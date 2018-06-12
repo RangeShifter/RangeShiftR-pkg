@@ -1,7 +1,11 @@
 Simple text file 
 :-)
-New third line
+I have edited the third line (just to confuse you) ...
+... and split it over two lines
 And a fourth one
 Greta's fifth line
 Steve's sixth line
 Yawn - this is becoming tedious!
+
+
+And added a completely new paragraph at the end
