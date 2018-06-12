@@ -1,4 +1,5 @@
 Simple text file 
 :-)
 New third line
-Greta's fourth line
+And a fourth one
+Greta's fifth line
