@@ -1,3 +1,5 @@
 Simple text file 
 :-)
 New third line
+And a fourth one
+
