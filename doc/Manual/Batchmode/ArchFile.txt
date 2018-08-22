@@ -1,0 +1,6 @@
+NChromosomes	4
+NLoci	5 6 10 2
+Trait 0 NLoci 4 0 0 0 1 0 2 1 5
+Trait 1 NLoci 8 0 4 2 0 2 1 2 2 2 3 2 4 2 9 3 0
+Trait 2 NLoci 2 1 4 3 1 
+
