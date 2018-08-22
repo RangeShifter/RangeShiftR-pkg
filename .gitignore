@@ -1,3 +1,17 @@
+# Embarcadero junk
+*.ilc
+*.ild
+*.ilf
+*.ils
+*.map
+*.pdi
+*.tds
+*.#0?
+*.~*
+*.local
+*.res
+*.stat
+
 # Prerequisites
 *.d
 
