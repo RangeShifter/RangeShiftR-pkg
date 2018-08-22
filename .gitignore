@@ -44,3 +44,14 @@
 *.exe
 *.out
 *.app
+
+# Test input and output files
+Debug/
+Release/
+Inputs/
+Outputs/
+Output_Maps/
+
+# Documentation
+*.wbk
+
