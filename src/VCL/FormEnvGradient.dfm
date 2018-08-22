@@ -1,0 +1,271 @@
+object frmEnvGradient: TfrmEnvGradient
+  Left = 0
+  Top = 0
+  Caption = 'Environmental Gradient '
+  ClientHeight = 502
+  ClientWidth = 309
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -13
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  OldCreateOrder = False
+  PixelsPerInch = 96
+  TextHeight = 16
+  object Bevel3: TBevel
+    Left = 9
+    Top = 313
+    Width = 290
+    Height = 14
+    Shape = bsTopLine
+  end
+  object RGgradientType: TRadioGroup
+    Left = 9
+    Top = 16
+    Width = 290
+    Height = 160
+    Caption = 'Gradient type'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -13
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ItemIndex = 0
+    Items.Strings = (
+      'None'
+      'Carrying capacity (K) or 1/b'
+      'Intrinsic growth rate (r) or fecundity '
+      'Local extinction probability')
+    ParentFont = False
+    TabOrder = 0
+    OnClick = RGgradientTypeClick
+  end
+  object edtGradInc: TLabeledEdit
+    Left = 242
+    Top = 193
+    Width = 57
+    Height = 24
+    Alignment = taRightJustify
+    EditLabel.Width = 136
+    EditLabel.Height = 16
+    EditLabel.Caption = 'Gradient steepness (G):'
+    EditLabel.Font.Charset = DEFAULT_CHARSET
+    EditLabel.Font.Color = clWindowText
+    EditLabel.Font.Height = -13
+    EditLabel.Font.Name = 'Tahoma'
+    EditLabel.Font.Style = []
+    EditLabel.ParentFont = False
+    Enabled = False
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -13
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    LabelPosition = lpLeft
+    ParentFont = False
+    TabOrder = 1
+    Text = '0.05'
+  end
+  object edtOptRow: TLabeledEdit
+    Left = 244
+    Top = 223
+    Width = 57
+    Height = 24
+    Alignment = taRightJustify
+    EditLabel.Width = 68
+    EditLabel.Height = 16
+    EditLabel.Caption = 'Optimum Y:'
+    EditLabel.Font.Charset = DEFAULT_CHARSET
+    EditLabel.Font.Color = clWindowText
+    EditLabel.Font.Height = -13
+    EditLabel.Font.Name = 'Tahoma'
+    EditLabel.Font.Style = []
+    EditLabel.ParentFont = False
+    Enabled = False
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -13
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    LabelPosition = lpLeft
+    ParentFont = False
+    TabOrder = 2
+    Text = '0.0'
+  end
+  object edtDev: TLabeledEdit
+    Left = 242
+    Top = 253
+    Width = 57
+    Height = 24
+    Alignment = taRightJustify
+    EditLabel.Width = 190
+    EditLabel.Height = 16
+    EditLabel.Caption = 'Local variability scaling factor (f):'
+    EditLabel.Font.Charset = DEFAULT_CHARSET
+    EditLabel.Font.Color = clWindowText
+    EditLabel.Font.Height = -13
+    EditLabel.Font.Name = 'Tahoma'
+    EditLabel.Font.Style = []
+    EditLabel.ParentFont = False
+    Enabled = False
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -13
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    LabelPosition = lpLeft
+    ParentFont = False
+    TabOrder = 3
+    Text = '0.0'
+  end
+  object edtOptEXT: TLabeledEdit
+    Left = 242
+    Top = 283
+    Width = 57
+    Height = 24
+    Alignment = taRightJustify
+    EditLabel.Width = 191
+    EditLabel.Height = 16
+    EditLabel.Caption = 'Local exinction prob. at optimum:'
+    EditLabel.Font.Charset = DEFAULT_CHARSET
+    EditLabel.Font.Color = clWindowText
+    EditLabel.Font.Height = -13
+    EditLabel.Font.Name = 'Tahoma'
+    EditLabel.Font.Style = []
+    EditLabel.ParentFont = False
+    Enabled = False
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -13
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    LabelPosition = lpLeft
+    ParentFont = False
+    TabOrder = 4
+    Text = '0.0'
+    Visible = False
+  end
+  object CBshift: TCheckBox
+    Left = 9
+    Top = 333
+    Width = 146
+    Height = 17
+    Caption = 'Gradient shifting'
+    Enabled = False
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -13
+    Font.Name = 'Tahoma'
+    Font.Style = [fsBold]
+    ParentFont = False
+    TabOrder = 5
+    OnClick = CBshiftClick
+  end
+  object edtShiftRate: TLabeledEdit
+    Left = 242
+    Top = 358
+    Width = 57
+    Height = 24
+    Alignment = taRightJustify
+    EditLabel.Width = 197
+    EditLabel.Height = 16
+    EditLabel.Caption = 'Gradient shifting rate (rows/year):'
+    EditLabel.Font.Charset = DEFAULT_CHARSET
+    EditLabel.Font.Color = clWindowText
+    EditLabel.Font.Height = -13
+    EditLabel.Font.Name = 'Tahoma'
+    EditLabel.Font.Style = []
+    EditLabel.ParentFont = False
+    Enabled = False
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -13
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    LabelPosition = lpLeft
+    ParentFont = False
+    TabOrder = 6
+    Text = '0.5'
+  end
+  object edtStartShift: TLabeledEdit
+    Left = 242
+    Top = 388
+    Width = 57
+    Height = 24
+    Alignment = taRightJustify
+    EditLabel.Width = 192
+    EditLabel.Height = 16
+    EditLabel.Caption = 'Start to shift the gradient at year '
+    EditLabel.Font.Charset = DEFAULT_CHARSET
+    EditLabel.Font.Color = clWindowText
+    EditLabel.Font.Height = -13
+    EditLabel.Font.Name = 'Tahoma'
+    EditLabel.Font.Style = []
+    EditLabel.ParentFont = False
+    Enabled = False
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -13
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    LabelPosition = lpLeft
+    ParentFont = False
+    TabOrder = 7
+    Text = '0'
+  end
+  object edtStopShift: TLabeledEdit
+    Left = 242
+    Top = 418
+    Width = 57
+    Height = 24
+    Alignment = taRightJustify
+    EditLabel.Width = 45
+    EditLabel.Height = 16
+    EditLabel.Caption = 'Stop at '
+    EditLabel.Font.Charset = DEFAULT_CHARSET
+    EditLabel.Font.Color = clWindowText
+    EditLabel.Font.Height = -13
+    EditLabel.Font.Name = 'Tahoma'
+    EditLabel.Font.Style = []
+    EditLabel.ParentFont = False
+    Enabled = False
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -13
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    LabelPosition = lpLeft
+    ParentFont = False
+    TabOrder = 8
+    Text = '0'
+  end
+  object BtnOK: TButton
+    Left = 112
+    Top = 468
+    Width = 89
+    Height = 25
+    Caption = 'OK'
+    Default = True
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -13
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ModalResult = 1
+    ParentFont = False
+    TabOrder = 9
+    OnClick = BtnOKClick
+  end
+  object BtnCancel: TButton
+    Left = 210
+    Top = 468
+    Width = 89
+    Height = 25
+    Cancel = True
+    Caption = 'Cancel'
+    ModalResult = 2
+    TabOrder = 10
+    OnClick = BtnCancelClick
+  end
+end
