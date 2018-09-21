@@ -397,11 +397,11 @@ stageParams sstruct = pSpecies->getStage();
 
 ofstream initfile;
 
-frmSeeding->SaveTextFileDialog1->InitialDir = paramsSim->getDir(1).c_str();
-if (frmSeeding->SaveTextFileDialog1->Execute()) {
+SaveTextFileDialog1->InitialDir = paramsSim->getDir(1).c_str();
+if (SaveTextFileDialog1->Execute()) {
 	StatusBar1->Panels->Items[0]->Text = "Saving Initialisation file. Please wait...";
 	StatusBar1->Refresh();
-	initname = AnsiString(frmSeeding->SaveTextFileDialog1->FileName).c_str();
+	initname = AnsiString(SaveTextFileDialog1->FileName).c_str();
 	// extract separate file and path names
 	string fname = initname;
 	string path = fname;
@@ -423,49 +423,56 @@ if (frmSeeding->SaveTextFileDialog1->Execute()) {
 	initfile.open(initname.c_str());
 
 	initfile << "SeedType\tFreeType\tSpType\tInitDens";
-	if (ppLand.patchModel) initfile << "\tInd_per_ha";
-	else  initfile << "\tIndXCell";
-
+	if (ppLand.patchModel) initfile << "\tIndsHa";
+	else  initfile << "\tIndsCell";
+	initfile << "\tminX\tmaxX\tminY\tmaxY\tNCells\tNSpCells";
+	initfile << "\tInitFreezeYear\tRestrictRows\tRestrictFreq\tFinalFreezeYear";
+	initfile << "\tInitIndsFile\tInitAge";
 	if (dem.stageStruct) {
-		for (int i = 1; i < sstruct.nStages+1; i++) initfile <<"\t" << "IndXStage_" << i;
+		for (int i = 1; i < sstruct.nStages; i++) initfile << "\t" << "PropStage_" << i;
 	}
-	else initfile << "\tIndXStage";
-	initfile << "\tInitAge\tminX\tmaxX\tminY\tmaxY\tNCells";
-	initfile << "\tFreezeYear\tInitCells_File";
-	initfile << "\tNSpCells\tInitSpDistCells_File" << endl;
+	initfile << "\tInitCells_File\tInitSpDistCells_File" << endl;
 
 	initfile << RG1->ItemIndex;
 	if (RG1->ItemIndex == 0) initfile << "\t" << RGRules->ItemIndex << "\t-9";
-	else initfile <<"\t-9\t"<< RGCells->ItemIndex;
-	initfile <<"\t" << cboNinds->ItemIndex;
-	if (cboNinds->ItemIndex == 2) initfile <<"\t" << StrToInt(edtNinds->Text);
+	else initfile << "\t-9\t" << RGCells->ItemIndex;
+	initfile << "\t" << cboNinds->ItemIndex;
+	if (cboNinds->ItemIndex == 2) initfile << "\t" << StrToInt(edtNinds->Text);
 	else initfile <<"\t-9";
-	if (dem.stageStruct) {
-		for (int i = 1; i < sstruct.nStages; i++)
-			initfile <<"\t" << frmSeeding->SGinitialStage->Cells[i][1].ToDouble();
-		initfile <<"\t" << frmSeeding->RGinitAges->ItemIndex;
-	}
-	else  initfile << "\t-9\t-9";
 	if (RG1->ItemIndex == 0) {
-		initfile <<"\t" << StrToInt(edtMinX->Text) <<"\t" << StrToInt(edtMaxX->Text);
-		initfile <<"\t" << StrToInt(edtMinY->Text) <<"\t" << StrToInt(edtMaxY->Text);
+		initfile << "\t" << StrToInt(edtMinX->Text) << "\t" << StrToInt(edtMaxX->Text);
+		initfile << "\t" << StrToInt(edtMinY->Text) << "\t" << StrToInt(edtMaxY->Text);
 	}
 	else
 		initfile << "\t-9\t-9\t-9\t-9";
 	if (RG1->ItemIndex == 0 && RGRules->ItemIndex == 0)
-		initfile <<"\t" << StrToInt(edtTotRandomCells->Text);
+		initfile << "\t" << StrToInt(edtTotRandomCells->Text);
 	else initfile << "\t-9";
-	if (RG1->ItemIndex == 0) {
-		initfile <<"\t" << StrToInt(edtInitFreezeYear->Text);
+	if (RG1->ItemIndex == 1) initfile << "\t" << StrToInt(edtNSpCells->Text);
+	else initfile << "\t-9";
+	if (RG1->ItemIndex == 0) initfile << "\t" << StrToInt(edtInitFreezeYear->Text);
+	else initfile << "\t-9";
+
+	if (CBrestrictRange->Checked) {
+		initfile << "\t" << StrToInt(edtRestrictRows->Text)
+			<< "\t" << StrToInt(edtRestrictFreq->Text) << "\t" << StrToInt(edtFinalFreezeYear->Text);
 	}
-	else initfile << "\t-9";
+	else initfile << "\t-9\t-9\t-9";
+
+  // initial individuals file name is never saved, as option is not allowed
+	initfile << "\t-9";    
+	
+	if (dem.stageStruct) {
+		initfile <<"\t" << RGinitAges->ItemIndex;
+		for (int i = 1; i < sstruct.nStages; i++)
+			initfile <<"\t" << SGinitialStage->Cells[i][1].ToDouble();
+	}
+	else  initfile << "\t-9";
 
 	if (pLandscape->initCellCount() > 0) { // additional cells selected
 		initcellsname = fname.substr(0,fname.length()-4) + "_InitCells.txt";
 		initfile <<"\t" << initcellsname;
 	}
-	else initfile <<"\t-9";
-	if (RG1->ItemIndex == 1) initfile <<"\t" << StrToInt(edtNSpCells->Text);
 	else initfile <<"\t-9";
 	if (RG1->ItemIndex == 1 && RGCells->ItemIndex == 2)
 	{
@@ -770,26 +777,28 @@ case 3: // from initialisation file
 		initname = (AnsiString(OpenInitialisationFile->FileName).c_str());
 		// check that selected file is the correct format
 		initfile.open(initname.c_str());
-		string h0,h1,h2,h3,h4,h5,h6,h7,h8,h9,h10,h11,h12,h13,h14,h15;
+		string h0,h1,h2,h3,h4,h5,h6,h7,h8,h9,h10,h11,h12,h13,h14,h15,h16,h17,h18,h19;
 		h0 = h1 = h2 = h3 = h4 = h5 = h6 = h7 = h8 = h9 = "x";
-		h10 = h11 = h12 = h13 = h14 = h15 = "x";
-		initfile >> h0 >> h1 >> h2 >> h3 >> h4;
+		h10 = h11 = h12 = h13 = h14 = h15 = h16 = h17 = h18 = h19 = "x";
+		initfile >> h0 >> h1 >> h2 >> h3 >> h4 >> h5 >> h6 >> h7 >> h8 >> h9 >> h10;                
+		initfile >> h11 >> h12 >> h13 >> h14 >> h15 >> h16;
 		if (dem.stageStruct) {
-			for (int i = 1; i < sstruct.nStages; i++) initfile >> h5;
+			for (int i = 1; i < sstruct.nStages; i++) initfile >> h17;
 		}
-		else initfile >> h5;
-		initfile >> h6 >> h7 >> h8 >> h9 >> h10 >> h11 >> h12 >> h13 >> h14 >> h15;
+		initfile >> h18 >> h19;
 		if (h0 != "SeedType" || h1 != "FreeType" || h2 != "SpType" || h3 != "InitDens")
 			hdrError = true;
 		if (ppLand.patchModel) {
-			if (h4 != "Ind_per_ha") hdrError = true;
+			if (h4 != "IndsHa") hdrError = true;
 		}
 		else {
-			if (h4 != "IndXCell") hdrError = true;
-		}
-		if (h6 != "InitAge" || h7 != "minX" || h8 != "maxX" || h9 != "minY" || h10 != "maxY"
-		||  h11 != "NCells" || h12 != "FreezeYear" || h13 != "InitCells_File"
-		||  h14 != "NSpCells" || h15 != "InitSpDistCells_File" ) hdrError = true;
+			if (h4 != "IndsCell") hdrError = true;
+		}                      
+		if (h5 != "minX" || h6 != "maxX" || h7 != "minY" || h8 != "maxY"
+		||  h9 != "NCells" ||  h10 != "NSpCells" || h11 != "InitFreezeYear" 
+		|| h12 != "RestrictRows" || h13 != "RestrictFreq" || h14 != "FinalFreezeYear" 
+		|| h15 != "InitIndsFile" || h16 != "InitAge" 
+		|| h18 != "InitCells_File" || h19 != "InitSpDistCells_File" ) hdrError = true;      
 		if (hdrError) {
 			initfile.close(); initfile.clear();
 			MessageDlg("Format error in header line of selected file",
@@ -799,20 +808,21 @@ case 3: // from initialisation file
 		// read the initialisation data from the single data line
 		int iiii;
 		float ffff;
+		string tttt;
 		initfile >> init.seedType >> init.freeType >> init.spDistType >> init.initDens;
+		if (ppLand.patchModel) initfile >> init.indsHa;
+		else initfile >> init.indsCell;
+		initfile >> init.minSeedX >> init.maxSeedX >> init.minSeedY >> init.maxSeedY;
+		initfile >> init.nSeedPatches >> init.nSpDistPatches >> init.initFrzYr >> init.restrictRows;		
+		initfile >> init.restrictFreq >> init.finalFrzYr >> tttt >> init.initAge; 
+		if (init.restrictRows > 0) init.restrictRange = true; else init.restrictRange = false;
 		if (dem.stageStruct) {
-			for (int i = 0; i < sstruct.nStages; i++) {
+			for (int i = 1; i < sstruct.nStages; i++) {
 				initfile >> ffff;
 				paramsInit->setProp(i,ffff);
 			}
 		}
-		else initfile >> ffff; // not used for non-structured model
-		if (ppLand.patchModel) initfile >> init.indsHa;
-		else initfile >> init.indsCell;
-		initfile >> init.initAge;
-		initfile >> init.minSeedX >> init.maxSeedX >> init.minSeedY >> init.maxSeedY;
-		initfile >> init.nSeedPatches >> init.initFrzYr >> initcellsname;
-		initfile >> init.nSpDistPatches >> initspdistcellsname;
+		initfile >> initcellsname >> initspdistcellsname;
 //string msg = "seedtype=" + Int2Str(init.seedType) + " =" + Int2Str(init.freeType) + " =" + Int2Str() + " =" + Int2Str() +
 //				+ Int2Str(nspcells-1);
 //MessageDlg(msg.c_str(),mtError, TMsgDlgButtons() << mbOK,0);

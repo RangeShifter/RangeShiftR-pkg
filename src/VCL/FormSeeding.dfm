@@ -239,14 +239,13 @@ object frmSeeding: TfrmSeeding
   end
   object StatusBar1: TStatusBar
     Left = 0
-    Top = 543
+    Top = 523
     Width = 842
     Height = 19
     Panels = <
       item
         Width = 50
       end>
-    ExplicitTop = 523
   end
   object PanelNInds: TPanel
     Left = 271
