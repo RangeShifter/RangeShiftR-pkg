@@ -65,9 +65,9 @@ gen = new tr1::mt19937 (RS_random_seed);
 DEBUGLOG << "RSrandom::RSrandom(): RS_random_seed=" << RS_random_seed
 	<< endl;
 #endif // RSDEBUG 
-#endif // GROUPDISP 
+#endif // GROUPDISP || RS_ABC
 
-#endif // RS_ABC || RS_ABC
+#endif // RS_ABC 
 
 #if RSDEBUG
 // RS random initialisation log added by SCFP 25/8/16

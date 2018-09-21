@@ -6,7 +6,7 @@ Implements the RSrandom class
 
 Author: Steve Palmer, University of Aberdeen
 
-Last updated: 12 June 2018 by Steve Palmer
+Last updated: 29 August 2018 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
