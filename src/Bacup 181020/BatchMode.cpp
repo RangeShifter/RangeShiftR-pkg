@@ -23,11 +23,8 @@ ifstream bABCoFile;
 #if EVOLSMS
 ifstream bMortFile;
 #endif
-#if SEASONAL
-ifstream bSeasonFile;
 #if PARTMIGRN
-ifstream bExtremeFile;
-#endif // PARTMIGRN 
+ifstream bSeasonFile;
 #endif
 
 ofstream batchlog;
@@ -43,18 +40,15 @@ ifstream landfile,dynlandfile;
 #if EVOLSMS
 ifstream mortFile;
 #endif
-#if SEASONAL
-ifstream seasonfile;
 #if PARTMIGRN
-ifstream extremefile;
-#endif // PARTMIGRN 
-#endif // SEASONAL
+ifstream seasonfile;
+#endif
 
 // global variables passed between parsing functions...
 int batchnum;
 int patchmodel,resolution,landtype,maxNhab,speciesdist,distresolution;
 int reproductn;
-#if SEASONAL
+#if PARTMIGRN
 int nseasons;
 #else
 int repseasons;
@@ -73,7 +67,7 @@ string name_landscape,name_patch,name_dynland,name_sp_dist;
 #if SPATIALMORT
 string name_mortfile[2];
 #endif
-#if SEASONAL
+#if PARTMIGRN
 string seasonFile;
 #endif
 string stageStructFile,transMatrix;
@@ -178,14 +172,6 @@ else controlFormatError = true; // wrong control file format
 
 controlfile >> paramname >> landtype;
 if (paramname == "LandType") {
-#if SEASONAL
-	if (landtype != 0) {
-		BatchError(filetype,-999,0,"LandType");
-		batchlog << "LandType must be 0 for a seasonal model" << endl;
-		errors++;
-	}
-	else b.landtype = landtype;
-#else
 	if (landtype != 0 && landtype != 2 && landtype != 9) {
 		BatchError(filetype,-999,0,"LandType");
 		batchlog << "LandType must be 0, 2 or 9" << endl;
@@ -199,7 +185,6 @@ if (paramname == "LandType") {
 		}
 		else b.landtype = landtype;
 	}
-#endif // SEASONAL 
 }
 else controlFormatError = true; // wrong control file format
 
@@ -290,7 +275,7 @@ if (paramname == "Reproduction") {
 }
 else controlFormatError = true; // wrong control file format
 
-#if SEASONAL
+#if PARTMIGRN
 controlfile >> paramname >> nseasons;
 if (paramname == "NSeasons") {
 	if (nseasons < 2) {
@@ -311,7 +296,7 @@ else controlFormatError = true; // wrong control file format
 
 controlfile >> paramname >> stagestruct;
 if (paramname == "StageStruct") {
-#if SEASONAL
+#if PARTMIGRN
 	if (stagestruct != 1) {
 		BatchError(filetype,-999,0," "); errors++;
 		batchlog << "StageStruct must be 1 for a partial migration model" << endl;
@@ -397,7 +382,7 @@ if (paramname == "ParameterFile" && !controlFormatError) {
 	}
 	else {
 		OpenError(paramname,fname); b.ok = false;
-		cout << "Unable to open ParameterFile" << endl;
+		cout << "Unable to open parameterFile" << endl;
 	}
 	bParamFile.clear();
 	if (!b.ok) {
@@ -440,8 +425,7 @@ if (paramname == "LandFile" && !controlFormatError) {
 }
 else controlFormatError = true; // wrong control file format
 
-/*
-#if SEASONAL
+#if PARTMIGRN
 // Check seasonal file
 controlfile >> paramname >> filename;
 if (paramname == "SeasonFile" && !controlFormatError) {
@@ -475,7 +459,6 @@ if (paramname == "SeasonFile" && !controlFormatError) {
 }
 else controlFormatError = true; // wrong control file format
 #endif
-*/
 
 // Check stage structure file if required file
 controlfile >> paramname >> filename;
@@ -769,8 +752,8 @@ if (batchlog.is_open()) 		{ batchlog.close(); batchlog.clear(); }
 // NOTE: THE FOLLOWING ELEMENTS COULD BE REMOVED FROM b ...
 parameterFile = b.parameterFile;
 landFile = b.landFile;
-#if SEASONAL
-//seasonFile = b.seasonFile;
+#if PARTMIGRN
+seasonFile = b.seasonFile;
 #endif
 stageStructFile = b.stageStructFile;
 emigrationFile = b.emigrationFile;
@@ -789,6 +772,107 @@ abcObsFile = b.abcObsFile;
 return b;
 
 }
+
+#if PARTMIGRN
+//---------------------------------------------------------------------------
+int ParseSeasonFile(string indir)
+{
+string header,filename,fname,ftype2;
+//int inint,i,err,fecdensdep,fecstagewts,devdensdep,devstagewts,survdensdep,survstagewts;
+int inint,i,err;
+//float infloat;
+int errors = 0;
+int seasons = 0;
+int prevseason;
+bool checkfile;
+vector <string> transfiles;
+string filetype = "SeasonFile";
+
+// Parse header line;
+bSeasonFile >> header; if (header != "Season" ) errors++;
+bSeasonFile >> header; if (header != "TransMatrixFile" ) errors++;
+if (errors > 0) {
+	FormatError(filetype,errors);
+	return -111;
+}
+
+// Parse data lines
+int line = 1;
+inint = -98765;
+bSeasonFile >> inint;
+// first season number must be zero
+if (inint != 0) {
+	BatchError(filetype,line,0," ");
+	batchlog << "First season must be 0" << endl; errors++;
+}
+prevseason = inint;
+while (inint != -98765) {
+	seasons++;
+
+	// transfer matrix file - compulsory
+	ftype2 = "TransMatrixFile";
+	bSeasonFile >> filename;
+	checkfile = true;
+	for (i = 0; i < (int)transfiles.size(); i++) {
+		if (filename == transfiles[i]) { // file has already been checked
+//			batchlog << "*** line = " << line << " i = " << i << " filename = " << filename
+//				<< " transfiles[i] = " << transfiles[i] << endl;
+			checkfile = false;
+		}
+	}
+	if (checkfile) {
+		if (filename == "NULL") {
+			batchlog << "*** " << ftype2 << " is compulsory for partial migration model" << endl;
+			errors++;
+		}
+		else {
+			fname = indir + filename;
+			batchlog << "Checking " << ftype2 << " " << fname << endl;
+			bTransMatrix.open(fname.c_str());
+			if (bTransMatrix.is_open()) {
+				err = ParseTransitionFile();
+				if (err == 0) FileHeadersOK(ftype2); else errors++;
+				bTransMatrix.close();
+			}
+			else {
+				OpenError(ftype2,fname); errors++;
+			}
+			if (bTransMatrix.is_open()) bTransMatrix.close();
+			bTransMatrix.clear();
+		}
+	}
+	transfiles.push_back(filename);
+
+	// ADD SURVIVAL SCHEDULE AND/OR STAGE WEIGHTS HERE?????
+	
+	// read next season
+	line++;
+	inint = -98765;
+	bSeasonFile >> inint;
+	if (bSeasonFile.eof()) {
+		inint = -98765;
+	}
+	else { // check for valid season number
+		if (inint != prevseason+1) {
+			BatchError(filetype,line,223," ");   
+			errors++;
+		}
+		prevseason = inint;
+	}
+}
+if (!bSeasonFile.eof()) {
+	EOFerror(filetype);
+	errors++;
+}
+
+transfiles.clear();
+
+if (errors > 0) return -111;
+else return seasons;
+
+}
+
+#endif // PARTMIGRN 
 
 //---------------------------------------------------------------------------
 #if BUTTERFLYDISP
@@ -846,19 +930,10 @@ bParamFile >> header; if (header != "PropMales" ) errors++;
 bParamFile >> header; if (header != "Harem" ) errors++;
 bParamFile >> header; if (header != "bc" ) errors++;
 bParamFile >> header; if (header != "Rmax" ) errors++;
-#if SEASONAL
-for (int j = 0; j < nseasons; j++) {
-	for (i = 0; i < maxNhab; i++) {
-		Kheader = "K" + Int2Str(i+1) + "_" + Int2Str(j);
-		bParamFile >> header; if (header != Kheader ) Kerrors++;
-	}
-}
-#else
 for (i = 0; i < maxNhab; i++) {
 	Kheader = "K" + Int2Str(i+1);
 	bParamFile >> header; if (header != Kheader ) Kerrors++;
 }
-#endif // SEASONAL 
 #if GROUPDISP
 // ADDITIONAL PARAMETERS FOR GROUP DISPERSAL MODEL
 bParamFile >> header; if (header != "Selfing" ) errors++;
@@ -925,7 +1000,7 @@ int nSimuls = 0;
 inint = -98765;
 bParamFile >> inint; // first simulation number
 if (inint < 0) {
-	batchlog << "*** Error in ParameterFile - first simulation number must be >= 0" << endl;
+	batchlog << "*** Error in parameterFile - first simulation number must be >= 0" << endl;
 	errors++;
 }
 else {
@@ -1157,37 +1232,6 @@ while (inint != -98765) {
 	if (stagestruct == 0 && infloat <= 0.0) { BatchError(filetype,line,10,"bc"); errors++; }
 	bParamFile >> infloat;
 	if (stagestruct == 0 && infloat <= 0.0) { BatchError(filetype,line,10,"Rmax"); errors++; }
-#if SEASONAL
-	for (int s = 0; s < nseasons; s++) {
-		sum_K = 0.0; min_K = 9999999.0; max_K = 0.0;
-		for (i = 0; i < maxNhab; i++) {
-			bParamFile >> infloat;
-			if (infloat < 0.0) {
-				Kheader = "K" + Int2Str(i+1) + "_" + Int2Str(s);
-				BatchError(filetype,line,19,Kheader); errors++;
-			}
-			else {
-				sum_K += infloat;
-				if (infloat > 0.0) {
-					if (infloat < min_K) min_K = infloat;
-					if (infloat > max_K) max_K = infloat;
-				}
-			}
-		}
-		if (sum_K <= 0.0) {
-			BatchError(filetype,line,0," "); errors++;
-			batchlog << "At least one K column per season must be non-zero" << endl;
-		}
-		else {
-			if (envstoch && stochtype == 1) { // environmental stochasticity in K
-				if (min_K < minK || max_K > maxK) {
-					BatchError(filetype,line,0," "); errors++;
-					batchlog << "Non-zero K values must lie between minK and maxK" << endl;
-				}
-			}
-		}
-	}
-#else
 	sum_K = 0.0; min_K = 9999999.0; max_K = 0.0;
 	for (i = 0; i < maxNhab; i++) {
 		bParamFile >> infloat;
@@ -1215,7 +1259,6 @@ while (inint != -98765) {
 			}
 		}
 	}
-#endif // SEASONAL 
 #if GROUPDISP
 // ADDITIONAL PARAMETERS FOR GROUP DISPERSAL MODEL
 	bParamFile >> inint;
@@ -1940,12 +1983,6 @@ int simuls = 0;
 int prevsimul;
 bool checkfile;
 vector <string> transfiles,wtsfiles;
-#if SEASONAL
-vector <string> seasonfiles;
-#if PARTMIGRN
-vector <string> extremefiles;
-#endif // PARTMIGRN 
-#endif // SEASONAL 
 string filetype = "StageStructFile";
 
 // Parse header line;
@@ -1960,11 +1997,7 @@ bStageStructFile >> header; if (header != "PostDestructn" ) errors++;
 bStageStructFile >> header; if (header != "PRep" ) errors++;
 bStageStructFile >> header; if (header != "RepInterval" ) errors++;
 bStageStructFile >> header; if (header != "MaxAge" ) errors++;
-#if SEASONAL
-bStageStructFile >> header; if (header != "SeasonFile" ) errors++;
-#else
 bStageStructFile >> header; if (header != "TransMatrixFile" ) errors++;
-#endif // SEASONAL 
 bStageStructFile >> header; if (header != "SurvSched" ) errors++;
 bStageStructFile >> header; if (header != "FecDensDep" ) errors++;
 bStageStructFile >> header; if (header != "FecStageWts" ) errors++;
@@ -1977,16 +2010,6 @@ bStageStructFile >> header; if (header != "SurvDensDep" ) errors++;
 bStageStructFile >> header; if (header != "SurvDensCoeff" ) errors++;
 bStageStructFile >> header; if (header != "SurvStageWts" ) errors++;
 bStageStructFile >> header; if (header != "SurvStageWtsFile" ) errors++;
-#if PARTMIGRN
-bStageStructFile >> header; if (header != "PropPhilRes" ) errors++;
-bStageStructFile >> header; if (header != "PropPhilMigFxd" ) errors++;
-bStageStructFile >> header; if (header != "PropPhilMigVar" ) errors++;
-bStageStructFile >> header; if (header != "PropDispRes" ) errors++;
-bStageStructFile >> header; if (header != "PropDispMigFxd" ) errors++;
-bStageStructFile >> header; if (header != "PropDispMigVar" ) errors++;
-bStageStructFile >> header; if (header != "ResetMigrn" ) errors++;
-bStageStructFile >> header; if (header != "ExtremeFile" ) errors++;
-#endif // PARTMIGRN 
 if (errors > 0) {
 	FormatError(filetype,errors);
 	return -111;
@@ -2022,57 +2045,9 @@ while (inint != -98765) {
 	bStageStructFile >> inint;
 	if (inint < 2) { BatchError(filetype,line,12,"MaxAge"); errors++; }
 
-	bStageStructFile >> filename;
-#if SEASONAL
-	// seasons file - compulsory
-	ftype2 = "SeasonFile";
-	checkfile = true;
-	for (i = 0; i < (int)seasonfiles.size(); i++) {
-		if (filename == seasonfiles[i]) { // file has already been checked
-//			batchlog << "*** line = " << line << " i = " << i << " filename = " << filename
-//				<< " seasonfiles[i] = " << seasonfiles[i] << endl;
-			checkfile = false;
-		}
-	}
-	if (checkfile) {
-		if (filename == "NULL") {
-			batchlog << "*** " << ftype2 << " is compulsory for seasonal model" << endl;
-			errors++;
-		}
-		else {
-			fname = indir + filename;
-			batchlog << "Checking " << ftype2 << " " << fname << endl;
-			bSeasonFile.open(fname.c_str());
-			if (bSeasonFile.is_open()) {
-				int lines = ParseSeasonFile(indir);
-				if (lines < 0) {
-					errors++;
-					if (lines < -111)
-						batchlog << "*** Format error in " << ftype2 << endl;
-				}
-				else {
-					if (lines == nseasons) {
-						FileOK(ftype2,lines,3);    
-//						b.seasonFile = fname;
-					}
-					else {
-						errors++;
-						batchlog << "*** No. of seasons in " << filename
-							<< " does not match no. in Control file" << endl;
-					}
-				}
-				bSeasonFile.close();
-			}
-			else {
-				OpenError(ftype2,fname); errors++;
-			}
-			bSeasonFile.clear();
-		}
-	}
-	seasonfiles.push_back(filename);
-#else
 	// transfer matrix file - compulsory
 	ftype2 = "TransMatrixFile";
+	bStageStructFile >> filename;
 	checkfile = true;
 	for (i = 0; i < (int)transfiles.size(); i++) {
 		if (filename == transfiles[i]) { // file has already been checked
@@ -2103,14 +2078,9 @@ while (inint != -98765) {
 		}
 	}
 	transfiles.push_back(filename);
-#endif // SEASONAL 
 
 	bStageStructFile >> inint;
-#if SEASONAL
-	if (inint < 0 || inint > 1) { BatchError(filetype,line,1,"SurvSched"); errors++; }
-#else
 	if (inint < 0 || inint > 2) { BatchError(filetype,line,2,"SurvSched"); errors++; }
-#endif
 	bStageStructFile >> fecdensdep;
 	if (fecdensdep < 0 || fecdensdep > 1)
 	{ BatchError(filetype,line,1,"FecDensDep"); errors++; fecdensdep = 1; }
@@ -2266,55 +2236,6 @@ while (inint != -98765) {
 		wtsfiles.push_back(filename);
 	}
 
-#if PARTMIGRN
-	float prop;
-	float cumprop = 0.0;
-	for (i = 0; i < 6; i++) {
-		bStageStructFile >> prop;
-		cumprop += prop;
-		if (prop < 0.0 || prop > 1.0) {
-			BatchError(filetype,line,20,"Proportion Phil/Disp Res/Mig"); errors++;
-		}
-	}
-	if (cumprop < 1.0 || cumprop > 1.0) {
-		BatchError(filetype,line,0," "); errors++;
-		batchlog << "Proportions must sum to 1.0" << endl;
-	}
-	int resetmigrn;
-	bStageStructFile >> resetmigrn;
-	if (resetmigrn < 0 || resetmigrn > 1) {
-		BatchError(filetype,line,1,"ResetMigrn"); errors++;
-	}
-
-	// extreme events file - optional
-	ftype2 = "ExtremeFile";
-	bStageStructFile >> filename;
-	if (filename != "NULL") {
-		checkfile = true;
-		for (i = 0; i < (int)extremefiles.size(); i++) {
-			if (filename == extremefiles[i]) checkfile = false; // file has already been checked
-		}
-		if (checkfile) {
-			fname = indir + filename;
-			batchlog << "Checking " << ftype2 << " " << fname << endl;
-			bExtremeFile.open(fname.c_str());
-			if (bExtremeFile.is_open()) {
-				err = ParseExtremeFile(ftype2);
-				if (err >= 0) FileHeadersOK(ftype2); else errors++;
-				bExtremeFile.close();
-			}
-			else {
-				OpenError(ftype2,fname); errors++;
-			}
-			if (bExtremeFile.is_open()) bExtremeFile.close();
-			bExtremeFile.clear();
-		}
-		extremefiles.push_back(filename);
-	}
-
-	
-#endif // PARTMIGRN 
-
 	// read next simulation
 	line++;
 	inint = -98765;
@@ -2337,12 +2258,6 @@ if (!bStageStructFile.eof()) {
 
 transfiles.clear();
 wtsfiles.clear();
-#if SEASONAL
-seasonfiles.clear();
-#if PARTMIGRN
-extremefiles.clear();
-#endif // PARTMIGRN 
-#endif // SEASONAL 
 
 if (errors > 0) return -111;
 else return simuls;
@@ -2402,7 +2317,7 @@ for (i = 0; i < stages; i++) {
 		}
 	}
 }
-#if !SEASONAL
+#if !PARTMIGRN
 if (totfecundity <= 0.0) {
 	BatchError(filetype,line,10,"Total fecundity"); errors++;
 }
@@ -2535,200 +2450,6 @@ if (!bStageWeightsFile.eof()) {
 return errors;
 
 }
-
-#if SEASONAL
-
-//---------------------------------------------------------------------------
-int ParseSeasonFile(string indir)
-{
-string header,filename,fname,ftype2;
-//int inint,i,err,fecdensdep,fecstagewts,devdensdep,devstagewts,survdensdep,survstagewts;
-int inint,i,err;
-float infloat;
-int errors = 0;
-int seasons = 0;
-int prevseason;
-bool checkfile;
-vector <string> transfiles;
-string filetype = "SeasonFile";
-
-// Parse header line;
-bSeasonFile >> header; if (header != "Season" ) errors++;
-bSeasonFile >> header; if (header != "TransMatrixFile" ) errors++;
-bSeasonFile >> header; if (header != "ProbExtreme" ) errors++;
-bSeasonFile >> header; if (header != "MortExtreme" ) errors++;
-if (errors > 0) {
-	FormatError(filetype,errors);
-	return -111;
-}
-
-// Parse data lines
-int line = 1;
-inint = -98765;
-bSeasonFile >> inint;
-// first season number must be zero
-if (inint != 0) {
-	BatchError(filetype,line,0," ");
-	batchlog << "First season must be 0" << endl; errors++;
-}
-prevseason = inint;
-while (inint != -98765) {
-	seasons++;
-
-	// transfer matrix file - compulsory
-	ftype2 = "TransMatrixFile";
-	bSeasonFile >> filename;
-	checkfile = true;
-	for (i = 0; i < (int)transfiles.size(); i++) {
-		if (filename == transfiles[i]) { // file has already been checked
-//			batchlog << "*** line = " << line << " i = " << i << " filename = " << filename
-//				<< " transfiles[i] = " << transfiles[i] << endl;
-			checkfile = false;
-		}
-	}
-	if (checkfile) {
-		if (filename == "NULL") {
-			batchlog << "*** " << ftype2 << " is compulsory for partial migration model" << endl;
-			errors++;
-		}
-		else {
-			fname = indir + filename;
-			batchlog << "Checking " << ftype2 << " " << fname << endl;
-			bTransMatrix.open(fname.c_str());
-			if (bTransMatrix.is_open()) {
-				err = ParseTransitionFile();
-				if (err == 0) FileHeadersOK(ftype2); else errors++;
-				bTransMatrix.close();
-			}
-			else {
-				OpenError(ftype2,fname); errors++;
-			}
-			if (bTransMatrix.is_open()) bTransMatrix.close();
-			bTransMatrix.clear();
-		}
-	}
-	transfiles.push_back(filename);
-
-	bSeasonFile >> infloat;
-	if (infloat < 0.0 || infloat > 1.0) { BatchError(filetype,line,20,"ProbExtreme"); errors++; }
-	bSeasonFile >> infloat;
-	if (infloat < 0.0 || infloat > 1.0) { BatchError(filetype,line,20,"MortExtreme"); errors++; }
-
-	// ADD SURVIVAL SCHEDULE AND/OR STAGE WEIGHTS HERE?????
-	
-	// read next season
-	line++;
-	inint = -98765;
-	bSeasonFile >> inint;
-	if (bSeasonFile.eof()) {
-		inint = -98765;
-	}
-	else { // check for valid season number
-		if (inint != prevseason+1) {
-			BatchError(filetype,line,223," ");   
-			errors++;
-		}
-		prevseason = inint;
-	}
-}
-if (!bSeasonFile.eof()) {
-	EOFerror(filetype);
-	errors++;
-}
-
-transfiles.clear();
-
-if (errors > 0) return -111;
-else return seasons;
-
-}
-
-#if PARTMIGRN
-
-//---------------------------------------------------------------------------
-int ParseExtremeFile(string indir)
-{
-string header,filename,fname,ftype2;
-//int inint,i,err;
-int inint,year,prevyear,season,prevseason,x,y;
-float infloat;
-int errors = 0;
-int events = 0;
-string filetype = "ExtremeFile";
-
-// Parse header line;
-bExtremeFile >> header; if (header != "Year" ) errors++;
-bExtremeFile >> header; if (header != "Season" ) errors++;
-if (patchmodel) {
-	bExtremeFile >> header; if (header != "PatchID" ) errors++;
-}
-else {
-	bExtremeFile >> header; if (header != "X" ) errors++;
-	bExtremeFile >> header; if (header != "Y" ) errors++;
-}
-bExtremeFile >> header; if (header != "MortExtreme" ) errors++;
-if (errors > 0) {
-	FormatError(filetype,errors);
-	return -111;
-}
-
-// Parse data lines
-int line = 1;
-year = prevyear = prevseason = -98765;
-bExtremeFile >> year;
-while (year != -98765) {
-	events++;
-	if (year < 0) {
-		BatchError(filetype,line,19,"Year"); errors++;
-	}
-	else {
-		if (year < prevyear) {
-			BatchError(filetype,line,2,"Year","previous Year"); errors++;
-		}
-	}
-	bExtremeFile >> season;
-	if (season < 0) { BatchError(filetype,line,19,"Season"); errors++; }
-	if (season >= nseasons) { BatchError(filetype,line,4,"Season","NSeasons in Control file"); errors++; }
-	if (year == prevyear) {
-		if (season < prevseason) {
-			BatchError(filetype,line,2,"Season","previous Season"); errors++;
-		}		
-	}
-	prevyear = year; prevseason = season;
-	if (patchmodel) {
-		bExtremeFile >> inint;
-		if (inint < 1) { BatchError(filetype,line,11,"PatchID"); errors++; }
-	}
-	else {  
-		bExtremeFile >> x >> y;
-		if (x < 0 || y < 0) {
-			BatchError(filetype,line,19,"X and Y"); errors++;
-		}
-	}
-	bExtremeFile >> infloat;
-	if (infloat < 0.0 || infloat > 1.0) { BatchError(filetype,line,20,"MortExtreme"); errors++; }
-
-	// read next event
-	line++;
-	year = -98765;
-	bExtremeFile >> year;
-	if (bExtremeFile.eof()) {
-		year = -98765;
-	}
-}
-if (!bExtremeFile.eof()) {
-	EOFerror(filetype);
-	errors++;
-}
-
-if (errors > 0) return -111;
-else return events;
-
-}
-
-#endif // PARTMIGRN 
-
-#endif // SEASONAL 
 
 //---------------------------------------------------------------------------
 int ParseEmigFile(void)
@@ -5506,12 +5227,12 @@ case 100:
 	batchlog << fieldname << " must be between 0 and 100";
 break;
 case 111:
-	batchlog << fieldname << " must match the first Simulation in ParameterFile";
+	batchlog << fieldname << " must match the first Simulation in parameterFile";
 break;
 case 222:
 	batchlog << "Simulation numbers must be sequential integers";
 break;
-#if SEASONAL
+#if PARTMIGRN
 case 223:
 	batchlog << "Season numbers must be sequential integers";
 break;
@@ -5625,7 +5346,7 @@ case 1:
 case 2:
 	batchlog << "parameters = ";
 	break;
-#if SEASONAL
+#if PARTMIGRN
 case 3:
 	batchlog << "seasons = ";
 	break;
@@ -5827,6 +5548,48 @@ DEBUGLOG << "ReadDynLandFile(): finished" << endl;
 return 0;
 }
 
+#if PARTMIGRN
+int ReadSeasonFile(const short option,const short nseasons) {
+short season;        
+string name;
+//demogrParams dem = pSpecies->getDemogr();
+//stageParams sstruct = pSpecies->getStage();
+string Inputs = paramsSim->getDir(1);
+
+if (option == 0) { // open file and read header line
+#if RSDEBUG
+DEBUGLOG << "ReadSeasonFile{}: option=" << option << " seasonFile=" << seasonFile << endl;
+#endif
+	seasonfile.open(seasonFile.c_str());    
+	string header;
+	for (int i = 0; i < 2; i++) seasonfile >> header;
+	return 0;
+}
+
+if (option == 9) { // close file
+	if (seasonfile.is_open()) {
+		seasonfile.close(); seasonfile.clear();
+	}
+	return 0;
+}
+
+for (int i = 0; i < nseasons; i++) {
+	seasonfile >> season;
+	seasonfile >> name; // 'name' is TransMatrixFile
+#if RSDEBUG
+//DEBUGLOG << "ReadSeasonFile{}: i=" << i << " season=" << season << " name=" << name << endl;
+#endif
+	tmfile.open((Inputs+name).c_str());
+	ReadTransitionMatrix(season);    
+	tmfile.close(); tmfile.clear();
+}
+
+// ADD SURVIVAL SCHEDULE AND/OR STAGE WEIGHTS HERE?????
+
+return 0;
+}
+#endif
+
 //---------------------------------------------------------------------------
 int ReadParameters(int option, Landscape *pLandscape)
 {
@@ -5844,9 +5607,6 @@ if (option == 0) { // open file and read header line
 	if (parameters.is_open()) {
 		string header;
 		int nheaders = 46 + paramsLand.nHabMax;
-#if SEASONAL
-		nheaders +=	paramsLand.nHabMax * (nseasons-1); // ADDITIONAL HEADER FOR SEASONAL MODEL 
-#endif // SEASONAL 
 #if GROUPDISP
 		nheaders += 4;	// ADDITIONAL HEADERS FOR GROUP DISPERSAL MODEL
 #if PEDIGREE
@@ -5884,7 +5644,7 @@ simParams sim = paramsSim->getSim();
 simView v = paramsSim->getViews();
 
 if (!parameters.is_open()) {
-	cout << endl << "ReadParameters(): ERROR - ParameterFile is not open" << endl;
+	cout << endl << "ReadParameters(): ERROR - parameterFile is not open" << endl;
 	return 4086534;
 }
 
@@ -5963,48 +5723,24 @@ pSpecies->setDemogr(dem);
 float k;
 if (landtype == 9) { // artificial landscape
 	// only one value of K is read, but the first 'habitat' is the matrix where K = 0
-#if SEASONAL
-	pSpecies->createHabK(2,1);
-#else
 	pSpecies->createHabK(2);
-#endif // SEASONAL 
 	parameters >> k;
 	k *= ((double)(paramsLand.resol*paramsLand.resol))/10000.0;
-#if SEASONAL
-	pSpecies->setHabK(0,1,0);
-	pSpecies->setHabK(1,1,k);
-#else
 	pSpecies->setHabK(0,0);
 	pSpecies->setHabK(1,k);
-#endif // SEASONAL 
 }
 else {
-#if SEASONAL
-	pSpecies->createHabK(paramsLand.nHabMax,dem.nSeasons);
-	for (int j = 0; j < dem.nSeasons; j++) {
-		for (int i = 0; i < paramsLand.nHabMax; i++) {
-			parameters >> k;
-			k *= ((double)(paramsLand.resol*paramsLand.resol))/10000.0;
-				pSpecies->setHabK(i,j,k);			
-		}
-	}
-#else
 	pSpecies->createHabK(paramsLand.nHabMax);
 	for (int i = 0; i < paramsLand.nHabMax; i++) {
 		parameters >> k;
 		k *= ((double)(paramsLand.resol*paramsLand.resol))/10000.0;
 		pSpecies->setHabK(i,k);
 	}
-#endif // SEASONAL 
 }
 
 #if RSDEBUG
 DEBUGLOG << "ReadParameters(): dem.lambda = " << dem.lambda
-#if SEASONAL
-	<< " habK[0] = " << pSpecies->getHabK(0,0)
-#else
 	<< " habK[0] = " << pSpecies->getHabK(0)
-#endif // SEASONAL 
 	<< " nHabMax = " << paramsLand.nHabMax
 	<< endl;
 #endif
@@ -6077,32 +5813,22 @@ return error;
 }
 
 //---------------------------------------------------------------------------
-#if SEASONAL && PARTMIGRN
-int ReadStageStructure(int option,Landscape *pLandscape)
-#else
 int ReadStageStructure(int option)
-#endif  
 {
 string name;
 int simulation,postDestructn;
-demogrParams dem = pSpecies->getDemogr();
+//demogrParams dem = pSpecies->getDemogr();
 stageParams sstruct = pSpecies->getStage();
 string Inputs = paramsSim->getDir(1);
 
 if (option == 0) { // open file and read header line
 	ssfile.open(stageStructFile.c_str());
 	string header;
-	int nheaders = 18;
 #if GOBYMODEL
-	nheaders += 4;
-#endif // GOBYMODEL 
-#if PARTMIGRN
-	nheaders += 8;
-#endif // PARTMIGRN 
-#if RSDEBUG
-//DEBUGLOG << "ReadStageStructure{}: nheaders=" << nheaders << endl;
+	for (int i = 0; i < 22; i++) ssfile >> header;
+#else
+	for (int i = 0; i < 18; i++) ssfile >> header;
 #endif
-	for (int i = 0; i < nheaders; i++) ssfile >> header;
 	return 0;
 }
 
@@ -6114,7 +5840,7 @@ if (option == 9) { // close file
 }
 
 #if RSDEBUG
-DEBUGLOG << "ReadStageStructure{}: sstruct.nStages=" << sstruct.nStages << endl;
+DEBUGLOG << "ReadStageStructure{}: sstruct.nStages = " << sstruct.nStages << endl;
 #endif
 
 ssfile >> simulation;
@@ -6127,18 +5853,12 @@ ssfile >> postDestructn >> sstruct.probRep >> sstruct.repInterval >> sstruct.max
 if (postDestructn == 1) sstruct.disperseOnLoss = true;
 else sstruct.disperseOnLoss = false;
 
-ssfile >> name >> sstruct.survival; 
-#if SEASONAL
-// 'name' is SeasonFile
-seasonfile.open((Inputs+name).c_str());
-ReadSeasonFile(1,dem.nSeasons);
-seasonfile.close(); seasonfile.clear();
-#else
-// 'name' is TransMatrixFile
+ssfile >> name >> sstruct.survival; // 'name' is TransMatrixFile
+#if !PARTMIGRN
 tmfile.open((Inputs+name).c_str());
 ReadTransitionMatrix(0);
 tmfile.close(); tmfile.clear();
-#endif // SEASONAL 
+#endif
 
 float devCoeff,survCoeff;
 ssfile >> sstruct.fecDens >> sstruct.fecStageDens >> name; // 'name' is FecStageWtsFile
@@ -6159,21 +5879,6 @@ if (name != "NULL") {
 	ReadStageWeights(3);
 	sdfile.close(); sdfile.clear();
 }
-#if PARTMIGRN
-float prop;
-int resetmigrn;
-for (short i = 1; i < 7; i++) { ssfile >> prop; pSpecies->setPropDispMigrn(i,prop); }
-ssfile >> resetmigrn;
-if (resetmigrn == 1) pSpecies->setResetMigrn(true);
-else pSpecies->setResetMigrn(true);
-ssfile >> name; // 'name' is ExtremeFile
-if (name != "NULL") {
-	pLandscape->resetExtEvents();
-	extremefile.open((Inputs+name).c_str());
-	ReadExtremeFile(pLandscape,nseasons);
-	extremefile.close(); extremefile.clear();
-}
-#endif // PARTMIGRN 
 
 pSpecies->setStage(sstruct);
 
@@ -6185,7 +5890,7 @@ return 0;
 }
 
 //---------------------------------------------------------------------------
-#if SEASONAL
+#if PARTMIGRN
 int ReadTransitionMatrix(int season)  
 #else
 int ReadTransitionMatrix(int option)
@@ -6197,19 +5902,13 @@ double ss, dd;
 string header;
 demogrParams dem = pSpecies->getDemogr();
 stageParams sstruct = pSpecies->getStage();
-#if SEASONAL
-bool breeding = false;
-#if RSDEBUG
-//DEBUGLOG << "Read_TransitionMatrix(): season=" << season << endl;
-#endif
-#endif // SEASONAL
 
 // read header line
 for (int i = 0; i < (sstruct.nStages*sexesDem)+2; i++)
 {
 	tmfile >> header;
 #if RSDEBUG
-//DEBUGLOG << "Read_TransitionMatrix(): i= << i << " header=" << header << endl;
+//DEBUGLOG << "Read_TransitionMatrix(): i = " << i << " header = " << header << endl;
 #endif
 }
 
@@ -6232,23 +5931,15 @@ if (dem.repType != 2) { // asexual or implicit sexual model
 	for (int i = 0; i < sstruct.nStages; i++) { // i = row; j = coloumn
 		tmfile >> header;
 #if RSDEBUG
-//DEBUGLOG << "Read_TransitionMatrix(): i=" << i << " header=" << header << endl;
+//DEBUGLOG << "Read_TransitionMatrix(): i = " << i << " header = " << header << endl;
 #endif
-		for (int j = 0; j < sstruct.nStages; j++) {
-			tmfile >> matrix[j][i];
-#if RSDEBUG
-//DEBUGLOG << "Read_TransitionMatrix(): j=" << j << " matrix[j][i]=" << matrix[j][i] << endl;
-#endif
-		}
+		for (int j = 0; j < sstruct.nStages; j++) tmfile >> matrix[j][i];
 		tmfile >> minAge; pSpecies->setMinAge(i,0,minAge);
 	}
 
 	for (int j = 1; j < sstruct.nStages; j++)
-#if SEASONAL
-		{
+#if PARTMIGRN
 		pSpecies->setFec(season,j,0,matrix[j][0]);
-		if (matrix[j][0] > 0.0) breeding = true;
-		}
 #else
 		pSpecies->setFec(j,0,matrix[j][0]);
 #endif
@@ -6258,7 +5949,7 @@ if (dem.repType != 2) { // asexual or implicit sexual model
 			if (i == j) ss = matrix[j][i];
 			if (i == (j+1)) dd = matrix[j][i];
 		}
-#if SEASONAL
+#if PARTMIGRN
 		pSpecies->setSurv(season,j,0,ss+dd);
 		if ((ss+dd) > 0.0)
 			pSpecies->setDev(season,j,0,dd/(ss+dd));
@@ -6272,6 +5963,7 @@ if (dem.repType != 2) { // asexual or implicit sexual model
 			pSpecies->setDev(j,0,0.0);
 #endif
 	}
+
 }
 else { // complex sexual model
 #if RSDEBUG
@@ -6312,12 +6004,11 @@ else { // complex sexual model
 
 	ii = 1;
   for (int j = 2; j < sstruct.nStages*2; j++) {
-#if SEASONAL
+#if PARTMIGRN
 		if (j%2 == 0)
 			pSpecies->setFec(season,ii,1,matrix[j][0]);
 		else {
 			pSpecies->setFec(season,ii,0,matrix[j][0]);
-			if (matrix[j][0] > 0.0) breeding = true;
 			ii++;
 		}
 #else
@@ -6330,7 +6021,7 @@ else { // complex sexual model
 #endif
 	}
 	// survival and development of male juveniles
-#if SEASONAL
+#if PARTMIGRN
 	pSpecies->setSurv(season,0,1,(matrix[0][0]+matrix[0][1]));
 	if ((matrix[0][0]+matrix[0][1]) > 0.0)
 		pSpecies->setDev(season,0,1,(matrix[0][1]/(matrix[0][0]+matrix[0][1])));
@@ -6364,7 +6055,7 @@ else { // complex sexual model
 				if (j == i+1) ss = matrix[j][i];
 				if (j == i-1) dd = matrix[j][i];
 			}
-#if SEASONAL
+#if PARTMIGRN
 			pSpecies->setSurv(season,ii,1,(ss+dd));
 			if ((ss+dd) > 0.0)
 				pSpecies->setDev(season,ii,1,dd/(ss+dd));
@@ -6383,7 +6074,7 @@ else { // complex sexual model
 				if (j == i+1) ss = matrix[j][i];
 				if (j == i-1) dd = matrix[j][i];
 			}
-#if SEASONAL
+#if PARTMIGRN
 			pSpecies->setSurv(season,ii,0,(ss+dd));
 			if ((ss+dd) > 0.0)
 				pSpecies->setDev(season,ii,0,dd/(ss+dd));
@@ -6402,9 +6093,6 @@ else { // complex sexual model
 //	for (int j = 0; j < sstruct.nStages*2; j++) delete[] matrix[j];
 //	delete[] matrix;
 }
-#if SEASONAL
-pSpecies->setBreeding(season,breeding);
-#endif
 
 #if RSDEBUG
 DEBUGLOG << "Read_TransitionMatrix(): matrix = " << matrix;
@@ -6494,92 +6182,6 @@ DEBUGLOG << "Read_StageWeights(): completed reading survival weights matrix " <<
 
 return 0;
 }
-
-//---------------------------------------------------------------------------
-
-#if SEASONAL
-
-int ReadSeasonFile(const short option,const short nseasons) {
-#if RSDEBUG
-DEBUGLOG << "ReadSeasonFile(): option=" << option << " nseasons=" << nseasons << endl;
-#endif
-short season;        
-string name;
-//demogrParams dem = pSpecies->getDemogr();
-//stageParams sstruct = pSpecies->getStage();
-string Inputs = paramsSim->getDir(1);
-
-// read header line
-string header;
-int nheaders = 4;
-//#if PARTMIGRN
-//nheaders += 0;
-//#endif // PARTMIGRN 
-for (int i = 0; i < nheaders; i++) seasonfile >> header;
-
-for (int i = 0; i < nseasons; i++) {
-	seasonfile >> season;
-	seasonfile >> name; // 'name' is TransMatrixFile
-#if RSDEBUG
-DEBUGLOG << "ReadSeasonFile(): i=" << i << " season=" << season << " name=" << name << endl;
-#endif
-	tmfile.open((Inputs+name).c_str());
-	ReadTransitionMatrix(season);    
-	tmfile.close(); tmfile.clear();
-	extrmevent e;
-	seasonfile >> e.prob >> e.mort;
-	pSpecies->setExtreme(season,e);
-}
-
-// ADD SURVIVAL SCHEDULE AND/OR STAGE WEIGHTS HERE?????
-
-return 0;
-}
-
-#if PARTMIGRN
-
-int ReadExtremeFile(Landscape *pLandscape,const short nseasons) {
-#if RSDEBUG
-DEBUGLOG << "ReadExtremeFile(): nseasons=" << nseasons << endl;
-#endif
-
-// read header line
-string header;
-int nheaders;
-if (patchmodel) nheaders = 4;	
-else nheaders = 5;
-for (int i = 0; i < nheaders; i++) extremefile >> header;
-
-// Read data lines;
-extEvent e;        
-e.year = -98765;
-extremefile >> e.year;
-while (e.year != -98765) {
-	extremefile >> e.season;
-	if (patchmodel) {
-		extremefile >> e.patchID; e.x = e.y = 0;
-	}
-	else {
-		extremefile >> e.x >> e.y; e.patchID = 0;
-	}
-	extremefile >> e.probMort;
-	pLandscape->addExtEvent(e);
-
-	e.year = -98765;
-	extremefile >> e.year;
-	if (extremefile.eof()) e.year = -98765;
-} // end of while loop
-
-if (extremefile.is_open()) extremefile.close();
-extremefile.clear();
-
-return 0;
-}
-
-#endif // PARTMIGRN 
-
-#endif // SEASONAL
-
 
 //---------------------------------------------------------------------------
 int ReadEmigration(int option)
@@ -8134,7 +7736,7 @@ int read_error;
 bool params_ok;
 simParams sim = paramsSim->getSim();
 simView v = paramsSim->getViews();
-#if SEASONAL
+#if PARTMIGRN
 demogrParams dem = pSpecies->getDemogr();
 #endif
 
@@ -8227,18 +7829,10 @@ DEBUGLOG << endl;
 		int landcode;
 		if (paramsLand.patchModel) {
 			string pname = paramsSim->getDir(1) + name_patch;
-#if SEASONAL
-			landcode = pLandscape->readLandscape(nseasons,0,hname,pname);
-#else
 			landcode = pLandscape->readLandscape(0,hname,pname);
-#endif // SEASONAL 
 		}
 		else
-#if SEASONAL
-			landcode = pLandscape->readLandscape(nseasons,0,hname," ");
-#else
 			landcode = pLandscape->readLandscape(0,hname," ");
-#endif // SEASONAL 
 		if (landcode != 0) {
 			rsLog << "Landscape," << land_nr << ",ERROR,CODE," << landcode << endl;
 			cout << endl << "Error reading landscape " << land_nr << " - aborting" << endl;
@@ -8350,12 +7944,15 @@ DEBUGLOG << "RunBatch(): land_nr = " << land_nr << " paramsLand.nHab = " << para
 //DEBUGLOG << "RunBatch(): parameterFile = " << parameterFile
 //	<< " parameters.open() = " << pppp << endl;
 #endif
+#if PARTMIGRN
+		ReadSeasonFile(0,0);
+#endif
+#if PARTMIGRN
+// NOTE - AT PRESENT THERE IS A SINGLE SEASON FILE TO BE APPLIED TO ALL SIMULATIONS
+		ReadSeasonFile(1,dem.nSeasons);
+#endif
 		if (stagestruct) {
-#if SEASONAL && PARTMIGRN
-			ReadStageStructure(0,pLandscape);
-#else
 			ReadStageStructure(0);
-#endif  
 		}
 		ReadEmigration(0);
 		ReadTransfer(0,pLandscape);
@@ -8381,11 +7978,7 @@ DEBUGLOG << "RunBatch(): land_nr = " << land_nr << " paramsLand.nHab = " << para
 				params_ok = false;
 			}
 			if (stagestruct) {
-#if SEASONAL && PARTMIGRN
-				ReadStageStructure(1,pLandscape);
-#else
 				ReadStageStructure(1);
-#endif  
 			}
 			read_error = ReadEmigration(1);
 			if (read_error) {
@@ -8492,11 +8085,10 @@ DEBUGLOG << endl << "RunBatch(): i=" << i
 
 		// close input files
 		ReadParameters(9,pLandscape);
-#if SEASONAL && PARTMIGRN
-		if (stagestruct) ReadStageStructure(9,pLandscape);
-#else
+#if PARTMIGRN
+		ReadSeasonFile(9,9);
+#endif
 		if (stagestruct) ReadStageStructure(9);
-#endif  
 		ReadEmigration(9);
 		ReadTransfer(9,pLandscape);
 		ReadSettlement(9);

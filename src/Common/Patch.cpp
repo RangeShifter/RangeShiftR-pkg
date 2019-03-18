@@ -8,11 +8,20 @@
 
 //---------------------------------------------------------------------------
 
-Patch::Patch(int seqnum,int num) {
+#if SEASONAL
+Patch::Patch(int seqnum,int num,short nseasons) 
+#else
+Patch::Patch(int seqnum,int num) 
+#endif // SEASONAL 
+{
 patchSeqNum = seqnum; patchNum = num; nCells = 0;
 xMin = yMin = 999999999; xMax = yMax = 0; x = y = 0;
 subCommPtr = 0;
+#if SEASONAL
+for (int i = 0; i < nseasons; i++) localK.push_back(0.0);
+#else
 localK = 0.0;
+#endif // SEASONAL 
 for (int sex = 0; sex < NSEXES; sex++) {
 	nTemp[sex] = 0;
 }
@@ -22,6 +31,9 @@ changed = false;
 Patch::~Patch() {
 cells.clear();
 popns.clear();
+#if SEASONAL
+localK.clear();
+#endif // SEASONAL 
 }
 
 int Patch::getSeqNum(void) { return patchSeqNum; }
@@ -107,8 +119,22 @@ locn loc;
 int xsum,ysum;
 short hx;
 float k,q,envval;
+#if SEASONAL
+int nseasons = (int)localK.size();
+int *nsuitable = new int[nseasons];
+for (int s = 0; s < nseasons; s++) {
+	localK[s] = 0.0;
+	nsuitable[s] = 0;
+}
+#if RSDEBUG
+//DEBUGLOG << "Patch::setCarryingCapacity(): patchNum=" << patchNum
+//	<< " nseasons=" << nseasons 
+//	<< endl;
+#endif
+#else
 localK = 0.0; // no. of suitable cells (unadjusted K > 0) in the patch
 int nsuitable = 0;
+#endif // SEASONAL 
 double mean;
 
 #if RSDEBUG
@@ -120,7 +146,11 @@ double mean;
 if (xMin > landlimits.xMax || xMax < landlimits.xMin
 ||  yMin > landlimits.yMax || yMax < landlimits.yMin) {
 	// patch lies wholely outwith current landscape limits
+#if !SEASONAL
+	// NB the next statement is unnecessary, as localK has been set to zero above
+	//    retained only for consistency in standard variant
 	localK = 0.0;
+#endif // !SEASONAL 
 #if RSDEBUG
 //DEBUGLOG << "Patch::setCarryingCapacity(): patchNum=" << patchNum
 //	<< " localK=" << localK
@@ -145,6 +175,43 @@ for (int i = 0; i < ncells; i++) {
 			envval += epsGlobal;
     }
 	}
+#if SEASONAL
+	for (int s = 0; s < nseasons; s++) {
+		switch (rasterType) {
+		case 0: // habitat codes
+			hx = cells[i]->getHabIndex(landIx);
+			k = pSpecies->getHabK(hx,s);
+			if (k > 0.0) {
+				(nsuitable[s])++;
+				localK[s] += envval * k;
+			}
+#if RSDEBUG
+//DEBUGLOG << "Patch::setCarryingCapacity(): patchNum=" << patchNum
+//	<< " i=" << i << " s=" << s << " hx=" << hx << " k=" << k << " localK[s]=" << localK[s]
+//	<< endl;
+#endif
+			break;
+		case 1: // cover %
+			k = 0.0;
+			for (int j = 0; j < nHab; j++) { // loop through cover layers
+				q = cells[i]->getHabitat(j);
+				k += q * pSpecies->getHabK(j,s) / 100.0;
+			}
+			if (k > 0.0) {
+				(nsuitable[s])++;
+				localK[s] += envval * k;
+			}
+			break;
+		case 2: // habitat quality
+			q = cells[i]->getHabitat(landIx);
+			if (q > 0.0) {
+				(nsuitable[s])++;
+				localK[s] += envval * pSpecies->getHabK(0,s) * q / 100.0;
+			}
+			break;
+		}
+	}
+#else
 	switch (rasterType) {
 	case 0: // habitat codes
 		hx = cells[i]->getHabIndex(landIx);
@@ -173,6 +240,7 @@ for (int i = 0; i < ncells; i++) {
 		}
 		break;
 	}
+#endif // SEASONAL 
 #if RSDEBUG
 //DEBUGLOG << "Patch::setCarryingCapacity(): patchNum=" << patchNum
 //	<< " i=" << i << " hx=" << hx << " q=" << q << " k=" << k << " localK=" << localK
@@ -197,6 +265,19 @@ if (env.stoch && env.inK) { // environmental stochasticity in K
 	// apply min and max limits to K over the whole patch
 	// NB limits have been stored as N/cell rather than N/ha
 	float limit;
+#if SEASONAL
+	for (int s = 0; s < nseasons; s++) {
+		limit = pSpecies->getMinMax(0) * (float)(nsuitable[s]);
+		if (localK[s] < limit) localK[s] = limit;
+#if RSDEBUG
+//DEBUGLOG << "Patch::setCarryingCapacity(): patchNum=" << patchNum
+//	<< " limit=" << limit << " localK=" << localK
+//	<< endl;
+#endif
+		limit = pSpecies->getMinMax(1) * (float)(nsuitable[s]);
+		if (localK[s] > limit) localK[s] = limit;		
+	}
+#else
 	limit = pSpecies->getMinMax(0) * (float)nsuitable;
 	if (localK < limit) localK = limit;
 #if RSDEBUG
@@ -206,6 +287,7 @@ if (env.stoch && env.inK) { // environmental stochasticity in K
 #endif
 	limit = pSpecies->getMinMax(1) * (float)nsuitable;
 	if (localK > limit) localK = limit;
+#endif // SEASONAL 
 #if RSDEBUG
 //DEBUGLOG << "Patch::setCarryingCapacity(): patchNum=" << patchNum
 //	<< " limit=" << limit << " localK=" << localK
@@ -219,7 +301,22 @@ if (env.stoch && env.inK) { // environmental stochasticity in K
 #endif
 }
 
+#if SEASONAL
+float Patch::getK(int season) { 
+if (season >= 0 && season < (int)localK.size()) return localK[season];
+else return 0.0; 
+}
+bool Patch::suitableInAllSeasons(void) {
+int nseasons = (int)localK.size();
+bool ok = true;
+for (int i = 0; i < nseasons; i++) {
+	if (localK[i] <= 0.0) ok = false;
+}
+return ok;
+}
+#else
 float Patch::getK(void) { return localK; }
+#endif // SEASONAL 
 
 // Return co-ordinates of a specified cell
 locn Patch::getCell(int ix) {

@@ -21,13 +21,8 @@ pGenome = 0;
 #endif
 
 // Individual constructor
-#if PARTMIGRN
-Individual::Individual(Species *pSpecies,Cell *pCell,Patch *pPatch,short stg,short a, 
-	short repInt,float probmale,bool movt,short moveType)
-#else
-Individual::Individual(Cell *pCell,Patch *pPatch,short stg,short a,short repInt,
-	float probmale,bool movt,short moveType)
-#endif // PARTMIGRN 
+Individual::Individual(Cell *pCell, Patch *pPatch, short stg, short a, short repInt,
+	float probmale, bool movt, short moveType)
 {
 indId = indCounter; indCounter++; // unique identifier for each individual
 #if RSDEBUG
@@ -53,30 +48,10 @@ if (probmale <= 0.0) sex = 0;
 else sex = pRandom->Bernoulli(probmale);
 age = a;
 status = 0;
-#if SEASONAL
-npatches = 0;
 #if PARTMIGRN
 migrnstatus = 0;
-npatches = 6; // <======= TO BE SET AS A PARAMETER =============================
-// set dispersal/migration status
-double cumprop = 0.0;
-//cumprop[0] = 0.0;
-double r = pRandom->Random();
-for (int i = 1; i < 7; i++) {
-	cumprop += pSpecies->getPropDispMigrn(i);
-	if (r < cumprop) {
-		setMigrnStatus(i);
-#if RSDEBUG
-//DEBUGLOG << "Individual::Individual(): indId=" << indId
-//	<< " i=" << i << " cumprop=" << cumprop << " r=" << r
-//	<< endl;
+npatches = 0; 									
 #endif
-		i = 7;
-	}
-}
-#endif // PARTMIGRN 
-#endif // SEASONAL
-
 if (sex == 0 && repInt > 0) { // set no. of fallow seasons for female
 	fallow = pRandom->IRandom(0,repInt);
 }
@@ -90,26 +65,17 @@ asocial = false;
 #endif
 pPrevCell = pCurrCell = pCell;
 pNatalPatch = pPatch;
-#if SEASONAL
-pPrevPatch = pPatch;
-#endif
 if (movt) {
 	locn loc = pCell->getLocn();
 	path = new pathData;
 	path->year = 0; path->total = 0; path->out = 0;
-#if SEASONAL
-	path->season= 0;
-#endif
 	path->pSettPatch = 0; path->settleStatus = 0;
 //	path->leftNatalPatch = false;
 	if (moveType == 1) { // SMS
 		// set up location data for SMS
 		smsData = new smsdata;
 		smsData->prev.x = loc.x; smsData->prev.y = loc.y; // previous location
-		smsData->goal.x = loc.x; smsData->goal.y = loc.y; // goal location - initialised for dispersal bias
-#if PARTMIGRN
-		smsData->goalType = 0;
-#endif  // PARTMIGRN 
+		smsData->goal.x = loc.x; smsData->goal.y = loc.y; // goal location - NOT YET USED ...
 	}
 	else smsData = 0;
 	if (moveType == 2) { // CRW
@@ -147,10 +113,6 @@ if (kerntraits != 0) delete kerntraits;
 if (setttraits != 0) delete setttraits;
 
 if (pGenome != 0) delete pGenome;
-
-#if SEASONAL
-patches.clear();
-#endif
 }
 
 //---------------------------------------------------------------------------
@@ -692,21 +654,14 @@ int Individual::getGroupId(void) { return groupId; }
 int Individual::getSex(void) { return sex; }
 
 int Individual::getStatus(void) { return status; }
-#if SEASONAL
 #if PARTMIGRN
 int Individual::getMigrnStatus(void) { return migrnstatus; }
-#endif // PARTMIGRN 
-#endif // SEASONAL
+#endif
 
 indStats Individual::getStats(void) {
 indStats s;
 s.stage = stage; s.sex = sex; s.age = age; s.status = status; s.fallow = fallow;
 s.isDeveloping = isDeveloping;
-#if SEASONAL
-#if PARTMIGRN
-s.migrnstatus = migrnstatus;
-#endif // PARTMIGRN 
-#endif // SEASONAL
 #if GOBYMODEL
 s.asocial = asocial;
 #endif
@@ -723,14 +678,6 @@ bool Individual::isAsocial(void) { return asocial; }
 #endif
 
 Cell* Individual::getLocn(const short option) {
-#if SEASONAL
-if (option == 2) { // return a random location in the previous patch
-//	Cell *pCell;
-//	pCell = pPrevPatch->getRandomCell();
-	return pPrevPatch->getRandomCell();
-
-}
-#endif
 if (option == 0) { // return previous location
 	return pPrevCell;
 }
@@ -757,15 +704,9 @@ pathSteps Individual::getSteps(void) {
 pathSteps s;
 if (path == 0) {
 	s.year = 0; s.total = 0; s.out = 0;
-#if SEASONAL
-	s.season = 0;
-#endif
 }
 else {
 	s.year = path->year; s.total = path->total; s.out = path->out;
-#if SEASONAL
-	s.season = path->season;
-#endif
 }
 return s;
 }
@@ -785,19 +726,14 @@ void Individual::setSettPatch(const settlePatch s) {
 if (path == 0) {
 	path = new pathData;
 	path->year = 0; path->total = 0; path->out = 0; path->settleStatus = 0;
-#if SEASONAL
-	path->season = 0;
-#endif
 }
 if (s.settleStatus >= 0 && s.settleStatus <= 2) path->settleStatus = s.settleStatus;
 path->pSettPatch = s.pSettPatch;
 }
 
-#if SEASONAL
-void Individual::resetPathSeason(void) {
-if (path != 0) path->season = 0;
-}
-#endif
+//void Individual::resetPathOut(void) {
+//if (path == 0) path->out = 0;
+//}
 
 // Set phenotypic emigration traits
 void Individual::setEmigTraits(Species *pSpecies,short emiggenelocn,short nemigtraits,
@@ -1333,127 +1269,12 @@ return l;
 
 void Individual::setStatus(short s) {
 if (s >= 0 && s <= 9) status = s;
-status = s;
 }
-#if SEASONAL
 #if PARTMIGRN
 void Individual::setMigrnStatus(short m) {
-if (m >= 0 && m <= 6) migrnstatus = m;
+if (m >= 0 && m <= 0) migrnstatus = m;
 }
-void Individual::setPrevPatch(Patch *pPatch) {
-pPrevPatch = pPatch;
-}
-#endif // PARTMIGRN
-#endif // SEASONAL
-
-#if SEASONAL
-#if PARTMIGRN
-
-//void Individual::setNpatches(const short n) {
-//if (n > 0) npatches = n;
-//}
-
-void Individual::addPatch(patchlist p) {
-int size = (int)patches.size();
-#if RSDEBUG
-//DEBUGLOG << "Individual::addPatch(): indId=" << indId
-//	<< " size=" << size << " Patch=" << p.pPatch->getPatchNum()
-//	<< " p.season=" << p.season << " p.breeding=" << p.breeding
-//	<< endl;
 #endif
-if (migrnstatus >= 4 && p.pPatch == pNatalPatch ) {
-	// a disperser may not remember its natal patch
-	return;
-}
-bool present = false;
-//bool fixed;
-if (p.breeding) {
-	p.fixed = true;
-}
-else {
-	if (migrnstatus == 3 || migrnstatus == 6) p.fixed = false;
-	else p.fixed = true;
-}
-for (int i = 0; i < size; i++) {                
-	if (patches[i].pPatch == p.pPatch && patches[i].breeding == p.breeding) {
-		present = true;
-//		patches[i].fixed = p.fixed;
-		patches[i].fixed = p.fixed;
-	}
-	if (patches[i].pPatch != p.pPatch && patches[i].breeding == p.breeding) {
-		// un-fix another patch previous fixed for the same breeding status
-		patches[i].fixed = false;     
-	}
-//	if (present) break;
-}
-if (!present) patches.push_back(p);
-size = (int)patches.size();
-#if RSDEBUG
-//DEBUGLOG << "Individual::addPatch(): indId=" << indId
-//	<< " size=" << size 
-//	<< endl;
-#endif
-}
-
-patchlist Individual::getPatch(const int n) {
-patchlist p;      
-int size = (int)patches.size();
-if (n >= 0 && n < size) {
-	p = patches[n];
-}
-else {
-	p.pPatch = 0; p.season = 0; p.breeding = p.fixed = false;
-}
-return p;
-}
-
-void Individual::setGoal(const locn loc,const short	gtype,const bool breeding) {
-#if RSDEBUG
-//DEBUGLOG << "Individual::setGoal(): indId=" << indId
-//	<< " gtype=" << gtype 
-//	<< " breeding=" << breeding 
-//	<< " smsData=" << smsData 
-//	<< endl;
-#endif
-if (smsData != 0) {
-	if (gtype >= 0 && gtype <= 2) {
-		if (gtype == 1) {
-			// set goal to fixed patch (if any) appropriate to season
-			smsData->goalType = 0;
-			int size = (int)patches.size();
-//			patchlist p; p.pPatch = 0; p.fixed = false;
-			for (int i = 0; i < size; i++) { 
-#if RSDEBUG
-//DEBUGLOG << "Individual::setGoal(): indId=" << indId
-//	<< " size=" << size 
-//	<< " i=" << i 
-//	<< " patches[i].Patch=" << patches[i].pPatch->getPatchNum() 
-//	<< " patches[i].fixed=" << patches[i].fixed 
-//	<< " patches[i].breeding=" << patches[i].breeding 
-//	<< endl;
-#endif
-				if (patches[i].fixed && patches[i].breeding == breeding) {   
-					smsData->goalType = 1; 
-					smsData->goal = patches[i].pPatch->getRandomCell()->getLocn();
-#if RSDEBUG
-//DEBUGLOG << "Individual::setGoal(): indId=" << indId
-//	<< " goal.x=" << smsData->goal.x 
-//	<< " goal.y=" << smsData->goal.y 
-//	<< endl;
-#endif
-					i = size;
-				}
-			}
-		}
-		else {
-			smsData->goalType = gtype; smsData->goal = loc;
-		}
-	}
-}
-}
-
-#endif // PARTMIGRN 
-#endif // SEASONAL
 
 void Individual::developing(void) {
 isDeveloping = true;
@@ -1506,13 +1327,8 @@ if (newCell != 0) {
 // Move to a new cell by sampling a dispersal distance from a single or double
 // negative exponential kernel
 // Returns 1 if still dispersing (including having found a potential patch), otherwise 0
-#if SEASONAL
-int Individual::moveKernel(Landscape *pLandscape,Species *pSpecies,
-	const short repType,const short nextseason,const bool absorbing)
-#else
 int Individual::moveKernel(Landscape *pLandscape,Species *pSpecies,
 	const short repType,const bool absorbing)
-#endif // SEASONAL 
 {
 
 intptr patch;
@@ -1696,11 +1512,7 @@ if (loopsteps < 1000) {
 	else {
 		pCurrCell = pCell;
 		if (pPatch == 0) localK = 0.0; // matrix
-#if SEASONAL
-		else localK = pPatch->getK(nextseason);
-#else
 		else localK = pPatch->getK();
-#endif // SEASONAL 
 		if (patchNum > 0 && localK > 0.0) { // found a new patch
 			status = 2; // record as potential settler
 		}
@@ -1756,13 +1568,8 @@ return dispersing;
 //---------------------------------------------------------------------------
 // Make a single movement step according to a mechanistic movement model
 // Returns 1 if still dispersing (including having found a potential patch), otherwise 0
-#if SEASONAL
-int Individual::moveStep(Landscape *pLandscape,Species *pSpecies,
-	const short landIx,const short nextseason,const bool absorbing)
-#else
 int Individual::moveStep(Landscape *pLandscape,Species *pSpecies,
 	const short landIx,const bool absorbing)
-#endif // SEASONAL 
 {
 
 if (status != 1) return 0; // not currently dispersing
@@ -1845,7 +1652,7 @@ if (pPatch == pNatalPatch && path->out == 0 && path->year == path->total) {
 	mortprob = 0.0;
 }
 #if RSDEBUG
-locn loc0,loc1,loc2;
+//locn loc0,loc1,loc2;
 //loc0 = pCurrCell->getLocn();
 //DEBUGLOG << "Individual::moveStep() BBBB: indId=" << indId << " status=" << status
 //	<< " path->year=" << path->year << " path->out=" << path->out
@@ -1867,9 +1674,6 @@ if (pRandom->Bernoulli(mortprob)) { // individual dies
 }
 else { // take a step
 	(path->year)++;
-#if SEASONAL
-	(path->season)++;
-#endif
 	(path->total)++;
 //	if (pPatch != pNatalPatch || path->out > 0) (path->out)++;
 	if (patch == 0 || pPatch == 0 || patchNum == 0) { // not in a patch
@@ -1885,22 +1689,15 @@ else { // take a step
 #if RSDEBUG                   
 //loc1 = pCurrCell->getLocn();      
 //DEBUGLOG << "Individual::moveStep() FFFF: indId=" << indId << " status=" << status
-////	<< " path->year=" << path->year
-//	<< " path->season=" << path->season
+//	<< " path->year=" << path->year
 //	<< " x=" << loc1.x << " y=" << loc1.y
-//	<< " smsData->goalType=" << smsData->goalType
-//	<< " goal.x=" << smsData->goal.x
-//	<< " goal.y=" << smsData->goal.y
+////	<< " smsData=" << smsData
 //	<< endl;
 #endif
 #if EVOLSMS
 		move = smsMove(pLandscape,pSpecies,landIx,pPatch==pNatalPatch,trfr.indVar,absorbing);
 #else
-#if PARTMIGRN
-		move = smsMove(pLandscape,pSpecies,landIx,pPatch==pPrevPatch,absorbing);
-#else
 		move = smsMove(pLandscape,pSpecies,landIx,pPatch==pNatalPatch,absorbing);
-#endif  // PARTMIGRN 
 #endif
 #if RSDEBUG
 //DEBUGLOG << "Individual::moveStep() GGGG: indId=" << indId << " status=" << status
@@ -2078,49 +1875,14 @@ else { // take a step
 	if (patch > 0  // not no-data area or matrix
 	&&  path->total >= settsteps.minSteps) {
 		pPatch = (Patch*)patch;
-#if PARTMIGRN
-		bool ok = false;
-		if (pPatch != pPrevPatch
-		&& (migrnstatus < 4 || pPatch != pNatalPatch)) {
-			if (smsData->goalType == 1) {
-				// aiming for a goal - check if goal patch has been reached
-				Cell *pCell = pLandscape->findCell(smsData->goal.x,smsData->goal.y);
-				if (pCell != 0) {
-					Patch *pGoalPatch = (Patch*)pCell->getPatch();
-					if (pPatch == pGoalPatch) ok = true;
-				}
-			}
-			else {
-				if (migrnstatus == 4) { // disperser resident
-					// may settle in a patch only if it has non-zero K in ALL seasons
-					// otherwise it is unsuitable
-					ok = pPatch->suitableInAllSeasons();
-				}
-				else ok = true;
-			}
-		}
-		if (ok)
-#else
-		if (pPatch != pNatalPatch) 
-#endif  // PARTMIGRN 
-		{
+		if (pPatch != pNatalPatch) {
 			// determine whether the new patch is potentially suitable
-#if SEASONAL
-			if (pPatch->getK(nextseason) > 0.0) 
-#else
-			if (pPatch->getK() > 0.0) 
-#endif // SEASONAL 
-			{ // patch is suitable
+			if (pPatch->getK() > 0.0) { // patch is suitable
 					status = 2;
 			}
 		}
 	}
 	if (status != 2 && status != 6) { // suitable patch not found, not already dead
-#if PARTMIGRN
-		if (path->season >= settsteps.maxStepsYr || path->season >= settsteps.maxSteps) {
-			status = 6; 
-		}
-#else
 		if (path->year >= settsteps.maxStepsYr) {
 			status = 3; // waits until next year
 		}
@@ -2128,7 +1890,6 @@ else { // take a step
 			status = 6; // dies
 			dispersing = 0;
 		}
-#endif
 	}
 } // end of single movement step
 
@@ -2202,16 +1963,9 @@ else {
 #else
 if ((path->out > 0 && path->out <= (movt.pr+1))
 || 	natalPatch
-|| (movt.straigtenPath && path->settleStatus > 0)) {
-#if PARTMIGRN
-	if (smsData->goalType == 1) 
-		// do not inflate DP so as not to swamp GB 
-		nbr = getSimDir(current.x,current.y,movt.dp);		
-	else
-#endif  // PARTMIGRN 
+|| (movt.straigtenPath && path->settleStatus > 0))
 	// inflate directional persistence to promote leaving the patch
 	nbr = getSimDir(current.x,current.y,10.0*movt.dp);
-}
 else
 	nbr = getSimDir(current.x,current.y,movt.dp);
 #endif
@@ -2275,23 +2029,7 @@ if (movt.goalType == 2) { // dispersal bias
 #endif
 }
 else gb = movt.gb;
-#if PARTMIGRN
-if (smsData->goalType == 1) {
-	if ((path->out > 0 && path->out <= (movt.pr+1))
-	|| 	natalPatch
-	|| (movt.straigtenPath && path->settleStatus > 0)) {
-		// inflate goal bias to promote leaving the patch in the bias direction
-		goal = getGoalBias(current.x,current.y,smsData->goalType,10.0*gb);  
-	}
-	else {
-		goal = getGoalBias(current.x,current.y,smsData->goalType,gb);  
-	}
-}
-else
-	goal = getGoalBias(current.x,current.y,smsData->goalType,gb);  
-#else
 goal = getGoalBias(current.x,current.y,movt.goalType,gb);
-#endif  // PARTMIGRN 
 //if (write_out) {
 //	out<<"goal bias weights:"<<endl;
 //	for (y2 = 2; y2 > -1; y2--) {
@@ -2625,9 +2363,7 @@ else {
 		return d;
 	}
 	if (goaltype == 1) {
-#if PARTMIGRN
-		theta = atan2((double)(smsData->goal.x - x),(double)(smsData->goal.y - y));
-#else
+//		theta = atan2((double)(smsData->goal.x - x),(double)(smsData->goal.y - y));
 		// TEMPORARY CODE - GOAL TYPE 1 NOT YET IMPLEMENTED, AS WE HAVE NO MEANS OF
 		// CAPTURING THE GOAL LOCATION OF EACH INDIVIDUAL
 		for (xx = 0; xx < 3; xx++) {
@@ -2636,7 +2372,6 @@ else {
 			}
 		}
 		return d;
-#endif  // PARTMIGRN 
 	}
 	else // goaltype == 2
 		theta = atan2((double)(x - smsData->goal.x),(double)(y - smsData->goal.y));

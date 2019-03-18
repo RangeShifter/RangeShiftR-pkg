@@ -43,7 +43,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 10 April 2017 by Steve Palmer
+Last updated: 12 November 2017 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -158,6 +158,14 @@ struct patchChange {
 	int chgnum,x,y,oldpatch,newpatch;
 };
 
+#if SEASONAL
+#if PARTMIGRN
+struct extEvent { // extreme event
+	int year,season,patchID,x,y; float probMort;
+};
+#endif // PARTMIGRN 
+#endif // SEASONAL 
+
 class Landscape{
 public:
 	Landscape();
@@ -205,6 +213,21 @@ public:
 	void setCellArray(void);
 	void addPatchNum(int);
 	void generatePatches(void); 		// create an artificial landscape
+#if SEASONAL
+	void allocatePatches( // create patches for a cell-based landscape
+		Species*,		// pointer to Species
+		short				// no. of seasons
+	);	
+	Patch* newPatch(
+		int,		// patch sequential no. (id no. is set to equal sequential no.)
+		short		// no. of seasons
+	);
+	Patch* newPatch(
+		int,	  // patch sequential no.
+		int,		// patch id no.
+		short		// no. of seasons
+	);
+#else
 	void allocatePatches(Species*);	// create patches for a cell-based landscape
 	Patch* newPatch(
 		int		// patch sequential no. (id no. is set to equal sequential no.)
@@ -213,6 +236,7 @@ public:
 		int,  // patch sequential no.
 		int		// patch id no.
 	);
+#endif // SEASONAL 
 	void resetPatches(void);
 	void addNewCellToLand(
 		int,    // x co-ordinate
@@ -272,10 +296,18 @@ public:
 	);
 	int patchCount(void);
 	void updateHabitatIndices(void);
+#if SEASONAL
+	void setEnvGradient(
+		Species*,	// pointer to Species
+		short,		// no. of seasons
+		bool      // TRUE for initial instance that gradient is set
+	);
+#else
 	void setEnvGradient(
 		Species*, // pointer to Species
 		bool      // TRUE for initial instance that gradient is set
 	);
+#endif // SEASONAL 
 	void setGlobalStoch(
 		int		// no. of years
 	);
@@ -393,19 +425,37 @@ public:
 	bool outConnectHeaders( // Write connectivity file headers
 		int		// option - set to -999 to close the connectivity file
 	);
+#if SEASONAL
+	void outConnect(
+		int,	// replicate no.
+		int,  // year
+		short // season
+	);
+#else
 	void outConnect(
 		int,	// replicate no.
 		int   // year
 	);
+#endif // SEASONAL 
 
 	// functions to handle input and output
 
+#if SEASONAL
+	int readLandscape(
+		int,		// no. of seasonss
+		int,		// fileNum == 0 for (first) habitat file and optional patch file
+						// fileNum > 0  for subsequent habitat files under the %cover option
+		string,	// habitat file name
+		string	// patch file name
+	);
+#else
 	int readLandscape(
 		int,		// fileNum == 0 for (first) habitat file and optional patch file
 						// fileNum > 0  for subsequent habitat files under the %cover option
 		string,	// habitat file name
 		string	// patch file name
 	);
+#endif // SEASONAL 
 	void listPatches(void);
 	int readCosts(
 		string	// costs file name
@@ -434,6 +484,16 @@ public:
 // Returns connectivity (no. of successful dispersers) for given start and end patches
 int outABCconnect(int,int);
 #endif
+
+#if SEASONAL
+#if PARTMIGRN
+	// extreme events
+	void addExtEvent(extEvent);
+	extEvent getExtEvent(int);
+	void resetExtEvents(void);
+	int numExtEvents(void);
+#endif // PARTMIGRN 
+#endif // SEASONAL 
 
 private:
 	bool generated;				// artificially generated?
@@ -499,6 +559,13 @@ private:
 	// where there are three periods, 0=original 1=previous 2=current
 	int ***patchChgMatrix;
 
+#if SEASONAL
+#if PARTMIGRN
+	// extreme events
+	std::vector <extEvent> extevents;
+#endif // PARTMIGRN 
+#endif // SEASONAL 
+	
 };
 
 // NOTE: the following function is not a behaviour of Landscape, as it is run by the

@@ -573,7 +573,11 @@ setCellArray();
 
 int patchnum = 0;  // initial patch number for cell-based landscape
 // create patch 0 - the matrix patch (even if there is no matrix)
+#if SEASONAL
+newPatch(patchnum++,1);
+#else
 newPatch(patchnum++);
+#endif // SEASONAL 
 
 // as landscape generator returns cells in a random sequence, first set up all cells
 // in the landscape in the correct sequence, then update them and create patches for
@@ -609,7 +613,11 @@ if (fractal) {
 		pCell = findCell(x,y);
 		if (continuous) {
 			if (iter->value > 0.0) { // habitat
+#if SEASONAL
+				pPatch = newPatch(patchnum++,1);
+#else
 				pPatch = newPatch(patchnum++);
+#endif // SEASONAL 
 				addCellToPatch(pCell,pPatch,iter->value);
 			}
 			else { // matrix
@@ -621,7 +629,11 @@ if (fractal) {
 				addCellToPatch(pCell,patches[0]);
 			}
 			else { // habitat
+#if SEASONAL
+				pPatch = newPatch(patchnum++,1);
+#else
 				pPatch = newPatch(patchnum++);
+#endif // SEASONAL 
 				addCellToPatch(pCell,pPatch);
 				pCell->changeHabIndex(0,1);
 			}
@@ -650,7 +662,11 @@ else { // random landscape
 //	<< " i=" << i << " patchnum=" << patchnum
 //	<< endl;
 #endif
+#if SEASONAL
+		pPatch = newPatch(patchnum++,1);
+#else
 		pPatch = newPatch(patchnum++);
+#endif // SEASONAL 
 		pCell = findCell(x,y);
 		if (continuous) {
 			addCellToPatch(pCell,pPatch);
@@ -702,7 +718,11 @@ else { // random landscape
 //---------------------------------------------------------------------------
 /* Create a patch for each suitable cell of a cell-based landscape (all other
 habitat cells are added to the matrix patch) */
+#if SEASONAL
+void Landscape::allocatePatches(Species *pSpecies,short nseasons)
+#else
 void Landscape::allocatePatches(Species *pSpecies)
+#endif // SEASONAL 
 {
 #if RSDEBUG
 //DEBUGLOG << "Landscape::allocatePatches(): pSpecies=" << pSpecies
@@ -724,7 +744,11 @@ for (int i = 0; i < npatches; i++) {
 }
 patches.clear();
 // create the matrix patch
+#if SEASONAL
+patches.push_back(new Patch(0,0,nseasons));
+#else
 patches.push_back(new Patch(0,0));
+#endif // SEASONAL 
 Patch *matrixPatch = patches[0];
 #if RSDEBUG
 //DEBUGLOG << "Landscape::allocatePatches(): npatches=" << npatches
@@ -748,7 +772,13 @@ case 0: // habitat codes
 				habK = 0.0;
 				int nhab = pCell->nHabitats();
 				for (int i = 0; i < nhab; i++) {
+#if SEASONAL
+					for (int j = 0; j < nseasons; j++) {
+						habK += pSpecies->getHabK(pCell->getHabIndex(i),j);						
+					}
+#else
 					habK += pSpecies->getHabK(pCell->getHabIndex(i));
+#endif // SEASONAL 
 #if RSDEBUG
 //DEBUGLOG << "Landscape::allocatePatches(): x=" << x << " y=" << y
 //	<< " i=" << i
@@ -758,7 +788,11 @@ case 0: // habitat codes
 #endif
 				}
 				if (habK > 0.0) { // cell is suitable - create a patch for it
+#if SEASONAL
+					pPatch = newPatch(patchnum++,nseasons);
+#else
 					pPatch = newPatch(patchnum++);
+#endif // SEASONAL 
 					addCellToPatch(pCell,pPatch);
 				}
 				else { // cell is not suitable - add to the matrix patch
@@ -782,7 +816,13 @@ case 1: // habitat cover
 //				for (int i = 0; i < nHab; i++)
 				for (int i = 0; i < nhab; i++)
 				{
+#if SEASONAL
+					for (int j = 0; j < nseasons; j++) {
+						habK += pSpecies->getHabK(i,j) * pCell->getHabitat(i) / 100.0;						
+					}
+#else
 					habK += pSpecies->getHabK(i) * pCell->getHabitat(i) / 100.0;
+#endif // SEASONAL 
 #if RSDEBUG
 //DEBUGLOG << "Landscape::allocatePatches(): x=" << x << " y=" << y
 //	<< " i=" << i
@@ -792,7 +832,11 @@ case 1: // habitat cover
 #endif
 				}
 				if (habK > 0.0) { // cell is suitable - create a patch for it
+#if SEASONAL
+					pPatch = newPatch(patchnum++,nseasons);
+#else
 					pPatch = newPatch(patchnum++);
+#endif // SEASONAL 
 					addCellToPatch(pCell,pPatch);
 				}
 				else { // cell is not suitable - add to the matrix patch
@@ -816,7 +860,13 @@ case 2: // habitat quality
 //				for (int i = 0; i < nHab; i++)
 				for (int i = 0; i < nhab; i++)
 				{
+#if SEASONAL
+					for (int j = 0; j < nseasons; j++) {
+						habK += pSpecies->getHabK(0,j) * pCell->getHabitat(i) / 100.0;						
+					}
+#else
 					habK += pSpecies->getHabK(0) * pCell->getHabitat(i) / 100.0;
+#endif // SEASONAL 
 #if RSDEBUG
 //DEBUGLOG << "Landscape::allocatePatches(): x=" << x << " y=" << y
 //	<< " i=" << i
@@ -826,7 +876,11 @@ case 2: // habitat quality
 #endif
 				}
 				if (habK > 0.0) { // cell is suitable (at some time) - create a patch for it
+#if SEASONAL
+					pPatch = newPatch(patchnum++,nseasons);
+#else
 					pPatch = newPatch(patchnum++);
+#endif // SEASONAL 
 					addCellToPatch(pCell,pPatch);
 				}
 				else { // cell is never suitable - add to the matrix patch
@@ -845,15 +899,42 @@ case 2: // habitat quality
 
 }
 
-Patch* Landscape::newPatch(int num) {
+#if SEASONAL
+Patch* Landscape::newPatch(int num,short nseasons) 
+#else
+Patch* Landscape::newPatch(int num) 
+#endif // SEASONAL 
+{
 int npatches = (int)patches.size();
+#if SEASONAL
+patches.push_back(new Patch(num,num,nseasons));
+#if RSDEBUG
+DEBUGLOG << "Landscape::newPatch(): nseasons= " << nseasons << " num=" << num
+	<< " npatches=" << (int)patches.size() << endl;
+#endif
+#else
 patches.push_back(new Patch(num,num));
+#endif // SEASONAL 
 return patches[npatches];
 }
 
-Patch* Landscape::newPatch(int seqnum,int num) {
+#if SEASONAL
+Patch* Landscape::newPatch(int seqnum,int num,short nseasons) 
+#else
+Patch* Landscape::newPatch(int seqnum,int num) 
+#endif // SEASONAL 
+{
 int npatches = (int)patches.size();
+#if SEASONAL
+patches.push_back(new Patch(seqnum,num,nseasons));
+#if RSDEBUG
+DEBUGLOG << "Landscape::newPatch(): nseasons= " << nseasons 
+	<< " seqnum=" << seqnum << " num=" << num
+	<< " npatches=" << (int)patches.size() << endl;
+#endif
+#else
 patches.push_back(new Patch(seqnum,num));
+#endif // SEASONAL 
 return patches[npatches];
 }
 
@@ -1080,7 +1161,12 @@ for(int y = dimY-1; y >= 0; y--){
 habIndexed = true;
 }
 
-void Landscape::setEnvGradient(Species *pSpecies,bool initial) {
+#if SEASONAL
+void Landscape::setEnvGradient(Species *pSpecies,short nseasons,bool initial) 
+#else
+void Landscape::setEnvGradient(Species *pSpecies,bool initial) 
+#endif // SEASONAL 
+{
 float dist_from_opt,dev;
 float habK;
 //int hab;
@@ -1099,6 +1185,23 @@ for(int y = dimY-1; y >= 0; y--){
 		if (cells[y][x] != 0) { // not no-data cell
 			habK = 0.0;
 			int nhab = cells[y][x]->nHabitats();
+#if SEASONAL
+			for (int i = 0; i < nhab; i++) {
+				for (int j = 0; j < nseasons; j++) {
+					switch (rasterType) {
+					case 0:
+						habK += pSpecies->getHabK(cells[y][x]->getHabIndex(i),j);
+						break;
+					case 1:
+						habK += pSpecies->getHabK(i,j) * cells[y][x]->getHabitat(i) / 100.0;
+						break;
+					case 2:
+						habK += pSpecies->getHabK(0,j) * cells[y][x]->getHabitat(i) / 100.0;
+						break;
+					}
+				}
+			}
+#else
 			for (int i = 0; i < nhab; i++) {
 				switch (rasterType) {
 				case 0:
@@ -1112,6 +1215,7 @@ for(int y = dimY-1; y >= 0; y--){
 					break;
 				}
 			}
+#endif // SEASONAL 
 #if RSDEBUG
 //DEBUGLOG << "Landscape::setEnvGradient(): y=" << y << " x=" << x
 //	<< " dist_from_opt=" << dist_from_opt << " rasterType=" << rasterType << " hab=" << hab
@@ -1611,7 +1715,12 @@ initcells.clear();
 // Read landscape file(s)
 // Returns error code or zero if read correctly
 
-int Landscape::readLandscape(int fileNum,string habfile,string pchfile) {
+#if SEASONAL
+int Landscape::readLandscape(int nseasons,int fileNum,string habfile,string pchfile) 
+#else
+int Landscape::readLandscape(int fileNum,string habfile,string pchfile) 
+#endif // SEASONAL 
+{
 // fileNum == 0 for (first) habitat file and optional patch file
 // fileNum > 0  for subsequent habitat files under the %cover option
 
@@ -1712,7 +1821,11 @@ case 0: // raster with habitat codes - 100% habitat each cell
 							if (existsPatch(p))
 								addNewCellToPatch(findPatch(p),x,y,h);
 							else {
+#if SEASONAL
+								pPatch = newPatch(seq++,p,nseasons);
+#else
 								pPatch = newPatch(seq++,p);
+#endif // SEASONAL 
 								addNewCellToPatch(pPatch,x,y,h);
 							}
 						}
@@ -1764,7 +1877,11 @@ case 1: // multiple % cover
 								if (existsPatch(p))
 									addNewCellToPatch(findPatch(p),x,y,hfloat);
 								else {
+#if SEASONAL
+									pPatch = newPatch(seq++,p,nseasons);
+#else
 									pPatch = newPatch(seq++,p);
+#endif // SEASONAL 
 									addNewCellToPatch(pPatch,x,y,hfloat);
 								}
 							}
@@ -1833,7 +1950,11 @@ case 2: // habitat quality
 								addNewCellToPatch(findPatch(p),x,y,hfloat);
 							else {
 								addPatchNum(p);
+#if SEASONAL
+								pPatch = newPatch(seq++,p,nseasons);
+#else
 								pPatch = newPatch(seq++,p);
+#endif // SEASONAL 
 								addNewCellToPatch(pPatch,x,y,hfloat);
 							}
 						}
@@ -2144,12 +2265,20 @@ else
 name += "_Connect.txt";
 outConnMat.open(name.c_str());
 
+#if SEASONAL
+outConnMat << "Rep\tYear\tSeason\tStartPatch\tEndPatch\tNinds" << endl;
+#else
 outConnMat << "Rep\tYear\tStartPatch\tEndPatch\tNinds" << endl;
+#endif // SEASONAL 
 
 return outConnMat.is_open();
 }
 
+#if SEASONAL
+void Landscape::outConnect(int rep,int yr,short season)
+#else
 void Landscape::outConnect(int rep,int yr)
+#endif // SEASONAL 
 {
 int patchnum0,patchnum1;
 int npatches = (int)patches.size();
@@ -2169,8 +2298,12 @@ for (int i = 0; i < npatches; i++) {
 				emigrants[i]  += connectMatrix[i][j];
 				immigrants[j] += connectMatrix[i][j];
 				if (connectMatrix[i][j] > 0) {
-					outConnMat << rep << "\t" << yr << "\t" << patchnum0
-						<< "\t" << patchnum1 << "\t" << connectMatrix[i][j] << endl;
+					outConnMat << rep << "\t" << yr 
+#if SEASONAL
+						<< "\t" << season 
+#endif  
+						<< "\t" << patchnum0 << "\t" << patchnum1 
+						<< "\t" << connectMatrix[i][j] << endl;
 				}
 			}
 		}
@@ -2180,11 +2313,22 @@ for (int i = 0; i < npatches; i++) {
 for (int i = 0; i < npatches; i++) {
 	patchnum0 = patches[i]->getPatchNum();
 	if (patchnum0 != 0) {
-		if (patches[i]->getK() > 0.0) { // suitable patch
-			outConnMat << rep << "\t" << yr << "\t" << patchnum0 << "\t-999\t"
-				<< emigrants[i] << endl;
-			outConnMat << rep << "\t" << yr << "\t-999\t" << patchnum0 << "\t"
-				<< immigrants[i] << endl;
+#if SEASONAL
+		if (patches[i]->getK(season) > 0.0) 
+#else
+		if (patches[i]->getK() > 0.0) 
+#endif // SEASONAL 
+		{ // suitable patch
+			outConnMat << rep << "\t" << yr 
+#if SEASONAL
+						<< "\t" << season 
+#endif  
+				<< "\t" << patchnum0 << "\t-999\t" << emigrants[i] << endl;
+			outConnMat << rep << "\t" << yr 
+#if SEASONAL
+						<< "\t" << season 
+#endif  
+				<< "\t-999\t" << patchnum0 << "\t" << immigrants[i] << endl;
 		}
 	}
 }
@@ -2306,6 +2450,49 @@ for (int y = dimY-1; y >= 0; y--) {
 outvisits.close(); outvisits.clear();
 }
 #endif
+
+//---------------------------------------------------------------------------
+
+#if SEASONAL
+#if PARTMIGRN
+
+// extreme events
+
+void Landscape::addExtEvent(extEvent e) { 
+#if RSDEBUG
+//DebugGUI(("Landscape::addExtEvent(): e.year=" + Int2Str(e.year)
+//	+ " e.season=" + Int2Str(e.season)
+//	+ " e.patchID=" + Int2Str(e.patchID)
+//	+ " e.x=" + Int2Str(e.x) + " e.y=" + Int2Str(e.y)
+//	).c_str());
+#endif
+extevents.push_back(e);
+}
+
+extEvent Landscape::getExtEvent(int ix) { 
+extEvent e;
+if (ix >= 0 && ix < (int)extevents.size()) {
+	e = extevents[ix];
+}
+else {
+	e.year = e.season = e.patchID = e.x = e.y = 0;
+	e.probMort = 0.0;
+}
+#if RSDEBUG
+//DEBUGLOG << "Landscape::getExtEvent(): ix=" << ix << " size()=" << extevents.size()
+//	<< " e.year=" << e.year << " e.season=" << e.season
+//	<< " e.patchID=" << e.patchID << " e.x=" << e.x << " e.y=" << e.y
+//	<< endl;
+#endif
+return e;
+}
+
+void Landscape::resetExtEvents(void) { extevents.clear(); }
+
+int Landscape::numExtEvents(void) { return (int)extevents.size(); }
+
+#endif // PARTMIGRN 
+#endif // SEASONAL 
 
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------

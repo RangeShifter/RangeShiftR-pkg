@@ -19,7 +19,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 18 March 2019 by Steve Palmer
+Last updated: 20 October 2018 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -154,7 +154,7 @@ public:
 	);
 #endif // RS_ABC
 	void extirpate(void); // Remove all individuals
-#if SEASONAL
+#if PARTMIGRN
 	void reproduction(
 		const int,		// season
 		const float,	// local carrying capacity
@@ -191,19 +191,12 @@ public:
 	);
 #endif // BUTTERFLYDISP
 #endif // GROUPDISP
-#endif // SEASONAL
+#endif // PARTMIGRN
 	// Following reproduction of ALL species, add juveniles to the population
 	void fledge(void);
-#if SEASONAL
-	void emigration( // Determine which individuals will disperse
-		float,  // local carrying capacity
-		short	  // season
-	);
-#else
 	void emigration( // Determine which individuals will disperse
 		float   // local carrying capacity
 	);
-#endif
 	void allEmigrate(void); // All individuals emigrate after patch destruction
 	// If an individual has been identified as an emigrant, remove it from the Population
 	disperser extractDisperser(
@@ -247,20 +240,6 @@ public:
 	void outGroups(Pedigree*,int,int,int,bool);
 #endif
 #endif // GROUPDISP 
-#if SEASONAL
-	int transfer( // Executed for the Population(s) in the matrix only
-		Landscape*,	// pointer to Landscape
-		short,			// landscape change index
-		short				// season
-	);
-	// Determine whether there is a potential mate present in a patch which a potential
-	// settler has reached
-	bool matePresent(
-		Cell*,	// pointer to the Cell which the potential settler has reached
-		short,	// sex of the required mate (0 = female, 1 = male)
-		short		// season
-	);
-#else
 	int transfer( // Executed for the Population(s) in the matrix only
 		Landscape*,	// pointer to Landscape
 		short				// landscape change index
@@ -271,57 +250,44 @@ public:
 		Cell*,	// pointer to the Cell which the potential settler has reached
 		short		// sex of the required mate (0 = female, 1 = male)
 	);
-#endif // SEASONAL 
 	// Determine survival and development and record in individual's status code
 	// Changes are NOT applied to the Population at this stage
-#if SEASONAL
+#if PARTMIGRN
 	void survival0(
 		float,	// local carrying capacity
 		short,	// season
-		short,	// option0:	0 - stage 0 (juveniles) only
-						//	  			1 - all stages
-						//					2 - stage 1 and above (all non-juveniles)
-		short 	// option1:	0 - development only (when survival is annual)
-						//	  	 		1 - development and survival
-						//	  	 		2 - survival only (when survival is annual)
+		short		// option: 0 - stage 0 (juveniles) only
+						//	  		 1 - all stages
+						//				 2 - stage 1 and above (all non-juveniles)
 	);
 #else
 #if SPATIALMORT
 	void survival0(
 		float,	// local carrying capacity
 		float,	// spatially varying mortality
-		short,	// option0:	0 - stage 0 (juveniles) only
-						//	  			1 - all stages
-						//					2 - stage 1 and above (all non-juveniles)
-		short 	// option1:	0 - development only (when survival is annual)
-						//	  	 		1 - development and survival
-						//	  	 		2 - survival only (when survival is annual)
+		short		// option: 0 - stage 0 (juveniles) only
+						//	  		 1 - all stages
+						//				 2 - stage 1 and above (all non-juveniles)
 	);
 #else
 #if PEDIGREE
 	void survival0(
 		Pedigree*,	// pointyer to Pedigree
 		float,			// local carrying capacity
-		short,			// option0:	0 - stage 0 (juveniles) only
-								//	  			1 - all stages
-								//					2 - stage 1 and above (all non-juveniles)
-		short 			// option1:	0 - development only (when survival is annual)
-								//	  	 		1 - development and survival
-								//	  	 		2 - survival only (when survival is annual)
+		short				// option: 0 - stage 0 (juveniles) only
+								//	  		 1 - all stages
+								//				 2 - stage 1 and above (all non-juveniles)
 	);
 #else
 	void survival0(
 		float,	// local carrying capacity
-		short,	// option0:	0 - stage 0 (juveniles) only
-						//	  			1 - all stages
-						//					2 - stage 1 and above (all non-juveniles)
-		short 	// option1:	0 - development only (when survival is annual)
-						//	  	 		1 - development and survival
-						//	  	 		2 - survival only (when survival is annual)
+		short		// option: 0 - stage 0 (juveniles) only
+						//	  		 1 - all stages
+						//				 2 - stage 1 and above (all non-juveniles)
 	);
 #endif // PEDIGREE
 #endif // SPATIALMORT
-#endif // SEASONAL
+#endif // PARTMIGRN
 #if PEDIGREE
 	void survival1(				// Apply survival changes to the population
 		Pedigree*
@@ -329,9 +295,6 @@ public:
 #else
 	void survival1(void); // Apply survival changes to the population
 #endif
-#if SEASONAL && PARTMIGRN
-	void extremeEvent(float);
-#endif // SEASONAL && PARTMIGRN 
 	void ageIncrement(void);
 	bool outPopHeaders( // Open population file and write header record
 		int,	// Landscape number (-999 to close the file)

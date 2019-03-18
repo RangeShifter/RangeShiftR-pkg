@@ -16,7 +16,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 18 March 2019 by Steve Palmer
+Last updated: 18 October 2018 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -30,18 +30,11 @@ Last updated: 18 March 2019 by Steve Palmer
 #include "Version.h"
 #include "Parameters.h"
 
-#if SEASONAL
-// structure for seasonal extreme event parameters
-struct extrmevent {
-	float prob; float mort;
-};
-#endif // SEASONAL 
-
 // structures for demographic parameters
 
 struct demogrParams {
 	short repType; 
-#if SEASONAL
+#if PARTMIGRN
 	short nSeasons;
 #else
 	short repSeasons;
@@ -229,41 +222,13 @@ public:
 	~Species(void);
 	short getSpNum(void);
 
-#if SEASONAL
+#if PARTMIGRN
 	void setBreeding(short,bool);	// set seasonal breeding indicator
 	bool getBreeding(short);			// get seasonal breeding indicator
-	void setExtreme(short,extrmevent);		// set seasonal extreme event
-	extrmevent getExtreme(short);					// get seasonal extreme event
-#if PARTMIGRN
-	void setPropDispMigrn(				// set probability of dispersal/migration strategy
-		short,		// migration status        
-		float			// probability
-	); 
-	float getPropDispMigrn(				// get probability of dispersal/migration strategy
-		short			// migration status        
-	); 
-	void setResetMigrn(bool);			// set reset dispersal/migration strategy indicator
-	bool getResetMigrn(void);			// get reset dispersal/migration strategy indicator
-#endif // PARTMIGRN 
-#endif // SEASONAL
+#endif
 	
 	// demographic parameter functions
 
-#if SEASONAL
-	void createHabK( // Create habitat carrying capacity table
-		short,	// no. of habitats
-		short		// no. of seasons
-	);
-	void setHabK(
-		short,	// habitat index no. (NB may differ from habitat no. supplied by user)
-		short,	// season
-		float		// carrying capacity (inds/cell)
-	);
-	float getHabK(
-		short,	// habitat index no. (NB may differ from habitat no. supplied by user)
-		short		// season
-	);
-#else
 	void createHabK( // Create habitat carrying capacity table
 		short	// no. of habitats
 	);
@@ -274,7 +239,6 @@ public:
 	float getHabK(
 		short		// habitat index no. (NB may differ from habitat no. supplied by user)
 	);
-#endif // SEASONAL 
 	float getMaxK(void); // return highest carrying capacity over all habitats
 	void deleteHabK(void); // Delete habitat carrying capacity table
 	void setStage( // Set stage structure parameters
@@ -292,7 +256,7 @@ public:
 		float		// survival coefficient
 	);
 	densDepParams getDensDep(void); // Get development and survival coefficients
-#if SEASONAL
+#if PARTMIGRN
 	void setFec( // Set fecundity
 		short,	// season (must be >= 0)
 		short,	// stage (must be > 0)
@@ -706,7 +670,7 @@ private:
 #if GOBYMODEL
 	float asocF;				// fecundity adjustment parameter for asocial phenotype
 #endif
-#if SEASONAL
+#if PARTMIGRN
 	short nSeasons;			// no. of seasons per year
 #else
 	short repSeasons;		// no. of reproductive seasons per year
@@ -731,18 +695,14 @@ private:
 	float propNghbr;    // proportion of pollen from neighbouring populations
 #endif
 	short habDimK;			// dimension of carrying capacities matrix
-#if SEASONAL
-	float **habK;				// seasonal habitat-specific carrying capacities (inds/cell)
-#else
 	float *habK;				// habitat-specific carrying capacities (inds/cell)
-#endif // SEASONAL 
 	float devCoeff; 		// density-dependent development coefficient
 	float survCoeff; 		// density-dependent survival coefficient
 	float **ddwtFec;    // density-dependent weights matrix for fecundity
 	float **ddwtDev;    // density-dependent weights matrix for development
 	float **ddwtSurv;   // density-dependent weights matrix for survival
 	// NB for the following arrays, sex 0 is females, sex 1 is males
-#if SEASONAL
+#if PARTMIGRN
 	float fec[NSEASONS][NSTAGES][NSEXES];			// fecundities
 	float dev[NSEASONS][NSTAGES][NSEXES];			// development probabilities
 	float surv[NSEASONS][NSTAGES][NSEXES];		// survival probabilities
@@ -945,14 +905,9 @@ private:
 
 	int spNum;
 
-#if SEASONAL
-	std::vector <bool> breeding;			// seasonal breeding
-	std::vector <extrmevent> extreme;	// seasonal random extreme events
 #if PARTMIGRN
-	float propDispMigrn[7];						// probabilities of dispersal/migration strategies
-	bool resetMigrn;									// reset dispersal/migration strategies every year
-#endif // PARTMIGRN 
-#endif // SEASONAL 
+	std::vector <bool> breeding;		// seasonal breeding 
+#endif
 	
 #if SOCIALMODEL
 	// ADDITIONAL PARAMETERS FOR PROBIS SOCIAL POLYMORPHISM MODEL

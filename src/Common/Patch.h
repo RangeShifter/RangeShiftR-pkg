@@ -36,7 +36,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 17 March 2017 by Steve Palmer
+Last updated: 21 November 2018 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -66,10 +66,18 @@ struct patchPopn {
 
 class Patch{
 public:
+#if SEASONAL
+	Patch(
+		int,	 // internal sequential number
+		int,	 // patch id number
+		short	 // no. of seasons
+	);
+#else
 	Patch(
 		int,	 // internal sequential number
 		int		 // patch id number
 	);
+#endif // SEASONAL 
 	~Patch();
 	int getSeqNum(void);
 	int getPatchNum(void);
@@ -120,7 +128,14 @@ public:
 		short,				// landscape change index (always zero if not dynamic)
 		bool					// TRUE if there is a gradient in carrying capacity across the Landscape
 	);
+#if SEASONAL
+	float getK(
+		int						// season
+	);
+	bool suitableInAllSeasons(void);
+#else
 	float getK(void);
+#endif // SEASONAL 
 #if VCL
 	// for GUI version, draw the Patch on the screen
 	void drawCells(TCanvas*,float,int,rgb);
@@ -137,7 +152,11 @@ public:
 	int x,y;				// centroid co-ordinates (approx.)
 	intptr subCommPtr; // pointer (cast as integer) to sub-community associated with the patch
 	// NOTE: FOR MULTI-SPECIES MODEL, PATCH WILL NEED TO STORE K FOR EACH SPECIES
+#if SEASONAL
+	std::vector <float> localK;			// seasonal patch carrying capacity (individuals) 
+#else
 	float localK;		// patch carrying capacity (individuals)
+#endif // SEASONAL 
 	bool changed;
 // NOTE: THE FOLLOWING ARRAY WILL NEED TO BE MADE SPECIES-SPECIFIC...
 	short nTemp[NSEXES];						// no. of potential settlers in each sex

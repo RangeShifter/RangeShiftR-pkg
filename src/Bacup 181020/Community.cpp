@@ -89,11 +89,7 @@ case 0:	// free initialisation
 					}
 				}
 				else { // cell-based model - is cell(patch) suitable
-#if SEASONAL
-					if (pch.pPatch->getK(0) > 0.0)
-#else
 					if (pch.pPatch->getK() > 0.0)
-#endif // SEASONAL 
 					{
 						subcomms.push_back(pch.pPatch->getSubComm());
 						selected.push_back(false);
@@ -141,12 +137,7 @@ case 0:	// free initialisation
 			if (pch.pPatch->withinLimits(limits)) {
 				patchnum = pch.pPatch->getPatchNum();
 				if (patchnum != 0) {
-#if SEASONAL
-					if (pch.pPatch->getK(0) > 0.0) 
-#else
-					if (pch.pPatch->getK() > 0.0) 
-#endif // SEASONAL 
-					{ // patch is suitable
+					if (pch.pPatch->getK() > 0.0) { // patch is suitable
 						subcomm = pch.pPatch->getSubComm();
 						if (subcomm == 0) {
 							// create a sub-community in the patch
@@ -274,12 +265,7 @@ case 2:	// initial individuals in specified patches/cells
 				if (ppLand.patchModel) {
 					if (pLandscape->existsPatch(iind.patchID)) {
 						pPatch = pLandscape->findPatch(iind.patchID);
-#if SEASONAL
-						if (pPatch->getK(0) > 0.0) 
-#else
-						if (pPatch->getK() > 0.0) 
-#endif // SEASONAL 
-						{ // patch is suitable
+						if (pPatch->getK() > 0.0) { // patch is suitable
 							subcomm = pPatch->getSubComm();
 							if (subcomm == 0) {
 								// create a sub-community in the patch
@@ -302,12 +288,7 @@ case 2:	// initial individuals in specified patches/cells
 						intptr ppatch = pCell->getPatch();
 						if (ppatch != 0) {
 							pPatch = (Patch*)ppatch;
-#if SEASONAL
-							if (pPatch->getK(0) > 0.0) 
-#else
-							if (pPatch->getK() > 0.0) 
-#endif // SEASONAL 
-							{ // patch is suitable
+							if (pPatch->getK() > 0.0) { // patch is suitable
 								subcomm = pPatch->getSubComm();
 								if (subcomm == 0) {
 									// create a sub-community in the patch
@@ -447,7 +428,7 @@ for (int i = 0; i < nsubcomms; i++) { // all sub-communities
 }
 }
 
-#if SEASONAL
+#if PARTMIGRN
 void Community::reproduction(int yr,short season)
 #else
 #if GROUPDISP
@@ -459,7 +440,7 @@ void Community::reproduction(Species* pSpecies,int yr,short option)
 void Community::reproduction(int yr)
 #endif // BUTTERFLYDISP
 #endif // GROUPDISP
-#endif // SEASONAL
+#endif // PARTMIGRN
 {
 float eps = 0.0; // epsilon for environmental stochasticity
 landParams land = pLandscape->getLandParams();
@@ -544,7 +525,7 @@ for (int i = 0; i < nsubcomms; i++) { // all sub-communities
 			eps = pLandscape->getGlobalStoch(yr);
 		}
 	}
-#if SEASONAL
+#if PARTMIGRN
 	subComms[i]->reproduction(land.resol,eps,season,land.rasterType,land.patchModel);
 #else
 #if GROUPDISP
@@ -558,7 +539,7 @@ for (int i = 0; i < nsubcomms; i++) { // all sub-communities
 	subComms[i]->reproduction(land.resol,eps,land.rasterType,land.patchModel);
 #endif // BUTTERFLYDISP
 #endif // GROUPDISP
-#endif // SEASONAL
+#endif // PARTMIGRN
 }
 #if RSDEBUG
 DEBUGLOG << "Community::reproduction(): finished" << endl;
@@ -575,23 +556,14 @@ for (int i = 0; i < nsubcomms; i++) { // all sub-communities
 }
 #endif
 
-#if SEASONAL
-void Community::emigration(short season) 
-#else
-void Community::emigration(void) 
-#endif
-{
+void Community::emigration(void) {
 int nsubcomms = (int)subComms.size();
 #if RSDEBUG
 DEBUGLOG << "Community::emigration(): this=" << this
 	<< " nsubcomms=" << nsubcomms << endl;
 #endif
 for (int i = 0; i < nsubcomms; i++) { // all sub-communities
-#if SEASONAL
-	subComms[i]->emigration(season);
-#else
 	subComms[i]->emigration();
-#endif
 }
 #if RSDEBUG
 DEBUGLOG << "Community::emigration(): finished" << endl;
@@ -604,11 +576,7 @@ void Community::dispersal(short landIx,bool obsconn)
 #if PEDIGREE
 void Community::dispersal(Pedigree *pPed,int rep,int yr,int gen,short landIx)
 #else
-#if SEASONAL
-void Community::dispersal(short landIx,short nextseason)
-#else
 void Community::dispersal(short landIx)
-#endif // SEASONAL 
 #endif // PEDIGREE
 #endif // RS_ABC
 {
@@ -658,11 +626,7 @@ do {
 		}
 	}
 #endif
-#if SEASONAL
-	ndispersers = matrix->transfer(pLandscape,landIx,nextseason);
-#else
 	ndispersers = matrix->transfer(pLandscape,landIx);
-#endif // SEASONAL 
 #if RSDEBUG
 //DEBUGLOG << "Community::dispersal() 2222: ndispersers=" << ndispersers << endl;
 #endif
@@ -711,27 +675,27 @@ for (int i = 0; i < nsubcomms; i++) { // all communities (including in matrix)
 }
 }
 #else
-#if SEASONAL
-void Community::survival(short season,short part,short option0,short option1) 
+#if PARTMIGRN
+void Community::survival(short season,short part,short option) 
 #else
 #if PEDIGREE
-void Community::survival(Pedigree *pPed,short part,short option0,short option1) 
+void Community::survival(Pedigree *pPed,short part,short option) 
 #else
-void Community::survival(short part,short option0,short option1) 
+void Community::survival(short part,short option) 
 #endif // PEDIGREE
-#endif // SEASONAL 
+#endif // PARTMIGRN 
 {
 int nsubcomms = (int)subComms.size();
 for (int i = 0; i < nsubcomms; i++) { // all communities (including in matrix)
-#if SEASONAL
-	subComms[i]->survival(season,part,option0,option1);
+#if PARTMIGRN
+	subComms[i]->survival(season,part,option);
 #else
 #if PEDIGREE
-	subComms[i]->survival(pPed,part,option0,option1);
+	subComms[i]->survival(pPed,part,option);
 #else
-	subComms[i]->survival(part,option0,option1);
+	subComms[i]->survival(part,option);
 #endif // PEDIGREE
-#endif // SEASONAL 
+#endif // PARTMIGRN 
 }
 }
 #endif // SPATIALMORT
@@ -781,12 +745,7 @@ for (int i = 0; i < nrows; i++)
 }
 }
 
-#if SEASONAL
-void Community::updateOccupancy(int row,int rep,short season) 
-#else
-void Community::updateOccupancy(int row,int rep) 
-#endif // SEASONAL 
-{
+void Community::updateOccupancy(int row,int rep) {
 #if RSDEBUG
 DEBUGLOG << "Community::updateOccupancy(): row = " << row << endl;
 #endif
@@ -795,11 +754,7 @@ for (int i = 0; i < nsubcomms; i++) {
 	subComms[i]->updateOccupancy(row);
 }
 
-#if SEASONAL
-commStats s = getStats(season);
-#else
 commStats s = getStats();
-#endif // SEASONAL 
 occSuit[row][rep] = (float)s.occupied / (float)s.suitable;
 
 }
@@ -819,11 +774,7 @@ delete[] occSuit;
 //---------------------------------------------------------------------------
 // Count no. of sub-communities (suitable patches) and those occupied (non-zero populations)
 // Determine range margins
-#if SEASONAL
-commStats Community::getStats(short season)
-#else
 commStats Community::getStats(void)
-#endif // SEASONAL 
 {
 commStats s;
 landParams ppLand = pLandscape->getLandParams();
@@ -854,18 +805,7 @@ for (int i = 0; i < nsubcomms; i++) { // all sub-communities
 //	<< " patchNum = " << patchPop.pPatch->getPatchNum() << endl;
 #endif
 		if (patchPop.pPatch->getPatchNum() != 0) { // not matrix patch
-#if SEASONAL
-			localK = patchPop.pPatch->getK(season);          
-#if RSDEBUG
-//DEBUGLOG << "Community::getStats(): season=" << season << " i= " << i  
-//	<< " patchNum= " << patchPop.pPatch->getPatchNum() << " localK= " << localK
-//	<< " nInds= " << patchPop.nInds << " nNonJuvs= " << patchPop.nNonJuvs 
-//	<< " nAdults= " << patchPop.nAdults << " breeding= " << (int)patchPop.breeding
-//	<< endl;
-#endif
-#else
 			localK = patchPop.pPatch->getK();
-#endif // SEASONAL 
 #if RSDEBUG
 //DEBUGLOG << "Community::getStats(): i= " << i
 //	<< " pSpecies= " << patchPop.pSpecies << " pPatch= " << patchPop.pPatch
@@ -1026,7 +966,7 @@ for (int i = 0; i < nsubcomms; i++) { // all sub-communities
 }
 }
 
-// Write records to genetics file
+// Write records to individuals file
 void Community::outGenetics(int rep, int yr, int gen,int landNr) {
 //landParams ppLand = pLandscape->getLandParams();
 #if GROUPDISP || ROBFITT
@@ -1100,7 +1040,7 @@ else {
 	name = paramsSim->getDir(2) + "Sim" + Int2Str(sim.simulation) + "_Range.txt";
 }
 outrange.open(name.c_str());
-#if SEASONAL
+#if PARTMIGRN
 outrange << "Rep\tYear\tSeason";
 #else
 outrange << "Rep\tYear\tRepSeason";
@@ -1238,11 +1178,7 @@ if (trfr.moveModel)
 	}
 #endif
 
-#if SEASONAL
-commStats s = getStats(gen);
-#else
 commStats s = getStats();
-#endif // SEASONAL 
 
 if (dem.stageStruct) {
 	outrange << "\t" << s.nnonjuvs;

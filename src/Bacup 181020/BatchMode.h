@@ -12,7 +12,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 5 February 2019 by Steve Palmer
+Last updated: 20 October 2018 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -40,7 +40,7 @@ struct batchfiles {
 	int nLandscapes;
 	int patchmodel,resolution,landtype,maxNhab,speciesdist,distresolution;
 	int reproductn;
-#if SEASONAL
+#if PARTMIGRN
 	int nseasons;
 #else
 	int repseasons;
@@ -48,8 +48,8 @@ struct batchfiles {
 	int stagestruct,stages,transfer;
 	int sexesDem;		// no. of explicit sexes for demographic model
 	int sexesDisp;	// no. of explicit sexes for dispersal model
-#if SEASONAL
-//	string seasonFile;
+#if PARTMIGRN
+	string seasonFile;
 #endif
 	string parameterFile;
 	string landFile;
@@ -73,6 +73,9 @@ struct simCheck {
 };
 
 batchfiles ParseControlFile(string,string,string);
+#if PARTMIGRN
+int ParseSeasonFile(string);
+#endif
 #if BUTTERFLYDISP
 int ParseParameterFile(string);
 #else
@@ -83,12 +86,6 @@ int ParseDynamicFile(string);
 int ParseStageFile(string);
 int ParseTransitionFile(void);
 int ParseWeightsFile(string);
-#if SEASONAL
-int ParseSeasonFile(string);
-#if PARTMIGRN
-int ParseExtremeFile(string);
-#endif // PARTMIGRN 
-#endif // SEASONAL
 int ParseEmigFile(void);
 int ParseTransferFile(string);
 int ParseSettleFile(void);
@@ -172,15 +169,14 @@ void FileHeadersOK(string);
 void SimulnCountError(string);
 
 void RunBatch(int,int);
+#if PARTMIGRN
+int ReadSeasonFile(const short,const short);
+#endif
 int ReadParameters(int,Landscape*);
 int ReadLandFile(int);
 int ReadLandFile(int,Landscape*);
 int ReadDynLandFile(Landscape*);
-#if SEASONAL && PARTMIGRN
-int ReadStageStructure(int,Landscape*);
-#else
 int ReadStageStructure(int);
-#endif  
 int ReadTransitionMatrix(int);
 int ReadStageWeights(int);
 int ReadEmigration(int);
@@ -190,12 +186,6 @@ int ReadGenetics(int);
 int ReadArchFile(string);
 int ReadInitialisation(int,Landscape*);
 int ReadInitIndsFile(int,Landscape*,string);
-#if SEASONAL
-int ReadSeasonFile(const short,const short);
-#if PARTMIGRN
-int ReadExtremeFile(Landscape*,const short);
-#endif // PARTMIGRN 
-#endif // SEASONAL
 #if VIRTUALECOLOGIST
 int ReadVirtEcol(int);
 int ReadSampleFile(string);

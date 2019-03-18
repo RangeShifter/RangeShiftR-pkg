@@ -15,7 +15,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 5 February 2019 by Steve Palmer
+Last updated: 18 October 2018 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -42,10 +42,8 @@ using namespace std;
 
 struct indStats {
 	short stage; short sex; short age; short status; short fallow;
-#if SEASONAL
 #if PARTMIGRN
 	short migrnstatus;
-#endif // PARTMIGRN 
 #endif
 	bool isDeveloping;
 #if GOBYMODEL
@@ -57,9 +55,6 @@ struct indStats {
 };
 struct pathData { // to hold path data common to SMS and CRW models
 	int year, total, out; // nos. of steps
-#if SEASONAL
-	int season;
-#endif
 	Patch* pSettPatch;		// pointer to most recent patch tested for settlement
 	short settleStatus; 	// whether ind may settle in current patch
 												// 0 = not set, 1 = debarred through density dependence rule
@@ -68,9 +63,6 @@ struct pathData { // to hold path data common to SMS and CRW models
 };
 struct pathSteps { // nos. of steps for movement model
 	int year, total, out;
-#if SEASONAL
-	int season;
-#endif
 };
 struct settlePatch {
 	Patch* pSettPatch; short settleStatus;
@@ -93,14 +85,10 @@ struct smsdata {
 	int betaDB;			// dispersal bias decay inflection point (no. of steps)
 };
 #else
-#if PARTMIGRN
-struct smsdata { locn prev; locn goal; short goalType; };
-#else
 struct smsdata { locn prev; locn goal; };
-#endif  // PARTMIGRN 
-#endif // EVOLSMS 
+#endif
 
-#if SEASONAL
+#if PARTMIGRN
 struct patchlist { Patch *pPatch; short season; bool breeding; bool fixed; };
 #endif
 
@@ -111,19 +99,6 @@ public:
 #if GROUPDISP
 	Individual(); // Default constructor
 #endif
-#if PARTMIGRN
-	Individual( // Individual constructor
-		Species*,	// pointer to Species
-		Cell*,		// pointer to Cell
-		Patch*,		// pointer to patch
-		short,		// stage
-		short,		// age
-		short,		// reproduction interval (no. of years/seasons between breeding attempts)
-		float,		// probability that sex is male
-		bool,			// TRUE for a movement model, FALSE for kernel-based transfer
-		short			// movement type: 1 = SMS, 2 = CRW
-	);
-#else
 	Individual( // Individual constructor
 		Cell*,	// pointer to Cell
 		Patch*,	// pointer to patch
@@ -134,7 +109,6 @@ public:
 		bool,		// TRUE for a movement model, FALSE for kernel-based transfer
 		short		// movement type: 1 = SMS, 2 = CRW
 	);
-#endif // PARTMIGRN 
 	~Individual(void);
 #if BUTTERFLYDISP
 void setMate(Individual*);
@@ -215,10 +189,8 @@ Individual* getMate(void);
 #endif
 	int getSex(void);
 	int getStatus(void);
-#if SEASONAL
 #if PARTMIGRN
 	int getMigrnStatus(void);
-#endif // PARTMIGRN 
 #endif
 	indStats getStats(void);
 #if GOBYMODEL
@@ -235,32 +207,11 @@ Individual* getMate(void);
 	pathSteps getSteps(void);
 	settlePatch getSettPatch(void);
 	void setSettPatch(const settlePatch);
-#if SEASONAL
-	void resetPathSeason(void);
-#endif
+//	void resetPathOut(void);
 	void setStatus(short);
-#if SEASONAL
 #if PARTMIGRN
 	void setMigrnStatus(short);
-#endif // PARTMIGRN 
-	void setPrevPatch(Patch*);
-#if PARTMIGRN
-//	void setNpatches( // set max. no. of patches to be held in memory
-//		const short		// no. of patches
-//	);
-	void addPatch( // add patch to memory
-		patchlist				// patch data
-	);
-	patchlist getPatch( // get specified patch from memory
-		const int		// patch list no.
-	);
-	void setGoal( // set goal type and location
-		const locn,			// goal location
-		const short,		// goal type
-		const bool			// breeding season
-	);
-#endif // PARTMIGRN 
-#endif // SEASONAL
+#endif
 	void developing(void);
 	void develop(void);
 	void ageIncrement( // Age by one year
@@ -279,40 +230,20 @@ Individual* getMate(void);
 	// Move to a new cell by sampling a dispersal distance from a single or double
 	// negative exponential kernel
 	// Returns 1 if still dispersing (including having found a potential patch), otherwise 0
-#if SEASONAL
-	int moveKernel(
-		Landscape*,		// pointer to Landscape
-		Species*,			// pointer to Species
-		const short,	// reproduction type (see Species)
-		const short,	// season
-		const bool    // absorbing boundaries?
-	);
-#else
 	int moveKernel(
 		Landscape*,		// pointer to Landscape
 		Species*,			// pointer to Species
 		const short,	// reproduction type (see Species)
 		const bool    // absorbing boundaries?
 	);
-#endif // SEASONAL 
 	// Make a single movement step according to a mechanistic movement model
 	// Returns 1 if still dispersing (including having found a potential patch), otherwise 0
-#if SEASONAL
-	int moveStep(
-		Landscape*,		// pointer to Landscape
-		Species*,			// pointer to Species
-		const short,	// landscape change index
-		const short,	// season
-		const bool    // absorbing boundaries?
-	);
-#else
 	int moveStep(
 		Landscape*,		// pointer to Landscape
 		Species*,			// pointer to Species
 		const short,	// landscape change index
 		const bool    // absorbing boundaries?
 	);
-#endif // SEASONAL 
 	void drawMove(	// Visualise paths resulting from movement simulation model
 									// NULL for the batch version
 		const float,	// initial x co-ordinate
@@ -452,16 +383,9 @@ private:
 								//     habitat-dependent or distance-dependent mortality
 								// 8 = failed to survive annual (demographic) mortality
 								// 9 = exceeded maximum age
-#if SEASONAL
 #if PARTMIGRN
-	short migrnstatus;	// 0 = not yet determined
-											// 1 = philopatric resident, breeding and non-breeding fixed
-											// 2 = philopatric migrant, non-breeding site fixed
-											// 3 = philopatric migrant, non-breeding site not fixed
-											// 4 = dispersed resident, breeding and non-breeding fixed
-											// 5 = dispersed migrant, breeding fixed, non-breeding fixed
-											// 6 = dispersed migrant, breeding fixed, non-breeding not fixed
-#endif // PARTMIGRN 
+	short migrnstatus;	// 0 = 
+											// 1 = 
 	short npatches; 		// no. of patches held in memory
 #endif
 	short fallow; // reproductive seasons since last reproduction
@@ -479,9 +403,6 @@ private:
 	Cell *pPrevCell;						// pointer to previous Cell
 	Cell *pCurrCell;						// pointer to current Cell
 	Patch *pNatalPatch;					// pointer to natal Patch
-#if SEASONAL
-	Patch *pPrevPatch;						// pointer to previous Patch
-#endif
 	emigTraits *emigtraits;			// pointer to emigration traits
 	trfrKernTraits *kerntraits;	// pointers to transfer by kernel traits
 	pathData *path; 						// pointer to path data for movement model
@@ -489,8 +410,8 @@ private:
 	smsdata *smsData;						// pointer to variables required for SMS
 	settleTraits *setttraits;		// pointer to settlement traits
 	std::queue <locn> memory;		// memory of last N squares visited for SMS
-#if SEASONAL
-	std::vector <patchlist> patches;		// memory of patches used
+#if PARTMIGRN
+	std::queue <patchlist> patches;		// memory of last N patches used
 #endif
 
 	Genome *pGenome;

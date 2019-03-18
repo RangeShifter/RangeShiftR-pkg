@@ -57,11 +57,7 @@ if (!ppLand.generated) {
 		// NB this is an overhead here, but is necessary in case the identity of
 		// suitable habitats has been changed from one simulation to another (GUI or batch)
 		// substantial time savings may result during simulation in certain landscapes
-#if SEASONAL
-		pLandscape->allocatePatches(pSpecies,dem.nSeasons);
-#else
 		pLandscape->allocatePatches(pSpecies);
-#endif // SEASONAL 
 	}
 	pComm = new Community(pLandscape); // set up community
 	// set up a sub-community associated with each patch (incl. the matrix)
@@ -339,11 +335,7 @@ DEBUGLOG << "RunModel(): PROBLEM - closing output files" << endl;
 	}
 
 	if (grad.gradient) { // set up environmental gradient
-#if SEASONAL
-		pLandscape->setEnvGradient(pSpecies,dem.nSeasons,true); 
-#else
 		pLandscape->setEnvGradient(pSpecies,true);
-#endif // SEASONAL 
 	}
 
 #if RS_ABC
@@ -409,21 +401,6 @@ cout << "RunModel(): completed initialisation " << endl;
 	if (ixABC < nABCyears) yearABC = pABCmaster->getYear(ixABC++);
 #endif
 
-#if SEASONAL && PARTMIGRN
-	// determine if specific extreme events will occur
-	bool extremeEvents = false;
-//	int prevYear,prevSeason;
-//	prevYear = prevSeason = 99999999;
-	extEvent eEvent;
-	int nEvents = pLandscape->numExtEvents();
-	int ixevent = 0;
-	if (nEvents) {
-		extremeEvents = true;
-		// read first event
-		eEvent = pLandscape->getExtEvent(ixevent++); 
-	}
-#endif  
-
 	// years loop
 	MemoLine("...running...");
 	for (yr = 0; yr < sim.years; yr++) {
@@ -450,11 +427,7 @@ DEBUGLOG << endl << "RunModel(): starting rep=" << rep << " yr=" << yr << endl;
 				if (yr > init.initFrzYr && yr < init.finalFrzYr) {
 					if ((yr-init.initFrzYr)%init.restrictFreq == 0) {
 						// apply dynamic range restriction
-#if SEASONAL
-						commStats s = pComm->getStats(0);
-#else
 						commStats s = pComm->getStats();
-#endif // SEASONAL 
 						int minY = s.maxY-init.restrictRows;
 						if (minY < 0) minY = 0;
 #if RSDEBUG
@@ -476,11 +449,7 @@ DEBUGLOG << "RunModel(): restriction yr=" << yr
 				}
 				if (yr == init.finalFrzYr) {
 					// apply final range restriction
-#if SEASONAL
-					commStats s = pComm->getStats(0);
-#else
 					commStats s = pComm->getStats();
-#endif // SEASONAL 
 #if RSDEBUG
 DEBUGLOG << "RunModel(): final restriction yr=" << yr
 	<< " s.minY=" << s.minY << " s.maxY=" << s.maxY
@@ -507,11 +476,7 @@ DEBUGLOG << "RunModel(): final restriction yr=" << yr
 		if (env.stoch || grad.gradient || ppLand.dynamic) {
 			if (grad.shifting && yr > grad.shift_begin && yr < grad.shift_stop) {
 				paramsGrad->incrOptY();
-#if SEASONAL
-				pLandscape->setEnvGradient(pSpecies,dem.nSeasons,false);
-#else
 				pLandscape->setEnvGradient(pSpecies,false);
-#endif // SEASONAL 
 				updateCC = true;
 			}
 #if RSDEBUG
@@ -656,11 +621,7 @@ DEBUGLOG  << endl;
 #if PEDIGREE
 			pComm->dispersal(pPed,rep,yr,0,landIx);
 #else
-#if SEASONAL
-			pComm->dispersal(landIx,0);
-#else
 			pComm->dispersal(landIx);
-#endif // SEASONAL 
 #endif // PEDIGREE
 #endif // RS_ABC
 		}
@@ -692,7 +653,7 @@ DEBUGLOG  << endl;
 		}
 #endif
 
-#if SEASONAL
+#if PARTMIGRN
 		for(int gen = 0; gen < dem.nSeasons; gen++) // seasonal loop
 #else
 		for(int gen = 0; gen < dem.repSeasons; gen++) // generation loop
@@ -700,10 +661,9 @@ DEBUGLOG  << endl;
 		{
 #if RSDEBUG
 // TEMPORARY RANDOM STREAM CHECK
-//if (yr%1 == 0 && gen == 0)
-if (yr%1 == 0)
+if (yr%1 == 0 && gen == 0)
 {
-DEBUGLOG << endl << "RunModel(): start of gen " << gen << " in year " << yr
+DEBUGLOG << "RunModel(): start of gen " << gen << " in year " << yr
 	<< " for rep " << rep << " (";
 for (int i = 0; i < 5; i++) {
 	int rrrr = pRandom->IRandom(1000,2000);
@@ -768,13 +728,8 @@ DEBUGLOG << " )"	<< endl;
 				if (grad.gradient && grad.gradType == 3) pComm->localExtinction(1);
 			}
 
-#if SEASONAL
-			if (sim.outConnect && ppLand.patchModel)
-				pLandscape->resetConnectMatrix();
-#endif
-			
 			// reproduction
-#if SEASONAL
+#if PARTMIGRN
 			pComm->reproduction(yr,gen);
 #else
 #if GROUPDISP
@@ -794,59 +749,24 @@ DEBUGLOG << " )"	<< endl;
 			pComm->reproduction(yr);
 #endif // BUTTERFLYDISP
 #endif // GROUPDISP
-#endif // SEASONAL
-
+#endif // PARTMIGRN
 			if (dem.stageStruct) {
 				if (sstruct.survival == 0) { // at reproduction
-#if SEASONAL
 #if PARTMIGRN
-					pComm->survival(gen,0,1,1); // survival of ALL stages
-					if (extremeEvents) {
-						Patch *pEventPatch;
-						Population *pPopn;
-						intptr pspecies = (intptr)pSpecies;
-						while (eEvent.year == yr && eEvent.season == gen) {
-							pEventPatch = pLandscape->findPatch(eEvent.patchID);
-							intptr ppopn = 0;
-							if (pEventPatch != 0) { // specified patch exists
-								ppopn = pEventPatch->getPopn(pspecies);
-								if (ppopn != 0) { // population exists
-									pPopn = (Population*)ppopn;
-									pPopn->extremeEvent(eEvent.probMort);
-								}							
-							}
-#if RSDEBUG
-DEBUGLOG << "RunModel(): EXTREME EVENT year=" << eEvent.year << " season=" << eEvent.season 
-	<< " patch=" << eEvent.patchID << " probMort=" << eEvent.probMort 
-	<< " pEventPatch=" << pEventPatch << " ppopn=" << ppopn 
-	<< endl;
-#endif
-							if (ixevent < nEvents) {
-								// read next event
-								eEvent = pLandscape->getExtEvent(ixevent++);								
-							}
-							else {
-								eEvent.year = eEvent.season = 99999999;   
-							}
-						}
-					}
-#else
 					pComm->survival(gen,0,2); // survival of all non-juvenile stages
-#endif // PARTMIGRN 
 #else
 #if SPATIALMORT
-					pComm->survival(0,period,2,1); // survival of all non-juvenile stages
+					pComm->survival(0,period,2); // survival of all non-juvenile stages
 #else
 #if PEDIGREE
-					pComm->survival(pPed,0,2,1); // survival of all non-juvenile stages
+					pComm->survival(pPed,0,2); // survival of all non-juvenile stages
 #else
-					pComm->survival(0,2,1); // survival of all non-juvenile stages
+					pComm->survival(0,2); // survival of all non-juvenile stages
 #endif // PEDIGREE
 #endif // SPATIALMORT 
-#endif // SEASONAL 
+#endif // PARTMIGRN 
 				}
 			}
-
 			// Output and pop. visualisation AFTER reproduction
 #if RS_ABC
 			if (dem.stageStruct && (sim.outRange || sim.outPop || abcYear))
@@ -873,11 +793,7 @@ DEBUGLOG << "RunModel(): yr=" << yr << " gen=" << gen << " completed reproductio
 
 			// Dispersal
 
-#if SEASONAL
-			pComm->emigration(gen);
-#else
 			pComm->emigration();
-#endif
 #if RSDEBUG
 DEBUGLOG << "RunModel(): yr=" << yr << " gen=" << gen << " completed emigration" << endl;
 #endif
@@ -887,13 +803,7 @@ DEBUGLOG << "RunModel(): yr=" << yr << " gen=" << gen << " completed emigration"
 #if PEDIGREE
 			pComm->dispersal(pPed,rep,yr,gen,landIx);
 #else
-#if SEASONAL
-			if ((gen+1) < dem.nSeasons) pComm->dispersal(landIx,(gen+1));				
-			else pComm->dispersal(landIx,0);
-			
-#else
 			pComm->dispersal(landIx);
-#endif // SEASONAL 
 #endif // PEDIGREE
 #endif // RS_ABC
 #if RSDEBUG
@@ -933,69 +843,50 @@ DEBUGLOG << "RunModel(): yr=" << yr << " gen=" << gen << " completed dispersal" 
 #if SPATIALMORT
 			if (dem.stageStruct) {
 				if (sstruct.survival == 0) { // at reproduction
-					pComm->survival(0,period,0,1); // survival of juveniles only
+					pComm->survival(0,period,0); // survival of juveniles only
 				}
 				if (sstruct.survival == 1) { // between reproduction events
-					pComm->survival(0,period,1,1); // survival of all stages
-				}
-				if (sstruct.survival == 2) { // annually
-					pComm->survival(0,period,1,0); // development only of all stages
+					pComm->survival(0,period,1); // survival of all stages
 				}
 			}
 			else { // non-structured population
-				pComm->survival(0,period,1,1);
+				pComm->survival(0,period,1);
 			}
 #else
 			if (dem.stageStruct) {
 				if (sstruct.survival == 0) { // at reproduction
-#if SEASONAL
 #if PARTMIGRN
-					// no action, as survival was applied to ALL stages prior to dispersal
-#else
-					pComm->survival(gen,0,0,1); // survival of juveniles only
-#endif // PARTMIGRN 
+					pComm->survival(gen,0,0); // survival of juveniles only
 #else
 #if PEDIGREE
-					pComm->survival(pPed,0,0,1); // survival of juveniles only
+					pComm->survival(pPed,0,0); // survival of juveniles only
 #else
-					pComm->survival(0,0,1); // survival of juveniles only
+					pComm->survival(0,0); // survival of juveniles only
 #endif // PEDIGREE
-#endif // SEASONAL 
+#endif // PARTMIGRN 
 				}
 				if (sstruct.survival == 1) { // between reproduction events
-#if SEASONAL
-					pComm->survival(gen,0,1,1); // survival of all stages
+#if PARTMIGRN
+					pComm->survival(gen,0,1); // survival of all stages
 #else
 #if PEDIGREE
-					pComm->survival(pPed,0,1,1); // survival of all stages
+					pComm->survival(pPed,0,1); // survival of all stages
 #else
-					pComm->survival(0,1,1); // survival of all stages
+					pComm->survival(0,1); // survival of all stages
 #endif // PEDIGREE
-#endif // SEASONAL 
-				}
-				if (sstruct.survival == 2) { // annually
-#if SEASONAL
-					pComm->survival(gen,0,1,0); // development only of all stages
-#else
-#if PEDIGREE
-					pComm->survival(pPed,0,1,0); // development only of all stages
-#else
-					pComm->survival(0,1,0); // development only of all stages
-#endif // PEDIGREE
-#endif // SEASONAL 
-					pComm->survival(0,1,0); // development only of all stages
+#endif // PARTMIGRN 
 				}
 			}
 			else { // non-structured population
-#if SEASONAL
-				pComm->survival(gen,0,1,1);
+#if PARTMIGRN
+				pComm->survival(gen,0,1);
 #else
 #if PEDIGREE
-				pComm->survival(pPed,0,1,1);
+				pComm->survival(pPed,0,1);
 #else
-				pComm->survival(0,1,1);
+				pComm->survival(0,1);
 #endif // PEDIGREE
-#endif // SEASONAL 
+#endif // PARTMIGRN 
 			}
 #endif // SPATIALMORT
 #if RSDEBUG
@@ -1039,49 +930,42 @@ DEBUGLOG << "RunModel(): yr=" << yr << " gen=" << gen << " completed survival pa
 			// survival part 1
 #if SPATIALMORT
 			if (dem.stageStruct) {
-//				if (sstruct.survival != 2) { // at reproduction or between reproduction events
-					pComm->survival(1,period,0,1);
-//				}
+				if (sstruct.survival != 2) { // at reproduction or between reproduction events
+					pComm->survival(1,period,0);
+				}
 			}
 			else { // non-structured population
-				pComm->survival(1,period,0,1);
+				pComm->survival(1,period,0);
 			}
 #else
 			if (dem.stageStruct) {
-//				if (sstruct.survival != 2) { // at reproduction or between reproduction events
-#if SEASONAL
-					pComm->survival(gen,1,0,1);
+				if (sstruct.survival != 2) { // at reproduction or between reproduction events
+#if PARTMIGRN
+					pComm->survival(gen,1,0);
 #else
 #if PEDIGREE
-					pComm->survival(pPed,1,0,1);
+					pComm->survival(pPed,1,0);
 #else
-					pComm->survival(1,0,1);
+					pComm->survival(1,0);
 #endif // PEDIGREE
-#endif // SEASONAL 
-//				}
+#endif // PARTMIGRN 
+				}
 			}
 			else { // non-structured population
-#if SEASONAL
-				pComm->survival(gen,1,0,1);
+#if PARTMIGRN
+				pComm->survival(gen,1,0);
 #else
 #if PEDIGREE
-				pComm->survival(pPed,1,0,1);
+				pComm->survival(pPed,1,0);
 #else
-				pComm->survival(1,0,1);
+				pComm->survival(1,0);
 #endif // PEDIGREE
-#endif // SEASONAL 
+#endif // PARTMIGRN 
 			}
 #endif // SPATIALMORT
 #if RSDEBUG
 DEBUGLOG << "RunModel(): yr=" << yr << " gen=" << gen << " completed survival part 1" << endl;
 #endif
-
-#if SEASONAL
-			// Connectivity Matrix
-			if (sim.outConnect && ppLand.patchModel
-			&& yr >= sim.outStartConn && yr%sim.outIntConn == 0)
-				pLandscape->outConnect(rep,yr,gen);
-#endif // SEASONAL 
 
 #if VCL
 			if (v.viewCosts && v.viewPaths) {
@@ -1103,12 +987,10 @@ DEBUGLOG << "RunModel(): yr=" << yr << " completed generation loop" << endl;
 		if (stopRun) break;
 #endif
 
-#if !SEASONAL
 		// Connectivity Matrix
 		if (sim.outConnect && ppLand.patchModel
 		&& yr >= sim.outStartConn && yr%sim.outIntConn == 0)
 			pLandscape->outConnect(rep,yr);
-#endif // !SEASONAL 
 #if RS_ABC
 		if (ppLand.patchModel && abcYear) {
 			// process any connectivity predictions for ABC
@@ -1142,17 +1024,17 @@ DEBUGLOG << "RunModel(): i=" << i << " PROCESS Type 4 Connectivity"
 
 		if (dem.stageStruct && sstruct.survival == 2) {  // annual survival - all stages
 #if SPATIALMORT
-			pComm->survival(0,period,1,2);
-			pComm->survival(1,period,0,1);
+			pComm->survival(0,period,1);
+			pComm->survival(1,period,0);
 #else
 #if PEDIGREE
-			pComm->survival(pPed,0,1,2);
-			pComm->survival(pPed,1,0,1);
+			pComm->survival(pPed,0,1);
+			pComm->survival(pPed,1,0);
 #else
-#if !SEASONAL
-			pComm->survival(0,1,2);
-			pComm->survival(1,0,1);
-#endif // !SEASONAL
+#if !PARTMIGRN
+			pComm->survival(0,1);
+			pComm->survival(1,0);
+#endif // !PARTMIGRN
 #endif // PEDIGREE
 #endif // SPATIALMORT
 #if RSDEBUG
@@ -1165,16 +1047,16 @@ DEBUGLOG << "RunModel(): yr=" << yr << " completed annual survival" << endl;
 			if (sim.outInds && yr >= sim.outStartInd && yr%sim.outIntInd == 0)
 				pComm->outInds(rep,yr,-1,-1); // list any individuals dying having reached maximum age
 #if SPATIALMORT
-			pComm->survival(1,period,0,1);		// delete any such individuals
+			pComm->survival(1,period,0);		// delete any such individuals
 #else
 #if PEDIGREE
-			pComm->survival(pPed,1,0,1);						// delete any such individuals
+			pComm->survival(pPed,1,0);						// delete any such individuals
 #else
-#if SEASONAL
-			pComm->survival(888,1,0,1);						// delete any such individuals
+#if PARTMIGRN
+			pComm->survival(888,1,0);						// delete any such individuals
 #else
-			pComm->survival(1,0,1);						// delete any such individuals
-#endif // SEASONAL
+			pComm->survival(1,0);						// delete any such individuals
+#endif // PARTMIGRN
 #endif // PEDIGREE
 #endif // SPATIALMORT
 #if RSDEBUG
@@ -1538,11 +1420,7 @@ if (v.viewTraits
 #endif
 
 if (sim.outOccup && yr%sim.outIntOcc == 0 && gen == 0)
-#if SEASONAL
-	pComm->updateOccupancy(yr/sim.outIntOcc,rep,0);
-#else
 	pComm->updateOccupancy(yr/sim.outIntOcc,rep);
-#endif // SEASONAL 
 
 #if RSDEBUG
 //DEBUGLOG << "PreReproductionOutput(): 88888 " << endl;
@@ -1621,9 +1499,8 @@ else
 outPar.open(name.c_str());
 
 outPar << "RangeShifter 2.0";
-#if SEASONAL
-//outPar << " PARTIAL MIGRATION MODEL";
-outPar << " SEASONAL MODEL";
+#if PARTMIGRN
+outPar << " PARTIAL MIGRATION MODEL";
 #else
 #if GOBYMODEL
 outPar << " GOBY MODEL";
@@ -1648,16 +1525,15 @@ outPar << " WITH EVOLUTIONARY SMS";
 #endif // GROUPDISP
 #endif // SOCIALMODEL
 #endif // GOBYMODEL
-#endif // SEASONAL 
+#endif // PARTMIGRN 
 #if RSWIN64
 outPar << "  -  64 bit implementation";
 #endif
 outPar << endl;
 
 outPar << "================";
-#if SEASONAL
-//outPar << " =======================";
-outPar << " ==============";
+#if PARTMIGRN
+outPar << " =======================";
 #else
 #if GOBYMODEL
 outPar << "===========";
@@ -1682,7 +1558,7 @@ outPar << " =====================";
 #endif // GROUPDISP
 #endif // SOCIALMODEL
 #endif // GOBYMODEL
-#endif // SEASONAL 
+#endif // PARTMIGRN 
 #if RSWIN64
 outPar << "     =====================";
 #endif
@@ -1692,7 +1568,7 @@ outPar << "BATCH MODE \t";
 if (sim.batchMode) outPar << "yes" << endl; else outPar << "no" << endl;
 outPar << "REPLICATES \t" << sim.reps << endl;
 outPar << "YEARS \t" << sim.years << endl;
-#if SEASONAL
+#if PARTMIGRN
 outPar << "NO. SEASONS / YEAR\t" << dem.nSeasons << endl;
 #else
 outPar << "REPRODUCTIVE SEASONS / YEAR\t" << dem.repSeasons << endl;
@@ -1767,14 +1643,6 @@ if (!ppLand.generated && ppLand.dynamic) {
 //			<< " habitat map: " << chg.habfile << endl;
 	}
 }
-#if SEASONAL
-#if PARTMIGRN
-if (pLandscape->numExtEvents() > 0) {
-	outPar << endl << "SPECIFIC EXTREME EVENTS: " << endl;
-	outPar << "No. of events: " << pLandscape->numExtEvents() << endl;	
-}
-#endif // PARTMIGRN 
-#endif // SEASONAL 
 
 outPar << endl << "SPECIES DISTRIBUTION UPLOADED: \t";
 //if (sim.initDistLoaded)
@@ -1959,13 +1827,9 @@ if (dem.stageStruct){
 		for (int i = 0; i < sstruct.nStages; i++) {
 			outPar << "stage\t" << i << ":\t" << pSpecies->getMinAge(i,0) << "\tyears"<< endl;
 		}
-#if SEASONAL
-		extrmevent e;
+#if PARTMIGRN
 		for (int j = 0; j < dem.nSeasons; j++) {
-			outPar << endl << "SEASON: " << j;
-			if (pSpecies->getBreeding(j)) outPar << " Breeding";
-			else outPar << " Non-breeding";
-			outPar << endl;
+			outPar << endl << "SEASON: " << j << endl;
 			outPar << "FECUNDITIES:" << endl;
 			for (int i = 0; i < sstruct.nStages; i++) {
 				outPar << "stage\t" << i << ":\t" << pSpecies->getFec(j,i,0) << endl;
@@ -1978,8 +1842,6 @@ if (dem.stageStruct){
 			for (int i = 0; i < sstruct.nStages; i++) {
 				outPar << "stage\t" << i << ":\t" << pSpecies->getSurv(j,i,0) << endl;
 			}
-			e = pSpecies->getExtreme(j);
-			outPar << "RANDOM EXTREME EVENTS: Probability " << e.prob << " Mortality " << e.mort << endl;
 		}
 		outPar << endl;
 #else
@@ -2004,7 +1866,7 @@ if (dem.stageStruct){
 			outPar << "males " << i << ":\t" << pSpecies->getMinAge(i,1) << " years;\t";
 			outPar << "females " << i << ":\t" << pSpecies->getMinAge(i,0) << " years" << endl;
 		}
-#if SEASONAL
+#if PARTMIGRN
 		for (int j = 0; j < dem.nSeasons; j++) {
 			outPar << "SEASON:" << j << endl;
 			outPar << "FECUNDITIES:" << endl;
@@ -2165,17 +2027,6 @@ else { // not stage-strutured
   outPar << "Rmax\t" << dem.lambda << endl;
 	outPar << "bc\t" << dem.bc << endl;
 }
-
-#if PARTMIGRN
-outPar << endl << "PROBABILITIES OF DISPERSAL/MIGRATION STRATEGIES:" << endl;
-outPar << "1 = Philopatric resident                             " << pSpecies->getPropDispMigrn(1) << endl;
-outPar << "2 = Philopatric migrant, non-breeding site fixed     " << pSpecies->getPropDispMigrn(2) << endl;
-outPar << "3 = Philopatric migrant, non-breeding site not fixed " << pSpecies->getPropDispMigrn(3) << endl;
-outPar << "4 = Dispersed resident                               " << pSpecies->getPropDispMigrn(4) << endl;
-outPar << "5 = Dispersed migrant, non-breeding site fixed       " << pSpecies->getPropDispMigrn(5) << endl;
-outPar << "6 = Dispersed migrant, non-breeding site not fixed   " << pSpecies->getPropDispMigrn(6) << endl;
-#endif // PARTMIGRN 
-
 if (dem.stageStruct) {
 	outPar << endl << "HABITAT SPECIFIC 1/b:" << endl;
 }
@@ -2183,22 +2034,6 @@ else {
 	outPar << endl << "CARRYING CAPACITIES:" << endl;
 
 }
-#if SEASONAL
-for (int j = 0; j < dem.nSeasons; j++) {
-	for (int i = 0; i < ppLand.nHab; i++) {
-		k = pSpecies->getHabK(i,j) * (10000.0/(float)(ppLand.resol*ppLand.resol));
-		if (!ppLand.generated && ppLand.rasterType == 0) { // imported & habitat codes
-			outPar << "Season " << j << " Habitat " << pLandscape->getHabCode(i) << ": \t";
-		}
-		else {
-			outPar << "Season " << j << " Habitat " << i << ": ";
-		}
-		if (dem.stageStruct) outPar << "1/b ";
-		else outPar << "K ";
-		outPar << k << endl;		
-	}
-}
-#else
 for (int i = 0; i < ppLand.nHab; i++) {
 	k = pSpecies->getHabK(i) * (10000.0/(float)(ppLand.resol*ppLand.resol));
 	if (!ppLand.generated && ppLand.rasterType == 0) { // imported & habitat codes
@@ -2207,12 +2042,10 @@ for (int i = 0; i < ppLand.nHab; i++) {
 	else {
 		outPar << "Habitat " << i << ": ";
 	}
-	if (dem.stageStruct) outPar << "1/b ";
-	else outPar << "K ";
-	outPar << k << endl;
+		if (dem.stageStruct) outPar << "1/b ";
+		else outPar << "K ";
+		outPar << k << endl;
 }
-#endif // SEASONAL 
-
 #if GOBYMODEL
 outPar << endl << "SOCIALITY PHENOTYPE:" << endl;
 socialParams s = pSpecies->getSocialParams();

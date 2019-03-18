@@ -17,7 +17,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 18 March 2019 by Steve Palmer
+Last updated: 20 October 2018 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -92,7 +92,7 @@ public:
 				//					1 - local extinction probability gradient
 	);
 	void patchChange(void);
-#if SEASONAL
+#if PARTMIGRN
 	void reproduction(
 		int,		// Landscape resolution
 		float,	// epsilon - global stochasticity value
@@ -138,14 +138,8 @@ public:
 	);
 #endif // BUTTERFLYDISP
 #endif // GROUPDISP
-#endif // SEASONAL
-#if SEASONAL
-	void emigration(
-		short		// season
-	);
-#else
+#endif // PARTMIGRN
 	void emigration(void);
-#endif
 	// Remove emigrants from their natal patch and add to patch 0 (matrix)
 	void initiateDispersal(
 		SubCommunity*	// pointer to matrix SubCommunity
@@ -167,18 +161,10 @@ public:
 		Individual*,	// pointer to Individual
 		Species*			// pointer to Species
 	);
-#if SEASONAL
-	int transfer( // Transfer through matrix - run for matrix SubCommunity only
-		Landscape*,	// pointer to Landscape
-		short,			// landscape change index
-		short				// season
-	);
-#else
 	int transfer( // Transfer through matrix - run for matrix SubCommunity only
 		Landscape*,	// pointer to Landscape
 		short				// landscape change index
 	);
-#endif // SEASONAL 
 	// Remove emigrants from patch 0 (matrix) and transfer to SubCommunity in which
 	// their destination co-ordinates fall (executed for the matrix patch only)
 #if PEDIGREE
@@ -198,16 +184,14 @@ public:
 	// This function is executed for the matrix patch only
 	void deleteGroups(void);
 #endif
-#if SEASONAL
+#if PARTMIGRN
 	void survival(
 		short,	// season
 		short,	// part:		0 = determine survival & development,
 						//		 			1 = apply survival changes to the population
-		short,	// option0:	0 = stage 0 (juveniles) only         )
+		short		// option:	0 = stage 0 (juveniles) only         )
 						//					1 = all stages                       ) used by part 0 only
 						//					2 = stage 1 and above (all non-juvs) )
-		short 	// option1:	0 - development only (when survival is annual)
-						//	  	 		1 - development and survival
 	);
 #else
 #if SPATIALMORT
@@ -215,11 +199,9 @@ public:
 		short,	// part:		0 = determine survival & development,
 						//		 			1 = apply survival changes to the population
 		short,	// spatial mortality period (0 or 1)
-		short,	// option0:	0 = stage 0 (juveniles) only         )
+		short		// option:	0 = stage 0 (juveniles) only         )
 						//					1 = all stages                       ) used by part 0 only
 						//					2 = stage 1 and above (all non-juvs) )
-		short 	// option1:	0 - development only (when survival is annual)
-						//	  	 		1 - development and survival
 	);
 #else
 #if PEDIGREE
@@ -227,25 +209,21 @@ public:
 		Pedigree*,	// pointer to Pedigree
 		short,			// part:		0 = determine survival & development,
 								//		 			1 = apply survival changes to the population
-		short,			// option0:	0 = stage 0 (juveniles) only         )
+		short				// option:	0 = stage 0 (juveniles) only         )
 								//					1 = all stages                       ) used by part 0 only
 								//					2 = stage 1 and above (all non-juvs) )
-		short 			// option1:	0 - development only (when survival is annual)
-								//	  	 		1 - development and survival
 	);
 #else
 	void survival(
 		short,	// part:		0 = determine survival & development,
 						//		 			1 = apply survival changes to the population
-		short,	// option0:	0 = stage 0 (juveniles) only         )
+		short		// option:	0 = stage 0 (juveniles) only         )
 						//					1 = all stages                       ) used by part 0 only
 						//					2 = stage 1 and above (all non-juvs) )
-		short 	// option1:	0 - development only (when survival is annual)
-						//	  	 		1 - development and survival
 	);
 #endif // PEDIGREE
 #endif // SPATIALMORT
-#endif // SEASONAL
+#endif // PARTMIGRN
 	void ageIncrement(void);
 	// Find the population of a given species in a given patch
 	Population* findPop(Species*,Patch*);

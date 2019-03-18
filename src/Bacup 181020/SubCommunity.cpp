@@ -64,11 +64,7 @@ if (subCommNum == 0 // matrix patch
 ||  !initial)   		// not in initial region or distribution
 	nInds = 0;
 else {
-#if SEASONAL
-	float k = pPatch->getK(0);
-#else
 	float k = pPatch->getK();
-#endif // SEASONAL 
 	if (k > 0.0) { // patch is currently suitable for this species
 		switch (init.initDens) {
 		case 0: // at carrying capacity
@@ -158,11 +154,7 @@ else {
 //
 //	}
 //}
-#if PARTMIGRN
-pInd = new Individual(pSpecies,pCell,pPatch,stg,age,repInt,probmale,trfr.moveModel,trfr.moveType);
-#else
 pInd = new Individual(pCell,pPatch,stg,age,repInt,probmale,trfr.moveModel,trfr.moveType);
-#endif // PARTMIGRN 
 
 // add new individual to the population
 // NB THIS WILL NEED TO BE CHANGED FOR MULTIPLE SPECIES...
@@ -210,8 +202,8 @@ return popns[npopns];
 }
 
 popStats SubCommunity::getPopStats(void) {
-popStats p,pop;               
-p.pSpecies = 0; p.spNum = 0; p.nInds = p.nAdults = p.nNonJuvs = 0; p.breeding = false;
+popStats p,pop;
+p.pSpecies = 0; p.spNum = 0; p.nInds = 0; p.nNonJuvs = 0; p.breeding = false;
 #if GOBYMODEL
 p.nSocial = p.nAsocial = 0;
 #endif
@@ -230,7 +222,6 @@ for (int i = 0; i < npops; i++) { // all populations
 	p.spNum = pop.spNum;
 	p.nInds += pop.nInds;
 	p.nNonJuvs += pop.nNonJuvs;
-	p.nAdults += pop.nAdults;
 	p.breeding = pop.breeding;
 #if GOBYMODEL
 	p.nSocial += pop.nSocial;
@@ -296,18 +287,11 @@ if (pRandom->Bernoulli(pExtinct)) {
 void SubCommunity::patchChange(void) {
 if (subCommNum == 0) return; // no reproduction in the matrix
 Species *pSpecies;
-float localK = 0.0;
+float localK;
 int npops = (int)popns.size();
 // THE FOLLOWING MAY BE MORE EFFICIENT WHILST THERE IS ONLY ONE SPECIES ...
 if (npops < 1) return;
-#if SEASONAL
-demogrParams dem = pSpecies->getDemogr();
-for (int i = 0; i < dem.nSeasons; i++) {
-	if (pPatch->getK(i) > localK) localK = pPatch->getK(i);
-}
-#else
 localK = pPatch->getK();
-#endif // SEASONAL 
 if (localK <= 0.0) { // patch in dynamic landscape has become unsuitable
 	for (int i = 0; i < npops; i++) { // all populations
 		pSpecies = popns[i]->getSpecies();
@@ -332,7 +316,7 @@ return popns[0]->getFather(minbrdstage,ix);
 }
 #endif
 
-#if SEASONAL
+#if PARTMIGRN
 void SubCommunity::reproduction(int resol,float epsGlobal,short season,short rasterType,bool patchModel)
 #else
 #if GROUPDISP
@@ -348,7 +332,7 @@ void SubCommunity::reproduction(int resol,float epsGlobal,short dispersal,short 
 void SubCommunity::reproduction(int resol,float epsGlobal,short rasterType,bool patchModel)
 #endif // BUTTERFLYDISP
 #endif // GROUPDISP
-#endif // SEASONAL
+#endif // PARTMIGRN
 {
 if (subCommNum == 0) return; // no reproduction in the matrix
 float localK,envval;
@@ -430,11 +414,7 @@ if (dem.repType == 3 && popns.size() > 0) { // hermaphrodite species (and presen
 int npops = (int)popns.size();
 // THE FOLLOWING MAY BE MORE EFFICIENT WHILST THERE IS ONLY ONE SPECIES ...
 if (npops < 1) return;
-#if SEASONAL
-localK = pPatch->getK(season);
-#else
 localK = pPatch->getK();
-#endif // SEASONAL 
 if (localK > 0.0) {
 	if (patchModel) {
 		envval = 1.0; // environmental gradient is currently not applied for patch-based model
@@ -459,7 +439,7 @@ if (localK > 0.0) {
 		}
 	}
 	for (int i = 0; i < npops; i++) { // all populations
-#if SEASONAL
+#if PARTMIGRN
 		popns[i]->reproduction(season,localK,envval,resol);
 #else
 #if GROUPDISP
@@ -471,7 +451,7 @@ if (localK > 0.0) {
 		popns[i]->reproduction(localK,envval,resol);
 #endif // BUTTERFLYDISP
 #endif // GROUPDISP
-#endif // SEASONAL
+#endif // PARTMIGRN
 #if BUTTERFLYDISP
 		if (option == 0) // complete classical reproduction
 			popns[i]->fledge();
@@ -525,31 +505,18 @@ for (int i = 0; i < npops; i++) { // all populations
 }
 #endif
 
-#if SEASONAL
-void SubCommunity::emigration(short season) 
-#else
-void SubCommunity::emigration(void) 
-#endif
-{
+void SubCommunity::emigration(void) {
 if (subCommNum == 0) return; // no emigration from the matrix
 float localK;
 int npops = (int)popns.size();
 // THE FOLLOWING MAY BE MORE EFFICIENT WHILST THERE IS ONLY ONE SPECIES ...
 if (npops < 1) return;
-#if SEASONAL
-localK = pPatch->getK(season);
-#else
 localK = pPatch->getK();
-#endif // SEASONAL 
 // NOTE that even if K is zero, it could have been >0 in previous time-step, and there
 // might be emigrants if there is non-juvenile emigration
 for (int i = 0; i < npops; i++) { // all populations
 //	localK = pPatch->getK();
-#if SEASONAL
-	popns[i]->emigration(localK,season);
-#else
 	popns[i]->emigration(localK);
-#endif
 }
 }
 
@@ -666,12 +633,7 @@ for (int i = 0; i < npops; i++) { // all populations
 }
 
 // Transfer through the matrix - run for the matrix sub-community only
-#if SEASONAL
-int SubCommunity::transfer(Landscape *pLandscape,short landIx,short nextseason) 
-#else
-int SubCommunity::transfer(Landscape *pLandscape,short landIx) 
-#endif // SEASONAL 
-{
+int SubCommunity::transfer(Landscape *pLandscape,short landIx) {
 #if RSDEBUG
 //DEBUGLOG << "SubCommunity::transfer(): this=" << this
 //	<< endl;
@@ -682,16 +644,11 @@ for (int i = 0; i < npops; i++) { // all populations
 #if GROUPDISP
 	Species *pSpecies = popns[i]->getSpecies();
 	emigRules emig = pSpecies->getEmig();
-	if (emig.groupdisp)  
+	if (emig.groupdisp)
 		ndispersers += popns[i]->grouptransfer(pLandscape,landIx);
 	else
-#else
-#if SEASONAL
-		ndispersers += popns[i]->transfer(pLandscape,landIx,nextseason);
-#else
-		ndispersers += popns[i]->transfer(pLandscape,landIx);
-#endif // SEASONAL 
 #endif // GROUPDISP
+	ndispersers += popns[i]->transfer(pLandscape,landIx);
 #if RSDEBUG
 //DEBUGLOG << "SubCommunity::transfer(): i = " << i
 //	<< " this = " << this
@@ -873,7 +830,7 @@ for (int i = 0; i < npops; i++) { // all populations
 				}
 			}
 #else
-			pPop->recruit(settler.pInd);   
+			pPop->recruit(settler.pInd);
 			if (connect) { // increment connectivity totals
 				int newpatch = pNewPatch->getSeqNum();
 				pPrevCell = settler.pInd->getLocn(0); // previous cell
@@ -976,19 +933,19 @@ for (int i = 0; i < npops; i++) { // all populations
 
 //---------------------------------------------------------------------------
 
-#if SEASONAL
-void SubCommunity::survival(short season,short part,short option0,short option1)
+#if PARTMIGRN
+void SubCommunity::survival(short season,short part,short option)
 #else
 #if SPATIALMORT
-void SubCommunity::survival(short part,short period,short option0,short option1)
+void SubCommunity::survival(short part,short period,short option)
 #else
 #if PEDIGREE
-void SubCommunity::survival(Pedigree *pPed,short part,short option0,short option1)
+void SubCommunity::survival(Pedigree *pPed,short part,short option)
 #else
-void SubCommunity::survival(short part,short option0,short option1)
+void SubCommunity::survival(short part,short option)
 #endif // PEDIGREE 
 #endif // SPATIALMORT
-#endif // SEASONAL
+#endif // PARTMIGRN
 {
 int npops = (int)popns.size();
 if (npops < 1) return;
@@ -1008,25 +965,21 @@ if (sim.mortMapLoaded) {
 }
 #endif
 if (part == 0) {
-#if SEASONAL
-	float localK = pPatch->getK(season);
-#else
 	float localK = pPatch->getK();
-#endif // SEASONAL 
 	for (int i = 0; i < npops; i++) { // all populations
-#if SEASONAL
-		popns[i]->survival0(localK,season,option0,option1);
+#if PARTMIGRN
+		popns[i]->survival0(localK,season,option);
 #else
 #if SPATIALMORT
-		popns[i]->survival0(localK,mort,option0,option1); // SPATIALLY VARYING MORTALITY
+		popns[i]->survival0(localK,mort,option); // SPATIALLY VARYING MORTALITY
 #else
 #if PEDIGREE
-		popns[i]->survival0(pPed,localK,option0,option1);
+		popns[i]->survival0(pPed,localK,option);
 #else
-		popns[i]->survival0(localK,option0,option1);
+		popns[i]->survival0(localK,option);
 #endif // PEDIGREE 
 #endif // SPATIALMORT
-#endif // SEASONAL
+#endif // PARTMIGRN
 	}
 }
 else {
@@ -1049,10 +1002,6 @@ for (int i = 0; i < npops; i++) { // all populations
 
 // Find the population of a given species in a given patch
 Population* SubCommunity::findPop(Species *pSp,Patch *pPch) {
-#if RSDEBUG
-DEBUGLOG << "SubCommunity::findPop(): this=" << this
-	<< endl;
-#endif
 Population *pPop;
 popStats pop;
 int npops = (int)popns.size();
@@ -1078,10 +1027,6 @@ if (nrows > 0) {
 }
 
 void SubCommunity::updateOccupancy(int row) {
-#if RSDEBUG
-DEBUGLOG << "SubCommunity::updateOccupancy(): this=" << this
-	<< endl;
-#endif
 popStats pop;
 int npops = (int)popns.size();
 for (int i = 0; i < npops; i++) {
@@ -1182,11 +1127,7 @@ if (env.stoch) {
 patchnum = pPatch->getPatchNum();
 for (int i = 0; i < npops; i++) { // all populations
 //	pSpecies = popns[i]->getSpecies();
-#if SEASONAL
-	localK = pPatch->getK(gen);
-#else
 	localK = pPatch->getK();
-#endif // SEASONAL 
 #if RS_ABC
 	if (popOutputYear) {
 		if (localK > 0.0 || (land.patchModel && patchnum == 0)) {
@@ -1449,11 +1390,7 @@ Species* pSpecies;
 float localK;
 
 for (int i = 0; i < npops; i++) { // all populations
-#if SEASONAL
-	localK = pPatch->getK(gen);
-#else
 	localK = pPatch->getK();
-#endif // SEASONAL 
 	if (localK > 0.0 && popns[i]->getNInds() > 0) {
 		pSpecies = popns[i]->getSpecies();
 		demogrParams dem = pSpecies->getDemogr();

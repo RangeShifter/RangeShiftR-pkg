@@ -19,12 +19,12 @@ Population::Population(Species *pSp,Pedigree *pPed,Patch *pPch,int ninds,int res
 Population::Population(Species *pSp,Patch *pPch,int ninds,int resol) 
 #endif
 {
-// constructor for a Population of a specified size
 #if RSDEBUG
 //DEBUGLOG << "Population::Population(): this=" << this
 //	<< " pPch=" << pPch << " ninds="<< ninds << endl;
 #endif
 
+//int n,patchNum,nindivs,age,minage,maxage,nAges;
 int n,nindivs,age,minage,maxage,nAges;
 int cumtotal = 0;
 float probmale;
@@ -137,7 +137,7 @@ for (int stg = 1; stg < nStages; stg++) {
 			if (maxage < minage) maxage = minage;
 			nAges = maxage - minage + 1;
 			if (init.initAge == 2) { // quasi-equilibrium distribution
-#if SEASONAL
+#if PARTMIGRN
 				double psurv = 1.0; // use female survival for the stage
 				for (int s = 0; s < dem.nSeasons; s++) {
 					psurv *= (double)pSpecies->getSurv(s,stg,0); // use female survival for the stage					
@@ -189,16 +189,6 @@ for (int stg = 1; stg < nStages; stg++) {
 			}
 		}
 		else age = stg;
-#if PARTMIGRN
-#if RSDEBUG
-	// NOTE: CURRENTLY SETTING ALL INDIVIDUALS TO RECORD NO. OF STEPS ...
-		inds.push_back(new Individual(pSpecies,pCell,pPatch,stg,age,sstruct.repInterval,
-			probmale,true,trfr.moveType));
-#else
-		inds.push_back(new Individual(pSpecies,pCell,pPatch,stg,age,sstruct.repInterval,
-			probmale,trfr.moveModel,trfr.moveType));
-#endif
-#else
 #if RSDEBUG
 	// NOTE: CURRENTLY SETTING ALL INDIVIDUALS TO RECORD NO. OF STEPS ...
 		inds.push_back(new Individual(pCell,pPatch,stg,age,sstruct.repInterval,
@@ -207,18 +197,7 @@ for (int stg = 1; stg < nStages; stg++) {
 		inds.push_back(new Individual(pCell,pPatch,stg,age,sstruct.repInterval,
 			probmale,trfr.moveModel,trfr.moveType));
 #endif
-#endif // PARTMIGRN
 		sex = inds[nindivs+i]->getSex();
-#if PARTMIGRN
-//		// TEMPORARY CODE TO SET MIGRATION STATUS
-//		if (pRandom->Bernoulli(0.5)) inds[nindivs+i]->setMigrnStatus(1);
-//		else {
-//			if (pRandom->Bernoulli(0.5)) inds[nindivs+i]->setMigrnStatus(2);
-//			else inds[nindivs+i]->setMigrnStatus(3);
-//			patchlist p; p.pPatch = pPatch; p.season = 0; p.breeding = p.fixed = true;
-//			inds[nindivs+i]->addPatch(p);
-//		}
-#endif  // PARTMIGRN 
 #if GOBYMODEL
 		if (true)
 #else
@@ -395,7 +374,7 @@ p.breeding = false;
 //DEBUGLOG << "Population::getStats(): this=" << this
 ////	<< " p.pSpecies=" << p.pSpecies << " p.spNum=" << p.spNum
 //	<< " p.pPatch=" << p.pPatch << " patchNum=" << p.pPatch->getPatchNum()
-//	<< " nStages=" << nStages << " nSexes=" << nSexes << " p.nInds=" << p.nInds
+//	<< " nStages=" << nStages << " nSexes=" << nSexes
 //	<< endl;
 #endif
 for (int stg = 1; stg < nStages; stg++) {
@@ -410,7 +389,7 @@ for (int stg = 1; stg < nStages; stg++) {
 #endif
 		if (ninds > 0) {
 			if (pSpecies->stageStructured()) {
-#if SEASONAL
+#if PARTMIGRN
 				fec = 0.0;
 				float seasonfec;
 				for (int s = 0; s < dem.nSeasons; s++) {
@@ -550,6 +529,8 @@ for (int sex = 0; sex < nSexes; sex++) {
 }
 }
 
+
+
 #if GROUPDISP
 Individual* Population::getFather(int minbrdstage,int ix) {
 indStats ind = inds[ix]->getStats();
@@ -558,9 +539,11 @@ else return 0;
 }
 #endif
 
+
+
 //---------------------------------------------------------------------------
 // Produce juveniles and hold them in the juvs vector
-#if SEASONAL
+#if PARTMIGRN
 void Population::reproduction(const int season,const float localK,const float envval,const int resol)
 #else
 #if GROUPDISP
@@ -575,7 +558,7 @@ void Population::reproduction(const float localK,const float envval,const int re
 void Population::reproduction(const float localK,const float envval,const int resol)
 #endif // BUTTERFLYDISP
 #endif // GROUPDISP
-#endif // SEASONAL
+#endif // PARTMIGRN
 {
 
 // get population size at start of reproduction
@@ -712,14 +695,14 @@ for (int stg = 0; stg < sstruct.nStages; stg++) {
 		if (dem.stageStruct) {
 			if (dem.repType == 1) { // simple sexual model
 				// both sexes use fecundity recorded for females
-#if SEASONAL
+#if PARTMIGRN
 				fec[stg][sex] = pSpecies->getFec(season,stg,0);
 #else
 				fec[stg][sex] = pSpecies->getFec(stg,0);
 #endif
 			}
 			else
-#if SEASONAL
+#if PARTMIGRN
 				fec[stg][sex] = pSpecies->getFec(season,stg,sex);
 #else
 				fec[stg][sex] = pSpecies->getFec(stg,sex);
@@ -924,21 +907,12 @@ case 0: // asexual model
 					nj = (int)juvs.size();
 					pCell = pPatch->getRandomCell();
 					for (int j = 0; j < njuvs; j++) {
-#if PARTMIGRN
-#if RSDEBUG
-					// NOTE: CURRENTLY SETTING ALL INDIVIDUALS TO RECORD NO. OF STEPS ...
-						juvs.push_back(new Individual(pSpecies,pCell,pPatch,0,0,0,0.0,true,trfr.moveType));
-#else
-						juvs.push_back(new Individual(pSpecies,pCell,pPatch,0,0,0,0.0,trfr.moveModel,trfr.moveType));
-#endif
-#else
 #if RSDEBUG
 					// NOTE: CURRENTLY SETTING ALL INDIVIDUALS TO RECORD NO. OF STEPS ...
 						juvs.push_back(new Individual(pCell,pPatch,0,0,0,0.0,true,trfr.moveType));
 #else
 						juvs.push_back(new Individual(pCell,pPatch,0,0,0,0.0,trfr.moveModel,trfr.moveType));
 #endif
-#endif // PARTMIGRN 
 						nInds[0][0]++;
 #if GOBYMODEL
 						if (true)
@@ -1111,21 +1085,12 @@ case 2: // complex sexual model
 #endif
 							pCell = pPatch->getRandomCell();
 							for (int j = 0; j < njuvs; j++) {
-#if PARTMIGRN
-#if RSDEBUG
-								// NOTE: CURRENTLY SETTING ALL INDIVIDUALS TO RECORD NO. OF STEPS ...
-								juvs.push_back(new Individual(pSpecies,pCell,pPatch,0,0,0,dem.propMales,true,trfr.moveType));
-#else
-								juvs.push_back(new Individual(pSpecies,pCell,pPatch,0,0,0,dem.propMales,trfr.moveModel,trfr.moveType));
-#endif
-#else
 #if RSDEBUG
 								// NOTE: CURRENTLY SETTING ALL INDIVIDUALS TO RECORD NO. OF STEPS ...
 								juvs.push_back(new Individual(pCell,pPatch,0,0,0,dem.propMales,true,trfr.moveType));
 #else
 								juvs.push_back(new Individual(pCell,pPatch,0,0,0,dem.propMales,trfr.moveModel,trfr.moveType));
 #endif
-#endif // PARTMIGRN 
 								sex = juvs[nj+j]->getSex();
 								nInds[0][sex]++;
 #if GOBYMODEL
@@ -1342,11 +1307,7 @@ juvs.clear();
 }
 
 // Determine which individuals will disperse
-#if SEASONAL
-void Population::emigration(float localK,short season)
-#else
 void Population::emigration(float localK)
-#endif
 {
 int nsexes;
 double disp,Pdisp,NK;
@@ -1437,14 +1398,6 @@ int nTotal,Nasocial,Nsocial;
 // NB - IT IS DOUBTFUL THIS CONTRIBUTES ANY SUBSTANTIAL TIME SAVING
 if (dem.repType == 0) nsexes = 1; else nsexes = 2;
 double Pemig[NSTAGES][NSEXES];
-
-#if SEASONAL
-bool breeding = pSpecies->getBreeding(season);
-bool nextbreeding;
-if (season+1 < dem.nSeasons) nextbreeding = pSpecies->getBreeding(season+1);
-else nextbreeding = pSpecies->getBreeding(0);
-#endif
-
 for (int stg = 0; stg < sstruct.nStages; stg++) {
 	for (int sex = 0; sex < nsexes; sex++) {
 		if (emig.indVar) Pemig[stg][sex] = 0.0;
@@ -1509,62 +1462,9 @@ for (int stg = 0; stg < sstruct.nStages; stg++) {
 //int currentsize = 0;
 //#endif // GROUPDISP
 
-//#if PARTMIGRN
-//double cumprop[7];
-//cumprop[0] = 0.0;
-//for (int i = 1; i < 7; i++) {
-//	cumprop[i] = cumprop[i-1] + pSpecies->getPropDispMigrn(i);
-//#if RSDEBUG
-//DEBUGLOG << "Population::emigration(): i=" << i
-//	<< " cumprop[i]=" << cumprop[i]
-//	<< endl;
-//#endif
-//}
-//#endif // PARTMIGRN
-//
-
 for (int i = 0; i < ninds; i++) {
-	ind = inds[i]->getStats();          
-#if SEASONAL
-	inds[i]->resetPathSeason();
-#if PARTMIGRN
-//	if (ind.migrnstatus == 0) { // migration status not yet set
-//		// TEMPORARY CODE TO SET MIGRATION STATUS
-//		if (pRandom->Bernoulli(0.5)) {
-//			if (pRandom->Bernoulli(0.5)) inds[i]->setMigrnStatus(1);
-//			else {
-//				if (pRandom->Bernoulli(0.5)) inds[i]->setMigrnStatus(2);
-//				else inds[i]->setMigrnStatus(3);
-//			}				
-//		}
-//		else {
-//			if (pRandom->Bernoulli(0.5)) inds[i]->setMigrnStatus(4);
-//			else {
-//				if (pRandom->Bernoulli(0.5)) inds[i]->setMigrnStatus(5);
-//				else inds[i]->setMigrnStatus(6);
-//			}				
-//		}
-//		double r = pRandom->Random();
-//		for (int m = 1; m < 7; m++) {
-//			if (r < cumprop[m]) {
-//				inds[i]->setMigrnStatus(m);
-//				m = 7;
-//			}
-//		}
-//	ind = inds[i]->getStats();
-//	}
-	if (ind.status < 6
-	&& (ind.migrnstatus == 0 || ind.migrnstatus == 2 || ind.migrnstatus == 3
-			|| (ind.migrnstatus == 4 && ind.status == 0)
-			|| ind.migrnstatus == 5 || ind.migrnstatus == 6)
-	)
-#else
-	if (ind.status < 6) 
-#endif // PARTMIGRN
-#else
-	if (ind.status < 1) 
-#endif // SEASONAL
-	{
+	ind = inds[i]->getStats();
+	if (ind.status < 1) {
 #if GOBYMODEL
 		if (emig.densDep) {
 			if (emig.sexDep) {
@@ -1649,10 +1549,6 @@ DEBUGLOG << "Population::emigration(): i=" << i << " asocial=" << ind.asocial
 	<< " Pdisp=" << Pdisp << endl;
 #endif
 #else // !SOCIALMODEL
-
-#if SEASONAL
-#endif
-
 			if (emig.densDep) {
 				if (emig.sexDep) {
 					if (emig.stgDep) {
@@ -1705,17 +1601,11 @@ DEBUGLOG << "Population::emigration(): i=" << i << " asocial=" << ind.asocial
 //				}
 //#endif // GROUPDISP
 			}
-
-			
 #endif // SOCIALMODEL
 		} // end of no individual variability
 #endif // GOBYMODEL
 
-#if PARTMIGRN
-		disp = 1;
-#else
 		disp = pRandom->Bernoulli(Pdisp);
-#endif  // PARTMIGRN 
 #if RSDEBUG
 //DEBUGLOG << "Population::emigration(): i=" << i << " sex=" << ind.sex << " stage=" << ind.stage
 //	<< " Pdisp=" << Pdisp << " disp=" << disp << endl;
@@ -1723,31 +1613,7 @@ DEBUGLOG << "Population::emigration(): i=" << i << " asocial=" << ind.asocial
 
 		if (disp == 1) { // emigrant
 			inds[i]->setStatus(1);
-#if PARTMIGRN
-			inds[i]->setPrevPatch(pPatch);
-			patchlist p;
-			p.pPatch = pPatch; p.season = season; p.breeding = breeding; 
-//			p.fixed = false;
-//			p.fixed = true;
-			inds[i]->addPatch(p);
-			locn dummy;
-			inds[i]->setGoal(dummy,1,nextbreeding);
-#endif  // PARTMIGRN
 		}
-#if PARTMIGRN
-//		else { // not an emigrant
-//			if (ind.migrnstatus == 0) { // migration status not yet set
-//				// TEMPORARY CODE TO SET MIGRATION STATUS
-//				if (pRandom->Bernoulli(0.5)) inds[i]->setMigrnStatus(1);
-//				else {
-//					if (pRandom->Bernoulli(0.5)) inds[i]->setMigrnStatus(2);
-//					else inds[i]->setMigrnStatus(3);
-//					patchlist p; p.pPatch = pPatch; p.season = 0; p.breeding = p.fixed = true;
-//					inds[i]->addPatch(p);
-//				}
-//			}
-//		}
-#endif  // PARTMIGRN 
 	} // end of if (ind.status < 1) condition
 } // end of for loop
 }
@@ -2222,12 +2088,7 @@ for (int i = 0; i < ngroups; i++) { // all groups
 #endif // GROUPDISP 
 
 // Transfer is run for populations in the matrix only
-#if SEASONAL
-int Population::transfer(Landscape *pLandscape,short landIx,short nextseason) 
-#else
-int Population::transfer(Landscape *pLandscape,short landIx) 
-#endif
-{
+int Population::transfer(Landscape *pLandscape,short landIx) {
 int ndispersers = 0;
 int disperser;
 short othersex;
@@ -2250,10 +2111,6 @@ settleTraits settDD;
 settlePatch settle;
 simParams sim = paramsSim->getSim();
 
-#if SEASONAL
-//bool breeding = pSpecies->getBreeding(season);
-#endif // SEASONAL 
-
 // each individual takes one step
 // for dispersal by kernel, this should be the only step taken
 int ninds = (int)inds.size();
@@ -2274,11 +2131,7 @@ for (int i = 0; i < ninds; i++) {
 //	<< " before:" << " x = " << loc.x << " y = " << loc.y
 //	<< endl;
 #endif
-#if SEASONAL
-		disperser = inds[i]->moveStep(pLandscape,pSpecies,landIx,nextseason,sim.absorbing);
-#else
 		disperser = inds[i]->moveStep(pLandscape,pSpecies,landIx,sim.absorbing);
-#endif // SEASONAL 
 #if RSDEBUG
 //pCell = inds[i]->getLocn(1);
 //newloc = pCell->getLocn();
@@ -2288,11 +2141,7 @@ for (int i = 0; i < ninds; i++) {
 #endif
 	}
 	else {
-#if SEASONAL
-		disperser = inds[i]->moveKernel(pLandscape,pSpecies,reptype,nextseason,sim.absorbing);
-#else
 		disperser = inds[i]->moveKernel(pLandscape,pSpecies,reptype,sim.absorbing);
-#endif // SEASONAL 
 	}
 	ndispersers += disperser;
 	if (disperser) {
@@ -2343,24 +2192,17 @@ for (int i = 0; i < ninds; i++) {
 //	<< " this = " << this << " pNewPopn = " << pNewPopn << " popsize = " << popsize
 //	<< endl;
 #endif
-#if SEASONAL
-			if (matePresent(pCell,othersex,nextseason)) mateOK = true;
-#else
-			if (matePresent(pCell,othersex)) mateOK = true;
-#endif // SEASONAL 
+			if (matePresent(pCell,othersex)) {
+				mateOK = true;
+			}
 		}
 		else { // no requirement to find a mate
 			mateOK = true;
 		}
 
 		densdepOK = false;
-		settle = inds[i]->getSettPatch();      
-#if PARTMIGRN
-		if (sett.densDep && nextseason == 1 && (ind.migrnstatus == 3 || ind.migrnstatus == 6)) 
-#else
-		if (sett.densDep) 
-#endif // PARTMIGRN  
-		{       
+		settle = inds[i]->getSettPatch();
+		if (sett.densDep) {
 			patch = pCell->getPatch();
 #if RSDEBUG
 //DEBUGLOG << "Population::transfer(): 8880: i=" << i << " patch=" << patch
@@ -2375,11 +2217,7 @@ for (int i = 0; i < ninds; i++) {
 				{
 //					inds[i]->resetPathOut(); // reset steps out of patch to zero
 					// determine whether settlement occurs in the (new) patch
-#if SEASONAL
-					localK = (double)pPatch->getK(nextseason);
-#else
 					localK = (double)pPatch->getK();
-#endif // SEASONAL 
 					popn = pPatch->getPopn((intptr)pSpecies);
 #if RSDEBUG
 //DEBUGLOG << "Population::transfer(): 8881: i=" << i << " patchNum=" << pPatch->getPatchNum()
@@ -2443,9 +2281,6 @@ for (int i = 0; i < ninds; i++) {
 
 		if (mateOK && densdepOK) { // can recruit to patch
 			ind.status = 4;
-#if SEASONAL
-//			ind.migrnstatus = 6;
-#endif
 			ndispersers--;
 		}
 		else { // does not recruit
@@ -2454,18 +2289,12 @@ for (int i = 0; i < ninds; i++) {
 				// ... maximum steps has been exceeded
 				pathSteps steps = inds[i]->getSteps();
 				settleSteps settsteps = pSpecies->getSteps(ind.stage,ind.sex);
-#if PARTMIGRN
-				if (steps.season >= settsteps.maxStepsYr || steps.season >= settsteps.maxSteps) {        
-					ind.status = 6; // dies
-				}
-#else
 				if (steps.year >= settsteps.maxStepsYr) {
 					ind.status = 3; // waits until next year
 				}
-				if (steps.total >= settsteps.maxSteps) {        
+				if (steps.total >= settsteps.maxSteps) {
 					ind.status = 6; // dies
 				}
-#endif
 			}
 			else { // dispersal kernel
 				if (sett.wait) {
@@ -2479,9 +2308,6 @@ for (int i = 0; i < ninds; i++) {
 		}
 
 	inds[i]->setStatus(ind.status);
-#if SEASONAL
-//	inds[i]->setMigrnStatus(ind.migrnstatus);
-#endif
 	}
 
 	if (!trfr.moveModel && sett.go2nbrLocn && (ind.status == 3 || ind.status == 6))
@@ -2511,18 +2337,11 @@ for (int i = 0; i < ninds; i++) {
 								patchnum = pPatch->getPatchNum();
 								if (patchnum > 0 &&  pPatch != inds[i]->getNatalPatch())
 								{ // not the matrix or natal patch
-#if SEASONAL
-									if (pPatch->getK(nextseason) > 0.0) 
-#else
-									if (pPatch->getK() > 0.0) 
-#endif // SEASONAL 
-									{ // suitable
+									if (pPatch->getK() > 0.0) { // suitable
 										if (sett.findMate) {
-#if SEASONAL
-											if (matePresent(pCell,othersex,nextseason)) nbrlist.push_back(pCell);
-#else
-											if (matePresent(pCell,othersex)) nbrlist.push_back(pCell);
-#endif // SEASONAL 
+											if (matePresent(pCell,othersex)) {
+												nbrlist.push_back(pCell);
+											}
 										}
 										else
 											nbrlist.push_back(pCell);
@@ -2557,11 +2376,7 @@ return ndispersers;
 
 // Determine whether there is a potential mate present in a patch which a potential
 // settler has reached
-#if SEASONAL
-bool Population::matePresent(Cell *pCell,short othersex,short nextseason)
-#else
 bool Population::matePresent(Cell *pCell,short othersex)
-#endif // SEASONAL 
 {
 int patch;
 Patch *pPatch;
@@ -2573,12 +2388,7 @@ patch = pCell->getPatch();
 if (patch != 0) {
 	pPatch = (Patch*)pCell->getPatch();
 	if (pPatch->getPatchNum() > 0) { // not the matrix patch
-#if SEASONAL
-		if (pPatch->getK(nextseason) > 0.0) 
-#else
-		if (pPatch->getK() > 0.0) 
-#endif // SEASONAL 
-		{ // suitable
+		if (pPatch->getK() > 0.0) { // suitable
 			pNewPopn = (Population*)pPatch->getPopn((intptr)pSpecies);
 			if (pNewPopn != 0) {
 				// count members of other sex already resident in the patch
@@ -2604,33 +2414,27 @@ return matefound;
 // FOR MULTIPLE SPECIES, MAY NEED TO SEPARATE OUT THIS IDENTIFICATION STAGE,
 // SO THAT IT CAN BE PERFORMED FOR ALL SPECIES BEFORE ANY UPDATING OF POPULATIONS
 
-#if SEASONAL
-void Population::survival0(float localK,short season,short option0,short option1)
+#if PARTMIGRN
+void Population::survival0(float localK,short season,short option)
 #else
 #if SPATIALMORT
-void Population::survival0(float localK,float mort,short option0,short option1)
+void Population::survival0(float localK,float mort,short option)
 #else
 #if PEDIGREE
-void Population::survival0(Pedigree *pPed,float localK,short option0,short option1)
+void Population::survival0(Pedigree *pPed,float localK,short option)
 #else
-void Population::survival0(float localK,short option0,short option1)
+void Population::survival0(float localK,short option)
 #endif // PEDIGREE
 #endif // SPATIALMORT
-#endif // SEASONAL
+#endif // PARTMIGRN
 {
-// option0:	0 - stage 0 (juveniles) only
-//					1 - all stages
-//					2 - stage 1 and above (all non-juveniles)
-// option1:	0 - development only (when survival is annual)
-//	  	 		1 - development and survival
-//	  	 		2 - survival only (when survival is annual)
+// option	0 - stage 0 (juveniles) only
+//				1 - all stages
+//				2 - stage 1 and above (all non-juveniles)
 
 #if RSDEBUG
 //DEBUGLOG << "Population::survival0():"
 //	<< " pSpecies=" << pSpecies << " this=" << this << " PatchNum=" << pPatch->getPatchNum()
-//#if SEASONAL
-//	<< " season=" << season 
-//#endif // SEASONAL
 //	<< " localK=" << localK << " option=" << option
 //	<< endl;
 #endif
@@ -2654,7 +2458,7 @@ for (int stg = 0; stg < sstruct.nStages; stg++) {
 		if (dem.stageStruct) {
 			if (dem.repType == 1) { // simple sexual model
 				// both sexes use development and survival recorded for females
-#if SEASONAL
+#if PARTMIGRN
 				dev[stg][sex]  = pSpecies->getDev(season,stg,0);
 				surv[stg][sex] = pSpecies->getSurv(season,stg,0);
 #else
@@ -2664,7 +2468,7 @@ for (int stg = 0; stg < sstruct.nStages; stg++) {
 				minAge[stg][sex] = pSpecies->getMinAge(stg,0);
 			}
 			else {
-#if SEASONAL
+#if PARTMIGRN
 				dev[stg][sex]  = pSpecies->getDev(season,stg,sex);
 				surv[stg][sex] = pSpecies->getSurv(season,stg,sex);
 #else
@@ -2673,8 +2477,6 @@ for (int stg = 0; stg < sstruct.nStages; stg++) {
 #endif
 				minAge[stg][sex] = pSpecies->getMinAge(stg,sex);
 			}
-			if (option1 == 0) surv[stg][sex] = 1.0; // development only - all survive
-			if (option1 == 2) dev[stg][sex] = 0.0;  // survival only - none develops
 		}
 		else { // non-structured population
 			if (stg == 1) { // adults
@@ -2702,7 +2504,7 @@ if (dem.stageStruct) {
 	// apply density dependence in development and/or survival probabilities
 	for (int stg = 0; stg < nStages; stg++) {
 		for (int sex = 0; sex < nsexes; sex++) {
-			if (option1 != 2 && sstruct.devDens && stg > 0) {
+			if (sstruct.devDens && stg > 0) {
 #if RSDEBUG
 //	DEBUGLOG << "DD in DEVELOPMENT for stg=" << stg << " sex=" << sex << endl;
 #endif
@@ -2745,7 +2547,7 @@ if (dem.stageStruct) {
 //	<< endl;
 #endif
 			} // end of if (sstruct.devDens && stg > 0)
-			if (option1 != 0 && sstruct.survDens) {
+			if (sstruct.survDens) {
 #if RSDEBUG
 //	DEBUGLOG << "DD in SURVIVAL for stg=" << stg << " sex=" << sex << endl;
 #endif
@@ -2795,30 +2597,15 @@ if (dem.stageStruct) {
 //DEBUGLOG << "Population::survival0():"  << " ninds " << ninds
 //	<< endl;
 #endif
-#if SEASONAL
-extrmevent e = pSpecies->getExtreme(season);
-bool affected = false;
-if (e.prob > 0.0) {
-	if (pRandom->Bernoulli((double)e.prob)) affected = true; // population is subject to extreme event	
-}
-#if RSDEBUG
-//DEBUGLOG << "Population::survival0(): option=" << option 
-//	<< " e.prob=" << e.prob << " affected=" << affected
-//	<< endl;
-#endif
-#endif // SEASONAL 
 for (int i = 0; i < ninds; i++) {
-	indStats ind = inds[i]->getStats();       
+	indStats ind = inds[i]->getStats();
 #if RSDEBUG
 //DEBUGLOG << "Population::survival0():"
-//	<< " i=" << i << " indId=" << inds[i]->getId()
-//	<< " stage=" << ind.stage << " status=" << ind.status << " sex=" << ind.sex
-//#if PARTMIGRN
-//	<< " migrnstatus=" << inds[i]->getMigrnStatus()
-//#endif  // PARTMIGRN 
+//	<< " i = " << i << " ID = " << inds[i]->getId()
+//	<< " stage = " << ind.stage << " status = " << ind.status
 //	<< endl;
 #endif
-	if ((ind.stage == 0 && option0 < 2) || (ind.stage > 0 && option0 > 0)) {
+	if ((ind.stage == 0 && option < 2) || (ind.stage > 0 && option > 0)) {
 		// condition for processing the stage is met...
 		if (ind.status < 6) { // not already doomed
 			double probsurv = surv[ind.stage][ind.sex];
@@ -2829,15 +2616,15 @@ for (int i = 0; i < ninds; i++) {
 				if (ind.stage < nStages-1) { // not final stage
 #if RSDEBUG
 //DEBUGLOG << "Population::survival0():"
-//	<< " i=" << i << " indId=" << inds[i]->getId()
+//	<< " i=" << i << " ID=" << inds[i]->getId()
+//	<< " stage=" << ind.stage << " status=" << ind.status
 //	<< " age=" << ind.age << " minAge[stage+1]=" << minAge[ind.stage+1][ind.sex]
-//	<< " probdev=" << probdev 
 //	<< endl;
 #endif
 					if (ind.age >= minAge[ind.stage+1][ind.sex]) { // old enough to enter next stage
 #if RSDEBUG
 //DEBUGLOG << "Population::survival0():"
-//	<< " i=" << i << " indId=" << inds[i]->getId() << " OLD ENOUGH"
+//	<< " i=" << i << " ID=" << inds[i]->getId() << " OLD ENOUGH"
 //	<< endl;
 #endif
 						if (pRandom->Bernoulli(probdev)) {
@@ -2869,11 +2656,6 @@ for (int i = 0; i < ninds; i++) {
 				}
 			}
 			else { // doomed to die
-#if RSDEBUG
-//DEBUGLOG << "Population::survival0():"
-//	<< " i=" << i << " indId=" << inds[i]->getId() << " DIES"
-//	<< endl;
-#endif
 				inds[i]->setStatus(8);
 			}
 		}
@@ -2884,12 +2666,6 @@ for (int i = 0; i < ninds; i++) {
 		if (pRandom->Bernoulli((double)mort)) inds[i]->setStatus(9); // dies
 	}
 #endif
-#if SEASONAL
-	// additional mortality due to extreme event
-	if (affected && e.mort > 0.0 && inds[i]->getStatus() < 6) {
-		if (pRandom->Bernoulli((double)e.mort)) inds[i]->setStatus(9); // dies		
-	}
-#endif // SEASONAL 
 #if RSDEBUG
 //ind = inds[i]->getStats();
 //DEBUGLOG << "Population::survival0():"
@@ -2973,23 +2749,6 @@ clean();
 #endif
 
 }
-
-#if SEASONAL && PARTMIGRN
-void Population::extremeEvent(float probMort) {
-int ninds = (int)inds.size();
-#if RSDEBUG
-DEBUGLOG << "Population::extremeEvent(): this=" << this
-	<< " patchNum=" << pPatch->getPatchNum() << " ninds=" << ninds << " probMort=" << probMort
-	<< endl;
-#endif
-for (int i = 0; i < ninds; i++) {
-	indStats ind = inds[i]->getStats(); 
-	if (ind.status < 6) { // not already doomed
-		if (pRandom->Bernoulli(probMort)) inds[i]->setStatus(8); // dies
-	}
-}	      
-}
-#endif // SEASONAL && PARTMIGRN 
 
 void Population::ageIncrement(void) {
 int ninds = (int)inds.size();
@@ -3094,7 +2853,7 @@ else{
 	name = paramsSim->getDir(2) + "Sim" + Int2Str(sim.simulation) +"_Pop.txt";
 }
 outPop.open(name.c_str());
-#if SEASONAL
+#if PARTMIGRN
 outPop << "Rep\tYear\tSeason";
 #else
 outPop << "Rep\tYear\tRepSeason";
@@ -3189,11 +2948,7 @@ if (writeEnv) {
 		outPop << "\t0\t0\t0";
 	}
 	else {
-#if SEASONAL
-		float k = pPatch->getK(gen);
-#else
 		float k = pPatch->getK();
-#endif // SEASONAL 
 		float envval = 0.0;
 		pCell = pPatch->getRandomCell();
 		if (pCell != 0) envval = pCell->getEnvVal();
@@ -3338,15 +3093,11 @@ outInds << "Rep\tYear\tRepSeason\tSpecies\tIndID\tMotherID";
 if (dem.repType > 0) outInds << "\tFatherID";
 outInds << "\tGroupID\tStatus";
 #else
-#if SEASONAL
 #if PARTMIGRN
-outInds << "Rep\tYear\tSeason\tSpecies\tIndID\tStatus\tMigrnStatus";
-#else
 outInds << "Rep\tYear\tSeason\tSpecies\tIndID\tStatus";
-#endif // PARTMIGRN 
 #else
 outInds << "Rep\tYear\tRepSeason\tSpecies\tIndID\tStatus";
-#endif // SEASONAL 
+#endif // PARTMIGRN 
 #endif // GROUPDISP 
 if (patchModel) outInds << "\tNatal_patch\tPatchID";
 else outInds << "\tNatal_X\tNatal_Y\tX\tY";
@@ -3382,20 +3133,12 @@ if (sett.indVar) {
 	outInds << "\tS0\tAlphaS\tBetaS";
 }
 outInds << "\tDistMoved";
-#if SEASONAL
-outInds << "\tPrevX\tPrevY\tX\tY";
-#endif
 #if RSDEBUG
 // ALWAYS WRITE NO. OF STEPS
 outInds << "\tNsteps";
 #else
 if (trfr.moveModel) outInds << "\tNsteps";
 #endif
-#if SEASONAL
-#if PARTMIGRN
-outInds << "\tP0\tP1\tP2\tP3\tP4\tP5";
-#endif // PARTMIGRN 
-#endif // SEASONAL
 outInds << endl;
 }
 
@@ -3423,7 +3166,7 @@ for (int i = 0; i < ninds; i++) {
 	indStats ind = inds[i]->getStats();
 	if (yr == -1) { // write all initialised individuals
 		writeInd = true;
-#if SEASONAL
+#if PARTMIGRN
 		outInds << rep << "\t" << yr << "\t" << dem.nSeasons-1;
 #else
 		outInds << rep << "\t" << yr << "\t" << dem.repSeasons-1;
@@ -3433,7 +3176,7 @@ for (int i = 0; i < ninds; i++) {
 		if (dem.stageStruct && gen < 0) { // write status 9 individuals only
 			if (ind.status == 9) {
 				writeInd = true;
-#if SEASONAL
+#if PARTMIGRN
 				outInds << rep << "\t" << yr << "\t" << dem.nSeasons-1;
 #else
 				outInds << rep << "\t" << yr << "\t" << dem.repSeasons-1;
@@ -3461,28 +3204,16 @@ for (int i = 0; i < ninds; i++) {
 //		}	
 		outInds << "\t" << inds[i]->getGroupId();
 #endif
-#if SEASONAL
-#if PARTMIGRN
-		outInds << "\t" << ind.status << "\t" << ind.migrnstatus;
-#else
-		outInds << "\t" << ind.status;
-#endif // PARTMIGRN 
-#else
 		if (dem.stageStruct) outInds << "\t" << ind.status;
 		else { // non-structured population
 			outInds << "\t" << ind.status;
 		}
-#endif
 		pCell = inds[i]->getLocn(1);
 		locn loc;
 		if (pCell == 0) loc.x = loc.y = -1; // beyond boundary or in no-data cell
 		else loc = pCell->getLocn();
 		pCell = inds[i]->getLocn(0);
 		locn natalloc = pCell->getLocn();
-//#if SEASONAL
-//		pCell = inds[i]->getLocn(2);
-//		locn prevloc = pCell->getLocn();
-//#endif
 		if (ppLand.patchModel) {
 			outInds << "\t" << inds[i]->getNatalPatch()->getPatchNum();
 			if (loc.x == -1) outInds << "\t-1";
@@ -3556,35 +3287,10 @@ for (int i = 0; i < ninds; i++) {
 		// distance moved (metres)
 		if (loc.x == -1) outInds << "\t-1";
 		else {
-#if SEASONAL
-			pCell = inds[i]->getLocn(2);
-			locn prevloc = pCell->getLocn();
-			steps = inds[i]->getSteps();
-			float d = 0.0;
-			if (steps.season > 0) {
-				d = ppLand.resol * sqrt((float)((prevloc.x-loc.x)*(prevloc.x-loc.x)
-																					+ (prevloc.y-loc.y)*(prevloc.y-loc.y)));
-			}
-			outInds << "\t" << d;
-			outInds << "\t" << prevloc.x << "\t" << prevloc.y;
-			outInds << "\t" << loc.x << "\t" << loc.y;
-#else
 			float d = ppLand.resol * sqrt((float)((natalloc.x-loc.x)*(natalloc.x-loc.x)
 																					+ (natalloc.y-loc.y)*(natalloc.y-loc.y)));
 			outInds << "\t" << d;
-#endif
 		}
-#if SEASONAL
-//		steps = inds[i]->getSteps();
-		outInds << "\t" << steps.season;
-#if PARTMIGRN
-		for (int j = 0; j < 6; j++) {
-			patchlist p = inds[i]->getPatch(j);
-			if (p.pPatch == 0) outInds << "\t-9";
-			else outInds << "\t" << p.pPatch->getPatchNum() << "(" << p.season << ")/" << p.breeding << "/" << p.fixed;  
-		}
-#endif // PARTMIGRN 
-#else
 #if RSDEBUG
 		// ALWAYS WRITE NO. OF STEPS
 		steps = inds[i]->getSteps();
@@ -3595,7 +3301,6 @@ for (int i = 0; i < ninds; i++) {
 			outInds << "\t" << steps.year;
 		}
 #endif
-#endif // SEASONAL
 		outInds << endl;
 	} // end of writeInd condition
 

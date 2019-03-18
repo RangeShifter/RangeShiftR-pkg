@@ -22,16 +22,12 @@ asocF = 1.0;
 selfing = false;
 paternity = 0;
 propLocal = 1.0; propNghbr = 0.0;
-#endif // GROUPDISP 
-#if SEASONAL
-nSeasons = 2; 
+#endif
 #if PARTMIGRN
-for (int i = 0; i < 7; i++) propDispMigrn[i] = 0.0;
-resetMigrn = false;									
-#endif // PARTMIGRN
+nSeasons = 2; 
 #else
 repSeasons = 1; 
-#endif // SEASONAL
+#endif
 repInterval = 0; maxAge	= 1000; survival	= 1;
 fecDens = false; fecStageDens	 = false;
 devDens	 = false; devStageDens	 = false;
@@ -39,13 +35,13 @@ survDens	 = false; survStageDens	 = false;
 disperseOnLoss = false;
 for (int i = 0; i < NSTAGES; i++) {
 	for (int j = 0; j < NSEXES; j++) {
-#if SEASONAL
+#if PARTMIGRN
 		for (int s = 0; s < NSEASONS; s++) {
 			fec[s][i][j] = 0.0; dev[s][i][j] = 0.0; surv[s][i][j] = 0.0; 
 		}
 #else
 		fec[i][j] = 0.0; dev[i][j] = 0.0; surv[i][j] = 0.0; 
-#endif // SEASONAL 
+#endif
 		minAge[i][j] = 0;
 	}
 }
@@ -184,15 +180,14 @@ if (traitnames != NULL) deleteTraitNames();
 #if EVOLSMS
 mortchanges.clear();
 #endif
-#if SEASONAL
+#if PARTMIGRN
 breeding.clear();
-extreme.clear();
 #endif
 }
 
 short Species::getSpNum(void) { return spNum; }
 
-#if SEASONAL
+#if PARTMIGRN
 void Species::setBreeding(short season,bool br) {
 if (season == 0) breeding.clear();
 if (season >= 0 && season < nSeasons) breeding.push_back(br);
@@ -201,27 +196,6 @@ bool Species::getBreeding(short season) {
 if (season >= 0 && season < nSeasons) return breeding[season];
 else return false;
 }			
-void Species::setExtreme(short season,extrmevent e) {
-if (season == 0) extreme.clear();
-if (season >= 0 && season < nSeasons
-&& e.prob >= 0.0 && e.prob <= 1.0 && e.mort >= 0.0 && e.mort <= 1.0 ) extreme.push_back(e);
-}
-extrmevent Species::getExtreme(short season) {
-extrmevent e; e.prob = e.mort = 0.0;
-if (season >= 0 && season < nSeasons) e = extreme[season];
-return e;
-}			
-#if PARTMIGRN
-void Species::setPropDispMigrn(short s,float p) {
-if (s >= 1 && s <= 6 && p >= 0.0 && p <= 1.0) propDispMigrn[s] = p;
-} 
-float Species::getPropDispMigrn(short s) {
-if (s >= 1 && s <= 6) return propDispMigrn[s];
-else return 0.0;
-} 
-void Species::setResetMigrn(bool r) { resetMigrn = r; }		
-bool Species::getResetMigrn(void) { return resetMigrn; }		
-#endif // PARTMIGRN 
 #endif
 
 //---------------------------------------------------------------------------
@@ -234,7 +208,7 @@ if (d.repType >= 0 && d.repType <= 3) repType = d.repType;
 #else
 if (d.repType >= 0 && d.repType <= 2) repType = d.repType;
 #endif
-#if SEASONAL
+#if PARTMIGRN
 if (d.nSeasons >= 2) nSeasons = d.nSeasons;
 #else
 if (d.repSeasons >= 1) repSeasons = d.repSeasons;
@@ -259,7 +233,7 @@ if (d.propLocal >= 0.0 && d.propNghbr >= 0.0 && d.propLocal+d.propNghbr <= 1.0) 
 demogrParams Species::getDemogr(void) {
 demogrParams d;
 d.repType = repType;
-#if SEASONAL
+#if PARTMIGRN
 d.nSeasons = nSeasons;
 #else
 d.repSeasons = repSeasons;
@@ -283,34 +257,6 @@ short Species::getRepType(void) { return repType; }
 
 bool Species::stageStructured(void) { return stageStruct; }
 
-#if SEASONAL
-
-void Species::createHabK(short nhab,short nseasons) {
-if (nhab >= 0) {
-	habDimK = nhab;
-	if (habK != 0) deleteHabK();
-	habK = new float *[nhab];
-	for (int i = 0; i < nhab; i++) {
-		habK[i] = new float[nseasons];
-		for (int j = 0; j < nseasons; j++) habK[i][j] = 0.0;
-	}
-}
-}
-
-void Species::setHabK(short hx,short season,float k) {
-if (hx >= 0 && hx < habDimK) {
-	if (k >= 0.0) habK[hx][season] = k;
-}
-}
-
-float Species::getHabK(short hx,short season) {
-float k = 0.0;
-if (hx >= 0 && hx < habDimK) k = habK[hx][season];
-return k;
-}
-
-#else
-
 void Species::createHabK(short nhab) {
 if (nhab >= 0) {
 	habDimK = nhab;
@@ -331,8 +277,6 @@ float k = 0.0;
 if (hx >= 0 && hx < habDimK) k = habK[hx];
 return k;
 }
-
-#endif // SEASONAL 
 
 float Species::getMaxK(void) {
 float k = 0.0;
@@ -377,7 +321,7 @@ s.disperseOnLoss = disperseOnLoss;
 return s;
 }
 
-#if SEASONAL
+#if PARTMIGRN
 
 void Species::setFec(short ssn,short stg,short sex,float f) {
 // NB fecundity for stage 0 must always be zero

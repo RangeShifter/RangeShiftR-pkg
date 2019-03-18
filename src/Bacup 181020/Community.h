@@ -20,7 +20,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 18 March 2019 by Steve Palmer
+Last updated: 20 October 2018 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -82,7 +82,7 @@ public:
 	void resetPopns(void);
 	void localExtinction(int);
 	void patchChanges(void);
-#if SEASONAL
+#if PARTMIGRN
 	void reproduction(
 		int,			// year
 		short			// season
@@ -109,14 +109,8 @@ public:
 	);
 #endif // BUTTERFLYDISP 
 #endif // GROUPDISP 
-#endif // SEASONAL
-#if SEASONAL
-	void emigration(
-		short		// season
-	);
-#else
+#endif // PARTMIGRN
 	void emigration(void);
-#endif
 #if RS_ABC
 	void dispersal(
 		short,	// landscape change index
@@ -132,16 +126,9 @@ public:
 		short				// landscape change index
 	);
 #else
-#if SEASONAL
-	void dispersal(
-		short,	// landscape change index
-		short		// season
-	);
-#else
 	void dispersal(
 		short		// landscape change index
 	);
-#endif // SEASONAL 
 #endif // PEDIGREE
 #endif // RS_ABC
 
@@ -155,16 +142,14 @@ public:
 						//					2 = stage 1 and above (all non-juvs) )
 	);
 #else
-#if SEASONAL
+#if PARTMIGRN
 	void survival(
 		short,	// season
 		short,	// part:		0 = determine survival & development,
 						//		 			1 = apply survival changes to the population
-		short,	// option0:	0 = stage 0 (juveniles) only         )
+		short		// option:	0 = stage 0 (juveniles) only         )
 						//					1 = all stages                       ) used by part 0 only
 						//					2 = stage 1 and above (all non-juvs) )
-		short 	// option1:	0 - development only (when survival is annual)
-						//	  	 		1 - development and survival
 	);
 #else
 #if PEDIGREE
@@ -172,24 +157,20 @@ public:
 		Pedigree*,	// pointer to Pedigree
 		short,			// part:		0 = determine survival & development,
 								//		 			1 = apply survival changes to the population
-		short,			// option0:	0 = stage 0 (juveniles) only         )
+		short				// option:	0 = stage 0 (juveniles) only         )
 								//					1 = all stages                       ) used by part 0 only
 								//					2 = stage 1 and above (all non-juvs) )
-		short 	// option1:	0 - development only (when survival is annual)
-						//	  	 		1 - development and survival
 	);
 #else
 	void survival(
 		short,	// part:		0 = determine survival & development,
 						//		 			1 = apply survival changes to the population
-		short,	// option0:	0 = stage 0 (juveniles) only         )
+		short		// option:	0 = stage 0 (juveniles) only         )
 						//					1 = all stages                       ) used by part 0 only
 						//					2 = stage 1 and above (all non-juvs) )
-		short 	// option1:	0 - development only (when survival is annual)
-						//	  	 		1 - development and survival
 	);
 #endif // PEDIGREE
-#endif // SEASONAL 
+#endif // PARTMIGRN 
 #endif // SPATIALMORT
 	void ageIncrement(void);
 	int totalInds(void);
@@ -197,29 +178,15 @@ public:
 		Species*, // pointer to Species
 		Patch*		// pointer to Patch
 	);
-#if SEASONAL
-	commStats getStats(
-		short		// season
-	);
-#else
 	commStats getStats(void);
-#endif // SEASONAL 
 	void createOccupancy(
 		int,	// no. of rows = (no. of years / interval) + 1
 		int		// no. of replicates
 	);
-#if SEASONAL
-	void updateOccupancy(
-		int,	// row = (no. of years / interval)
-		int,	// replicate
-		short	// season
-	);
-#else
 	void updateOccupancy(
 		int,	// row = (no. of years / interval)
 		int		// replicate
 	);
-#endif // SEASONAL 
 	void deleteOccupancy(
 		int		// no. of rows (as above)
 	);

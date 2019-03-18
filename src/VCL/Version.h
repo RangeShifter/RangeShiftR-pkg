@@ -3,7 +3,7 @@
 #ifndef VersionH
 #define VersionH
 
-#define RSDEBUG 1
+#define RSDEBUG 0
 
 #define CLUSTER	0
 #define RSWIN64 0
