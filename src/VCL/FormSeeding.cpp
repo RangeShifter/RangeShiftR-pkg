@@ -578,7 +578,7 @@ if (dem.stageStruct && init.seedType < 2) {
 		p = frmSeeding->SGinitialStage->Cells[i][1].ToDouble();
 		check += p;
 	}
-	if (check < 1.0 || check > 1.0) {
+	if (check < 0.99999 || check > 1.00001) {
 		MessageDlg("Please set the proportions of individuals per stage class"
 				" to sum up to 1.0", mtError, TMsgDlgButtons() << mbOK,0);
 		return;
