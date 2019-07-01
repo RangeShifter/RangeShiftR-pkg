@@ -20,7 +20,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 18 March 2019 by Steve Palmer
+Last updated: 20 June 2019 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -49,6 +49,10 @@ using namespace std;
 #include "Group.h"
 #include "Pedigree.h"
 #endif
+#if RS_CONTAIN
+//#include "Cull.h"
+#include "Control.h"
+#endif // RS_CONTAIN 
 
 //---------------------------------------------------------------------------
 struct commStats {
@@ -65,6 +69,12 @@ public:
 	Community(Landscape*);
 	~Community(void);
 	SubCommunity* addSubComm(Patch*,int);
+#if RS_CONTAIN
+	void setHabIndex(
+		Species*,	// pointer to Species
+		short			// landscape change index
+	);
+#endif // RS_CONTAIN 
 	// functions to manage populations occurring in the community
 #if PEDIGREE
 	void initialise(
@@ -110,13 +120,20 @@ public:
 #endif // BUTTERFLYDISP 
 #endif // GROUPDISP 
 #endif // SEASONAL
+#if RS_DISEASE
+	void emigration(
+		Species*,	// pointer to Species
+		short			// season
+	);
+#else
 #if SEASONAL
 	void emigration(
 		short		// season
 	);
 #else
 	void emigration(void);
-#endif
+#endif // SEASONAL
+#endif // RS_DISEASE  
 #if RS_ABC
 	void dispersal(
 		short,	// landscape change index
@@ -191,6 +208,13 @@ public:
 #endif // PEDIGREE
 #endif // SEASONAL 
 #endif // SPATIALMORT
+#if RS_CONTAIN
+	int findCullTargets(Cull*,int,int);
+	void cullAllTargets(Cull*);
+	void cullRandomTargets(Cull*,int);
+//	void cullClosestTargets(Cull*,int);
+	void resetCullTargets(void);
+#endif // RS_CONTAIN 
 	void ageIncrement(void);
 	int totalInds(void);
 	Population* findPop( // Find the population of a given species in a given patch
@@ -266,6 +290,19 @@ public:
 		int		// generation
 	);
 #endif
+
+#if RS_CONTAIN
+	bool outCullHeaders( // Open cull file and write header record
+		Species*, // pointer to Species
+		int       // option: -999 to close the file
+	);
+	void outCull( // Write records to cull file
+		int,	// replicate
+		int,	// year
+		int		// generation
+	);
+#endif // RS_CONTAIN 
+
 	void outInds( // Write records to individuals file
 		int,	// replicate
 		int,	// year

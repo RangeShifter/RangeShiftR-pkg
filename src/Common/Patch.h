@@ -36,7 +36,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 21 November 2018 by Steve Palmer
+Last updated: 28 June 2019 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -50,6 +50,9 @@ using namespace std;
 #include "Parameters.h"
 #include "Cell.h"
 #include "Species.h"
+#if RS_CONTAIN
+#include "Control.h"
+#endif // RS_CONTAIN 
 
 #if VCL
 #include <VCLTee.Chart.hpp>
@@ -128,6 +131,23 @@ public:
 		short,				// landscape change index (always zero if not dynamic)
 		bool					// TRUE if there is a gradient in carrying capacity across the Landscape
 	);
+#if RS_CONTAIN
+	void resetDamageIndex(void);
+	void updateDamageIndex(
+		int,					// x co-ordinate of damage cell
+		int,					// y co-ordinate of damage cell
+		int,					// damage value
+		double				// distance decay coefficient
+	);		
+	double getDamageIndex(void);
+	void resetDamageLocns(void);
+	void setDamage(
+		int,    // x co-ordinate
+		int,    // y co-ordinate
+		int			// damage index 
+	);
+	double totalDamage(void);
+#endif // RS_CONTAIN 
 #if SEASONAL
 	float getK(
 		int						// season
@@ -152,6 +172,9 @@ public:
 	int x,y;				// centroid co-ordinates (approx.)
 	intptr subCommPtr; // pointer (cast as integer) to sub-community associated with the patch
 	// NOTE: FOR MULTI-SPECIES MODEL, PATCH WILL NEED TO STORE K FOR EACH SPECIES
+#if RS_CONTAIN
+	double damageIndex;		
+#endif // RS_CONTAIN 
 #if SEASONAL
 	std::vector <float> localK;			// seasonal patch carrying capacity (individuals) 
 #else
@@ -164,6 +187,10 @@ public:
 	std::vector <Cell*> cells;
 	std::vector <patchPopn> popns;
 
+#if RS_CONTAIN
+	std::vector <DamageLocn*> dmglocns;
+#endif // RS_CONTAIN 
+	
 };
 
 //---------------------------------------------------------------------------

@@ -19,7 +19,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 18 March 2019 by Steve Palmer
+Last updated: 24 June 2019 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -48,6 +48,9 @@ using namespace std;
 #if PEDIGREE
 #include "Pedigree.h"
 #endif
+#if RS_CONTAIN
+#include "Control.h"
+#endif // RS_CONTAIN 
 
 //---------------------------------------------------------------------------
 
@@ -131,7 +134,13 @@ public:
 #endif
 	~Population(void);
 	traitsums getTraits(Species*);
+#if RS_CONTAIN
+	popStats getStats(
+		short		// habitat index
+	);
+#else
 	popStats getStats(void);
+#endif // RS_CONTAIN 
 	Species* getSpecies(void);
 #if GROUPDISP
 	int getNGroups(void);
@@ -154,6 +163,27 @@ public:
 	);
 #endif // RS_ABC
 	void extirpate(void); // Remove all individuals
+#if RS_CONTAIN
+	void cull(Cull*,double); // Kill individuals with a specified probability
+#endif // RS_CONTAIN 
+#if RS_CONTAIN
+#if SEASONAL
+	void reproduction(
+		const int,		// habitat index 
+		const int,		// season
+		const float,	// local carrying capacity
+		const float,	// effect of environmental gradient and/or stochasticty
+		const int			// Landscape resolution
+	);
+#else
+	void reproduction(
+		const int,		// habitat index 
+		const float,	// local carrying capacity
+		const float,	// effect of environmental gradient and/or stochasticty
+		const int			// Landscape resolution
+	);
+#endif // SEASONAL
+#else
 #if SEASONAL
 	void reproduction(
 		const int,		// season
@@ -192,6 +222,7 @@ public:
 #endif // BUTTERFLYDISP
 #endif // GROUPDISP
 #endif // SEASONAL
+#endif // RS_CONTAIN 
 	// Following reproduction of ALL species, add juveniles to the population
 	void fledge(void);
 #if SEASONAL
@@ -274,6 +305,32 @@ public:
 #endif // SEASONAL 
 	// Determine survival and development and record in individual's status code
 	// Changes are NOT applied to the Population at this stage
+#if RS_CONTAIN
+#if SEASONAL
+	void survival0(
+		float,	// local carrying capacity
+		short,	// habitat index 
+		short,	// season
+		short,	// option0:	0 - stage 0 (juveniles) only
+						//	  			1 - all stages
+						//					2 - stage 1 and above (all non-juveniles)
+		short 	// option1:	0 - development only (when survival is annual)
+						//	  	 		1 - development and survival
+						//	  	 		2 - survival only (when survival is annual)
+	);
+#else
+	void survival0(
+		float,	// local carrying capacity
+		short,	// habitat index 
+		short,	// option0:	0 - stage 0 (juveniles) only
+						//	  			1 - all stages
+						//					2 - stage 1 and above (all non-juveniles)
+		short 	// option1:	0 - development only (when survival is annual)
+						//	  	 		1 - development and survival
+						//	  	 		2 - survival only (when survival is annual)
+	);
+#endif // SEASONAL
+#else
 #if SEASONAL
 	void survival0(
 		float,	// local carrying capacity
@@ -322,6 +379,7 @@ public:
 #endif // PEDIGREE
 #endif // SPATIALMORT
 #endif // SEASONAL
+#endif // RS_CONTAIN 
 #if PEDIGREE
 	void survival1(				// Apply survival changes to the population
 		Pedigree*
@@ -359,7 +417,24 @@ public:
 		bool,		// TRUE to write environmental data
 		bool		// TRUE if there is a gradient in carrying capacity
 	);
-#endif
+#endif // RS_ABC 
+
+#if RS_CONTAIN
+
+	bool outCullHeaders( // Open cull file and write header record
+		int,	// Landscape number (-999 to close the file)
+		bool	// TRUE for a patch-based model, FALSE for a cell-based model
+	);
+	void outCullData( // Write record to cull file
+		Landscape*,	// pointer to Landscape
+		int,				// replicate
+		int,				// year
+		int,				// generation
+		bool				// TRUE for a patch-based model, FALSE for a cell-based model
+	);
+
+#endif // RS_CONTAIN 
+
 	void outIndsHeaders( // Open individuals file and write header record
 		int,	// replicate
 		int,	// Landscape number (-999 to close the file)
@@ -406,6 +481,10 @@ private:
 	std::vector <Group*> groups;		// dispersal groups (matrix only)
 	Group *pGroup;			// pointer to the current group
 #endif
+
+#if RS_CONTAIN
+	int nCulled;				// no. of individuals culled
+#endif // RS_CONTAIN 
 
 };
 

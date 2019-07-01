@@ -7,6 +7,9 @@
 #pragma package(smart_init)
 
 ofstream outPop;
+#if RS_CONTAIN
+ofstream outCull;
+#endif // RS_CONTAIN 
 ofstream outInds;
 
 //---------------------------------------------------------------------------
@@ -137,6 +140,16 @@ for (int stg = 1; stg < nStages; stg++) {
 			if (maxage < minage) maxage = minage;
 			nAges = maxage - minage + 1;
 			if (init.initAge == 2) { // quasi-equilibrium distribution
+#if RS_CONTAIN
+#if SEASONAL
+				double psurv = 1.0; // use female survival for the stage
+				for (int s = 0; s < dem.nSeasons; s++) {
+					psurv *= (double)pSpecies->getSurv(0,s,stg,0); // use female survival for the stage					
+				}
+#else
+				double psurv = (double)pSpecies->getSurv(0,stg,0); // use female survival in the first habitat for the stage
+#endif // SEASONAL 
+#else
 #if SEASONAL
 				double psurv = 1.0; // use female survival for the stage
 				for (int s = 0; s < dem.nSeasons; s++) {
@@ -144,7 +157,8 @@ for (int stg = 1; stg < nStages; stg++) {
 				}
 #else
 				double psurv = (double)pSpecies->getSurv(stg,0); // use female survival for the stage
-#endif
+#endif // SEASONAL 
+#endif // RS_CONTAIN 
 				ageProb.clear();
 				ageprobsum = 0.0;
 				ageprob = 1.0;
@@ -256,6 +270,9 @@ for (int stg = 1; stg < nStages; stg++) {
 #endif
 	}
 }
+#if RS_CONTAIN
+nCulled = 0;
+#endif // RS_CONTAIN 
 #if RSDEBUG
 //DEBUGLOG << "Population::Population(): this=" << this
 //	<< " finished " << endl;
@@ -379,7 +396,12 @@ else return 0;
 }
 #endif
 
-popStats Population::getStats(void) {
+#if RS_CONTAIN
+popStats Population::getStats(short hab) 
+#else
+popStats Population::getStats(void) 
+#endif // RS_CONTAIN 
+{
 popStats p;
 int ninds;
 float fec;
@@ -410,6 +432,20 @@ for (int stg = 1; stg < nStages; stg++) {
 #endif
 		if (ninds > 0) {
 			if (pSpecies->stageStructured()) {
+#if RS_CONTAIN
+#if SEASONAL
+				fec = 0.0;
+				float seasonfec;
+				for (int s = 0; s < dem.nSeasons; s++) {
+					if (dem.repType == 2) seasonfec = pSpecies->getFec(hab,s,stg,sex);
+					else seasonfec = pSpecies->getFec(hab,s,stg,0);
+					if (seasonfec > fec) fec = seasonfec;
+				}
+#else
+				if (dem.repType == 2) fec = pSpecies->getFec(hab,stg,sex);
+				else fec = pSpecies->getFec(hab,stg,0);
+#endif // SEASONAL 
+#else
 #if SEASONAL
 				fec = 0.0;
 				float seasonfec;
@@ -421,7 +457,8 @@ for (int stg = 1; stg < nStages; stg++) {
 #else
 				if (dem.repType == 2) fec = pSpecies->getFec(stg,sex);
 				else fec = pSpecies->getFec(stg,0);
-#endif
+#endif // SEASONAL 
+#endif // RS_CONTAIN 
 #if GROUPDISP
 				if (dem.repType == 3) { // hermaphrodite
 					if (dem.selfing) {
@@ -550,6 +587,42 @@ for (int sex = 0; sex < nSexes; sex++) {
 }
 }
 
+#if RS_CONTAIN
+
+// Remove individuals with a specified probability
+void Population::cull(Cull *pCull,double pculled) {
+#if RSDEBUG
+DEBUGLOG << "Population::cull(): this=" << this
+	<< " patch=" << pPatch->getPatchNum() << " pculled=" << pculled
+	<< " getNInds=" << getNInds() << " totalPop=" << totalPop()  
+	<< " nCulled=" << nCulled 
+	<< endl;
+#endif
+nCulled = 0;
+indStats ind;
+int ninds = (int)inds.size();
+for (int i = 0; i < ninds; i++) {
+	ind = inds[i]->getStats();  
+	if (pCull->getCullStage(ind.stage)) {
+		if (pRandom->Bernoulli(pculled)) { inds[i]->setStatus(10); nCulled++; }		
+	}	
+}
+int njuvs = (int)juvs.size();
+for (int i = 0; i < njuvs; i++) {
+	ind = juvs[i]->getStats();  
+	if (pCull->getCullStage(ind.stage)) {
+		if (pRandom->Bernoulli(pculled)) { juvs[i]->setStatus(10); nCulled++; }		
+	}	
+}
+#if RSDEBUG
+DEBUGLOG << "Population::cull(): this=" << this
+	<< " patch=" << pPatch->getPatchNum() << " nCulled=" << nCulled 
+	<< endl;
+#endif
+} 
+
+#endif // RS_CONTAIN 
+
 #if GROUPDISP
 Individual* Population::getFather(int minbrdstage,int ix) {
 indStats ind = inds[ix]->getStats();
@@ -560,6 +633,13 @@ else return 0;
 
 //---------------------------------------------------------------------------
 // Produce juveniles and hold them in the juvs vector
+#if RS_CONTAIN
+#if SEASONAL
+void Population::reproduction(const int hab,const int season,const float localK,const float envval,const int resol)
+#else
+void Population::reproduction(const int hab,const float localK,const float envval,const int resol)
+#endif // SEASONAL 
+#else
 #if SEASONAL
 void Population::reproduction(const int season,const float localK,const float envval,const int resol)
 #else
@@ -573,21 +653,25 @@ void Population::reproduction(const float localK,const float envval,const int re
 	const short option)
 #else
 void Population::reproduction(const float localK,const float envval,const int resol)
-#endif // BUTTERFLYDISP
-#endif // GROUPDISP
-#endif // SEASONAL
+#endif // BUTTERFLYDISP 
+#endif // GROUPDISP 
+#endif // SEASONAL 
+#endif // RS_CONTAIN  
 {
 
 // get population size at start of reproduction
 int ninds = (int)inds.size();
 #if RSDEBUG
 //DEBUGLOG << "Population::reproduction(): this=" << this
-#if BUTTERFLYDISP
-	<< " option=" << option
-#endif // BUTTERFLYDISP
+//#if BUTTERFLYDISP
+//	<< " option=" << option
+//#endif // BUTTERFLYDISP 
+//#if RS_CONTAIN
+//	<< " hab=" << hab
+//#endif // RS_CONTAIN 
 //	<< " ninds=" << ninds
 //	<< endl;
-#endif
+#endif // RSDEBUG 
 if (ninds == 0) return;
 
 int nsexes,stage,sex,njuvs,nj,nmales,nfemales;
@@ -657,8 +741,8 @@ if (dem.repType == 0 || dem.repType == 3) nsexes = 1; else nsexes = 2;
 //int nglobal = fglobal.size();
 //int nneighbourhood = neighbourhood.size();
 //int nneighbourhood = 0;
-// CHANGE OF METHOD IMPLEMENTED 18/11/17
-// if there a no potential fathers in the neighbourhood, then select
+// CHANGE OF METHOD IMPLEMENTED 18/10/17
+// if there are no potential fathers in the neighbourhood, then select
 // father at random from local/global pools in their specified ratio
 float propLocal,propNghbr;
 propLocal = propNghbr = 0.0;
@@ -687,8 +771,12 @@ if (dem.repType == 0) nsexes = 1; else nsexes = 2;
 
 #if RSDEBUG
 //DEBUGLOG << "Population::reproduction(): this=" << this
+//#if RS_CONTAIN
+//	<< " hab=" << hab
+//#else
 //	<< " pSpecies=" << pSpecies
 //	<< " localK=" << localK << " envval=" << envval << " resol=" << resol
+//#endif // RS_CONTAIN 
 //	<< " sstruct.nStages=" << sstruct.nStages << " nsexes=" << nsexes << " ninds=" << ninds
 //	<< endl;
 #endif
@@ -712,18 +800,34 @@ for (int stg = 0; stg < sstruct.nStages; stg++) {
 		if (dem.stageStruct) {
 			if (dem.repType == 1) { // simple sexual model
 				// both sexes use fecundity recorded for females
+#if RS_CONTAIN
+#if SEASONAL
+				fec[stg][sex] = pSpecies->getFec(hab,season,stg,0);
+#else
+				fec[stg][sex] = pSpecies->getFec(hab,stg,0);
+#endif // SEASONAL 
+#else
 #if SEASONAL
 				fec[stg][sex] = pSpecies->getFec(season,stg,0);
 #else
 				fec[stg][sex] = pSpecies->getFec(stg,0);
-#endif
+#endif // SEASONAL 
+#endif // RS_CONTAIN 
 			}
 			else
+#if RS_CONTAIN
+#if SEASONAL
+				fec[stg][sex] = pSpecies->getFec(hab,season,stg,sex);
+#else
+				fec[stg][sex] = pSpecies->getFec(hab,stg,sex);
+#endif // SEASONAL 
+#else
 #if SEASONAL
 				fec[stg][sex] = pSpecies->getFec(season,stg,sex);
 #else
 				fec[stg][sex] = pSpecies->getFec(stg,sex);
-#endif
+#endif // SEASONAL 
+#endif // RS_CONTAIN 
 //			if (sex == 0 && fec[stg][sex] > dem.lambda) dem.lambda = fec[stg][sex];
 		}
 		else { // non-structured population
@@ -1295,6 +1399,10 @@ case 3: // hermaphrodite
 
 } // end of switch (dem.repType)
 
+#if RS_CONTAIN
+nCulled = 0;
+#endif // RS_CONTAIN 
+
 #if RSDEBUG
 //DEBUGLOG << "Population::reproduction(): before reprodn. " << " inds.size() = " << inds.size()
 //	<< endl;
@@ -1438,12 +1546,12 @@ int nTotal,Nasocial,Nsocial;
 if (dem.repType == 0) nsexes = 1; else nsexes = 2;
 double Pemig[NSTAGES][NSEXES];
 
-#if SEASONAL
+#if PARTMIGRN
 bool breeding = pSpecies->getBreeding(season);
 bool nextbreeding;
 if (season+1 < dem.nSeasons) nextbreeding = pSpecies->getBreeding(season+1);
 else nextbreeding = pSpecies->getBreeding(0);
-#endif
+#endif // PARTMIGRN 
 
 for (int stg = 0; stg < sstruct.nStages; stg++) {
 	for (int sex = 0; sex < nsexes; sex++) {
@@ -1732,7 +1840,7 @@ DEBUGLOG << "Population::emigration(): i=" << i << " asocial=" << ind.asocial
 			inds[i]->addPatch(p);
 			locn dummy;
 			inds[i]->setGoal(dummy,1,nextbreeding);
-#endif  // PARTMIGRN
+#endif // PARTMIGRN 
 		}
 #if PARTMIGRN
 //		else { // not an emigrant
@@ -2604,6 +2712,13 @@ return matefound;
 // FOR MULTIPLE SPECIES, MAY NEED TO SEPARATE OUT THIS IDENTIFICATION STAGE,
 // SO THAT IT CAN BE PERFORMED FOR ALL SPECIES BEFORE ANY UPDATING OF POPULATIONS
 
+#if RS_CONTAIN
+#if SEASONAL
+void Population::survival0(float localK,short hab,short season,short option0,short option1)
+#else
+void Population::survival0(float localK,short hab,short option0,short option1)
+#endif // SEASONAL
+#else
 #if SEASONAL
 void Population::survival0(float localK,short season,short option0,short option1)
 #else
@@ -2617,6 +2732,7 @@ void Population::survival0(float localK,short option0,short option1)
 #endif // PEDIGREE
 #endif // SPATIALMORT
 #endif // SEASONAL
+#endif // RS_CONTAIN 
 {
 // option0:	0 - stage 0 (juveniles) only
 //					1 - all stages
@@ -2654,23 +2770,43 @@ for (int stg = 0; stg < sstruct.nStages; stg++) {
 		if (dem.stageStruct) {
 			if (dem.repType == 1) { // simple sexual model
 				// both sexes use development and survival recorded for females
+#if RS_CONTAIN
+#if SEASONAL
+				dev[stg][sex]  = pSpecies->getDev(hab,season,stg,0);
+				surv[stg][sex] = pSpecies->getSurv(hab,season,stg,0);
+#else
+				dev[stg][sex]  = pSpecies->getDev(hab,stg,0);
+				surv[stg][sex] = pSpecies->getSurv(hab,stg,0);
+#endif // SEASONAL 
+#else
 #if SEASONAL
 				dev[stg][sex]  = pSpecies->getDev(season,stg,0);
 				surv[stg][sex] = pSpecies->getSurv(season,stg,0);
 #else
 				dev[stg][sex]  = pSpecies->getDev(stg,0);
 				surv[stg][sex] = pSpecies->getSurv(stg,0);
-#endif
+#endif // SEASONAL 
+#endif // RS_CONTAIN 
 				minAge[stg][sex] = pSpecies->getMinAge(stg,0);
 			}
 			else {
+#if RS_CONTAIN
+#if SEASONAL
+				dev[stg][sex]  = pSpecies->getDev(hab,season,stg,sex);
+				surv[stg][sex] = pSpecies->getSurv(hab,season,stg,sex);
+#else
+				dev[stg][sex]  = pSpecies->getDev(hab,stg,sex);
+				surv[stg][sex] = pSpecies->getSurv(hab,stg,sex);
+#endif // SEASONAL 
+#else
 #if SEASONAL
 				dev[stg][sex]  = pSpecies->getDev(season,stg,sex);
 				surv[stg][sex] = pSpecies->getSurv(season,stg,sex);
 #else
 				dev[stg][sex]  = pSpecies->getDev(stg,sex);
 				surv[stg][sex] = pSpecies->getSurv(stg,sex);
-#endif
+#endif // SEASONAL 
+#endif // RS_CONTAIN 
 				minAge[stg][sex] = pSpecies->getMinAge(stg,sex);
 			}
 			if (option1 == 0) surv[stg][sex] = 1.0; // development only - all survive
@@ -3156,12 +3292,12 @@ void Population::outPopulation(int rep,int yr,int gen,float eps,
 #else
 void Population::outPopulation(int rep,int yr,int gen,float eps,
 	bool patchModel,bool writeEnv,bool gradK)
-#endif
+#endif // RS_ABC 
 {
 Cell *pCell;
 
 #if RSDEBUG
-//DEBUGLOG << "Landscape::outPopulations(): this=" << this
+//DEBUGLOG << "Population::outPopulations(): this=" << this
 //	<< " writeEnv " << (int)writeEnv
 //	<< endl;
 #endif
@@ -3209,7 +3345,13 @@ if (writeEnv) {
 #endif
 outPop << "\t" << pSpecies->getSpNum();
 if (dem.stageStruct) {
+#if RS_CONTAIN
+	// here we can set the habitat index parameter to 0 as we are not concerned 
+	// whether or not the poplation includes breeders
+	p = getStats(0);
+#else
 	p = getStats();
+#endif // RS_CONTAIN 
 	outPop << "\t" << p.nNonJuvs;
 	// non-juvenile stage totals from permanent array
 	for (int stg = 1; stg < nStages; stg++) {
@@ -3303,6 +3445,95 @@ DEBUGLOG << "Population::outPopulation(): i=" << i << " PROCESS Population NInds
 }
 
 //---------------------------------------------------------------------------
+
+#if RS_CONTAIN
+
+// Open population file and write header record
+bool Population::outCullHeaders(int landNr,bool patchModel) {
+
+if (landNr == -999) { // close file
+	if (outCull.is_open()) outCull.close();
+	outCull.clear();
+	return true;
+}
+
+string name;
+//landParams ppLand = pLandscape->getLandParams();
+//envStochParams env = paramsStoch->getStoch();
+simParams sim = paramsSim->getSim();
+//envGradParams grad = paramsGrad->getGradient();
+
+//demogrParams dem = pSpecies->getDemogr();
+//stageParams sstruct = pSpecies->getStage();
+
+if (sim.batchMode)  {
+	name = paramsSim->getDir(2)
+		+ "Batch" + Int2Str(sim.batchNum) + "_"
+		+ "Sim" + Int2Str(sim.simulation) + "_Land" + Int2Str(landNr) + "_Cull.txt";
+}
+else{
+	name = paramsSim->getDir(2) + "Sim" + Int2Str(sim.simulation) +"_Cull.txt";
+}
+outCull.open(name.c_str());
+#if SEASONAL
+outCull << "Rep\tYear\tSeason";
+#else
+outCull << "Rep\tYear\tRepSeason";
+#endif
+if (patchModel) outCull << "\tPatchID";
+else outCull << "\tx\ty\tHabitat";
+outCull << "\tSpecies\tNculled";
+outCull << endl;
+
+return outPop.is_open();
+}
+
+// Write record to cull file
+void Population::outCullData(Landscape *pLand,int rep,int yr,int gen,
+	bool patchModel)
+{
+Cell *pCell;
+
+#if RSDEBUG
+//DEBUGLOG << "Population::outCullData(): this=" << this
+//	<< endl;
+#endif
+
+//demogrParams dem = pSpecies->getDemogr();
+//stageParams sstruct = pSpecies->getStage();
+//popStats p;
+
+outCull << rep << "\t" << yr << "\t" << gen;
+if (patchModel) {
+	outCull << "\t" << pPatch->getPatchNum();
+}
+else {
+	locn loc = pPatch->getCell(0);
+	outCull << "\t" << loc.x << "\t" << loc.y;
+	Cell *pCell = pPatch->getRandomCell();
+	int habitat = -9;
+	if (pCell != 0) {
+		int ix = pCell->getHabIndex(0); // CURRENTLY INITIAL HABITAT ONLY 
+		habitat = pLand->getHabCode(ix); 
+	}
+	outCull << "\t" << habitat;
+}
+#if RSDEBUG
+//DEBUGLOG << "Population::outCullData(): this=" << this
+//	<< " patchNum=" << pPatch->getPatchNum()
+//	<< " totalPop()=" << totalPop()
+//	<< " nStages=" << nStages << " nSexes=" << nSexes
+//	<< endl;
+#endif
+outCull << "\t" << pSpecies->getSpNum();
+outCull << "\t" << nCulled;
+outCull << endl;
+
+}
+
+#endif // RS_CONTAIN 
+
+//---------------------------------------------------------------------------
 // Open individuals file and write header record
 void Population::outIndsHeaders(int rep,int landNr,bool patchModel)
 {
@@ -3375,7 +3606,11 @@ if (trfr.indVar) {
 	}
 	else { // kernel
 		outInds << "\tMeanDistI";
+#if RS_CONTAIN
+		if (trfr.kernType == 1) outInds << "\tMeanDistII\tPKernelI";
+#else
 		if (trfr.twinKern) outInds << "\tMeanDistII\tPKernelI";
+#endif // RS_CONTAIN 
 	}
 }
 if (sett.indVar) {
@@ -3539,7 +3774,12 @@ for (int i = 0; i < ninds; i++) {
 			}
 			else { // kernel
 				trfrKernTraits k = inds[i]->getKernTraits();
-				if (trfr.twinKern) {
+#if RS_CONTAIN
+				if (trfr.kernType == 1) 
+#else
+				if (trfr.twinKern) 
+#endif // RS_CONTAIN 
+				{
 					outInds << "\t" << k.meanDist1 << "\t" << k.meanDist2 << "\t" << k.probKern1;
 				}
 				else {

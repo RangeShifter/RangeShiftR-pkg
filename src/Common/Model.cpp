@@ -66,6 +66,8 @@ if (!ppLand.generated) {
 	pComm = new Community(pLandscape); // set up community
 	// set up a sub-community associated with each patch (incl. the matrix)
 	pLandscape->updateCarryingCapacity(pSpecies,0,0);
+//	if (ppLand.rasterType <= 2 && ppLand.dmgLoaded) 
+//		pLandscape->updateDamageIndices();
 	patchData ppp;
 	int npatches = pLandscape->patchCount();
 	for (int i = 0; i < npatches; i++) {
@@ -237,11 +239,22 @@ DEBUGLOG << endl << "RunModel(): finished generating populations" << endl;
 				MemoLine("UNABLE TO OPEN OCCUPANCY FILE(S)");
 				filesOK = false;
 			}
-		if (sim.outPop) // open Population file
+		if (sim.outPop) {
+			// open Population file
 			if (!pComm->outPopHeaders(pSpecies,ppLand.landNum)) {
 				MemoLine("UNABLE TO OPEN POPULATION FILE");
 				filesOK = false;
 			}
+#if RS_CONTAIN
+			if (pCull->isCullApplied()) {
+				// also open Cull file
+				if (!pComm->outCullHeaders(pSpecies,ppLand.landNum)) {
+					MemoLine("UNABLE TO OPEN MANAGEMENT CULL FILE");
+					filesOK = false;
+				}
+			}
+#endif // RS_CONTAIN 
+		}
 		if (sim.outTraitsCells)
 			if (!pComm->outTraitsHeaders(pSpecies,ppLand.landNum)) {
 				MemoLine("UNABLE TO OPEN TRAITS FILE");
@@ -296,8 +309,14 @@ DEBUGLOG << "RunModel(): PROBLEM - closing output files" << endl;
 			pComm->outRangeHeaders(pSpecies,-999);
 		if (sim.outOccup && sim.reps > 1)
 			pComm->outOccupancyHeaders(-999);
-		if (sim.outPop)
+		if (sim.outPop) {
 			pComm->outPopHeaders(pSpecies,-999);
+#if RS_CONTAIN
+			if (pCull->isCullApplied()) {
+				pComm->outCullHeaders(pSpecies,-999);				
+			}
+#endif // RS_CONTAIN
+		}
 		if (sim.outTraitsCells)
 			pComm->outTraitsHeaders(pSpecies,-999);
 		if (sim.outTraitsRows)
@@ -366,6 +385,10 @@ DEBUGLOG << "RunModel(): PROBLEM - closing output files" << endl;
 	
 	// set up populations in the community
 	pLandscape->updateCarryingCapacity(pSpecies,0,0);
+#if RS_CONTAIN
+	if (ppLand.rasterType <= 2 && ppLand.dmgLoaded)
+		pLandscape->updateDamageIndices();
+#endif // RS_CONTAIN 
 #if RSDEBUG
 DEBUGLOG << "RunModel(): completed updating carrying capacity" << endl;
 #endif
@@ -584,7 +607,14 @@ DEBUGLOG << "RunModel(): yr=" << yr << " landChg.chgnum=" << landChg.chgnum
 
 		if (updateCC) {
 			pLandscape->updateCarryingCapacity(pSpecies,yr,landIx);
+#if RS_CONTAIN
+			if (ppLand.rasterType <= 2 && ppLand.dmgLoaded)
+				pLandscape->updateDamageIndices();
+#endif // RS_CONTAIN 
 		}
+#if RS_CONTAIN
+		pLandscape->resetDamageLocns();
+#endif // RS_CONTAIN 
 
 #if EVOLSMS
 		trfrRules trfr = pSpecies->getTrfr();
@@ -682,6 +712,11 @@ DEBUGLOG  << endl;
 #endif
 		}
 
+#if RS_CONTAIN
+		// update landscape change index for all sub-communities
+		pComm->setHabIndex(pSpecies,landIx);
+#endif // RS_CONTAIN 
+		
 #if VIRTUALECOLOGIST
 		if (sim.virtualEcologist) {
 			if ((yr >= virt.outStart && yr%virt.outInt == 0)) {
@@ -831,7 +866,7 @@ DEBUGLOG << "RunModel(): EXTREME EVENT year=" << eEvent.year << " season=" << eE
 						}
 					}
 #else
-					pComm->survival(gen,0,2); // survival of all non-juvenile stages
+					pComm->survival(gen,0,1,2); // survival of all non-juvenile stages
 #endif // PARTMIGRN 
 #else
 #if SPATIALMORT
@@ -871,13 +906,33 @@ DEBUGLOG << "RunModel(): EXTREME EVENT year=" << eEvent.year << " season=" << eE
 DEBUGLOG << "RunModel(): yr=" << yr << " gen=" << gen << " completed reproduction" << endl;
 #endif
 
+#if RS_CONTAIN || CULLDEMO
+			if (pCull->isCullApplied()) {
+				if (pCull->cullTiming() == 0) {
+#if RSDEBUG
+#if RS_CONTAIN 
+DEBUGLOG << endl << "RunModel(): PERFORMING MANAGEMENT CULL before dispersal" << endl;
+#else
+DEBUGLOG << endl << "RunModel(): PERFORMING MANAGEMENT CULL after reproduction" << endl;
+#endif // RS_CONTAIN  
+#endif
+					if (dem.stageStruct) ManagementCull(pLandscape,yr,sstruct.nStages);					
+					else ManagementCull(pLandscape,yr,1);								
+				}
+			}
+#endif // RS_CONTAIN || CULLDEMO
+
 			// Dispersal
 
+#if RS_DISEASE
+			pComm->emigration(pSpecies,gen);
+#else
 #if SEASONAL
 			pComm->emigration(gen);
 #else
 			pComm->emigration();
-#endif
+#endif // SEASONAL 
+#endif // RS_DISEASE  
 #if RSDEBUG
 DEBUGLOG << "RunModel(): yr=" << yr << " gen=" << gen << " completed emigration" << endl;
 #endif
@@ -902,6 +957,18 @@ DEBUGLOG << "RunModel(): yr=" << yr << " gen=" << gen << " completed dispersal" 
 #if VCL
 			if (stopRun) break;
 #endif
+
+#if RS_CONTAIN || CULLDEMO
+			if (pCull->isCullApplied()) {
+				if (pCull->cullTiming() == 1) {
+#if RSDEBUG
+DEBUGLOG << endl << "RunModel(): PERFORMING MANAGEMENT CULL after dispersal" << endl;
+#endif				
+					if (dem.stageStruct) ManagementCull(pLandscape,yr,sstruct.nStages);					
+					else ManagementCull(pLandscape,yr,1);								
+				}
+			}
+#endif // RS_CONTAIN || CULLDEMO
 
 #if BUTTERFLYDISP
 			if (!dem.stageStruct && dem.dispersal == 0) { // dispersal prior to parturition
@@ -983,7 +1050,7 @@ DEBUGLOG << "RunModel(): yr=" << yr << " gen=" << gen << " completed dispersal" 
 					pComm->survival(0,1,0); // development only of all stages
 #endif // PEDIGREE
 #endif // SEASONAL 
-					pComm->survival(0,1,0); // development only of all stages
+//					pComm->survival(0,1,0); // development only of all stages
 				}
 			}
 			else { // non-structured population
@@ -1075,6 +1142,21 @@ DEBUGLOG << "RunModel(): yr=" << yr << " gen=" << gen << " completed survival pa
 #if RSDEBUG
 DEBUGLOG << "RunModel(): yr=" << yr << " gen=" << gen << " completed survival part 1" << endl;
 #endif
+
+#if CULLDEMO
+			if (pCull->cullTiming() == 2) {
+#if RSDEBUG
+DEBUGLOG << endl << "RunModel(): PERFORMING MANAGEMENT CULL after survival" << endl;
+#endif				
+				if (dem.stageStruct) ManagementCull(pLandscape,yr,sstruct.nStages);					
+				else ManagementCull(pLandscape,yr,1);								
+			}
+#endif // CULLDEMO 
+#if RS_CONTAIN || CULLDEMO
+			// Write data to Cull file to match data written to Pop file
+			if (sim.outPop && yr >= sim.outStartPop && yr%sim.outIntPop == 0)
+				pComm->outCull(rep,yr,gen);
+#endif // RS_CONTAIN || CULLDEMO 
 
 #if SEASONAL
 			// Connectivity Matrix
@@ -1415,8 +1497,14 @@ if (sim.outOccup && sim.reps > 1) {
 
 if (sim.outRange)
 	pComm->outRangeHeaders(pSpecies,-999); // close Range file
-if (sim.outPop)
+if (sim.outPop) {
 	pComm->outPopHeaders(pSpecies,-999); // close Population file
+#if RS_CONTAIN
+	if (pCull->isCullApplied()) {
+		pComm->outCullHeaders(pSpecies,-999); // close Population file		
+	}
+#endif // RS_CONTAIN 
+}
 if (sim.outTraitsCells)
 	pComm->outTraitsHeaders(pSpecies,-999); // close Traits file
 if (sim.outTraitsRows)
@@ -1589,6 +1677,42 @@ if (sim.outPop && yr >= sim.outStartPop && yr%sim.outIntPop == 0)
 
 }
 
+#if RS_CONTAIN
+
+void ManagementCull(Landscape *pLandscape,int year,int nstages)
+{
+culldata c = pCull->getCullData();
+int nTargetPatches = pComm->findCullTargets(pCull,year,nstages);
+#if RSDEBUG
+DEBUGLOG << "ManagementCull(): maxNpatches=" << c.maxNpatches 
+	<< " nTargetPatches=" << nTargetPatches << endl;
+#endif
+if (nTargetPatches <= 0) return;
+if (nTargetPatches <= c.maxNpatches) {
+	// cull all target patches
+	pComm->cullAllTargets(pCull);
+}
+else {
+	// cull the maximum number of patches
+	// NB AT PRESENT THIS IS AT RANDOM, BUT IF THE CULL IS TO BE SPATIALLY
+	//    CORRELATED, IT WILL HAVE TO BECOME A FUNCTION OF THE Landscape
+	switch (c.method) {	
+	case 0: // random
+	case 1: // recently colonised
+		pComm->cullRandomTargets(pCull,year);
+		break;
+	case 2: // closest to damage
+	case 3: // closest to damage X popn size
+		pComm->cullRandomTargets(pCull,year);
+//		pComm->cullClosestTargets(pCull,year);
+		break;
+	}
+}
+pComm->resetCullTargets();
+}
+
+#endif // RS_CONTAIN 
+
 //---------------------------------------------------------------------------
 void OutParameters(Landscape *pLandscape)
 {
@@ -1620,71 +1744,73 @@ else
 	name = paramsSim->getDir(2) + "Sim" + Int2Str(sim.simulation) + "_Parameters.txt";
 outPar.open(name.c_str());
 
-outPar << "RangeShifter 2.0";
+outPar << "RangeShifter 2.0 ";
 #if SEASONAL
 //outPar << " PARTIAL MIGRATION MODEL";
-outPar << " SEASONAL MODEL";
-#else
-#if GOBYMODEL
-outPar << " GOBY MODEL";
-#else
-#if SOCIALMODEL
-outPar << " SOCIAL PHENOTYPE MODEL";
-#else
-#if GROUPDISP
-outPar << " GROUP DISPERSAL MODEL";
-#else
-#if HEATMAP
-outPar << " WITH DISPERSAL VISITS HEAT MAP";
-#else
-#if RS_ABC
-outPar << " APPROXIMATE BAYESIAN COMPUTATION";
-#else
-#if EVOLSMS
-outPar << " WITH EVOLUTIONARY SMS";
-#endif // EVOLSMS
-#endif // RS_ABC
-#endif // HEATMAP
-#endif // GROUPDISP
-#endif // SOCIALMODEL
-#endif // GOBYMODEL
+outPar << " SEASONAL MODEL ";
 #endif // SEASONAL 
+#if GOBYMODEL
+outPar << " GOBY MODEL ";
+#endif // GOBYMODEL
+#if SOCIALMODEL
+outPar << " SOCIAL PHENOTYPE MODEL ";
+#endif // SOCIALMODEL
+#if GROUPDISP
+outPar << " GROUP DISPERSAL MODEL ";
+#endif // GROUPDISP 
+#if HEATMAP
+outPar << " WITH DISPERSAL VISITS HEAT MAP ";
+#endif // HEATMAP 
+#if RS_ABC
+outPar << " APPROXIMATE BAYESIAN COMPUTATION ";
+#endif // RS_ABC
+#if EVOLSMS
+outPar << " WITH EVOLUTIONARY SMS ";
+#endif // EVOLSMS 
+#if CULLDEMO
+outPar << " CULL DEMONSTRATION ";
+#endif // CULLDEMO 
+#if RS_CONTAIN
+outPar << " ADAPTIVE MANAGEMENT ";
+#endif // RS_CONTAIN 
+
 #if RSWIN64
-outPar << "  -  64 bit implementation";
+outPar << " - 64 bit implementation";
 #endif
 outPar << endl;
 
-outPar << "================";
+outPar << "================ ";
 #if SEASONAL
 //outPar << " =======================";
-outPar << " ==============";
-#else
-#if GOBYMODEL
-outPar << "===========";
-#else
-#if SOCIALMODEL
-outPar << "=======================";
-#else
-#if GROUPDISP
-outPar << "======================";
-#else
-#if HEATMAP
-outPar << " ==============================";
-#else
-#if RS_ABC
-outPar << " ================================";
-#else
-#if EVOLSMS
-outPar << " =====================";
-#endif // EVOLSMS
-#endif // RS_ABC
-#endif // HEATMAP
-#endif // GROUPDISP
-#endif // SOCIALMODEL
-#endif // GOBYMODEL
+outPar << " ============== ";
 #endif // SEASONAL 
+#if GOBYMODEL
+outPar << " ========== ";
+#endif // GOBYMODEL
+#if SOCIALMODEL
+outPar << " ====================== ";
+#endif // SOCIALMODEL
+#if GROUPDISP
+outPar << " ===================== ";
+#endif // GROUPDISP 
+#if HEATMAP
+outPar << " ============================== ";
+#endif // HEATMAP 
+#if RS_ABC
+outPar << " ================================ ";
+#endif // RS_ABC
+#if EVOLSMS
+outPar << " ===================== ";
+#endif // EVOLSMS
+#if CULLDEMO
+outPar << " ================== ";
+#endif // CULLDEMO 
+#if RS_CONTAIN
+outPar << " =================== ";
+#endif // RS_CONTAIN 
+
 #if RSWIN64
-outPar << "     =====================";
+outPar << "   =====================";
 #endif
 outPar << endl << endl;
 
@@ -1767,6 +1893,15 @@ if (!ppLand.generated && ppLand.dynamic) {
 //			<< " habitat map: " << chg.habfile << endl;
 	}
 }
+#if RS_CONTAIN
+if (ppLand.dmgLoaded) {
+	outPar << endl << "ECONOMIC / ENVIRONMENTAL DAMAGE: " << endl;
+	outPar << "DAMAGE MAP: ";     
+	if (sim.batchMode) outPar << " (see batch file) " << landFile << endl;
+	else outPar << dmgmapname << endl;
+	outPar << "ALPHA     : " << pLandscape->getAlpha() << endl;
+}
+#endif // RS_CONTAIN 
 #if SEASONAL
 #if PARTMIGRN
 if (pLandscape->numExtEvents() > 0) {
@@ -1941,6 +2076,10 @@ switch (dem.repType) {
 		break;
 #endif
 }
+#if RS_CONTAIN
+int nhabitats = ppLand.nHab; 
+if (nhabitats > NHABITATS) nhabitats = NHABITATS;
+#endif // RS_CONTAIN 
 outPar << "STAGE STRUCTURE:\t";
 if (dem.stageStruct){
 	outPar << "yes" << endl;
@@ -1959,6 +2098,88 @@ if (dem.stageStruct){
 		for (int i = 0; i < sstruct.nStages; i++) {
 			outPar << "stage\t" << i << ":\t" << pSpecies->getMinAge(i,0) << "\tyears"<< endl;
 		}
+#if RS_CONTAIN
+#if SEASONAL
+		if (dem.habDepDem) {
+			for (int h = 0; h < nhabitats; h++) {
+				for (int j = 0; j < dem.nSeasons; j++) {
+					outPar << endl << "HABITAT: " << pLandscape->getHabCode(h);
+					outPar << " SEASON: " << j;
+//					if (pSpecies->getBreeding(j)) outPar << " Breeding";
+//					else outPar << " Non-breeding";
+					outPar << endl;
+					outPar << "FECUNDITIES:" << endl;
+					for (int i = 0; i < sstruct.nStages; i++) {
+						outPar << "stage\t" << i << ":\t" << pSpecies->getFec(h,j,i,0) << endl;
+					}
+					outPar << "DEVELOPMENT PROB.:" << endl;
+					for (int i = 0; i < sstruct.nStages; i++) {
+						outPar << "stage\t" << i << ":\t" << pSpecies->getDev(h,j,i,0) << endl;
+					}
+					outPar << "SURVIVAL PROB.:" << endl;
+					for (int i = 0; i < sstruct.nStages; i++) {
+						outPar << "stage\t" << i << ":\t" << pSpecies->getSurv(h,j,i,0) << endl;
+					}
+				}
+			}
+			outPar << endl;
+		}
+		else {
+			for (int j = 0; j < dem.nSeasons; j++) {
+				outPar << endl << "SEASON: " << j;
+				if (pSpecies->getBreeding(j)) outPar << " Breeding";
+				else outPar << " Non-breeding";
+				outPar << endl;
+				outPar << "FECUNDITIES:" << endl;
+				for (int i = 0; i < sstruct.nStages; i++) {
+					outPar << "stage\t" << i << ":\t" << pSpecies->getFec(0,j,i,0) << endl;
+				}
+				outPar << "DEVELOPMENT PROB.:" << endl;
+				for (int i = 0; i < sstruct.nStages; i++) {
+					outPar << "stage\t" << i << ":\t" << pSpecies->getDev(0,j,i,0) << endl;
+				}
+				outPar << "SURVIVAL PROB.:" << endl;
+				for (int i = 0; i < sstruct.nStages; i++) {
+					outPar << "stage\t" << i << ":\t" << pSpecies->getSurv(0,j,i,0) << endl;
+				}
+			}
+		}
+#else
+		if (dem.habDepDem) {
+			for (int h = 0; h < nhabitats; h++) {
+				outPar << endl << "HABITAT: " << pLandscape->getHabCode(h);
+				outPar << endl;
+				outPar << "FECUNDITIES:" << endl;
+				for (int i = 0; i < sstruct.nStages; i++) {
+					outPar << "stage\t" << i << ":\t" << pSpecies->getFec(h,i,0) << endl;
+				}
+				outPar << "DEVELOPMENT PROB.:" << endl;
+				for (int i = 0; i < sstruct.nStages; i++) {
+					outPar << "stage\t" << i << ":\t" << pSpecies->getDev(h,i,0) << endl;
+				}
+				outPar << "SURVIVAL PROB.:" << endl;
+				for (int i = 0; i < sstruct.nStages; i++) {
+					outPar << "stage\t" << i << ":\t" << pSpecies->getSurv(h,i,0) << endl;
+				}
+			}
+			outPar << endl;
+		}
+		else {
+			outPar << "FECUNDITIES:" << endl;
+			for (int i = 0; i < sstruct.nStages; i++) {
+				outPar << "stage\t" << i << ":\t" << pSpecies->getFec(0,i,0) << endl;
+			}
+			outPar << "DEVELOPMENT PROB.:" << endl;
+			for (int i = 0; i < sstruct.nStages; i++) {
+				outPar << "stage\t" << i << ":\t" << pSpecies->getDev(0,i,0) << endl;
+			}
+			outPar << "SURVIVAL PROB.:" << endl;
+			for (int i = 0; i < sstruct.nStages; i++) {
+				outPar << "stage\t" << i << ":\t" << pSpecies->getSurv(0,i,0) << endl;
+			}
+		}
+#endif // SEASONAL 
+#else
 #if SEASONAL
 		extrmevent e;
 		for (int j = 0; j < dem.nSeasons; j++) {
@@ -1995,7 +2216,8 @@ if (dem.stageStruct){
 		for (int i = 0; i < sstruct.nStages; i++) {
 			outPar << "stage\t" << i << ":\t" << pSpecies->getSurv(i,0) << endl;
 		}
-#endif
+#endif // SEASONAL 
+#endif // RS_CONTAIN 
 	}
 	// sex-specific demographic parameters
 	else {
@@ -2004,6 +2226,50 @@ if (dem.stageStruct){
 			outPar << "males " << i << ":\t" << pSpecies->getMinAge(i,1) << " years;\t";
 			outPar << "females " << i << ":\t" << pSpecies->getMinAge(i,0) << " years" << endl;
 		}
+#if RS_CONTAIN
+#if SEASONAL
+		for (int h = 0; h < nhabitats; h++) {
+			for (int j = 0; j < dem.nSeasons; j++) {
+				outPar << "HABITAT:" << h;
+				outPar << " SEASON:" << j << endl;
+				outPar << "FECUNDITIES:" << endl;
+				for (int i = 0; i < sstruct.nStages; i++) {
+					outPar << "males   " << i << ":\t" << pSpecies->getFec(h,j,i,1) << endl;
+					outPar << "females " << i << ":\t" << pSpecies->getFec(h,j,i,0) << endl;
+				}
+				outPar << "DEVELOPMENT PROB.:" << endl;
+				for (int i = 0; i < sstruct.nStages; i++) {
+					outPar << "males   " << i << ":\t" << pSpecies->getDev(h,j,i,1) << endl;
+					outPar << "females " << i << ":\t" << pSpecies->getDev(h,j,i,0) << endl;
+				}
+				outPar << "SURVIVAL PROB.:" << endl;
+				for (int i = 0; i < sstruct.nStages; i++) {
+					outPar << "males   " << i << ":\t" << pSpecies->getSurv(h,j,i,1) << endl;
+					outPar << "females " << i << ":\t" << pSpecies->getSurv(h,j,i,0) << endl;
+				}
+			}
+		}
+#else
+		for (int h = 0; h < nhabitats; h++) {
+			outPar << "HABITAT:" << h << endl;
+			outPar << "FECUNDITIES:" << endl;
+			for (int i = 0; i < sstruct.nStages; i++) {
+				outPar << "males   " << i << ":\t" << pSpecies->getFec(h,i,1) << endl;
+				outPar << "females " << i << ":\t" << pSpecies->getFec(h,i,0) << endl;
+			}
+			outPar << "DEVELOPMENT PROB.:" << endl;
+			for (int i = 0; i < sstruct.nStages; i++) {
+				outPar << "males   " << i << ":\t" << pSpecies->getDev(h,i,1) << endl;
+				outPar << "females " << i << ":\t" << pSpecies->getDev(h,i,0) << endl;
+			}
+			outPar << "SURVIVAL PROB.:" << endl;
+			for (int i = 0; i < sstruct.nStages; i++) {
+				outPar << "males   " << i << ":\t" << pSpecies->getSurv(h,i,1) << endl;
+				outPar << "females " << i << ":\t" << pSpecies->getSurv(h,i,0) << endl;
+			}
+		}
+#endif // SEASONAL 
+#else
 #if SEASONAL
 		for (int j = 0; j < dem.nSeasons; j++) {
 			outPar << "SEASON:" << j << endl;
@@ -2039,7 +2305,8 @@ if (dem.stageStruct){
 			outPar << "males   " << i << ":\t" << pSpecies->getSurv(i,1) << endl;
 			outPar << "females " << i << ":\t" << pSpecies->getSurv(i,0) << endl;
 		}
-#endif
+#endif // SEASONAL 
+#endif // RS_CONTAIN 
 	}
 /*
 #if RSDEBUG
@@ -2563,9 +2830,24 @@ else { // kernel
 	trfrKernTraits kern0,kern1;
 	trfrKernParams k0,k1;
 	outPar << "dispersal kernel" << endl << "TYPE: \t";
+#if RS_CONTAIN
+	if (trfr.kernType == 1) outPar << "double ";
+	if (trfr.kernType <= 1) outPar << "negative exponential" << endl;
+	if (trfr.kernType == 2) outPar << "2Dt" << endl;
+#else
 	if (trfr.twinKern) outPar << "double ";
 	outPar << "negative exponential" << endl;
+#endif // RS_CONTAIN 
 
+#if RS_CONTAIN
+	if (trfr.kernType == 2) {
+		trfr2Dt t2 = pSpecies->getTrfr2Dt(); 
+		outPar << "Kernel 1   U0: " << t2.u0Kernel1 << " P0: " << t2.p0Kernel1 << endl;
+		outPar << "Kernel 2   U0: " << t2.u0Kernel2 << " P0: " << t2.p0Kernel2 << endl;
+		outPar << "Prop kernel 1: " << t2.propKernel1 << endl;
+	}
+	else {
+#endif // RS_CONTAIN 
 	if (trfr.sexDep) {
 		outPar << sexdept << "yes" << endl;
 		if (trfr.stgDep) {
@@ -2576,7 +2858,11 @@ else { // kernel
 				kern0 = pSpecies->getKernTraits(i,0);
 				kern1 = pSpecies->getKernTraits(i,1);
 				outPar << meandist << " I: \tfemales "<< kern0.meanDist1 << " \tmales " << kern1.meanDist1 << endl;
+#if RS_CONTAIN
+				if (trfr.kernType == 1)
+#else
 				if (trfr.twinKern)
+#endif // RS_CONTAIN 
 				{
 					outPar << meandist << " II: \tfemales "<< kern0.meanDist2 << " \tmales " << kern1.meanDist2 << endl;
 					outPar << probkern << ": \tfemales "<< kern0.probKern1 << " \tmales " << kern1.probKern1 << endl;
@@ -2596,7 +2882,11 @@ else { // kernel
 					<< " \tmales " << k1.dist1SD << endl;
 				outPar << meandist << " I  (scaling factor): \tfemales " << k0.dist1Scale
 					<< " \tmales " << k1.dist1Scale << endl;
+#if RS_CONTAIN
+				if (trfr.kernType == 1)
+#else
 				if (trfr.twinKern)
+#endif // RS_CONTAIN 
 				{
 					outPar << meandist << " II (mean): \tfemales " << k0.dist2Mean
 						<< " \tmales " << k1.dist2Mean << endl;
@@ -2617,7 +2907,11 @@ else { // kernel
 				kern0 = pSpecies->getKernTraits(0,0);
 				kern1 = pSpecies->getKernTraits(0,1);
 				outPar << meandist << " I: \tfemales "<< kern0.meanDist1 << " \tmales " << kern1.meanDist1 << endl;
+#if RS_CONTAIN
+				if (trfr.kernType == 1)
+#else
 				if (trfr.twinKern)
+#endif // RS_CONTAIN 
 				{
 					outPar << meandist << " II: \tfemales "<< kern0.meanDist2 << " \tmales " << kern1.meanDist2 << endl;
 					outPar << probkern << ": \tfemales "<< kern0.probKern1 << " \tmales " << kern1.probKern1 << endl;
@@ -2633,7 +2927,11 @@ else { // kernel
 			for (int i = 0; i < sstruct.nStages; i++) {
 				kern0 = pSpecies->getKernTraits(i,0);
 				outPar << "stage " << i << ": \t"  << meandist << " I: " << kern0.meanDist1;
+#if RS_CONTAIN
+				if (trfr.kernType == 1)
+#else
 				if (trfr.twinKern)
+#endif // RS_CONTAIN 
 				{
 					outPar << " \t" << meandist << " II: " << kern0.meanDist2;
 					outPar << " \t" << probkern << ": " << kern0.probKern1;
@@ -2650,7 +2948,12 @@ else { // kernel
 				outPar << meandist << " I  (mean): " << k0.dist1Mean
 					<< " \t(s.d.): " << k0.dist1SD
 					<< " \t(scaling factor): " << k0.dist1Scale << endl;
-				if (trfr.twinKern) {
+#if RS_CONTAIN
+				if (trfr.kernType == 1) 
+#else
+				if (trfr.twinKern) 
+#endif // RS_CONTAIN 
+				{
 					outPar << meandist << " II (mean): " << k0.dist2Mean
 						<< " \t(s.d.): " << k0.dist2SD
 						<< " \t(scaling factor): " << k0.dist2Scale << endl;
@@ -2663,13 +2966,22 @@ else { // kernel
 				outPar << "no" << endl;
 				kern0 = pSpecies->getKernTraits(0,0);
 				outPar << meandist << " I: \t" << kern0.meanDist1 <<endl;
-				if (trfr.twinKern) {
+#if RS_CONTAIN
+				if (trfr.kernType == 1) 
+#else
+				if (trfr.twinKern) 
+#endif // RS_CONTAIN 
+				{
 					outPar << meandist << " II: \t" << kern0.meanDist2 <<endl;
 					outPar << probkern << ": \t" << kern0.probKern1 <<endl;
 				}
 			}
 		}
 	}
+#if RS_CONTAIN
+	}
+#endif // RS_CONTAIN 
+
 	outPar << "DISPERSAL MORTALITY:   ";
 	trfrMortParams mort = pSpecies->getMortParams();
 	if (trfr.distMort) {
@@ -2946,9 +3258,11 @@ if (virt.landscapeGenetics) {
 		outPar << endl;
 	}
 }
+
 #endif // VIRTUALECOLOGIST
 
 #if SOCIALMODEL
+
 // ADDITIONAL PARAMETERS FOR PROBIS SOCIAL POLYMORPHISM MODEL
 socialParams s = pSpecies->getSocialParams();
 outPar << endl << "SOCIAL POLYMORPHISM PARAMETERS:" << endl;
@@ -2964,7 +3278,63 @@ outPar << "Parameters for Allee effect below T: ca " << s.ca << " ba " << s.ba
 	<< " cs " << s.cs << " bs " << s.bs << endl;
 outPar << "Fitness-independent dispersal rate (dK):       " << s.dK << endl;
 outPar << "Change in dispersal rate with fitness (alpha): " << s.alpha << endl;
+
 #endif // SOCIALMODEL
+
+#if RS_CONTAIN
+
+outPar << endl << "MANAGEMENT CULL:" << endl;
+if (pCull->isCullApplied()) {
+	culldata c;
+	c = pCull->getCullData();
+	outPar << "Method:                    ";
+	switch (c.method) {	
+	case 0:
+		outPar << "random" << endl;
+		break;
+	case 1:
+		outPar << "recently colonised" << endl;
+		break;
+	case 2:
+		outPar << "closest to damage" << endl;
+		break;
+	case 3:
+		outPar << "closest to damage X population size" << endl;
+		break;
+	}
+	outPar << "Timing of cull:            ";
+	switch (c.timing) {	
+	case 0:
+		outPar << "before dispersal" << endl;
+		break;
+	case 1:
+		outPar << "after dispersal" << endl;
+		break;
+	}
+	if (dem.stageStruct) {
+		outPar << "Stages to be culled:       ";
+		bool firststage = true;
+		for (int i = 0; i < sstruct.nStages; i++) {
+			if (pCull->getCullStage(i)) {
+				if (!firststage) outPar << ", ";
+				outPar << i;
+				firststage = false;			
+			}
+		}
+		outPar << endl;	
+	}
+	outPar << "Threshold population:      " << c.popnThreshold << endl;
+	outPar << "Planned cull rate (%):     " << c.cullRate << endl;
+	outPar << "Max. no. of cells/patches: " << c.maxNpatches << endl;
+//	outPar << "Delay (years):             " << c.delay << endl;
+//	outPar << "Bias towards range edge:   ";
+//	if (c.edgeBias) outPar << "yes"; else outPar << "no"; outPar << endl;
+}
+else {
+	outPar << "Not applied" << endl;
+}
+
+#endif // RS_CONTAIN 
 
 // Initialisation
 

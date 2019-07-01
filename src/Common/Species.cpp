@@ -14,6 +14,9 @@ repType = 0; nStages = 2;
 dispersal = 1;
 #endif
 stageStruct = false;
+#if RS_CONTAIN
+habDepDem = false;
+#endif // RS_CONTAIN 
 propMales = 0.5; harem = 1.0; bc	= 1.0; lambda	= 1.5; probRep = 1.0;
 #if GOBYMODEL
 asocF = 1.0;
@@ -39,6 +42,19 @@ survDens	 = false; survStageDens	 = false;
 disperseOnLoss = false;
 for (int i = 0; i < NSTAGES; i++) {
 	for (int j = 0; j < NSEXES; j++) {
+#if RS_CONTAIN
+#if SEASONAL
+		for (int h = 0; h < NHABITATS; h++) {
+			for (int s = 0; s < NSEASONS; s++) {
+				fec[h][s][i][j] = 0.0; dev[h][s][i][j] = 0.0; surv[h][s][i][j] = 0.0; 
+			}
+		}
+#else
+		for (int h = 0; h < NHABITATS; h++) {
+			fec[h][i][j] = 0.0; dev[h][i][j] = 0.0; surv[h][i][j] = 0.0; 
+		}
+#endif // SEASONAL 
+#else
 #if SEASONAL
 		for (int s = 0; s < NSEASONS; s++) {
 			fec[s][i][j] = 0.0; dev[s][i][j] = 0.0; surv[s][i][j] = 0.0; 
@@ -46,6 +62,7 @@ for (int i = 0; i < NSTAGES; i++) {
 #else
 		fec[i][j] = 0.0; dev[i][j] = 0.0; surv[i][j] = 0.0; 
 #endif // SEASONAL 
+#endif // RS_CONTAIN 
 		minAge[i][j] = 0;
 	}
 }
@@ -100,8 +117,13 @@ groupmean = 2.0; groupdisp = false; grouptype = 0;
 #endif
 
 // initialise transfer parameters
-moveModel = false; stgDepTrfr = false; sexDepTrfr = false; twinKern = false; distMort = false;
+moveModel = false; stgDepTrfr = false; sexDepTrfr = false; distMort = false; 
 indVarTrfr = false;
+#if RS_CONTAIN
+kernType = 0;
+#else
+twinKern = false;
+#endif // RS_CONTAIN 
 #if EVOLSMS
 smType = 0;		
 nextChange = 0;
@@ -208,7 +230,9 @@ if (season >= 0 && season < nSeasons
 }
 extrmevent Species::getExtreme(short season) {
 extrmevent e; e.prob = e.mort = 0.0;
-if (season >= 0 && season < nSeasons) e = extreme[season];
+if (season >= 0 && season < nSeasons) {
+	if (extreme.size() > 0) e = extreme[season];	
+}
 return e;
 }			
 #if PARTMIGRN
@@ -239,6 +263,9 @@ if (d.nSeasons >= 2) nSeasons = d.nSeasons;
 #else
 if (d.repSeasons >= 1) repSeasons = d.repSeasons;
 #endif
+#if RS_CONTAIN
+habDepDem = d.habDepDem;
+#endif // RS_CONTAIN 
 #if BUTTERFLYDISP
 if (d.dispersal >= 0 && d.dispersal <= 1) dispersal = d.dispersal;
 #endif
@@ -264,6 +291,9 @@ d.nSeasons = nSeasons;
 #else
 d.repSeasons = repSeasons;
 #endif
+#if RS_CONTAIN
+d.habDepDem = habDepDem;
+#endif // RS_CONTAIN 
 #if BUTTERFLYDISP
 d.dispersal = dispersal;
 #endif
@@ -309,6 +339,16 @@ if (hx >= 0 && hx < habDimK) k = habK[hx][season];
 return k;
 }
 
+float Species::getMaxK(short nseasons) {
+float k = 0.0;
+for (int h = 0; h < habDimK; h++) {
+	for (int s = 0; s < nseasons; s++) {
+		if (habK[h][s] > k) k = habK[h][s];		
+	}
+}
+return k;
+}
+
 #else
 
 void Species::createHabK(short nhab) {
@@ -332,8 +372,6 @@ if (hx >= 0 && hx < habDimK) k = habK[hx];
 return k;
 }
 
-#endif // SEASONAL 
-
 float Species::getMaxK(void) {
 float k = 0.0;
 for (int i = 0; i < habDimK; i++) {
@@ -341,6 +379,8 @@ for (int i = 0; i < habDimK; i++) {
 }
 return k;
 }
+
+#endif // SEASONAL 
 
 void Species::deleteHabK(void) {
 if (habK != 0) {
@@ -376,6 +416,166 @@ s.survDens = survDens; s.survStageDens = survStageDens;
 s.disperseOnLoss = disperseOnLoss;
 return s;
 }
+
+#if RS_CONTAIN
+
+#if SEASONAL
+void Species::resetDem(short hab) {
+if (hab < 0) { // reset all habitats
+	for (int h = 0; h < NHABITATS; h++) {
+		for (int ssn = 0; ssn < NSEASONS; ssn++) {
+			for (int stg = 0; stg < NSTAGES; stg++) {
+				for (int sex = 0; sex < NSEXES; sex++) {
+					fec[h][ssn][stg][sex] = 0.0; dev[h][ssn][stg][sex] = 0.0; surv[h][ssn][stg][sex] = 0.0;
+				}
+			}		
+		}
+	}
+}
+else {
+	if (hab < NHABITATS) {
+		for (int ssn = 0; ssn < NSEASONS; ssn++) {		
+			for (int stg = 0; stg < NSTAGES; stg++) {
+				for (int sex = 0; sex < NSEXES; sex++) {
+					fec[hab][ssn][stg][sex] = 0.0; dev[hab][ssn][stg][sex] = 0.0; surv[hab][ssn][stg][sex] = 0.0;
+				}
+			}
+		}
+	}
+}
+}
+
+void Species::setFec(short hab,short ssn,short stg,short sex,float f) {
+#if RSDEBUG
+DebugGUI("Species::setFec(): hab=" + Int2Str(hab)	+ " ssn=" + Int2Str(ssn)
+	+ " stg=" + Int2Str(stg) + " sex=" + Int2Str(sex) + " f=" + Float2Str(f)
+	);
+#endif
+// NB fecundity for stage 0 must always be zero
+if (hab >= 0 && hab < NHABITATS && ssn >= 0 && ssn < NSEASONS && stg > 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES && f >= 0)
+	fec[hab][ssn][stg][sex] = f;
+}
+
+float Species::getFec(short hab,short ssn,short stg,short sex) {
+if (hab >= 0 && hab < NHABITATS && ssn >= 0 && ssn < NSEASONS && stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES)
+	return fec[hab][ssn][stg][sex];
+else return 0.0;
+}
+
+float Species::getMaxFec(void) {
+float maxfec = 0.0;
+if (stageStruct) {
+	for (int hab = 0; hab < NHABITATS; hab++) {
+		for (int ssn = 0; ssn < 10; ssn++) {
+			for (int stg = 1; stg < NSTAGES; stg++) {
+				if (fec[hab][ssn][stg][0] > maxfec) maxfec = fec[hab][ssn][stg][0];
+			}		
+		}
+	}
+}
+else maxfec = lambda;
+return maxfec;
+}
+
+void Species::setDev(short hab,short ssn,short stg,short sex,float d) {
+if (hab >= 0 && hab < NHABITATS && ssn >= 0 && ssn < NSEASONS && stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES && d >= 0)
+	dev[hab][ssn][stg][sex] = d;
+}
+
+float Species::getDev(short hab,short ssn,short stg,short sex) {
+if (hab >= 0 && hab < NHABITATS && ssn >= 0 && ssn < NSEASONS && stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES)
+	return dev[hab][ssn][stg][sex];
+else return 0.0;
+}
+
+void Species::setSurv(short hab,short ssn,short stg,short sex,float s) {
+if (hab >= 0 && hab < NHABITATS && ssn >= 0 && ssn < NSEASONS && stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES && s >= 0)
+	surv[hab][ssn][stg][sex] = s;
+}
+
+float Species::getSurv(short hab,short ssn,short stg,short sex) {
+if (hab >= 0 && hab < NHABITATS && ssn >= 0 && ssn < NSEASONS && stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES)
+	return surv[hab][ssn][stg][sex];
+else return 0.0;
+}
+#else
+void Species::resetDem(short hab) {
+if (hab < 0) { // reset all habitats
+	for (int h = 0; h < NHABITATS; h++) {
+		for (int stg = 0; stg < NSTAGES; stg++) {
+			for (int sex = 0; sex < NSEXES; sex++) {
+				fec[h][stg][sex] = 0.0; dev[h][stg][sex] = 0.0; surv[h][stg][sex] = 0.0;
+			}
+		}		
+	}
+}
+else {
+	if (hab < NHABITATS) {
+		for (int stg = 0; stg < NSTAGES; stg++) {
+			for (int sex = 0; sex < NSEXES; sex++) {
+				fec[hab][stg][sex] = 0.0; dev[hab][stg][sex] = 0.0; surv[hab][stg][sex] = 0.0;
+			}
+		}
+	}
+}
+}
+
+void Species::setFec(short hab,short stg,short sex,float f) {
+#if RSDEBUG
+DebugGUI("Species::setFec(): hab=" + Int2Str(hab)
+	+ " stg=" + Int2Str(stg)
+	+ " sex=" + Int2Str(sex)
+	+ " f=" + Float2Str(f)
+	);
+#endif
+// NB fecundity for stage 0 must always be zero
+if (hab >= 0 && hab < NHABITATS && stg > 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES && f >= 0)
+	fec[hab][stg][sex] = f;
+}
+
+float Species::getFec(short hab,short stg,short sex) {
+if (hab >= 0 && hab < NHABITATS && stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES)
+	return fec[hab][stg][sex];
+else return 0.0;
+}
+
+float Species::getMaxFec(void) {
+float maxfec = 0.0;
+if (stageStruct) {
+	for (int hab = 0; hab < NHABITATS; hab++) {
+		for (int stg = 1; stg < NSTAGES; stg++) {
+			if (fec[hab][stg][0] > maxfec) maxfec = fec[hab][stg][0];
+		}		
+	}
+}
+else maxfec = lambda;
+return maxfec;
+}
+
+void Species::setDev(short hab,short stg,short sex,float d) {
+if (hab >= 0 && hab < NHABITATS && stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES && d >= 0)
+	dev[hab][stg][sex] = d;
+}
+
+float Species::getDev(short hab,short stg,short sex) {
+if (hab >= 0 && hab < NHABITATS && stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES)
+	return dev[hab][stg][sex];
+else return 0.0;
+}
+
+void Species::setSurv(short hab,short stg,short sex,float s) {
+if (hab >= 0 && hab < NHABITATS && stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES && s >= 0)
+	surv[hab][stg][sex] = s;
+}
+
+float Species::getSurv(short hab,short stg,short sex) {
+if (hab >= 0 && hab < NHABITATS && stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES)
+	return surv[hab][stg][sex];
+else return 0.0;
+}
+#endif // SEASONAL 
+
+#else
 
 #if SEASONAL
 
@@ -473,8 +673,9 @@ if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES)
 else return 0.0;
 }
 
-#endif
+#endif // SEASONAL 
 
+#endif // RS_CONTAIN 
 
 void Species::setMinAge(short stg,short sex,int age) {
 // NB min age for stages 0 & 1 must always be zero
@@ -849,12 +1050,21 @@ if (indVarTrfr) {
 		if (moveType == 2) movttraits = 2;
 	}
 	else {
+#if RS_CONTAIN
+		if (sexDepTrfr) {
+			if (kernType == 1) movttraits = 6; else movttraits = 2;
+		}
+		else {
+			if (kernType == 1) movttraits = 3; else movttraits = 1;
+		}
+#else
 		if (sexDepTrfr) {
 			if (twinKern) movttraits = 6; else movttraits = 2;
 		}
 		else {
 			if (twinKern) movttraits = 3; else movttraits = 1;
 		}
+#endif // RS_CONTAIN 
 	}
 	movtTrait[0] = nTraits; movtTrait[1] = movttraits;
 	nTraits += movttraits;
@@ -940,7 +1150,12 @@ if (indVarTrfr) {
 	}
 	else {
 		if (sexDepTrfr) {
-			if (twinKern) {
+#if RS_CONTAIN
+			if (kernType == 1) 
+#else
+			if (twinKern) 
+#endif // RS_CONTAIN 
+			{
 				traitnames[trait++] = "meanDistI_F";
 				traitnames[trait++] = "meanDistI_M";
 				traitnames[trait++] = "meanDistII_F";
@@ -955,7 +1170,12 @@ if (indVarTrfr) {
 		}
 		else {
 			traitnames[trait++] = "meanDistI";
-			if (twinKern) {
+#if RS_CONTAIN
+			if (kernType == 1) 
+#else
+			if (twinKern) 
+#endif // RS_CONTAIN 
+			{
 				traitnames[trait++] = "meanDistII";
 				traitnames[trait++] = "probKernI";
 			}
@@ -1414,8 +1634,12 @@ void Species::setTrfr(const trfrRules t) {
 //DebugGUI("Species::setTrfr(): t.indVar=" + Int2Str((int)t.indVar));
 #endif
 moveModel = t.moveModel; stgDepTrfr = t.stgDep; sexDepTrfr = t.sexDep;
-twinKern = t.twinKern; distMort = t.distMort;
-indVarTrfr = t.indVar;
+distMort = t.distMort; indVarTrfr = t.indVar;
+#if RS_CONTAIN
+if (t.kernType >= 0 && t.kernType <= 2) kernType = t.kernType;
+#else
+twinKern = t.twinKern; 
+#endif // RS_CONTAIN 
 #if EVOLSMS
 if (t.smType >= 0 && t.smType <= 2) smType = t.smType;
 #else
@@ -1428,8 +1652,12 @@ moveType = t.moveType; costMap = t.costMap;
 trfrRules Species::getTrfr(void) {
 trfrRules t;
 t.moveModel = moveModel; t.stgDep = stgDepTrfr; t.sexDep = sexDepTrfr;
-t.twinKern = twinKern; t.distMort = distMort;
-t.indVar = indVarTrfr;
+t.distMort = distMort; t.indVar = indVarTrfr;
+#if RS_CONTAIN
+t.kernType = kernType;
+#else
+t.twinKern = twinKern; 
+#endif // RS_CONTAIN 
 #if EVOLSMS
 t.smType = smType;
 #else
@@ -1480,6 +1708,26 @@ trfrMortParams m;
 m.fixedMort = fixedMort; m.mortAlpha = mortAlpha; m.mortBeta = mortBeta;
 return m;
 }
+
+#if RS_CONTAIN
+
+void Species::setTrfr2Dt(trfr2Dt t) {
+if (t.u0Kernel1 >= 0.0) u0Kernel1 = t.u0Kernel1;
+if (t.p0Kernel1 >= 0.0) p0Kernel1 = t.p0Kernel1;
+if (t.u0Kernel2 >= 0.0) u0Kernel2 = t.u0Kernel2;
+if (t.p0Kernel2 >= 0.0) p0Kernel2 = t.p0Kernel2;
+if (t.propKernel1 >= 0.0) propKernel1 = t.propKernel1;
+}
+ 
+trfr2Dt Species::getTrfr2Dt(void) {
+trfr2Dt t;
+t.u0Kernel1 = u0Kernel1; t.p0Kernel1 = p0Kernel1;
+t.u0Kernel2 = u0Kernel2; t.p0Kernel2 = p0Kernel2;
+t.propKernel1 = propKernel1;
+return t;
+}
+	 
+#endif // RS_CONTAIN 
 
 void Species::setMovtTraits(const trfrMovtTraits m) {
 if (m.pr >= 1) pr = m.pr;

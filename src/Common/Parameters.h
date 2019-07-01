@@ -19,19 +19,12 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 20 October 2018 by Steve Palmer
+Last updated: 4 June 2019 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
 #ifndef ParametersH
 #define ParametersH
-
-#define NSTAGES 10		// maximum number of stages permitted
-#define NSEXES 2			// maximum number of sexes permitted
-#define PARAMDEBUG 0
-#define NTRAITS 18		// maximum number of variable traits which can be displayed
-											// in GUI (VCL version)
-#define NSD 3.0				// no. of s.d. to use to control range for displaying traits
 
 //#if CLUSTER
 //#include <string.h>
@@ -48,9 +41,18 @@ using namespace std;
 
 #include "Version.h"
 
+#define NSTAGES 10		// maximum number of stages permitted
+#define NSEXES 2			// maximum number of sexes permitted
+#define PARAMDEBUG 0
+#define NTRAITS 18		// maximum number of variable traits which can be displayed
+											// in GUI (VCL version)
+#define NSD 3.0				// no. of s.d. to use to control range for displaying traits
 #if SEASONAL
 #define NSEASONS 12		// maximum number of seasons permitted
 #endif
+#if RS_CONTAIN
+#define NHABITATS 10	// maximum number of SUITABLE habitats permitted
+#endif // RS_CONTAIN 
 
 #if RSWIN64
 typedef unsigned long long intptr;

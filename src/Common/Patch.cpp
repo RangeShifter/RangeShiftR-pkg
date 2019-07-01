@@ -17,6 +17,9 @@ Patch::Patch(int seqnum,int num)
 patchSeqNum = seqnum; patchNum = num; nCells = 0;
 xMin = yMin = 999999999; xMax = yMax = 0; x = y = 0;
 subCommPtr = 0;
+#if RS_CONTAIN
+damageIndex = 0.0;		
+#endif // RS_CONTAIN 
 #if SEASONAL
 for (int i = 0; i < nseasons; i++) localK.push_back(0.0);
 #else
@@ -300,6 +303,54 @@ if (env.stoch && env.inK) { // environmental stochasticity in K
 //	<< endl;
 #endif
 }
+
+#if RS_CONTAIN
+
+void Patch::resetDamageIndex(void) { damageIndex = 0.0; }
+
+void Patch::updateDamageIndex(int dmgX,int dmgY,int damage,double alpha) {
+// the damage index for the patch is based on Hanskii's index, i.e. it is the sum
+// of damage values of each cell in the landscape weighted by a negative exponential
+// function of distance between the cell and the patch (approx.) centroid
+
+// if the location of the damage is within the patch, then take the distance to
+// be zero - otherwise use Euclidean distance from centroid
+
+bool inpatch = false;
+int ncells = (int)cells.size();
+locn loc;
+double dist = 0.0;
+for (int i = 0; i < ncells; i++) {
+	loc = cells[i]->getLocn();
+	if (loc.x == dmgX && loc.y == dmgY) { inpatch = true; i = ncells+1; break; }
+}
+if (!inpatch) dist = sqrt((double)((dmgX-loc.x)*(dmgX-loc.x) + (dmgY-loc.y)*(dmgY-loc.y)));
+damageIndex += (double)damage * exp(-1.0*alpha*dist);
+
+}	
+
+double Patch::getDamageIndex(void) { return damageIndex; }
+
+void Patch::resetDamageLocns(void) {
+int ndlocns = (int)dmglocns.size();
+for (int i = 0; i < ndlocns; i++)
+	if (dmglocns[i] != NULL) dmglocns[i]->resetDamageLocn();
+}
+
+void Patch::setDamage(int xx,int yy,int dmg) {
+dmglocns.push_back(new DamageLocn(x,y,dmg));
+}
+
+double Patch::totalDamage(void) {
+double totdmg = 0.0;
+int ndlocns = (int)dmglocns.size();
+for (int i = 0; i < ndlocns; i++)
+	if (dmglocns[i] != NULL) totdmg += dmglocns[i]->getDamageIndex();
+return totdmg;
+}
+	
+#endif // RS_CONTAIN 
+
 
 #if SEASONAL
 float Patch::getK(int season) { 

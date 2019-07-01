@@ -16,7 +16,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 29 May 2017 by Steve Palmer
+Last updated: 5 June 2019 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -108,7 +108,11 @@ public:
 	void resetVisits(void);
 	void incrVisits(void);
 	unsigned long int getVisits(void);
-#endif
+#endif // HEATMAP 
+#if RS_CONTAIN
+	void setDamage(unsigned int);
+	unsigned int getDamage(void);
+#endif // RS_CONTAIN 
 
 private:
 	int x,y;			// cell co-ordinates
@@ -121,10 +125,13 @@ private:
 	float eps;		// local environmental stochasticity (epsilon) (dynamic, from N(0,std))
 #if HEATMAP
 	unsigned long int visits; // no. of times square is visited by dispersers
-#endif
+#endif // HEATMAP 
+#if RS_CONTAIN
+	unsigned int damage; // index of economic / environmental damage incurred if occupied
+#endif // RS_CONTAIN 
 #if SPATIALMORT
 	float mort[2];	// additional mortality in two periods
-#endif
+#endif // SPATIALMORT 
 	smscosts *smsData;
 
 	vector <short> habIxx; 		// habitat indices (rasterType=0)

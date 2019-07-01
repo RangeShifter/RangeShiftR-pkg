@@ -12,7 +12,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 5 February 2019 by Steve Palmer
+Last updated: 1 July 2019 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -20,8 +20,8 @@ Last updated: 5 February 2019 by Steve Palmer
 #define BatchModeH
 
 #include <vector>
-#include <fstream>
 #include <string>
+#include <fstream>
 #include <algorithm>
 using namespace std;
 
@@ -32,6 +32,10 @@ using namespace std;
 #if RS_ABC
 #include "ABC.h"
 #endif
+#if RS_CONTAIN
+//#include "Cull.h"
+#include "Control.h"
+#endif // RS_CONTAIN 
 
 struct batchfiles {
 	bool ok;
@@ -44,13 +48,13 @@ struct batchfiles {
 	int nseasons;
 #else
 	int repseasons;
-#endif
+#endif // SEASONAL  
 	int stagestruct,stages,transfer;
 	int sexesDem;		// no. of explicit sexes for demographic model
 	int sexesDisp;	// no. of explicit sexes for dispersal model
 #if SEASONAL
 //	string seasonFile;
-#endif
+#endif // SEASONAL 
 	string parameterFile;
 	string landFile;
 	string stageStructFile;
@@ -58,6 +62,9 @@ struct batchfiles {
 	string transferFile;
 	string settleFile;
 	string geneticsFile;
+#if RS_CONTAIN
+	string manageFile;
+#endif // RS_CONTAIN 
 	string initFile;
 #if VIRTUALECOLOGIST
 	string virtEcolFile;
@@ -81,13 +88,17 @@ int ParseParameterFile(void);
 int ParseLandFile(int,string);
 int ParseDynamicFile(string);
 int ParseStageFile(string);
-int ParseTransitionFile(void);
+int ParseTransitionFile(short,short);
 int ParseWeightsFile(string);
+#if RS_CONTAIN
+int ParseHabDemFile(short,short,string);
+int ParseManageFile(string);
+#endif // RS_CONTAIN 
 #if SEASONAL
 int ParseSeasonFile(string);
-#if PARTMIGRN
+//#if PARTMIGRN
 int ParseExtremeFile(string);
-#endif // PARTMIGRN 
+//#endif // PARTMIGRN 
 #endif // SEASONAL
 int ParseEmigFile(void);
 int ParseTransferFile(string);
@@ -140,6 +151,7 @@ void BatchError(
 222 - simulations must be sequential integers
 223 - seasons must be sequential integers
 333 - columns must match no. of habitats
+444 - columns must be one fewer than no. of stages
 444 - columns must match no. of stages
 666 - fieldname must be a unique positive integer
 */
@@ -176,12 +188,21 @@ int ReadParameters(int,Landscape*);
 int ReadLandFile(int);
 int ReadLandFile(int,Landscape*);
 int ReadDynLandFile(Landscape*);
-#if SEASONAL && PARTMIGRN
+#if SEASONAL
 int ReadStageStructure(int,Landscape*);
 #else
 int ReadStageStructure(int);
-#endif  
-int ReadTransitionMatrix(int);
+#endif // SEASONAL   
+#if RS_CONTAIN
+int ReadHabDemFile(const short,const short);
+int ReadManageFile(int,Landscape*);
+#endif // RS_CONTAIN 
+int ReadTransitionMatrix(
+	short,	// no. of stages
+	short,	// no. of sexes represented for demography 
+	short,	// habitat index
+	short		// season
+);
 int ReadStageWeights(int);
 int ReadEmigration(int);
 int ReadTransfer(int,Landscape*);
@@ -192,9 +213,9 @@ int ReadInitialisation(int,Landscape*);
 int ReadInitIndsFile(int,Landscape*,string);
 #if SEASONAL
 int ReadSeasonFile(const short,const short);
-#if PARTMIGRN
+//#if PARTMIGRN
 int ReadExtremeFile(Landscape*,const short);
-#endif // PARTMIGRN 
+//#endif // PARTMIGRN 
 #endif // SEASONAL
 #if VIRTUALECOLOGIST
 int ReadVirtEcol(int);
@@ -215,10 +236,13 @@ extern paramSim *paramsSim;
 extern Species *pSpecies;
 extern string costmapname;	// see FormMove.cpp (VCL) OR Main.cpp (batch)
 extern string genfilename;	// see FormGenetics.cpp (VCL) OR Main.cpp (batch)
+#if RS_CONTAIN
+extern Cull *pCull;
+#endif // RS_CONTAIN 
 #if VIRTUALECOLOGIST
 extern string locfilename;		// see FormVirtEcol.cpp (VCL) OR Main.cpp (batch)
 extern string patchfilename;	// see [NOT YET CODED FOR GUI] (VCL) OR Main.cpp (batch)
-#endif // VIRTUALECOLOGIST
+#endif // VIRTUALECOLOGIST 
 #if EVOLSMS
 extern string mortfilename;	// see [NOT YET CODED FOR GUI] (VCL) OR Main.cpp (batch)
 #endif // EVOLSMS
@@ -226,7 +250,7 @@ extern string mortfilename;	// see [NOT YET CODED FOR GUI] (VCL) OR Main.cpp (ba
 #if RSRANDOM
 extern int RS_random_seed;			// see RSrandom.cpp 
 #endif
-#endif // GROUPDISP
+#endif // GROUPDISP 
 
 //---------------------------------------------------------------------------
 #endif

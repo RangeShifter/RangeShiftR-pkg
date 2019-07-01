@@ -181,6 +181,9 @@ return 0;
 Landscape::Landscape(void) {
 patchModel = false; spDist = false; generated = false; fractal = false; continuous = false;
 dynamic = false; habIndexed = false;
+#if RS_CONTAIN
+dmgLoaded = false;
+#endif // RS_CONTAIN 
 resol = spResol = landNum = 0;
 rasterType = 0;
 nHab = nHabMax = 0;
@@ -201,6 +204,9 @@ cells = 0;
 connectMatrix = 0;
 epsGlobal = 0;
 patchChgMatrix = 0;
+#if RS_CONTAIN
+alpha = 1.0;					
+#endif // RS_CONTAIN 
 
 #if RSDEBUG
 //DEBUGLOG << "Landscape::Landscape():"
@@ -267,6 +273,13 @@ colours.clear();
 deleteConnectMatrix();
 deletePatchChgMatrix();
 
+#if RS_CONTAIN
+int ndlocns = dmglocns.size();
+for (int i = 0; i < ndlocns; i++)
+	if (dmglocns[i] != NULL) delete dmglocns[i];
+dmglocns.clear();
+#endif // RS_CONTAIN 
+
 #if RSDEBUG
 //MemoLine(("Landscape::~Landscape(): landscape deleted " + Int2Str(1)
 //	).c_str());
@@ -330,6 +343,9 @@ void Landscape::setLandParams(landParams ppp,bool batchMode)
 generated = ppp.generated; patchModel = ppp.patchModel; spDist = ppp.spDist;
 dynamic = ppp.dynamic;
 landNum = ppp.landNum;
+#if RS_CONTAIN
+dmgLoaded = ppp.dmgLoaded;
+#endif // RS_CONTAIN 
 if (ppp.resol > 0) resol = ppp.resol;
 if (ppp.spResol > 0 && ppp.spResol%ppp.resol == 0) spResol = ppp.spResol;
 if ((ppp.rasterType >= 0 && ppp.rasterType <= 2) || ppp.rasterType == 9)
@@ -365,6 +381,9 @@ landParams Landscape::getLandParams(void)
 landParams ppp;
 ppp.generated = generated; ppp.patchModel = patchModel; ppp.spDist = spDist;
 ppp.dynamic = dynamic;
+#if RS_CONTAIN
+ppp.dmgLoaded = dmgLoaded;
+#endif // RS_CONTAIN 
 ppp.landNum = landNum;
 ppp.resol = resol; ppp.spResol = spResol;
 ppp.rasterType = rasterType;
@@ -470,7 +489,7 @@ int nhab = (int)habCodes.size();
 for (int i = 0; i < nhab; i++) {
 	if (hab == habCodes[i]) return i;
 }
-return 0;
+return -999;
 }
 
 // Get the specified habitat code
@@ -1009,6 +1028,80 @@ locn loc = pCell->getLocn();
 pPatch->addCell(pCell,loc.x,loc.y);
 }
 
+#if RS_CONTAIN
+
+void Landscape::setDamage(Patch *pPatch,int x,int y,int dmg) 
+//void Landscape::setDamage(int x,int y,int dmg)
+{
+if (cells[y][x] != 0) { // not a no-data cell
+	if (dmg >= 0) {
+		if (pPatch == 0) { // cell is in the matrix
+			cells[y][x]->setDamage(dmg);			
+			dmglocns.push_back(new DamageLocn(x,y,dmg));
+		}
+		else { // cell is in a patch
+			pPatch->setDamage(x,y,dmg);
+		}
+//		intptr ppatch = (intptr)pPatch;
+//		dmglocns.push_back(new DamageLocn(x,y,ppatch,dmg));
+	}	
+}
+}
+
+void Landscape::updateDamageIndices(void) {
+
+int npatches = (int)patches.size();
+for (int i = 0; i < npatches; i++) patches[i]->resetDamageIndex();
+
+for (int y = dimY-1; y >= 0; y--) {
+	for (int x = 0; x < dimX; x++) {
+		if (cells[y][x] != 0) { // not a no-data cell
+			unsigned int d = cells[y][x]->getDamage();
+			if (d > 0) {
+#if RSDEBUG
+DEBUGLOG << "Landscape::updateDamageIndices(): y=" << y << " x=" << x
+	<< " d=" << d 
+	<< endl;
+#endif
+				for (int i = 1; i < npatches; i++) { // all except matrix patch
+					patches[i]->updateDamageIndex(x,y,d,alpha);
+				}
+			}
+		}
+	}
+}
+
+#if RSDEBUG
+for (int i = 1; i < npatches; i++) {
+	locn l = patches[i]->getCentroid();
+DEBUGLOG << "Landscape::updateDamageIndices(): i=" << i 
+	<< " PatchNum=" << patches[i]->getPatchNum() 
+	<< " x=" << l.x << " y=" << l.y << " damageIndex=" << patches[i]->getDamageIndex()
+	<< endl;	
+}
+#endif
+
+}
+
+void Landscape::setAlpha(double a) { if (a > 0.0) alpha = a; }
+double Landscape::getAlpha(void) { return alpha; }
+
+void Landscape::resetDamageLocns(void) {
+int ndlocns = (int)dmglocns.size();
+for (int i = 0; i < ndlocns; i++)
+	if (dmglocns[i] != NULL) dmglocns[i]->resetDamageLocn();
+}
+
+double Landscape::totalDamage(void) {
+double totdmg = 0.0;
+int ndlocns = (int)dmglocns.size();
+for (int i = 0; i < ndlocns; i++)
+	if (dmglocns[i] != NULL) totdmg += dmglocns[i]->getDamageIndex();
+return totdmg;
+}
+
+#endif // RS_CONTAIN 
+
 patchData Landscape::getPatchData(int ix) {
 patchData ppp;
 ppp.pPatch = patches[ix]; ppp.patchNum = patches[ix]->getPatchNum();
@@ -1065,6 +1158,7 @@ for (int i = 0; i < npatches; i++) {
 			getGlobalStoch(yr),nHab,rasterType,landIx,gradK);
 	}
 }
+
 }
 
 Cell* Landscape::findCell(int x,int y) {
@@ -1715,11 +1809,19 @@ initcells.clear();
 // Read landscape file(s)
 // Returns error code or zero if read correctly
 
+#if RS_CONTAIN
+#if SEASONAL
+int Landscape::readLandscape(int nseasons,int fileNum,string habfile,string pchfile,string dmgfile) 
+#else
+int Landscape::readLandscape(int fileNum,string habfile,string pchfile,string dmgfile) 
+#endif // SEASONAL 
+#else
 #if SEASONAL
 int Landscape::readLandscape(int nseasons,int fileNum,string habfile,string pchfile) 
 #else
 int Landscape::readLandscape(int fileNum,string habfile,string pchfile) 
 #endif // SEASONAL 
+#endif // RS_CONTAIN 
 {
 // fileNum == 0 for (first) habitat file and optional patch file
 // fileNum > 0  for subsequent habitat files under the %cover option
@@ -1728,6 +1830,10 @@ string header;
 int h,seq,p,habnodata,pchnodata;
 int ncols,nrows;
 float hfloat,pfloat;
+#if RS_CONTAIN
+int d,dmgnodata;
+float dfloat;
+#endif // RS_CONTAIN 
 Patch *pPatch;
 simParams sim = paramsSim->getSim();
 
@@ -1735,18 +1841,40 @@ if (fileNum < 0) return 19;
 
 ifstream hfile; // habitat file input stream
 ifstream pfile; // patch file input stream
+#if RS_CONTAIN
+ifstream dfile; // damage file input stream
+#if RSDEBUG
+//DEBUGLOG << "Landscape::readLandscape(): habfile=" << habfile << " pchfile=" << pchfile
+//	<< " dmgfile=" << dmgfile 
+//	<< endl;
+#endif
+bool readdamage = true;
+if (dmgfile == "NULL") readdamage = false;
+#endif // RS_CONTAIN 
 initParams init = paramsInit->getInit();
 
 // open habitat file and optionally also patch file
 hfile.open(habfile.c_str());
 if (!hfile.is_open()) return 11;
-if (fileNum == 0 && patchModel) {
-	pfile.open(pchfile.c_str());
-	if (!pfile.is_open()) {
-		hfile.close(); hfile.clear();
-		return 12;
+if (fileNum == 0) { 
+	if (patchModel) {
+		pfile.open(pchfile.c_str());
+		if (!pfile.is_open()) {
+			hfile.close(); hfile.clear();
+			return 12;
+		}
 	}
+#if RS_CONTAIN
+	if (readdamage) {
+		dfile.open(dmgfile.c_str());
+		if (!dfile.is_open()) {
+			hfile.close(); hfile.clear();
+			return 15;
+		}		
+	}
+#endif // RS_CONTAIN 
 }
+
 // read landscape data from header records of habitat file
 // NB headers of all files have already been compared
 hfile >> header >> ncols >> header >> nrows >> header >> minEast >> header >> minNorth
@@ -1759,9 +1887,17 @@ if (fileNum == 0) {
 	paramsInit->setInit(init);
 }
 
-if (fileNum == 0 && patchModel) {
-	for (int i = 0; i < 5; i++) pfile >> header >> pfloat;
-	pfile >> header >> pchnodata;
+if (fileNum == 0) {
+	if (patchModel) {
+		for (int i = 0; i < 5; i++) pfile >> header >> pfloat;
+		pfile >> header >> pchnodata;		
+	}
+#if RS_CONTAIN
+	if (readdamage) {
+		for (int i = 0; i < 5; i++) dfile >> header >> dfloat;
+		dfile >> header >> dmgnodata;		
+	}
+#endif // RS_CONTAIN 
 }
 
 if (fileNum == 0) setCellArray();
@@ -1769,6 +1905,9 @@ if (fileNum == 0) setCellArray();
 // set up bad float values to ensure that valid values are read
 float badhfloat = -9.0; if (habnodata == -9) badhfloat = -99.0;
 float badpfloat = -9.0; if (pchnodata == -9) badpfloat = -99.0;
+#if RS_CONTAIN
+float baddfloat = -9.0; if (dmgnodata == -9) baddfloat = -99.0;
+#endif // RS_CONTAIN 
 
 seq = 0; 	// initial sequential patch landscape
 p = 0; 		// initial patch number for cell-based landscape
@@ -1836,6 +1975,23 @@ case 0: // raster with habitat codes - 100% habitat each cell
 					}
 				}
 			}
+#if RS_CONTAIN
+			if (readdamage) {
+				dfloat = baddfloat; dfile >> dfloat; d = (int)dfloat;
+				if (d < 0) { // invalid damage value
+					hfile.close(); hfile.clear();
+					if (pfile.is_open()) { pfile.close(); pfile.clear(); }
+					return 16;					
+				}
+				if (patchModel) {
+					if (p == 0) // cell is in the matrix
+						setDamage(0,x,y,d);
+					else
+						setDamage(pPatch,x,y,d);					
+				}
+				else setDamage(0,x,y,d);
+			}
+#endif // RS_CONTAIN 
 		}
 	}
 	break;
@@ -1907,6 +2063,23 @@ case 1: // multiple % cover
 					}
 				} // end of h != habnodata
 			}
+#if RS_CONTAIN
+			if (readdamage) {
+				dfloat = baddfloat; dfile >> dfloat; d = (int)dfloat;
+				if (d < 0) { // invalid damage value
+					hfile.close(); hfile.clear();
+					if (pfile.is_open()) { pfile.close(); pfile.clear(); }
+					return 16;					
+				}
+				if (patchModel) {
+					if (p == 0) // cell is in the matrix
+						setDamage(0,x,y,d);
+					else
+						setDamage(pPatch,x,y,d);					
+				}
+				else setDamage(0,x,y,d);
+			}
+#endif // RS_CONTAIN 
 		}
 	}
 	habIndexed = true; // habitats are already numbered 1...n in correct order
@@ -1965,6 +2138,23 @@ case 2: // habitat quality
 					}
 				}
 			}
+#if RS_CONTAIN
+			if (readdamage) {
+				dfloat = baddfloat; dfile >> dfloat; d = (int)dfloat;
+				if (d < 0) { // invalid damage value
+					hfile.close(); hfile.clear();
+					if (pfile.is_open()) { pfile.close(); pfile.clear(); }
+					return 16;					
+				}
+				if (patchModel) {
+					if (p == 0) // cell is in the matrix
+						setDamage(0,x,y,d);
+					else
+						setDamage(pPatch,x,y,d);					
+				}
+				else setDamage(0,x,y,d);
+			}
+#endif // RS_CONTAIN 
 		}
 	}
 	break;
@@ -1973,8 +2163,15 @@ default:
 	;
 }
 
+#if RS_CONTAIN
+dmgLoaded = readdamage;
+#endif // RS_CONTAIN 
+
 if (hfile.is_open()) { hfile.close(); hfile.clear(); }
 if (pfile.is_open()) { pfile.close(); pfile.clear(); }
+#if RS_CONTAIN
+if (dfile.is_open()) { dfile.close(); dfile.clear(); }
+#endif // RS_CONTAIN 
 return 0;
 }
 
@@ -2454,7 +2651,7 @@ outvisits.close(); outvisits.clear();
 //---------------------------------------------------------------------------
 
 #if SEASONAL
-#if PARTMIGRN
+//#if PARTMIGRN
 
 // extreme events
 
@@ -2491,7 +2688,7 @@ void Landscape::resetExtEvents(void) { extevents.clear(); }
 
 int Landscape::numExtEvents(void) { return (int)extevents.size(); }
 
-#endif // PARTMIGRN 
+//#endif // PARTMIGRN 
 #endif // SEASONAL 
 
 //---------------------------------------------------------------------------

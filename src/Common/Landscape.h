@@ -43,7 +43,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 12 November 2017 by Steve Palmer
+Last updated: 1 July 2019 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -64,6 +64,9 @@ using namespace std;
 #include "Cell.h"
 #include "Species.h"
 #include "FractalGenerator.h"
+#if RS_CONTAIN
+#include "Control.h"
+#endif // RS_CONTAIN 
 
 //---------------------------------------------------------------------------
 
@@ -118,9 +121,12 @@ private:
 
 //---------------------------------------------------------------------------
 
-struct landParams {
+struct landParams {       
 	bool patchModel; bool spDist; bool generated;
 	bool dynamic;
+#if RS_CONTAIN
+	bool dmgLoaded;
+#endif // RS_CONTAIN 
 	int landNum; int resol; int spResol; int nHab; int nHabMax;
 	int dimX,dimY,minX,minY,maxX,maxY;
 	short rasterType;
@@ -159,12 +165,12 @@ struct patchChange {
 };
 
 #if SEASONAL
-#if PARTMIGRN
+//#if PARTMIGRN
 struct extEvent { // extreme event
 	int year,season,patchID,x,y; float probMort;
 };
-#endif // PARTMIGRN 
-#endif // SEASONAL 
+//#endif // PARTMIGRN 
+#endif // SEASONAL
 
 class Landscape{
 public:
@@ -274,6 +280,19 @@ public:
 		int,    // y co-ordinate
 		float   // habitat quality value
 	);
+#if RS_CONTAIN
+	void setDamage(
+		Patch*, // pointer to Patch
+		int,    // x co-ordinate
+		int,    // y co-ordinate
+		int			// damage index 
+	);
+	void updateDamageIndices(void);
+	void setAlpha(double);
+	double getAlpha(void);
+	void resetDamageLocns(void);
+	double totalDamage(void);
+#endif // RS_CONTAIN 
 	patchData getPatchData(
 		int		// index no. of Patch in patches vector
 	);
@@ -316,7 +335,7 @@ public:
 		int,		// no. of years
 		string	// filename
 	);
-#endif
+#endif // BUTTERFLYDISP 
 	float getGlobalStoch(
 		int		// year
 	);
@@ -352,7 +371,7 @@ public:
 		string,	// mortality file name period 0
 		string	// mortality file name period 1
 	);
-#endif
+#endif // SPATIALMORT 
 
 	// functions to handle species distributions
 
@@ -440,6 +459,26 @@ public:
 
 	// functions to handle input and output
 
+#if RS_CONTAIN
+#if SEASONAL
+	int readLandscape(
+		int,		// no. of seasonss
+		int,		// fileNum == 0 for (first) habitat file and optional patch file
+						// fileNum > 0  for subsequent habitat files under the %cover option
+		string,	// habitat file name
+		string,	// patch file name
+		string	// damage file name (may be NULL)
+	);
+#else
+	int readLandscape(
+		int,		// fileNum == 0 for (first) habitat file and optional patch file
+						// fileNum > 0  for subsequent habitat files under the %cover option
+		string,	// habitat file name
+		string,	// patch file name
+		string	// damage file name (may be NULL)
+	);
+#endif // SEASONAL 
+#else
 #if SEASONAL
 	int readLandscape(
 		int,		// no. of seasonss
@@ -456,6 +495,7 @@ public:
 		string	// patch file name
 	);
 #endif // SEASONAL 
+#endif // RS_CONTAIN 
 	void listPatches(void);
 	int readCosts(
 		string	// costs file name
@@ -486,14 +526,14 @@ int outABCconnect(int,int);
 #endif
 
 #if SEASONAL
-#if PARTMIGRN
+//#if PARTMIGRN
 	// extreme events
 	void addExtEvent(extEvent);
 	extEvent getExtEvent(int);
 	void resetExtEvents(void);
 	int numExtEvents(void);
-#endif // PARTMIGRN 
-#endif // SEASONAL 
+//#endif // PARTMIGRN 
+#endif // SEASONAL
 
 private:
 	bool generated;				// artificially generated?
@@ -503,6 +543,9 @@ private:
 	bool continuous;			//
 	bool dynamic;					// landscape changes during simulation
 	bool habIndexed;			// habitat codes have been converted to index numbers
+#if RS_CONTAIN
+	bool dmgLoaded;				// economic / environmental damage values have been input
+#endif // RS_CONTAIN 
 	short rasterType;			// 0 = habitat codes 1 = % cover 2 = quality 9 = artificial landscape
 	int landNum;					// landscape number
 	int resol;						// cell size (m)
@@ -520,6 +563,9 @@ private:
 	float gpix;						// image display ratio for gradient map
 	double minEast;				// ) real world min co-ordinates
 	double minNorth;			// ) read from habitat raster
+#if RS_CONTAIN
+	double alpha;					// economic / environmental damage distance decay coefficient
+#endif // RS_CONTAIN 
 
 	// list of cells in the landscape
 	// cells MUST be loaded in the sequence ascending x within descending y
@@ -560,11 +606,15 @@ private:
 	int ***patchChgMatrix;
 
 #if SEASONAL
-#if PARTMIGRN
+//#if PARTMIGRN
 	// extreme events
 	std::vector <extEvent> extevents;
-#endif // PARTMIGRN 
+//#endif // PARTMIGRN 
 #endif // SEASONAL 
+
+#if RS_CONTAIN
+	std::vector <DamageLocn*> dmglocns;
+#endif // RS_CONTAIN 
 	
 };
 

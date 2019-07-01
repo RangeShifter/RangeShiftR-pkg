@@ -17,6 +17,13 @@ pPatch = pPch;
 pPatch->setSubComm((intptr)this);
 initial = false;
 occupancy = 0;
+#if RS_CONTAIN
+cullTarget = false;
+firstYear = -1;
+#endif // RS_CONTAIN 
+#if RS_CONTAIN
+habIndex = -1;
+#endif // RS_CONTAIN 
 }
 
 SubCommunity::~SubCommunity() {
@@ -37,6 +44,23 @@ locn SubCommunity::getLocn(void) {
 locn loc = pPatch->getCell(0);
 return loc;
 }
+
+#if RS_CONTAIN
+void SubCommunity::setHabIndex(Species *pSpecies,short rastertype,short landIx) {
+demogrParams dem = pSpecies->getDemogr();
+if (dem.habDepDem) {   
+	if (rastertype == 0) {
+		habIndex = -1;
+		Cell *pCell = pPatch->getRandomCell();
+		if (pCell != 0) {
+			habIndex = pCell->getHabIndex(landIx);
+		}
+	}
+	else habIndex = 0;	
+}
+else habIndex = 0;
+}
+#endif // RS_CONTAIN 
 
 void SubCommunity::setInitial(bool b) { initial = b; }
 
@@ -225,7 +249,11 @@ for (int i = 0; i < npops; i++) { // all populations
 //	<< " i = " << i
 //	<< " popns[i] = " << popns[i] << endl;
 #endif
+#if RS_CONTAIN
+	pop = popns[i]->getStats(habIndex);
+#else
 	pop = popns[i]->getStats();
+#endif // RS_CONTAIN 
 	p.pSpecies = pop.pSpecies;
 	p.spNum = pop.spNum;
 	p.nInds += pop.nInds;
@@ -430,6 +458,7 @@ if (dem.repType == 3 && popns.size() > 0) { // hermaphrodite species (and presen
 int npops = (int)popns.size();
 // THE FOLLOWING MAY BE MORE EFFICIENT WHILST THERE IS ONLY ONE SPECIES ...
 if (npops < 1) return;
+
 #if SEASONAL
 localK = pPatch->getK(season);
 #else
@@ -459,6 +488,13 @@ if (localK > 0.0) {
 		}
 	}
 	for (int i = 0; i < npops; i++) { // all populations
+#if RS_CONTAIN
+#if SEASONAL
+		popns[i]->reproduction(habIndex,season,localK,envval,resol);
+#else
+		popns[i]->reproduction(habIndex,localK,envval,resol);
+#endif // SEASONAL
+#else
 #if SEASONAL
 		popns[i]->reproduction(season,localK,envval,resol);
 #else
@@ -469,9 +505,10 @@ if (localK > 0.0) {
 		popns[i]->reproduction(localK,envval,resol,option);
 #else
 		popns[i]->reproduction(localK,envval,resol);
-#endif // BUTTERFLYDISP
-#endif // GROUPDISP
+#endif // BUTTERFLYDISP 
+#endif // GROUPDISP 
 #endif // SEASONAL
+#endif // RS_CONTAIN 
 #if BUTTERFLYDISP
 		if (option == 0) // complete classical reproduction
 			popns[i]->fledge();
@@ -525,22 +562,33 @@ for (int i = 0; i < npops; i++) { // all populations
 }
 #endif
 
+#if RS_DISEASE
+void SubCommunity::emigration(Species *pSpecies,short season) 
+#else
 #if SEASONAL
 void SubCommunity::emigration(short season) 
 #else
 void SubCommunity::emigration(void) 
-#endif
+#endif // SEASONAL 
+#endif // RS_DISEASE  
 {
 if (subCommNum == 0) return; // no emigration from the matrix
 float localK;
 int npops = (int)popns.size();
 // THE FOLLOWING MAY BE MORE EFFICIENT WHILST THERE IS ONLY ONE SPECIES ...
 if (npops < 1) return;
+#if RS_DISEASE
+// use local K for the NEXT season in emigration decision
+demogrParams dem = pSpecies->getDemogr();
+if (season+1 < dem.nSeasons) localK = pPatch->getK(season+1);
+else localK = pPatch->getK(0);
+#else
 #if SEASONAL
 localK = pPatch->getK(season);
 #else
 localK = pPatch->getK();
 #endif // SEASONAL 
+#endif // RS_DISEASE  
 // NOTE that even if K is zero, it could have been >0 in previous time-step, and there
 // might be emigrants if there is non-juvenile emigration
 for (int i = 0; i < npops; i++) { // all populations
@@ -571,7 +619,11 @@ int npops = (int)popns.size();
 //	<< endl;
 #endif
 for (int i = 0; i < npops; i++) { // all populations
+#if RS_CONTAIN
+	pop = popns[i]->getStats(habIndex);
+#else
 	pop = popns[i]->getStats();
+#endif // RS_CONTAIN 
 #if GROUPDISP
 	bool newgroup = true;
 	int groupsize,currentsize;
@@ -1014,6 +1066,13 @@ if (part == 0) {
 	float localK = pPatch->getK();
 #endif // SEASONAL 
 	for (int i = 0; i < npops; i++) { // all populations
+#if RS_CONTAIN
+#if SEASONAL
+		popns[i]->survival0(localK,habIndex,season,option0,option1);
+#else
+		popns[i]->survival0(localK,habIndex,option0,option1);
+#endif // SEASONAL
+#else
 #if SEASONAL
 		popns[i]->survival0(localK,season,option0,option1);
 #else
@@ -1025,8 +1084,9 @@ if (part == 0) {
 #else
 		popns[i]->survival0(localK,option0,option1);
 #endif // PEDIGREE 
-#endif // SPATIALMORT
+#endif // SPATIALMORT 
 #endif // SEASONAL
+#endif // RS_CONTAIN 
 	}
 }
 else {
@@ -1039,6 +1099,66 @@ else {
 	}
 }
 }
+
+#if RS_CONTAIN
+
+short SubCommunity::findCullTarget(Cull *pCull,int year,int nstages)
+{
+#if RSDEBUG
+//DEBUGLOG << "SubCommunity::findCullTarget(): year=" << year
+//	<< " nstages=" << nstages << " PatchNum=" << pPatch->getPatchNum()
+//	<< endl;
+#endif
+short target = 0;
+culldata c = pCull->getCullData();      
+int npops = (int)popns.size();
+for (int i = 0; i < npops; i++) { // all populations
+	if (nstages < 2) { // non-structured
+		if (popns[i]->getNInds() >= c.popnThreshold) {
+			cullTarget = true; target = 1;
+			if (firstYear < 0) firstYear = year;
+		}	
+	}
+	else { // stage-structured
+		int nInds = 0;
+		for (short stg = 0; stg < nstages; stg++) {
+			if (pCull->getCullStage(stg)) {
+				nInds += popns[i]->stagePop(stg);
+			}
+#if RSDEBUG
+//DEBUGLOG << "SubCommunity::findCullTarget(): stg=" << stg
+//	<< " nInds=" << nInds << " getCullStage=" << pCull->getCullStage(stg)
+//	<< endl;
+#endif
+		}
+		if (nInds >= c.popnThreshold) {
+			cullTarget = true; target = 1;
+			if (firstYear < 0) firstYear = year;
+		}			
+	}
+}
+#if RSDEBUG
+//DEBUGLOG << "SubCommunity::findCullTarget(): target=" << target
+//	<< " cullTarget=" << cullTarget << " firstYear=" << firstYear
+//	<< endl;
+#endif
+return target;
+}
+
+bool SubCommunity::isCullTarget(void) { return cullTarget; }
+
+int SubCommunity::initialYear(void) { return firstYear; }
+
+double SubCommunity::damageIndex(void) { return pPatch->getDamageIndex(); }
+
+void SubCommunity::resetCullTarget(void) { cullTarget = false; }
+
+void SubCommunity::cullPatch(Cull *pCull,int pop,float cullrate) { 
+popns[pop]->cull(pCull,cullrate/100.0);
+cullTarget = false;
+}
+	
+#endif // RS_CONTAIN 
 
 void SubCommunity::ageIncrement(void) {
 int npops = (int)popns.size();
@@ -1057,7 +1177,11 @@ Population *pPop;
 popStats pop;
 int npops = (int)popns.size();
 for (int i = 0; i < npops; i++) { // all populations
+#if RS_CONTAIN
+	pop = popns[i]->getStats(habIndex);
+#else
 	pop = popns[i]->getStats();
+#endif // RS_CONTAIN 
 	if (pop.pSpecies == pSp && pop.pPatch == pPch) { // population located
 		pPop = popns[i];
 		break;
@@ -1085,7 +1209,11 @@ DEBUGLOG << "SubCommunity::updateOccupancy(): this=" << this
 popStats pop;
 int npops = (int)popns.size();
 for (int i = 0; i < npops; i++) {
+#if RS_CONTAIN
+	pop = popns[i]->getStats(habIndex);
+#else
 	pop = popns[i]->getStats();
+#endif // RS_CONTAIN 
 	if (pop.nInds > 0 && pop.breeding) {
 		occupancy[row]++;
 		i = npops;
@@ -1217,9 +1345,83 @@ for (int i = 0; i < npops; i++) { // all populations
 			popns[i]->outPopulation(rep,yr,gen,eps,land.patchModel,writeEnv,gradK);
 		}
 	}
+#endif // RS_ABC 
+}
+}
+
+#if RS_CONTAIN
+
+// Open cull file and write header record
+bool SubCommunity::outCullHeaders(Landscape *pLandscape,Species *pSpecies,int option)
+{
+bool fileOK;
+Population *pPop;
+landParams land = pLandscape->getLandParams();
+
+if (option == -999) { // close the file
+	// as all populations may have been deleted, set up a dummy one
+	// species is not necessary
+	pPop = new Population();
+	fileOK = pPop->outCullHeaders(-999,land.patchModel);
+	delete pPop;
+}
+else { // open the file
+	// as no population has yet been created, set up a dummy one
+	// species is necessary, as columns depend on stage and sex structure
+#if PEDIGREE
+	pPop = new Population(pSpecies,0,pPatch,0,land.resol);
+#else
+	pPop = new Population(pSpecies,pPatch,0,land.resol);
+#endif // PEDIGREE
+	fileOK = pPop->outCullHeaders(land.landNum,land.patchModel);
+	delete pPop;
+}
+return fileOK;
+}
+
+// Write records to cull file
+void SubCommunity::outCull(Landscape *pLandscape,int rep,int yr,int gen)
+{
+#if RSDEBUG
+//DEBUGLOG << "SubCommunity::outCull(): subCommNum=" << subCommNum
+//	<< " yr=" << yr << " PatchNum="<< pPatch->getPatchNum()
+//	<< " cullTarget=" << cullTarget << " firstYear="<< firstYear
+//	<< endl;
 #endif
+landParams land = pLandscape->getLandParams();
+envGradParams grad = paramsGrad->getGradient();
+envStochParams env = paramsStoch->getStoch();
+
+// generate output for each population within the sub-community (patch)
+// provided that the patch is suitable (i.e. non-zero carrying capacity)
+// or the population is above zero (possible if there is stochasticity or a moving gradient)
+// or it is the matrix patch in a patch-based model
+int npops = (int)popns.size();
+int patchnum;
+//Species* pSpecies;
+Cell *pCell;
+float localK;
+
+patchnum = pPatch->getPatchNum();
+for (int i = 0; i < npops; i++) { // all populations
+//	pSpecies = popns[i]->getSpecies();
+#if SEASONAL
+	localK = pPatch->getK(gen);
+#else
+	localK = pPatch->getK();
+#endif // SEASONAL 
+	if (localK > 0.0 || (land.patchModel && patchnum == 0)) {
+		popns[i]->outCullData(pLandscape,rep,yr,gen,land.patchModel);
+	}
+	else {
+		if (popns[i]->totalPop() > 0) {
+			popns[i]->outCullData(pLandscape,rep,yr,gen,land.patchModel);
+		}
+	}
 }
 }
+
+#endif // RS_CONTAIN 
 
 // Write records to individuals file
 void SubCommunity::outInds(Landscape *pLandscape,int rep,int yr,int gen,int landNr) {
@@ -1377,14 +1579,22 @@ if (trfr.indVar) {
 	else {
 		if (trfr.sexDep) {
 			outtraits << "\tF_mean_distI\tF_std_distI\tM_mean_distI\tM_std_distI";
+#if RS_CONTAIN
+			if (trfr.kernType == 1)
+#else
 			if (trfr.twinKern)
+#endif // RS_CONTAIN 
 				outtraits << "\tF_mean_distII\tF_std_distII\tM_mean_distII\tM_std_distII"
 					<< "\tF_meanPfirstKernel\tF_stdPfirstKernel"
 					<< "\tM_meanPfirstKernel\tM_stdPfirstKernel";
 		}
 		else {
 			outtraits << "\tmean_distI\tstd_distI";
+#if RS_CONTAIN
+			if (trfr.kernType == 1)
+#else
 			if (trfr.twinKern)
+#endif // RS_CONTAIN 
 				outtraits << "\tmean_distII\tstd_distII\tmeanPfirstKernel\tstdPfirstKernel";
 		}
 	}
@@ -1673,7 +1883,12 @@ for (int i = 0; i < npops; i++) { // all populations
 					if (trfr.sexDep) {
 						outtraits << "\t" << mnDist1[0] << "\t" << sdDist1[0];
 						outtraits << "\t" << mnDist1[1] << "\t" << sdDist1[1];
-						if (trfr.twinKern) {
+#if RS_CONTAIN
+						if (trfr.kernType == 1) 
+#else
+						if (trfr.twinKern) 
+#endif // RS_CONTAIN 
+						{
 							outtraits << "\t" << mnDist2[0] << "\t" << sdDist2[0];
 							outtraits << "\t" << mnDist2[1] << "\t" << sdDist2[1];
 							outtraits << "\t" << mnProp1[0] << "\t" << sdProp1[0];
@@ -1682,7 +1897,12 @@ for (int i = 0; i < npops; i++) { // all populations
 					}
 					else { // sex-independent
 						outtraits << "\t" << mnDist1[0] << "\t" << sdDist1[0];
-						if (trfr.twinKern) {
+#if RS_CONTAIN
+						if (trfr.kernType == 1) 
+#else
+						if (trfr.twinKern) 
+#endif // RS_CONTAIN 
+						{
 							outtraits << "\t" << mnDist2[0] << "\t" << sdDist2[0];
 							outtraits << "\t" << mnProp1[0] << "\t" << sdProp1[0];
 						}
@@ -1755,7 +1975,12 @@ for (int i = 0; i < npops; i++) { // all populations
 						nFactor = (int)((mnDist1[1] - min)*768/(max - min));
 						colour = draw_wheel(nFactor);
 						pPatch->drawCells(tcanv.pcanvas[ixt++],p.gpix,land.dimY,colour);
-						if (trfr.twinKern) {
+#if RS_CONTAIN
+						if (trfr.kernType == 1) 
+#else
+						if (trfr.twinKern) 
+#endif // RS_CONTAIN 
+						{
 							min = klim0.dist2Mean - nsd * klim0.dist2Scale; if (min < minDist) min = minDist;
 							max = klim0.dist2Mean + nsd * klim0.dist2Scale;
 							nFactor = (int)((mnDist2[0] - min)*768/(max - min));
@@ -1779,7 +2004,12 @@ for (int i = 0; i < npops; i++) { // all populations
 						}
 					}
 					else { // sex-independent
-						if (trfr.twinKern) {
+#if RS_CONTAIN
+						if (trfr.kernType == 1) 
+#else
+						if (trfr.twinKern) 
+#endif // RS_CONTAIN 
+						{
 							min = klim0.dist2Mean - nsd * klim0.dist2Scale; if (min < minDist) min = minDist;
 							max = klim0.dist2Mean + nsd * klim0.dist2Scale;
 							nFactor = (int)((mnDist2[0] - min)*768/(max - min));

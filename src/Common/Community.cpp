@@ -31,6 +31,18 @@ subComms.push_back(new SubCommunity(pPch,num));
 return subComms[nsubcomms];
 }
 
+#if RS_CONTAIN
+void Community::setHabIndex(Species *pSpecies,short landIx) {
+landParams ppLand = pLandscape->getLandParams();   
+int nsubcomms = (int)subComms.size();
+for (int i = 0; i < nsubcomms; i++) { // all sub-communities
+	if (subComms[i]->getNum() > 0) { // except in matrix
+		subComms[i]->setHabIndex(pSpecies,ppLand.rasterType,landIx);
+	}
+}
+}
+#endif // RS_CONTAIN 
+
 #if PEDIGREE
 void Community::initialise(Species *pSpecies,Pedigree *pPed,int year) 
 #else
@@ -536,7 +548,7 @@ if (nfglobal > 0) {
 }
 DEBUGLOG << endl;
 #endif
-#endif // GROUPDISP
+#endif // GROUPDISP 
 
 for (int i = 0; i < nsubcomms; i++) { // all sub-communities
 	if (env.stoch) {
@@ -575,11 +587,15 @@ for (int i = 0; i < nsubcomms; i++) { // all sub-communities
 }
 #endif
 
+#if RS_DISEASE
+void Community::emigration(Species *pSpecies,short season) 
+#else
 #if SEASONAL
 void Community::emigration(short season) 
 #else
 void Community::emigration(void) 
-#endif
+#endif // SEASONAL 
+#endif // RS_DISEASE  
 {
 int nsubcomms = (int)subComms.size();
 #if RSDEBUG
@@ -587,11 +603,15 @@ DEBUGLOG << "Community::emigration(): this=" << this
 	<< " nsubcomms=" << nsubcomms << endl;
 #endif
 for (int i = 0; i < nsubcomms; i++) { // all sub-communities
+#if RS_DISEASE
+	subComms[i]->emigration(pSpecies,season);
+#else
 #if SEASONAL
 	subComms[i]->emigration(season);
 #else
 	subComms[i]->emigration();
-#endif
+#endif // SEASONAL 
+#endif // RS_DISEASE  
 }
 #if RSDEBUG
 DEBUGLOG << "Community::emigration(): finished" << endl;
@@ -735,6 +755,153 @@ for (int i = 0; i < nsubcomms; i++) { // all communities (including in matrix)
 }
 }
 #endif // SPATIALMORT
+
+#if RS_CONTAIN
+
+int Community::findCullTargets(Cull *pCull,int year,int nstages)
+{
+int ntargets = 0;
+//culldata c = pCull->getCullData();
+int nsubcomms = (int)subComms.size();
+for (int i = 0; i < nsubcomms; i++) { // all sub-communities
+	if (subComms[i]->getNum() > 0) { // except in matrix
+		ntargets += subComms[i]->findCullTarget(pCull,year,nstages);
+	}
+}
+#if RSDEBUG
+DEBUGLOG << "Community::findCullTargets(): ntargets=" << ntargets << endl;
+#endif
+return ntargets;
+}
+
+void Community::cullAllTargets(Cull *pCull) {
+culldata c = pCull->getCullData();
+#if RSDEBUG                       
+DEBUGLOG << "Community::cullAllTargets(): maxNpatches=" << c.maxNpatches << endl;
+#endif
+int nsubcomms = (int)subComms.size();
+for (int i = 0; i < nsubcomms; i++) { // all sub-communities
+	if (subComms[i]->getNum() > 0) { // except in matrix
+		if (subComms[i]->isCullTarget()) {
+			subComms[i]->cullPatch(pCull,0,c.cullRate); // ASSUMING Species 0
+		}
+	}
+}
+}
+
+void Community::cullRandomTargets(Cull *pCull,int year) {
+// cull target patches until max. no. is reached;
+culldata c = pCull->getCullData();
+#if RSDEBUG
+DEBUGLOG << "Community::cullRandomTargets(): maxNpatches=" << c.maxNpatches << endl;
+#endif
+int nsubcomms = (int)subComms.size();
+bool *selected;
+selected = new bool [nsubcomms];
+double *initProb;
+initProb = new double [nsubcomms];
+for (int i = 0; i < nsubcomms; i++) { selected[i] = false; initProb[i] = 0.0; }
+//if (c.edgeBias) 
+if (c.method > 0) 
+{
+	// set up weighted lottery based on reciprocal of time since first a target
+	double tot = 0.0;
+	int inityear;
+	double damage;
+	for (int i = 0; i < nsubcomms; i++) {
+		if (subComms[i]->getNum() > 0    // except in matrix
+		&&  subComms[i]->isCullTarget()) 
+		{ 
+			switch (c.method) {			
+			case 1: // bias towards recently colonised patches
+				inityear = subComms[i]->initialYear();
+#if RSDEBUG
+//DEBUGLOG << "Community::cullRandomTargets(): i=" << i 
+//	<< " inityear=" << inityear
+//	<< endl;
+#endif
+				if (inityear >= 0) {
+					initProb[i] = 1.0 / (double)(year - inityear + 1);
+					tot += initProb[i];
+				}
+				break;
+			case 2: // bias towards closest to damage
+			case 3: // bias towards closest to damage X popn size
+				damage = subComms[i]->damageIndex();
+				if (c.method == 3) {
+					popStats pop = subComms[i]->getPopStats();
+					damage *= (double)pop.nInds;
+				}
+				initProb[i] = damage;
+				tot += initProb[i];				
+				break;
+			}
+#if RSDEBUG
+//DEBUGLOG << "Community::cullRandomTargets(): i=" << i 
+//	<< " inityear=" << inityear << " initProb=" << initProb[i] << " tot=" << tot
+//	<< endl;
+#endif
+		}
+	}
+	for (int i = 0; i < nsubcomms; i++) initProb[i] /= tot;
+	for (int i = 0; i < nsubcomms; i++) { 
+		if (i > 1) initProb[i] += initProb[i-1];
+#if RSDEBUG
+//DEBUGLOG << "Community::cullRandomTargets(): i=" << i 
+//	<< " initProb=" << initProb[i] 
+//	<< endl;
+#endif
+	}
+}
+int r;
+int nculled = 0;
+int loopcount = 0;
+do {
+//	if (c.edgeBias)
+	if (c.method == 1) // bias towards recently colonised patches
+	{
+		double rnd = pRandom->Random();
+		for (int i = 0; i < nsubcomms; i++) {
+			if (rnd <= initProb[i]) {
+				r = i; i = nsubcomms+1;
+			}
+#if RSDEBUG
+//DEBUGLOG << "Community::cullRandomTargets(): i=" << i 
+//	<< " rnd=" << rnd << " initProb=" << initProb[i] << " r=" << r 
+//	<< endl;
+#endif
+		}
+	}
+	else r = pRandom->IRandom(0,(nsubcomms-1));
+	if (!selected[r]) {
+		if (subComms[r]->getNum() > 0) { // except in matrix
+			if (subComms[r]->isCullTarget()) {
+				subComms[r]->cullPatch(pCull,0,c.cullRate); // ASSUMING Species 0	
+				nculled++;			
+			}
+		}
+		selected[r] = true;		
+	}
+	loopcount++;
+} while (nculled < c.maxNpatches && loopcount < 10000);
+#if RSDEBUG
+DEBUGLOG << "Community::cullRandomTargets(): nculled=" << nculled 
+	<< " loopcount=" << loopcount << endl;
+#endif
+delete[] selected;
+}
+
+void Community::resetCullTargets(void)
+{
+int nsubcomms = (int)subComms.size();
+for (int i = 0; i < nsubcomms; i++) { // all sub-communities
+	if (subComms[i]->getNum() > 0) { // except in matrix
+		subComms[i]->resetCullTarget();
+	}
+}
+}
+
+#endif // RS_CONTAIN 
 
 void Community::ageIncrement(void) {
 int nsubcomms = (int)subComms.size();
@@ -1008,6 +1175,26 @@ if (abcYear) {
 
 }
 
+#if RS_CONTAIN
+
+// Open population file and write header record
+bool Community::outCullHeaders(Species *pSpecies,int option) {
+return subComms[0]->outCullHeaders(pLandscape,pSpecies,option);
+}
+
+// Write records to population file
+void Community::outCull(int rep,int yr,int gen)
+{
+// generate output for each sub-community (patch) in the community
+int nsubcomms = (int)subComms.size();
+for (int i = 0; i < nsubcomms; i++) { // all sub-communities
+	subComms[i]->outCull(pLandscape,rep,yr,gen);
+}
+}
+
+#endif // RS_CONTAIN 
+
+
 // Write records to individuals file
 void Community::outInds(int rep, int yr, int gen,int landNr) {
 landParams ppLand = pLandscape->getLandParams();
@@ -1165,14 +1352,22 @@ if (trfr.indVar) {
 	else {
 		if (trfr.sexDep) {
 			outrange << "\tF_mean_distI\tF_std_distI\tM_mean_distI\tM_std_distI";
+#if RS_CONTAIN
+			if (trfr.kernType == 1)
+#else
 			if (trfr.twinKern)
+#endif // RS_CONTAIN 
 				outrange << "\tF_mean_distII\tF_std_distII\tM_mean_distII\tM_std_distII"
 					<< "\tF_meanPfirstKernel\tF_stdPfirstKernel"
 					<< "\tM_meanPfirstKernel\tM_stdPfirstKernel";
 		}
 		else {
 			outrange << "\tmean_distI\tstd_distI";
+#if RS_CONTAIN
+			if (trfr.kernType == 1)
+#else
 			if (trfr.twinKern)
+#endif // RS_CONTAIN 
 				outrange << "\tmean_distII\tstd_distII\tmeanPfirstKernel\tstdPfirstKernel";
 		}
 	}
@@ -1552,7 +1747,12 @@ if (emig.indVar || trfr.indVar || sett.indVar) { // output trait means
 			if (trfr.sexDep) {
 				outrange << "\t" << mnDist1[0] << "\t" << sdDist1[0];
 				outrange << "\t" << mnDist1[1] << "\t" << sdDist1[1];
-				if (trfr.twinKern) {
+#if RS_CONTAIN
+				if (trfr.kernType == 1) 
+#else
+				if (trfr.twinKern) 
+#endif // RS_CONTAIN 
+				{
 					outrange << "\t" << mnDist2[0] << "\t" << sdDist2[0];
 					outrange << "\t" << mnDist2[1] << "\t" << sdDist2[1];
 					outrange << "\t" << mnProp1[0] << "\t" << sdProp1[0];
@@ -1561,7 +1761,12 @@ if (emig.indVar || trfr.indVar || sett.indVar) { // output trait means
 			}
 			else { // sex-independent
 				outrange << "\t" << mnDist1[0] << "\t" << sdDist1[0];
-				if (trfr.twinKern) {
+#if RS_CONTAIN
+				if (trfr.kernType == 1) 
+#else
+				if (trfr.twinKern) 
+#endif // RS_CONTAIN 
+				{
 					outrange << "\t" << mnDist2[0] << "\t" << sdDist2[0];
 					outrange << "\t" << mnProp1[0] << "\t" << sdProp1[0];
 				}
@@ -1957,7 +2162,12 @@ if (trfr.indVar) {
 			if (ts.ninds[1] > 1) sd = ts.ssqDist1[1]/(double)ts.ninds[1] - mn*mn; else sd = 0.0;
 			if (sd > 0.0) sd = sqrt(sd); else sd = 0.0;
 			outtraitsrows << "\t" << mn << "\t" << sd;
-			if (trfr.twinKern) {
+#if RS_CONTAIN
+			if (trfr.kernType == 1) 
+#else
+			if (trfr.twinKern) 
+#endif // RS_CONTAIN 
+			{
 				if (ts.ninds[0] > 0) mn = ts.sumDist2[0]/(double)ts.ninds[0]; else mn = 0.0;
 				if (ts.ninds[0] > 1) sd = ts.ssqDist2[0]/(double)ts.ninds[0] - mn*mn; else sd = 0.0;
 				if (sd > 0.0) sd = sqrt(sd); else sd = 0.0;
@@ -1981,7 +2191,12 @@ if (trfr.indVar) {
 			if (popsize > 1) sd = ts.ssqDist1[0]/(double)popsize - mn*mn; else sd = 0.0;
 			if (sd > 0.0) sd = sqrt(sd); else sd = 0.0;
 			outtraitsrows << "\t" << mn << "\t" << sd;
-			if (trfr.twinKern) {
+#if RS_CONTAIN
+			if (trfr.kernType == 1) 
+#else
+			if (trfr.twinKern) 
+#endif // RS_CONTAIN 
+			{
 				if (popsize > 0) mn = ts.sumDist2[0]/(double)popsize; else mn = 0.0;
 				if (popsize > 1) sd = ts.ssqDist2[0]/(double)popsize - mn*mn; else sd = 0.0;
 				if (sd > 0.0) sd = sqrt(sd); else sd = 0.0;
@@ -2104,14 +2319,22 @@ if (trfr.indVar) {
 	else { // dispersal kernel
 		if (trfr.sexDep) {
 			outtraitsrows << "\tF_mean_distI\tF_std_distI\tM_mean_distI\tM_std_distI";
+#if RS_CONTAIN
+			if (trfr.kernType == 1)
+#else
 			if (trfr.twinKern)
+#endif // RS_CONTAIN 
 				outtraitsrows << "\tF_mean_distII\tF_std_distII\tM_mean_distII\tM_std_distII"
 					<< "\tF_meanPfirstKernel\tF_stdPfirstKernel"
 					<< "\tM_meanPfirstKernel\tM_stdPfirstKernel";
 		}
 		else {
 			outtraitsrows << "\tmean_distI\tstd_distI";
+#if RS_CONTAIN
+			if (trfr.kernType == 1)
+#else
 			if (trfr.twinKern)
+#endif // RS_CONTAIN 
 				outtraitsrows << "\tmean_distII\tstd_distII\tmeanPfirstKernel\tstdPfirstKernel";
 		}
 	}

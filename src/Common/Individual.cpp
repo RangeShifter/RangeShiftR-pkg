@@ -402,27 +402,47 @@ if (trfr.indVar) { // set transfer genes
 		for (int g = 0; g < ntraits; g++) { // first traits for females/all, second for males
 			k = pSpecies->getKernParams(0,g);
 			dist1 = pRandom->Normal(0.0,k.dist1SD) / k.dist1Scale;
-			if (trfr.twinKern) {
+#if RS_CONTAIN
+			if (trfr.kernType == 1) 
+#else
+			if (trfr.twinKern) 
+#endif // RS_CONTAIN 
+			{
 				dist2 = pRandom->Normal(0.0,k.dist2SD) / k.dist2Scale;
 				prob1 = pRandom->Normal(0.0,k.PKern1SD) / k.PKern1Scale;
 			}
 			if (gen.trait1Chromosome) {
 				pGenome->setGene(gposn++,expr,dist1,gen.alleleSD);
-				if (trfr.twinKern) {
+#if RS_CONTAIN
+				if (trfr.kernType == 1) 
+#else
+				if (trfr.twinKern) 
+#endif // RS_CONTAIN 
+				{
 					pGenome->setGene(gposn++,expr,dist2,gen.alleleSD);
 					pGenome->setGene(gposn++,expr,prob1,gen.alleleSD);
 				}
 			}
 			else {
 				pGenome->setTrait(pSpecies,gposn++,dist1,gen.alleleSD);
-				if (trfr.twinKern) {
+#if RS_CONTAIN
+				if (trfr.kernType == 1) 
+#else
+				if (trfr.twinKern) 
+#endif // RS_CONTAIN 
+				{
 					pGenome->setTrait(pSpecies,gposn++,dist2,gen.alleleSD);
 					pGenome->setTrait(pSpecies,gposn++,prob1,gen.alleleSD);
 				}
       }
 		}
 		// record phenotypic traits
-		if (trfr.twinKern) {
+#if RS_CONTAIN
+		if (trfr.kernType == 1) 
+#else
+		if (trfr.twinKern) 
+#endif // RS_CONTAIN 
+		{
 			setKernTraits(pSpecies,trfrposn,3,resol,trfr.sexDep);
 		}
 		else {
@@ -618,7 +638,12 @@ if (trfr.indVar) {
 	}
 	else { // kernel
 		if (father == 0) { // haploid
-			if (trfr.twinKern) {
+#if RS_CONTAIN
+			if (trfr.kernType == 1) 
+#else
+			if (trfr.twinKern) 
+#endif // RS_CONTAIN 
+			{
 				setKernTraits(pSpecies,trfr.movtTrait[0],3,resol,0);
 			}
 			else {
@@ -626,7 +651,12 @@ if (trfr.indVar) {
 			}
 		}
 		else { // diploid
-			if (trfr.twinKern) {
+#if RS_CONTAIN
+			if (trfr.kernType == 1) 
+#else
+			if (trfr.twinKern) 
+#endif // RS_CONTAIN 
+			{
 				setKernTraits(pSpecies,trfr.movtTrait[0],3,resol,trfr.sexDep);
 			}
 			else {
@@ -1505,6 +1535,9 @@ if (newCell != 0) {
 //---------------------------------------------------------------------------
 // Move to a new cell by sampling a dispersal distance from a single or double
 // negative exponential kernel
+#if RS_CONTAIN
+// or the 2Dt kernel
+#endif // RS_CONTAIN 
 // Returns 1 if still dispersing (including having found a potential patch), otherwise 0
 #if SEASONAL
 int Individual::moveKernel(Landscape *pLandscape,Species *pSpecies,
@@ -1538,7 +1571,12 @@ if (trfr.indVar) { // get individual's kernel parameters
 //	kparams = pSpecies->getKernParams(stage,sex);
 	if (pGenome != 0) {
 		kern.meanDist1 = kerntraits->meanDist1;
-		if (trfr.twinKern) {
+#if RS_CONTAIN
+		if (trfr.kernType == 1) 
+#else
+		if (trfr.twinKern) 
+#endif // RS_CONTAIN 
+		{
 			kern.meanDist2 = kerntraits->meanDist2;
 			kern.probKern1 = kerntraits->probKern1;
 		}
@@ -1575,7 +1613,12 @@ else { // get kernel parameters for the species
 #endif
 
 // scale the appropriate kernel mean to the cell size
-if (trfr.twinKern) {
+#if RS_CONTAIN
+if (trfr.kernType == 1) 
+#else
+if (trfr.twinKern) 
+#endif // RS_CONTAIN 
+{
 	if (pRandom->Bernoulli(kern.probKern1))
 		meandist = kern.meanDist1 / (float)land.resol;
 	else
@@ -1605,6 +1648,47 @@ if (!usefullkernel && meandist < 1.0) meandist = 1.0;
 //DEBUGLOG << " meandist = " << meandist << endl;
 #endif
 
+#if RS_CONTAIN
+
+// simple model (no environmental effects) 
+
+trfr2Dt t2 = pSpecies->getTrfr2Dt();
+double propkern1 = t2.propKernel1;
+double p,u,f,f0;
+bool reject;
+
+// select kernel to sample for this individual
+// and find a suitable maximum x-value for the range of distances to sample
+int maxdim = max(land.dimX,land.dimY) * land.resol;  
+double maxx = (double)maxdim;
+bool ok = false;
+double fdim;
+if (trfr.kernType == 2) {
+	if (pRandom->Bernoulli(propkern1)) { // sample from kernel 1
+		u = exp(t2.u0Kernel1); p = exp(t2.p0Kernel1); f0 = p / (PI * u);
+		while (!ok) {
+			fdim = p / (PI * u * pow((1.0 + (maxx*maxx/u)),(p + 1.0)));
+			if (fdim >= f0/1000.0) ok = true; else maxx /= 1.25;
+		}
+	}
+	else { // sample from kernel 2
+		u = exp(t2.u0Kernel2); p = exp(t2.p0Kernel2); f0 = p / (PI * u);
+		while (!ok) {
+			fdim = p / (PI * u * pow((1.0 + (maxx*maxx/u)),(p + 1.0)));
+			if (fdim >= f0/1000.0) ok = true; else maxx /= 1.25;
+		}
+	}
+}
+
+#if RSDEBUG
+//DEBUGLOG << "Individual::moveKernel(): indId=" << indId << " x=" << loc.x << " y=" << loc.y
+//	<< " maxx=" << maxx 
+//	<< " u=" << u << " p=" << p << " f0=" << f0 
+//	<< endl;
+#endif
+
+#endif // RS_CONTAIN 
+
 int loopsteps = 0; // new counter to prevent infinite loop added 14/8/15
 do {
 	do {
@@ -1624,9 +1708,54 @@ do {
 			// randomise the position of the individual inside the cell
 			xrand = (double)loc.x + pRandom->Random()*0.999;
 			yrand = (double)loc.y + pRandom->Random()*0.999;
+
+#if RS_CONTAIN
+
+			if (trfr.kernType == 2) { // 2Dt kernel
+        
+			// sample distance from 2Dt kernel by method of REJECTION SAMPLING 
+
+			// NOTE: sampling must be in real-world co-ordinates (not cell co-ordinates)
+			// as kernel units are metres
+
+			reject = true;
+			while (reject) {
+				// sample a random distance along the x-axis
+				dist = pRandom->Random() * maxx;
+				// sample a random y-axis variate between zero and max. possible 
+				r1 = pRandom->Random() * f0;
+				// calculate value of kernel at dist;
+				f = p / (PI * u * pow((1.0 + (dist*dist/u)),(p+1.0)));
+				if (r1 <= f) reject = false;
+#if RSDEBUG
+//DEBUGLOG << "Individual::moveKernel(): indId=" << indId << " dist=" << dist << " r1=" << r1
+//	<< " f=" << f << " reject=" << reject << endl;
+#endif
+				}
+#if RSDEBUG
+//DEBUGLOG << "Individual::moveKernel(): indId=" << indId << " SAMPLED dist=" << dist 
+//	<< endl;
+#endif
+			// convert sampled distance to cell co-ordinates 
+			dist /= land.resol;
+//			rndangle = pRandom->Random() * 2.0 * PI;
+//			nx = (xrand + dist * cos(rndangle)) / land.resol;
+//			ny = (yrand + dist * sin(rndangle)) / land.resol;
+
+			}
+			else { // negative exponential kernel
+				r1 = 0.0000001 + pRandom->Random()*(1.0-0.0000001);
+				dist = (-1.0*meandist)*log(r1);  // for CLUSTER
+			}
+
+#else
+			
 			r1 = 0.0000001 + pRandom->Random()*(1.0-0.0000001);
 //			dist = (-1.0*meandist)*std::log(r1);
 			dist = (-1.0*meandist)*log(r1);  // for CLUSTER
+			
+#endif // RS_CONTAIN 
+
 			rndangle = pRandom->Random() * 2.0 * PI;
 			nx = xrand + dist * cos(rndangle);
 			ny = yrand + dist * sin(rndangle);

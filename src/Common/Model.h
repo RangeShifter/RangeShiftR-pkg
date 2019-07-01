@@ -18,7 +18,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 18 March 2019 by Steve Palmer
+Last updated: 28 June 2019 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -43,6 +43,10 @@ Last updated: 18 March 2019 by Steve Palmer
 #if PEDIGREE
 #include "Pedigree.h"
 #endif
+#if RS_CONTAIN
+//#include "Cull.h"
+#include "Control.h"
+#endif // RS_CONTAIN 
 
 #if RSDEBUG
 extern ofstream DEBUGLOG;
@@ -99,6 +103,9 @@ void DrawPopnGraph(
 	Community*,	// pointer to Community
 	int					// year
 );
+#if RS_CONTAIN
+void ManagementCull(Landscape*,int,int);
+#endif // RS_CONTAIN 
 void OutParameters(
 	Landscape*	// pointer to Landscape
 );
@@ -112,6 +119,9 @@ extern Community *pComm;
 #if VIRTUALECOLOGIST
 extern VirtualEcologist *pVirt;
 #endif
+#if RS_CONTAIN
+extern Cull *pCull;
+#endif // RS_CONTAIN 
 
 #if VCL
 extern bool batchMode;
@@ -125,24 +135,27 @@ extern string patchmapname;	// see FormLand.cpp (VCL) OR Main.cpp (batch)
 extern string distnmapname;	// see FormLand.cpp (VCL) OR Main.cpp (batch)
 extern string costmapname;	// see FormMove.cpp (VCL) OR Main.cpp (batch)
 extern string genfilename;	// see FormGenetics.cpp (VCL) OR Main.cpp (batch)
+#if RS_CONTAIN
+extern string dmgmapname;		// see FormLand.cpp (VCL) OR Main.cpp (batch)
+#endif // RS_CONTAIN 
 #if SPATIALMORT
 extern string mortmapname[2];	// see FormLand.cpp (VCL) OR Main.cpp (batch)
-#endif
+#endif // SPATIALMORT 
 #if EVOLSMS
 extern string mortfilename;	// see [NOT YET CODED FOR GUI] (VCL) OR Main.cpp (batch)
-#endif
+#endif // EVOLSMS 
 #if VIRTUALECOLOGIST
 extern string locfilename;		// see FormVirtEcol.cpp (VCL) OR Main.cpp (batch)
 extern string patchfilename;	// see [NOT YET CODED FOR GUI] (VCL) OR Main.cpp (batch)
-#endif
+#endif // VIRTUALECOLOGIST 
 #if BUTTERFLYDISP
 extern string envstochfilename;
-#endif
+#endif // BUTTERFLYDISP 
 #if RSRANDOM
 extern RSrandom *pRandom;
 #else
 extern StochasticLib1 *pRandom;
-#endif
+#endif // RSRANDOM 
 
 // these functions to have different version for GUI and batch applications ...
 #if BATCH

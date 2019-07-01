@@ -26,7 +26,10 @@ habIxx.push_back(hab);
 #endif
 #if HEATMAP
 visits = 0;
-#endif
+#endif // HEATMAP 
+#if RS_CONTAIN
+damage = 0; 
+#endif // RS_CONTAIN 
 smsData = 0;
 }
 
@@ -74,7 +77,7 @@ else habIxx[ix] = 0;
 int Cell::getHabIndex(int ix) {
 if (ix < 0 || ix >= (int)habIxx.size())
 	// nodata cell OR should not occur, but treat as such
-	return -1.0;
+	return -1;
 else return habIxx[ix];
 }
 int Cell::nHabitats(void) {
@@ -94,7 +97,6 @@ if (ix < 0 || ix >= (int)habitats.size())
 	return -1.0;
 else return habitats[ix];
 }
-
 
 void Cell::setPatch(intptr p) {
 pPatch = p;
@@ -141,7 +143,8 @@ float m = 0.0;
 if (period == 0 || period == 1) m = mort[period];
 return m;
 }
-#endif
+
+#endif // SPATIALMORT 
 
 // Functions to handle costs for SMS
 
@@ -196,10 +199,19 @@ if (smsData != 0) {
 }
 
 #if HEATMAP
+
 void Cell::resetVisits(void) { visits = 0; }
 void Cell::incrVisits(void) { visits++; }
 unsigned long int Cell::getVisits(void) { return visits; }
-#endif
+
+#endif // HEATMAP 
+
+#if RS_CONTAIN
+
+void Cell::setDamage(unsigned int d) { damage = d; }
+unsigned int Cell::getDamage(void) { return damage; }
+	
+#endif // RS_CONTAIN 
 
 //---------------------------------------------------------------------------
 

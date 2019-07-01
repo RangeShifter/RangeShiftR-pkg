@@ -17,7 +17,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 18 March 2019 by Steve Palmer
+Last updated: 24 June 2019 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -42,6 +42,9 @@ using namespace std;
 #if ROBFITT
 #include "PatchSelection.h"
 #endif
+#if RS_CONTAIN
+#include "Control.h"
+#endif // RS_CONTAIN 
 
 //---------------------------------------------------------------------------
 
@@ -61,6 +64,13 @@ public:
 	int getNum(void);
 	Patch* getPatch(void);
 	locn getLocn(void);
+#if RS_CONTAIN
+	void setHabIndex(
+		Species*,	// pointer to Species
+		short,		// landscape raster type
+		short			// landscape change index
+	);
+#endif // RS_CONTAIN 
 
 	// functions to manage populations occurring in the SubCommunity
 	popStats getPopStats(void);
@@ -139,13 +149,20 @@ public:
 #endif // BUTTERFLYDISP
 #endif // GROUPDISP
 #endif // SEASONAL
+#if RS_DISEASE
+	void emigration(
+		Species*,		// pointer to Species
+		short				// season
+	);
+#else
 #if SEASONAL
 	void emigration(
 		short		// season
 	);
 #else
 	void emigration(void);
-#endif
+#endif // SEASONAL 
+#endif // RS_DISEASE  
 	// Remove emigrants from their natal patch and add to patch 0 (matrix)
 	void initiateDispersal(
 		SubCommunity*	// pointer to matrix SubCommunity
@@ -246,6 +263,14 @@ public:
 #endif // PEDIGREE
 #endif // SPATIALMORT
 #endif // SEASONAL
+#if RS_CONTAIN
+	short findCullTarget(Cull*,int,int);
+	bool isCullTarget(void);
+	int initialYear(void);
+	double damageIndex(void);
+	void resetCullTarget(void);
+	void cullPatch(Cull*,int,float);
+#endif // RS_CONTAIN 
 	void ageIncrement(void);
 	// Find the population of a given species in a given patch
 	Population* findPop(Species*,Patch*);
@@ -283,6 +308,21 @@ public:
 		int					// generation
 	);
 #endif
+
+#if RS_CONTAIN
+	bool outCullHeaders( // Open cull file and write header record
+		Landscape*,	// pointer to Landscape
+		Species*,		// pointer to Species
+		int					// option: -999 to close the file
+	);
+	void outCull( // Write records to cull file
+		Landscape*,	// pointer to Landscape
+		int,				// replicate
+		int,				// year
+		int					// generation
+	);
+#endif // RS_CONTAIN 
+
 	void outInds( // Write records to individuals file
 		Landscape*,	// pointer to Landscape
 		int,				// replicate
@@ -339,12 +379,22 @@ dispstats getDispStats(float);
 
 private:
 	intptr subCommNum;	// SubCommunity number
-									// 0 is reserved for the SubCommunity in the inter-patch matrix
+		// 0 is reserved for the SubCommunity in the inter-patch matrix
 //	intptr *occupancy;	// pointer to occupancy array
 	Patch *pPatch;
 	int *occupancy;	// pointer to occupancy array
 	std::vector <Population*> popns;
 	bool initial; 	// WILL NEED TO BE CHANGED FOR MULTIPLE SPECIES ...
+#if RS_CONTAIN
+	int habIndex;		// current habitat index for the patch in which the sub-community occurs
+		// NOTE: the habitat is based on a randomly chosen cell within the patch and
+		// therefore habitat-dependent demography should be applied only for a landscape
+		// in which patches are homogeneous
+#endif // RS_CONTAIN 
+#if RS_CONTAIN
+	bool cullTarget;
+	int firstYear;	// first year qualified as a cull target
+#endif // RS_CONTAIN 
 
 };
 

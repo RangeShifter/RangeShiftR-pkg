@@ -16,7 +16,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 18 March 2019 by Steve Palmer
+Last updated: 17 June 2019 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -46,6 +46,9 @@ struct demogrParams {
 #else
 	short repSeasons;
 #endif
+#if RS_CONTAIN
+	bool habDepDem;
+#endif // RS_CONTAIN 
 	float propMales; float harem; float bc; float lambda;
 	bool stageStruct;
 #if BUTTERFLYDISP
@@ -135,8 +138,13 @@ struct emigScales {
 // structures for transfer parameters
 
 struct trfrRules {
-	bool moveModel; bool stgDep; bool sexDep; bool twinKern; bool distMort;
-	bool indVar;
+	bool moveModel; bool stgDep; bool sexDep; 
+	bool distMort; bool indVar;
+#if RS_CONTAIN
+	short kernType;		
+#else
+	bool twinKern; 
+#endif // RS_CONTAIN 
 #if EVOLSMS
 	short smType;		
 #else
@@ -191,6 +199,11 @@ struct trfrScales {
 #endif
 	float stepLScale; float rhoScale;
 };
+#if RS_CONTAIN
+struct trfr2Dt {
+	float u0Kernel1,p0Kernel1,u0Kernel2,p0Kernel2,propKernel1; 
+};
+#endif // RS_CONTAIN 
 
 // structures for settlement parameters
 
@@ -263,6 +276,9 @@ public:
 		short,	// habitat index no. (NB may differ from habitat no. supplied by user)
 		short		// season
 	);
+	float getMaxK( // return highest carrying capacity over all habitats
+		short		// no. of seasons
+	); 
 #else
 	void createHabK( // Create habitat carrying capacity table
 		short	// no. of habitats
@@ -274,8 +290,8 @@ public:
 	float getHabK(
 		short		// habitat index no. (NB may differ from habitat no. supplied by user)
 	);
-#endif // SEASONAL 
 	float getMaxK(void); // return highest carrying capacity over all habitats
+#endif // SEASONAL 
 	void deleteHabK(void); // Delete habitat carrying capacity table
 	void setStage( // Set stage structure parameters
 		const stageParams	// structure holding stage structure parameters
@@ -292,6 +308,90 @@ public:
 		float		// survival coefficient
 	);
 	densDepParams getDensDep(void); // Get development and survival coefficients
+	
+#if RS_CONTAIN
+
+	void resetDem( // Reset demographic rates to zero for a specified habitat
+		short		// habitat index (if < 0 then all habitats are reset)
+	);
+#if SEASONAL
+	void setFec( // Set fecundity
+		short,	// habitat index (must be >= 0)
+		short,	// season (must be >= 0)
+		short,	// stage (must be > 0)
+		short,	// sex
+		float		// fecundity
+	);
+	float getFec( // Get fecundity
+		short,	// habitat index (must be >= 0)
+		short,	// season (must be >= 0)
+		short,	// stage
+		short		// sex
+	);
+	void setDev( // Set development probability
+		short,	// habitat index (must be >= 0)
+		short,	// season (must be >= 0)
+		short,	// stage
+		short,	// sex
+		float		// development probability
+	);
+	float getDev( // Get development probability
+		short,	// habitat index (must be >= 0)
+		short,	// season (must be >= 0)
+		short,	// stage
+		short		// sex
+	);
+	void setSurv( // Set survival probability
+		short,	// habitat index (must be >= 0)
+		short,	// season (must be >= 0)
+		short,	// stage
+		short,	// sex
+		float		// survival probability
+	);
+	float getSurv( // Get survival probability
+		short,	// habitat index (must be >= 0)
+		short,	// season (must be >= 0)
+		short,	// stage
+		short		// sex
+	);
+#else
+	void setFec( // Set fecundity
+		short,	// habitat index (must be >= 0)
+		short,	// stage (must be > 0)
+		short,	// sex
+		float		// fecundity
+	);
+	float getFec( // Get fecundity
+		short,	// habitat index (must be >= 0)
+		short,	// stage
+		short		// sex
+	);
+	void setDev( // Set development probability
+		short,	// habitat index (must be >= 0)
+		short,	// stage
+		short,	// sex
+		float		// development probability
+	);
+	float getDev( // Get development probability
+		short,	// habitat index (must be >= 0)
+		short,	// stage
+		short		// sex
+	);
+	void setSurv( // Set survival probability
+		short,	// habitat index (must be >= 0)
+		short,	// stage
+		short,	// sex
+		float		// survival probability
+	);
+	float getSurv( // Get survival probability
+		short,	// habitat index (must be >= 0)
+		short,	// stage
+		short		// sex
+	);
+#endif // SEASONAL 
+	
+#else
+
 #if SEASONAL
 	void setFec( // Set fecundity
 		short,	// season (must be >= 0)
@@ -326,7 +426,9 @@ public:
 		short,	// stage
 		short		// sex
 	);
+	
 #else
+
 	void setFec( // Set fecundity
 		short,	// stage (must be > 0)
 		short,	// sex
@@ -354,7 +456,11 @@ public:
 		short,	// stage
 		short		// sex
 	);
-#endif
+	
+#endif // SEASONAL 
+
+#endif // RS_CONTAIN 
+
 	float getMaxFec(void); // Get highest fecundity of any stage
 	void setMinAge( // Set minimum age
 		short,	// stage
@@ -634,6 +740,10 @@ public:
 		short		// habitat index no.
 	);
 	void deleteHabCostMort(void); // Delete habitat-dependent costs and mortality matrices
+#if RS_CONTAIN
+	void setTrfr2Dt(trfr2Dt); 
+	trfr2Dt getTrfr2Dt(void); 
+#endif // RS_CONTAIN 
 
 	// settlement parameter functions
 
@@ -742,6 +852,18 @@ private:
 	float **ddwtDev;    // density-dependent weights matrix for development
 	float **ddwtSurv;   // density-dependent weights matrix for survival
 	// NB for the following arrays, sex 0 is females, sex 1 is males
+#if RS_CONTAIN
+#if SEASONAL
+	float fec[NHABITATS][NSEASONS][NSTAGES][NSEXES];		// fecundities
+	float dev[NHABITATS][NSEASONS][NSTAGES][NSEXES];		// development probabilities
+	float surv[NHABITATS][NSEASONS][NSTAGES][NSEXES];		// survival probabilities
+#else
+	float fec[NHABITATS][NSTAGES][NSEXES];		// fecundities
+	float dev[NHABITATS][NSTAGES][NSEXES];		// development probabilities
+	float surv[NHABITATS][NSTAGES][NSEXES];		// survival probabilities
+#endif // SEASONAL 
+	bool habDepDem;														// habitat-dependent demography 
+#else
 #if SEASONAL
 	float fec[NSEASONS][NSTAGES][NSEXES];			// fecundities
 	float dev[NSEASONS][NSTAGES][NSEXES];			// development probabilities
@@ -750,7 +872,8 @@ private:
 	float fec[NSTAGES][NSEXES];			// fecundities
 	float dev[NSTAGES][NSEXES];			// development probabilities
 	float surv[NSTAGES][NSEXES];		// survival probabilities
-#endif
+#endif // SEASONAL 
+#endif // RS_CONTAIN 
 	short minAge[NSTAGES][NSEXES];	// minimum age to enter stage
 	// NOTE - IN THEORY, NEXT 3 VARIABLES COULD BE COMMON, BUT WE WOULD NEED TO ENSURE THAT
 	// ALL MATRICES ARE DELETED IF THERE IS A CHANGE IN NO. OF STAGES OR REPRODUCTION TYPE
@@ -811,13 +934,13 @@ private:
 	float	betaEmig[NSTAGES][NSEXES];	 // inflection point of reaction norm (in terms of N/K)
 #if GOBYMODEL
 	float asocD;				// emigration adjustment parameter for asocial phenotype
-#endif
+#endif // GOBYMODEL 
 #if GROUPDISP
 	float groupmean;    // mean group size (> 1)
 	bool groupdisp;     // group dispersal occurs
 	short grouptype;    // 0 = population-level grouping, 1 = sibling-level grouping
 											// NB OPTION 1 IS NOT CURRENTLY IMPLEMENTED
-#endif
+#endif // GROUPDISP 
 	// NB Initialisation parameters are made double to avoid conversion errors (reason unclear)
 	// on traits maps using FloatToStr()
 	// As evolving traits are not stage-dependent, no. of rows can be 1
@@ -837,9 +960,14 @@ private:
 	bool moveModel;
 	bool stgDepTrfr;
 	bool sexDepTrfr;
-	bool twinKern;
 	bool distMort;
 	bool indVarTrfr;
+#if RS_CONTAIN
+	short kernType;	// 0 = single negative exponential, 1 = double negative exponential
+									// 2 = 2Dt
+#else
+	bool twinKern;
+#endif // RS_CONTAIN 
 #if EVOLSMS
 	short smType;		// per-step mortality type: 0 = constant, 1 = habitat-dependent
 									// 2 = temporally variable
@@ -866,6 +994,13 @@ private:
 	float fixedMort;		// constant mortality probability
 	float mortAlpha;		// slope for mortality distance dependence function
 	float mortBeta;			// inflection point for mortality distance dependence function
+#if RS_CONTAIN
+	float u0Kernel1; 
+	float p0Kernel1; 
+	float u0Kernel2; 
+	float p0Kernel2; 
+	float propKernel1; 
+#endif // RS_CONTAIN 
 	short moveType; 		// 1 = SMS, 2 = CRW
 	short pr;						// SMS perceptual range (cells)
 	short prMethod;			// SMS perceptual range evaluation method:
