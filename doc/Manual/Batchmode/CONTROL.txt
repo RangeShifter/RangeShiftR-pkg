@@ -21,10 +21,10 @@ InitialisationFile	InitialisationFile_name.txt
 
 ANY ADDITIONAL LINES ARE NOT READ, AND CAN THEREFORE BE USED FOR COMMENTS
 
-Example rangeShifter v1.1 Control File for a patch-based model of a stage-structured population dispersing by the kernel transfer option
+Example RangeShifter v2.0 Control File for a patch-based model of a stage-structured population dispersing by the kernel transfer option
 
 Alternatives for non-structutred population / no variable traits:
 
-StageStructFile	StageStructFile_name.txt
+StageStructFile	NULL
 GeneticsFile	NULL
 
