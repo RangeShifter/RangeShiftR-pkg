@@ -15,7 +15,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 21 May 2019 by Steve Palmer
+Last updated: 6 November 2019 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -33,6 +33,9 @@ using namespace std;
 #include "Patch.h"
 #include "Cell.h"
 #include "Genome.h"
+#if RS_CONTAIN
+#include "Control.h"
+#endif // RS_CONTAIN 
 
 #define NODATACOST 100000 // cost to use in place of nodata value for SMS
 #define ABSNODATACOST 100 // cost to use in place of nodata value for SMS
@@ -111,6 +114,19 @@ public:
 #if GROUPDISP
 	Individual(); // Default constructor
 #endif
+#if RS_CONTAIN
+	Individual( // Individual constructor
+		Cell*,	// pointer to Cell
+		Patch*,	// pointer to patch
+		short,	// stage
+		short,	// age
+		short,	// reproduction interval (no. of years/seasons between breeding attempts)
+		short,	// mother's stage
+		float,	// probability that sex is male
+		bool,		// TRUE for a movement model, FALSE for kernel-based transfer
+		short		// movement type: 1 = SMS, 2 = CRW
+	);
+#else
 #if PARTMIGRN
 	Individual( // Individual constructor
 		Species*,	// pointer to Species
@@ -135,6 +151,7 @@ public:
 		short		// movement type: 1 = SMS, 2 = CRW
 	);
 #endif // PARTMIGRN 
+#endif // RS_CONTAIN 
 	~Individual(void);
 #if BUTTERFLYDISP
 void setMate(Individual*);
@@ -452,6 +469,9 @@ private:
 								//     habitat-dependent or distance-dependent mortality
 								// 8 = failed to survive annual (demographic) mortality
 								// 9 = exceeded maximum age
+#if RS_CONTAIN
+	short motherstage;	// mother's stage for purpose of implementing WALD kernel
+#endif // RS_CONTAIN 
 #if SEASONAL
 #if PARTMIGRN
 	short migrnstatus;	// 0 = not yet determined
@@ -463,7 +483,7 @@ private:
 											// 6 = dispersed migrant, breeding fixed, non-breeding not fixed
 #endif // PARTMIGRN 
 	short npatches; 		// no. of patches held in memory
-#endif
+#endif // SEASONAL 
 	short fallow; // reproductive seasons since last reproduction
 #if BUTTERFLYDISP
 //	short nJuvs;

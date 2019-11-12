@@ -28,8 +28,8 @@ habIxx.push_back(hab);
 visits = 0;
 #endif // HEATMAP 
 #if RS_CONTAIN
-damage = 0; 
-#endif // RS_CONTAIN 
+pDamage = 0;
+#endif // RS_CONTAIN
 smsData = 0;
 }
 
@@ -40,6 +40,12 @@ pPatch = patch;
 envVal = 1.0; // default - no effect of any gradient
 envDev = eps = 0.0;
 habitats.push_back(hab);
+#if HEATMAP
+visits = 0;
+#endif // HEATMAP 
+#if RS_CONTAIN
+pDamage = 0;
+#endif // RS_CONTAIN
 smsData = 0;
 }
 
@@ -208,9 +214,11 @@ unsigned long int Cell::getVisits(void) { return visits; }
 
 #if RS_CONTAIN
 
-void Cell::setDamage(unsigned int d) { damage = d; }
-unsigned int Cell::getDamage(void) { return damage; }
-	
+//void Cell::setDamage(unsigned int d) { damage = d; }
+//unsigned int Cell::getDamage(void) { return damage; }
+void Cell::setDamage(DamageLocn *pDmg) { pDamage = pDmg; }
+DamageLocn* Cell::getDamage(void) { return pDamage; }
+
 #endif // RS_CONTAIN 
 
 //---------------------------------------------------------------------------

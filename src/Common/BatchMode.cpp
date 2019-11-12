@@ -352,15 +352,23 @@ else controlFormatError = true; // wrong control file format
 controlfile >> paramname >> transfer;
 if (paramname == "Transfer") {
 #if RS_CONTAIN
-	if (transfer < 0 || transfer > 3) {
-		BatchError(filetype,-999,3,"Transfer"); errors++;
+	if (transfer < 0 || transfer > 4) {
+		BatchError(filetype,-999,4,"Transfer"); errors++;
+	}
+	else {
+		if (stagestruct || transfer < 3) b.transfer = transfer;
+		else {
+			BatchError(filetype,-999,0," "); errors++;
+			batchlog << "Transfer option " << transfer 
+				<< " is not allowed for a non-structured species" << endl;
+		} 
 	}
 #else
 	if (transfer < 0 || transfer > 2) {
 		BatchError(filetype,-999,2,"Transfer"); errors++;
 	}
-#endif // RS_CONTAIN 
 	else b.transfer = transfer;
+#endif // RS_CONTAIN 
 }
 else controlFormatError = true; // wrong control file format
 
@@ -957,6 +965,9 @@ bParamFile >> header; if (header != "OutStartGenetic" ) errors++;
 bParamFile >> header; if (header != "OutStartTraitCell" ) errors++;
 bParamFile >> header; if (header != "OutStartTraitRow" ) errors++;
 bParamFile >> header; if (header != "OutStartConn" ) errors++;
+#if RS_CONTAIN
+bParamFile >> header; if (header != "OutStartDamage" ) errors++;
+#endif // RS_CONTAIN 
 bParamFile >> header; if (header != "OutIntRange" ) errors++;
 bParamFile >> header; if (header != "OutIntOcc" ) errors++;
 bParamFile >> header; if (header != "OutIntPop" ) errors++;
@@ -967,6 +978,9 @@ bParamFile >> header; if (header != "OutGenCrossTab" ) errors++;
 bParamFile >> header; if (header != "OutIntTraitCell" ) errors++;
 bParamFile >> header; if (header != "OutIntTraitRow" ) errors++;
 bParamFile >> header; if (header != "OutIntConn" ) errors++;
+#if RS_CONTAIN
+bParamFile >> header; if (header != "OutIntDamage" ) errors++;
+#endif // RS_CONTAIN 
 bParamFile >> header; if (header != "SaveMaps" ) errors++;
 bParamFile >> header; if (header != "MapsInterval" ) errors++;
 #if HEATMAP
@@ -1287,8 +1301,8 @@ while (inint != -98765) {
 		BatchError(filetype,line,11,"ThresholdPop"); errors++;
 	}
 	bParamFile >> infloat;
-	if (infloat < 0.0 || infloat > 100.0) {
-		BatchError(filetype,line,100,"CullRate"); errors++;
+	if (infloat < 0.0 || infloat > 1.0) {
+		BatchError(filetype,line,20,"CullRate"); errors++;
 	}
 	bParamFile >> inint;
 	if (inint < 2) {
@@ -1405,6 +1419,10 @@ while (inint != -98765) {
 	if (inint < 0) { BatchError(filetype,line,19,"OutStartTraitRow"); errors++; }
 	bParamFile >> inint;
 	if (inint < 0) { BatchError(filetype,line,19,"OutStartConn"); errors++; }
+#if RS_CONTAIN
+	bParamFile >> inint;
+	if (inint < 0) { BatchError(filetype,line,19,"OutStartDamage"); errors++; }
+#endif // RS_CONTAIN 
 	bParamFile >> inint;
 	if (inint < 0) { BatchError(filetype,line,19,"OutIntRange"); errors++; }
 	bParamFile >> inint;
@@ -1442,6 +1460,19 @@ while (inint != -98765) {
 			errors++;
 		}
 	}
+#if RS_CONTAIN
+	bParamFile >> inint;
+	if (landtype == 9) {
+		if (inint != 0) {
+			BatchError(filetype,line,0," ");
+			batchlog << "OutIntDamage must be 0 for an artificial landscape" << endl;
+			errors++;					
+		}
+	}
+	else {
+		if (inint < 0) { BatchError(filetype,line,19,"OutIntDamage"); errors++; }
+	}
+#endif // RS_CONTAIN 
 	bParamFile >> savemaps; if (savemaps < 0 || savemaps > 1)
 	{ BatchError(filetype,line,1,"SaveMaps"); errors++; }
 	bParamFile >> inint; if (savemaps == 1 && inint < 1) {
@@ -2207,7 +2238,7 @@ while (inint != -98765) {
 		}
 	}
 
-	// transfer matrix file - compulsory if HabDemFile is NULL 
+	// transition matrix file - compulsory if HabDemFile is NULL 
 	bStageStructFile >> filename;
 	ftype2 = "TransMatrixFile";    
 	if (filename == "NULL") {
@@ -2298,7 +2329,7 @@ while (inint != -98765) {
 	}
 	seasonfiles.push_back(filename);
 #else
-	// transfer matrix file - compulsory
+	// transition matrix file - compulsory
 	ftype2 = "TransMatrixFile";
 	checkfile = true;
 	for (i = 0; i < (int)transfiles.size(); i++) {
@@ -2752,7 +2783,7 @@ while (inint != -98765) {
 		batchlog << "Season must be from 0 to " << nseasons-1 << endl; errors++;
 	}
 #endif // SEASONAL 
-	// transfer matrix file - compulsory
+	// transition matrix file - compulsory
 	ftype2 = "TransMatrixFile";
 	bHabDemFile >> filename;
 	checkfile = true;
@@ -2917,7 +2948,7 @@ prevseason = inint;
 while (inint != -98765) {
 	seasons++;
 
-	// transfer matrix file - compulsory
+	// transition matrix file - compulsory
 	ftype2 = "TransMatrixFile";
 	bSeasonFile >> filename;
 	checkfile = true;
@@ -3139,7 +3170,7 @@ while (simul != -98765) {
 	// read and validate columns relating to stage and sex-dependency and to IIV
 	bEmigrationFile >> densdep >> usefullkern >> stagedep >> sexdep;
 	bEmigrationFile >> indvar >> emigstage >> stage >> sex;
-	current = CheckStageSex(filetype,line,simul,prev,stagedep,sexdep,stage,sex,indvar,false);
+	current = CheckStageSex(filetype,line,simul,prev,stagedep,sexdep,stage,sex,indvar,true,false);
 	if (current.newsimul) simuls++;
 	errors += current.errors;
 	prev = current;
@@ -3331,6 +3362,7 @@ float DistIScale,DistIIScale,ProbKernelIScale;
 float DistIScale0,DistIIScale0,ProbKernelIScale0;
 #if RS_CONTAIN
 float u0Kernel1,p0Kernel1,u0Kernel2,p0Kernel2,propKernel1;
+float meanU,sigma_w,hc,hr,vt,kappa,dirnmean,dirnsd;
 #endif // RS_CONTAIN 
 float mortProb,slope,inflPoint;
 float morthab,mortmatrix;
@@ -3343,7 +3375,7 @@ vector <string> costsfiles;
 vector <string> mortfiles;
 #endif
 
-int errors = 0; int morthaberrors = 0; int costerrors = 0;
+int errors = 0; int morthaberrors = 0; int costerrors = 0; int hrerrors = 0;
 int simuls = 0;
 string filetype = "TransferFile";
 
@@ -3476,7 +3508,7 @@ case 2: { // CRW
 #if RS_CONTAIN
 
 case 3: { // 2Dt dispersal kernel
-	batchlog << "Checking dispersal kernel format file" << endl;
+	batchlog << "Checking 2DT dispersal kernel format file" << endl;
 	bTransferFile >> header; if (header != "DistMort" ) errors++;
 	bTransferFile >> header; if (header != "U0Kernel1" ) errors++;
 	bTransferFile >> header; if (header != "P0Kernel1" ) errors++;
@@ -3489,14 +3521,35 @@ case 3: { // 2Dt dispersal kernel
 	break;
 } // end of 2Dt dispersal kernel
 
+case 4: { // WALD dispersal kernel
+	batchlog << "Checking WALD dispersal kernel format file" << endl;
+	bTransferFile >> header; if (header != "DistMort" ) errors++;
+	bTransferFile >> header; if (header != "MeanU" ) errors++;
+	bTransferFile >> header; if (header != "SigmaW" ) errors++;
+	bTransferFile >> header; if (header != "Hc" ) errors++;
+	for (i = 1; i < stages; i++) {
+		colheader = "Hr" + Int2Str(i);
+		bTransferFile >> header; if (header != colheader ) hrerrors++;
+	}
+	bTransferFile >> header; if (header != "Vt" ) errors++;
+	bTransferFile >> header; if (header != "Kappa" ) errors++;
+	bTransferFile >> header; if (header != "DirnMean" ) errors++;
+	bTransferFile >> header; if (header != "DirnSD" ) errors++;
+	bTransferFile >> header; if (header != "MortProb" ) errors++;
+	bTransferFile >> header; if (header != "Slope" ) errors++;
+	bTransferFile >> header; if (header != "InflPoint" ) errors++;
+	break;
+} // end of WALD dispersal kernel
+
 #endif // RS_CONTAIN 
 
 } // end of switch (transfer)
 // report any errors in headers, and if so, terminate validation
-if (errors > 0 || morthaberrors > 0 || costerrors > 0) {
+if (errors > 0 || morthaberrors > 0 || costerrors > 0 || hrerrors > 0) {
 	FormatError(filetype,errors+morthaberrors+costerrors);
 	if (morthaberrors > 0) BatchError(filetype,-999,333,"MortHab");
 	if (costerrors > 0) BatchError(filetype,-999,333,"CostHab");
+	if (hrerrors > 0) BatchError(filetype,-999,444,"Hr");
 	return -111;
 }
 
@@ -3519,7 +3572,7 @@ while (simul != -98765) {
 		// read and validate columns relating to stage and sex-dependency and to IIV
 		bTransferFile >> stagedep >> sexdep >> kerneltype >> distmort;
 		bTransferFile >> indvar >> stage >> sex;
-		current = CheckStageSex(filetype,line,simul,prev,stagedep,sexdep,stage,sex,indvar,false);
+		current = CheckStageSex(filetype,line,simul,prev,stagedep,sexdep,stage,sex,indvar,true,false);
 		if (current.newsimul) simuls++;
 		errors += current.errors;
 		prev = current;
@@ -3628,7 +3681,7 @@ while (simul != -98765) {
 #endif
 		bTransferFile	>> pr >> prMethod	>> dp;
 		bTransferFile	>> memsize >> gb	>> goaltype >> alphaDB >> betaDB;
-		current = CheckStageSex(filetype,line,simul,prev,0,0,0,0,0,false);
+		current = CheckStageSex(filetype,line,simul,prev,0,0,0,0,0,true,false);
 		if (current.newsimul) simuls++;
 		errors += current.errors;
 		prev = current;
@@ -3948,7 +4001,7 @@ while (simul != -98765) {
 	case 2: { // CRW
 		bTransferFile	>> indvar >> SL	>> rho >> StepLMean	>> StepLSD >> RhoMean >> RhoSD;
 		bTransferFile >> StepLScale >> RhoScale	>> smtype >> smconst >> straightenPath;
-		current = CheckStageSex(filetype,line,simul,prev,0,0,0,0,indvar,false);
+		current = CheckStageSex(filetype,line,simul,prev,0,0,0,0,indvar,true,false);
 		if (current.newsimul) simuls++;
 		errors += current.errors;
 		prev = current;
@@ -3999,7 +4052,7 @@ while (simul != -98765) {
 			if (straightenPath < 0 || straightenPath > 1) {
 				BatchError(filetype,line,1,"StraightenPath"); errors++;
 			}
-			for (i = 0; i < maxNhab; i++) {
+			for (int i = 0; i < maxNhab; i++) {
 				bTransferFile >> morthab;
 				if (smtype) {
 					if (morthab < 0.0 || morthab >= 1.0) {
@@ -4028,7 +4081,7 @@ while (simul != -98765) {
 
 	case 3: { // 2Dt dispersal kernel
 		// read and validate columns relating to stage and sex-dependency and to IIV
-		current = CheckStageSex(filetype,line,simul,prev,0,0,0,0,0,false);
+		current = CheckStageSex(filetype,line,simul,prev,0,0,0,0,0,true,false);
 		if (current.newsimul) simuls++;
 		errors += current.errors;
 		prev = current;
@@ -4068,6 +4121,65 @@ while (simul != -98765) {
 
 		break;
 	} // end of 2Dt dispersal kernel
+
+	case 4: { // WALD dispersal kernel
+		// read and validate columns relating to stage and sex-dependency and to IIV
+		current = CheckStageSex(filetype,line,simul,prev,0,0,0,0,0,true,false);
+		if (current.newsimul) simuls++;
+		errors += current.errors;
+		prev = current;
+		// validate mortality
+		bTransferFile >> distmort;          
+		if (distmort < 0 || distmort > 1) {
+			BatchError(filetype,line,1,"DistMort"); errors++;
+		}
+		// read remaining columns of the current record
+		bTransferFile >> meanU >> sigma_w >> hc;
+		if (meanU <= 0.0) {
+			BatchError(filetype,line,10,"MeanU"); errors++;
+		}
+		if (sigma_w <= 0.0) {
+			BatchError(filetype,line,10,"SigmaW"); errors++;
+		}
+		if (hc <= 0.0) {
+			BatchError(filetype,line,10,"Hc"); errors++;
+		}
+		for (int i = 1; i < stages; i++) {
+			bTransferFile >> hr; 
+			colheader = "Hr" + Int2Str(i);
+			if (hr <= 0.0) {
+				BatchError(filetype,line,10,colheader); errors++;
+			}
+			if (hr > hc) {
+				BatchError(filetype,line,3,colheader,"Hc"); errors++;
+			}
+		}
+		bTransferFile >> vt	>> kappa >> dirnmean >> dirnsd;
+		if (vt <= 0.0) {
+			BatchError(filetype,line,10,"Vt"); errors++;
+		}
+		if (kappa <= 0.0) {
+			BatchError(filetype,line,10,"Kappa"); errors++;
+		}
+		if (dirnmean < 0.0 || dirnmean >= 360.0) {
+			BatchError(filetype,line,0," "); errors++;
+			batchlog << "DirnMean must be >= 0.0 and < 360.0" << endl;
+		}
+		if (dirnsd <= 0.0) {
+			BatchError(filetype,line,10,"DirnSD"); errors++;
+		}
+		bTransferFile >> mortProb	>> slope >> inflPoint;
+		if (distmort) { // distance-dependent mortality
+			// WHAT CONDITIONS APPLY TO MORTALITY SLOPE AND INFLECTION POINT?
+		}
+		else { // constant mortality
+			if (mortProb < 0.0 || mortProb >= 1.0) {
+				BatchError(filetype,line,20,"MortProb"); errors++;
+			}
+		}
+
+		break;
+	} // end of WALD dispersal kernel
 
 #endif // RS_CONTAIN 
 	
@@ -4171,7 +4283,7 @@ bSettlementFile >> header; if (header != "SexDep" ) errors++;
 bSettlementFile >> header; if (header != "Stage" ) errors++;
 bSettlementFile >> header; if (header != "Sex" ) errors++;
 #if RS_CONTAIN
-if (transfer == 0 || transfer == 3) 
+if (transfer == 0 || transfer == 3 || transfer == 4) 
 #else
 if (transfer == 0) 
 #endif // RS_CONTAIN 
@@ -4221,14 +4333,14 @@ if (simul != firstsimul) {
 }
 while (simul != -98765) {
 #if RS_CONTAIN
-	if (transfer == 0 || transfer == 3) 
+	if (transfer == 0 || transfer == 3 || transfer == 4) 
 #else
 	if (transfer == 0) 
 #endif // RS_CONTAIN 
 	{ // dispersal kernel
 		// read and validate columns relating to stage and sex-dependency (NB no IIV here)
 		bSettlementFile >> stagedep >> sexdep >> stage >> sex >> settletype >> findmate;
-		current = CheckStageSex(filetype,line,simul,prev,stagedep,sexdep,stage,sex,0,false);
+		current = CheckStageSex(filetype,line,simul,prev,stagedep,sexdep,stage,sex,0,true,false);
 		if (current.newsimul) simuls++;
 		errors += current.errors;
 		prev = current;
@@ -4248,7 +4360,7 @@ while (simul != -98765) {
 	else { // movement method
 		// read and validate columns relating to stage and sex-dependency (IIV psossible)
 		bSettlementFile >> stagedep >> sexdep >> stage >> sex >> densdep >> indvar >> findmate;
-		current = CheckStageSex(filetype,line,simul,prev,stagedep,sexdep,stage,sex,indvar,false);
+		current = CheckStageSex(filetype,line,simul,prev,stagedep,sexdep,stage,sex,indvar,true,false);
 		if (current.newsimul) simuls++;
 		errors += current.errors;
 		prev = current;
@@ -4426,7 +4538,7 @@ while (simul != -98765) {
 	bGeneticsFile >> arch >> nLoci >> filename
 		>> probMutn >> probCross >> alleleSD >> mutationSD;
 
-	current = CheckStageSex(filetype,line,simul,prev,0,0,0,0,0,false);
+	current = CheckStageSex(filetype,line,simul,prev,0,0,0,0,0,true,false);
 	if (current.newsimul) simuls++;
 	errors += current.errors;
 	prev = current;
@@ -4642,44 +4754,71 @@ return errors;
 int ParseManageFile(string indir)
 {
 string header,colheader;
-int i,simul,err;
-int inint;
+int simul,err;
+int inint,cullNstages,prevNstages,cullstage,prevstage,cullrate,firstcullrate;
+int damagetype,occoption;
 string filename,ftype,fname;
 float infloat;
 bool checkfile;
-int errors = 0; int cullerrors = 0;
+int errors = 0; 
+//int cullerrors = 0;
 int simuls = 0;
 //vector <string> archfiles;
-string filetype = "ManageFile";
+string filetype = "ManagementFile";
 
 // Parse header line;
 bManageFile >> header; if (header != "Simulation" ) errors++;
 bManageFile >> header; if (header != "Method" ) errors++;
 bManageFile >> header; if (header != "Timing" ) errors++;
-bManageFile >> header; if (header != "ThresholdPop" ) errors++;
-bManageFile >> header; if (header != "CullRate" ) errors++;
+bManageFile >> header; if (header != "DistDecay" ) errors++;
 bManageFile >> header; if (header != "MaxPatches" ) errors++;
-//bManageFile >> header; if (header != "EdgeBias" ) errors++;
-bManageFile >> header; if (header != "Alpha" ) errors++;
+//bManageFile >> header; if (header != "ThresholdPop" ) errors++;
+bManageFile >> header; if (header != "ThresholdDens" ) errors++;
+bManageFile >> header; if (header != "CountCV" ) errors++;
 if (stagestruct) {
-	for (i = 0; i < stages; i++) {
-		colheader = "CullStage" + Int2Str(i);
-		bManageFile >> header; if (header != colheader ) cullerrors++;
-	}
+	bManageFile >> header; if (header != "CullNstages" ) errors++;	
+	bManageFile >> header; if (header != "CullStage" ) errors++;	
 }
+bManageFile >> header; if (header != "CullRate" ) errors++;
+bManageFile >> header; if (header != "CullMaxRate" ) errors++;
+bManageFile >> header; if (header != "CullAlpha" ) errors++;
+bManageFile >> header; if (header != "CullBeta" ) errors++;
+//bManageFile >> header; if (header != "EdgeBias" ) errors++;
+//if (stagestruct) {
+//	for (i = 0; i < stages; i++) {
+//		colheader = "CullStage" + Int2Str(i);
+//		bManageFile >> header; if (header != colheader ) cullerrors++;
+//	}
+//}
+bManageFile >> header; if (header != "DamageTiming" ) errors++;
+bManageFile >> header; if (header != "DamageType" ) errors++;
+bManageFile >> header; if (header != "OccOption" ) errors++;
+bManageFile >> header; if (header != "DamageStage" ) errors++;
+bManageFile >> header; if (header != "AlphaOccupancy" ) errors++;
+bManageFile >> header; if (header != "BetaOccupancy" ) errors++;
+bManageFile >> header; if (header != "AlphaTraversal" ) errors++;
+bManageFile >> header; if (header != "BetaTraversal" ) errors++;
 // report any errors in headers, and if so, terminate validation
-if (errors > 0 || cullerrors > 0) {
-	FormatError(filetype,errors+cullerrors);
-	if (cullerrors > 0) BatchError(filetype,-999,555,"CullStage");
+//if (errors > 0 || cullerrors > 0) {
+//	FormatError(filetype,errors+cullerrors);
+//	if (cullerrors > 0) BatchError(filetype,-999,555,"CullStage");
+//	return -111;
+//}
+if (errors > 0) {
+	FormatError(filetype,errors);
 	return -111;
 }
 
 // Parse data lines
 int line = 1;
+int nstages = 0;
 simCheck current,prev;
 simul = -98765;
 prev.simul = -999;
 prev.simlines = prev.reqdsimlines = 0;
+prevstage = prevNstages = -1;
+string msgsame = " must be the same for all lines of the Simulation";
+
 bManageFile >> simul;
 // first simulation number must match first one in parameterFile
 if (simul != firstsimul) {
@@ -4687,51 +4826,157 @@ if (simul != firstsimul) {
 }
 while (simul != -98765) {
 
-	current = CheckStageSex(filetype,line,simul,prev,0,0,0,0,0,false);
-	if (current.newsimul) simuls++;
+	if (stagestruct) 
+		current = CheckStageSex(filetype,line,simul,prev,0,0,0,0,0,false,false);
+	else 
+		current = CheckStageSex(filetype,line,simul,prev,0,0,0,0,0,true,false);
+	if (current.newsimul) {
+		if (stagestruct && line > 1) {
+			// check that no. of stages for previous simulation was correct
+			if (nstages != cullNstages) {
+				BatchError(filetype,(line-1),0," "); errors++;  
+				batchlog << "No. of stages must match CullNstages" << endl;				
+			}
+		} 
+		simuls++; prevstage = prevNstages = -1; nstages = 0; 
+	}
 	errors += current.errors;
 	prev = current;
 
 	// validate parameters
 
 	bManageFile >> inint;
-	if (inint < 0 || inint > 3) {
-		BatchError(filetype,line,3,"Method"); errors++;
+	if (current.newsimul && (inint < 0 || inint > 7)) {
+		BatchError(filetype,line,7,"Method"); errors++;
 	}
 	bManageFile >> inint;
-	if (inint < 0 || inint > 1) {
+	if (current.newsimul && (inint < 0 || inint > 1)) {
 		BatchError(filetype,line,1,"Timing"); errors++;
 	}
-	bManageFile >> inint;
-	if (inint < 1) {
-		BatchError(filetype,line,11,"ThresholdPop"); errors++;
-	}
 	bManageFile >> infloat;
-	if (infloat < 0.0 || infloat > 100.0) {
-		BatchError(filetype,line,100,"CullRate"); errors++;
+	if (current.newsimul && infloat < 0.0) {
+		BatchError(filetype,line,10,"DistDecay"); errors++;
 	}
 	bManageFile >> inint;
-	if (inint < 2) {
+	if (current.newsimul && inint < 2) {
 		BatchError(filetype,line,12,"MaxPatches"); errors++;
 	}
+//	bManageFile >> inint;
+//	if (inint < 1) {
+//		BatchError(filetype,line,11,"ThresholdPop"); errors++;
+//	}
+	bManageFile >> infloat;
+	if (current.newsimul && infloat <= 0.0) {
+		BatchError(filetype,line,10,"ThresholdDens"); errors++;
+	}
+	bManageFile >> infloat;
+	if (current.newsimul && infloat < 0.0) {
+		BatchError(filetype,line,19,"CountCV"); errors++;
+	}
+	if (stagestruct) {
+		bManageFile >> cullNstages;
+		if (cullNstages < 1 || cullNstages > stages) {
+			BatchError(filetype,line,0," "); errors++;  
+			batchlog << "CullNstages must be from 1 to " << stages << endl;
+		}
+		if (!current.newsimul && cullNstages != prevNstages) {
+			BatchError(filetype,line,0," "); errors++;  
+			batchlog << "CullNstages" << msgsame << endl;
+		}
+		bManageFile >> cullstage;
+		if (cullstage < 0 || cullstage >= stages) {
+			BatchError(filetype,line,0," "); errors++;  
+			batchlog << "CullStage must be from 0 to " << (stages-1) << endl;
+		}
+		if (cullstage <= prevstage) {
+			BatchError(filetype,line,0," "); errors++;  
+			batchlog << "CullStage must be greater than previous CullStage" << endl;
+		}
+		prevstage = cullstage; prevNstages = cullNstages; nstages++;
+	}
+	bManageFile >> cullrate;
+	if (stagestruct) {
+		if (cullrate < 0 || cullrate > 2) {
+			BatchError(filetype,line,2,"CullRate"); errors++;
+		}		
+		if (current.newsimul) {
+			firstcullrate = cullrate;
+		}
+		else {
+			if (cullrate != firstcullrate) {
+				BatchError(filetype,line,0," "); errors++;  
+				batchlog << "CullRate" << msgsame << endl;
+			}
+		}		
+	}
+	else {
+		if (cullrate < 0 || cullrate > 1) {
+			BatchError(filetype,line,1,"CullRate"); errors++;
+		}
+	}
+	bManageFile >> infloat;
+	if (current.newsimul || cullrate == 2) {
+		if (infloat < 0.0 || infloat > 1.0) {
+			BatchError(filetype,line,20,"CullMaxRate"); errors++;
+		}
+	}
+	bManageFile >> infloat >> infloat; // CullAlpha and CullBeta - no conditions
 //	bManageFile >> inint;
 //	if (inint < 0 || inint > 1) {
 //		BatchError(filetype,line,1,"EdgeBias"); errors++;
 //	}
-	bManageFile >> infloat;
-	if (infloat < 0.0) {
-		BatchError(filetype,line,10,"Alpha"); errors++;
-	}
 	
+//	if (stagestruct) {
+////		int cullstage;
+//		for (i = 0; i < stages; i++) {
+//			bManageFile >> inint;
+//			if (inint < 0 || inint > 1) {
+//				colheader = "CullStage" + Int2Str(i);
+//				BatchError(filetype,line,1,colheader); errors++;
+//			}
+//		}
+//	}
+	bManageFile >> inint;
+	if (current.newsimul && (inint < 0 || inint > 1)) {
+		BatchError(filetype,line,1,"DamageTiming"); errors++;
+	}
+	bManageFile >> damagetype;
+	if (current.newsimul && (damagetype < 0 || damagetype > 2)) {
+		BatchError(filetype,line,2,"DamageType"); errors++;
+	}
+	bManageFile >> occoption;
 	if (stagestruct) {
-//		int cullstage;
-		for (i = 0; i < stages; i++) {
-			bManageFile >> inint;
-			if (inint < 0 || inint > 1) {
-				colheader = "CullStage" + Int2Str(i);
-				BatchError(filetype,line,1,colheader); errors++;
-			}
+		if (current.newsimul && (occoption < 0 || occoption > 3)) {
+			BatchError(filetype,line,3,"OccOption"); errors++;
 		}
+	}
+	else {
+		if (occoption < 0 || occoption > 1) {
+			BatchError(filetype,line,1,"OccOption"); errors++;
+		}
+	}
+	bManageFile >> inint;
+	if (stagestruct && occoption == 3) {
+		if (inint < 0 || inint >= stages) {
+			BatchError(filetype,line,0," "); errors++;  
+			batchlog << "DamageStage must be from 0 to " << (stages-1) << endl;
+		}
+	}
+	bManageFile >> infloat;
+	if (damagetype == 2 && infloat < 0.0) {
+		BatchError(filetype,line,10,"AlphaOccupancy"); errors++;
+	}
+	bManageFile >> infloat;
+	if (damagetype == 1 && infloat < 0.0) {
+		BatchError(filetype,line,10,"BetaOccupancy"); errors++;
+	}
+	bManageFile >> infloat;
+	if (transfer == 1 && damagetype == 2 && infloat < 0.0) {
+		BatchError(filetype,line,10,"AlphaTraversal"); errors++;
+	}
+	bManageFile >> infloat;
+	if (transfer == 1 && damagetype == 1 && infloat < 0.0) {
+		BatchError(filetype,line,10,"BetaTraversal"); errors++;
 	}
 
 	// read next simulation
@@ -4741,11 +4986,18 @@ while (simul != -98765) {
 	if (bManageFile.eof()) simul = -98765;
 } // end of while loop
 // check for correct number of lines for previous simulation
-if (current.simlines != current.reqdsimlines) {
+if (!stagestruct && current.simlines != current.reqdsimlines) {
 	BatchError(filetype,line,0," "); errors++;
 	batchlog << msgnlines << current.simul
 		<< msgshldbe << current.reqdsimlines << endl;
 }
+if (stagestruct) {
+	// check that no. of stages for final simulation was correct
+	if (nstages != cullNstages) {
+		BatchError(filetype,(line-1),0," "); errors++;  
+		batchlog << "No. of stages must match CullNstages" << endl;				
+	}
+} 
 if (!bManageFile.eof()) {
 	EOFerror(filetype);
 	errors++;
@@ -4823,7 +5075,7 @@ if (simul != firstsimul) {
 	BatchError(filetype,line,111,"Simulation"); errors++;
 }
 while (simul != -98765) {
-	current = CheckStageSex(filetype,line,simul,prev,0,0,0,0,0,false);
+	current = CheckStageSex(filetype,line,simul,prev,0,0,0,0,0,true,false);
 	if (current.newsimul) simuls++;
 	errors += current.errors;
 	prev = current;
@@ -4965,7 +5217,7 @@ while (simul != -98765) {
 	if (stagestruct) {
 		bInitFile >> initAge;
 		if (seedtype != 2 && (initAge < 0 || initAge > 2)) {
-			BatchError(filetype,line,1,"initAge"); errors++;
+			BatchError(filetype,line,2,"initAge"); errors++;
 		}
 		float propstage;
 		float cumprop = 0.0;
@@ -5805,11 +6057,12 @@ else return nparams;
 /*
 Check stage- and sex-dependency fields for any of the dispersal files.
 Check that the number of records for a simulation matches the stage-
-and sex-dependency settings.
+and sex-dependency settings (unless checklines is false).
 Validate the IIV field (if present).
 */
 simCheck CheckStageSex(string filetype, int line, int simul, simCheck prev,
-	int stagedep, int sexdep, int stage, int sex, int indvar, bool stgdepindvarok)
+	int stagedep, int sexdep, int stage, int sex, int indvar,
+	bool checklines, bool stgdepindvarok)
 {
 simCheck current;
 current.errors = 0;
@@ -5826,7 +6079,7 @@ else { // yes
 		BatchError(filetype,line,222," "); current.errors++;
 	}
 	// check for correct number of lines for previous simulation
-	if (prev.simlines != prev.reqdsimlines) {
+	if (checklines && prev.simlines != prev.reqdsimlines) {
 		BatchError(filetype,line,0," "); current.errors++;
 		batchlog << "No. of lines for previous Simulation " << prev.simul
 			<< msgshldbe << prev.reqdsimlines << endl;
@@ -6006,6 +6259,18 @@ break;
 case 3:
 	batchlog << fieldname << " must be 0, 1, 2 or 3";
 break;
+case 4:
+	batchlog << fieldname << " must be from 0 to 4";
+break;
+case 5:
+	batchlog << fieldname << " must be from 0 to 5";
+break;
+case 6:
+	batchlog << fieldname << " must be from 0 to 6";
+break;
+case 7:
+	batchlog << fieldname << " must be from 0 to 7";
+break;
 case 10:
 	batchlog << fieldname << " must be greater than zero";
 break;
@@ -6073,7 +6338,6 @@ case 666:
 break;
 default:
 	batchlog << "*** Unspecified error regarding parameter " << fieldname;
-	;
 }
 if (option != 0) batchlog << endl;
 }
@@ -6400,6 +6664,9 @@ if (option == 0) { // open file and read header line
 #if CULLDEMO
 		nheaders += 5;	// ADDITIONAL HEADERS FOR CULL DEMONSTRATION MODEL
 #endif // CULLDEMO  
+#if RS_CONTAIN
+		nheaders += 2;	// ADDITIONAL HEADERS FOR ADAPTIVE MANAGEMENT MODEL
+#endif // RS_CONTAIN 
 #if SEASONAL
 		nheaders +=	paramsLand.nHabMax * (nseasons-1); // ADDITIONAL HEADER FOR SEASONAL MODEL 
 #endif // SEASONAL 
@@ -6455,9 +6722,9 @@ parameters >> sim.mortChgYear;
 parameters >> iiii;
 if (iiii == 1) sim.absorbing = true; else sim.absorbing = false;
 #if RSDEBUG
-DEBUGLOG << "ReadParameters(): paramsSim = " << paramsSim << endl;
-DEBUGLOG << "ReadParameters(): simulation = " << sim.simulation
-	<< " reps = " << sim.reps << " years = " << sim.years << endl;
+//DEBUGLOG << "ReadParameters(): paramsSim=" << paramsSim << endl;
+DEBUGLOG << "ReadParameters(): simulation=" << sim.simulation
+	<< " reps=" << sim.reps << " years=" << sim.years << endl;
 #endif
 parameters >> gradType;
 parameters >> grad_inc >> opt_y >> f >> optEXT >> iiii >> shift_rate;
@@ -6499,7 +6766,7 @@ if (env.inK) {
 }
 else pSpecies->setMinMax(minR,maxR);
 #if RSDEBUG
-//DEBUGLOG << "ReadParameters(): minR = " << env.minR << " maxR = " << env.maxR << endl;
+//DEBUGLOG << "ReadParameters(): minR=" << env.minR << " maxR=" << env.maxR << endl;
 #endif
 parameters >> iiii;
 if (iiii == 1) env.localExt = true; else env.localExt = false;
@@ -6555,7 +6822,7 @@ else {
 }
 
 #if RSDEBUG
-DEBUGLOG << "ReadParameters(): dem.lambda = " << dem.lambda
+DEBUGLOG << "ReadParameters(): dem.lambda=" << dem.lambda
 #if SEASONAL
 	<< " habK[0] = " << pSpecies->getHabK(0,0)
 #else
@@ -6568,7 +6835,7 @@ DEBUGLOG << "ReadParameters(): dem.lambda = " << dem.lambda
 #if CULLDEMO
 // ADDITIONAL PARAMETERS FOR CULL DEMONSTRATION MODEL
 culldata c;       
-parameters >> c.popnThreshold >> c.cullRate >> c.maxNpatches >> c.timing;
+parameters >> c.popnThreshold >> c.cullMaxRate >> c.maxNpatches >> c.timing;
 parameters >> iiii;
 if (iiii == 1) c.edgeBias = true; else c.edgeBias = false;
 pCull->setCullData(c);
@@ -6598,10 +6865,16 @@ pSpecies->setSocialParams(soc);
 #endif
 
 parameters >> sim.outStartPop >> sim.outStartInd >> sim.outStartGenetic
-	>> sim.outStartTraitCell >> sim.outStartTraitRow >> sim.outStartConn
-	>> sim.outIntRange >> sim.outIntOcc >> sim.outIntPop >> sim.outIntInd
+	>> sim.outStartTraitCell >> sim.outStartTraitRow >> sim.outStartConn;
+#if RS_CONTAIN
+parameters >> sim.outStartDamage;
+#endif // RS_CONTAIN 
+parameters >> sim.outIntRange >> sim.outIntOcc >> sim.outIntPop >> sim.outIntInd
 	>> sim.outIntGenetic >> sim.outGenType >> jjjj
 	>> sim.outIntTraitCell >> sim.outIntTraitRow >> sim.outIntConn;
+#if RS_CONTAIN
+parameters >> sim.outIntDamage;       
+#endif // RS_CONTAIN 
 if (sim.outIntRange > 0)     sim.outRange = true; else sim.outRange = false;
 if (sim.outIntOcc > 0)       sim.outOccup = true; else sim.outOccup = false;
 if (sim.outIntPop > 0)       sim.outPop = true; else sim.outPop = false;
@@ -6612,6 +6885,9 @@ if (sim.outIntRange > 0)     sim.outRange = true; else sim.outRange = false;
 if (sim.outIntTraitCell > 0) sim.outTraitsCells = true; else sim.outTraitsCells = false;
 if (sim.outIntTraitRow > 0)  sim.outTraitsRows = true; else sim.outTraitsRows = false;
 if (sim.outIntConn > 0)      sim.outConnect = true; else sim.outConnect = false;
+#if RS_CONTAIN
+if (sim.outIntDamage > 0)    sim.outDamage = true; else sim.outDamage = false;
+#endif // RS_CONTAIN 
 if (sim.outOccup && sim.reps < 2) error = 103;
 if (paramsLand.patchModel) {
 	if (sim.outTraitsRows) error = 104;
@@ -6620,7 +6896,7 @@ else{
 	if (sim.outConnect) error = 105;
 }
 #if RSDEBUG
-DEBUGLOG << "ReadParameters(): outRange = " << sim.outRange << " outInt = " << sim.outIntRange
+DEBUGLOG << "ReadParameters(): outRange=" << sim.outRange << " outInt=" << sim.outIntRange
 	<< endl;
 #endif
 parameters >> iiii >> sim.mapInt;
@@ -7597,13 +7873,17 @@ int error = 0;
 landParams paramsLand = pLandscape->getLandParams();
 demogrParams dem = pSpecies->getDemogr();
 stageParams sstruct = pSpecies->getStage();
-trfrRules trfr = pSpecies->getTrfr();
+trfrRules trfr = pSpecies->getTrfr();                   
 #if RSDEBUG
 DEBUGLOG << "ReadTransfer(): option=" << option
 	<< " paramsLand.generated=" << paramsLand.generated
 	<< " paramsLand.rasterType=" << paramsLand.rasterType
 	<< " trfr.moveModel=" << trfr.moveModel
+#if RS_CONTAIN
 	<< " trfr.kernType=" << trfr.kernType
+#else
+	<< " trfr.twinKern=" << trfr.twinKern
+#endif
 	<< endl;
 #endif
 
@@ -7650,10 +7930,15 @@ DEBUGLOG << endl;
 	}
 	else { // dispersal kernel
 #if RS_CONTAIN
-		if (trfr.kernType == 2) // 2Dt kernel
-			nheaders = 10;			
-		else // negative exponential kernel
-			nheaders = 23;
+		switch (trfr.kernType) {			
+		case 0: // negative exponential kernel
+		case 1: // double negative exponential kernel
+			nheaders = 23; break;
+		case 2: // 2Dt kernel
+			nheaders = 10; break;
+		case 3: // WALD kernel
+			nheaders = 12 + sstruct.nStages; break;
+		}
 #else
 		nheaders = 23;
 #endif // RS_CONTAIN 
@@ -7677,8 +7962,9 @@ int TransferType; // new local variable to replace former global variable
 #if RS_CONTAIN
 if (trfr.moveModel) TransferType = trfr.moveType; 
 else { 
+	TransferType = 0; // negative exponential kernel
 	if (trfr.kernType == 2) TransferType = 3; // 2Dt kernel
-	else TransferType = 0; // negative exponential kernel
+	if (trfr.kernType == 3) TransferType = 4; // WALD kernel
 }
 #else
 if (trfr.moveModel) TransferType = trfr.moveType; else TransferType = 0;
@@ -8115,7 +8401,7 @@ case 3: // 2Dt kernel
 	transFile >> mort.fixedMort >> mort.mortAlpha >> mort.mortBeta;
 	pSpecies->setMortParams(mort);
 	
-	#if RSDEBUG
+#if RSDEBUG
 DEBUGLOG << "ReadTransfer(): simulation=" << simulation
 	<< " trfr.distMort=" << trfr.distMort
 	<< " t2.u0Kernel1=" << t2.u0Kernel1 << " t2.p0Kernel1=" << t2.p0Kernel1
@@ -8128,6 +8414,41 @@ DEBUGLOG << "ReadTransfer(): simulation=" << simulation
 
 	break; // end of 2Dt kernel
 
+case 4: // WALD kernel
+
+	trfrWald w;
+
+	transFile >> simulation >> iiii;
+	if (iiii == 0) trfr.distMort = false; else trfr.distMort = true;
+
+	transFile >> w.meanU >> w.sigma_w >> w.hc;
+	for (int i = 1; i < sstruct.nStages; i++) {
+		float hr;
+		transFile >> hr;
+		pSpecies->setTrfrHr(hr,i);	
+	}
+	transFile >> w.vt >> w.kappa >> w.meanDirn >> w.sdDirn;
+	pSpecies->setTrfrWald(w);
+
+	// mortality
+	trfrMortParams m;
+	transFile >> m.fixedMort >> m.mortAlpha >> m.mortBeta;
+	pSpecies->setMortParams(m);
+
+#if RSDEBUG
+DEBUGLOG << "ReadTransfer(): simulation=" << simulation
+	<< " trfr.distMort=" << trfr.distMort
+	<< " w.meanU=" << w.meanU << " w.sigma_w=" << w.sigma_w
+	<< " w.hc=" << w.hc << " w.vt=" << w.vt
+	<< " w.meanDirn=" << w.meanDirn << " w.sdDirn=" << w.sdDirn
+	<< " m.fixedMort=" << m.fixedMort
+	<< endl;
+#endif
+	
+	pSpecies->setTrfr(trfr);
+
+	break; // end of 2Dt kernel
+	
 #endif // RS_CONTAIN 
 
 	
@@ -8243,7 +8564,7 @@ for (int line = 0; line < Nlines; line++) {
 
 	settFile >> simulation >> stageDep >> sexDep >> stage >> sex;
 #if RS_CONTAIN
-	if (transfer == 0 || transfer == 3) 
+	if (transfer == 0 || transfer == 3 || transfer == 4) 
 #else
 	if (transfer == 0) 
 #endif // RS_CONTAIN 
@@ -8259,7 +8580,7 @@ for (int line = 0; line < Nlines; line++) {
 		if (stageDep == 1) sett.stgDep = true; else sett.stgDep = false;
 		if (sexDep == 1) sett.sexDep = true; else sett.sexDep = false;
 #if RS_CONTAIN
-		if (transfer == 0 || transfer == 3) sett.indVar = false;  // dispersal kernel
+		if (transfer == 0 || transfer == 3 || transfer == 4) sett.indVar = false;  // dispersal kernel
 #else
 		if (transfer == 0) sett.indVar = false;  // dispersal kernel
 #endif // RS_CONTAIN 
@@ -8690,7 +9011,6 @@ DEBUGLOG << "ReadManageFile(): option=" << option  << " name_managefile= " << na
 	<< endl;
 #endif
 
-int simulation,iiii;
 int error = 0;
 demogrParams dem = pSpecies->getDemogr();
 stageParams sstruct = pSpecies->getStage();
@@ -8698,8 +9018,9 @@ stageParams sstruct = pSpecies->getStage();
 if (option == 0) { // open file and read header line
 	amfile.open(name_managefile.c_str());
 	string header;
-	int nheaders = 7;
-	if (dem.stageStruct) nheaders += sstruct.nStages;
+	int nheaders = 19;
+//	if (dem.stageStruct) nheaders += sstruct.nStages;
+	if (dem.stageStruct) nheaders += 2;
 	for (int i = 0; i < nheaders; i++) amfile >> header;
 	return 0;
 }
@@ -8711,29 +9032,64 @@ if (option == 9) { // close file
 	return 0;
 }
 
-amfile >> simulation;
+int simulation,Nlines,line,cullNstages,cullstage,iiii;
+culldata c;
+cullstagedata cstage;       
+float distdecay,cullmaxrate,cullalpha,cullbeta;
+damageparams d;
 
-culldata c;       
-amfile >> c.method >> c.timing >> c.popnThreshold >> c.cullRate >> c.maxNpatches;
-//amfile >> iiii;
-//if (iiii == 1) c.edgeBias = true; else c.edgeBias = false;
-pCull->setCullData(c);
+Nlines = line = 1; // assume one line is to be read until cullNstages is read
+for (int i = 0; i < Nlines; i++) {
 
-float alpha;
-amfile >> alpha;
-pLandscape->setAlpha(alpha);
+	amfile >> simulation;
+
+	//	amfile >> c.method >> c.timing >> c.popnThreshold >> c.cullMaxRate >> c.maxNpatches;
+	amfile >> c.method >> c.timing >> distdecay >> c.maxNpatches >> c.densThreshold >> c.countCV;
+	amfile >> cullNstages >> cullstage >> c.cullRate >> cullmaxrate >> cullalpha >> cullbeta; 
+	if (c.cullRate == 2) {
+		cstage.cullMaxRate = cullmaxrate; cstage.cullAlpha = cullalpha; cstage.cullBeta = cullbeta;
+	}
+	else {
+		c.cullMaxRate = cullmaxrate; c.cullAlpha = cullalpha; c.cullBeta = cullbeta;
+	}      
+//	amfile >> iiii;
+//	if (iiii == 1) c.edgeBias = true; else c.edgeBias = false;
+	if (line == 1) {
+		if (dem.stageStruct) pCull->resetCullStage();
+		pCull->setCullData(c);
+		if (c.method > 1) {
+			landParams ppLand = pLandscape->getLandParams();
+			if (!ppLand.dmgLoaded) error = 701;
+		}
+		pLandscape->setAlpha(distdecay);	
+	}
+	pCull->setCullStage(cullstage,true);
+	if (c.cullRate == 2) {
+		pCull->setCullStageData(cstage,cullstage); 		
+	}
 #if RSDEBUG
 //DEBUGLOG << "ReadManageFile(): simulation=" << simulation << " alpha=" << alpha
 //	<< endl;
 #endif
 
-if (dem.stageStruct) {
-	pCull->resetCullStage();
-	int cull;
-	for (int i = 0; i < sstruct.nStages; i++) {
-	 amfile >> cull;
-	 if (cull == 0) pCull->setCullStage(i,false); else pCull->setCullStage(i,true);
-	}
+//	if (dem.stageStruct) {
+//		pCull->resetCullStage();
+//		int cull;
+//		for (int i = 0; i < sstruct.nStages; i++) {
+//			amfile >> cull;
+//			if (cull == 0) pCull->setCullStage(i,false); else pCull->setCullStage(i,true);
+//		}
+//	}
+
+	amfile >> d.timing >> d.type >> d.occOption >> d.stage >> d.alphaOccupancy >> d.betaOccupancy 
+		>> d.alphaTraversal >> d.betaTraversal;
+	if (line == 1) pDamageParams->setDamageParams(d);
+
+	if (line == 1) {
+		if (cullNstages > 1) Nlines = cullNstages;		
+	}	 
+	line++;
+	
 }
 
 return error;

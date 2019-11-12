@@ -17,7 +17,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 24 June 2019 by Steve Palmer
+Last updated: 6 November 2019 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -264,12 +264,17 @@ public:
 #endif // SPATIALMORT
 #endif // SEASONAL
 #if RS_CONTAIN
-	short findCullTarget(Cull*,int,int);
+	short findCullTarget(Cull*,int,int,int);
 	bool isCullTarget(void);
 	int initialYear(void);
 	double damageIndex(void);
 	void resetCullTarget(void);
-	void cullPatch(Cull*,int,float);
+	void resetCull(void); 
+//	void cullPatch(Cull*,int,float);
+	void cullPatch(Cull*,int,int);
+	void updateDamage(Landscape*,Species*,Cull*);
+	int getCullCount(void);
+	double prevDamage(void);
 #endif // RS_CONTAIN 
 	void ageIncrement(void);
 	// Find the population of a given species in a given patch
@@ -394,9 +399,14 @@ private:
 #if RS_CONTAIN
 	bool cullTarget;
 	int firstYear;	// first year qualified as a cull target
+	int cullCount;	// estimated count for purpose of cull
 #endif // RS_CONTAIN 
 
 };
+
+#if RS_CONTAIN
+extern DamageParams *pDamageParams;
+#endif // RS_CONTAIN 
 
 extern paramGrad *paramsGrad;
 extern paramStoch *paramsStoch;

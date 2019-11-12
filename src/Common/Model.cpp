@@ -28,7 +28,7 @@ envStochParams env = paramsStoch->getStoch();
 demogrParams dem = pSpecies->getDemogr();
 stageParams sstruct = pSpecies->getStage();
 //emigRules emig = pSpecies->getEmig();
-//trfrRules trfr = pSpecies->getTrfr();
+trfrRules trfr = pSpecies->getTrfr();
 initParams init = paramsInit->getInit();
 simParams sim = paramsSim->getSim();
 simView v = paramsSim->getViews();
@@ -114,7 +114,7 @@ bool abcYear;
 // Loop through replicates
 for (int rep = 0; rep < sim.reps; rep++) {
 #if RSDEBUG
-DEBUGLOG << endl << "RunModel(): starting rep=" << rep << endl;
+DEBUGLOG << endl << "RunModel(): starting simulation=" << sim.simulation << " rep=" << rep << endl;
 #endif
 #if !VCL
 	cout << endl << "starting replicate " << rep << endl;
@@ -229,11 +229,20 @@ DEBUGLOG << endl << "RunModel(): finished generating populations" << endl;
 	filesOK = true;
 	if (rep == 0) {
 		// open output files
-		if (sim.outRange) // open Range file
+		if (sim.outRange) { // open Range file
 			if (!pComm->outRangeHeaders(pSpecies,ppLand.landNum)) {
 				MemoLine("UNABLE TO OPEN RANGE FILE");
 				filesOK = false;
 			}
+#if RS_CONTAIN
+			if (ppLand.dmgLoaded) {
+				if (!pLandscape->outSummDmgHeaders(ppLand.landNum)) {
+					MemoLine("UNABLE TO OPEN SUMMARY DAMAGE FILE");
+					filesOK = false;
+				}				
+			}
+#endif // RS_CONTAIN
+		}
 		if (sim.outOccup && sim.reps > 1)
 			if (!pComm->outOccupancyHeaders(0)) {
 				MemoLine("UNABLE TO OPEN OCCUPANCY FILE(S)");
@@ -270,6 +279,14 @@ DEBUGLOG << endl << "RunModel(): finished generating populations" << endl;
 				MemoLine("UNABLE TO OPEN CONNECTIVITY FILE");
 				filesOK = false;
 			}
+#if RS_CONTAIN
+		if (ppLand.dmgLoaded && sim.outDamage) {
+			if (!pLandscape->outDamageHeaders(ppLand.landNum)) {
+				MemoLine("UNABLE TO OPEN DAMAGE INDICES FILE");
+				filesOK = false;
+			}				
+		}
+#endif // RS_CONTAIN
 #if VIRTUALECOLOGIST
 		if (sim.virtualEcologist) {
 			if (!pVirt->outLandGenHeaders(ppLand.landNum,ppLand.patchModel)) {
@@ -305,8 +322,12 @@ DEBUGLOG << "RunModel(): completed opening output files" << endl;
 DEBUGLOG << "RunModel(): PROBLEM - closing output files" << endl;
 #endif
 		// close any files which may be open
-		if (sim.outRange)
+		if (sim.outRange) {
 			pComm->outRangeHeaders(pSpecies,-999);
+#if RS_CONTAIN
+			if (ppLand.dmgLoaded) pLandscape->outSummDmgHeaders(-999);				
+#endif // RS_CONTAIN 
+		}
 		if (sim.outOccup && sim.reps > 1)
 			pComm->outOccupancyHeaders(-999);
 		if (sim.outPop) {
@@ -323,6 +344,9 @@ DEBUGLOG << "RunModel(): PROBLEM - closing output files" << endl;
 			pComm->outTraitsRowsHeaders(pSpecies,-999);
 		if (sim.outConnect && ppLand.patchModel)
 			pLandscape->outConnectHeaders(-999);
+#if RS_CONTAIN
+		if (ppLand.dmgLoaded && sim.outDamage) pLandscape->outDamageHeaders(-999);				
+#endif // RS_CONTAIN 
 #if VIRTUALECOLOGIST
 		if (sim.virtualEcologist) {
 			pVirt->outLandGenHeaders(-999,false);
@@ -386,6 +410,7 @@ DEBUGLOG << "RunModel(): PROBLEM - closing output files" << endl;
 	// set up populations in the community
 	pLandscape->updateCarryingCapacity(pSpecies,0,0);
 #if RS_CONTAIN
+//	pLandscape->resetPrevDamage();
 	if (ppLand.rasterType <= 2 && ppLand.dmgLoaded)
 		pLandscape->updateDamageIndices();
 #endif // RS_CONTAIN 
@@ -451,7 +476,8 @@ cout << "RunModel(): completed initialisation " << endl;
 	MemoLine("...running...");
 	for (yr = 0; yr < sim.years; yr++) {
 #if RSDEBUG
-DEBUGLOG << endl << "RunModel(): starting rep=" << rep << " yr=" << yr << endl;
+DEBUGLOG << endl << "RunModel(): starting simulation=" << sim.simulation 
+	<< " rep=" << rep << " yr=" << yr << endl;
 #endif
 		bool updateCC = false;
 		if (yr < 4
@@ -617,7 +643,7 @@ DEBUGLOG << "RunModel(): yr=" << yr << " landChg.chgnum=" << landChg.chgnum
 #endif // RS_CONTAIN 
 
 #if EVOLSMS
-		trfrRules trfr = pSpecies->getTrfr();
+//		trfrRules trfr = pSpecies->getTrfr();
 		if (trfr.moveModel)
 			if (trfr.moveType == 1 && trfr.smType == 2) { 
 				// SMS with temporally variable per-step mortality
@@ -674,7 +700,7 @@ DEBUGLOG  << endl;
 			pLandscape->resetConnectMatrix();
 
 		if (ppLand.dynamic && updateland) {
-			trfrRules trfr = pSpecies->getTrfr();
+//			trfrRules trfr = pSpecies->getTrfr();
 			if (trfr.moveModel && trfr.moveType == 1) { // SMS
 				if (!trfr.costMap) pLandscape->resetCosts(); // in case habitats have changed
 			}
@@ -807,6 +833,11 @@ DEBUGLOG << " )"	<< endl;
 			if (sim.outConnect && ppLand.patchModel)
 				pLandscape->resetConnectMatrix();
 #endif
+
+#if RS_CONTAIN
+			damageparams d = pDamageParams->getDamageParams();
+			if (d.timing == 0) pComm->updateDamage(pSpecies,pCull);
+#endif // RS_CONTAIN 
 			
 			// reproduction
 #if SEASONAL
@@ -882,6 +913,10 @@ DEBUGLOG << "RunModel(): EXTREME EVENT year=" << eEvent.year << " season=" << eE
 				}
 			}
 
+#if RS_CONTAIN
+			if (d.timing == 1) pComm->updateDamage(pSpecies,pCull);
+#endif // RS_CONTAIN 
+			
 			// Output and pop. visualisation AFTER reproduction
 #if RS_ABC
 			if (dem.stageStruct && (sim.outRange || sim.outPop || abcYear))
@@ -1165,6 +1200,16 @@ DEBUGLOG << endl << "RunModel(): PERFORMING MANAGEMENT CULL after survival" << e
 				pLandscape->outConnect(rep,yr,gen);
 #endif // SEASONAL 
 
+#if RS_CONTAIN
+			if (ppLand.dmgLoaded) {
+//				pLandscape->resetPrevDamage();
+				if (sim.outRange && yr%sim.outIntRange == 0) 
+					pLandscape->outSummDmg(rep,yr,trfr.moveModel && trfr.moveType == 1,v.viewDamage);
+				if (sim.outDamage && yr >= sim.outStartDamage && yr%sim.outIntDamage == 0) 
+					pLandscape->outDamage(rep,yr,trfr.moveModel && trfr.moveType == 1);
+			}	
+			pComm->resetCull();			
+#endif // RS_CONTAIN 
 #if VCL
 			if (v.viewCosts && v.viewPaths) {
 				RefreshVisualCost();
@@ -1495,8 +1540,21 @@ if (sim.outOccup && sim.reps > 1) {
 	MemoLine("...finished");
 }
 
-if (sim.outRange)
+#if RS_CONTAIN
+#if VCL
+if (v.viewDamage) {
+	pLandscape->outTotDamage(true);
+	pLandscape->deleteTotDamage(sim.reps);
+}
+#endif
+#endif // RS_CONTAIN 
+
+if (sim.outRange) {
 	pComm->outRangeHeaders(pSpecies,-999); // close Range file
+#if RS_CONTAIN	
+	if (ppLand.dmgLoaded) pLandscape->outSummDmgHeaders(-999);
+#endif // RS_CONTAIN 
+}
 if (sim.outPop) {
 	pComm->outPopHeaders(pSpecies,-999); // close Population file
 #if RS_CONTAIN
@@ -1513,6 +1571,9 @@ if (sim.outTraitsRows)
 // they can still be open if the simulation was stopped by the user
 if (sim.outInds) pComm->outInds(0,0,0,-999);
 if (sim.outGenetics) pComm->outGenetics(0,0,0,-999);
+#if RS_CONTAIN	
+if (ppLand.dmgLoaded && sim.outDamage) pLandscape->outDamageHeaders(-999);
+#endif // RS_CONTAIN 
 #if VIRTUALECOLOGIST
 if (sim.virtualEcologist) {
 	pVirt->outLandGenHeaders(-999,false);
@@ -1694,17 +1755,25 @@ if (nTargetPatches <= c.maxNpatches) {
 }
 else {
 	// cull the maximum number of patches
-	// NB AT PRESENT THIS IS AT RANDOM, BUT IF THE CULL IS TO BE SPATIALLY
-	//    CORRELATED, IT WILL HAVE TO BECOME A FUNCTION OF THE Landscape
+	// NB IF THE CULL IS TO BE SPATIALLY CORRELATED,
+	//    IT WILL HAVE TO BECOME A FUNCTION OF THE Landscape
 	switch (c.method) {	
 	case 0: // random
-	case 1: // recently colonised
-		pComm->cullRandomTargets(pCull,year);
-		break;
-	case 2: // closest to damage
-	case 3: // closest to damage X popn size
+	case 1: // random recently colonised
+	case 2: // random closest to damage
+	case 3: // random closest to damage X popn size
 		pComm->cullRandomTargets(pCull,year);
 //		pComm->cullClosestTargets(pCull,year);
+		break;
+	case 4: // closest to damage
+	case 5: // closest to damage X popn size
+		pComm->cullTargets(pCull);
+		break;
+	case 6: // random reactive to previous damage
+		pComm->cullRandomTargets(pCull,year);
+		break;
+	case 7: // reactive to previous damage
+		pComm->cullTargets(pCull);
 		break;
 	}
 }
@@ -1896,10 +1965,10 @@ if (!ppLand.generated && ppLand.dynamic) {
 #if RS_CONTAIN
 if (ppLand.dmgLoaded) {
 	outPar << endl << "ECONOMIC / ENVIRONMENTAL DAMAGE: " << endl;
-	outPar << "DAMAGE MAP: ";     
-	if (sim.batchMode) outPar << " (see batch file) " << landFile << endl;
+	outPar << "DAMAGE MAP:             ";     
+	if (sim.batchMode) outPar << "(see batch file) " << landFile << endl;
 	else outPar << dmgmapname << endl;
-	outPar << "ALPHA     : " << pLandscape->getAlpha() << endl;
+	outPar << "DISTANCE DECAY (alpha): " << pLandscape->getAlpha() << endl;
 }
 #endif // RS_CONTAIN 
 #if SEASONAL
@@ -2834,17 +2903,32 @@ else { // kernel
 	if (trfr.kernType == 1) outPar << "double ";
 	if (trfr.kernType <= 1) outPar << "negative exponential" << endl;
 	if (trfr.kernType == 2) outPar << "2Dt" << endl;
+	if (trfr.kernType == 3) outPar << "WALD" << endl;
 #else
 	if (trfr.twinKern) outPar << "double ";
 	outPar << "negative exponential" << endl;
 #endif // RS_CONTAIN 
 
 #if RS_CONTAIN
-	if (trfr.kernType == 2) {
-		trfr2Dt t2 = pSpecies->getTrfr2Dt(); 
-		outPar << "Kernel 1   U0: " << t2.u0Kernel1 << " P0: " << t2.p0Kernel1 << endl;
-		outPar << "Kernel 2   U0: " << t2.u0Kernel2 << " P0: " << t2.p0Kernel2 << endl;
-		outPar << "Prop kernel 1: " << t2.propKernel1 << endl;
+	if (trfr.kernType >= 2) {
+		if (trfr.kernType == 2) { // 2DT 
+			trfr2Dt t2 = pSpecies->getTrfr2Dt(); 
+			outPar << "Kernel 1   U0: " << t2.u0Kernel1 << " P0: " << t2.p0Kernel1 << endl;
+			outPar << "Kernel 2   U0: " << t2.u0Kernel2 << " P0: " << t2.p0Kernel2 << endl;
+			outPar << "Prop kernel 1: " << t2.propKernel1 << endl;
+		}
+		else { // WALD 
+			trfrWald w = pSpecies->getTrfrWald();
+			outPar << "Mean U: " << w.meanU << " sigma_w: " << w.sigma_w << " hc: " << w.hc << " vt: " << w.vt << " kappa: " << w.kappa << endl;
+			outPar << "hr:";
+			if (dem.stageStruct) {
+				for (int i = 1; i < sstruct.nStages; i++) {
+					outPar << "  stage " << i << ": " << pSpecies->getTrfrHr(i);					
+				}
+			}
+			outPar << endl;
+			outPar << "Mean wind direction: " << w.meanDirn << " s.d.: " << w.sdDirn << endl;
+		}		
 	}
 	else {
 #endif // RS_CONTAIN 
@@ -3284,8 +3368,10 @@ outPar << "Change in dispersal rate with fitness (alpha): " << s.alpha << endl;
 #if RS_CONTAIN
 
 outPar << endl << "MANAGEMENT CULL:" << endl;
+
 if (pCull->isCullApplied()) {
 	culldata c;
+	cullstagedata cstage;
 	c = pCull->getCullData();
 	outPar << "Method:                    ";
 	switch (c.method) {	
@@ -3293,13 +3379,25 @@ if (pCull->isCullApplied()) {
 		outPar << "random" << endl;
 		break;
 	case 1:
-		outPar << "recently colonised" << endl;
+		outPar << "random weighted recently colonised" << endl;
 		break;
 	case 2:
-		outPar << "closest to damage" << endl;
+		outPar << "random weighted closest to damage" << endl;
 		break;
 	case 3:
-		outPar << "closest to damage X population size" << endl;
+		outPar << "random weighted closest to damage X population size" << endl;
+		break;
+	case 4:
+		outPar << "weighted closest to damage" << endl;
+		break;
+	case 5:
+		outPar << "weighted closest to damage X population size" << endl;
+		break;
+	case 6:
+		outPar << "random reactive to incurred damage" << endl;
+		break;
+	case 7:
+		outPar << "reactive to incurred damage" << endl;
 		break;
 	}
 	outPar << "Timing of cull:            ";
@@ -3311,6 +3409,10 @@ if (pCull->isCullApplied()) {
 		outPar << "after dispersal" << endl;
 		break;
 	}
+	outPar << "Max. no. of cells/patches: " << c.maxNpatches << endl;
+//	outPar << "Threshold population:      " << c.popnThreshold << endl;
+	outPar << "Threshold density:         " << c.densThreshold << endl;
+	outPar << "Count c.v. (%):            " << c.countCV << endl;
 	if (dem.stageStruct) {
 		outPar << "Stages to be culled:       ";
 		bool firststage = true;
@@ -3323,15 +3425,77 @@ if (pCull->isCullApplied()) {
 		}
 		outPar << endl;	
 	}
-	outPar << "Threshold population:      " << c.popnThreshold << endl;
-	outPar << "Planned cull rate (%):     " << c.cullRate << endl;
-	outPar << "Max. no. of cells/patches: " << c.maxNpatches << endl;
+	switch (c.cullRate) {		
+	case 0: // constant
+		outPar << "Cull rate function:        constant " << c.cullMaxRate << endl;
+		break;
+	case 1: // logistic function of density of stages to be culled
+		outPar << "Cull rate function:        logistic function of density" << endl;
+		outPar << "Max. cull rate:            " << c.cullMaxRate << endl;
+		outPar << "Slope:                     " << c.cullAlpha << endl;
+		outPar << "Inflection point:          " << c.cullBeta << endl;
+		break;
+	case 2: // stage-specific logistic functions of density
+		outPar << "Cull rate function:        stage-specific logistic functions of density" << endl;
+		for (int i = 0; i < NSTAGES; i++) {
+			if (pCull->getCullStage(i)) {
+				cstage = pCull->getCullStageData(i);
+				outPar << "Stage " << i << ":                   " << "max. cull rate: " << cstage.cullMaxRate
+					<< "  slope: " << cstage.cullAlpha << "  inflection point: " << cstage.cullBeta << endl;
+			}			
+		}
+		break;
+	}
 //	outPar << "Delay (years):             " << c.delay << endl;
 //	outPar << "Bias towards range edge:   ";
 //	if (c.edgeBias) outPar << "yes"; else outPar << "no"; outPar << endl;
 }
 else {
 	outPar << "Not applied" << endl;
+}
+
+if (ppLand.dmgLoaded) {
+	damageparams d = pDamageParams->getDamageParams();
+	outPar << "Occupancy damage assessment: ";
+	switch (d.timing) {		
+	case 0:
+		outPar << "before"; break;
+	case 1:
+		outPar << "after"; break;
+	}
+	outPar << " reproduction" << endl;	
+	outPar << "Damage type:                 ";
+	switch (d.type) {		
+	case 0:
+		outPar << "catastrophic"; break;
+	case 1:
+		outPar << "asymptotic"; break;
+	case 2:
+		outPar << "logistic"; break;
+	}
+	outPar << endl;	
+	if (d.type > 0) {
+		outPar << "Damage-occupancy function:   ";
+		switch (d.occOption) {		
+		case 0:
+			outPar << "total population size, "; break;
+		case 1:
+			outPar << "population density, "; break;
+		case 2:
+			outPar << "density of culled stages, "; break;
+		case 3:
+			outPar << "stage-specific density, stage "; 
+			outPar << d.stage << ", ";
+			break;
+		}
+		if (d.type == 2) outPar << "alpha " << d.alphaOccupancy << " ";
+		outPar << "beta " << d.betaOccupancy << endl;
+		if (trfr.moveModel && trfr.moveType == 1) { // SMS
+			outPar << "Damage-traversal function:   ";
+			if (d.type == 2) outPar << "alpha " << d.alphaTraversal << " ";
+			outPar << "beta " << d.betaTraversal << endl;
+		}		
+	}
 }
 
 #endif // RS_CONTAIN 
@@ -3512,6 +3676,14 @@ if (sim.outConnect) {
 	if (sim.outStartConn > 0) outPar << " starting year " << sim.outStartConn;
 	outPar << endl;
 }
+#if RS_CONTAIN
+if (sim.outDamage) {
+	outPar << "Damage indices - every " << sim.outIntDamage << " year";
+	if (sim.outIntDamage > 1) outPar << "s";
+	if (sim.outStartDamage > 0) outPar << " starting year " << sim.outStartDamage;
+	outPar << endl;
+}
+#endif // RS_CONTAIN 
 outPar << "SAVE MAPS: ";
 if (sim.saveMaps) {
 	outPar << "yes - every " << sim.mapInt << " year";

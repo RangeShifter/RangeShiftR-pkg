@@ -164,6 +164,14 @@ dpScale = 0.1; gbScale = 0.1; alphaDBScale = 0.1; betaDBScale  = 1.0;
 habDimTrfr = 0;
 straigtenPath = false;
 fullKernel = false;
+#if RS_CONTAIN
+u0Kernel1 = p0Kernel1 = u0Kernel2 = p0Kernel2 = 0.0;
+propKernel1 = 1.0; 
+//mu = gamma = 0.0; 
+meanU = vt = 1.0; sigma_w = kappa = 0.1; hc = 10.0;
+meanDirn = 0.0; sdDirn = 10.0;
+for (int i = 0; i < NSTAGES; i++) hr[i] = 1.0;
+#endif // RS_CONTAIN 
 
 // initialise settlement parameters
 stgDepSett = false; sexDepSett = false; indVarSett = false;
@@ -569,9 +577,25 @@ if (hab >= 0 && hab < NHABITATS && stg >= 0 && stg < NSTAGES && sex >= 0 && sex 
 }
 
 float Species::getSurv(short hab,short stg,short sex) {
+if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES) {
+	if (hab >= 0 && hab < NHABITATS) return surv[hab][stg][sex];		
+	else {
+		if (hab < 0) { // return highest survival for the stage from all habitats
+			float maxsurv = 0.0;
+			for (int i = 0; i < NHABITATS; i++) {
+				if (surv[i][stg][sex] > maxsurv) maxsurv = surv[i][stg][sex];
+			}
+			return maxsurv;
+		}
+		else return 0.0;
+	}
+}
+else return 0.0;
+/*
 if (hab >= 0 && hab < NHABITATS && stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES)
 	return surv[hab][stg][sex];
 else return 0.0;
+*/
 }
 #endif // SEASONAL 
 
@@ -1636,7 +1660,7 @@ void Species::setTrfr(const trfrRules t) {
 moveModel = t.moveModel; stgDepTrfr = t.stgDep; sexDepTrfr = t.sexDep;
 distMort = t.distMort; indVarTrfr = t.indVar;
 #if RS_CONTAIN
-if (t.kernType >= 0 && t.kernType <= 2) kernType = t.kernType;
+if (t.kernType >= 0 && t.kernType <= 3) kernType = t.kernType;
 #else
 twinKern = t.twinKern; 
 #endif // RS_CONTAIN 
@@ -1711,6 +1735,8 @@ return m;
 
 #if RS_CONTAIN
 
+// parameters for 2Dt kernel
+
 void Species::setTrfr2Dt(trfr2Dt t) {
 if (t.u0Kernel1 >= 0.0) u0Kernel1 = t.u0Kernel1;
 if (t.p0Kernel1 >= 0.0) p0Kernel1 = t.p0Kernel1;
@@ -1726,6 +1752,36 @@ t.u0Kernel2 = u0Kernel2; t.p0Kernel2 = p0Kernel2;
 t.propKernel1 = propKernel1;
 return t;
 }
+
+// parameters for WALD (inverse Gaussian) kernel
+
+void Species::setTrfrWald(trfrWald w) {
+if (w.meanU > 0.0) meanU = w.meanU;
+if (w.sigma_w > 0.0) sigma_w = w.sigma_w;
+if (w.hc > 0.0) hc = w.hc;
+if (w.vt > 0.0) vt = w.vt;
+if (w.kappa > 0.0) kappa = w.kappa;
+if (w.meanDirn >= 0.0 && w.meanDirn < 360.0) meanDirn = w.meanDirn;
+if (w.sdDirn > 0.0) sdDirn = w.sdDirn;
+}
+ 
+trfrWald Species::getTrfrWald(void) {
+trfrWald w;
+w.meanU = meanU; w.sigma_w = sigma_w; w.hc = hc; w.vt = vt; w.kappa = kappa;
+w.meanDirn = meanDirn; w.sdDirn = sdDirn;
+return w;
+} 
+
+void Species::setTrfrHr(float h,unsigned short stg) {
+if (stg >= 0 && stg < NSTAGES) {
+ if (h > 0.0) hr[stg] = h;
+}
+} 
+
+float Species::getTrfrHr(unsigned short stg) {
+if (stg >= 0 && stg < NSTAGES) return hr[stg];
+else return 0.0;
+} 
 	 
 #endif // RS_CONTAIN 
 

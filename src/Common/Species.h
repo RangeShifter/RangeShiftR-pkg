@@ -16,7 +16,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 17 June 2019 by Steve Palmer
+Last updated: 25 October 2019 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -202,6 +202,11 @@ struct trfrScales {
 #if RS_CONTAIN
 struct trfr2Dt {
 	float u0Kernel1,p0Kernel1,u0Kernel2,p0Kernel2,propKernel1; 
+};
+struct trfrWald {
+//	float mu,gamma; 
+	float meanU,sigma_w,hc,vt,kappa;
+	float meanDirn,sdDirn;	
 };
 #endif // RS_CONTAIN 
 
@@ -743,6 +748,10 @@ public:
 #if RS_CONTAIN
 	void setTrfr2Dt(trfr2Dt); 
 	trfr2Dt getTrfr2Dt(void); 
+	void setTrfrWald(trfrWald); 
+	trfrWald getTrfrWald(void); 
+	void setTrfrHr(float,unsigned short); 
+	float getTrfrHr(unsigned short); 
 #endif // RS_CONTAIN 
 
 	// settlement parameter functions
@@ -964,7 +973,7 @@ private:
 	bool indVarTrfr;
 #if RS_CONTAIN
 	short kernType;	// 0 = single negative exponential, 1 = double negative exponential
-									// 2 = 2Dt
+									// 2 = 2Dt, 3 = WALD (inverse Gaussian)
 #else
 	bool twinKern;
 #endif // RS_CONTAIN 
@@ -995,11 +1004,23 @@ private:
 	float mortAlpha;		// slope for mortality distance dependence function
 	float mortBeta;			// inflection point for mortality distance dependence function
 #if RS_CONTAIN
-	float u0Kernel1; 
-	float p0Kernel1; 
-	float u0Kernel2; 
-	float p0Kernel2; 
-	float propKernel1; 
+	// parameters for 2Dt kernel
+	float u0Kernel1;		// scaling parameter for 1st kernel
+	float p0Kernel1;		// shape parameter for 1st kernel
+	float u0Kernel2;		// scaling parameter for 2nd kernel
+	float p0Kernel2;		// shape parameter for 2nd kernel
+	float propKernel1;	// probability of dispersing with the 1st kernel
+	// parameters for WALD (inverse Gaussian) kernel
+//	float mu;						// scaling parameter 
+//	float gamma;				// shape parameter 
+	float meanU;				// mean horizontal wind speed (m/s)
+	float sigma_w;			// s.d. of vertical wind speed (m/s)
+	float hc;						// canopy height (m)
+	float hr[NSTAGES];	// stage-dependent seed release height (m)
+	float vt;						// seed terminal velocity (m/s)
+	float kappa;				// turbulence coefficient
+	float meanDirn;			// mean wind direction (degrees)
+	float sdDirn;				// s.d. of wind direction (degrees)
 #endif // RS_CONTAIN 
 	short moveType; 		// 1 = SMS, 2 = CRW
 	short pr;						// SMS perceptual range (cells)

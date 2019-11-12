@@ -18,7 +18,9 @@ patchSeqNum = seqnum; patchNum = num; nCells = 0;
 xMin = yMin = 999999999; xMax = yMax = 0; x = y = 0;
 subCommPtr = 0;
 #if RS_CONTAIN
-damageIndex = 0.0;		
+damageIndex = 0.0;
+//prevDamage = 0.0;		
+damageLocns = false;
 #endif // RS_CONTAIN 
 #if SEASONAL
 for (int i = 0; i < nseasons; i++) localK.push_back(0.0);
@@ -66,7 +68,7 @@ if (xMin <= rect.xMax && xMax >= rect.xMin &&  yMin <= rect.yMax && yMax >= rect
 				// check for any cell of the patch lying within the rectangle
 				int ncells = (int)cells.size();
 				for (int i = 0; i < ncells; i++) {
-					loc = getCell(i);
+					loc = getCellLocn(i);
 					if (loc.x >= rect.xMin && loc.x <= rect.xMax
 					&&  loc.y >= rect.yMin && loc.y <= rect.yMax) {
 						// cell lies within the rectangle
@@ -96,7 +98,7 @@ if (changed) {
 	xMin = yMin = 999999999; xMax = yMax = 0;
 	ncells = (int)cells.size();
 	for (int i = 0; i < ncells; i++) {
-		loc = getCell(i);
+		loc = getCellLocn(i);
 		if (loc.x < xMin) xMin = loc.x; if (loc.x > xMax) xMax = loc.x;
 		if (loc.y < yMin) yMin = loc.y; if (loc.y > yMax) yMax = loc.y;
 	}
@@ -309,7 +311,7 @@ if (env.stoch && env.inK) { // environmental stochasticity in K
 void Patch::resetDamageIndex(void) { damageIndex = 0.0; }
 
 void Patch::updateDamageIndex(int dmgX,int dmgY,int damage,double alpha) {
-// the damage index for the patch is based on Hanskii's index, i.e. it is the sum
+// the damage index for the patch is based on Hanski's index, i.e. it is the sum
 // of damage values of each cell in the landscape weighted by a negative exponential
 // function of distance between the cell and the patch (approx.) centroid
 
@@ -330,7 +332,7 @@ damageIndex += (double)damage * exp(-1.0*alpha*dist);
 }	
 
 double Patch::getDamageIndex(void) { return damageIndex; }
-
+/*
 void Patch::resetDamageLocns(void) {
 int ndlocns = (int)dmglocns.size();
 for (int i = 0; i < ndlocns; i++)
@@ -348,6 +350,24 @@ for (int i = 0; i < ndlocns; i++)
 	if (dmglocns[i] != NULL) totdmg += dmglocns[i]->getDamageIndex();
 return totdmg;
 }
+*/
+void Patch::setDamageLocns(bool d) { damageLocns = d; }
+bool Patch::hasDamageLocns(void) { return damageLocns; }
+
+//void Patch::setPrevDamage(double dmg) { if (dmg >= 0.0) prevDamage = dmg; }
+//double Patch::getPrevDamage(void) { return prevDamage; }      
+double Patch::getPrevDamage(void) {
+double damage = 0.0;
+DamageLocn *pDamage; 
+int ncells = (int)cells.size();
+for (int i = 0; i < ncells; i++) {
+	pDamage = cells[i]->getDamage();
+	if (pDamage != 0) {
+		damage += pDamage->getDamageIndex(false);
+	}
+}
+return damage; 
+}      
 	
 #endif // RS_CONTAIN 
 
@@ -370,13 +390,19 @@ float Patch::getK(void) { return localK; }
 #endif // SEASONAL 
 
 // Return co-ordinates of a specified cell
-locn Patch::getCell(int ix) {
+locn Patch::getCellLocn(int ix) {
 locn loc; loc.x = -666; loc.y = -666;
 int ncells = (int)cells.size();
 if (ix >= 0 && ix < ncells) {
 	loc = cells[ix]->getLocn();
 }
 return loc;
+}
+// Return pointer to a specified cell
+Cell* Patch::getCell(int ix) {			
+int ncells = (int)cells.size();
+if (ix >= 0 && ix < ncells) return cells[ix];
+else return 0;
 }
 // Return co-ordinates of patch centroid
 locn Patch::getCentroid(void) {

@@ -225,12 +225,19 @@ paramSim::paramSim(void) {
 	outStartTraitCell = outStartTraitRow = outStartConn = 0;
 	outIntOcc = outIntPop = outIntInd = outIntGenetic = 10;
 	outIntTraitCell = outIntTraitRow = outIntConn = 10;
+#if RS_CONTAIN
+	int outStartDamage = 0; 		
+	int outIntDamage = 10;				
+#endif // RS_CONTAIN 
 	mapInt = traitInt = 10;
 	slowFactor = 1;
 	batchMode = absorbing = false;
 	outRange = outOccup = outPop = outInds = false;
 	outGenetics = outGenXtab = false; outGenType = 0;
 	outTraitsCells = outTraitsRows = outConnect = false;
+#if RS_CONTAIN
+	outDamage = false;
+#endif // RS_CONTAIN 
 	saveMaps = false; saveTraitMaps = false;
 #if HEATMAP
 	saveVisits = false;
@@ -257,6 +264,9 @@ paramSim::paramSim(void) {
 	drawLoaded = false;
 	viewLand = false; viewPatch = false; viewGrad = false; viewCosts = false;
 	viewPop = false; viewTraits = false; viewPaths = false; viewGraph = false;
+#if RS_CONTAIN
+	viewDamage = false;
+#endif // RS_CONTAIN 
 	dir = ' ';
 }
 
@@ -279,6 +289,9 @@ if (s.outGenType >= 0 && s.outGenType <= 2) {
 outGenXtab = s.outGenXtab;
 outTraitsCells = s.outTraitsCells; outTraitsRows = s.outTraitsRows;
 outConnect = s.outConnect;
+#if RS_CONTAIN
+outDamage = s.outDamage;
+#endif // RS_CONTAIN 
 //if (s.outStartRange >= 0) outStartRange =	s.outStartRange;
 //if (s.outStartOcc >= 0) outStartOcc =	s.outStartOcc;
 if (s.outStartPop >= 0) outStartPop =	s.outStartPop;
@@ -295,6 +308,10 @@ if (s.outIntGenetic >= 1) outIntGenetic = s.outIntGenetic;
 if (s.outIntTraitCell >= 1) outIntTraitCell = s.outIntTraitCell;
 if (s.outIntTraitRow >= 1) outIntTraitRow = s.outIntTraitRow;
 if (s.outIntConn >= 1) outIntConn = s.outIntConn;
+#if RS_CONTAIN
+if (s.outStartDamage >= 0) outStartDamage =	s.outStartDamage;
+if (s.outIntDamage >= 1) outIntDamage =	s.outIntDamage;
+#endif // RS_CONTAIN 
 saveMaps = s.saveMaps; saveTraitMaps = s.saveTraitMaps;
 #if HEATMAP
 saveVisits = s.saveVisits;
@@ -319,6 +336,9 @@ s.simulation = simulation; s.reps = reps; s.years = years;
 s.outRange = outRange; s.outOccup = outOccup; s.outPop = outPop; s.outInds = outInds;
 s.outGenetics = outGenetics; s.outGenType = outGenType; s.outGenXtab = outGenXtab;
 s.outTraitsCells = outTraitsCells; s.outTraitsRows = outTraitsRows; s.outConnect = outConnect;
+#if RS_CONTAIN
+s.outDamage = outDamage;
+#endif // RS_CONTAIN 
 //s.outStartRange =	outStartRange;
 //s.outStartOcc =	outStartOcc;
 s.outStartPop =	outStartPop; s.outStartInd = outStartInd; s.outStartGenetic = outStartGenetic;
@@ -330,6 +350,9 @@ s.outIntInd = outIntInd; s.outIntGenetic = outIntGenetic;
 s.outIntTraitCell = outIntTraitCell;
 s.outIntTraitRow = outIntTraitRow;
 s.outIntConn = outIntConn;
+#if RS_CONTAIN
+s.outStartDamage = outStartDamage; s.outIntDamage = outIntDamage;
+#endif // RS_CONTAIN 
 s.batchMode = batchMode;
 s.absorbing = absorbing;
 s.saveMaps = saveMaps; s.saveTraitMaps = saveTraitMaps;
@@ -357,6 +380,9 @@ viewLand = v.viewLand; viewPatch = v.viewPatch;
 viewGrad = v.viewGrad; viewCosts = v.viewCosts;
 viewPop = v.viewPop; viewTraits = v.viewTraits;
 viewPaths = v.viewPaths; viewGraph = v.viewGraph;
+#if RS_CONTAIN
+viewDamage = v.viewDamage;
+#endif // RS_CONTAIN 
 if (v.slowFactor > 0) slowFactor = v.slowFactor;
 }
 
@@ -366,6 +392,9 @@ v.viewLand = viewLand; v.viewPatch = viewPatch;
 v.viewGrad = viewGrad; v.viewCosts = viewCosts;
 v.viewPop = viewPop; v.viewTraits = viewTraits;
 v.viewPaths = viewPaths; v.viewGraph = viewGraph;
+#if RS_CONTAIN
+v.viewDamage = viewDamage;
+#endif // RS_CONTAIN 
 v.slowFactor = slowFactor;
 return v;
 }

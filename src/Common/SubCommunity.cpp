@@ -18,11 +18,12 @@ pPatch->setSubComm((intptr)this);
 initial = false;
 occupancy = 0;
 #if RS_CONTAIN
-cullTarget = false;
-firstYear = -1;
+habIndex = -1;
 #endif // RS_CONTAIN 
 #if RS_CONTAIN
-habIndex = -1;
+cullTarget = false;
+firstYear = -1;
+cullCount = 0;
 #endif // RS_CONTAIN 
 }
 
@@ -41,7 +42,7 @@ int SubCommunity::getNum(void) { return subCommNum; }
 Patch* SubCommunity::getPatch(void) { return pPatch; }
 
 locn SubCommunity::getLocn(void) {
-locn loc = pPatch->getCell(0);
+locn loc = pPatch->getCellLocn(0);
 return loc;
 }
 
@@ -182,11 +183,15 @@ else {
 //
 //	}
 //}
+#if RS_CONTAIN
+pInd = new Individual(pCell,pPatch,stg,age,repInt,1,probmale,trfr.moveModel,trfr.moveType);
+#else
 #if PARTMIGRN
 pInd = new Individual(pSpecies,pCell,pPatch,stg,age,repInt,probmale,trfr.moveModel,trfr.moveType);
 #else
 pInd = new Individual(pCell,pPatch,stg,age,repInt,probmale,trfr.moveModel,trfr.moveType);
 #endif // PARTMIGRN 
+#endif // RS_CONTAIN 
 
 // add new individual to the population
 // NB THIS WILL NEED TO BE CHANGED FOR MULTIPLE SPECIES...
@@ -1102,20 +1107,28 @@ else {
 
 #if RS_CONTAIN
 
-short SubCommunity::findCullTarget(Cull *pCull,int year,int nstages)
+short SubCommunity::findCullTarget(Cull *pCull,int year,int nstages,int resol)
 {
+int ncells = pPatch->getNCells();
+culldata c = pCull->getCullData();      
+int nthreshold = (int)(c.densThreshold * (double)ncells * (double)resol * (double)resol / 10000.0);
 #if RSDEBUG
 //DEBUGLOG << "SubCommunity::findCullTarget(): year=" << year
-//	<< " nstages=" << nstages << " PatchNum=" << pPatch->getPatchNum()
+//	<< " nstages=" << nstages << " densThreshold=" << c.densThreshold 
+//	<< " PatchNum=" << pPatch->getPatchNum() << " ncells=" << ncells 
+//	<< " nthreshold=" << nthreshold
 //	<< endl;
 #endif
 short target = 0;
-culldata c = pCull->getCullData();      
+cullCount = 0;
 int npops = (int)popns.size();
 for (int i = 0; i < npops; i++) { // all populations
 	if (nstages < 2) { // non-structured
-		if (popns[i]->getNInds() >= c.popnThreshold) {
+//		if (popns[i]->getNInds() >= c.popnThreshold) 
+		if (popns[i]->getNInds() > nthreshold)
+		{
 			cullTarget = true; target = 1;
+			cullCount = popns[i]->getNInds();
 			if (firstYear < 0) firstYear = year;
 		}	
 	}
@@ -1131,12 +1144,31 @@ for (int i = 0; i < npops; i++) { // all populations
 //	<< endl;
 #endif
 		}
-		if (nInds >= c.popnThreshold) {
+//		if (nInds >= c.popnThreshold) 
+		if (nInds > nthreshold) 
+		{
 			cullTarget = true; target = 1;
+			cullCount = nInds;
 			if (firstYear < 0) firstYear = year;
 		}			
 	}
 }
+// now convert the true cull count to an estimate allowing for the variance 
+// in counting accuracy implied by the count c.v.
+#if RSDEBUG
+//DEBUGLOG << "SubCommunity::findCullTarget(): BEFORE cullCount=" << cullCount
+//	<< " countCV=" << c.countCV 
+//	<< endl;
+#endif
+if (cullTarget) {
+	double countSD = (double)cullCount * c.countCV / 100.0;
+	cullCount = (int)(0.5 + pRandom->Normal((double)cullCount,countSD));
+	if (cullCount < 0) cullCount = 0;
+}
+#if RSDEBUG
+//DEBUGLOG << "SubCommunity::findCullTarget(): AFTER cullCount=" << cullCount
+//	<< endl;
+#endif
 #if RSDEBUG
 //DEBUGLOG << "SubCommunity::findCullTarget(): target=" << target
 //	<< " cullTarget=" << cullTarget << " firstYear=" << firstYear
@@ -1153,11 +1185,101 @@ double SubCommunity::damageIndex(void) { return pPatch->getDamageIndex(); }
 
 void SubCommunity::resetCullTarget(void) { cullTarget = false; }
 
-void SubCommunity::cullPatch(Cull *pCull,int pop,float cullrate) { 
-popns[pop]->cull(pCull,cullrate/100.0);
+void SubCommunity::resetCull(void) {
+int npops = (int)popns.size();
+for (int i = 0; i < npops; i++) popns[i]->resetCull();
+} 
+
+//void SubCommunity::cullPatch(Cull *pCull,int pop,float cullrate) 
+void SubCommunity::cullPatch(Cull *pCull,int pop,int resol)
+{ 
+int ncells = pPatch->getNCells();
+//popns[pop]->cull(pCull,cullrate);
+popns[pop]->cull(pCull,(double)(ncells * resol * resol)/10000.0);
 cullTarget = false;
 }
+
+// Record any damage caused by a resident population within the patch
+void SubCommunity::updateDamage(Landscape *pLandscape,Species *pSpecies,Cull *pCull) {
+int ncells = pPatch->getNCells();
+int npops = (int)popns.size();
+#if RSDEBUG
+DEBUGLOG << "SubCommunity::updateDamage(): PatchNum=" << pPatch->getPatchNum()
+	<< " ncells=" << ncells << " npops=" << npops
+	<< " hasDamageLocns=" << (int)pPatch->hasDamageLocns() 
+	<< endl;
+#endif
+if (!pPatch->hasDamageLocns()) return;
+landParams ppLand = pLandscape->getLandParams();
+demogrParams dem = pSpecies->getDemogr();
+stageParams sstruct = pSpecies->getStage();
+damageparams d = pDamageParams->getDamageParams();
+popStats p;
+Cell *pCell;
+DamageLocn *pDamageLocn;
+double densityfactor = 10000.0 / (double)(ncells * ppLand.resol * ppLand.resol);
+// find damage locations within the patch
+for (int i = 0; i < ncells; i++) {
+	pCell = pPatch->getCell(i);
+	if (pCell != 0) {
+		pDamageLocn = pCell->getDamage();
+		if (pDamageLocn != 0) {
+			for (int j = 0; j < npops; j++) { // all populations
+				p = popns[j]->getStats(0); 
+				int ninds = 0;     
+				switch (d.occOption) {				 
+				case 0: // total population size
+					pDamageLocn->updateOccupancyDamage((double)p.nInds);
+					break;
+				case 1: // total population density
+#if RSDEBUG
+DEBUGLOG << "SubCommunity::updateDamage(): occOption=1: nInds=" << p.nInds
+	<< " ncells=" << ncells << " resol=" << ppLand.resol
+	<< " density=" << (double)p.nInds * densityfactor 
+	<< " pDamageLocn=" << pDamageLocn 
+	<< endl;
+#endif
+					pDamageLocn->updateOccupancyDamage((double)p.nInds * densityfactor);
+					break;
+				case 2: // density of culled stages
+					if (!dem.stageStruct) break; // condition should not occur
+					for (int s = 0; s < sstruct.nStages; s++) {
+						if (pCull->getCullStage(s)) { // stage is to be culled
+							ninds += popns[j]->stagePop(s);
+						}
+					}		
+#if RSDEBUG
+DEBUGLOG << "SubCommunity::updateDamage(): occOption=2: ninds=" << ninds
+	<< " ncells=" << ncells << " resol=" << ppLand.resol
+	<< " density=" << (double)ninds * densityfactor 
+	<< " pDamageLocn=" << pDamageLocn 
+	<< endl;
+#endif
+					pDamageLocn->updateOccupancyDamage((double)ninds * densityfactor);				
+					break;
+				case 3: // stage-specific density
+					if (!dem.stageStruct) break; // condition should not occur
+#if RSDEBUG
+DEBUGLOG << "SubCommunity::updateDamage(): occOption=3: nInds=" << p.nInds
+	<< " stage=" << d.stage << " N=" << popns[j]->stagePop(d.stage)
+	<< " ncells=" << ncells << " resol=" << ppLand.resol
+	<< " density=" << (double)popns[j]->stagePop(d.stage) * densityfactor 
+	<< " pDamageLocn=" << pDamageLocn 
+	<< endl;
+#endif
+					pDamageLocn->updateOccupancyDamage((double)popns[j]->stagePop(d.stage) * densityfactor);				
+					break;
+				}
+			}
+		}     
+	}
+}
+}
+
+int SubCommunity::getCullCount(void) { return cullCount; }
 	
+double SubCommunity::prevDamage(void) { return pPatch->getPrevDamage(); }
+
 #endif // RS_CONTAIN 
 
 void SubCommunity::ageIncrement(void) {
@@ -1362,7 +1484,7 @@ if (option == -999) { // close the file
 	// as all populations may have been deleted, set up a dummy one
 	// species is not necessary
 	pPop = new Population();
-	fileOK = pPop->outCullHeaders(-999,land.patchModel);
+	fileOK = pPop->outCullHeaders(pLandscape,-999,land.patchModel);
 	delete pPop;
 }
 else { // open the file
@@ -1373,7 +1495,7 @@ else { // open the file
 #else
 	pPop = new Population(pSpecies,pPatch,0,land.resol);
 #endif // PEDIGREE
-	fileOK = pPop->outCullHeaders(land.landNum,land.patchModel);
+	fileOK = pPop->outCullHeaders(pLandscape,land.landNum,land.patchModel);
 	delete pPop;
 }
 return fileOK;
@@ -1678,7 +1800,7 @@ for (int i = 0; i < npops; i++) { // all populations
 				outtraits << "\t" << pPatch->getPatchNum();
 			}
 			else {
-				locn loc = pPatch->getCell(0);
+				locn loc = pPatch->getCellLocn(0);
 				outtraits << "\t" << loc.x << "\t" << loc.y;
 			}
 		}

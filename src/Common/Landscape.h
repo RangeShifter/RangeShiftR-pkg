@@ -43,7 +43,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 1 July 2019 by Steve Palmer
+Last updated: 6 November 2019 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -282,16 +282,37 @@ public:
 	);
 #if RS_CONTAIN
 	void setDamage(
-		Patch*, // pointer to Patch
+//		Patch*, // pointer to Patch
 		int,    // x co-ordinate
 		int,    // y co-ordinate
+		intptr,	// pointer (cast as integer) to the Patch in which cell lies (if any)
 		int			// damage index 
+	);
+	void updateDamage(
+		int,    // x co-ordinate
+		int,    // y co-ordinate
+		intptr	// pointer (cast as integer) to the Patch in which cell lies (if any)
 	);
 	void updateDamageIndices(void);
 	void setAlpha(double);
 	double getAlpha(void);
 	void resetDamageLocns(void);
-	double totalDamage(void);
+//	void updateDamageLocns(Species*);
+	double totalDamage(
+		bool		// transfer by SMS?
+	);
+	void viewDamage(	// Update the damage graph on the screen
+										// NULL for the batch version
+		int,		// year
+		double,	// mean damage
+		double,	// standard error of damage
+		bool		// show standard error?
+	);
+	void createTotDamage(int nrows,int reps);
+	void updateTotDamage(unsigned short row,unsigned short rep,float damage); 
+	void deleteTotDamage(int nrows);
+	void outTotDamage(bool view);
+//	void resetPrevDamage(void);
 #endif // RS_CONTAIN 
 	patchData getPatchData(
 		int		// index no. of Patch in patches vector
@@ -478,6 +499,23 @@ public:
 		string	// damage file name (may be NULL)
 	);
 #endif // SEASONAL 
+	bool outSummDmgHeaders( // Open summary damage file and write header record
+		int				// Landscape number (-999 to close the file)
+	);
+	void outSummDmg( // Write record to summary damage file
+		int,			// replicate
+		int,			// year
+		bool,			// transfer by SMS?
+		bool			// view damage on screen
+	);
+	bool outDamageHeaders( // Open damage file and write header record
+		int				// Landscape number (-999 to close the file)
+	);
+	void outDamage( // Write record to damage file
+		int,			// replicate
+		int,			// year
+		bool			// transfer by SMS?
+	);
 #else
 #if SEASONAL
 	int readLandscape(
@@ -614,6 +652,7 @@ private:
 
 #if RS_CONTAIN
 	std::vector <DamageLocn*> dmglocns;
+	float **totDamage;	// total damage record to view on screen
 #endif // RS_CONTAIN 
 	
 };

@@ -761,11 +761,12 @@ for (int i = 0; i < nsubcomms; i++) { // all communities (including in matrix)
 int Community::findCullTargets(Cull *pCull,int year,int nstages)
 {
 int ntargets = 0;
+landParams ppLand = pLandscape->getLandParams();
 //culldata c = pCull->getCullData();
 int nsubcomms = (int)subComms.size();
 for (int i = 0; i < nsubcomms; i++) { // all sub-communities
 	if (subComms[i]->getNum() > 0) { // except in matrix
-		ntargets += subComms[i]->findCullTarget(pCull,year,nstages);
+		ntargets += subComms[i]->findCullTarget(pCull,year,nstages,ppLand.resol);
 	}
 }
 #if RSDEBUG
@@ -775,25 +776,29 @@ return ntargets;
 }
 
 void Community::cullAllTargets(Cull *pCull) {
+landParams ppLand = pLandscape->getLandParams();
+#if RSDEBUG
 culldata c = pCull->getCullData();
-#if RSDEBUG                       
 DEBUGLOG << "Community::cullAllTargets(): maxNpatches=" << c.maxNpatches << endl;
 #endif
 int nsubcomms = (int)subComms.size();
 for (int i = 0; i < nsubcomms; i++) { // all sub-communities
 	if (subComms[i]->getNum() > 0) { // except in matrix
 		if (subComms[i]->isCullTarget()) {
-			subComms[i]->cullPatch(pCull,0,c.cullRate); // ASSUMING Species 0
+//			subComms[i]->cullPatch(pCull,0,c.cullMaxRate); // ASSUMING Species 0
+			subComms[i]->cullPatch(pCull,0,ppLand.resol); // ASSUMING Species 0
 		}
 	}
 }
 }
 
+// cull target patches at random until max. no. of patches is reached;
 void Community::cullRandomTargets(Cull *pCull,int year) {
-// cull target patches until max. no. is reached;
+landParams ppLand = pLandscape->getLandParams();
 culldata c = pCull->getCullData();
+if (c.method == 4 || c.method == 5 || c.method == 7) return;
 #if RSDEBUG
-DEBUGLOG << "Community::cullRandomTargets(): maxNpatches=" << c.maxNpatches << endl;
+//DEBUGLOG << "Community::cullRandomTargets(): maxNpatches=" << c.maxNpatches << endl;
 #endif
 int nsubcomms = (int)subComms.size();
 bool *selected;
@@ -801,10 +806,11 @@ selected = new bool [nsubcomms];
 double *initProb;
 initProb = new double [nsubcomms];
 for (int i = 0; i < nsubcomms; i++) { selected[i] = false; initProb[i] = 0.0; }
+
 //if (c.edgeBias) 
 if (c.method > 0) 
 {
-	// set up weighted lottery based on reciprocal of time since first a target
+	// set up weighted lottery dependent on cull method
 	double tot = 0.0;
 	int inityear;
 	double damage;
@@ -828,11 +834,22 @@ if (c.method > 0)
 			case 2: // bias towards closest to damage
 			case 3: // bias towards closest to damage X popn size
 				damage = subComms[i]->damageIndex();
+#if RSDEBUG
+//DEBUGLOG << "Community::cullRandomTargets(): i=" << i 
+//	<< " getNum()=" << subComms[i]->getNum()
+//	<< " damage=" << damage << " tot=" << tot
+//	<< endl;
+#endif
 				if (c.method == 3) {
-					popStats pop = subComms[i]->getPopStats();
-					damage *= (double)pop.nInds;
+//					popStats pop = subComms[i]->getPopStats();
+//					damage *= (double)pop.nInds;
+					damage *= subComms[i]->getCullCount();
 				}
 				initProb[i] = damage;
+				tot += initProb[i];				
+				break;
+			case 6: // bias towards recently incurred damage
+				initProb[i] = subComms[i]->prevDamage();
 				tot += initProb[i];				
 				break;
 			}
@@ -843,8 +860,9 @@ if (c.method > 0)
 #endif
 		}
 	}
+	if (tot <= 0.0) tot = 1.0;
 	for (int i = 0; i < nsubcomms; i++) initProb[i] /= tot;
-	for (int i = 0; i < nsubcomms; i++) { 
+	for (int i = 0; i < nsubcomms; i++) {
 		if (i > 1) initProb[i] += initProb[i-1];
 #if RSDEBUG
 //DEBUGLOG << "Community::cullRandomTargets(): i=" << i 
@@ -853,10 +871,13 @@ if (c.method > 0)
 #endif
 	}
 }
+
 int r;
 int nculled = 0;
 int loopcount = 0;
+double rnd;
 do {
+	/*
 //	if (c.edgeBias)
 	if (c.method == 1) // bias towards recently colonised patches
 	{
@@ -873,10 +894,26 @@ do {
 		}
 	}
 	else r = pRandom->IRandom(0,(nsubcomms-1));
+	*/
+	switch (c.method) { 
+	case 0: // random
+		r = pRandom->IRandom(0,(nsubcomms-1));
+		break;
+	case 1: // bias towards recently colonised patches
+	case 2: // bias towards closest to damage
+	case 3: // bias towards closest to damage X popn size
+	case 6: // bias towards recently incurred damage
+		rnd = pRandom->Random();
+		for (int i = 0; i < nsubcomms; i++) {
+			if (rnd <= initProb[i]) { r = i; i = nsubcomms+1; }
+		}	
+		break;
+	}
 	if (!selected[r]) {
 		if (subComms[r]->getNum() > 0) { // except in matrix
 			if (subComms[r]->isCullTarget()) {
-				subComms[r]->cullPatch(pCull,0,c.cullRate); // ASSUMING Species 0	
+//				subComms[r]->cullPatch(pCull,0,c.cullMaxRate); // ASSUMING Species 0	
+				subComms[r]->cullPatch(pCull,0,ppLand.resol); // ASSUMING Species 0
 				nculled++;			
 			}
 		}
@@ -885,18 +922,111 @@ do {
 	loopcount++;
 } while (nculled < c.maxNpatches && loopcount < 10000);
 #if RSDEBUG
-DEBUGLOG << "Community::cullRandomTargets(): nculled=" << nculled 
-	<< " loopcount=" << loopcount << endl;
-#endif
+//DEBUGLOG << "Community::cullRandomTargets(): nculled=" << nculled 
+//	<< " loopcount=" << loopcount << endl;
+#endif  
+		 
 delete[] selected;
+delete[] initProb;
 }
 
-void Community::resetCullTargets(void)
-{
+// cull target patches in sequence until max. no. of patches is reached;
+void Community::cullTargets(Cull *pCull) {
+landParams ppLand = pLandscape->getLandParams();
+culldata c = pCull->getCullData();
+if (c.method < 4) return;
+if (c.method == 6) return;
+#if RSDEBUG
+//DEBUGLOG << "Community::cullTargets(): maxNpatches=" << c.maxNpatches << endl;
+#endif
+int nsubcomms = (int)subComms.size();
+bool *selected;
+selected = new bool [nsubcomms];
+double *weight;
+weight = new double [nsubcomms];
+
+for (int i = 0; i < nsubcomms; i++) {
+	selected[i] = false; weight[i] = 0.0;
+	if (subComms[i]->getNum() > 0    // except in matrix
+	&&  subComms[i]->isCullTarget()) { 
+		if (c.method <= 5) {
+			weight[i] = subComms[i]->damageIndex();
+		}
+#if RSDEBUG
+//DEBUGLOG << "Community::cullTargets(): i=" << i 
+//	<< " getNum()=" << subComms[i]->getNum() << " weight=" << weight[i] 
+//	<< endl;
+#endif
+		if (c.method == 5) {
+			weight[i] *= subComms[i]->getCullCount();
+		}
+		if (c.method == 7) {
+			weight[i] = subComms[i]->prevDamage();
+#if RSDEBUG
+//DEBUGLOG << "Community::cullTargets(): method=7 i=" << i 
+//	<< " getNum()=" << subComms[i]->getNum() << " weight=" << weight[i] 
+//	<< endl;
+#endif
+		}
+	}
+}
+
+int max;
+int nculled = 0;
+int loopcount = 0;
+double maxweight;
+do {
+	// find highest weighted patch
+	maxweight = 0.0;
+	max = -1;
+	for (int i = 0; i < nsubcomms; i++) {
+		if (weight[i] > maxweight) {
+			maxweight = weight[i]; max = i;
+		}
+	}
+	// cull the patch
+	if (max < 0) { // should not occur, but if so abort cull
+		nculled = c.maxNpatches + 1; loopcount = 10001;
+	}
+	else {
+		if (!selected[max]) {
+			if (subComms[max]->getNum() > 0) { // except in matrix
+				if (subComms[max]->isCullTarget()) {
+					subComms[max]->cullPatch(pCull,0,ppLand.resol); // ASSUMING Species 0
+					nculled++;			
+				}
+			}
+			selected[max] = true; weight[max] = 0.0;		
+		}
+		loopcount++;
+	}
+} while (nculled < c.maxNpatches && loopcount < 10000);
+
+delete[] selected;
+delete[] weight;
+}
+
+void Community::resetCullTargets(void) {
 int nsubcomms = (int)subComms.size();
 for (int i = 0; i < nsubcomms; i++) { // all sub-communities
 	if (subComms[i]->getNum() > 0) { // except in matrix
 		subComms[i]->resetCullTarget();
+	}
+}
+}
+
+void Community::resetCull(void) {
+int nsubcomms = (int)subComms.size();
+for (int i = 0; i < nsubcomms; i++) { // all sub-communities
+	subComms[i]->resetCull();
+}
+} 
+
+void Community::updateDamage(Species *pSpecies,Cull *pCull) {
+int nsubcomms = (int)subComms.size();
+for (int i = 0; i < nsubcomms; i++) { // all sub-communities
+	if (subComms[i]->getNum() > 0) { // except in matrix
+		subComms[i]->updateDamage(pLandscape,pSpecies,pCull);
 	}
 }
 }
@@ -955,7 +1085,7 @@ void Community::updateOccupancy(int row,int rep)
 #endif // SEASONAL 
 {
 #if RSDEBUG
-DEBUGLOG << "Community::updateOccupancy(): row = " << row << endl;
+DEBUGLOG << "Community::updateOccupancy(): row=" << row << endl;
 #endif
 int nsubcomms = (int)subComms.size();
 for (int i = 0; i < nsubcomms; i++) {

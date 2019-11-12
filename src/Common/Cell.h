@@ -16,7 +16,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 5 June 2019 by Steve Palmer
+Last updated: 23 August 2019 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -27,6 +27,9 @@ Last updated: 5 June 2019 by Steve Palmer
 using namespace std;
 
 #include "Parameters.h"
+#if RS_CONTAIN
+#include "Control.h"
+#endif // RS_CONTAIN 
 
 //---------------------------------------------------------------------------
 
@@ -110,8 +113,10 @@ public:
 	unsigned long int getVisits(void);
 #endif // HEATMAP 
 #if RS_CONTAIN
-	void setDamage(unsigned int);
-	unsigned int getDamage(void);
+//	void setDamage(unsigned int);
+//	unsigned int getDamage(void);
+	void setDamage(DamageLocn*);
+	DamageLocn* getDamage(void);
 #endif // RS_CONTAIN 
 
 private:
@@ -127,7 +132,7 @@ private:
 	unsigned long int visits; // no. of times square is visited by dispersers
 #endif // HEATMAP 
 #if RS_CONTAIN
-	unsigned int damage; // index of economic / environmental damage incurred if occupied
+	DamageLocn *pDamage;	// pointer to damage location (if any)
 #endif // RS_CONTAIN 
 #if SPATIALMORT
 	float mort[2];	// additional mortality in two periods

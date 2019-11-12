@@ -19,7 +19,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 4 June 2019 by Steve Palmer
+Last updated: 13 September 2019 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -259,6 +259,9 @@ struct simParams {
 	int outStartTraitCell; int outStartTraitRow; int outStartConn;
 	int outIntRange; int outIntOcc; int outIntPop; int outIntInd; int outIntGenetic;
 	int outIntTraitCell; int outIntTraitRow; int outIntConn;
+#if RS_CONTAIN
+	int outStartDamage, outIntDamage;
+#endif // RS_CONTAIN 
 	int mapInt; int traitInt;
 #if SPATIALMORT
 	int mortChgYear;
@@ -268,6 +271,9 @@ struct simParams {
 	bool outRange; bool outOccup; bool outPop; bool outInds;
 	bool outGenetics; short outGenType; bool outGenXtab;
 	bool outTraitsCells; bool outTraitsRows; bool outConnect;
+#if RS_CONTAIN
+	bool outDamage;
+#endif // RS_CONTAIN 
 	bool saveMaps;
 	bool drawLoaded; bool saveTraitMaps;
 #if HEATMAP
@@ -300,6 +306,9 @@ struct sampleLimits {
 struct simView {
 	bool viewLand; bool viewPatch; bool viewGrad; bool viewCosts;
 	bool viewPop; bool viewTraits; bool viewPaths; bool viewGraph;
+#if RS_CONTAIN
+	bool viewDamage;
+#endif // RS_CONTAIN 
 	int slowFactor;
 };
 
@@ -357,6 +366,10 @@ private:
 	int outIntTraitCell;		// output interval for traits by cell file
 	int outIntTraitRow;			// output interval for traits by row file
 	int outIntConn;					// output interval for connectivity matrix
+#if RS_CONTAIN
+	int outStartDamage; 		// output start year for damage file
+	int outIntDamage;				// output interval for damage file
+#endif // RS_CONTAIN 
 	int mapInt;							// output interval for maps
 	int traitInt;						// output interval for evolving traits maps
 	int slowFactor;					// to reduce speed of movement paths on screen
@@ -378,6 +391,9 @@ private:
 	bool outTraitsCells;		// produce output summary traits by cell file?
 	bool outTraitsRows;			// produce output summary traits by row (y) file?
 	bool outConnect;				// produce output connectivity file?
+#if RS_CONTAIN
+	bool outDamage;					// produce output damage file?
+#endif // RS_CONTAIN 
 	bool saveMaps;					// save landscape/population maps?
 #if HEATMAP
 	bool saveVisits;        // save dispersal visits heat maps?
@@ -419,6 +435,9 @@ private:
 	bool viewTraits;				// view summary traits map(s) on screen?
 	bool viewPaths;					// view individual movement paths on screen?
 	bool viewGraph;					// view population/occupancy graph on screen?
+#if RS_CONTAIN
+	bool viewDamage;				// view summary damage graph on screen?
+#endif // RS_CONTAIN 
 	string dir;							// full name of working directory
 
 };

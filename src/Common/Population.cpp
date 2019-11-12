@@ -147,7 +147,7 @@ for (int stg = 1; stg < nStages; stg++) {
 					psurv *= (double)pSpecies->getSurv(0,s,stg,0); // use female survival for the stage					
 				}
 #else
-				double psurv = (double)pSpecies->getSurv(0,stg,0); // use female survival in the first habitat for the stage
+				double psurv = (double)pSpecies->getSurv(-1,stg,0); // use highest female survival for the stage
 #endif // SEASONAL 
 #else
 #if SEASONAL
@@ -203,6 +203,16 @@ for (int stg = 1; stg < nStages; stg++) {
 			}
 		}
 		else age = stg;
+#if RS_CONTAIN
+#if RSDEBUG
+	// NOTE: CURRENTLY SETTING ALL INDIVIDUALS TO RECORD NO. OF STEPS ...
+		inds.push_back(new Individual(pCell,pPatch,stg,age,sstruct.repInterval,
+			1,probmale,true,trfr.moveType));
+#else
+		inds.push_back(new Individual(pCell,pPatch,stg,age,sstruct.repInterval,
+			1,probmale,trfr.moveModel,trfr.moveType));
+#endif
+#else
 #if PARTMIGRN
 #if RSDEBUG
 	// NOTE: CURRENTLY SETTING ALL INDIVIDUALS TO RECORD NO. OF STEPS ...
@@ -221,7 +231,8 @@ for (int stg = 1; stg < nStages; stg++) {
 		inds.push_back(new Individual(pCell,pPatch,stg,age,sstruct.repInterval,
 			probmale,trfr.moveModel,trfr.moveType));
 #endif
-#endif // PARTMIGRN
+#endif // PARTMIGRN 
+#endif // RS_CONTAIN 
 		sex = inds[nindivs+i]->getSex();
 #if PARTMIGRN
 //		// TEMPORARY CODE TO SET MIGRATION STATUS
@@ -272,6 +283,7 @@ for (int stg = 1; stg < nStages; stg++) {
 }
 #if RS_CONTAIN
 nCulled = 0;
+selectedForCull = false;
 #endif // RS_CONTAIN 
 #if RSDEBUG
 //DEBUGLOG << "Population::Population(): this=" << this
@@ -590,36 +602,105 @@ for (int sex = 0; sex < nSexes; sex++) {
 #if RS_CONTAIN
 
 // Remove individuals with a specified probability
-void Population::cull(Cull *pCull,double pculled) {
+//void Population::cull(Cull *pCull,double pculled) 
+void Population::cull(Cull *pCull, double hectares)
+{
+culldata c = pCull->getCullData();
+cullstagedata cstage;
+double pculled[NSTAGES];
+for (int i = 0; i < nStages; i++) pculled[i] = 0.0;
+double density = 0.0;
+int nINNS = 0;
+switch (c.cullRate) {	
+case 0: // constant
+	pculled[0] = c.cullMaxRate;
+	break;
+case 1: // logistic function of density of stages to be culled
+	if (pSpecies->stageStructured()) {
+		for (int i = 0; i < nStages; i++) {
+			if (pCull->getCullStage(i)) { // stage is to be culled
+				nINNS += stagePop(i);
+			}
+		}		
+	}
+	else {
+		nINNS = getNInds();
+	}
+//	double density = (double)nINNS / hectares;
+	density = (double)nINNS / hectares;
+	pculled[0] = c.cullMaxRate / (1.0 + exp(-(density-c.cullBeta)*c.cullAlpha));	 
+	break;
+case 2: // stage-specific logistic functions of density
+	for (int i = 0; i < nStages; i++) {
+		if (pCull->getCullStage(i)) { // stage is to be culled
+			cstage = pCull->getCullStageData(i);
+			density = (double)stagePop(i) / hectares;
+			pculled[i] = cstage.cullMaxRate / (1.0 + exp(-(density-cstage.cullBeta)*cstage.cullAlpha));
+		}
+	}
+	break;
+}
+int ninds = (int)inds.size();
+int njuvs = (int)juvs.size();
 #if RSDEBUG
-DEBUGLOG << "Population::cull(): this=" << this
-	<< " patch=" << pPatch->getPatchNum() << " pculled=" << pculled
-	<< " getNInds=" << getNInds() << " totalPop=" << totalPop()  
+DEBUGLOG << "Population::cull(): this=" << this << " patch=" << pPatch->getPatchNum()	
+	<< " hectares=" << hectares 
+	<< " cullRate=" << c.cullRate << " cullMaxRate=" << c.cullMaxRate 
+	<< " cullAlpha=" << c.cullAlpha << " cullBeta=" << c.cullBeta 
+	<< " stagePop(0)=" << stagePop(0) << " stagePop(1)=" << stagePop(1) << " stagePop(2)=" << stagePop(2)
+//	<< " getNInds=" << getNInds()
+//	<< " ninds=" << ninds << " njuvs=" << njuvs
+	<< " density=" << density 
+	<< " pculled[0]=" << pculled[0] 
+//	<< " nCulled=" << nCulled
+	<< endl;
+#endif
+demogrParams dem = pSpecies->getDemogr();
+nCulled = 0;
+selectedForCull = true;
+indStats ind;
+for (int i = 0; i < ninds; i++) {
+	if (dem.stageStruct) {
+		ind = inds[i]->getStats();  
+		if (pCull->getCullStage(ind.stage)) {
+			if (c.cullRate == 2) {
+				if (pRandom->Bernoulli(pculled[ind.stage])) { inds[i]->setStatus(10); nCulled++; }						
+			}
+			else {
+				if (pRandom->Bernoulli(pculled[0])) { inds[i]->setStatus(10); nCulled++; }						
+			}
+#if RSDEBUG
+//DEBUGLOG << "Population::cull(): i=" << i << " ind.stage=" << ind.stage 
+//	<< " nCulled=" << nCulled 
+//	<< endl;
+#endif
+		}			
+	}
+	else {
+		if (pRandom->Bernoulli(pculled[0])) { inds[i]->setStatus(10); nCulled++; }		
+	}
+}
+/*
+for (int i = 0; i < njuvs; i++) {
+	if (dem.stageStruct) {
+		ind = juvs[i]->getStats();  
+		if (pCull->getCullStage(ind.stage)) {
+			if (pRandom->Bernoulli(pculled)) { juvs[i]->setStatus(10); nCulled++; }		
+		}	
+	}	
+	else {
+		if (pRandom->Bernoulli(pculled)) { juvs[i]->setStatus(10); nCulled++; }		
+	}
+}
+*/
+#if RSDEBUG
+DEBUGLOG << "Population::cull(): this=" << this << " patch=" << pPatch->getPatchNum() 
 	<< " nCulled=" << nCulled 
 	<< endl;
 #endif
-nCulled = 0;
-indStats ind;
-int ninds = (int)inds.size();
-for (int i = 0; i < ninds; i++) {
-	ind = inds[i]->getStats();  
-	if (pCull->getCullStage(ind.stage)) {
-		if (pRandom->Bernoulli(pculled)) { inds[i]->setStatus(10); nCulled++; }		
-	}	
-}
-int njuvs = (int)juvs.size();
-for (int i = 0; i < njuvs; i++) {
-	ind = juvs[i]->getStats();  
-	if (pCull->getCullStage(ind.stage)) {
-		if (pRandom->Bernoulli(pculled)) { juvs[i]->setStatus(10); nCulled++; }		
-	}	
-}
-#if RSDEBUG
-DEBUGLOG << "Population::cull(): this=" << this
-	<< " patch=" << pPatch->getPatchNum() << " nCulled=" << nCulled 
-	<< endl;
-#endif
 } 
+
+void Population::resetCull(void) { nCulled = 0; selectedForCull = false; } 
 
 #endif // RS_CONTAIN 
 
@@ -1028,6 +1109,14 @@ case 0: // asexual model
 					nj = (int)juvs.size();
 					pCell = pPatch->getRandomCell();
 					for (int j = 0; j < njuvs; j++) {
+#if RS_CONTAIN
+#if RSDEBUG
+					// NOTE: CURRENTLY SETTING ALL INDIVIDUALS TO RECORD NO. OF STEPS ...
+						juvs.push_back(new Individual(pCell,pPatch,0,0,0,stage,0.0,true,trfr.moveType));
+#else
+						juvs.push_back(new Individual(pCell,pPatch,0,0,0,stage,0.0,trfr.moveModel,trfr.moveType));
+#endif
+#else
 #if PARTMIGRN
 #if RSDEBUG
 					// NOTE: CURRENTLY SETTING ALL INDIVIDUALS TO RECORD NO. OF STEPS ...
@@ -1043,6 +1132,7 @@ case 0: // asexual model
 						juvs.push_back(new Individual(pCell,pPatch,0,0,0,0.0,trfr.moveModel,trfr.moveType));
 #endif
 #endif // PARTMIGRN 
+#endif // RS_CONTAIN 
 						nInds[0][0]++;
 #if GOBYMODEL
 						if (true)
@@ -1215,6 +1305,14 @@ case 2: // complex sexual model
 #endif
 							pCell = pPatch->getRandomCell();
 							for (int j = 0; j < njuvs; j++) {
+#if RS_CONTAIN
+#if RSDEBUG
+								// NOTE: CURRENTLY SETTING ALL INDIVIDUALS TO RECORD NO. OF STEPS ...
+								juvs.push_back(new Individual(pCell,pPatch,0,0,0,stage,dem.propMales,true,trfr.moveType));
+#else
+								juvs.push_back(new Individual(pCell,pPatch,0,0,0,stage,dem.propMales,trfr.moveModel,trfr.moveType));
+#endif
+#else
 #if PARTMIGRN
 #if RSDEBUG
 								// NOTE: CURRENTLY SETTING ALL INDIVIDUALS TO RECORD NO. OF STEPS ...
@@ -1230,6 +1328,7 @@ case 2: // complex sexual model
 								juvs.push_back(new Individual(pCell,pPatch,0,0,0,dem.propMales,trfr.moveModel,trfr.moveType));
 #endif
 #endif // PARTMIGRN 
+#endif // RS_CONTAIN 
 								sex = juvs[nj+j]->getSex();
 								nInds[0][sex]++;
 #if GOBYMODEL
@@ -1401,6 +1500,7 @@ case 3: // hermaphrodite
 
 #if RS_CONTAIN
 nCulled = 0;
+selectedForCull = false;
 #endif // RS_CONTAIN 
 
 #if RSDEBUG
@@ -2431,6 +2531,16 @@ for (int i = 0; i < ninds; i++) {
 	if (ind.status == 2)
 	{ // awaiting settlement
 		pCell = inds[i]->getLocn(1);
+		if (pCell == 0) {
+			// this condition can occur in a patch-based model at the time of a dynamic landscape
+			// change when there is a range restriction in place, since a patch can straddle the
+			// range restriction and an individual forced to disperse upon patch removal could
+			// start its trajectory beyond the boundary of the restrictyed range - such a model is 
+			// not good practice, but the condition must be handled by killing the individual conceerned
+			ind.status = 6;			
+		}
+		else {
+
 #if RSDEBUG
 //newloc = pCell->getLocn();
 //DEBUGLOG << "Population::transfer(): 6666: i=" << i << " ID=" << inds[i]->getId()
@@ -2442,80 +2552,80 @@ for (int i = 0; i < ninds; i++) {
 //	<< endl;
 #endif
 
-		mateOK = false;
-		if (sett.findMate) {
-			// determine whether at least one individual of the opposite sex is present in the
-			// new population
+			mateOK = false;
+			if (sett.findMate) {
+				// determine whether at least one individual of the opposite sex is present in the
+				// new population
 #if RSDEBUG
 //DEBUGLOG << "Population::transfer(): 7777: othersex = " << othersex
 //	<< " this = " << this << " pNewPopn = " << pNewPopn << " popsize = " << popsize
 //	<< endl;
 #endif
 #if SEASONAL
-			if (matePresent(pCell,othersex,nextseason)) mateOK = true;
+				if (matePresent(pCell,othersex,nextseason)) mateOK = true;
 #else
-			if (matePresent(pCell,othersex)) mateOK = true;
+				if (matePresent(pCell,othersex)) mateOK = true;
 #endif // SEASONAL 
-		}
-		else { // no requirement to find a mate
-			mateOK = true;
-		}
+			}
+			else { // no requirement to find a mate
+				mateOK = true;
+			}
 
-		densdepOK = false;
-		settle = inds[i]->getSettPatch();      
+			densdepOK = false;
+			settle = inds[i]->getSettPatch();      
 #if PARTMIGRN
-		if (sett.densDep && nextseason == 1 && (ind.migrnstatus == 3 || ind.migrnstatus == 6)) 
+			if (sett.densDep && nextseason == 1 && (ind.migrnstatus == 3 || ind.migrnstatus == 6)) 
 #else
-		if (sett.densDep) 
+			if (sett.densDep) 
 #endif // PARTMIGRN  
-		{       
-			patch = pCell->getPatch();
+			{       
+				patch = pCell->getPatch();
 #if RSDEBUG
 //DEBUGLOG << "Population::transfer(): 8880: i=" << i << " patch=" << patch
 //	<< endl;
 #endif
-			if (patch != 0) { // not no-data area
-				pPatch = (Patch*)patch;
-				if (settle.settleStatus == 0
-				||  settle.pSettPatch != pPatch)
-				// note: second condition allows for having moved from one patch to another
-				// adjacent one
-				{
-//					inds[i]->resetPathOut(); // reset steps out of patch to zero
-					// determine whether settlement occurs in the (new) patch
+				if (patch != 0) { // not no-data area
+					pPatch = (Patch*)patch;
+					if (settle.settleStatus == 0
+					||  settle.pSettPatch != pPatch)
+					// note: second condition allows for having moved from one patch to another
+					// adjacent one
+					{
+//						inds[i]->resetPathOut(); // reset steps out of patch to zero
+						// determine whether settlement occurs in the (new) patch
 #if SEASONAL
-					localK = (double)pPatch->getK(nextseason);
+						localK = (double)pPatch->getK(nextseason);
 #else
-					localK = (double)pPatch->getK();
+						localK = (double)pPatch->getK();
 #endif // SEASONAL 
-					popn = pPatch->getPopn((intptr)pSpecies);
+						popn = pPatch->getPopn((intptr)pSpecies);
 #if RSDEBUG
 //DEBUGLOG << "Population::transfer(): 8881: i=" << i << " patchNum=" << pPatch->getPatchNum()
 //	<< " localK=" << localK << " popn=" << popn << endl;
 #endif
-					if (popn == 0) { // population has not been set up in the new patch
-						popsize = 0.0;
-					}
-					else {
-						pNewPopn = (Population*)popn;
-						popsize = (double)pNewPopn->totalPop();
-					}
-					if (localK > 0.0) {
-						// make settlement decision
-						if (settletype.indVar) settDD = inds[i]->getSettTraits();
-						else settDD = pSpecies->getSettTraits(ind.stage,ind.sex);
-#if GOBYMODEL
-						if (ind.asocial) {
-							settprob = settDD.s0 / (1.0 + exp(-(popsize/localK
-								- (double)(settDD.beta*settletype.betaSasoc)) * (double)(settDD.alpha*settletype.alphaSasoc)));
+						if (popn == 0) { // population has not been set up in the new patch
+							popsize = 0.0;
 						}
 						else {
+							pNewPopn = (Population*)popn;
+							popsize = (double)pNewPopn->totalPop();
+						}
+						if (localK > 0.0) {
+							// make settlement decision
+							if (settletype.indVar) settDD = inds[i]->getSettTraits();
+							else settDD = pSpecies->getSettTraits(ind.stage,ind.sex);
+#if GOBYMODEL
+							if (ind.asocial) {
+								settprob = settDD.s0 / (1.0 + exp(-(popsize/localK
+									- (double)(settDD.beta*settletype.betaSasoc)) * (double)(settDD.alpha*settletype.alphaSasoc)));
+							}
+							else {
+								settprob = settDD.s0 /
+									(1.0 + exp(-(popsize/localK - (double)settDD.beta) * (double)settDD.alpha));
+							}
+#else
 							settprob = settDD.s0 /
 								(1.0 + exp(-(popsize/localK - (double)settDD.beta) * (double)settDD.alpha));
-						}
-#else
-						settprob = settDD.s0 /
-							(1.0 + exp(-(popsize/localK - (double)settDD.beta) * (double)settDD.alpha));
 #endif
 #if RSDEBUG
 //DEBUGLOG << "Population::transfer(): 8888: i=" << i << " ind.stage=" << ind.stage
@@ -2524,65 +2634,66 @@ for (int i = 0; i < ninds; i++) {
 //	<< " settprob=" << settprob
 //	<< endl;
 #endif
-						if (pRandom->Bernoulli(settprob)) { // settlement allowed
-							densdepOK = true;
-							settle.settleStatus = 2;
+							if (pRandom->Bernoulli(settprob)) { // settlement allowed
+								densdepOK = true;
+								settle.settleStatus = 2;
+							}
+							else { // settlement procluded
+								settle.settleStatus = 1;
+							}
+							settle.pSettPatch = pPatch;
 						}
-						else { // settlement procluded
-							settle.settleStatus = 1;
-						}
-						settle.pSettPatch = pPatch;
+						inds[i]->setSettPatch(settle);
 					}
-					inds[i]->setSettPatch(settle);
-				}
-				else {
-					if (settle.settleStatus == 2) { // previously allowed to settle
-						densdepOK = true;
+					else {
+						if (settle.settleStatus == 2) { // previously allowed to settle
+							densdepOK = true;
+						}
 					}
 				}
 			}
-		}
-		else { // no density-dependent settlement
-			densdepOK = true;
-			settle.settleStatus = 2;
-			settle.pSettPatch = pPatch;
-			inds[i]->setSettPatch(settle);
-		}
+			else { // no density-dependent settlement
+				densdepOK = true;
+				settle.settleStatus = 2;
+				settle.pSettPatch = pPatch;
+				inds[i]->setSettPatch(settle);
+			}
 
-		if (mateOK && densdepOK) { // can recruit to patch
-			ind.status = 4;
+			if (mateOK && densdepOK) { // can recruit to patch
+				ind.status = 4;
 #if SEASONAL
 //			ind.migrnstatus = 6;
 #endif
-			ndispersers--;
-		}
-		else { // does not recruit
-			if (trfr.moveModel) {
-				ind.status = 1; // continue dispersing, unless ...
-				// ... maximum steps has been exceeded
-				pathSteps steps = inds[i]->getSteps();
-				settleSteps settsteps = pSpecies->getSteps(ind.stage,ind.sex);
-#if PARTMIGRN
-				if (steps.season >= settsteps.maxStepsYr || steps.season >= settsteps.maxSteps) {        
-					ind.status = 6; // dies
-				}
-#else
-				if (steps.year >= settsteps.maxStepsYr) {
-					ind.status = 3; // waits until next year
-				}
-				if (steps.total >= settsteps.maxSteps) {        
-					ind.status = 6; // dies
-				}
-#endif
-			}
-			else { // dispersal kernel
-				if (sett.wait) {
-					ind.status = 3; // wait until next dispersal event
-				}
-				else {
-					ind.status = 6; // (dies unless a neighbouring cell is suitable)
-				}
 				ndispersers--;
+			}
+			else { // does not recruit
+				if (trfr.moveModel) {
+					ind.status = 1; // continue dispersing, unless ...
+					// ... maximum steps has been exceeded
+					pathSteps steps = inds[i]->getSteps();
+					settleSteps settsteps = pSpecies->getSteps(ind.stage,ind.sex);
+#if PARTMIGRN
+					if (steps.season >= settsteps.maxStepsYr || steps.season >= settsteps.maxSteps) {        
+						ind.status = 6; // dies
+					}
+#else
+					if (steps.year >= settsteps.maxStepsYr) {
+						ind.status = 3; // waits until next year
+					}
+					if (steps.total >= settsteps.maxSteps) {        
+						ind.status = 6; // dies
+					}
+#endif
+				}
+				else { // dispersal kernel
+					if (sett.wait) {
+						ind.status = 3; // wait until next dispersal event
+					}
+					else {
+						ind.status = 6; // (dies unless a neighbouring cell is suitable)
+					}
+					ndispersers--;
+				}
 			}
 		}
 
@@ -3317,7 +3428,7 @@ if (patchModel) {
 	outPop << "\t" << pPatch->getNCells();
 }
 else {
-	locn loc = pPatch->getCell(0);
+	locn loc = pPatch->getCellLocn(0);
 	outPop << "\t" << loc.x << "\t" << loc.y;
 }
 if (writeEnv) {
@@ -3449,7 +3560,7 @@ DEBUGLOG << "Population::outPopulation(): i=" << i << " PROCESS Population NInds
 #if RS_CONTAIN
 
 // Open population file and write header record
-bool Population::outCullHeaders(int landNr,bool patchModel) {
+bool Population::outCullHeaders(Landscape *pLand,int landNr,bool patchModel) {
 
 if (landNr == -999) { // close file
 	if (outCull.is_open()) outCull.close();
@@ -3458,7 +3569,7 @@ if (landNr == -999) { // close file
 }
 
 string name;
-//landParams ppLand = pLandscape->getLandParams();
+landParams ppLand = pLand->getLandParams();
 //envStochParams env = paramsStoch->getStoch();
 simParams sim = paramsSim->getSim();
 //envGradParams grad = paramsGrad->getGradient();
@@ -3481,8 +3592,11 @@ outCull << "Rep\tYear\tSeason";
 outCull << "Rep\tYear\tRepSeason";
 #endif
 if (patchModel) outCull << "\tPatchID";
-else outCull << "\tx\ty\tHabitat";
-outCull << "\tSpecies\tNculled";
+else {
+	outCull << "\tx\ty\tHabitat";
+	if (ppLand.rasterType == 1) outCull << "1";
+}	
+outCull << "\tSpecies\tSelected\tNculled";
 outCull << endl;
 
 return outPop.is_open();
@@ -3493,30 +3607,46 @@ void Population::outCullData(Landscape *pLand,int rep,int yr,int gen,
 	bool patchModel)
 {
 Cell *pCell;
+int habitat,ix;
+float habprop;
+landParams ppLand = pLand->getLandParams();  
+//demogrParams dem = pSpecies->getDemogr();
+//stageParams sstruct = pSpecies->getStage();
+//popStats p;
 
 #if RSDEBUG
 //DEBUGLOG << "Population::outCullData(): this=" << this
 //	<< endl;
 #endif
 
-//demogrParams dem = pSpecies->getDemogr();
-//stageParams sstruct = pSpecies->getStage();
-//popStats p;
-
 outCull << rep << "\t" << yr << "\t" << gen;
 if (patchModel) {
 	outCull << "\t" << pPatch->getPatchNum();
 }
 else {
-	locn loc = pPatch->getCell(0);
+	locn loc = pPatch->getCellLocn(0);
 	outCull << "\t" << loc.x << "\t" << loc.y;
-	Cell *pCell = pPatch->getRandomCell();
-	int habitat = -9;
-	if (pCell != 0) {
-		int ix = pCell->getHabIndex(0); // CURRENTLY INITIAL HABITAT ONLY 
-		habitat = pLand->getHabCode(ix); 
+	pCell = pPatch->getRandomCell();
+#if RSDEBUG
+//DEBUGLOG << "Population::outCullData(): this=" << this
+//	<< " x=" << loc.x << " y=" << loc.y << " pCell=" << pCell
+//	<< endl;
+#endif
+	habitat = -9;
+	if (pCell == 0) { 
+		outCull << "\t" << habitat;
 	}
-	outCull << "\t" << habitat;
+	else {
+		if (ppLand.rasterType == 0) {
+			ix = pCell->getHabIndex(0); // CURRENTLY INITIAL HABITAT ONLY 
+			habitat = pLand->getHabCode(ix); 			
+			outCull << "\t" << habitat;
+		}
+		else {
+			habprop = pCell->getHabitat(0);
+			outCull << "\t" << habprop;
+		}  
+	}
 }
 #if RSDEBUG
 //DEBUGLOG << "Population::outCullData(): this=" << this
@@ -3526,6 +3656,7 @@ else {
 //	<< endl;
 #endif
 outCull << "\t" << pSpecies->getSpNum();
+if (selectedForCull) outCull << "\t1"; else outCull << "\t0";
 outCull << "\t" << nCulled;
 outCull << endl;
 

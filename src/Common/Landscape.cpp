@@ -12,6 +12,10 @@ ofstream outConnMat;
 #if HEATMAP
 ofstream outvisits;
 #endif
+#if RS_CONTAIN
+ofstream outdamage;
+ofstream outsummdmg;
+#endif // RS_CONTAIN 
 
 //---------------------------------------------------------------------------
 
@@ -816,7 +820,13 @@ case 0: // habitat codes
 				}
 				else { // cell is not suitable - add to the matrix patch
 					addCellToPatch(pCell,matrixPatch);
+					pPatch = 0;
 				}
+#if RS_CONTAIN
+				if (pPatch != 0) {
+					updateDamage(x,y,(intptr)pPatch);
+				}
+#endif // RS_CONTAIN 
 			}
 		}
 	}
@@ -860,7 +870,13 @@ case 1: // habitat cover
 				}
 				else { // cell is not suitable - add to the matrix patch
 					addCellToPatch(pCell,matrixPatch);
+					pPatch = 0;
 				}
+#if RS_CONTAIN
+				if (pPatch != 0) {
+					updateDamage(x,y,(intptr)pPatch);
+				}
+#endif // RS_CONTAIN 
 			}
 		}
 	}
@@ -904,7 +920,13 @@ case 2: // habitat quality
 				}
 				else { // cell is never suitable - add to the matrix patch
 					addCellToPatch(pCell,matrixPatch);
+					pPatch = 0;
 				}
+#if RS_CONTAIN
+				if (pPatch != 0) {
+					updateDamage(x,y,(intptr)pPatch);
+				}
+#endif // RS_CONTAIN 
 			}
 		}
 	}
@@ -1030,21 +1052,60 @@ pPatch->addCell(pCell,loc.x,loc.y);
 
 #if RS_CONTAIN
 
-void Landscape::setDamage(Patch *pPatch,int x,int y,int dmg) 
+// Record damage at the time the landscape is read (for both cell- and
+// patch-based models)
+//void Landscape::setDamage(Patch *pPatch,int x,int y,int dmg) 
 //void Landscape::setDamage(int x,int y,int dmg)
+void Landscape::setDamage(int x,int y,intptr ppatch,int dmg) 
 {
+Patch *pPatch;
+int ndlocns = (int)dmglocns.size();
 if (cells[y][x] != 0) { // not a no-data cell
-	if (dmg >= 0) {
-		if (pPatch == 0) { // cell is in the matrix
-			cells[y][x]->setDamage(dmg);			
-			dmglocns.push_back(new DamageLocn(x,y,dmg));
+	if (dmg > 0) {     
+#if RSDEBUG
+//DEBUGLOG << "Landscape::setDamage(): y=" << y << " x=" << x
+//	<< " ppatch=" << ppatch << " dmg=" << dmg 
+//	<< endl;
+//DebugGUI(("Landscape::setDamage(): ppatch=" + Int2Str(ppatch)
+//	+ " y=" + Int2Str(y) + " x=" + Int2Str(x) + " dmg=" + Int2Str(dmg)
+//	).c_str());
+#endif
+		dmglocns.push_back(new DamageLocn(x,y,ppatch,dmg));
+		cells[y][x]->setDamage(dmglocns[ndlocns]);
+		if (ppatch != 0) {
+			pPatch = (Patch*)ppatch;
+			pPatch->setDamageLocns(true);
+#if RSDEBUG
+//DebugGUI(("Landscape::setDamage(): ppatch=" + Int2Str(ppatch)
+//	+ " PatchNum=" + Int2Str(pPatch->getPatchNum())  
+//	).c_str());
+#endif
+		}			
+	}
+}
+}
+
+// Update damage record once the whole landscape is read (for cell-based model
+// only, once patches have been created)
+void Landscape::updateDamage(int x,int y,intptr ppatch) {
+Patch *pPatch;
+Cell *pCell;
+int ndlocns = (int)dmglocns.size();
+damagelocn d;
+// find cell in list of damage locations
+for (int i = 0; i < ndlocns; i++) {
+	d = dmglocns[i]->getDamageLocn();
+	if (d.x == x && d.y == y) {
+		if (ppatch != 0) { // cell is a patch
+			pCell = findCell(x,y);
+			if (pCell != 0) {
+//				pCell->setDamage(0); // no longer record as matrix damage
+				dmglocns[i]->updatePatch(ppatch);
+				pPatch = (Patch*)ppatch;
+				pPatch->setDamageLocns(true);				
+			}
 		}
-		else { // cell is in a patch
-			pPatch->setDamage(x,y,dmg);
-		}
-//		intptr ppatch = (intptr)pPatch;
-//		dmglocns.push_back(new DamageLocn(x,y,ppatch,dmg));
-	}	
+	}
 }
 }
 
@@ -1053,6 +1114,7 @@ void Landscape::updateDamageIndices(void) {
 int npatches = (int)patches.size();
 for (int i = 0; i < npatches; i++) patches[i]->resetDamageIndex();
 
+/*
 for (int y = dimY-1; y >= 0; y--) {
 	for (int x = 0; x < dimX; x++) {
 		if (cells[y][x] != 0) { // not a no-data cell
@@ -1070,15 +1132,27 @@ DEBUGLOG << "Landscape::updateDamageIndices(): y=" << y << " x=" << x
 		}
 	}
 }
+*/
+int ndlocns = (int)dmglocns.size();
+damagelocn d;
+for (int i = 0; i < ndlocns; i++) {
+	d = dmglocns[i]->getDamageLocn();
+	if (d.maxDamage > 0) {
+		for (int i = 1; i < npatches; i++) { // all except matrix patch
+			patches[i]->updateDamageIndex(d.x,d.y,d.maxDamage,alpha);
+		}
+
+	}
+}
 
 #if RSDEBUG
-for (int i = 1; i < npatches; i++) {
-	locn l = patches[i]->getCentroid();
-DEBUGLOG << "Landscape::updateDamageIndices(): i=" << i 
-	<< " PatchNum=" << patches[i]->getPatchNum() 
-	<< " x=" << l.x << " y=" << l.y << " damageIndex=" << patches[i]->getDamageIndex()
-	<< endl;	
-}
+//for (int i = 1; i < npatches; i++) {
+//	locn l = patches[i]->getCentroid();
+//DEBUGLOG << "Landscape::updateDamageIndices(): i=" << i 
+//	<< " PatchNum=" << patches[i]->getPatchNum() 
+//	<< " x=" << l.x << " y=" << l.y << " damageIndex=" << patches[i]->getDamageIndex()
+//	<< endl;	
+//}
 #endif
 
 }
@@ -1089,16 +1163,134 @@ double Landscape::getAlpha(void) { return alpha; }
 void Landscape::resetDamageLocns(void) {
 int ndlocns = (int)dmglocns.size();
 for (int i = 0; i < ndlocns; i++)
-	if (dmglocns[i] != NULL) dmglocns[i]->resetDamageLocn();
+	if (dmglocns[i] != 0) dmglocns[i]->resetDamageLocn();
 }
+/*
+// update damage to damage locations within patches
+void Landscape::updateDamageLocns(Species *pSpecies) {
+damagelocn d;
+Patch *pPatch;
+intptr ppopn;
+//intptr psubcomm;
+//SubCommunity *pSubComm;
+int ndlocns = (int)dmglocns.size();
+for (int i = 0; i < ndlocns; i++) {
+	pPatch = 0;
+	damagelocn d = dmglocns[i]->getDamageLocn();
+	if (d.ppatch != 0) {
+		pPatch = (Patch*)d.ppatch;
+//		psubcomm = pPatch->getSubComm();
+//		if (psubcomm != 0) {
+//			pSubComm = (SubCommunity*)psubcomm;
+//			pSubComm->
+//		}
+		ppopn = pPatch->getPopn((intptr)pSpecies);
+		if (ppopn != 0) {
+      
+		}	
+	}
+}
+}
+*/
 
-double Landscape::totalDamage(void) {
+double Landscape::totalDamage(bool sms) {
+double dmg;
 double totdmg = 0.0;
 int ndlocns = (int)dmglocns.size();
-for (int i = 0; i < ndlocns; i++)
-	if (dmglocns[i] != NULL) totdmg += dmglocns[i]->getDamageIndex();
+for (int i = 0; i < ndlocns; i++) {
+	if (dmglocns[i] != 0) {
+		dmg = dmglocns[i]->getDamageIndex(sms);
+		totdmg += dmg;
+#if RSDEBUG
+//damagelocn d = dmglocns[i]->getDamageLocn();
+//int patchNum;
+//if (d.ppatch == 0) patchNum = 0;		
+//else {
+//	Patch *pPatch = (Patch*)d.ppatch;
+//	patchNum = pPatch->getPatchNum();
+//}
+//DEBUGLOG << "Landscape::totalDamage(): i=" << i 
+//	<< " x=" << d.x << " y=" << d.y  << " PatchNum=" << patchNum 
+//	<< " damageIndex=" << dmg
+//	<< " totdmg=" << totdmg
+//	<< endl;	
+#endif
+	}
+}
 return totdmg;
 }
+
+void Landscape::createTotDamage(int nrows,int reps) {
+// Initialise array for total damage
+totDamage = new float *[nrows];
+for (int i = 0; i < nrows; i++)
+{
+	totDamage[i] = new float[reps];
+	for (int ii = 0; ii < reps; ii++) totDamage[i][ii] = 0.0;
+}
+}
+
+void Landscape::updateTotDamage(unsigned short row,unsigned short rep,float damage) 
+{
+#if RSDEBUG
+DEBUGLOG << "Landscape::updateTotDamage(): row=" << row << " rep=" << rep 
+	<< " damage=" << damage << endl;
+#endif
+totDamage[row][rep] = damage;
+}
+
+void Landscape::deleteTotDamage(int nrows) {
+for(int i = 0; i < nrows; i++)
+	delete[] totDamage[i];
+delete[] totDamage;
+}
+
+void Landscape::outTotDamage(bool view) {
+double sum,ss,mean,sd,se;
+simParams sim = paramsSim->getSim();
+//streamsize prec = outsuit.precision();
+
+#if RSDEBUG
+DEBUGLOG << "Landscape::outTotDamage(): view=" << view
+	<< " sim.reps=" << sim.reps << " sim.years=" << sim.years << endl;
+#endif
+for (int i = 0; i < sim.years; i++) {
+	sum = ss = 0.0;
+	for (int rep = 0; rep < sim.reps; rep++) {
+		sum += totDamage[i][rep];
+		ss  += totDamage[i][rep] * totDamage[i][rep];
+#if RSDEBUG
+//DEBUGLOG << "Landscape::outTotDamage(): i=" << i << " rep=" << rep
+//	<< " occSuit[i][rep]=" << occSuit[i][rep]
+//	<< " sum=" << sum << " ss=" << ss
+//	<< endl;
+#endif
+	}
+	mean = sum / (double)sim.reps;
+	if (sim.reps > 1) sd = (ss - (sum*sum/(double)sim.reps)) / (double)(sim.reps-1);		
+	else sd = 0.0;
+	
+#if RSDEBUG
+//DEBUGLOG << "Landscape::outTotDamage(): i=" << i
+//	<< " mean=" << mean << " sd=" << sd << endl;
+#endif
+	if (sd > 0.0) sd = sqrt(sd);
+	else sd = 0.0;
+	se = sd / sqrt((double)(sim.reps));
+#if RSDEBUG
+//DEBUGLOG << "Landscape::outTotDamage(): i=" << i
+//	<< " sd=" << sd << " se=" << se << endl;
+#endif
+
+	if (view) viewDamage(i,mean,se,sim.reps > 1);
+}
+
+}
+
+//void Landscape::resetPrevDamage(void) {
+//int npatches = (int)patches.size();
+//for (int i = 0; i < npatches; i++) patches[i]->setPrevDamage(0.0);
+//}
 
 #endif // RS_CONTAIN 
 
@@ -1957,8 +2149,11 @@ case 0: // raster with habitat codes - 100% habitat each cell
 							addNewCellToPatch(0,x,y,h);
 						}
 						else {
-							if (existsPatch(p))
-								addNewCellToPatch(findPatch(p),x,y,h);
+							if (existsPatch(p)) {
+								pPatch = findPatch(p);
+								addNewCellToPatch(pPatch,x,y,h);   
+//								addNewCellToPatch(findPatch(p),x,y,h);   
+							}
 							else {
 #if SEASONAL
 								pPatch = newPatch(seq++,p,nseasons);
@@ -1985,11 +2180,11 @@ case 0: // raster with habitat codes - 100% habitat each cell
 				}
 				if (patchModel) {
 					if (p == 0) // cell is in the matrix
-						setDamage(0,x,y,d);
+						setDamage(x,y,0,d);
 					else
-						setDamage(pPatch,x,y,d);					
+						setDamage(x,y,(intptr)pPatch,d);					
 				}
-				else setDamage(0,x,y,d);
+				else setDamage(x,y,0,d);
 			}
 #endif // RS_CONTAIN 
 		}
@@ -2030,8 +2225,11 @@ case 1: // multiple % cover
 								addNewCellToPatch(0,x,y,hfloat);
 							}
 							else {
-								if (existsPatch(p))
-									addNewCellToPatch(findPatch(p),x,y,hfloat);
+								if (existsPatch(p)) {
+									pPatch = findPatch(p);
+									addNewCellToPatch(pPatch,x,y,hfloat);
+//									addNewCellToPatch(findPatch(p),x,y,hfloat);
+								}
 								else {
 #if SEASONAL
 									pPatch = newPatch(seq++,p,nseasons);
@@ -2073,11 +2271,11 @@ case 1: // multiple % cover
 				}
 				if (patchModel) {
 					if (p == 0) // cell is in the matrix
-						setDamage(0,x,y,d);
+						setDamage(x,y,0,d);
 					else
-						setDamage(pPatch,x,y,d);					
+						setDamage(x,y,(intptr)pPatch,d);					
 				}
-				else setDamage(0,x,y,d);
+				else setDamage(x,y,0,d);
 			}
 #endif // RS_CONTAIN 
 		}
@@ -2119,8 +2317,11 @@ case 2: // habitat quality
 							addNewCellToPatch(0,x,y,hfloat);
 						}
 						else {
-							if (existsPatch(p))
-								addNewCellToPatch(findPatch(p),x,y,hfloat);
+							if (existsPatch(p)) {
+								pPatch = findPatch(p);
+								addNewCellToPatch(pPatch,x,y,hfloat);
+//								addNewCellToPatch(findPatch(p),x,y,hfloat);
+              }
 							else {
 								addPatchNum(p);
 #if SEASONAL
@@ -2148,11 +2349,11 @@ case 2: // habitat quality
 				}
 				if (patchModel) {
 					if (p == 0) // cell is in the matrix
-						setDamage(0,x,y,d);
+						setDamage(x,y,0,d);
 					else
-						setDamage(pPatch,x,y,d);					
+						setDamage(x,y,(intptr)pPatch,d);					
 				}
-				else setDamage(0,x,y,d);
+				else setDamage(x,y,0,d);
 			}
 #endif // RS_CONTAIN 
 		}
@@ -2175,9 +2376,127 @@ if (dfile.is_open()) { dfile.close(); dfile.clear(); }
 return 0;
 }
 
-#if SPATIALMORT
-
 //---------------------------------------------------------------------------
+
+#if RS_CONTAIN
+
+// Open summary damage file and write header record
+bool Landscape::outSummDmgHeaders(int landNr) {
+
+if (landNr == -999) { // close the file
+	if (outsummdmg.is_open()) outsummdmg.close();
+	outsummdmg.clear();
+	return true;
+}
+
+string name;
+simParams sim = paramsSim->getSim();     
+simView v = paramsSim->getViews();
+
+#if RSDEBUG
+//DEBUGLOG << "Landscape::outSummDmgHeaders(): simulation=" << sim.simulation
+//	<< " sim.batchMode=" << sim.batchMode << " landNr=" << landNr << endl;
+#endif
+
+if (sim.batchMode) {
+	name = paramsSim->getDir(2)
+		+ "Batch" + Int2Str(sim.batchNum) + "_"
+		+ "Sim" + Int2Str(sim.simulation) + "_Land"
+		+ Int2Str(landNr) + "_SummDamage.txt";
+}
+else {
+	name = paramsSim->getDir(2) + "Sim" + Int2Str(sim.simulation) + "_SummDamage.txt";
+}
+outsummdmg.open(name.c_str());
+outsummdmg << "Rep\tYear\tDamage";
+outsummdmg << endl;
+
+if (v.viewDamage) {
+	createTotDamage(sim.years,sim.reps);
+}
+#if RSDEBUG
+//DEBUGLOG << "Landscape::outSummDmgHeaders(): finished" << endl;
+#endif
+
+return outsummdmg.is_open();
+
+}
+	
+// Write record to summary damage file
+void Landscape::outSummDmg(int rep,int yr,bool sms,bool view) {
+#if RSDEBUG
+DEBUGLOG << "Landscape::outSummDmg(): rep=" << rep << " yr=" << yr << endl;
+#endif
+outsummdmg << rep << "\t" << yr;
+outsummdmg << "\t" << totalDamage(sms);
+outsummdmg << endl;
+if (view) {
+	updateTotDamage(yr,rep,totalDamage(sms));
+}
+}
+
+// Open damage file and write header record
+bool Landscape::outDamageHeaders(int landNr) {
+
+if (landNr == -999) { // close the file
+	if (outdamage.is_open()) outdamage.close();
+	outdamage.clear();
+	return true;
+}
+
+string name;
+simParams sim = paramsSim->getSim();
+
+#if RSDEBUG
+DEBUGLOG << "Landscape::outDamageHeaders(): simulation=" << sim.simulation
+	<< " sim.batchMode=" << sim.batchMode
+	<< " landNr=" << landNr << endl;
+#endif
+
+if (sim.batchMode) {
+	name = paramsSim->getDir(2)
+		+ "Batch" + Int2Str(sim.batchNum) + "_"
+		+ "Sim" + Int2Str(sim.simulation) + "_Land"
+		+ Int2Str(landNr) + "_Damage.txt";
+}
+else {
+	name = paramsSim->getDir(2) + "Sim" + Int2Str(sim.simulation) + "_Damage.txt";
+}
+outdamage.open(name.c_str());
+outdamage << "Rep\tYear\tX\tY\tMaxDamage\tDamage";
+outdamage << endl;
+
+#if RSDEBUG
+DEBUGLOG << "Landscape::outDamageHeaders(): finished" << endl;
+#endif
+
+return outdamage.is_open();
+
+}
+
+// Write record to damage file
+void Landscape::outDamage(int rep,int yr, bool sms) {
+
+int ndlocns = (int)dmglocns.size();
+#if RSDEBUG
+DEBUGLOG << "Landscape::outDamage(): rep=" << rep
+	<< " yr=" << yr << " ndlocns=" << ndlocns << endl;
+#endif
+damagelocn d;
+for (int i = 0; i < ndlocns; i++) {
+	d = dmglocns[i]->getDamageLocn();
+	outdamage << rep << "\t" << yr << "\t" << d.x << "\t" << d.y << "\t" << d.maxDamage;
+	outdamage << "\t" << dmglocns[i]->getDamageIndex(sms);
+	outdamage << endl;
+}
+
+}
+
+#endif // RS_CONTAIN 
+	
+//---------------------------------------------------------------------------
+
+#if SPATIALMORT
 
 int Landscape::readMortalityFiles(string mortfile0,string mortfile1) {
 

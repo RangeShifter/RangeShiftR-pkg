@@ -12,7 +12,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 1 July 2019 by Steve Palmer
+Last updated: 6 November 2019 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -121,7 +121,7 @@ int ParseMortFile(void);
 int ReadMortalities(string);
 #endif // EVOLSMS
 int CheckCostRaster(string,string);
-simCheck CheckStageSex(string,int,int,simCheck,int,int,int,int,int,bool);
+simCheck CheckStageSex(string,int,int,simCheck,int,int,int,int,int,bool,bool);
 
 void BatchError(
 	string,	// file name
@@ -134,6 +134,10 @@ void BatchError(
 1 - fieldname must be 0 or 1
 2 - fieldname must be 0, 1 or 2
 3 - fieldname must be 0, 1, 2 or 3
+4 - fieldname must be from 0 to 4
+5 - fieldname must be from 0 to 5
+6 - fieldname must be from 0 to 6
+7 - fieldname must be from 0 to 7
 10 - fieldname must be >0
 11 - fieldname must be >=1
 12 - fieldname must be >=2
@@ -152,7 +156,7 @@ void BatchError(
 223 - seasons must be sequential integers
 333 - columns must match no. of habitats
 444 - columns must be one fewer than no. of stages
-444 - columns must match no. of stages
+555 - columns must match no. of stages
 666 - fieldname must be a unique positive integer
 */
 void BatchError(

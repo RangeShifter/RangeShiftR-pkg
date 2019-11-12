@@ -19,7 +19,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 24 June 2019 by Steve Palmer
+Last updated: 25 October 2019 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -164,7 +164,8 @@ public:
 #endif // RS_ABC
 	void extirpate(void); // Remove all individuals
 #if RS_CONTAIN
-	void cull(Cull*,double); // Kill individuals with a specified probability
+	void cull(Cull*,double); // Remove individuals according to cull rate
+	void resetCull(void); 
 #endif // RS_CONTAIN 
 #if RS_CONTAIN
 #if SEASONAL
@@ -422,8 +423,9 @@ public:
 #if RS_CONTAIN
 
 	bool outCullHeaders( // Open cull file and write header record
-		int,	// Landscape number (-999 to close the file)
-		bool	// TRUE for a patch-based model, FALSE for a cell-based model
+		Landscape*,	// pointer to Landscape
+		int,				// Landscape number (-999 to close the file)
+		bool				// TRUE for a patch-based model, FALSE for a cell-based model
 	);
 	void outCullData( // Write record to cull file
 		Landscape*,	// pointer to Landscape
@@ -484,6 +486,7 @@ private:
 
 #if RS_CONTAIN
 	int nCulled;				// no. of individuals culled
+	bool selectedForCull;				
 #endif // RS_CONTAIN 
 
 };

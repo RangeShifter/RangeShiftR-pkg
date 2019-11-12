@@ -21,6 +21,10 @@ pGenome = 0;
 #endif
 
 // Individual constructor
+#if RS_CONTAIN
+Individual::Individual(Cell *pCell,Patch *pPatch,short stg,short a,short repInt,
+	short mstg,float probmale,bool movt,short moveType)
+#else
 #if PARTMIGRN
 Individual::Individual(Species *pSpecies,Cell *pCell,Patch *pPatch,short stg,short a, 
 	short repInt,float probmale,bool movt,short moveType)
@@ -28,6 +32,7 @@ Individual::Individual(Species *pSpecies,Cell *pCell,Patch *pPatch,short stg,sho
 Individual::Individual(Cell *pCell,Patch *pPatch,short stg,short a,short repInt,
 	float probmale,bool movt,short moveType)
 #endif // PARTMIGRN 
+#endif // RS_CONTAIN 
 {
 indId = indCounter; indCounter++; // unique identifier for each individual
 #if RSDEBUG
@@ -49,6 +54,9 @@ pMate = 0;
 #endif
 
 stage = stg;
+#if RS_CONTAIN
+motherstage = mstg;	
+#endif // RS_CONTAIN 
 if (probmale <= 0.0) sex = 0;
 else sex = pRandom->Bernoulli(probmale);
 age = a;
@@ -1536,7 +1544,7 @@ if (newCell != 0) {
 // Move to a new cell by sampling a dispersal distance from a single or double
 // negative exponential kernel
 #if RS_CONTAIN
-// or the 2Dt kernel
+// or the 2Dt kernel or the WALD kernel
 #endif // RS_CONTAIN 
 // Returns 1 if still dispersing (including having found a potential patch), otherwise 0
 #if SEASONAL
@@ -1650,15 +1658,20 @@ if (!usefullkernel && meandist < 1.0) meandist = 1.0;
 
 #if RS_CONTAIN
 
-// simple model (no environmental effects) 
-
+// simple 2Dt model (no environmental effects) 
 trfr2Dt t2 = pSpecies->getTrfr2Dt();
 double propkern1 = t2.propKernel1;
 double p,u,f,f0;
 bool reject;
 
-// select kernel to sample for this individual
-// and find a suitable maximum x-value for the range of distances to sample
+// WALD model
+trfrWald w = pSpecies->getTrfrWald(); 
+double hr = pSpecies->getTrfrHr(motherstage);
+double mu = w.meanU * hr / w.vt;
+double gamma = (w.meanU * hr * hr) / (2.0 * w.kappa * w.hc * w.sigma_w);   
+
+// select kernel to sample for this individual (if 2Dt) and
+// find a suitable maximum x-value for the range of distances to sample
 int maxdim = max(land.dimX,land.dimY) * land.resol;  
 double maxx = (double)maxdim;
 bool ok = false;
@@ -1679,12 +1692,25 @@ if (trfr.kernType == 2) {
 		}
 	}
 }
-
 #if RSDEBUG
 //DEBUGLOG << "Individual::moveKernel(): indId=" << indId << " x=" << loc.x << " y=" << loc.y
 //	<< " maxx=" << maxx 
 //	<< " u=" << u << " p=" << p << " f0=" << f0 
 //	<< endl;
+#endif
+if (trfr.kernType == 3) {
+	f0 = 1.0;
+	while (!ok) {
+		fdim = sqrt(gamma / (2.0 * PI * maxx * maxx * maxx)) 
+						* exp(-1.0 * gamma * (maxx-mu) * (maxx-mu) / (2.0 * maxx * mu * mu) );
+		if (fdim >= f0/10000.0) ok = true; else maxx /= 1.25;
+	}	
+}
+#if RSDEBUG
+DEBUGLOG << "Individual::moveKernel(): indId=" << indId << " x=" << loc.x << " y=" << loc.y
+	<< " stage=" << stage << " hr=" << hr << " mu=" << mu << " gamma=" << gamma 
+	<< " maxx=" << maxx 
+	<< endl;
 #endif
 
 #endif // RS_CONTAIN 
@@ -1711,8 +1737,9 @@ do {
 
 #if RS_CONTAIN
 
+			/*
 			if (trfr.kernType == 2) { // 2Dt kernel
-        
+				
 			// sample distance from 2Dt kernel by method of REJECTION SAMPLING 
 
 			// NOTE: sampling must be in real-world co-ordinates (not cell co-ordinates)
@@ -1737,7 +1764,7 @@ do {
 //	<< endl;
 #endif
 			// convert sampled distance to cell co-ordinates 
-			dist /= land.resol;
+			dist /= (double)land.resol;
 //			rndangle = pRandom->Random() * 2.0 * PI;
 //			nx = (xrand + dist * cos(rndangle)) / land.resol;
 //			ny = (yrand + dist * sin(rndangle)) / land.resol;
@@ -1746,6 +1773,83 @@ do {
 			else { // negative exponential kernel
 				r1 = 0.0000001 + pRandom->Random()*(1.0-0.0000001);
 				dist = (-1.0*meandist)*log(r1);  // for CLUSTER
+			}
+			*/
+
+			switch (trfr.kernType) {
+				
+			case 0: // single negative exponential
+			case 1: // single negative exponential
+				r1 = 0.0000001 + pRandom->Random()*(1.0-0.0000001);
+				dist = (-1.0*meandist)*log(r1);  // for CLUSTER
+				break;
+				
+			case 2: // 2Dt
+				
+			// sample distance from 2Dt kernel by method of REJECTION SAMPLING 
+
+			// NOTE: sampling must be in real-world co-ordinates (not cell co-ordinates)
+			// as kernel units are metres
+
+			reject = true;
+			while (reject) {
+				// sample a random distance along the x-axis
+				dist = pRandom->Random() * maxx;
+				// sample a random y-axis variate between zero and max. possible 
+				r1 = pRandom->Random() * f0;
+				// calculate value of kernel at dist;
+				f = p / (PI * u * pow((1.0 + (dist*dist/u)),(p+1.0)));
+				if (r1 <= f) reject = false;
+#if RSDEBUG
+//DEBUGLOG << "Individual::moveKernel(): indId=" << indId << " dist=" << dist << " r1=" << r1
+//	<< " f=" << f << " reject=" << reject << endl;
+#endif
+				}
+#if RSDEBUG
+//DEBUGLOG << "Individual::moveKernel(): indId=" << indId << " SAMPLED dist=" << dist 
+//	<< endl;
+#endif
+			// convert sampled distance to cell co-ordinates 
+			dist /= (double)land.resol;      
+//			rndangle = pRandom->Random() * 2.0 * PI;
+//			nx = (xrand + dist * cos(rndangle)) / land.resol;
+//			ny = (yrand + dist * sin(rndangle)) / land.resol;
+
+				break;
+				
+			case 3: // Wald
+
+//			dist = 2 * land.resol;
+				
+			// sample distance from 2Dt kernel by method of REJECTION SAMPLING 
+
+			// NOTE: sampling must be in real-world co-ordinates (not cell co-ordinates)
+			// as kernel units are metres
+
+			reject = true;
+			while (reject) {
+				// sample a random distance along the x-axis
+				dist = pRandom->Random() * maxx;
+				// sample a random y-axis variate between zero and max. possible 
+				r1 = pRandom->Random() * f0;
+				// calculate value of kernel at dist;
+				f = sqrt(gamma / (2.0 * PI * dist * dist * dist)) 
+						* exp(-1.0 * gamma * (dist-mu) * (dist-mu) / (2.0 * dist * mu * mu) );
+				if (r1 <= f) reject = false;
+#if RSDEBUG
+//DEBUGLOG << "Individual::moveKernel(): indId=" << indId << " dist=" << dist << " r1=" << r1
+//	<< " f=" << f << " reject=" << reject << endl;
+#endif
+				}
+#if RSDEBUG
+//DEBUGLOG << "Individual::moveKernel(): indId=" << indId << " SAMPLED dist=" << dist 
+//	<< endl;
+#endif
+			// convert sampled distance to cell co-ordinates 
+			dist /= (double)land.resol;      
+
+				break;
+				
 			}
 
 #else
@@ -1756,9 +1860,22 @@ do {
 			
 #endif // RS_CONTAIN 
 
+#if RS_CONTAIN
+			rndangle = pRandom->Normal(w.meanDirn,w.sdDirn);
+			if (rndangle < 0.0) rndangle += 360.0;
+			if (rndangle >= 360.0) rndangle -= 360.0;
+			rndangle *= 2.0 * PI / 360.00;
+#if RSDEBUG
+DEBUGLOG << "Individual::moveKernel(): indId=" << indId << " status=" << status
+	<< " meanDirn=" << w.meanDirn << " sdDirn=" << w.sdDirn << " rndangle=" << rndangle
+	<< " loopsteps=" << loopsteps 
+	<< endl;
+#endif
+#else
 			rndangle = pRandom->Random() * 2.0 * PI;
-			nx = xrand + dist * cos(rndangle);
-			ny = yrand + dist * sin(rndangle);
+#endif // RS_CONTAIN 
+			nx = xrand + dist * sin(rndangle);
+			ny = yrand + dist * cos(rndangle);
 			if (nx < 0.0) newX = -1; else newX = (int)nx;
 			if (ny < 0.0) newY = -1; else newY = (int)ny;
 #if RSDEBUG
@@ -2078,6 +2195,12 @@ else { // take a step
 				}
 			}
 #endif
+#if RS_CONTAIN
+			if (status < 6) {
+				DamageLocn *pDamageLocn = pCurrCell->getDamage();
+				if (pDamageLocn != 0) pDamageLocn->updateTraversalDamage();
+			}
+#endif // RS_CONTAIN 
 		}
 		break;
 

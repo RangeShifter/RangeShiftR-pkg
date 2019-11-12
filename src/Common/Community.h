@@ -20,7 +20,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 20 June 2019 by Steve Palmer
+Last updated: 6 November 2019 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -212,8 +212,11 @@ public:
 	int findCullTargets(Cull*,int,int);
 	void cullAllTargets(Cull*);
 	void cullRandomTargets(Cull*,int);
+	void cullTargets(Cull*);
 //	void cullClosestTargets(Cull*,int);
 	void resetCullTargets(void);
+	void resetCull(void); 
+	void updateDamage(Species*,Cull*);
 #endif // RS_CONTAIN 
 	void ageIncrement(void);
 	int totalInds(void);

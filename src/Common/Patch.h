@@ -36,7 +36,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 28 June 2019 by Steve Palmer
+Last updated: 16 September 2019 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -52,7 +52,7 @@ using namespace std;
 #include "Species.h"
 #if RS_CONTAIN
 #include "Control.h"
-#endif // RS_CONTAIN 
+#endif // RS_CONTAIN
 
 #if VCL
 #include <VCLTee.Chart.hpp>
@@ -94,7 +94,10 @@ public:
 		Cell*,	// pointer to the Cell to be added to the Patch
 		int,int	// x (column) and y (row) co-ordinates of the Cell
 	);
-	locn getCell( // Return co-ordinates of a specified cell
+	locn getCellLocn( // Return co-ordinates of a specified cell
+		int			// index no. of the Cell within the vector cells
+	);
+	Cell* getCell( // Return pointer to a specified cell
 		int			// index no. of the Cell within the vector cells
 	);
 	locn getCentroid(void); // Return co-ordinates of patch centroid
@@ -140,13 +143,17 @@ public:
 		double				// distance decay coefficient
 	);		
 	double getDamageIndex(void);
-	void resetDamageLocns(void);
-	void setDamage(
-		int,    // x co-ordinate
-		int,    // y co-ordinate
-		int			// damage index 
-	);
-	double totalDamage(void);
+//	void resetDamageLocns(void);
+//	void setDamage(
+//		int,    // x co-ordinate
+//		int,    // y co-ordinate
+//		int			// damage index 
+//	);
+//	double totalDamage(void);
+	void setDamageLocns(bool);
+	bool hasDamageLocns(void);
+//	void setPrevDamage(double);
+	double getPrevDamage(void);       
 #endif // RS_CONTAIN 
 #if SEASONAL
 	float getK(
@@ -173,14 +180,18 @@ public:
 	intptr subCommPtr; // pointer (cast as integer) to sub-community associated with the patch
 	// NOTE: FOR MULTI-SPECIES MODEL, PATCH WILL NEED TO STORE K FOR EACH SPECIES
 #if RS_CONTAIN
-	double damageIndex;		
-#endif // RS_CONTAIN 
+	double damageIndex;	// index of the patch's proximity to potential damage locations
+//	double prevDamage;	// actual damage within the patch during the previous season / year 		
+#endif // RS_CONTAIN
 #if SEASONAL
 	std::vector <float> localK;			// seasonal patch carrying capacity (individuals) 
 #else
 	float localK;		// patch carrying capacity (individuals)
 #endif // SEASONAL 
 	bool changed;
+#if RS_CONTAIN
+	bool damageLocns; // are there any locations of damage within the patch
+#endif // RS_CONTAIN
 // NOTE: THE FOLLOWING ARRAY WILL NEED TO BE MADE SPECIES-SPECIFIC...
 	short nTemp[NSEXES];						// no. of potential settlers in each sex
 
@@ -188,8 +199,8 @@ public:
 	std::vector <patchPopn> popns;
 
 #if RS_CONTAIN
-	std::vector <DamageLocn*> dmglocns;
-#endif // RS_CONTAIN 
+//	std::vector <DamageLocn*> dmglocns;
+#endif // RS_CONTAIN
 	
 };
 
