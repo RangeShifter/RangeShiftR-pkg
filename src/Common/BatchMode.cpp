@@ -1627,8 +1627,8 @@ if (landtype == 0 || landtype == 2) { // real landscape
 						if (patchraster.ncols == landraster.ncols
 						&&  patchraster.nrows == landraster.nrows
 						&&  patchraster.cellsize == landraster.cellsize
-						&&  patchraster.xllcorner == landraster.xllcorner
-						&&  patchraster.yllcorner == landraster.yllcorner) {
+						&&  (int)patchraster.xllcorner == (int)landraster.xllcorner
+						&&  (int)patchraster.yllcorner == (int)landraster.yllcorner) {
 							batchlog << ftype << " headers OK: " << fname << endl;
 						}
 						else {
@@ -1699,8 +1699,8 @@ if (landtype == 0 || landtype == 2) { // real landscape
 							}
 							else {
 								// check origins match
-								if (spdistraster.xllcorner == landraster.xllcorner
-								&&  spdistraster.yllcorner == landraster.yllcorner) {
+								if ((int)spdistraster.xllcorner == (int)landraster.xllcorner
+								&&  (int)spdistraster.yllcorner == (int)landraster.yllcorner) {
 									batchlog << ftype << " headers OK: " << fname << endl;
 								}
 								else {
@@ -1712,8 +1712,8 @@ if (landtype == 0 || landtype == 2) { // real landscape
 						}
 						else { // not able to check extents match
 							// check origins match
-							if (spdistraster.xllcorner == landraster.xllcorner
-							&&  spdistraster.yllcorner == landraster.yllcorner) {
+							if ((int)spdistraster.xllcorner == (int)landraster.xllcorner
+							&&  (int)spdistraster.yllcorner == (int)landraster.yllcorner) {
 								batchlog << ftype << " headers OK: " << fname << endl;
 							}
 							else {
@@ -1752,8 +1752,8 @@ if (landtype == 0 || landtype == 2) { // real landscape
 						if (damageraster.ncols == landraster.ncols
 						&&  damageraster.nrows == landraster.nrows
 						&&  damageraster.cellsize == landraster.cellsize
-						&&  damageraster.xllcorner == landraster.xllcorner
-						&&  damageraster.yllcorner == landraster.yllcorner) {
+						&&  (int)damageraster.xllcorner == (int)landraster.xllcorner
+						&&  (int)damageraster.yllcorner == (int)landraster.yllcorner) {
 							batchlog << ftype << " headers OK: " << fname << endl;
 						}
 						else {
@@ -1798,8 +1798,8 @@ if (landtype == 0 || landtype == 2) { // real landscape
 						if (mortraster.ncols == landraster.ncols
 						&&  mortraster.nrows == landraster.nrows
 						&&  mortraster.cellsize == landraster.cellsize
-						&&  mortraster.xllcorner == landraster.xllcorner
-						&&  mortraster.yllcorner == landraster.yllcorner) {
+						&&  (int)mortraster.xllcorner == (int)landraster.xllcorner
+						&&  (int)mortraster.yllcorner == (int)landraster.yllcorner) {
 							batchlog << ftype << " headers OK: " << fname << endl;
 						}
 						else {
@@ -2001,8 +2001,8 @@ while (change != -98765) {
 			if (landchgraster.ncols == landraster.ncols
 			&&  landchgraster.nrows == landraster.nrows
 			&&  landchgraster.cellsize == landraster.cellsize
-			&&  landchgraster.xllcorner == landraster.xllcorner
-			&&  landchgraster.yllcorner == landraster.yllcorner) {
+			&&  (int)landchgraster.xllcorner == (int)landraster.xllcorner
+			&&  (int)landchgraster.yllcorner == (int)landraster.yllcorner) {
 				batchlog << ftype << " headers OK: " << fname << endl;
 			}
 			else {
@@ -2041,8 +2041,8 @@ while (change != -98765) {
 					if (patchchgraster.ncols == landraster.ncols
 					&&  patchchgraster.nrows == landraster.nrows
 					&&  patchchgraster.cellsize == landraster.cellsize
-					&&  patchchgraster.xllcorner == landraster.xllcorner
-					&&  patchchgraster.yllcorner == landraster.yllcorner) {
+					&&  (int)patchchgraster.xllcorner == (int)landraster.xllcorner
+					&&  (int)patchchgraster.yllcorner == (int)landraster.yllcorner) {
 						batchlog << ftype << " headers OK: " << fname << endl;
 					}
 					else {
@@ -4636,7 +4636,7 @@ int nchromosomes,nloci;
 int errors = 0;
 bool formatError = false;
 string filetype = "ArchFile";
-int *chromsize;
+int *chromsize = 0;
 
 // check no. of chromosomes, and terminate if in error
 bArchFile >> paramname >> nchromosomes;
@@ -4743,6 +4743,8 @@ if (!bArchFile.eof()) {
 	EOFerror(filetype);
 	errors++;
 }
+
+if (chromsize != 0) delete[] chromsize;
 
 return errors;
 
@@ -7155,7 +7157,7 @@ for (int i = 0; i < (nstages*nsexesDem)+2; i++)
 if (matrix != NULL) {
 	for (int j = 0; j < matrixsize; j++) delete[] matrix[j];
 	delete[] matrix;
-	matrix = NULL;
+	matrix = NULL; matrixsize = 0;
 }
 
 if (dem.repType != 2) { // asexual or implicit sexual model
@@ -7163,10 +7165,6 @@ if (dem.repType != 2) { // asexual or implicit sexual model
 //DEBUGLOG << "Read_TransitionMatrix(): asexual model, sstruct.nStages = " << sstruct.nStages << endl;
 #endif
 	// create a temporary matrix
-//	matrix = new float *[sstruct.nStages];
-//	matrixsize = sstruct.nStages;
-//	for (int i = 0; i < sstruct.nStages; i++)
-//		matrix[i] = new float [sstruct.nStages];
 	matrix = new float *[nstages];
 	matrixsize = nstages;
 	for (int i = 0; i < nstages; i++)
@@ -7482,6 +7480,13 @@ pSpecies->setBreeding(season,breeding);
 DEBUGLOG << "Read_TransitionMatrix(): matrix = " << matrix;
 DEBUGLOG << " matrix[1][1] = " << matrix[1][1] << endl;
 #endif
+
+if (matrix != NULL) {
+	for (int j = 0; j < matrixsize; j++) delete[] matrix[j];
+	delete[] matrix;
+	matrix = NULL; matrixsize = 0;
+}
+
 return 0;
 }
 
@@ -8279,8 +8284,9 @@ DEBUGLOG << "ReadTransfer(): CostsFile=" << CostsFile << endl;
 		if (costsraster.ncols != paramsLand.maxX+1 || costsraster.nrows != paramsLand.maxY+1) {
 			error = 52;          
 		}
-		landOrigin origin = pLandscape->getOrigin();
-		if (costsraster.xllcorner != origin.minEast || costsraster.yllcorner != origin.minNorth) {
+		landOrigin origin = pLandscape->getOrigin();      
+		if ((int)costsraster.xllcorner != (int)origin.minEast 
+		|| (int)costsraster.yllcorner != (int)origin.minNorth) {
 			error = 53;          
 		}
 		int retcode = pLandscape->readCosts(costmapname);  
@@ -9542,7 +9548,14 @@ DEBUGLOG << endl;
 #if SEASONAL
 			landcode = pLandscape->readLandscape(nseasons,0,hname,pname);
 #else
+#if RSDEBUG
+int t02a = time(0);
+#endif
 			landcode = pLandscape->readLandscape(0,hname,pname);
+#if RSDEBUG
+int t02b = time(0);
+DEBUGLOG << "RunBatch(): TIME for readLandscape() " << t02b-t02a << endl;
+#endif
 #endif // SEASONAL 
 #endif // RS_CONTAIN 
 		}
@@ -9567,7 +9580,14 @@ DEBUGLOG << endl;
 			landOK = false;
 		}
 		if (paramsLand.dynamic) {
+#if RSDEBUG
+int t03a = time(0);
+#endif
 			landcode = ReadDynLandFile(pLandscape);
+#if RSDEBUG
+int t03b = time(0);
+DEBUGLOG << "RunBatch(): TIME for ReadDynLandFile() " << t03b-t03a << endl;
+#endif
 			if (landcode != 0) {
 				rsLog << "Landscape," << land_nr << ",ERROR,CODE," << landcode << endl;
 				cout << endl << "Error reading landscape " << land_nr << " - aborting" << endl;
@@ -9841,7 +9861,9 @@ DEBUGLOG << endl << "RunBatch(): i=" << i
 		if (virtEcolFile != "NULL") ReadVirtEcol(9);
 #endif
 
-		if (landtype != 9) {
+//		if (landtype != 9) 
+		if (pLandscape != NULL) 
+		{
 			delete pLandscape; pLandscape = NULL;
 		}
 

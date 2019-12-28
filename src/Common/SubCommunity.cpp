@@ -1325,8 +1325,8 @@ if (nrows > 0) {
 
 void SubCommunity::updateOccupancy(int row) {
 #if RSDEBUG
-DEBUGLOG << "SubCommunity::updateOccupancy(): this=" << this
-	<< endl;
+//DEBUGLOG << "SubCommunity::updateOccupancy(): this=" << this
+//	<< endl;
 #endif
 popStats pop;
 int npops = (int)popns.size();

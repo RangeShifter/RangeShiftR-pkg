@@ -16,7 +16,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 23 August 2019 by Steve Palmer
+Last updated: 27 December 2019 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 

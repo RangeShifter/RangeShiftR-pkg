@@ -57,7 +57,7 @@ habIxx.clear();
 habitats.clear();
 if (smsData != 0) {
 	if (smsData->effcosts != 0) delete smsData->effcosts;
-	delete smsData;
+	delete smsData;       
 }
 #if RSDEBUG
 //DEBUGLOG << "Cell::~Cell(): deleted" << endl;
@@ -171,7 +171,7 @@ smsData->cost = c;
 
 // Reset the cost and the effective cost of the cell
 void Cell::resetCost(void) {
-if (smsData != 0) delete smsData;
+if (smsData != 0) { this->resetEffCosts(); delete smsData; }
 smsData = 0;
 }
 
@@ -189,7 +189,7 @@ else
 return a;
 }
 
-void Cell::setEffCosts(array3x3f a) {
+void Cell::setEffCosts(array3x3f a) {     
 if (smsData->effcosts == 0) smsData->effcosts = new array3x3f;
 *smsData->effcosts = a;
 }

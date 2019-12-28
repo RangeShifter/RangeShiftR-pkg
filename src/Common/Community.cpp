@@ -2103,7 +2103,7 @@ landOrigin origin = pLandscape->getOrigin();
 //emigRules emig = pSpecies->getEmig();
 //trfrRules trfr = pSpecies->getTrfr();
 //locn loc;
-traitsums *ts;
+traitsums *ts = 0;
 traitsums sctraits;
 if (sim.outTraitsRows && yr >= sim.outStartTraitRow && yr%sim.outIntTraitRow == 0) {
 	// create array of traits means, etc., one for each row
@@ -2182,10 +2182,11 @@ if (v.viewTraits
 		}
 	}
 }
-if (sim.outTraitsRows && yr >= sim.outStartTraitRow && yr%sim.outIntTraitRow == 0)
-{
-	if (ts != 0) delete[] ts;
-}
+//if (sim.outTraitsRows && yr >= sim.outStartTraitRow && yr%sim.outIntTraitRow == 0)
+//{
+//	if (ts != 0) delete[] ts;
+//}
+if (ts != 0) { delete[] ts; ts = 0; }
 }
 
 // Write records to trait rows file

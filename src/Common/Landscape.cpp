@@ -271,11 +271,15 @@ for (int i = 0; i < ninitcells; i++)
 	if (initcells[i] != NULL) delete initcells[i];
 initcells.clear();
 
+patchnums.clear();
 habCodes.clear();
 colours.clear();
+landchanges.clear();
+patchchanges.clear();
 
 deleteConnectMatrix();
 deletePatchChgMatrix();
+if (epsGlobal != 0) delete[] epsGlobal;
 
 #if RS_CONTAIN
 int ndlocns = dmglocns.size();
@@ -534,7 +538,8 @@ void Landscape::setCellArray(void) {
 //	+ " cells=" + Int2Str((int)cells)).c_str());
 #endif
 if (cells != 0) resetLand();
-cells = new Cell **[maxY+1];
+//cells = new Cell **[maxY+1];
+cells = new Cell **[dimY];
 #if RSDEBUG
 //DebugGUI(("Landscape::setCellArray(): cells=" + Int2Str((int)cells)).c_str());
 #endif
@@ -1751,12 +1756,13 @@ simParams sim = paramsSim->getSim();
 
 if (filenum < 0) return 19;
 
-if (patchModel && (rasterType == 0 || rasterType == 2)) {
-	if (filenum == 0) { // first change
-		createPatchChgMatrix();
-	}
-	pchseq = patchCount();
-}
+//if (patchModel && (rasterType == 0 || rasterType == 2)) {
+//	if (filenum == 0) { // first change
+//		createPatchChgMatrix();
+//	}
+//	pchseq = patchCount();
+//}
+if (patchModel) pchseq = patchCount();
 
 ifstream hfile; // habitat file input stream
 ifstream pfile; // patch file input stream

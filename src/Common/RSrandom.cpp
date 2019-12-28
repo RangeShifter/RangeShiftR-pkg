@@ -116,6 +116,9 @@ pNormal = new	tr1::normal_distribution<> (0.0,1.0);
 }
 
 RSrandom::~RSrandom(void) {
+#if RS_ABC
+delete gen;
+#endif
 #if !CLUSTER
 if (pRandom01 != 0) delete pRandom01;
 if (pNormal != 0) delete pNormal;
