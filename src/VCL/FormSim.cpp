@@ -175,6 +175,13 @@ else {
 	edtMovtSlow->Enabled = false;
 }
 
+if (trfr.moveModel && trfr.moveType == 1) { // SMS
+	CBSMSheatmap->Enabled = true;
+}
+else { // SMS
+	CBSMSheatmap->Enabled = false; CBSMSheatmap->Checked = false;
+}
+
 }
 
 //---------------------------------------------------------------------------
@@ -565,6 +572,8 @@ if (sim.saveMaps) {
 
 sim.saveTraitMaps = RGTraitsMap->ItemIndex;
 if (sim.saveTraitMaps) sim.traitInt = StrToInt(edtTraitsMap_Int->Text);
+
+sim.saveVisits = CBSMSheatmap->Checked;
 
 paramsSim->setSim(sim);
 

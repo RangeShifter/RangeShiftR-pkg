@@ -18,7 +18,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 24 September 2019 by Steve Palmer
+Last updated: 7 January 2020 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -44,7 +44,6 @@ Last updated: 24 September 2019 by Steve Palmer
 #include "Pedigree.h"
 #endif
 #if RS_CONTAIN
-//#include "Cull.h"
 #include "Control.h"
 #endif // RS_CONTAIN 
 
@@ -142,9 +141,9 @@ extern string dmgmapname;		// see FormLand.cpp (VCL) OR Main.cpp (batch)
 #if SPATIALMORT
 extern string mortmapname[2];	// see FormLand.cpp (VCL) OR Main.cpp (batch)
 #endif // SPATIALMORT 
-#if EVOLSMS
+#if TEMPMORT
 extern string mortfilename;	// see [NOT YET CODED FOR GUI] (VCL) OR Main.cpp (batch)
-#endif // EVOLSMS 
+#endif // TEMPMORT  
 #if VIRTUALECOLOGIST
 extern string locfilename;		// see FormVirtEcol.cpp (VCL) OR Main.cpp (batch)
 extern string patchfilename;	// see [NOT YET CODED FOR GUI] (VCL) OR Main.cpp (batch)
@@ -152,11 +151,7 @@ extern string patchfilename;	// see [NOT YET CODED FOR GUI] (VCL) OR Main.cpp (b
 #if BUTTERFLYDISP
 extern string envstochfilename;
 #endif // BUTTERFLYDISP 
-#if RSRANDOM
 extern RSrandom *pRandom;
-#else
-extern StochasticLib1 *pRandom;
-#endif // RSRANDOM 
 
 // these functions to have different version for GUI and batch applications ...
 #if BATCH

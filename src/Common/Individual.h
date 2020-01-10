@@ -15,7 +15,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 6 November 2019 by Steve Palmer
+Last updated: 6 January 2020 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -86,7 +86,6 @@ struct crwParams { // to hold data for CRW movement model
 };
 struct array3x3d { double cell[3][3]; };
 struct movedata { float dist; float cost; };
-#if EVOLSMS
 struct smsdata {
 	locn prev;			// location of previous cell
 	locn goal;			// location of goal
@@ -94,14 +93,10 @@ struct smsdata {
 	float gb;				// goal bias
 	float alphaDB;	// dispersal bias decay rate
 	int betaDB;			// dispersal bias decay inflection point (no. of steps)
-};
-#else
 #if PARTMIGRN
-struct smsdata { locn prev; locn goal; short goalType; };
-#else
-struct smsdata { locn prev; locn goal; };
+	short goalType;
 #endif  // PARTMIGRN 
-#endif // EVOLSMS 
+};
 
 #if SEASONAL
 struct patchlist { Patch *pPatch; short season; bool breeding; bool fixed; };
@@ -189,7 +184,6 @@ Individual* getMate(void);
 	);
 	trfrKernTraits getKernTraits(void); // Get phenotypic transfer by kernel traits
 
-#if EVOLSMS
 	void setSMSTraits( // Set phenotypic transfer by SMS traits
 		Species*,	// pointer to Species
 		short,		// location of SMS genes on genome
@@ -197,7 +191,6 @@ Individual* getMate(void);
 		bool			// TRUE if transfer is sex-dependent
 	);
 	trfrSMSTraits getSMSTraits(void); // Get phenotypic transfer by SMS traits
-#endif
 	void setCRWTraits( // Set phenotypic transfer by CRW traits
 		Species*,	// pointer to Species
 		short,		// location of CRW genes on genome
@@ -337,7 +330,6 @@ Individual* getMate(void);
 		const float,	// final x co-ordinate
 		const float		// final y co-ordinate
 	);
-#if EVOLSMS
 	movedata smsMove( // Move to a neighbouring cell according to the SMS algorithm
 		Landscape*,		// pointer to Landscape
 		Species*,			// pointer to Species
@@ -346,15 +338,6 @@ Individual* getMate(void);
 		const bool,   // individual variability?
 		const bool    // absorbing boundaries?
 	);
-#else
-	movedata smsMove( // Move to a neighbouring cell according to the SMS algorithm
-		Landscape*,		// pointer to Landscape
-		Species*,			// pointer to Species
-		const short,	// landscape change index
-		const bool,		// TRUE if still in (or returned to) natal patch
-		const bool    // absorbing boundaries?
-	);
-#endif
 	array3x3d getSimDir( // Weight neighbouring cells on basis of current movement direction
 		const int,	// current x co-ordinate
 		const int,	// current y co-ordinate
@@ -529,11 +512,7 @@ double rcauchy(double location, double scale) ;
 double rwrpcauchy (double location, double rho = exp(double(-1)));
 #endif
 
-#if RSRANDOM
 extern RSrandom *pRandom;
-#else
-extern StochasticLib1 *pRandom;
-#endif
 
 #if RSDEBUG
 extern ofstream DEBUGLOG;

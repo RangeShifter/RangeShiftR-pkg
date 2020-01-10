@@ -6,7 +6,7 @@
         <AppType>Application</AppType>
         <MainSource>RangeShifter_v2_0_64bit.cpp</MainSource>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Debug</Config>
+        <Config Condition="'$(Config)'==''">Release</Config>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>3</TargetedPlatforms>
     </PropertyGroup>
@@ -145,7 +145,7 @@
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
         <Defines>NDEBUG;$(Defines)</Defines>
         <AppEnableRuntimeThemes>true</AppEnableRuntimeThemes>
-        <LinkPackageStatics>rtl.lib;vcl.lib;Tee.lib;vclimg.lib</LinkPackageStatics>
+        <LinkPackageStatics>rtl.lib;vcl.lib;Tee.lib;vclimg.lib;vclactnband.lib;vclx.lib</LinkPackageStatics>
         <UsePackages>false</UsePackages>
         <UsingDelphiRTL>true</UsingDelphiRTL>
         <DynamicRTL>false</DynamicRTL>
@@ -197,9 +197,6 @@
             <DependentOn>Common\Landscape.h</DependentOn>
             <BuildOrder>20</BuildOrder>
         </CppCompile>
-        <CppCompile Include="Common\mersenne.cpp">
-            <BuildOrder>34</BuildOrder>
-        </CppCompile>
         <CppCompile Include="Common\Model.cpp">
             <DependentOn>Common\Model.h</DependentOn>
             <BuildOrder>23</BuildOrder>
@@ -223,9 +220,6 @@
         <CppCompile Include="Common\Species.cpp">
             <DependentOn>Common\Species.h</DependentOn>
             <BuildOrder>27</BuildOrder>
-        </CppCompile>
-        <CppCompile Include="Common\stoc1.cpp">
-            <BuildOrder>35</BuildOrder>
         </CppCompile>
         <CppCompile Include="Common\SubCommunity.cpp">
             <DependentOn>Common\SubCommunity.h</DependentOn>
@@ -337,19 +331,19 @@
         <FormResources Include="VCL\FormLand.dfm"/>
         <FormResources Include="VCL\FormSeeding.dfm"/>
         <FormResources Include="VCL\FormMove.dfm"/>
-        <FormResources Include="VCL\FormGenetics.dfm"/>
-        <FormResources Include="VCL\FormDensity.dfm"/>
-        <FormResources Include="VCL\FormArtificialLand.dfm"/>
-        <FormResources Include="VCL\FormEnvGradient.dfm"/>
         <FormResources Include="VCL\FormDynLand.dfm"/>
+        <FormResources Include="VCL\FormDensity.dfm"/>
+        <FormResources Include="VCL\FormGenetics.dfm"/>
+        <FormResources Include="VCL\FormEnvGradient.dfm"/>
+        <FormResources Include="VCL\FormSim.dfm"/>
         <FormResources Include="VCL\FormVisualTraits1.dfm"/>
         <FormResources Include="VCL\FormVisualTraits0.dfm"/>
         <FormResources Include="VCL\FormVisualTraits2.dfm"/>
-        <FormResources Include="VCL\FormVisualPatch.dfm"/>
-        <FormResources Include="VCL\FormSpecies.dfm"/>
-        <FormResources Include="VCL\FormSim.dfm"/>
-        <FormResources Include="VCL\FormVisualGrad.dfm"/>
         <FormResources Include="VCL\FormVisualCost.dfm"/>
+        <FormResources Include="VCL\FormSpecies.dfm"/>
+        <FormResources Include="VCL\FormVisualPatch.dfm"/>
+        <FormResources Include="VCL\FormVisualGrad.dfm"/>
+        <FormResources Include="VCL\FormArtificialLand.dfm"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -437,8 +431,20 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
+                <DeployFile LocalName=".\Win32\Debug\RangeShifter_v2_0_64bit.exe" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>RangeShifter_v2_0_64bit.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployFile Condition="'$(DynamicRTL)'=='true'" LocalName="$(BDS)\Redist\osx32\libcgstl.dylib" Class="DependencyModule">
                     <Platform Name="OSX32">
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName=".\Win32\Debug\RangeShifter_v2_0_64bit.tds" Configuration="Debug" Class="DebugSymbols">
+                    <Platform Name="Win32">
+                        <RemoteName>RangeShifter_v2_0_64bit.tds</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

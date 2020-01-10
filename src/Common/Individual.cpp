@@ -353,7 +353,6 @@ if (trfr.indVar) { // set transfer genes
 	}
 //	trfrScales scale = pSpecies->getTrfrScales();
 	if (trfr.moveModel) {
-#if EVOLSMS
 		if (trfr.moveType == 1) { // set SMS genes
 			double dp,gb,alphaDB,betaDB;
 			trfrSMSParams smsparams = pSpecies->getSMSParams(0,0); // only traits for females/all
@@ -386,7 +385,6 @@ if (trfr.indVar) { // set transfer genes
 			else
 				setSMSTraits(pSpecies,trfrposn,2,false);
 		}
-#endif // EVOLSMS
 		if (trfr.moveType == 2) { // set CRW genes
 			double stepL,rho;
 			trfrCRWParams m = pSpecies->getCRWParams(0,0); // only traits for females/all
@@ -631,7 +629,6 @@ if (emig.indVar) {
 if (trfr.indVar) {
 	// record movement model traits
 	if (trfr.moveModel) {
-#if EVOLSMS
 		if (trfr.moveType == 1) { // SMS
 			trfrSMSTraits s = pSpecies->getSMSTraits();
 			if (s.goalType == 2)
@@ -639,7 +636,6 @@ if (trfr.indVar) {
 			else
 				setSMSTraits(pSpecies,trfr.movtTrait[0],2,0);
 		}
-#endif
 		if (trfr.moveType == 2) { // CRW
 			setCRWTraits(pSpecies,trfr.movtTrait[0],2,0);
 		}
@@ -1060,7 +1056,6 @@ if (kerntraits != 0) {
 return k;
 }
 
-#if EVOLSMS
 // Set phenotypic transfer by SMS traits
 void Individual::setSMSTraits(Species *pSpecies,short SMSgenelocn,short nSMStraits,
 		bool sexdep) {
@@ -1069,15 +1064,12 @@ void Individual::setSMSTraits(Species *pSpecies,short SMSgenelocn,short nSMStrai
 //	<< " SMSgenelocn=" << SMSgenelocn << " nSMStraits=" << nSMStraits << " sexdep=" << sexdep
 //	<< endl;
 #endif
-//trfrSMSTraits s; s.dp = s.gb = s.alphaDB = 0.0; s.betaDB = 0;
 trfrSMSTraits s = pSpecies->getSMSTraits();
 double dp,gb,alphaDB,betaDB;
 dp = gb = alphaDB = betaDB = 0.0;
 if (pGenome != 0) {
 	if (pSpecies->has1ChromPerTrait()) {
 		if (sexdep) {
-//			dp = pGenome->express(SMSgenelocn+sex,0,sex);
-//			gb = pGenome->express(SMSgenelocn+2+sex,0,sex);
 			dp = pGenome->express(SMSgenelocn,0,0);
 			gb = pGenome->express(SMSgenelocn+1,0,0);
 			if (nSMStraits == 4) {
@@ -1096,8 +1088,6 @@ if (pGenome != 0) {
 	}
 	else {
 		if (sexdep) {
-//			dp = pGenome->express(pSpecies,SMSgenelocn+sex);
-//			gb = pGenome->express(pSpecies,SMSgenelocn+2+sex);
 			dp = pGenome->express(pSpecies,SMSgenelocn);
 			gb = pGenome->express(pSpecies,SMSgenelocn+1);
 			if (nSMStraits == 4) {
@@ -1124,7 +1114,6 @@ if (pGenome != 0) {
 
 trfrSMSParams smsparams;
 if (sexdep) {
-//	smsparams = pSpecies->getSMSParams(0,sex);
 	smsparams = pSpecies->getSMSParams(0,0);
 }
 else {
@@ -1178,7 +1167,6 @@ if (smsData != 0) {
 #endif
 return s;
 }
-#endif
 
 // Set phenotypic transfer by CRW traits
 void Individual::setCRWTraits(Species *pSpecies,short CRWgenelocn,short nCRWtraits,
@@ -2028,9 +2016,7 @@ bool absorbed = false;
 
 landData land = pLandscape->getLandData();
 simView v = paramsSim->getViews();
-#if HEATMAP
 simParams sim = paramsSim->getSim();
-#endif
 
 trfrRules trfr = pSpecies->getTrfr();
 trfrCRWTraits movt = pSpecies->getCRWTraits();
@@ -2052,7 +2038,7 @@ else {
 	patchNum = pPatch->getPatchNum();
 }
 // apply step-dependent mortality risk ...
-#if EVOLSMS
+#if TEMPMORT
 int h;
 switch (trfr.smType) {
 case 0: // constant
@@ -2085,7 +2071,7 @@ if (trfr.habMort)
 #endif
 }
 else mortprob = movt.stepMort;
-#endif
+#endif // TEMPMORT 
 // ... unless individual has not yet left natal patch in emigration year
 if (pPatch == pNatalPatch && path->out == 0 && path->year == path->total) {
 	mortprob = 0.0;
@@ -2139,15 +2125,11 @@ else { // take a step
 //	<< " goal.y=" << smsData->goal.y
 //	<< endl;
 #endif
-#if EVOLSMS
-		move = smsMove(pLandscape,pSpecies,landIx,pPatch==pNatalPatch,trfr.indVar,absorbing);
-#else
 #if PARTMIGRN
-		move = smsMove(pLandscape,pSpecies,landIx,pPatch==pPrevPatch,absorbing);
+		move = smsMove(pLandscape,pSpecies,landIx,pPatch==pPrevPatch,trfr.indVar,absorbing);
 #else
-		move = smsMove(pLandscape,pSpecies,landIx,pPatch==pNatalPatch,absorbing);
+		move = smsMove(pLandscape,pSpecies,landIx,pPatch==pNatalPatch,trfr.indVar,absorbing);
 #endif  // PARTMIGRN 
-#endif
 #if RSDEBUG
 //DEBUGLOG << "Individual::moveStep() GGGG: indId=" << indId << " status=" << status
 //	<< " move.dist=" << move.dist
@@ -2173,20 +2155,16 @@ else { // take a step
 		// WOULD IT BE MORE EFFICIENT FOR smsMove TO RETURN A POINTER TO THE NEW CELL? ...
 
 			patch = pCurrCell->getPatch();
-#if HEATMAP
 			int patchnum;
 			if (patch == 0) {
-				pPatch = 0;
-				patchnum = 0;
+				pPatch = 0; patchnum = 0;
 			}
 			else {
-				pPatch = (Patch*)patch;
-				patchnum = pPatch->getPatchNum();
+				pPatch = (Patch*)patch; patchnum = pPatch->getPatchNum();
 			}
 			if (sim.saveVisits && pPatch != pNatalPatch && patchnum == 0) {
 				pCurrCell->incrVisits();
 			}
-#endif
 #if VCL
 			if (v.viewPaths) {
 				if ((Patch*)patch != pNatalPatch) {
@@ -2393,13 +2371,8 @@ return dispersing;
 // Functions to implement the SMS algorithm
 
 // Move to a neighbouring cell according to the SMS algorithm
-#if EVOLSMS
 movedata Individual::smsMove(Landscape *pLand,Species *pSpecies,
 	const short landIx,const bool natalPatch,const bool indvar,const bool absorbing)
-#else
-movedata Individual::smsMove(Landscape *pLand,Species *pSpecies,
-	const short landIx,const bool natalPatch,const bool absorbing)
-#endif
 {
 
 array3x3d nbr; 	// to hold weights/costs/probs of moving to neighbouring cells
@@ -2438,20 +2411,6 @@ current = pCurrCell->getLocn();
 
 //get weights for directional persistence....
 //if ((path->out > 0 && path->out < 10 && path->out < 2*movt.pr)
-#if EVOLSMS
-if ((path->out > 0 && path->out <= (movt.pr+1))
-|| 	natalPatch
-|| (movt.straigtenPath && path->settleStatus > 0)) {
-	// inflate directional persistence to promote leaving the patch
-	if (indvar) nbr = getSimDir(current.x,current.y,10.0*smsData->dp);
-	else nbr = getSimDir(current.x,current.y,10.0*movt.dp);
-}
-else {
-	if (indvar) nbr = getSimDir(current.x,current.y,smsData->dp);
-	else nbr = getSimDir(current.x,current.y,movt.dp);
-}
-
-#else
 if ((path->out > 0 && path->out <= (movt.pr+1))
 || 	natalPatch
 || (movt.straigtenPath && path->settleStatus > 0)) {
@@ -2459,14 +2418,19 @@ if ((path->out > 0 && path->out <= (movt.pr+1))
 	if (smsData->goalType == 1) 
 		// do not inflate DP so as not to swamp GB 
 		nbr = getSimDir(current.x,current.y,movt.dp);		
-	else
+	else {
 #endif  // PARTMIGRN 
 	// inflate directional persistence to promote leaving the patch
-	nbr = getSimDir(current.x,current.y,10.0*movt.dp);
+	if (indvar) nbr = getSimDir(current.x,current.y,10.0*smsData->dp);
+	else nbr = getSimDir(current.x,current.y,10.0*movt.dp);
+#if PARTMIGRN
+	}
+#endif  // PARTMIGRN 
 }
-else
-	nbr = getSimDir(current.x,current.y,movt.dp);
-#endif
+else {
+	if (indvar) nbr = getSimDir(current.x,current.y,smsData->dp);
+	else nbr = getSimDir(current.x,current.y,movt.dp);
+}
 if (natalPatch || path->settleStatus > 0) path->out = 0;
 //if (natalPatch) path->out = 0;
 #if RSDEBUG
@@ -2496,7 +2460,6 @@ if (movt.goalType == 2) { // dispersal bias
 	else { // use total no. of steps
 		nsteps = path->total;
 	}
-#if EVOLSMS
 	if (indvar) {
 		double exp_arg = -(double)(nsteps - smsData->betaDB)*(-smsData->alphaDB);
 #if RSDEBUG
@@ -2513,18 +2476,6 @@ if (movt.goalType == 2) { // dispersal bias
 		if (exp_arg > 100.0) exp_arg = 100.0; // to prevent exp() overflow error
 		gb = 1.0 + (movt.gb - 1.0)/(1.0 + exp(exp_arg));
 	}
-#else
-	double exp_arg = -(double)(nsteps - movt.betaDB)*(-movt.alphaDB);
-#if RSDEBUG
-//DEBUGLOG << "Individual::smsMove(): exp_arg=" << exp_arg;
-#endif
-	if (exp_arg > 100.0) exp_arg = 100.0; // to prevent exp() overflow error
-	gb = 1.0 + (movt.gb - 1.0)/(1.0 + exp(exp_arg));
-#endif // EVOLSMS
-#if RSDEBUG
-//DEBUGLOG << " (RESET)exp_arg=" << exp_arg
-//	<< " exp=" << exp(exp_arg) << " gb=" << gb << endl;
-#endif
 }
 else gb = movt.gb;
 #if PARTMIGRN

@@ -122,11 +122,9 @@ DEBUGLOG << endl << "RunModel(): starting simulation=" << sim.simulation << " re
 
 	MemoLine(("Running replicate " + Int2Str(rep) + "...").c_str());
 
-#if HEATMAP
 	if (sim.saveVisits && !ppLand.generated) {
 		pLandscape->resetVisits();
 	}
-#endif
 
 	patchChange patchchange;
 	int npatchchanges = pLandscape->numPatchChanges();
@@ -642,14 +640,14 @@ DEBUGLOG << "RunModel(): yr=" << yr << " landChg.chgnum=" << landChg.chgnum
 		pLandscape->resetDamageLocns();
 #endif // RS_CONTAIN 
 
-#if EVOLSMS
+#if TEMPMORT
 //		trfrRules trfr = pSpecies->getTrfr();
 		if (trfr.moveModel)
 			if (trfr.moveType == 1 && trfr.smType == 2) { 
 				// SMS with temporally variable per-step mortality
 				pSpecies->updateMortality(yr);
 			}
-#endif
+#endif // TEMPMORT 
 		
 #if GROUPDISP
 #if PEDIGREE
@@ -941,7 +939,7 @@ DEBUGLOG << "RunModel(): EXTREME EVENT year=" << eEvent.year << " season=" << eE
 DEBUGLOG << "RunModel(): yr=" << yr << " gen=" << gen << " completed reproduction" << endl;
 #endif
 
-#if RS_CONTAIN || CULLDEMO
+#if RS_CONTAIN
 			if (pCull->isCullApplied()) {
 				if (pCull->cullTiming() == 0) {
 #if RSDEBUG
@@ -955,7 +953,7 @@ DEBUGLOG << endl << "RunModel(): PERFORMING MANAGEMENT CULL after reproduction" 
 					else ManagementCull(pLandscape,yr,1);								
 				}
 			}
-#endif // RS_CONTAIN || CULLDEMO
+#endif // RS_CONTAIN 
 
 			// Dispersal
 
@@ -993,7 +991,7 @@ DEBUGLOG << "RunModel(): yr=" << yr << " gen=" << gen << " completed dispersal" 
 			if (stopRun) break;
 #endif
 
-#if RS_CONTAIN || CULLDEMO
+#if RS_CONTAIN 
 			if (pCull->isCullApplied()) {
 				if (pCull->cullTiming() == 1) {
 #if RSDEBUG
@@ -1003,7 +1001,7 @@ DEBUGLOG << endl << "RunModel(): PERFORMING MANAGEMENT CULL after dispersal" << 
 					else ManagementCull(pLandscape,yr,1);								
 				}
 			}
-#endif // RS_CONTAIN || CULLDEMO
+#endif // RS_CONTAIN 
 
 #if BUTTERFLYDISP
 			if (!dem.stageStruct && dem.dispersal == 0) { // dispersal prior to parturition
@@ -1178,20 +1176,11 @@ DEBUGLOG << "RunModel(): yr=" << yr << " gen=" << gen << " completed survival pa
 DEBUGLOG << "RunModel(): yr=" << yr << " gen=" << gen << " completed survival part 1" << endl;
 #endif
 
-#if CULLDEMO
-			if (pCull->cullTiming() == 2) {
-#if RSDEBUG
-DEBUGLOG << endl << "RunModel(): PERFORMING MANAGEMENT CULL after survival" << endl;
-#endif				
-				if (dem.stageStruct) ManagementCull(pLandscape,yr,sstruct.nStages);					
-				else ManagementCull(pLandscape,yr,1);								
-			}
-#endif // CULLDEMO 
-#if RS_CONTAIN || CULLDEMO
+#if RS_CONTAIN 
 			// Write data to Cull file to match data written to Pop file
 			if (sim.outPop && yr >= sim.outStartPop && yr%sim.outIntPop == 0)
 				pComm->outCull(rep,yr,gen);
-#endif // RS_CONTAIN || CULLDEMO 
+#endif // RS_CONTAIN  
 
 #if SEASONAL
 			// Connectivity Matrix
@@ -1451,13 +1440,13 @@ DEBUGLOG << "RunModel(): yr=" << yr << " completed reset"
 	if (sim.outGenetics) // close Genetics output file
 		pComm->outGenetics(rep,0,0,-999);
 
-#if HEATMAP
 	if (sim.saveVisits) {
+#if VCL
 		pLandscape->saveVisits(rep,ppLand.landNum);
+#endif
 		pLandscape->outVisits(rep,ppLand.landNum);
 		pLandscape->resetVisits();
 	}
-#endif
 
 #if VCL
 	if (stopRun) break;
@@ -1827,24 +1816,17 @@ outPar << " SOCIAL PHENOTYPE MODEL ";
 #if GROUPDISP
 outPar << " GROUP DISPERSAL MODEL ";
 #endif // GROUPDISP 
-#if HEATMAP
-outPar << " WITH DISPERSAL VISITS HEAT MAP ";
-#endif // HEATMAP 
 #if RS_ABC
 outPar << " APPROXIMATE BAYESIAN COMPUTATION ";
 #endif // RS_ABC
-#if EVOLSMS
-outPar << " WITH EVOLUTIONARY SMS ";
-#endif // EVOLSMS 
-#if CULLDEMO
-outPar << " CULL DEMONSTRATION ";
-#endif // CULLDEMO 
 #if RS_CONTAIN
 outPar << " ADAPTIVE MANAGEMENT ";
 #endif // RS_CONTAIN 
 
 #if RSWIN64
 outPar << " - 64 bit implementation";
+#else
+outPar << " - 32 bit implementation";
 #endif
 outPar << endl;
 
@@ -1862,25 +1844,14 @@ outPar << " ====================== ";
 #if GROUPDISP
 outPar << " ===================== ";
 #endif // GROUPDISP 
-#if HEATMAP
-outPar << " ============================== ";
-#endif // HEATMAP 
 #if RS_ABC
 outPar << " ================================ ";
 #endif // RS_ABC
-#if EVOLSMS
-outPar << " ===================== ";
-#endif // EVOLSMS
-#if CULLDEMO
-outPar << " ================== ";
-#endif // CULLDEMO 
 #if RS_CONTAIN
 outPar << " =================== ";
 #endif // RS_CONTAIN 
 
-#if RSWIN64
 outPar << "   =====================";
-#endif
 outPar << endl << endl;
 
 outPar << "BATCH MODE \t";
@@ -2782,7 +2753,6 @@ if (trfr.moveModel) {
 		string pr = "PERCEPTUAL RANGE";
 		outPar << pr << ":        " << move.pr << endl;
 		outPar << pr << " METHOD: " << move.prMethod << endl;
-#if EVOLSMS
 		if (!trfr.indVar) outPar << "DIRECTIONAL PERSISTENCE: " << move.dp << endl;
 		outPar << "MEMORY SIZE: " << move.memSize << endl;
 		if (!trfr.indVar) outPar << "GOAL BIAS:   " << move.gb << endl;
@@ -2810,16 +2780,6 @@ if (trfr.moveModel) {
 		else {
 			outPar << indvar << "no " << endl;
 		}
-#else
-		outPar << "DIRECTIONAL PERSISTENCE: " << move.dp << endl;
-		outPar << "MEMORY SIZE: " << move.memSize << endl;
-		outPar << "GOAL BIAS:   " << move.gb << endl;
-		outPar << "GOAL TYPE:   " << move.goalType << endl;
-		if (move.goalType == 2) { //  dispersal bias
-			outPar << "ALPHA DB:    " << move.alphaDB << endl;
-			outPar << "BETA DB:     " << move.betaDB << endl;
-		}
-#endif
 	}
 	else { // CRW
 		trfrCRWTraits move = pSpecies->getCRWTraits();
@@ -2847,8 +2807,8 @@ if (trfr.moveModel) {
 	if (straigtenPath) outPar << "yes" << endl;
 	else outPar << "no" << endl;
 	outPar << "STEP MORTALITY:\t" << endl;
-#if EVOLSMS
-	trfrCRWTraits move = pSpecies->getCRWTraits();
+#if TEMPMORT
+	trfrCRWTraits move = pSpecies->getCRWTraits();      
 	switch ((trfr.smType)) {	
 		case 0:
 			outPar << "constant " << move.stepMort << endl;
@@ -2891,7 +2851,7 @@ if (trfr.moveModel) {
 		trfrCRWTraits move = pSpecies->getCRWTraits();
 		outPar << "constant " << move.stepMort << endl;
 	}
-#endif
+#endif // TEMPMORT 
 } // end of movement process
 else { // kernel
 	string meandist = "MEAN DISTANCE";
@@ -3698,6 +3658,11 @@ if (sim.saveTraitMaps) {
 	outPar << endl;
 }
 else outPar << "no" << endl;
+if (trfr.moveType == 1) {
+	outPar << "SMS HEAT MAPS: ";
+	if (sim.saveVisits) outPar << "yes" << endl;
+	else outPar << "no" << endl;
+}
 
 outPar.close(); outPar.clear();
 

@@ -20,7 +20,7 @@ ifstream bVirtEcolFile,bSampleFile,bPatchFile;
 ifstream bABCpFile;
 ifstream bABCoFile;
 #endif
-#if EVOLSMS
+#if TEMPMORT
 ifstream bMortFile;
 #endif
 #if SEASONAL
@@ -46,7 +46,7 @@ ifstream hdfile,amfile;
 #endif // RS_CONTAIN 
 ifstream emigFile,transFile,settFile,genFile,archFile,initFile,initIndsFile;
 ifstream landfile,dynlandfile;
-#if EVOLSMS
+#if TEMPMORT
 ifstream mortFile;
 #endif
 #if SEASONAL
@@ -923,13 +923,6 @@ for (i = 0; i < maxNhab; i++) {
 	bParamFile >> header; if (header != Kheader ) Kerrors++;
 }
 #endif // SEASONAL 
-#if CULLDEMO
-bParamFile >> header; if (header != "ThresholdPop" ) errors++;
-bParamFile >> header; if (header != "CullRate" ) errors++;
-bParamFile >> header; if (header != "MaxPatches" ) errors++;
-bParamFile >> header; if (header != "Timing" ) errors++;
-bParamFile >> header; if (header != "EdgeBias" ) errors++;
-#endif // CULLDEMO  
 #if GROUPDISP
 // ADDITIONAL PARAMETERS FOR GROUP DISPERSAL MODEL
 bParamFile >> header; if (header != "Selfing" ) errors++;
@@ -983,9 +976,7 @@ bParamFile >> header; if (header != "OutIntDamage" ) errors++;
 #endif // RS_CONTAIN 
 bParamFile >> header; if (header != "SaveMaps" ) errors++;
 bParamFile >> header; if (header != "MapsInterval" ) errors++;
-#if HEATMAP
 bParamFile >> header; if (header != "SMSHeatMap" ) errors++;
-#endif
 bParamFile >> header; if (header != "DrawLoadedSp" ) errors++;
 if (errors > 0 || Kerrors > 0) {
 	FormatError(filetype,errors);
@@ -1294,30 +1285,6 @@ while (inint != -98765) {
 	}
 #endif // SEASONAL 
 
-#if CULLDEMO
-// ADDITIONAL PARAMETERS FOR CULL DEMONSTRATION MODEL
-	bParamFile >> inint;
-	if (inint < 1) {
-		BatchError(filetype,line,11,"ThresholdPop"); errors++;
-	}
-	bParamFile >> infloat;
-	if (infloat < 0.0 || infloat > 1.0) {
-		BatchError(filetype,line,20,"CullRate"); errors++;
-	}
-	bParamFile >> inint;
-	if (inint < 2) {
-		BatchError(filetype,line,12,"MaxPatches"); errors++;
-	}
-	bParamFile >> inint;
-	if (inint < 0 || inint > 2) {
-		BatchError(filetype,line,2,"Timing"); errors++;
-	}
-	bParamFile >> inint;
-	if (inint < 0 || inint > 1) {
-		BatchError(filetype,line,1,"EdgeBias"); errors++;
-	}
-#endif // CULLDEMO  
-		
 #if GROUPDISP
 // ADDITIONAL PARAMETERS FOR GROUP DISPERSAL MODEL
 	bParamFile >> inint;
@@ -1479,12 +1446,10 @@ while (inint != -98765) {
 		BatchError(filetype,line,11,"MapsInterval");
 		errors++;
 	}
-#if HEATMAP
 	bParamFile >> inint; if (inint < 0 || inint > 1) {
 		BatchError(filetype,line,1,"SMSHeatMap");
 		errors++;
 	}
-#endif
 	bParamFile >> inint; if (savemaps == 1 && (inint < 0 || inint > 1)) {
 		BatchError(filetype,line,1,"DrawLoadedSp");
 		errors++;
@@ -3352,10 +3317,8 @@ int i,simul,stagedep,sexdep,kerneltype,distmort,indvar,stage,sex;
 int	prMethod,smtype,straightenPath;
 float pr,dp,smconst;
 int goaltype,memsize,betaDB; float gb,alphaDB;
-#if EVOLSMS
 float dpMean,dpSD,gbMean,gbSD,alphaDBMean,alphaDBSD,betaDBMean,betaDBSD;
 float dpScale,gbScale,alphaDBScale,betaDBScale;
-#endif
 float meanDistI,meanDistII,ProbKernelI;
 float DistIMean,DistISD,DistIIMean,DistIISD,ProbKernelIMean,ProbKernelISD;
 float DistIScale,DistIIScale,ProbKernelIScale;
@@ -3371,7 +3334,7 @@ float SL,rho;
 float StepLMean,StepLSD,RhoMean,RhoSD,StepLScale,RhoScale;
 bool checkfile;
 vector <string> costsfiles;
-#if EVOLSMS
+#if TEMPMORT
 vector <string> mortfiles;
 #endif
 
@@ -3412,9 +3375,7 @@ case 0: { // negative exponential dispersal kernel
 
 case 1: { // SMS
 	batchlog << "Checking SMS format file ";
-#if EVOLSMS
 	bTransferFile >> header; if (header != "IndVar" ) errors++;
-#endif
 	bTransferFile >> header; if (header != "PR" ) errors++;
 	bTransferFile >> header; if (header != "PRMethod" ) errors++;
 	bTransferFile >> header; if (header != "DP" ) errors++;
@@ -3423,7 +3384,6 @@ case 1: { // SMS
 	bTransferFile >> header; if (header != "GoalType" ) errors++;
 	bTransferFile >> header; if (header != "AlphaDB" ) errors++;
 	bTransferFile >> header; if (header != "BetaDB" ) errors++;
-#if EVOLSMS
 	bTransferFile >> header; if (header != "DPMean" ) errors++;
 	bTransferFile >> header; if (header != "DPSD" ) errors++;
 	bTransferFile >> header; if (header != "GBMean" ) errors++;
@@ -3436,16 +3396,15 @@ case 1: { // SMS
 	bTransferFile >> header; if (header != "GBScale" ) errors++;
 	bTransferFile >> header; if (header != "AlphaDBScale" ) errors++;
 	bTransferFile >> header; if (header != "BetaDBScale" ) errors++;
-#endif
-#if EVOLSMS
+#if TEMPMORT
 	bTransferFile >> header; if (header != "StraightenPath" ) errors++;
 	bTransferFile >> header; if (header != "SMtype" ) errors++;
 	bTransferFile >> header; if (header != "SMconst" ) errors++;
 	bTransferFile >> header; if (header != "MortFile" ) errors++;
 #else
+	bTransferFile >> header; if (header != "StraightenPath" ) errors++;
 	bTransferFile >> header; if (header != "SMtype" ) errors++;
 	bTransferFile >> header; if (header != "SMconst" ) errors++;
-	bTransferFile >> header; if (header != "StraightenPath" ) errors++;
 #endif
 	switch (landtype) {
 	case 0: { // raster map with unique habitat codes
@@ -3493,9 +3452,9 @@ case 2: { // CRW
 	bTransferFile >> header; if (header != "RhoSD" ) errors++;
 	bTransferFile >> header; if (header != "StepLScale" ) errors++;
 	bTransferFile >> header; if (header != "RhoScale" ) errors++;
+	bTransferFile >> header; if (header != "StraightenPath" ) errors++;
 	bTransferFile >> header; if (header != "SMtype" ) errors++;
 	bTransferFile >> header; if (header != "SMconst" ) errors++;
-	bTransferFile >> header; if (header != "StraightenPath" ) errors++;
 	if (landtype == 0) {
 		for (i = 0; i < maxNhab; i++) {
 			colheader = "MortHab" + Int2Str(i+1);
@@ -3676,9 +3635,7 @@ while (simul != -98765) {
 	} // end of negative exponential dispersal kernel
 
 	case 1: { // SMS
-#if EVOLSMS
 		bTransferFile >> indvar;
-#endif
 		bTransferFile	>> pr >> prMethod	>> dp;
 		bTransferFile	>> memsize >> gb	>> goaltype >> alphaDB >> betaDB;
 		current = CheckStageSex(filetype,line,simul,prev,0,0,0,0,0,true,false);
@@ -3692,32 +3649,19 @@ while (simul != -98765) {
 		if (prMethod < 1 || prMethod > 3) {
 			BatchError(filetype,line,33,"PRmethod"); errors++;
 		}
-#if EVOLSMS
 		if (!indvar && dp < 1.0) {
 			BatchError(filetype,line,11,"DP"); errors++;
 		}
-#else
-		if (dp < 1.0) {
-			BatchError(filetype,line,11,"DP"); errors++;
-		}
-#endif
 		if (memsize < 1 || memsize > 14) {
 			BatchError(filetype,line,0,"MemSize"); errors++;
 			batchlog << "MemSize must be from 1 to 14" << endl;
 		}
-#if EVOLSMS
 		if (!indvar && gb < 1.0) {
 			BatchError(filetype,line,11,"GB"); errors++;
 		}
-#else
-		if (gb < 1.0) {
-			BatchError(filetype,line,11,"GB"); errors++;
-		}
-#endif
 		if (goaltype < 0 || goaltype > 2) {
 			BatchError(filetype,line,2,"GoalType"); errors++;
 		}
-#if EVOLSMS
 		if (!indvar && goaltype == 2) { // dispersal bias
 			if (alphaDB <= 0.0) {
 				BatchError(filetype,line,10,"AlphaDB"); errors++;
@@ -3726,17 +3670,6 @@ while (simul != -98765) {
 				BatchError(filetype,line,10,"BetaDB"); errors++;
 			}
 		}
-#else
-		if (goaltype == 2) { // dispersal bias
-			if (alphaDB <= 0.0) {
-				BatchError(filetype,line,10,"AlphaDB"); errors++;
-			}
-			if (betaDB <= 0.0) {
-				BatchError(filetype,line,10,"BetaDB"); errors++;
-			}
-		}
-#endif
-#if EVOLSMS
 		bTransferFile >> dpMean >> dpSD >> gbMean >> gbSD >> alphaDBMean >> alphaDBSD
 			>> betaDBMean >> betaDBSD >> dpScale >> gbScale >> alphaDBScale >> betaDBScale;
 		if (indvar) {
@@ -3791,14 +3724,16 @@ while (simul != -98765) {
 				}
 			}
 		}
-#endif
-#if EVOLSMS
+#if TEMPMORT
 		bTransferFile >> straightenPath	>> smtype >> smconst >> intext;
 #else
-		bTransferFile	>> smtype >> smconst >> straightenPath;
-#endif
+		bTransferFile >> straightenPath	>> smtype >> smconst;
+#endif // TEMPMORT 
+		if (straightenPath < 0 || straightenPath > 1) {
+			BatchError(filetype,line,1,"StraightenPath"); errors++;
+		}
 		if (landtype == 2) // habitat quality landscape 
-#if EVOLSMS
+#if TEMPMORT
 		{ // must have constant or temporally variable mortality 
 			if (smtype != 0 && smtype != 2) {
 				BatchError(filetype,line,0," "); errors++;
@@ -3812,9 +3747,9 @@ while (simul != -98765) {
 				batchlog << "SMtype must be 0 for LandType 2" << endl;
 			}
 		}
-#endif
+#endif // TEMPMORT 
 		else {
-#if EVOLSMS
+#if TEMPMORT
 			if (smtype < 0 || smtype > 2) {
 				BatchError(filetype,line,2,"SMtype"); errors++;
 			}
@@ -3822,22 +3757,19 @@ while (simul != -98765) {
 			if (smtype < 0 || smtype > 1) {
 				BatchError(filetype,line,1,"SMtype"); errors++;
 			}
-#endif
+#endif // TEMPMORT
 		}
-#if EVOLSMS
+#if TEMPMORT
 		if (smtype == 0 || smtype == 2) 
 #else
 		if (smtype == 0) 
-#endif
+#endif // TEMPMORT 
 		{
 			if (smconst < 0.0 || smconst >= 1.0) {
 				BatchError(filetype,line,20,"SMconst"); errors++;
 			}
 		}
-		if (straightenPath < 0 || straightenPath > 1) {
-			BatchError(filetype,line,1,"StraightenPath"); errors++;
-		}
-#if EVOLSMS
+#if TEMPMORT
 		ftype = "MortFile";
 		if (smtype == 2) {
 			if (intext == "NULL") {
@@ -3875,7 +3807,7 @@ while (simul != -98765) {
 				batchlog << ftype << " should be NULL if SMtype is not 2" << endl;
 			}
 		}
-#endif
+#endif // TEMPMORT 
 		switch (landtype) {
 		
 		case 0: { // raster map with unique habitat codes
@@ -4000,7 +3932,7 @@ while (simul != -98765) {
 
 	case 2: { // CRW
 		bTransferFile	>> indvar >> SL	>> rho >> StepLMean	>> StepLSD >> RhoMean >> RhoSD;
-		bTransferFile >> StepLScale >> RhoScale	>> smtype >> smconst >> straightenPath;
+		bTransferFile >> StepLScale >> RhoScale >> straightenPath	>> smtype >> smconst;
 		current = CheckStageSex(filetype,line,simul,prev,0,0,0,0,indvar,true,false);
 		if (current.newsimul) simuls++;
 		errors += current.errors;
@@ -4040,6 +3972,9 @@ while (simul != -98765) {
 				BatchError(filetype,line,20,"Rho"); errors++;
 			}
 		}
+		if (straightenPath < 0 || straightenPath > 1) {
+			BatchError(filetype,line,1,"StraightenPath"); errors++;
+		}
 		if (landtype == 0) { // real landscape with habitat types
 			if (smtype < 0 || smtype > 1) {
 				BatchError(filetype,line,1,"SMtype"); errors++;
@@ -4048,9 +3983,6 @@ while (simul != -98765) {
 				if (smconst < 0.0 || smconst >= 1.0) {
 					BatchError(filetype,line,20,"SMconst"); errors++;
 				}
-			}
-			if (straightenPath < 0 || straightenPath > 1) {
-				BatchError(filetype,line,1,"StraightenPath"); errors++;
 			}
 			for (int i = 0; i < maxNhab; i++) {
 				bTransferFile >> morthab;
@@ -4069,9 +4001,6 @@ while (simul != -98765) {
 			}
 			if (smconst < 0.0 || smtype >= 1.0) {
 				BatchError(filetype,line,20,"SMconst"); errors++;
-			}
-			if (straightenPath < 0 || straightenPath > 1) {
-				BatchError(filetype,line,1,"StraightenPath"); errors++;
 			}
 		}
 		break;
@@ -4210,7 +4139,7 @@ else return simuls;
 }
 
 
-#if EVOLSMS
+#if TEMPMORT
 //---------------------------------------------------------------------------
 
 int ParseMortFile(void)
@@ -4258,7 +4187,7 @@ if (!bMortFile.eof()) {
 return errors;
 
 }
-#endif // EVOLSMS
+#endif // TEMPMORT
 
 //---------------------------------------------------------------------------
 int ParseSettleFile(void)
@@ -6662,10 +6591,7 @@ if (option == 0) { // open file and read header line
 	parameters.open(parameterFile.c_str());
 	if (parameters.is_open()) {
 		string header;
-		int nheaders = 46 + paramsLand.nHabMax;
-#if CULLDEMO
-		nheaders += 5;	// ADDITIONAL HEADERS FOR CULL DEMONSTRATION MODEL
-#endif // CULLDEMO  
+		int nheaders = 47 + paramsLand.nHabMax;
 #if RS_CONTAIN
 		nheaders += 2;	// ADDITIONAL HEADERS FOR ADAPTIVE MANAGEMENT MODEL
 #endif // RS_CONTAIN 
@@ -6680,9 +6606,6 @@ if (option == 0) { // open file and read header line
 #endif // GROUPDISP 
 #if SOCIALMODEL
 		nheaders += 14; // ADDITIONAL HEADERS FOR PROBIS SOCIAL POLYMORPHISM MODEL
-#endif
-#if HEATMAP
-		nheaders += 1;	// ADDITIONAL HEADER FOR SMS HEAT MAP
 #endif
 #if SPATIALMORT
 		nheaders += 1;	// ADDITIONAL HEADER FOR SPATIALLY VARYING MORTALITY
@@ -6834,15 +6757,6 @@ DEBUGLOG << "ReadParameters(): dem.lambda=" << dem.lambda
 	<< endl;
 #endif
 
-#if CULLDEMO
-// ADDITIONAL PARAMETERS FOR CULL DEMONSTRATION MODEL
-culldata c;       
-parameters >> c.popnThreshold >> c.cullMaxRate >> c.maxNpatches >> c.timing;
-parameters >> iiii;
-if (iiii == 1) c.edgeBias = true; else c.edgeBias = false;
-pCull->setCullData(c);
-#endif // CULLDEMO  
-
 #if GROUPDISP
 // ADDITIONAL PARAMETERS FOR GROUP DISPERSAL MODEL
 parameters >> iiii;
@@ -6904,11 +6818,9 @@ DEBUGLOG << "ReadParameters(): outRange=" << sim.outRange << " outInt=" << sim.o
 parameters >> iiii >> sim.mapInt;
 if (iiii == 0) sim.saveMaps = false;
 else sim.saveMaps = true;
-#if HEATMAP
 parameters >> iiii;
 if (iiii == 0) sim.saveVisits = false;
 else sim.saveVisits = true;
-#endif
 parameters >> iiii;
 //sim.saveInitMap = false;
 if (iiii == 0) sim.drawLoaded = false; else sim.drawLoaded = true;
@@ -7910,9 +7822,9 @@ DEBUGLOG << endl;
 		else
 			pSpecies->createHabCostMort(paramsLand.nHabMax);
 		if (trfr.moveType == 1) { // SMS
-			int standardcols = 12;
-#if EVOLSMS
-			standardcols += 14;
+			int standardcols = 25;
+#if TEMPMORT
+			standardcols += 1;
 #endif
 			if (paramsLand.generated) {
 				nheaders = standardcols + 6; // artificial landscape
@@ -7980,8 +7892,8 @@ trfrMovtTraits move;
 trfrKernParams kparams;
 trfrScales scale = pSpecies->getTrfrScales();
 string CostsFile;
-#if EVOLSMS
 trfrSMSParams smsparams;
+#if TEMPMORT
 string MortFile;
 #endif
 
@@ -8164,13 +8076,8 @@ case 0: // negative exponential dispersal kernel
 
 case 1: // SMS
 
-#if EVOLSMS
 	transFile >> simulation >> iiii >> move.pr >> move.prMethod >> move.dp;
 	if (iiii == 0) trfr.indVar = false; else trfr.indVar = true;
-#else
-	trfr.indVar = false;
-	transFile >> simulation >> move.pr >> move.prMethod >> move.dp;
-#endif
 	transFile >> move.memSize >> move.gb >> move.goalType >> tttt >> iiii;
 	if (move.goalType == 2) { // dispersal bias
 		move.alphaDB = tttt; move.betaDB = iiii;
@@ -8181,7 +8088,6 @@ DEBUGLOG << "ReadTransfer(): simulation=" << simulation << " indVar=" << trfr.in
 DEBUGLOG << "ReadTransfer(): dp=" << move.dp << " MemSize=" << move.memSize
 	<< " gb=" << move.gb << " goaltype=" << move.goalType << endl;
 #endif
-#if EVOLSMS
 	smsparams = pSpecies->getSMSParams(0,0);
 	transFile >> smsparams.dpMean >> smsparams.dpSD >> smsparams.gbMean >> smsparams.gbSD
 		>> smsparams.alphaDBMean >> smsparams.alphaDBSD >> smsparams.betaDBMean >> smsparams.betaDBSD;
@@ -8190,8 +8096,7 @@ DEBUGLOG << "ReadTransfer(): dp=" << move.dp << " MemSize=" << move.memSize
 		pSpecies->setSMSParams(0,0,smsparams);
 		pSpecies->setTrfrScales(scale);
 	}
-#endif
-#if EVOLSMS
+#if TEMPMORT
 	transFile >> jjjj >> trfr.smType >> move.stepMort >> MortFile;  
 #if RSDEBUG
 DEBUGLOG << "ReadTransfer(): MortFile=" << MortFile << endl;
@@ -8201,26 +8106,26 @@ DEBUGLOG << "ReadTransfer(): MortFile=" << MortFile << endl;
 		ReadMortalities(mortfilename);
 	}
 #else
-	transFile >> iiii >> move.stepMort >> jjjj;
+	transFile >> jjjj >> iiii >> move.stepMort;
 	if (iiii == 0) trfr.habMort = false; else trfr.habMort = true;
-#endif
+#endif // TEMPMORT 
 	if (jjjj == 0) move.straigtenPath = false; else move.straigtenPath = true;
 
 #if RSDEBUG
-#if EVOLSMS
+#if TEMPMORT
 DEBUGLOG << "ReadTransfer(): SMtype=" << trfr.smType << " SMconst=" << move.stepMort << endl;
 #else
 DEBUGLOG << "ReadTransfer(): SMtype=" << trfr.habMort << " SMconst=" << move.stepMort << endl;
-#endif
-#endif
+#endif // TEMPMORT 
+#endif // RSDEBUG 
 
 	if (!paramsLand.generated) { // real landscape
 		if (paramsLand.rasterType == 0) { // habitat codes
-#if EVOLSMS
+#if TEMPMORT
 			if (trfr.smType == 1)
 #else
 			if (trfr.habMort)
-#endif
+#endif // TEMPMORT 
 			{ // habitat-dependent step mortality
 				for (int i = 0; i < paramsLand.nHabMax; i++)
 				{
@@ -8241,11 +8146,11 @@ DEBUGLOG << "ReadTransfer(): SMtype=" << trfr.habMort << " SMconst=" << move.ste
 		}
 	}
 	else { // artificial landscape
-#if EVOLSMS
+#if TEMPMORT
 		if (trfr.smType == 1)
 #else
 		if (trfr.habMort) 
-#endif
+#endif // TEMPMORT 
 		{ // habitat-dependent step mortality
 			// values are for habitat (hab=1) then for matrix (hab=0)
 			transFile >> tttt; pSpecies->setHabMort(1,tttt);
@@ -8342,12 +8247,12 @@ case 2: // CRW
 	transFile >> move.stepLength >> move.rho
 		>> mparams.stepLgthMean >> mparams.stepLgthSD >> mparams.rhoMean >> mparams.rhoSD;
 	transFile >> scale.stepLScale >> scale.rhoScale; 
-#if EVOLSMS
+#if TEMPMORT
 	transFile >> trfr.smType >> move.stepMort >> jjjj;
 #else
-	transFile >> iiii >> move.stepMort >> jjjj;
+	transFile >> jjjj >> iiii >> move.stepMort;
 	if (iiii == 0) trfr.habMort = false; else trfr.habMort = true;
-#endif
+#endif // TEMPMORT 
 	if (jjjj == 0) move.straigtenPath = false; else move.straigtenPath = true;
 	pSpecies->setTrfrScales(scale);
 #if RSDEBUG
@@ -8361,18 +8266,18 @@ DEBUGLOG << "ReadTransfer(): simulation=" << simulation
 #endif
 
 	//Habitat-dependent per step mortality
-#if EVOLSMS
+#if TEMPMORT
 	if (trfr.smType == 1 && paramsLand.rasterType != 0) error = 434;
 #else
 	if (trfr.habMort && paramsLand.rasterType != 0) error = 434;
-#endif
+#endif // TEMPMORT 
 
 	if (!paramsLand.generated && paramsLand.rasterType == 0) { // real habitat codes landscape
-#if EVOLSMS
+#if TEMPMORT
 		if (trfr.smType == 1)
 #else
 		if (trfr.habMort)
-#endif
+#endif // TEMPMORT 
 		{ // habitat-dependent step mortality
 			for (int i = 0; i < paramsLand.nHabMax; i++) {
 				transFile >> tttt;
@@ -8466,7 +8371,7 @@ default:
 return error;
 }
 
-#if EVOLSMS
+#if TEMPMORT
 
 //---------------------------------------------------------------------------
 int ReadMortalities(string mortfile) {
@@ -8505,7 +8410,7 @@ mortFile.close(); mortFile.clear();
 return error;
 }
 
-#endif // EVOLSMS
+#endif // TEMPMORT 
 
 //---------------------------------------------------------------------------
 // NOTE that stage- and sex-dependent settlement parameters are set for
@@ -9470,9 +9375,12 @@ rsLog << "Event,Number,Reps,Years,Time" << endl;
 #if RSDEBUG
 rsLog << "WARNING,***** RSDEBUG mode is active *****,,," << endl;
 #endif
-#if GROUPDISP || RS_ABC
-rsLog << "RANDOM SEED,,,," << RS_random_seed << endl;
-#endif
+//#if GROUPDISP || RS_ABC
+//rsLog << "RANDOM SEED,,,," << RS_random_seed << endl;
+//#endif
+#if !CLUSTER
+rsLog << "RANDOM SEED," << RS_random_seed << ",,," << endl;
+#endif // !CLUSTER
 
 // Open landscape batch file and read header record
 if (ReadLandFile(0)) {

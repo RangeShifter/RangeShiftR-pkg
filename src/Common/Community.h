@@ -20,7 +20,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 27 December 2019 by Steve Palmer
+Last updated: 7 January 2020 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -50,7 +50,6 @@ using namespace std;
 #include "Pedigree.h"
 #endif
 #if RS_CONTAIN
-//#include "Cull.h"
 #include "Control.h"
 #endif // RS_CONTAIN 
 

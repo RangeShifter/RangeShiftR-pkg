@@ -19,7 +19,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 7 December 2016 by Steve Palmer
+Last updated: 7 January 2020 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -67,11 +67,7 @@ Last updated: 7 December 2016 by Steve Palmer
 #include <numeric>
 using namespace std;
 
-#if !RSRANDOM
 //#include "mathlib.h"
-#include "randomc.h"
-#include "stocc.h"				// define random library classes
-#endif
 
 #include "Parameters.h"
 #include "Model.h"

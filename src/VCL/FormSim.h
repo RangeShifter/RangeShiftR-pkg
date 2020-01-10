@@ -12,7 +12,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 3 January 2017 by Steve Palmer
+Last updated: 3 March 2017 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -103,6 +103,7 @@ __published:	// IDE-managed Components
 	TRadioGroup *RGGen;
 	TCheckBox *CBGenCrosstab;
 	TCheckBox *CBabsorbing;
+	TCheckBox *CBSMSheatmap;
 	void __fastcall BtnOKClick(TObject *Sender);
 	void __fastcall BtnSeedingClick(TObject *Sender);
 	void __fastcall RGMapClick(TObject *Sender);

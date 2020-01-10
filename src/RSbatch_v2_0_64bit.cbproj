@@ -137,9 +137,6 @@
             <DependentOn>Common\Landscape.h</DependentOn>
             <BuildOrder>8</BuildOrder>
         </CppCompile>
-        <CppCompile Include="Common\mersenne.cpp">
-            <BuildOrder>16</BuildOrder>
-        </CppCompile>
         <CppCompile Include="Common\Model.cpp">
             <DependentOn>Common\Model.h</DependentOn>
             <BuildOrder>10</BuildOrder>
@@ -163,9 +160,6 @@
         <CppCompile Include="Common\Species.cpp">
             <DependentOn>Common\Species.h</DependentOn>
             <BuildOrder>14</BuildOrder>
-        </CppCompile>
-        <CppCompile Include="Common\stoc1.cpp">
-            <BuildOrder>17</BuildOrder>
         </CppCompile>
         <CppCompile Include="Common\SubCommunity.cpp">
             <DependentOn>Common\SubCommunity.h</DependentOn>
@@ -274,12 +268,6 @@
                 </DeployFile>
                 <DeployFile LocalName="$(BDS)\Redist\iossimulator\libPCRE.dylib" Class="DependencyModule">
                     <Platform Name="iOSSimulator">
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName=".\Win32\Debug\RSbatch_v2_0_64bit.tds" Configuration="Debug" Class="DebugSymbols">
-                    <Platform Name="Win32">
-                        <RemoteName>RSbatch_v2_0_64bit.tds</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

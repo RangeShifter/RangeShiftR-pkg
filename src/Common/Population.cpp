@@ -313,12 +313,10 @@ for (int i = 0; i < NSEXES; i++) {
 	ts.sumAlpha[i] = ts.ssqAlpha[i] = 0.0; ts.sumBeta[i] = ts.ssqBeta[i] = 0.0;
 	ts.sumDist1[i] = ts.ssqDist1[i] = 0.0; ts.sumDist2[i] = ts.ssqDist2[i] = 0.0;
 	ts.sumProp1[i] = ts.ssqProp1[i] = 0.0;
-#if EVOLSMS
 	ts.sumDP[i] = ts.ssqDP[i] = 0.0;
 	ts.sumGB[i] = ts.ssqGB[i] = 0.0;
 	ts.sumAlphaDB[i] = ts.ssqAlphaDB[i] = 0.0;
 	ts.sumBetaDB[i]  = ts.ssqBetaDB[i]  = 0.0;
-#endif
 	ts.sumStepL[i] = ts.ssqStepL[i] = 0.0; ts.sumRho[i] = ts.ssqRho[i] = 0.0;
 	ts.sumS0[i] = ts.ssqS0[i] = 0.0;
 	ts.sumAlphaS[i] = ts.ssqAlphaS[i] = 0.0; ts.sumBetaS[i] = ts.ssqBetaS[i] = 0.0;
@@ -356,7 +354,6 @@ for (int i = 0; i < ninds; i++) {
 	ts.sumDist1[g] += k.meanDist1; ts.ssqDist1[g] += k.meanDist1 * k.meanDist1;
 	ts.sumDist2[g] += k.meanDist2; ts.ssqDist2[g] += k.meanDist2 * k.meanDist2;
 	ts.sumProp1[g] += k.probKern1; ts.ssqProp1[g] += k.probKern1 * k.probKern1;
-#if EVOLSMS
 	trfrSMSTraits sms = inds[i]->getSMSTraits();
 	g = 0; // CURRENTLY INDIVIDUAL VARIATION CANNOT BE SEX-DEPENDENT
 	ts.sumDP[g] += sms.dp; ts.ssqDP[g] += sms.dp * sms.dp;
@@ -370,7 +367,6 @@ for (int i = 0; i < ninds; i++) {
 //	<< " ts.sumDP[g]= " << ts.sumDP[g] << " ts.ssqDP[g]= " << ts.ssqDP[g]
 //	<< " ts.sumGB[g]= " << ts.sumGB[g] << " ts.ssqGB[g]= " << ts.ssqGB[g]
 //	<< endl;
-#endif
 #endif
 	trfrCRWTraits c = inds[i]->getCRWTraits();
 	g = 0; // CURRENTLY INDIVIDUAL VARIATION CANNOT BE SEX-DEPENDENT
@@ -3726,11 +3722,9 @@ if (emig.indVar) {
 }
 if (trfr.indVar) {
 	if (trfr.moveModel) {
-#if EVOLSMS
 		if (trfr.moveType == 1) { // SMS
 			outInds << "\tDP\tGB\tAlphaDB\tBetaDB";
 		}
-#endif
 		if (trfr.moveType == 2) { // CRW
 			outInds << "\tStepLength\tRho";
 		}
@@ -3885,13 +3879,11 @@ for (int i = 0; i < ninds; i++) {
 
 		if (trfr.indVar) {
 			if (trfr.moveModel) {
-#if EVOLSMS
 				if (trfr.moveType == 1) { // SMS
 					trfrSMSTraits s = inds[i]->getSMSTraits();
 					outInds << "\t" << s.dp << "\t" << s.gb;
 					outInds << "\t" << s.alphaDB << "\t" << s.betaDB;
 				} // end of SMS
-#endif
 				if (trfr.moveType == 2) { // CRW
 					trfrCRWTraits c = inds[i]->getCRWTraits();
 					outInds << "\t" << c.stepLength << "\t" << c.rho;

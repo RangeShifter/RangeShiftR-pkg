@@ -12,7 +12,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 27 December 2019 by Steve Palmer
+Last updated: 7 January 2020 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -33,7 +33,6 @@ using namespace std;
 #include "ABC.h"
 #endif
 #if RS_CONTAIN
-//#include "Cull.h"
 #include "Control.h"
 #endif // RS_CONTAIN 
 
@@ -116,10 +115,10 @@ int ParsePatchFile(void);
 int ParseABCParamsFile(void);
 int ParseABCObsFile(void);
 #endif // RS_ABC
-#if EVOLSMS
+#if TEMPMORT
 int ParseMortFile(void);
 int ReadMortalities(string);
-#endif // EVOLSMS
+#endif // TEMPMORT 
 int CheckCostRaster(string,string);
 simCheck CheckStageSex(string,int,int,simCheck,int,int,int,int,int,bool,bool);
 
@@ -247,14 +246,12 @@ extern Cull *pCull;
 extern string locfilename;		// see FormVirtEcol.cpp (VCL) OR Main.cpp (batch)
 extern string patchfilename;	// see [NOT YET CODED FOR GUI] (VCL) OR Main.cpp (batch)
 #endif // VIRTUALECOLOGIST 
-#if EVOLSMS
+#if TEMPMORT
 extern string mortfilename;	// see [NOT YET CODED FOR GUI] (VCL) OR Main.cpp (batch)
-#endif // EVOLSMS
-#if GROUPDISP || RS_ABC
-#if RSRANDOM
+#endif // TEMPMORT 
+#if !CLUSTER
 extern int RS_random_seed;			// see RSrandom.cpp 
-#endif
-#endif // GROUPDISP 
+#endif // !CLUSTER
 
 //---------------------------------------------------------------------------
 #endif

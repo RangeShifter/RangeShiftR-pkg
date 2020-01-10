@@ -19,7 +19,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 25 October 2019 by Steve Palmer
+Last updated: 6 January 2020 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -90,7 +90,6 @@ struct traitsums { // sums of trait genes for dispersal
 	double ssqDist2[NSEXES]; 	// sum of squares of kernel II mean
 	double sumProp1[NSEXES]; 	// sum of propn using kernel I
 	double ssqProp1[NSEXES]; 	// sum of squares of propn using kernel I
-#if EVOLSMS
 	double sumDP[NSEXES]; 		// sum of SMS directional persistence
 	double ssqDP[NSEXES]; 		// sum of squares of SMS directional persistence
 	double sumGB[NSEXES]; 		// sum of SMS goal bias
@@ -99,7 +98,6 @@ struct traitsums { // sums of trait genes for dispersal
 	double ssqAlphaDB[NSEXES]; 	// sum of squares of SMS dispersal bias decay rate
 	double sumBetaDB[NSEXES];		// sum of SMS dispersal bias decay infl. pt.
 	double ssqBetaDB[NSEXES]; 	// sum of squares of SMS dispersal bias decay infl. pt.
-#endif
 	double sumStepL[NSEXES]; 	// sum of CRW step length
 	double ssqStepL[NSEXES]; 	// sum of squares of CRW step length
 	double sumRho[NSEXES]; 		// sum of CRW correlation coefficient
@@ -497,11 +495,7 @@ extern paramGrad *paramsGrad;
 extern paramStoch *paramsStoch;
 extern paramInit *paramsInit;
 extern paramSim *paramsSim;
-#if RSRANDOM
 extern RSrandom *pRandom;
-#else
-extern StochasticLib1 *pRandom;
-#endif
 
 #if RSDEBUG
 extern ofstream DEBUGLOG;

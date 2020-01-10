@@ -9,9 +9,7 @@
 ifstream landscape;
 
 ofstream outConnMat;
-#if HEATMAP
 ofstream outvisits;
-#endif
 #if RS_CONTAIN
 ofstream outdamage;
 ofstream outsummdmg;
@@ -2911,8 +2909,6 @@ return npred;
 
 //---------------------------------------------------------------------------
 
-#if HEATMAP
-
 void Landscape::resetVisits(void) {
 for(int y = dimY-1; y >= 0; y--){
 	for (int x = 0; x < dimX; x++) {
@@ -2971,7 +2967,6 @@ for (int y = dimY-1; y >= 0; y--) {
 
 outvisits.close(); outvisits.clear();
 }
-#endif
 
 //---------------------------------------------------------------------------
 

@@ -6,7 +6,7 @@ Implements the Genome class
 
 Author: Steve Palmer & Roslyn Henry, University of Aberdeen
 
-Last updated: 27 June 2018 by Steve Palmer
+Last updated: 6 January 2020 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -238,11 +238,7 @@ private:
 //---------------------------------------------------------------------------
 
 extern paramSim *paramsSim;
-#if RSRANDOM
 extern RSrandom *pRandom;
-#else
-extern StochasticLib1 *pRandom;
-#endif
 
 #if RSDEBUG
 extern ofstream DEBUGLOG;

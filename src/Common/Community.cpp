@@ -1423,13 +1423,13 @@ outrange << "Rep\tYear\tSeason";
 outrange << "Rep\tYear\tRepSeason";
 #endif
 if (env.stoch && !env.local) outrange << "\tEpsilon";
-#if EVOLSMS
+#if TEMPMORT
 if (trfr.moveModel)
 	if (trfr.moveType == 1 && trfr.smType == 2) { 
 		// SMS with temporally variable per-step mortality
 		outrange << "\tMortality";
 	}
-#endif
+#endif // TEMPMORT 
 
 outrange << "\tNInds";
 if (dem.stageStruct) {
@@ -1466,15 +1466,11 @@ if (emig.indVar) {
 }
 if (trfr.indVar) {
 	if (trfr.moveModel) {
-#if EVOLSMS
 		if (trfr.moveType == 1) {
 			outrange << "\tmeanDP\tstdDP\tmeanGB\tstdGB";
 			trfrSMSTraits s = pSpecies->getSMSTraits();
-//			if (s.goalType == 2) {
 				outrange << "\tmeanAlphaDB\tstdAlphaDB\tmeanBetaDB\tstdBetaDB";
-//			}
 		}
-#endif
 		if (trfr.moveType == 2) {
 			outrange << "\tmeanStepLength\tstdStepLength\tmeanRho\tstdRho";
 		}
@@ -1555,13 +1551,13 @@ simParams sim = paramsSim->getSim();
 outrange << rep << "\t" << yr << "\t" << gen;
 if (env.stoch && !env.local) // write global environmental stochasticity
 	outrange << "\t" << pLandscape->getGlobalStoch(yr);
-#if EVOLSMS
+#if TEMPMORT
 if (trfr.moveModel)
 	if (trfr.moveType == 1 && trfr.smType == 2) { 
 		// SMS with temporally variable per-step mortality
 		outrange << "\t" << pSpecies->getMortality();
 	}
-#endif
+#endif // TEMPMORT 
 
 #if SEASONAL
 commStats s = getStats(gen);
@@ -1670,12 +1666,10 @@ if (emig.indVar || trfr.indVar || sett.indVar) { // output trait means
 		ts.sumAlpha[i] = ts.ssqAlpha[i] = 0.0; ts.sumBeta[i] = ts.ssqBeta[i] = 0.0;
 		ts.sumDist1[i] = ts.ssqDist1[i] = 0.0; ts.sumDist2[i] = ts.ssqDist2[i] = 0.0;
 		ts.sumProp1[i] = ts.ssqProp1[i] = 0.0;
-#if EVOLSMS
 		ts.sumDP[i] = ts.ssqDP[i] = 0.0;
 		ts.sumGB[i] = ts.ssqGB[i] = 0.0;
 		ts.sumAlphaDB[i] = ts.ssqAlphaDB[i] = 0.0;
 		ts.sumBetaDB[i]  = ts.ssqBetaDB[i]  = 0.0;
-#endif
 		ts.sumStepL[i] = ts.ssqStepL[i] = 0.0; ts.sumRho[i] = ts.ssqRho[i] = 0.0;
 		ts.sumS0[i] = ts.ssqS0[i] = 0.0;
 		ts.sumAlphaS[i] = ts.ssqAlphaS[i] = 0.0; ts.sumBetaS[i] = ts.ssqBetaS[i] = 0.0;
@@ -1692,12 +1686,10 @@ if (emig.indVar || trfr.indVar || sett.indVar) { // output trait means
 			ts.sumDist1[j]  += scts.sumDist1[j];  ts.ssqDist1[j]  += scts.ssqDist1[j];
 			ts.sumDist2[j]  += scts.sumDist2[j];  ts.ssqDist2[j]  += scts.ssqDist2[j];
 			ts.sumProp1[j]  += scts.sumProp1[j];  ts.ssqProp1[j]  += scts.ssqProp1[j];
-#if EVOLSMS
 			ts.sumDP[j]     += scts.sumDP[j];     ts.ssqDP[j]     += scts.ssqDP[j];
 			ts.sumGB[j]     += scts.sumGB[j];     ts.ssqGB[j]     += scts.ssqGB[j];
 			ts.sumAlphaDB[j] += scts.sumAlphaDB[j]; ts.ssqAlphaDB[j] += scts.ssqAlphaDB[j];
 			ts.sumBetaDB[j]  += scts.sumBetaDB[j];  ts.ssqBetaDB[j]  += scts.ssqBetaDB[j];
-#endif
 			ts.sumStepL[j]  += scts.sumStepL[j];  ts.ssqStepL[j]  += scts.ssqStepL[j];
 			ts.sumRho[j]    += scts.sumRho[j];    ts.ssqRho[j]    += scts.ssqRho[j];
 			ts.sumS0[j]     += scts.sumS0[j];     ts.ssqS0[j]     += scts.ssqS0[j];
@@ -1797,17 +1789,13 @@ if (emig.indVar || trfr.indVar || sett.indVar) { // output trait means
 		}
 		double mnDist1[2],mnDist2[2],mnProp1[2],mnStepL[2],mnRho[2];
 		double sdDist1[2],sdDist2[2],sdProp1[2],sdStepL[2],sdRho[2];
-#if EVOLSMS
 		double mnDP[2],mnGB[2],mnAlphaDB[2],mnBetaDB[2];
 		double sdDP[2],sdGB[2],sdAlphaDB[2],sdBetaDB[2];
-#endif
 		for (int g = 0; g < ngenes; g++) {
 			mnDist1[g] = mnDist2[g] = mnProp1[g] = mnStepL[g] = mnRho[g] = 0.0;
 			sdDist1[g] = sdDist2[g] = sdProp1[g] = sdStepL[g] = sdRho[g] = 0.0;
-#if EVOLSMS
 			mnDP[g] = mnGB[g] = mnAlphaDB[g] = mnBetaDB[g] = 0.0;
 			sdDP[g] = sdGB[g] = sdAlphaDB[g] = sdBetaDB[g] = 0.0;
-#endif
 			// individuals may have been counted by sex if there was
 			// sex dependency in another dispersal phase
 			if (ngenes == 2) popsize = ts.ninds[g];
@@ -1818,12 +1806,10 @@ if (emig.indVar || trfr.indVar || sett.indVar) { // output trait means
 				mnProp1[g] = ts.sumProp1[g] / (double)popsize;
 				mnStepL[g] = ts.sumStepL[g] / (double)popsize;
 				mnRho[g] =   ts.sumRho[g]   / (double)popsize;
-#if EVOLSMS
 				mnDP[g] = ts.sumDP[g] / (double)popsize;
 				mnGB[g] = ts.sumGB[g] / (double)popsize;
 				mnAlphaDB[g] = ts.sumAlphaDB[g] / (double)popsize;
 				mnBetaDB[g]  = ts.sumBetaDB[g]  / (double)popsize;
-#endif
 				if (popsize > 1) {
 					sdDist1[g] = ts.ssqDist1[g]/(double)popsize	- mnDist1[g]*mnDist1[g];
 					if (sdDist1[g] > 0.0) sdDist1[g] = sqrt(sdDist1[g]); else sdDist1[g] = 0.0;
@@ -1835,7 +1821,6 @@ if (emig.indVar || trfr.indVar || sett.indVar) { // output trait means
 					if (sdStepL[g] > 0.0) sdStepL[g] = sqrt(sdStepL[g]); else sdStepL[g] = 0.0;
 					sdRho[g] = ts.ssqRho[g]/(double)popsize	- mnRho[g]*mnRho[g];
 					if (sdRho[g] > 0.0) sdRho[g] = sqrt(sdRho[g]); else sdRho[g] = 0.0;
-#if EVOLSMS
 					sdDP[g] = ts.ssqDP[g]/(double)popsize	- mnDP[g]*mnDP[g];
 					if (sdDP[g] > 0.0) sdDP[g] = sqrt(sdDP[g]); else sdDP[g] = 0.0;
 					sdGB[g] = ts.ssqGB[g]/(double)popsize	- mnGB[g]*mnGB[g];
@@ -1844,7 +1829,6 @@ if (emig.indVar || trfr.indVar || sett.indVar) { // output trait means
 					if (sdAlphaDB[g] > 0.0) sdAlphaDB[g] = sqrt(sdAlphaDB[g]); else sdAlphaDB[g] = 0.0;
 					sdBetaDB[g]  = ts.ssqBetaDB[g]/(double)popsize	- mnBetaDB[g]*mnBetaDB[g];
 					if (sdBetaDB[g] > 0.0) sdBetaDB[g] = sqrt(sdBetaDB[g]); else sdBetaDB[g] = 0.0;
-#endif
 				}
 			}
 #if RSDEBUG
@@ -1860,14 +1844,12 @@ if (emig.indVar || trfr.indVar || sett.indVar) { // output trait means
 #endif
 		}
 		if (trfr.moveModel) {
-#if EVOLSMS
 			if (trfr.moveType == 1) {
 				outrange << "\t" << mnDP[0] << "\t" << sdDP[0];
 				outrange << "\t" << mnGB[0] << "\t" << sdGB[0];
 				outrange << "\t" << mnAlphaDB[0] << "\t" << sdAlphaDB[0];
 				outrange << "\t" << mnBetaDB[0] << "\t" << sdBetaDB[0];
 			}
-#endif
 			if (trfr.moveType == 2) {
 				outrange << "\t" << mnStepL[0] << "\t" << sdStepL[0];
 				outrange << "\t" << mnRho[0] << "\t" << sdRho[0];

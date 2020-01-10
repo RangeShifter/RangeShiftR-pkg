@@ -239,9 +239,7 @@ paramSim::paramSim(void) {
 	outDamage = false;
 #endif // RS_CONTAIN 
 	saveMaps = false; saveTraitMaps = false;
-#if HEATMAP
 	saveVisits = false;
-#endif
 #if VIRTUALECOLOGIST
 	virtualEcologist = landscapeGenetics = false;
 	patchMethod = stgMethod = 0;
@@ -313,9 +311,7 @@ if (s.outStartDamage >= 0) outStartDamage =	s.outStartDamage;
 if (s.outIntDamage >= 1) outIntDamage =	s.outIntDamage;
 #endif // RS_CONTAIN 
 saveMaps = s.saveMaps; saveTraitMaps = s.saveTraitMaps;
-#if HEATMAP
 saveVisits = s.saveVisits;
-#endif
 #if VIRTUALECOLOGIST
 virtualEcologist = s.virtualEcologist;
 #endif
@@ -356,9 +352,7 @@ s.outStartDamage = outStartDamage; s.outIntDamage = outIntDamage;
 s.batchMode = batchMode;
 s.absorbing = absorbing;
 s.saveMaps = saveMaps; s.saveTraitMaps = saveTraitMaps;
-#if HEATMAP
 s.saveVisits = saveVisits;
-#endif
 #if VIRTUALECOLOGIST
 s.virtualEcologist = virtualEcologist;
 #endif

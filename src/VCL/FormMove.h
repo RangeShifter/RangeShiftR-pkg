@@ -1,6 +1,6 @@
 /*------------------------------------------------------------------------------
 
-RangeShifter v2.0 FormMove
+RangeShifter v2.0 FormMove for EVOLUTIONARY SMS
 
 Input from the Movement Processes form
 
@@ -12,7 +12,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 22 August 2018 by Steve Palmer
+Last updated: 7 January 2020 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -77,7 +77,21 @@ __published:	// IDE-managed Components
 	TLabeledEdit *edtBetaDB;
 	TLabel *AlphaDBlabel;
 	TLabel *BetaDBlabel;
-	TPanel *PanelDB;
+	TCheckBox *CBIndVarSMS;
+	TEdit *edtGBMean;
+	TEdit *edtGBSD;
+	TEdit *edtGBScale;
+	TEdit *edtAlphaDBMean;
+	TEdit *edtAlphaDBSD;
+	TEdit *edtAlphaDBScale;
+	TEdit *edtBetaDBMean;
+	TEdit *edtBetaDBSD;
+	TEdit *edtBetaDBScale;
+	TLabeledEdit *edtDPMean;
+	TLabeledEdit *edtDPSD;
+	TLabeledEdit *edtDPScale;
+	TPanel *PanelDBIndVar;
+	TPanel *PanelDPGBIndVar;
 	void __fastcall BtnOKClick(TObject *Sender);
 	void __fastcall RGstepMClick(TObject *Sender);
 	void __fastcall CBCostsClick(TObject *Sender);
@@ -85,6 +99,7 @@ __published:	// IDE-managed Components
 	void __fastcall CBIndVarCRWClick(TObject *Sender);
 	void __fastcall BtnCancelClick(TObject *Sender);
 	void __fastcall edtGoalTypeChange(TObject *Sender);
+	void __fastcall CBIndVarSMSClick(TObject *Sender);
 //	void __fastcall CBEvolRWClick(TObject *Sender);
 private:	// User declarations
 public:		// User declarations

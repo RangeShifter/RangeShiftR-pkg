@@ -16,7 +16,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 27 December 2019 by Steve Palmer
+Last updated: 31 December 2019 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -107,11 +107,9 @@ public:
 		array3x3f	// 3 x 3 array of effective costs for neighbouring cells
 	);
 	void resetEffCosts(void); // Reset the effective cost, but not the cost, of the cell
-#if HEATMAP
 	void resetVisits(void);
 	void incrVisits(void);
 	unsigned long int getVisits(void);
-#endif // HEATMAP 
 #if RS_CONTAIN
 //	void setDamage(unsigned int);
 //	unsigned int getDamage(void);
@@ -128,9 +126,7 @@ private:
 								// gradient in K, r or extinction probability
 	float envDev;	// local environmental deviation (static, in range -1.0 to +1.0)
 	float eps;		// local environmental stochasticity (epsilon) (dynamic, from N(0,std))
-#if HEATMAP
 	unsigned long int visits; // no. of times square is visited by dispersers
-#endif // HEATMAP 
 #if RS_CONTAIN
 	DamageLocn *pDamage;	// pointer to damage location (if any)
 #endif // RS_CONTAIN 

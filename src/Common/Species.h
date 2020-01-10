@@ -16,7 +16,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 25 October 2019 by Steve Palmer
+Last updated: 31 December 2019 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -145,11 +145,11 @@ struct trfrRules {
 #else
 	bool twinKern; 
 #endif // RS_CONTAIN 
-#if EVOLSMS
+#if TEMPMORT
 	short smType;		
 #else
 	bool habMort;		
-#endif
+#endif // TEMPMORT 
 	short moveType; bool costMap;
 	short movtTrait[2];
 };
@@ -178,12 +178,12 @@ struct trfrKernParams {
 	double dist2Mean; double dist2SD; double dist2Scale;
 	double PKern1Mean; double PKern1SD; double PKern1Scale;
 };
-#if EVOLSMS
 struct trfrSMSParams {
 	double dpMean; double dpSD; double gbMean; double gbSD;
 	double alphaDBMean; double alphaDBSD; double betaDBMean; double betaDBSD;
 	double dpScale; double gbScale; double alphaDBScale; double betaDBScale;
 };
+#if TEMPMORT
 struct mortChange {
 	int chgyear; double gradient;
 };
@@ -194,9 +194,7 @@ struct trfrCRWParams {
 };
 struct trfrScales {
 	float dist1Scale; float dist2Scale; float	PKern1Scale;
-#if EVOLSMS
 	float dpScale; float gbScale; float alphaDBScale; float betaDBScale;
-#endif
 	float stepLScale; float rhoScale;
 };
 #if RS_CONTAIN
@@ -694,7 +692,6 @@ public:
 		short,	// stage (NB implemented for stage 0 only)
 		short		// sex
 	);
-#if EVOLSMS
 	void setSMSParams( // Set initial transfer by SMS parameter limits
 		const short,					// stage (NB implemented for stage 0 only)
 		const short,					// sex   (NB implemented for sex 0 only)
@@ -704,6 +701,7 @@ public:
 		short,	// stage (NB implemented for stage 0 only)
 		short		// sex   (NB implemented for sex 0 only)
 	);
+#if TEMPMORT
 	void clearMortalities(void);
 	void addMortChange(
 		int,		// year of change
@@ -711,7 +709,7 @@ public:
 	);
 	void updateMortality(int);
 	double getMortality(void);
-#endif
+#endif // TEMPMORT 
 	void setCRWParams( // Set initial transfer by CRW parameter limits
 		const short,					// stage (NB implemented for stage 0 only)
 		const short,					// sex   (NB implemented for sex 0 only)
@@ -977,12 +975,12 @@ private:
 #else
 	bool twinKern;
 #endif // RS_CONTAIN 
-#if EVOLSMS
+#if TEMPMORT
 	short smType;		// per-step mortality type: 0 = constant, 1 = habitat-dependent
 									// 2 = temporally variable
 #else
 	bool habMort;		// habitat-dependent mortality
-#endif
+#endif // TEMPMORT 
 	float	meanDist1[NSTAGES][NSEXES];	// mean of 1st dispersal kernel (m)
 	float	meanDist2[NSTAGES][NSEXES]; // mean of 2nd dispersal kernel (m)
 	float	probKern1[NSTAGES][NSEXES]; // probability of dispersing with the 1st kernel
@@ -1036,7 +1034,6 @@ private:
 	double *habStepMort;	// habitat-dependent per-step mortality probability
 	float stepLength;		// CRW step length (m)
 	float rho;					// CRW correlation coefficient
-#if EVOLSMS
 	double dpMean[1][NSEXES];				// mean of initial SMS directional persistence
 	double dpSD[1][NSEXES];	 				// s.d. of initial SMS directional persistence
 	double gbMean[1][NSEXES];				// mean of initial SMS goal bias
@@ -1049,11 +1046,12 @@ private:
 	float gbScale;									// scaling factor for SMS goal bias
 	float alphaDBScale;							// scaling factor for SMS dispersal bias decay rate
 	float betaDBScale;							// scaling factor for SMS dispersal bias decay infl. pt.
+#if TEMPMORT
 	// list of dynamic per-step mortality changes
 	std::vector <mortChange> mortchanges;
 	int nextChange,nextYear;
 	double currentMortality,currentGradient,nextGradient;
-#endif
+#endif // TEMPMORT 
 	double stepLgthMean[1][NSEXES];	// mean of initial step length (m)
 	double stepLgthSD[1][NSEXES];		// s.d. of initial step length (m)
 	double rhoMean[1][NSEXES];			// mean of initial correlation coefficient

@@ -17,21 +17,26 @@ extern paramSim *paramsSim;
 
 #if !CLUSTER
 // set up Mersenne Twister random generator
-#if GROUPDISP
+#if RSWIN64
 #if RSDEBUG
-int RS_random_seed = 123;
+int RS_random_seed = 666;
 tr1::mt19937 gen(RS_random_seed);
 #else
 int RS_random_seed = time(0);
 tr1::mt19937 gen(RS_random_seed);
 #endif // RSDEBUG 
 #else
+// for some unknown reason, 32-bit compile fails if RS_random_seed is passed as parameter (as above)...
 #if RSDEBUG
+int RS_random_seed = 666;
 tr1::mt19937 gen(666);
 #else
+// ...there is thus the extremely low possibiity that the value in RS_random_seed and
+// the value used to seed the random number stream may differ by 1
+int RS_random_seed = time(0);
 tr1::mt19937 gen(time(0));
 #endif // RSDEBUG 
-#endif // GROUPDISP 
+#endif // RSWIN64 
 #endif // !CLUSTER
 
 #endif // !RS_ABC
@@ -48,6 +53,9 @@ RSrandom::RSrandom(void)
 
 #if !CLUSTER
 // set up Mersenne Twister random generator
+// NB see comments above
+// presumably 32-bit compile would fail, but ABC version is likely to always be
+// compiled as a 64-bit version 
 #if RSDEBUG
 RS_random_seed = 666;
 gen = new tr1::mt19937 (RS_random_seed);
@@ -60,12 +68,10 @@ gen = new tr1::mt19937 (RS_random_seed);
 
 #else
 
-#if GROUPDISP || RS_ABC
 #if RSDEBUG
 DEBUGLOG << "RSrandom::RSrandom(): RS_random_seed=" << RS_random_seed
 	<< endl;
 #endif // RSDEBUG 
-#endif // GROUPDISP || RS_ABC
 
 #endif // RS_ABC 
 

@@ -17,7 +17,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi, University of Aberdeen
 
-Last updated: 4 November 2016 by Steve Palmer
+Last updated: 6 January 2020 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -54,11 +54,7 @@ vector<land>& fractal_landscape(
 );
 bool compare(const land&, const land&);
 
-#if RSRANDOM
 extern RSrandom *pRandom;
-#else
-extern StochasticLib1 *pRandom;
-#endif
 #if RSDEBUG
 extern void DebugGUI(string);
 #endif

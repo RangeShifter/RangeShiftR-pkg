@@ -34,10 +34,10 @@ trfrRules trfr = pSpecies->getTrfr();
 #endif
 
 if (ppLand.generated) { // importing cost map is not permitted
-	CBCosts->Enabled = false; CBCosts->Visible = false; CBCosts->Checked = false;
+	CBCosts->Enabled = false; CBCosts->Checked = false;
 }
 else {
-	CBCosts->Enabled = true; CBCosts->Visible = true; 
+	CBCosts->Enabled = true;
 	if (!costsSet) { // any previous cost map may be invalid
 		trfr.costMap = false;
 		pSpecies->setTrfr(trfr);
@@ -50,18 +50,27 @@ if (trfr.moveType == 1) {
 	RGMoveModel->ItemIndex = 0; // SMS
 	trfrSMSTraits sms = pSpecies->getSMSTraits();
 	if (sms.goalType == 2) { // dispersal bias
-		PanelDB->Visible = true; PanelDB->Enabled = true;
+		edtAlphaDB->Enabled = true; edtBetaDB->Enabled = true;
 	}
 	else {
-		PanelDB->Visible = false; PanelDB->Enabled = false;
+		edtAlphaDB->Enabled = false; edtBetaDB->Enabled = false;
 	}
 }
 else RGMoveModel->ItemIndex = 1; // CRW
 
-RGstepM->Enabled = true;
+RGstepM->Enabled = true; 
+#if TEMPMORT              
+if (trfr.smType == 1) RGstepM->ItemIndex = 1; // habitat-dependent mortality
+#else
 if (trfr.habMort) RGstepM->ItemIndex = 1; // habitat-dependent mortality
+#endif // TEMPMORT
 else RGstepM->ItemIndex = 0; // constant mortality
-if (trfr.moveType == 2 && !trfr.habMort) {
+#if TEMPMORT              
+if (trfr.moveType == 2 && !trfr.smType == 1)
+#else
+if (trfr.moveType == 2 && !trfr.habMort) 
+#endif // TEMPMORT
+{
 	// CRW and constant per step mortality - do not show costs/mortality matrix
 	PanelHab->Enabled = false;   PanelHab->Visible = false;
 }
@@ -187,17 +196,13 @@ case 0: // SMS
 	PanelHab->Enabled = true; PanelHab->Visible = true;
 	PanelSMS->Enabled = true; PanelSMS->Visible = true;
 	PanelRW->Enabled = false; PanelRW->Visible = false;
-	if (ppLand.generated) {
-		CBCosts->Enabled = false; CBCosts->Visible = false; CBCosts->Checked = false;		
-	}
-	else {
-		CBCosts->Enabled = true; CBCosts->Visible = true;		
-	}
+	CBCosts->Enabled = true; CBCosts->Visible = true;
+//	CBCosts->Checked = false;
 	if (StrToInt(edtGoalType->Text) == 2) { // dispersal bias
-		PanelDB->Visible = true; PanelDB->Enabled = true;
+		edtAlphaDB->Enabled = true; edtBetaDB->Enabled = true;
 	}
 	else {
-		PanelDB->Visible = false; PanelDB->Enabled = false;
+		edtAlphaDB->Enabled = false; edtBetaDB->Enabled = false;
 	}
 
 	if (RGstepM->ItemIndex == 0) { // constant per-step mortality
@@ -288,10 +293,46 @@ setHabTable();
 void __fastcall TfrmMove::edtGoalTypeChange(TObject *Sender)
 {
 if (StrToInt(edtGoalType->Text) == 2) { // dispersal bias
-	PanelDB->Visible = true; PanelDB->Enabled = true;
+	if (CBIndVarSMS->Checked) {
+		PanelDBIndVar->Enabled = true; PanelDBIndVar->Visible = true;
+		edtAlphaDB->Enabled = false; edtBetaDB->Enabled = false;
+	}
+	else {
+		PanelDBIndVar->Enabled = false; PanelDBIndVar->Visible = false;
+		edtAlphaDB->Enabled = true; edtBetaDB->Enabled = true;
+	}
 }
 else {
-	PanelDB->Visible = false; PanelDB->Enabled = false;
+	PanelDBIndVar->Enabled = false; PanelDBIndVar->Visible = false;
+	edtAlphaDB->Enabled = false; edtBetaDB->Enabled = false;
+}
+}
+
+//---------------------------------------------------------------------------
+void __fastcall TfrmMove::CBIndVarSMSClick(TObject *Sender)
+{
+if (CBIndVarSMS->Checked) {
+	edtDP->Enabled = false; edtGoalBias->Enabled = false;
+	edtAlphaDB->Enabled = false; edtBetaDB->Enabled = false;
+	PanelDPGBIndVar->Enabled = true; PanelDPGBIndVar->Visible = true;
+	if (StrToInt(edtGoalType->Text) == 2) { // dispersal bias
+		PanelDBIndVar->Enabled = true; PanelDBIndVar->Visible = true;
+	}
+	else {
+		PanelDBIndVar->Enabled = false; PanelDBIndVar->Visible = false;
+	}
+}
+else {
+	edtDP->Enabled = true; edtGoalBias->Enabled = true;
+	edtAlphaDB->Enabled = true; edtBetaDB->Enabled = true;
+	PanelDPGBIndVar->Enabled = false; PanelDPGBIndVar->Visible = false;
+	PanelDBIndVar->Enabled = false;   PanelDBIndVar->Visible = false;
+	if (StrToInt(edtGoalType->Text) == 2) { // dispersal bias
+		edtAlphaDB->Enabled = true; edtBetaDB->Enabled = true;
+	}
+	else {
+		edtAlphaDB->Enabled = false; edtBetaDB->Enabled = false;
+	}
 }
 }
 
@@ -366,12 +407,17 @@ Cell *pCell;
 landParams ppLand = pLandscape->getLandParams();
 trfrRules trfr = pSpecies->getTrfr();
 trfrMovtTraits move = pSpecies->getMovtTraits();
-trfrCRWParams mparams;
+trfrSMSParams smsparams;
+trfrCRWParams crwparams;
 movtModelOK = false;
 bool costsEntered = false;
 float tttt0,tttt1;
 
 string msg;
+string msgdp = "Directional persistence ";
+string msggb = "Goal bias ";
+string msgalpha = "Alpha DB ";
+string msgbeta = "Beta DB ";
 string msgsteplgh = "Step length ";
 string msgrho = "Step correlation ";
 string msgmean = "mean ";
@@ -445,7 +491,7 @@ if (trfr.moveType == 1) { // SMS
 			move.alphaDB = StrToFloat(edtAlphaDB->Text);
 		}
 		else {
-			msg = "Alpha DB " + msggt0;
+			msg = msgalpha + msggt0;
 			MessageDlg(msg.c_str(),mtError,TMsgDlgButtons() << mbOK,0);
 			return;
 		}
@@ -453,16 +499,132 @@ if (trfr.moveType == 1) { // SMS
 			move.betaDB = StrToInt(edtBetaDB->Text);
 		}
 		else {
-			msg = "Beta DB " + msggt0;
+			msg = msgbeta + msggt0;
 			MessageDlg(msg.c_str(),mtError,TMsgDlgButtons() << mbOK,0);
 			return;
 		}
 	}
+	if (CBIndVarSMS->Checked) {
+		if (StrToFloat(edtDPMean->Text) < 1.0) {
+			msg = msgdp + msgmean + msgnotlt + "1.0";
+			MessageDlg(msg.c_str(),mtError,TMsgDlgButtons() << mbOK,0);
+			return;
+		}
+		tttt0 = StrToFloat(edtDPSD->Text);
+		if (tttt0 <= 0.0) {
+			msg = msgdp + msgsd + msggt0;
+			MessageDlg(msg.c_str(),mtError,TMsgDlgButtons() << mbOK,0);
+			return;
+		}
+		tttt1 = StrToFloat(edtDPScale->Text);
+		if (tttt1 <= 0.0) {
+			msg = msgdp + msgscale + msggt0;
+			MessageDlg(msg.c_str(),mtError,TMsgDlgButtons() << mbOK,0);
+			return;
+		}
+		if (tttt1 < tttt0) {
+			msg = msgdp + msgscale + msgnotlt + msgsd;
+			MessageDlg(msg.c_str(),mtError,TMsgDlgButtons() << mbOK,0);
+			return;
+		}
+		if (StrToFloat(edtGBMean->Text) < 1.0) {
+			msg = msggb + msgmean + msgnotlt + "1.0";
+			MessageDlg(msg.c_str(),mtError,TMsgDlgButtons() << mbOK,0);
+			return;
+		}
+		tttt0 = StrToFloat(edtGBSD->Text);
+		if (tttt0 <= 0.0) {
+			msg = msggb + msgsd + msggt0;
+			MessageDlg(msg.c_str(),mtError,TMsgDlgButtons() << mbOK,0);
+			return;
+		}
+		tttt1 = StrToFloat(edtGBScale->Text);
+		if (tttt1 <= 0.0) {
+			msg = msggb + msgscale + msggt0;
+			MessageDlg(msg.c_str(),mtError,TMsgDlgButtons() << mbOK,0);
+			return;
+		}
+		if (tttt1 < tttt0) {
+			msg = msggb + msgscale + msgnotlt + msgsd;
+			MessageDlg(msg.c_str(),mtError,TMsgDlgButtons() << mbOK,0);
+			return;
+		}
+		if (StrToInt(edtGoalType->Text) == 2) { // dispersal bias
+			if (StrToFloat(edtAlphaDBMean->Text) <= 0.0) {
+				msg = msgalpha + msgmean + msggt0;
+				MessageDlg(msg.c_str(),mtError,TMsgDlgButtons() << mbOK,0);
+				return;
+			}
+			tttt0 = StrToFloat(edtAlphaDBSD->Text);
+			if (tttt0 <= 0.0) {
+				msg = msgalpha + msgsd + msggt0;
+				MessageDlg(msg.c_str(),mtError,TMsgDlgButtons() << mbOK,0);
+				return;
+			}
+			tttt1 = StrToFloat(edtAlphaDBScale->Text);
+			if (tttt1 <= 0.0) {
+				msg = msgalpha + msgscale + msggt0;
+				MessageDlg(msg.c_str(),mtError,TMsgDlgButtons() << mbOK,0);
+				return;
+			}
+			if (tttt1 < tttt0) {
+				msg = msgalpha + msgscale + msgnotlt + msgsd;
+				MessageDlg(msg.c_str(),mtError,TMsgDlgButtons() << mbOK,0);
+				return;
+			}
+			if (StrToFloat(edtBetaDBMean->Text) < 1.0) {
+				msg = msgbeta + msgmean + msgnotlt + "1.0";
+				MessageDlg(msg.c_str(),mtError,TMsgDlgButtons() << mbOK,0);
+				return;
+			}
+			tttt0 = StrToFloat(edtBetaDBSD->Text);
+			if (tttt0 <= 0.0) {
+				msg = msgbeta + msgsd + msggt0;
+				MessageDlg(msg.c_str(),mtError,TMsgDlgButtons() << mbOK,0);
+				return;
+			}
+			tttt1 = StrToFloat(edtBetaDBScale->Text);
+			if (tttt1 <= 0.0) {
+				msg = msgbeta + msgscale + msggt0;
+				MessageDlg(msg.c_str(),mtError,TMsgDlgButtons() << mbOK,0);
+				return;
+			}
+			if (tttt1 < tttt0) {
+				msg = msgalpha + msgscale + msgnotlt + msgsd;
+				MessageDlg(msg.c_str(),mtError,TMsgDlgButtons() << mbOK,0);
+				return;
+			}
+		}
+	} // end of (CBIndVarSMS->Checked)
+	move.straigtenPath = CBstraightPath->Checked;
 //	maxcost = 0;
 	if (!ppLand.generated && ppLand.rasterType != 0) // real landscape and not habitat codes
 		trfr.costMap = true; // cost map is compulsory
 	else
 		trfr.costMap = CBCosts->Checked;
+	if (CBIndVarSMS->Checked) {
+		trfrScales scales = pSpecies->getTrfrScales();
+		trfr.indVar = true;
+		smsparams.dpMean  = StrToFloat(edtDPMean->Text);
+		smsparams.dpSD    = StrToFloat(edtDPSD->Text);
+		scales.dpScale 		= StrToFloat(edtDPScale->Text);
+		smsparams.gbMean  = StrToFloat(edtGBMean->Text);
+		smsparams.gbSD    = StrToFloat(edtGBSD->Text);
+		scales.gbScale 	  = StrToFloat(edtGBScale->Text);
+		if (StrToInt(edtGoalType->Text) == 2) { // dispersal bias
+			smsparams.alphaDBMean  = StrToFloat(edtAlphaDBMean->Text);
+			smsparams.alphaDBSD    = StrToFloat(edtAlphaDBSD->Text);
+			scales.alphaDBScale    = StrToFloat(edtAlphaDBScale->Text);
+			smsparams.betaDBMean   = StrToFloat(edtBetaDBMean->Text);
+			smsparams.betaDBSD     = StrToFloat(edtBetaDBSD->Text);
+			scales.betaDBScale     = StrToFloat(edtBetaDBScale->Text);
+		}
+		pSpecies->setSMSParams(0,0,smsparams);
+		pSpecies->setTrfrScales(scales);
+	}
+	else {
+		trfr.indVar = false;
+	}
 } // end of SMS
 else { // CRW
 	trfr.costMap = false; // cost map is not applicable
@@ -535,11 +697,11 @@ else { // CRW
 	}
 	if (CBIndVarCRW->Checked) {
 		trfr.indVar = true;
-		mparams.stepLgthMean = StrToFloat(edtStepLMean->Text);
-		mparams.stepLgthSD = StrToFloat(edtStepLSD->Text);
-		mparams.rhoMean = StrToFloat(edtRhoMean->Text);
-		mparams.rhoSD = StrToFloat(edtRhoSD->Text);
-		pSpecies->setCRWParams(0,0,mparams);
+		crwparams.stepLgthMean = StrToFloat(edtStepLMean->Text);
+		crwparams.stepLgthSD = StrToFloat(edtStepLSD->Text);
+		crwparams.rhoMean = StrToFloat(edtRhoMean->Text);
+		crwparams.rhoSD = StrToFloat(edtRhoSD->Text);
+		pSpecies->setCRWParams(0,0,crwparams);
 		trfrScales scales = pSpecies->getTrfrScales();
 		scales.stepLScale = StrToFloat(edtStepLScale->Text);
 		scales.rhoScale   = StrToFloat(edtRhoScale->Text);
@@ -551,10 +713,13 @@ else { // CRW
 		move.rho = StrToFloat(edtRho->Text);
 	}
 }
-move.straigtenPath = CBstraightPath->Checked;
 
 // record habitat-dependent step mortality indicator
+#if TEMPMORT              
+trfr.smType = RGstepM->ItemIndex;
+#else
 if (RGstepM->ItemIndex == 0) trfr.habMort = false; else trfr.habMort = true;
+#endif // TEMPMORT
 
 // Check the habitat-dependent costs / step mortality table, if activated
 bool checktable = false;
@@ -562,17 +727,31 @@ int nCols = 0;
 
 if (trfr.moveType == 1) { // SMS
 	if (trfr.costMap) {
-		if (trfr.habMort) {
+#if TEMPMORT              
+		if (trfr.smType == 1)
+#else
+		if (trfr.habMort) 
+#endif // TEMPMORT
+		{
 			checktable = true; nCols = 1;
 		}
 	}
 	else { // no cost map
 		checktable = true; nCols = 1; costsEntered = true;
+#if TEMPMORT              
+		if (trfr.smType == 1) nCols = 2;
+#else
 		if (trfr.habMort) nCols = 2;
+#endif // TEMPMORT
 	}
 }
 else { // CRW
-	if (trfr.habMort) {
+#if TEMPMORT              
+	if (trfr.smType == 1) 
+#else
+	if (trfr.habMort)
+#endif // TEMPMORT 
+	{
 		checktable = true; nCols = 1;
 	}
 }

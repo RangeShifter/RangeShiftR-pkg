@@ -15,11 +15,7 @@ Landscape *pLandscape;  		// pointer to landscape
 Species *pSpecies;					// pointer to species
 Community *pComm;						// pointer to community
 
-#if RSRANDOM
 RSrandom *pRandom;
-#else
-StochasticLib1 *pRandom;
-#endif
 
 #if RSDEBUG
 ofstream DEBUGLOG;
@@ -40,19 +36,12 @@ paramsSim = new paramSim;
 
 #if RSWIN64
 Caption = "RangeShifter v2.0  -  64 bit implementation";
+#else
+Caption = "RangeShifter v2.0  -  32 bit implementation";
 #endif
 
 // set up random number stream
-#if RSRANDOM
 pRandom = new RSrandom();
-#else
-#if RSDEBUG
-int seed = 111;    		// fixed seed for debugging
-#else
-int seed = time(0);  // random seed
-#endif
-pRandom = new StochasticLib1(seed);
-#endif
 
 //MemoLine(("TfrmMain::TfrmMain(): frmGenerateLand = "
 //	+ Int2Str((int)frmGenerateLand)).c_str());
@@ -2076,6 +2065,78 @@ void Landscape::drawGlobalStoch(int nyears){
 for (int i = 0; i < nyears; i++){
 	frmMain->EnvNoise->AddXY(i,epsGlobal[i],"");
 }
+}
+
+//---------------------------------------------------------------------------
+
+// Save SMS path visits map to .bmp file
+void Landscape::saveVisits(int rep, int landNr)
+{
+
+int rs,gs;
+int nFactor;
+unsigned long int visits,maxvisits;
+string mapName;
+simParams sim = paramsSim->getSim();
+
+// find max no of visits to scale colour ramp;
+maxvisits = 0;
+for (int y = dimY-1; y >= 0; y--) {
+	for (int x = 0; x < dimX; x++) {
+		if (cells[y][x] != 0) { // not a no-data cell
+			visits = cells[y][x]->getVisits();
+			if (visits > maxvisits) maxvisits = visits;
+		}
+	}
+}
+if (maxvisits < 1) return;
+
+// set up new bitmap for the map
+Graphics::TBitmap *mapVisits = new Graphics::TBitmap();
+TCanvas *canvasVisits = mapVisits->Canvas;
+mapVisits->Height = bmpLand->Height;
+mapVisits->Width  = bmpLand->Width;
+mapVisits->Canvas->CopyRect(Rect(0,0,mapVisits->Width,mapVisits->Height),
+	bmpLand->Canvas,Rect(0,0,bmpLand->Width,bmpLand->Height));
+
+// draw visits on red-blue colour ramp
+for (int y = dimY-1; y >= 0; y--) {
+	for (int x = 0; x < dimX; x++) {
+		if (cells[y][x] != 0) { // not a no-data cell
+			visits = cells[y][x]->getVisits();
+			nFactor = 100 + (int) (visits * 280.0 / maxvisits);
+			if (visits > 0.0) {
+				if (nFactor <= 256) { rs = nFactor; gs = 0; } // red increasing, green 0
+				else {
+					if (nFactor <= 380) {
+						rs = 255; gs = nFactor - 255; // red 255, green increasing until 380
+					}
+					else { rs = 255; gs = 175; }
+				}
+				canvasVisits->Brush->Color=(TColor)RGB(rs,gs,0);
+				canvasVisits->FillRect(Rect((int)(x*pix),(int)((dimY-1-y)*pix),
+					(int)((x+1)*pix),(int)((dimY-y)*pix)));
+			}
+		}
+	}
+}
+
+if (sim.batchMode) {
+	mapName = paramsSim->getDir(3)
+		+ "Batch" + Int2Str(sim.batchNum) + "_"
+		+ "Sim" + Int2Str(sim.simulation)
+		+ "_land" + Int2Str(landNr) + "_rep" + Int2Str(rep)
+		+ "_Visits.bmp";
+}
+else {
+	mapName = paramsSim->getDir(3)
+		+ "Sim" + Int2Str(sim.simulation)
+		+ "_land" + Int2Str(landNr) + "_rep" + Int2Str(rep)
+		+ "_Visits.bmp";
+}
+mapVisits->SaveToFile(mapName.c_str());
+delete mapVisits;
+
 }
 
 //---------------------------------------------------------------------------

@@ -43,7 +43,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 27 December 2019 by Steve Palmer
+Last updated: 6 January 2020 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -551,12 +551,11 @@ public:
 		int		// no. of years
 	);
 
-#if HEATMAP
 	void resetVisits(void);
-//	void saveVisits(int,int,int);
+#if VCL
 	void saveVisits(int,int); // save SMS path visits map to .bmp file
-	void outVisits(int,int);	// save SMS path visits map to raster text file
 #endif
+	void outVisits(int,int);	// save SMS path visits map to raster text file
 
 #if RS_ABC
 // Returns connectivity (no. of successful dispersers) for given start and end patches
@@ -665,11 +664,7 @@ extern paramGrad *paramsGrad;
 extern paramStoch *paramsStoch;
 extern paramInit *paramsInit;
 extern paramSim *paramsSim;
-#if RSRANDOM
 extern RSrandom *pRandom;
-#else
-extern StochasticLib1 *pRandom;
-#endif
 
 #if RSDEBUG
 extern ofstream DEBUGLOG;

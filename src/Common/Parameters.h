@@ -19,7 +19,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 13 September 2019 by Steve Palmer
+Last updated: 6 January 2020 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -40,6 +40,7 @@ Last updated: 13 September 2019 by Steve Palmer
 using namespace std;
 
 #include "Version.h"
+#include "RSrandom.h"
 
 #define NSTAGES 10		// maximum number of stages permitted
 #define NSEXES 2			// maximum number of sexes permitted
@@ -58,12 +59,6 @@ using namespace std;
 typedef unsigned long long intptr;
 #else
 typedef unsigned int intptr;
-#endif
-
-#if RSRANDOM
-#include "RSrandom.h"
-#else
-#include "stocc.h"
 #endif
 
 const double PI = 3.141592654;
@@ -276,9 +271,7 @@ struct simParams {
 #endif // RS_CONTAIN 
 	bool saveMaps;
 	bool drawLoaded; bool saveTraitMaps;
-#if HEATMAP
 	bool saveVisits;
-#endif // HEATMAP 
 #if VIRTUALECOLOGIST
 	bool virtualEcologist;
 #endif // VIRTUALECOLOGIST 
@@ -395,9 +388,7 @@ private:
 	bool outDamage;					// produce output damage file?
 #endif // RS_CONTAIN 
 	bool saveMaps;					// save landscape/population maps?
-#if HEATMAP
 	bool saveVisits;        // save dispersal visits heat maps?
-#endif // HEATMAP 
 #if VIRTUALECOLOGIST
 	bool virtualEcologist;
 	// landscape genetics parameters

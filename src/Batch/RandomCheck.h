@@ -13,11 +13,7 @@ using namespace std;
 void randomCheck(void);
 
 extern paramSim *paramsSim;
-#if RSRANDOM
 extern RSrandom *pRandom;
-#else
-extern StochasticLib1 *pRandom;
-#endif
 
 //---------------------------------------------------------------------------
 #endif

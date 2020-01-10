@@ -24,9 +24,7 @@ habIxx.push_back(hab);
 //	+ " habIndex=" + Int2Str(habIndex)
 //).c_str());
 #endif
-#if HEATMAP
 visits = 0;
-#endif // HEATMAP 
 #if RS_CONTAIN
 pDamage = 0;
 #endif // RS_CONTAIN
@@ -40,9 +38,7 @@ pPatch = patch;
 envVal = 1.0; // default - no effect of any gradient
 envDev = eps = 0.0;
 habitats.push_back(hab);
-#if HEATMAP
 visits = 0;
-#endif // HEATMAP 
 #if RS_CONTAIN
 pDamage = 0;
 #endif // RS_CONTAIN
@@ -171,7 +167,7 @@ smsData->cost = c;
 
 // Reset the cost and the effective cost of the cell
 void Cell::resetCost(void) {
-if (smsData != 0) { this->resetEffCosts(); delete smsData; }
+if (smsData != 0) { resetEffCosts(); delete smsData; }
 smsData = 0;
 }
 
@@ -204,13 +200,9 @@ if (smsData != 0) {
 }
 }
 
-#if HEATMAP
-
 void Cell::resetVisits(void) { visits = 0; }
 void Cell::incrVisits(void) { visits++; }
 unsigned long int Cell::getVisits(void) { return visits; }
-
-#endif // HEATMAP 
 
 #if RS_CONTAIN
 

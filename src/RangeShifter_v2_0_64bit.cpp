@@ -8,19 +8,19 @@ USEFORM("VCL\FormMain.cpp", frmMain);
 USEFORM("VCL\FormLand.cpp", frmLand);
 USEFORM("VCL\FormSeeding.cpp", frmSeeding);
 USEFORM("VCL\FormMove.cpp", frmMove);
-USEFORM("VCL\FormDynLand.cpp", frmDynLand);
-USEFORM("VCL\FormDensity.cpp", frmDensity);
 USEFORM("VCL\FormGenetics.cpp", frmGenetics);
+USEFORM("VCL\FormDensity.cpp", frmDensity);
+USEFORM("VCL\FormArtificialLand.cpp", frmGenerateLand);
 USEFORM("VCL\FormEnvGradient.cpp", frmEnvGradient);
-USEFORM("VCL\FormSim.cpp", frmSim);
+USEFORM("VCL\FormDynLand.cpp", frmDynLand);
 USEFORM("VCL\FormVisualTraits1.cpp", frmVisualTraits1);
 USEFORM("VCL\FormVisualTraits0.cpp", frmVisualTraits0);
 USEFORM("VCL\FormVisualTraits2.cpp", frmVisualTraits2);
-USEFORM("VCL\FormVisualCost.cpp", frmVisualCost);
-USEFORM("VCL\FormSpecies.cpp", frmSpecies);
 USEFORM("VCL\FormVisualPatch.cpp", frmVisualPatch);
+USEFORM("VCL\FormSpecies.cpp", frmSpecies);
+USEFORM("VCL\FormSim.cpp", frmSim);
 USEFORM("VCL\FormVisualGrad.cpp", frmVisualGrad);
-USEFORM("VCL\FormArtificialLand.cpp", frmGenerateLand);
+USEFORM("VCL\FormVisualCost.cpp", frmVisualCost);
 //---------------------------------------------------------------------------
 int WINAPI _tWinMain(HINSTANCE, HINSTANCE, LPTSTR, int)
 {

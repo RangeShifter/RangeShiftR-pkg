@@ -1688,12 +1688,10 @@ if (emig.indVar) {
 }
 if (trfr.indVar) {
 	if (trfr.moveModel) {
-#if EVOLSMS
 		if (trfr.moveType == 1) {
 			outtraits << "\tmeanDP\tstdDP\tmeanGB\tstdGB";
 			outtraits << "\tmeanAlphaDB\tstdAlphaDB\tmeanBetaDB\tstdBetaDB";
 		}
-#endif
 		if (trfr.moveType == 2) {
 			outtraits << "\tmeanStepLength\tstdStepLength\tmeanRho\tstdRho";
 		}
@@ -1755,12 +1753,10 @@ for (int i = 0; i < NSEXES; i++) {
 	ts.sumAlpha[i] = ts.ssqAlpha[i] = 0.0; ts.sumBeta[i] = ts.ssqBeta[i] = 0.0;
 	ts.sumDist1[i] = ts.ssqDist1[i] = 0.0; ts.sumDist2[i] = ts.ssqDist2[i] = 0.0;
 	ts.sumProp1[i] = ts.ssqProp1[i] = 0.0;
-#if EVOLSMS
 	ts.sumDP[i] = ts.ssqDP[i] = 0.0;
 	ts.sumGB[i] = ts.ssqGB[i] = 0.0;
 	ts.sumAlphaDB[i] = ts.ssqAlphaDB[i] = 0.0;
 	ts.sumBetaDB[i]  = ts.ssqBetaDB[i]  = 0.0;
-#endif
 	ts.sumStepL[i] = ts.ssqStepL[i] = 0.0; ts.sumRho[i] = ts.ssqRho[i] = 0.0;
 	ts.sumS0[i] = ts.ssqS0[i] = 0.0;
 	ts.sumAlphaS[i] = ts.ssqAlphaS[i] = 0.0; ts.sumBetaS[i] = ts.ssqBetaS[i] = 0.0;
@@ -1935,17 +1931,13 @@ for (int i = 0; i < npops; i++) { // all populations
 			}
 			double mnDist1[2],mnDist2[2],mnProp1[2],mnStepL[2],mnRho[2];
 			double sdDist1[2],sdDist2[2],sdProp1[2],sdStepL[2],sdRho[2];
-#if EVOLSMS
 			double mnDP[2],mnGB[2],mnAlphaDB[2],mnBetaDB[2];
 			double sdDP[2],sdGB[2],sdAlphaDB[2],sdBetaDB[2];
-#endif
 			for (int g = 0; g < ngenes; g++) {
 				mnDist1[g] = mnDist2[g] = mnProp1[g] = mnStepL[g] = mnRho[g] = 0.0;
 				sdDist1[g] = sdDist2[g] = sdProp1[g] = sdStepL[g] = sdRho[g] = 0.0;
-#if EVOLSMS
 				mnDP[g] = mnGB[g] = mnAlphaDB[g] = mnBetaDB[g] = 0.0;
 				sdDP[g] = sdGB[g] = sdAlphaDB[g] = sdBetaDB[g] = 0.0;
-#endif
 				// individuals may have been counted by sex if there was
 				// sex dependency in another dispersal phase
 				if (ngenes == 2) popsize = poptraits.ninds[g];
@@ -1956,12 +1948,10 @@ for (int i = 0; i < npops; i++) { // all populations
 					mnProp1[g] = poptraits.sumProp1[g] / (double)popsize;
 					mnStepL[g] = poptraits.sumStepL[g] / (double)popsize;
 					mnRho[g] =   poptraits.sumRho[g]   / (double)popsize;
-#if EVOLSMS
 					mnDP[g] = poptraits.sumDP[g] / (double)popsize;
 					mnGB[g] = poptraits.sumGB[g] / (double)popsize;
 					mnAlphaDB[g] = poptraits.sumAlphaDB[g] / (double)popsize;
 					mnBetaDB[g]  = poptraits.sumBetaDB[g]  / (double)popsize;
-#endif
 					if (popsize > 1) {
 						sdDist1[g] = poptraits.ssqDist1[g]/(double)popsize	- mnDist1[g]*mnDist1[g];
 						if (sdDist1[g] > 0.0) sdDist1[g] = sqrt(sdDist1[g]); else sdDist1[g] = 0.0;
@@ -1973,7 +1963,6 @@ for (int i = 0; i < npops; i++) { // all populations
 						if (sdStepL[g] > 0.0) sdStepL[g] = sqrt(sdStepL[g]); else sdStepL[g] = 0.0;
 						sdRho[g] = poptraits.ssqRho[g]/(double)popsize	- mnRho[g]*mnRho[g];
 						if (sdRho[g] > 0.0) sdRho[g] = sqrt(sdRho[g]); else sdRho[g] = 0.0;
-#if EVOLSMS
 						sdDP[g] = poptraits.ssqDP[g]/(double)popsize	- mnDP[g]*mnDP[g];
 						if (sdDP[g] > 0.0) sdDP[g] = sqrt(sdDP[g]); else sdDP[g] = 0.0;
 						sdGB[g] = poptraits.ssqGB[g]/(double)popsize	- mnGB[g]*mnGB[g];
@@ -1982,20 +1971,17 @@ for (int i = 0; i < npops; i++) { // all populations
 						if (sdAlphaDB[g] > 0.0) sdAlphaDB[g] = sqrt(sdAlphaDB[g]); else sdAlphaDB[g] = 0.0;
 						sdBetaDB[g]  = poptraits.ssqBetaDB[g]/(double)popsize	- mnBetaDB[g]*mnBetaDB[g];
 						if (sdBetaDB[g] > 0.0) sdBetaDB[g] = sqrt(sdBetaDB[g]); else sdBetaDB[g] = 0.0;
-#endif
 					}
 				}
 			}
 			if (writefile) {
 				if (trfr.moveModel) {
-#if EVOLSMS
 					if (trfr.moveType == 1) {
 						outtraits << "\t" << mnDP[0] << "\t" << sdDP[0];
 						outtraits << "\t" << mnGB[0] << "\t" << sdGB[0];
 						outtraits << "\t" << mnAlphaDB[0] << "\t" << sdAlphaDB[0];
 						outtraits << "\t" << mnBetaDB[0] << "\t" << sdBetaDB[0];
 					}
-#endif
 					if (trfr.moveType == 2) {
 						outtraits << "\t" << mnStepL[0] << "\t" << sdStepL[0];
 						outtraits << "\t" << mnRho[0] << "\t" << sdRho[0];
@@ -2034,7 +2020,6 @@ for (int i = 0; i < npops; i++) { // all populations
 #if VCL
 			if (v.viewTraits && !commlevel) {
 				if (trfr.moveModel) {
-#if EVOLSMS
 					if (trfr.moveType == 1) {
 						trfrSMSParams slim0 = pSpecies->getSMSParams(0,0);
 						double min,max;
@@ -2062,7 +2047,6 @@ for (int i = 0; i < npops; i++) { // all populations
 							pPatch->drawCells(tcanv.pcanvas[ixt++],p.gpix,land.dimY,colour);
 						}
 					}
-#endif // EVOLSMS
 					if (trfr.moveType == 2) {
 						trfrCRWParams clim0 = pSpecies->getCRWParams(0,0);
 						double min,max;
@@ -2266,12 +2250,10 @@ for (int i = 0; i < npops; i++) { // all populations
 			ts.sumDist1[s]  += poptraits.sumDist1[s];  ts.ssqDist1[s]  += poptraits.ssqDist1[s];
 			ts.sumDist2[s]  += poptraits.sumDist2[s];  ts.ssqDist2[s]  += poptraits.ssqDist2[s];
 			ts.sumProp1[s]  += poptraits.sumProp1[s];  ts.ssqProp1[s]  += poptraits.ssqProp1[s];
-#if EVOLSMS
 			ts.sumDP[s]     += poptraits.sumDP[s];     ts.ssqDP[s]     += poptraits.ssqDP[s];
 			ts.sumGB[s]     += poptraits.sumGB[s];     ts.ssqGB[s]     += poptraits.ssqGB[s];
 			ts.sumAlphaDB[s] += poptraits.sumAlphaDB[s]; ts.ssqAlphaDB[s] += poptraits.ssqAlphaDB[s];
 			ts.sumBetaDB[s]  += poptraits.sumBetaDB[s];  ts.ssqBetaDB[s]  += poptraits.ssqBetaDB[s];
-#endif
 			ts.sumStepL[s]  += poptraits.sumStepL[s];  ts.ssqStepL[s]  += poptraits.ssqStepL[s];
 			ts.sumRho[s]    += poptraits.sumRho[s];    ts.ssqRho[s]    += poptraits.ssqRho[s];
 			ts.sumS0[s]     += poptraits.sumS0[s];     ts.ssqS0[s]     += poptraits.ssqS0[s];

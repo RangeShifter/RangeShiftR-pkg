@@ -2,7 +2,7 @@ object frmSim: TfrmSim
   Left = 51
   Top = 56
   Width = 777
-  Height = 688
+  Height = 704
   VertScrollBar.ButtonSize = 10
   VertScrollBar.Margin = 5
   VertScrollBar.Tracking = True
@@ -65,12 +65,12 @@ object frmSim: TfrmSim
     Left = 10
     Top = 268
     Width = 740
-    Height = 344
+    Height = 354
     BevelInner = bvLowered
     TabOrder = 5
     object RGMap: TRadioGroup
       Left = 10
-      Top = 270
+      Top = 280
       Width = 85
       Height = 72
       Caption = 'Save Maps'
@@ -89,7 +89,7 @@ object frmSim: TfrmSim
     end
     object PanelMaps: TPanel
       Left = 100
-      Top = 270
+      Top = 280
       Width = 214
       Height = 74
       BevelEdges = []
@@ -144,7 +144,7 @@ object frmSim: TfrmSim
       Left = 10
       Top = 9
       Width = 500
-      Height = 255
+      Height = 265
       Caption = 'Outputs'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
@@ -252,6 +252,21 @@ object frmSim: TfrmSim
         Enabled = False
         TabOrder = 5
         OnClick = CBoutConnectClick
+      end
+      object CBSMSheatmap: TCheckBox
+        Left = 16
+        Top = 235
+        Width = 111
+        Height = 17
+        Caption = 'SMS heat map'
+        Enabled = False
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -13
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        ParentFont = False
+        TabOrder = 24
       end
       object edtFreqRange: TEdit
         Left = 400
@@ -608,7 +623,7 @@ object frmSim: TfrmSim
     end
     object RGTraitsMap: TRadioGroup
       Left = 320
-      Top = 270
+      Top = 280
       Width = 117
       Height = 72
       Caption = 'Save Traits Maps'
@@ -650,7 +665,7 @@ object frmSim: TfrmSim
     end
     object edtTraitsMap_Int: TLabeledEdit
       Left = 463
-      Top = 315
+      Top = 325
       Width = 47
       Height = 24
       Alignment = taRightJustify
@@ -700,7 +715,7 @@ object frmSim: TfrmSim
   end
   object BtnOK: TButton
     Left = 489
-    Top = 617
+    Top = 627
     Width = 89
     Height = 25
     Caption = 'OK'
@@ -954,7 +969,7 @@ object frmSim: TfrmSim
   end
   object BtnCancel: TButton
     Left = 584
-    Top = 617
+    Top = 627
     Width = 89
     Height = 25
     Cancel = True

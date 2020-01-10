@@ -1,7 +1,7 @@
 object frmMove: TfrmMove
   Left = 0
   Top = 0
-  Width = 675
+  Width = 895
   Height = 637
   AutoScroll = True
   Caption = 'Movement Processes '
@@ -15,7 +15,7 @@ object frmMove: TfrmMove
   PixelsPerInch = 96
   TextHeight = 16
   object BtnOK: TButton
-    Left = 449
+    Left = 680
     Top = 560
     Width = 89
     Height = 25
@@ -26,7 +26,7 @@ object frmMove: TfrmMove
     OnClick = BtnOKClick
   end
   object BtnCancel: TButton
-    Left = 544
+    Left = 780
     Top = 560
     Width = 89
     Height = 25
@@ -37,7 +37,7 @@ object frmMove: TfrmMove
     OnClick = BtnCancelClick
   end
   object PanelRW: TPanel
-    Left = 294
+    Left = 530
     Top = 328
     Width = 338
     Height = 218
@@ -278,7 +278,7 @@ object frmMove: TfrmMove
     end
   end
   object PanelHab: TPanel
-    Left = 296
+    Left = 530
     Top = 16
     Width = 337
     Height = 306
@@ -407,7 +407,7 @@ object frmMove: TfrmMove
   object PanelSMS: TPanel
     Left = 8
     Top = 183
-    Width = 280
+    Width = 505
     Height = 363
     Alignment = taLeftJustify
     BevelInner = bvLowered
@@ -498,6 +498,32 @@ object frmMove: TfrmMove
       Font.Style = []
       ParentFont = False
     end
+    object AlphaDBlabel: TLabel
+      Left = 205
+      Top = 231
+      Width = 35
+      Height = 16
+      Caption = '> 0.0 '
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -13
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+    end
+    object BetaDBlabel: TLabel
+      Left = 205
+      Top = 261
+      Width = 68
+      Height = 16
+      Caption = '>= 1 (cells)'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -13
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+    end
     object edtPRMethod: TLabeledEdit
       Left = 149
       Top = 78
@@ -545,7 +571,7 @@ object frmMove: TfrmMove
       Font.Style = []
       LabelPosition = lpLeft
       ParentFont = False
-      TabOrder = 1
+      TabOrder = 11
       Text = '1'
     end
     object edtDP: TLabeledEdit
@@ -595,7 +621,7 @@ object frmMove: TfrmMove
       Font.Style = []
       LabelPosition = lpLeft
       ParentFont = False
-      TabOrder = 0
+      TabOrder = 12
       Text = '0.0'
     end
     object Memo2: TMemo
@@ -695,73 +721,234 @@ object frmMove: TfrmMove
       Text = '0'
       OnChange = edtGoalTypeChange
     end
-    object PanelDB: TPanel
-      Left = 80
+    object edtAlphaDB: TLabeledEdit
+      Left = 149
+      Top = 228
+      Width = 50
+      Height = 24
+      Alignment = taRightJustify
+      EditLabel.Width = 55
+      EditLabel.Height = 16
+      EditLabel.Caption = 'Alpha DB '
+      EditLabel.Font.Charset = DEFAULT_CHARSET
+      EditLabel.Font.Color = clWindowText
+      EditLabel.Font.Height = -13
+      EditLabel.Font.Name = 'Tahoma'
+      EditLabel.Font.Style = []
+      EditLabel.ParentFont = False
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -13
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      LabelPosition = lpLeft
+      ParentFont = False
+      TabOrder = 0
+      Text = '1.0'
+    end
+    object edtBetaDB: TLabeledEdit
+      Left = 149
+      Top = 258
+      Width = 50
+      Height = 24
+      Alignment = taRightJustify
+      EditLabel.Width = 48
+      EditLabel.Height = 16
+      EditLabel.Caption = 'Beta DB '
+      EditLabel.Font.Charset = DEFAULT_CHARSET
+      EditLabel.Font.Color = clWindowText
+      EditLabel.Font.Height = -13
+      EditLabel.Font.Name = 'Tahoma'
+      EditLabel.Font.Style = []
+      EditLabel.ParentFont = False
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -13
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      LabelPosition = lpLeft
+      ParentFont = False
+      TabOrder = 1
+      Text = '100000'
+    end
+    object CBIndVarSMS: TCheckBox
+      Left = 300
+      Top = 22
+      Width = 161
+      Height = 17
+      Caption = 'Individual variability'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -13
+      Font.Name = 'Tahoma'
+      Font.Style = [fsBold]
+      ParentFont = False
+      TabOrder = 9
+      OnClick = CBIndVarSMSClick
+    end
+    object PanelDBIndVar: TPanel
+      Left = 290
       Top = 224
       Width = 200
       Height = 70
       BevelOuter = bvNone
-      TabOrder = 8
-      object AlphaDBlabel: TLabel
-        Left = 125
-        Top = 8
-        Width = 35
-        Height = 16
-        Caption = '> 0.0 '
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -13
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        ParentFont = False
-      end
-      object BetaDBlabel: TLabel
-        Left = 125
-        Top = 38
-        Width = 68
-        Height = 16
-        Caption = '>= 1 (cells)'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -13
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        ParentFont = False
-      end
-      object edtAlphaDB: TLabeledEdit
-        Left = 69
+      Enabled = False
+      TabOrder = 10
+      Visible = False
+      object edtAlphaDBMean: TEdit
+        Left = 10
         Top = 4
         Width = 50
         Height = 24
         Alignment = taRightJustify
-        EditLabel.Width = 55
-        EditLabel.Height = 16
-        EditLabel.Caption = 'Alpha DB '
-        EditLabel.Font.Charset = DEFAULT_CHARSET
-        EditLabel.Font.Color = clWindowText
-        EditLabel.Font.Height = -13
-        EditLabel.Font.Name = 'Tahoma'
-        EditLabel.Font.Style = []
-        EditLabel.ParentFont = False
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -13
         Font.Name = 'Tahoma'
         Font.Style = []
-        LabelPosition = lpLeft
         ParentFont = False
         TabOrder = 0
-        Text = '1.0'
+        Text = '0.0'
       end
-      object edtBetaDB: TLabeledEdit
-        Left = 69
+      object edtAlphaDBSD: TEdit
+        Left = 70
+        Top = 4
+        Width = 50
+        Height = 24
+        Alignment = taRightJustify
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -13
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        ParentFont = False
+        TabOrder = 1
+        Text = '0.0'
+      end
+      object edtAlphaDBScale: TEdit
+        Left = 130
+        Top = 4
+        Width = 50
+        Height = 24
+        Alignment = taRightJustify
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -13
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        ParentFont = False
+        TabOrder = 2
+        Text = '0.0'
+      end
+      object edtBetaDBMean: TEdit
+        Left = 10
         Top = 34
         Width = 50
         Height = 24
         Alignment = taRightJustify
-        EditLabel.Width = 48
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -13
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        ParentFont = False
+        TabOrder = 3
+        Text = '0'
+      end
+      object edtBetaDBSD: TEdit
+        Left = 70
+        Top = 34
+        Width = 50
+        Height = 24
+        Alignment = taRightJustify
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -13
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        ParentFont = False
+        TabOrder = 4
+        Text = '0'
+      end
+      object edtBetaDBScale: TEdit
+        Left = 130
+        Top = 34
+        Width = 50
+        Height = 24
+        Alignment = taRightJustify
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -13
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        ParentFont = False
+        TabOrder = 5
+        Text = '0'
+      end
+    end
+    object PanelDPGBIndVar: TPanel
+      Left = 290
+      Top = 74
+      Width = 200
+      Height = 122
+      BevelOuter = bvNone
+      Enabled = False
+      TabOrder = 8
+      Visible = False
+      object edtGBMean: TEdit
+        Left = 10
+        Top = 95
+        Width = 50
+        Height = 24
+        Alignment = taRightJustify
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -13
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        ParentFont = False
+        TabOrder = 3
+        Text = '0.0'
+      end
+      object edtGBSD: TEdit
+        Left = 70
+        Top = 95
+        Width = 50
+        Height = 24
+        Alignment = taRightJustify
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -13
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        ParentFont = False
+        TabOrder = 4
+        Text = '0.0'
+      end
+      object edtGBScale: TEdit
+        Left = 130
+        Top = 95
+        Width = 50
+        Height = 24
+        Alignment = taRightJustify
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -13
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        ParentFont = False
+        TabOrder = 5
+        Text = '0.0'
+      end
+      object edtDPMean: TLabeledEdit
+        Left = 10
+        Top = 35
+        Width = 50
+        Height = 24
+        Alignment = taRightJustify
+        EditLabel.Width = 36
         EditLabel.Height = 16
-        EditLabel.Caption = 'Beta DB '
+        EditLabel.Caption = 'Mean:'
         EditLabel.Font.Charset = DEFAULT_CHARSET
         EditLabel.Font.Color = clWindowText
         EditLabel.Font.Height = -13
@@ -773,10 +960,61 @@ object frmMove: TfrmMove
         Font.Height = -13
         Font.Name = 'Tahoma'
         Font.Style = []
-        LabelPosition = lpLeft
+        ParentFont = False
+        TabOrder = 0
+        Text = '0.0'
+      end
+      object edtDPSD: TLabeledEdit
+        Left = 70
+        Top = 35
+        Width = 50
+        Height = 24
+        Alignment = taRightJustify
+        EditLabel.Width = 28
+        EditLabel.Height = 16
+        EditLabel.Caption = 'S.d.:'
+        EditLabel.Font.Charset = DEFAULT_CHARSET
+        EditLabel.Font.Color = clWindowText
+        EditLabel.Font.Height = -13
+        EditLabel.Font.Name = 'Tahoma'
+        EditLabel.Font.Style = []
+        EditLabel.ParentFont = False
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -13
+        Font.Name = 'Tahoma'
+        Font.Style = []
         ParentFont = False
         TabOrder = 1
-        Text = '100000'
+        Text = '0.0'
+      end
+      object edtDPScale: TLabeledEdit
+        Left = 130
+        Top = 35
+        Width = 50
+        Height = 24
+        Alignment = taRightJustify
+        EditLabel.AlignWithMargins = True
+        EditLabel.Width = 45
+        EditLabel.Height = 32
+        EditLabel.BiDiMode = bdLeftToRight
+        EditLabel.Caption = 'Scaling factor:'
+        EditLabel.Font.Charset = DEFAULT_CHARSET
+        EditLabel.Font.Color = clWindowText
+        EditLabel.Font.Height = -13
+        EditLabel.Font.Name = 'Tahoma'
+        EditLabel.Font.Style = []
+        EditLabel.ParentBiDiMode = False
+        EditLabel.ParentFont = False
+        EditLabel.WordWrap = True
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -13
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        ParentFont = False
+        TabOrder = 2
+        Text = '0.0'
       end
     end
   end

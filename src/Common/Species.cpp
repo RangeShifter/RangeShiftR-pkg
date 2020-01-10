@@ -124,13 +124,13 @@ kernType = 0;
 #else
 twinKern = false;
 #endif // RS_CONTAIN 
-#if EVOLSMS
+#if TEMPMORT
 smType = 0;		
 nextChange = 0;
 currentMortality = currentGradient = nextGradient = 0.0;
 #else
 habMort = false; 
-#endif
+#endif // TEMPMORT 
 costMap = false;
 moveType = 1;
 for (int i = 0; i < NSTAGES; i++) {
@@ -144,12 +144,10 @@ for (int j = 0; j < NSEXES; j++) {
 	PKern1Mean[0][j] = 0.9; PKern1SD[0][j] = 0.01;
 	stepLgthMean[0][j] = 10.0; stepLgthSD[0][j] = 1.0;
 	rhoMean[0][j] = 0.9; rhoSD[0][j] = 0.01;
-#if EVOLSMS
 	dpMean[0][j] = 1.0; dpSD[0][j] = 0.1;
 	gbMean[0][j] = 1.0; gbSD[0][j] = 0.1;
 	alphaDBMean[0][j] = 1.0;  alphaDBSD[0][j] = 0.1;
 	betaDBMean[0][j]  = 10.0; betaDBSD[0][j]  = 1.0;
-#endif
 }
 pr = 1; prMethod = 1; memSize = 1; goalType = 0;
 dp = 1.0; gb = 1.0; alphaDB = 1.0; betaDB = 100000;
@@ -158,9 +156,7 @@ habStepMort = 0; habCost = 0;
 //costMapFile = "NULL";
 fixedMort = 0.0; mortAlpha = 0.0; mortBeta = 1.0;
 dist1Scale = dist2Scale = PKern1Scale = stepLScale = rhoScale = 0.0;
-#if EVOLSMS
 dpScale = 0.1; gbScale = 0.1; alphaDBScale = 0.1; betaDBScale  = 1.0;
-#endif
 habDimTrfr = 0;
 straigtenPath = false;
 fullKernel = false;
@@ -211,7 +207,7 @@ if (habCost != 0 || habStepMort != 0) deleteHabCostMort();
 if (nLoci != NULL) deleteLoci();
 if (traitdata != NULL) deleteTraitData();
 if (traitnames != NULL) deleteTraitNames();
-#if EVOLSMS
+#if TEMPMORT 
 mortchanges.clear();
 #endif
 #if SEASONAL
@@ -1065,12 +1061,10 @@ if (indVarEmig) {
 int movttraits = 0;
 if (indVarTrfr) {
 	if (moveModel) {
-#if EVOLSMS
 		if (moveType == 1) { // SMS
 			movttraits = 2;
 			if (goalType == 2) movttraits += 2;
 		}
-#endif
 		if (moveType == 2) movttraits = 2;
 	}
 	else {
@@ -1664,11 +1658,11 @@ if (t.kernType >= 0 && t.kernType <= 3) kernType = t.kernType;
 #else
 twinKern = t.twinKern; 
 #endif // RS_CONTAIN 
-#if EVOLSMS
+#if TEMPMORT
 if (t.smType >= 0 && t.smType <= 2) smType = t.smType;
 #else
 habMort = t.habMort;
-#endif
+#endif // TEMPMORT 
 moveType = t.moveType; costMap = t.costMap;
 //setGenome();
 }
@@ -1682,11 +1676,11 @@ t.kernType = kernType;
 #else
 t.twinKern = twinKern; 
 #endif // RS_CONTAIN 
-#if EVOLSMS
+#if TEMPMORT
 t.smType = smType;
 #else
 t.habMort = habMort;
-#endif
+#endif // TEMPMORT 
 t.moveType = moveType; t.costMap = costMap;
 t.movtTrait[0] = movtTrait[0]; t.movtTrait[1] = movtTrait[1];
 return t;
@@ -1859,7 +1853,6 @@ else {
 return k;
 }
 
-#if EVOLSMS
 void Species::setSMSParams(const short stg,const short sex,const trfrSMSParams s) {
 //if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES)
 if (stg >= 0 && stg < 1 && sex >= 0 && sex < 1) // implemented for stage 0 & sex 0 only
@@ -1899,6 +1892,8 @@ else {
 }
 return s;
 }
+
+#if TEMPMORT
 
 void Species::clearMortalities(void) {
 mortchanges.clear();
@@ -1970,7 +1965,7 @@ DEBUGLOG << "Species::updateMortality(): yr=" << yr
 
 double Species::getMortality(void) { return currentMortality; }
 
-#endif
+#endif // TEMPMORT 
 
 void Species::setCRWParams(const short stg,const short sex,const trfrCRWParams m) {
 //if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES)
@@ -2005,12 +2000,10 @@ void Species::setTrfrScales(const trfrScales s) {
 if (s.dist1Scale >= 0.0) dist1Scale = s.dist1Scale;
 if (s.dist2Scale >= 0.0) dist2Scale = s.dist2Scale;
 if (s.PKern1Scale > 0.0 && s.PKern1Scale < 1.0) PKern1Scale = s.PKern1Scale;
-#if EVOLSMS
 if (s.dpScale > 0.0) dpScale = s.dpScale;
 if (s.gbScale > 0.0) gbScale = s.gbScale;
 if (s.alphaDBScale > 0.0) alphaDBScale = s.alphaDBScale;
 if (s.betaDBScale > 0.0)  betaDBScale  = s.betaDBScale;
-#endif
 if (s.stepLScale > 0.0) stepLScale = s.stepLScale;
 if (s.rhoScale > 0.0 && s.rhoScale < 1.0) rhoScale = s.rhoScale;
 }
@@ -2018,10 +2011,8 @@ if (s.rhoScale > 0.0 && s.rhoScale < 1.0) rhoScale = s.rhoScale;
 trfrScales Species::getTrfrScales(void) {
 trfrScales s;
 s.dist1Scale = dist1Scale; s.dist2Scale = dist2Scale; s.PKern1Scale = PKern1Scale;
-#if EVOLSMS
 s.dpScale = dpScale; s.gbScale = gbScale;
 s.alphaDBScale = alphaDBScale; s.betaDBScale = betaDBScale;
-#endif
 s.stepLScale = stepLScale; s.rhoScale = rhoScale;
 return s;
 }

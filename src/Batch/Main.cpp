@@ -14,7 +14,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Author: Steve Palmer, University of Aberdeen
 
-Last updated: 13 June 2018 by Steve Palmer
+Last updated: 6 January 2020 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -77,20 +77,11 @@ paramSim *paramsSim;				// pointer to simulation parameters
 
 Species *pSpecies;  				// pointer to species
 Community *pComm;						// pointer to community
-
-#if RSRANDOM
-RSrandom *pRandom;
-#else
-StochasticLib1 *pRandom;
-#endif
+RSrandom *pRandom;          // pointer to random number routines
 
 #if RSDEBUG
 ofstream DEBUGLOG;
 ofstream MUTNLOG;
-#else
-//#if RSRANDOM
-//ofstream DEBUGLOG;
-//#endif
 #endif
 
 //---------------------------------------------------------------------------
@@ -190,20 +181,6 @@ if (errorfolder) {
 	return 666;
 }
 
-// set up random number stream
-#if RSRANDOM
-pRandom = new RSrandom();
-#else
-#if RSDEBUG
-//int32_t seed = (int32_t)111;    	// fixed seed for debugging
-int seed = 111;    		// fixed seed for debugging
-#else
-//int32_t seed = (int32_t)time(0);  // random seed
-int seed = time(0);  // random seed
-#endif
-pRandom = new StochasticLib1(seed);
-#endif
-
 #if RSDEBUG
 // set up debugging log file
 string name = paramsSim->getDir(2) + "DebugLog.txt";
@@ -220,11 +197,6 @@ if (DEBUGLOG.is_open())
 	cout << endl << "Main(): DEBUGLOG is open" << endl << endl;
 else
 	cout << endl << "Main(): DEBUGLOG is NOT open" << endl << endl;
-#else
-//#if RSRANDOM
-//string name = paramsSim->getDir(2) + "DebugLog.txt";
-//DEBUGLOG.open(name.c_str());
-//#endif
 #endif
 
 /*
@@ -343,6 +315,8 @@ else {
 #if RSDEBUG
 DEBUGLOG << "Main(): dem.repType = " << dem.repType << endl;
 #endif
+
+pRandom = new RSrandom();
 
 #if RANDOMCHECK
 randomCheck();
