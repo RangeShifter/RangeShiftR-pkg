@@ -1,3 +1,74 @@
+.gitignore
+#README.md
+
+# Hidden source
+/RangeshiftR/src/.*
+
+# Windows files
+/RangeshiftR/src/*.dll
+
+# History files
+.Rhistory
+.Rapp.history
+
+# RStudio files
+.Rproj.user/
+/RangeshiftR/.Rproj.user/
+#/RangeshiftR/RangeshiftR.Rproj
+/RangeshiftR/Read-and-delete-me
+/RangeshiftR/.Rhistory
+/RangeshiftR/.Rbuildignore
+
+# Session Data files
+.RData
+
+# User-specific files
+.Ruserdata
+
+# Example code in package build process
+*-Ex.R
+
+# Output files from R CMD build
+/*.tar.gz
+/RangeshiftR/src/*.o
+/RangeshiftR/src/RangeshiftR.so
+
+
+# Windows files
+/RangeshiftR/src/*.dll
+
+# Output files from R CMD check
+/*.Rcheck/
+
+# Output from Rcpp compile.attributes()
+/RangeshiftR/R/RcppExports.R
+/RangeshiftR/src/RcppExports.cpp
+
+# RStudio files
+.Rproj.user/
+
+# produced vignettes
+vignettes/*.html
+vignettes/*.pdf
+/RangeshiftR/man/
+
+# OAuth2 token, see https://github.com/hadley/httr/releases/tag/v0.3
+.httr-oauth
+
+# knitr and R markdown default cache directories
+/*_cache/
+/cache/
+
+# Temporary files created by R markdown
+*.utf8.md
+*.knit.md
+
+# CodeBlocks files
+RangeShiftR.cbp
+RangeShiftR.layout
+
+#-----
+
 # Embarcadero junk
 *.ilc
 *.ild
