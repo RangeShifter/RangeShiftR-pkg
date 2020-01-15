@@ -2,15 +2,17 @@
 #README.md
 
 # CodeLite
+/.build-debug/
+/Debug/
+/Release/
 .codelite/
 compile_commands.json
-compile_flags.txt
-RangeshiftR.project
-RangeshiftR.workspace
 Makefile
-RangeshiftR.mk
-RangeshiftR.txt
-
+*.txt
+*.project
+*.workspace
+*.mk
+*.txt
 
 # Hidden source
 /RangeshiftR/src/.*
@@ -25,7 +27,7 @@ RangeshiftR.txt
 # RStudio files
 .Rproj.user/
 /RangeshiftR/.Rproj.user/
-#/RangeshiftR/RangeshiftR.Rproj
+/RangeshiftR/RangeshiftR.Rproj
 /RangeshiftR/Read-and-delete-me
 /RangeshiftR/.Rhistory
 /RangeshiftR/.Rbuildignore
@@ -52,8 +54,8 @@ RangeshiftR.txt
 /*.Rcheck/
 
 # Output from Rcpp compile.attributes()
-/RangeshiftR/R/RcppExports.R
-/RangeshiftR/src/RcppExports.cpp
+#/RangeshiftR/R/RcppExports.R
+#/RangeshiftR/src/RcppExports.cpp
 
 # RStudio files
 .Rproj.user/

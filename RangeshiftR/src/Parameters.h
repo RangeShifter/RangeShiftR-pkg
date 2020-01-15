@@ -58,14 +58,20 @@ using namespace std;
 #if RSWIN64
 typedef unsigned long long intptr;
 #else
-    #if RCPP
+    #if RS_RCPP
     typedef intptr_t intptr;
     #else
     typedef unsigned int intptr;
     #endif
 #endif
 
-const double PI = 3.141592654;
+#if RS_RCPP // the R headers define PI as a macro (like this), so that the 'else' line results in an error
+    #ifndef PI
+    #define PI 3.141592653589793238462643383279502884197169399375
+    #endif
+#else
+    const double PI = 3.141592654;
+#endif
 const double SQRT2 = sqrt(2.0); // more efficient than calculating every time
 
 //---------------------------------------------------------------------------
@@ -282,6 +288,10 @@ struct simParams {
 #if PEDIGREE
 	int relMatSize;
 #endif // PEDIGREE
+#if RS_RCPP
+	bool ReturnPopRaster;
+	bool CreatePopFile;
+#endif
 };
 
 #if VIRTUALECOLOGIST
@@ -340,7 +350,11 @@ public:
 	void addSamplePatch(const unsigned int);
 	unsigned int nSamplePatches(void);
 	unsigned int getSamplePatch(unsigned int);
-#endif // VIRTUALECOLOGIST 
+#endif // VIRTUALECOLOGIST
+#if RS_RCPP
+	bool getReturnPopRaster(void);
+	bool getCreatePopFile(void);
+#endif
 
 private:
 	int batchNum;						// batch number
@@ -420,6 +434,10 @@ private:
 #if PEDIGREE
 	int relMatSize;			// size of pedigree relatedness matrix
 #endif // PEDIGREE
+#if RS_RCPP
+	bool ReturnPopRaster;
+	bool CreatePopFile;
+#endif
 	bool drawLoaded;				// draw initial distribution on landscape/population maps?
 	bool saveTraitMaps;			// save summary traits maps?
 	bool viewLand;					// view landscape map on screen?

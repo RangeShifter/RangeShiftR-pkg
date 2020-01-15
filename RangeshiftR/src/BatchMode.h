@@ -249,9 +249,9 @@ extern string patchfilename;	// see [NOT YET CODED FOR GUI] (VCL) OR Main.cpp (b
 #if TEMPMORT
 extern string mortfilename;	// see [NOT YET CODED FOR GUI] (VCL) OR Main.cpp (batch)
 #endif // TEMPMORT
-#if !CLUSTER || RCPP
+#if !CLUSTER || RS_RCPP
 extern int RS_random_seed;			// see RSrandom.cpp 
-#endif // !CLUSTER || RCPP
+#endif // !CLUSTER || RS_RCPP
 
 //---------------------------------------------------------------------------
 #endif

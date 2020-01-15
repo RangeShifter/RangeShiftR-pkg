@@ -85,7 +85,7 @@ ofstream MUTNLOG;
 #endif
 
 //---------------------------------------------------------------------------
-#if CLUSTER || RCPP
+#if CLUSTER || RS_RCPP
 int main(int argc, char* argv[])
 #else
 int _tmain(int argc, _TCHAR* argv[])
@@ -106,7 +106,7 @@ paramsSim = new paramSim;
 
 // set up working directory and control file name
 string cname;
-#if CLUSTER || RCPP
+#if CLUSTER || RS_RCPP
 if (argc > 1) {
 	// full path name of directory passed as a parameter
 	paramsSim->setDir(argv[1]);
@@ -317,7 +317,7 @@ DEBUGLOG << "Main(): dem.repType = " << dem.repType << endl;
 #endif
 
 // set up random number class
-#if RCPP
+#if RS_RCPP
 #if RSDEBUG
 pRandom = new RSrandom(666);
 #else
@@ -336,6 +336,8 @@ if (b.ok) {
 }
 #endif
 
+delete pRandom;
+
 #if RSDEBUG
 if (DEBUGLOG.is_open()) {
 	DEBUGLOG.close(); DEBUGLOG.clear();
@@ -344,6 +346,12 @@ if (MUTNLOG.is_open()) {
 	MUTNLOG.close(); MUTNLOG.clear();
 }
 #endif
+
+delete paramsGrad;
+delete paramsStoch;
+delete paramsInit;
+delete paramsSim;     
+delete pSpecies;
 
 t1 = time(0);
 cout << endl << "***** Elapsed time " << t1-t0 << " seconds" << endl << endl;

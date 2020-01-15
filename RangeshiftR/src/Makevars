@@ -1,0 +1,4 @@
+CXX_STD = CXX11
+
+## for C++ code
+# PKG_CXXFLAGS = -Wall -pedantic
