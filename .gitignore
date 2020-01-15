@@ -1,6 +1,17 @@
 .gitignore
 #README.md
 
+# CodeLite
+.codelite/
+compile_commands.json
+compile_flags.txt
+RangeshiftR.project
+RangeshiftR.workspace
+Makefile
+RangeshiftR.mk
+RangeshiftR.txt
+
+
 # Hidden source
 /RangeshiftR/src/.*
 
@@ -29,7 +40,7 @@
 *-Ex.R
 
 # Output files from R CMD build
-/*.tar.gz
+*.tar.gz
 /RangeshiftR/src/*.o
 /RangeshiftR/src/RangeshiftR.so
 
@@ -63,9 +74,7 @@ vignettes/*.pdf
 *.utf8.md
 *.knit.md
 
-# CodeBlocks files
-RangeShiftR.cbp
-RangeShiftR.layout
+
 
 #-----
 

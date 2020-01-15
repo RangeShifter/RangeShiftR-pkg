@@ -12,9 +12,9 @@ paramStoch - Environmental stochasticity parameters
 Also declares some structures and functions used throughout the program.
 
 For full details of RangeShifter, please see:
-Bocedi G., Palmer S.C.F., Pe’er G., Heikkinen R.K., Matsinos Y.G., Watts K.
+Bocedi G., Palmer S.C.F., PeÂ’er G., Heikkinen R.K., Matsinos Y.G., Watts K.
 and Travis J.M.J. (2014). RangeShifter: a platform for modelling spatial
-eco-evolutionary dynamics and species’ responses to environmental changes.
+eco-evolutionary dynamics and speciesÂ’ responses to environmental changes.
 Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
@@ -58,7 +58,11 @@ using namespace std;
 #if RSWIN64
 typedef unsigned long long intptr;
 #else
-typedef unsigned int intptr;
+    #if RCPP
+    typedef intptr_t intptr;
+    #else
+    typedef unsigned int intptr;
+    #endif
 #endif
 
 const double PI = 3.141592654;
