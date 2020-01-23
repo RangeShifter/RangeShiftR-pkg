@@ -1,0 +1,5 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^src/BatchMode\.cpp$
+^src/Main\.cpp$
+^src/BatchMode\.h$

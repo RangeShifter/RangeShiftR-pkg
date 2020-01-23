@@ -92,13 +92,13 @@
 #' are treated as philopatric recruits, and hence the kernel determines the probability of emigration. In this case, the emigration probability
 #' for all stages/sexes which potentially disperse should be set to \eqn{1.0}.
 #' @examples # stage- and sex-dependent emigration
-#' emigmat_1 <- matrix(c(0,0,1,20,.2,0,1,1,20,.1,1,0,.7,25,.5,1,1,.8,50,.5,2,0,.4,10,1,2,1,.5,20,1), byrow = T, ncol = 5)
-#' emig_1 <- Emigration(DensDep = T, StageDep = T, SexDep = T, EmigProb = emigmat_1)
+#' emigmat_1 <- matrix(c(0,0,1,20,.2,0,1,1,20,.1,1,0,.7,25,.5,1,1,.8,50,.5,2,0,.4,10,1,2,1,.5,20,1), byrow = TRUE, ncol = 5)
+#' emig_1 <- Emigration(DensDep = TRUE, StageDep = TRUE, SexDep = TRUE, EmigProb = emigmat_1)
 #' plotProbs(emig_1)
 #'
 #' # inter-individual variation
-#' emigmat_2 <- matrix(c(0,.7,.1,20,7,.2,.01,1,.9,.05,40,4,.5,.05), byrow = T, ncol = 7)
-#' emig_2 <- Emigration(DensDep = T, IndVar = T, SexDep = T, EmigProb = emigmat_2, MutationScales = c(.1,7,.05))
+#' emigmat_2 <- matrix(c(0,.7,.1,20,7,.2,.01,1,.9,.05,40,4,.5,.05), byrow = TRUE, ncol = 7)
+#' emig_2 <- Emigration(DensDep = TRUE, IndVar = TRUE, SexDep = TRUE, EmigProb = emigmat_2, MutationScales = c(.1,7,.05))
 #' plotProbs(emig_2)
 #' @references Kun and Scheuring (2006)
 #' @return a parameter object of class "EmigrationParams"
@@ -201,7 +201,7 @@ setValidity("EmigrationParams", function(object) {
         }
     }
     if (object@IndVar) {
-        if (is.na(object@MutationScales) || length(object@MutationScales)==0) {
+        if (anyNA(object@MutationScales) || (length(object@MutationScales)==0)) {
             msg <- c(msg, "MutationScales must be set!")
         }
         else{
@@ -539,15 +539,15 @@ setMethod("show", "TransferParams", function(object){
 #' Note that the total dispersal mortality experienced will be the sum of the mortalities due to the two sources identified above and,
 #' in parameterising the model, it will be important to recognize this such that dispersal mortality is not double-accounted.
 #' @examples # stage- and sex-dependent mixed kernel
-#' dists_1 <- matrix(c(0,0,1000,4500,0.92,0,1,1400,6000,0.95,1,0,700,500,0.50,1,1,500,600,0.55,2,0,100,0,1.0,2,1,100,0,1.0), byrow = T, ncol = 5)
-#' disp_1 <- DispersalKernel(Distances = dists_1, SexDep = T, StageDep = T, DoubleKernel = T, DistMort = T, Slope = 0.001, InflPoint = 4000)
+#' dists_1 <- matrix(c(0,0,1000,4500,0.92,0,1,1400,6000,0.95,1,0,700,500,0.50,1,1,500,600,0.55,2,0,100,0,1.0,2,1,100,0,1.0), byrow = TRUE, ncol = 5)
+#' disp_1 <- DispersalKernel(Distances = dists_1, SexDep = TRUE, StageDep = TRUE, DoubleKernel = TRUE, DistMort = TRUE, Slope = 0.001, InflPoint = 4000)
 #' plotProbs(disp_1, sex = 0, ymax = 0.002)
-#' plotProbs(disp_1, mortality = T)
+#' plotProbs(disp_1, mortality = TRUE)
 #'
 #' # mixed kernel with inter-individual variation
-#' dists_2 <- matrix(c(0,1000,300,2500,500,0.62,0.13,1,3400,860,8000,2800,0.72,0.12), byrow = T, ncol = 7)
-#' disp_2 <- DispersalKernel(Distances = dists_2, SexDep = T, DoubleKernel = T, MutationScales = c(900,2800,0.14), IndVar = T)
-#' plotProbs(disp_2, xmax = 10000, combinekernels = T)
+#' dists_2 <- matrix(c(0,1000,300,2500,500,0.62,0.13,1,3400,860,8000,2800,0.72,0.12), byrow = TRUE, ncol = 7)
+#' disp_2 <- DispersalKernel(Distances = dists_2, SexDep = TRUE, DoubleKernel = TRUE, MutationScales = c(900,2800,0.14), IndVar = TRUE)
+#' plotProbs(disp_2, xmax = 10000, combinekernels = TRUE)
 #' @references Hovestadt et al. 2012, Nathan et al. 2012, Hovestadt et al. 2011
 #' @return a parameter object of class "DispersalKernel"
 #' @name DispersalKernel
@@ -648,7 +648,7 @@ setValidity("DispersalKernel", function(object) {
         }
     }
     if (object@IndVar) {
-        if (is.na(object@MutationScales) || length(object@MutationScales)==0) {
+        if (anyNA(object@MutationScales) || (length(object@MutationScales)==0)) {
             msg <- c(msg, "MutationScales must be set!")
         }
         else{

@@ -120,12 +120,12 @@
 #' to scale the density-dependence for the different stages. In fact, any real value will be accepted for the single weights, so care should be taken when setting them.
 #' @examples  # Stage-structure for simple sexual model
 #' transmat <- matrix(c(0,1,0,0,0,0.3,0.4,0,1.5,0,0.6,0.3,2.5,0,0,0.8), ncol = 4)
-#' stg <- StageStructure(Stages = 4, TransMatrix = transmat, FecDensDep = T, SurvDensDep = T, SurvDensCoeff = 1.5)
+#' stg <- StageStructure(Stages = 4, TransMatrix = transmat, FecDensDep = TRUE, SurvDensDep = TRUE, SurvDensCoeff = 1.5)
 #' plotProbs(stg, stage=1:3)
 #'
 #'  # Stage-structure for explicit sexual model
 #' transmat_2 <- matrix(c(0,0.5,0,0,0,0,0,0.5,0,0,1.0,0.4,0,0.3,0,3.0,0,0.3,0,0.4,1.0,0,0,0.85,0,5,0,0,0,0.8), ncol = 6)
-#' stg_2 <- StageStructure(Stages = 3, TransMatrix = transmat_2, FecDensDep = T, DevDensDep = T, DevDensCoeff = 1.2)
+#' stg_2 <- StageStructure(Stages = 3, TransMatrix = transmat_2, FecDensDep = TRUE, DevDensDep = TRUE, DevDensCoeff = 1.2)
 #' plotProbs(stg_2, stage=c(1,2), sex = 1)
 #' @references Neubert & Caswell (2000), Caswell (2001)
 #' @return a parameter object of class "StagesParams"

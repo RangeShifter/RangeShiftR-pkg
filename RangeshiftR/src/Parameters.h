@@ -65,14 +65,15 @@ typedef unsigned long long intptr;
     #endif
 #endif
 
-#if RS_RCPP // the R headers define PI as a macro (like this), so that the 'else' line results in an error
-    #ifndef PI
-    #define PI 3.141592653589793238462643383279502884197169399375
+#if RS_RCPP
+    #ifndef R_EXT_CONSTANTS_H_  // the R headers define PI as a macro, so that the 'else' line results in an error
+        const double PI = 3.141592653589793238462643383279502884197169399375;
     #endif
 #else
     const double PI = 3.141592654;
 #endif
-const double SQRT2 = sqrt(2.0); // more efficient than calculating every time
+//const double PI = 3.141592654;
+const double SQRT2 = std::sqrt(double(2.0)); // more efficient than calculating every time
 
 //---------------------------------------------------------------------------
 

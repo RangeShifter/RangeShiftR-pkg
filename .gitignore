@@ -8,6 +8,7 @@
 .codelite/
 compile_commands.json
 Makefile
+.build-release/
 *.txt
 *.project
 *.workspace
@@ -30,7 +31,7 @@ Makefile
 /RangeshiftR/RangeshiftR.Rproj
 /RangeshiftR/Read-and-delete-me
 /RangeshiftR/.Rhistory
-/RangeshiftR/.Rbuildignore
+#/RangeshiftR/.Rbuildignore
 
 # Session Data files
 .RData

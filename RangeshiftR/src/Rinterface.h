@@ -7,9 +7,9 @@ Implements the interface to the R-package RangeshiftR.
 Includes the following functions:
 
 For full details of RangeShifter, please see:
-Bocedi G., Palmer S.C.F., Peer G., Heikkinen R.K., Matsinos Y.G., Watts K.
+Bocedi G., Palmer S.C.F., Pe'er G., Heikkinen R.K., Matsinos Y.G., Watts K.
 and Travis J.M.J. (2014). RangeShifter: a platform for modelling spatial
-eco-evolutionary dynamics and species responses to environmental changes.
+eco-evolutionary dynamics and species' responses to environmental changes.
 Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Author: Anne-Kathleen Malchow, Humboldt University Berlin
@@ -31,6 +31,8 @@ Author: Anne-Kathleen Malchow, Humboldt University Berlin
 #include <stdlib.h>
 #include <vector>
 #include <algorithm>
+#include <locale>
+#include <codecvt>
 
 using namespace std;
 
@@ -51,7 +53,7 @@ Rcpp::List BatchMainFile(string, Rcpp::S4);
 #if RSDEBUG
 Rcpp::List BatchMainR(string, Rcpp::S4);
 #endif // RSDEBUG
-int ReadLandParamsR(Landscape*, Rcpp::S4);
+bool ReadLandParamsR(Landscape*, Rcpp::S4);
 int ReadParametersR(Landscape*, Rcpp::S4);
 int ReadStageStructureR(Rcpp::S4);
 int ReadEmigrationR(Rcpp::S4);
@@ -60,14 +62,19 @@ int ReadSettlementR(Rcpp::S4);
 int ReadInitialisationR(Landscape*, Rcpp::S4);
 void RunBatchR(int, int, Rcpp::S4);
 void clear_outPop();
-void setglobalvarsR(Rcpp::S4 control);
+void setglobalvarsR(Rcpp::S4);
 
 
 //---------------------------------------------------------------------------
 
-int ReadInitIndsFile(int,Landscape*,string);
+string check_bom(string); // check BOM of a text file for UTF-16 encoding
+rasterdata ParseRasterHead(string); //parse, read and return ASCII raster head data
+
+int ParseInitIndsFileR(wifstream&);
+int ReadInitIndsFileR(int,Landscape*);
 
 void BatchErrorR(string,int,int,string);
+void BatchErrorR(string,int,int,string,string);
 
 //void CtrlFormatError(void);
 //void ArchFormatError(void);
@@ -76,10 +83,14 @@ void BatchErrorR(string,int,int,string);
 #endif // VIRTUALECOLOGIST
 void FormatErrorR(string,int);
 void OpenErrorR(string,string);
-//void EOFerror(string);
+void EOFerrorR(string);
 //void FileOK(string,int,int);
 //void FileHeadersOK(string);
 //void SimulnCountError(string);
+
+
+
+//---------------------------------------------------------------------------
 
 // Dummy functions corresponding to those used in GUI version
 
@@ -121,7 +132,7 @@ extern string patchfilename;	// see [NOT YET CODED FOR GUI] (VCL) OR Main.cpp (b
 extern string mortfilename;	// see [NOT YET CODED FOR GUI] (VCL) OR Main.cpp (batch)
 #endif // TEMPMORT
 #if !CLUSTER || RS_RCPP
-extern int RS_random_seed;			// see RSrandom.cpp 
+extern int RS_random_seed;			// see RSrandom.cpp
 #endif // !CLUSTER || RS_RCPP
 
 //---------------------------------------------------------------------------
