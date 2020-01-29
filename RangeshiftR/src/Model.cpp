@@ -116,7 +116,7 @@ int RunModel(Landscape *pLandscape,int seqsim)
 		DEBUGLOG << endl << "RunModel(): starting simulation=" << sim.simulation << " rep=" << rep << endl;
 #endif
 
-#if !R_CMD
+#if RS_RCPP && !R_CMD
 		Rcpp::Rcout << endl << "starting replicate " << rep << endl;
 #else
 #if !VCL
@@ -434,7 +434,7 @@ int RunModel(Landscape *pLandscape,int seqsim)
 		         << " pSpecies=" << pSpecies << endl;
 #endif
 #if BATCH
-#if !R_CMD
+#if RS_RCPP && !R_CMD
 		Rcpp::Rcout << "RunModel(): completed initialisation " << endl;
 #else
 		cout << "RunModel(): completed initialisation " << endl;
@@ -494,7 +494,7 @@ int RunModel(Landscape *pLandscape,int seqsim)
 			    || (yr < 300001 && yr%100000 == 0)
 			    || (yr < 3000001 && yr%1000000 == 0)
 			   ) {
-#if !R_CMD
+#if RS_RCPP && !R_CMD
 				Rcpp::Rcout << "starting year " << yr << "..." << endl;
 #else
 				cout << "starting year " << yr << endl;

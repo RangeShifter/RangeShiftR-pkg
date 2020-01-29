@@ -577,7 +577,7 @@ bool Landscape::habitatsIndexed(void)
 void Landscape::listHabCodes(void)
 {
 	int nhab = (int)habCodes.size();
-#if !R_CMD
+#if RS_RCPP && !R_CMD
 	Rcpp::Rcout << endl;
 	for (int i = 0; i < nhab; i++) {
 		Rcpp::Rcout << "Habitat code[ " << i << "] = " << habCodes[i] << endl;
@@ -1521,7 +1521,7 @@ void Landscape::listPatches(void)
 {
 	patchLimits p;
 	int npatches = (int)patches.size();
-#if !R_CMD
+#if RS_RCPP && !R_CMD
 	Rcpp::Rcout << endl;
 	for (int i = 0; i < npatches; i++) {
 		p = patches[i]->getLimits();

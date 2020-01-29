@@ -251,6 +251,10 @@ extern string mortfilename;	// see [NOT YET CODED FOR GUI] (VCL) OR Main.cpp (ba
 #endif // TEMPMORT
 #if !CLUSTER || RS_RCPP
 extern int RS_random_seed;			// see RSrandom.cpp
+#if RS_RCPP
+void EOFerrorR(string);
+void StreamErrorR(string);
+#endif // RS_RCPP
 #endif // !CLUSTER || RS_RCPP
 
 //---------------------------------------------------------------------------
