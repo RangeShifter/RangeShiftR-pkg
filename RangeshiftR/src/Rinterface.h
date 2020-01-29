@@ -60,6 +60,7 @@ int ReadEmigrationR(Rcpp::S4);
 int ReadTransferR(Landscape*, Rcpp::S4);
 int ReadSettlementR(Rcpp::S4);
 int ReadInitialisationR(Landscape*, Rcpp::S4);
+
 void RunBatchR(int, int, Rcpp::S4);
 void clear_outPop();
 void setglobalvarsR(Rcpp::S4);
@@ -84,6 +85,7 @@ void BatchErrorR(string,int,int,string,string);
 void FormatErrorR(string,int);
 void OpenErrorR(string,string);
 void EOFerrorR(string);
+void StreamErrorR(string);
 //void FileOK(string,int,int);
 //void FileHeadersOK(string);
 //void SimulnCountError(string);

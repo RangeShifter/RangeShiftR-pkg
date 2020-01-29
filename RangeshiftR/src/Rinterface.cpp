@@ -56,7 +56,7 @@ int sexesDem;  // no. of explicit sexes for demographic model
 int sexesDisp; // no. of explicit sexes for dispersal model
 int firstsimul;
 int fileNtraits; // no. of traits defined in genetic architecture file
-rasterdata landraster,patchraster,spdistraster;
+rasterdata landraster,patchraster,spdistraster,costsraster;
 // rasterdata landraster;
 // ...including names of the input files
 // string parameterFile;
@@ -616,12 +616,17 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 
 		// check dimensions  -->  these shouldn't occur, as already checked for on R-level
 		if(ppGenLand.fractal && ppLand.maxX > ppLand.maxY) {
-			return -901;
+			//return -901;
+			// fix it by swapping X and Y:
+			ppLand.maxX = ppLand.dimY - 1;
+			ppLand.maxY = ppLand.dimX - 1;
+			ppLand.dimX = ppLand.maxX + 1;
+			ppLand.dimY = ppLand.maxY + 1;
 		}
 		if(ppGenLand.fractal) {
 			if((ppLand.dimX < 3 || ppLand.dimX % 2 != 1) // why only check for uneven number, not ((power of 2)-1) ?
 			   || (ppLand.dimY < 3 || ppLand.dimY % 2 != 1)) {
-				return -902;
+				//return -902;  // -> no action, should be covered on R-level
 			}
 		}
 		// SCFP 26/9/13 - min and max habitat percentages need to be set for all types of
@@ -1800,9 +1805,9 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 
 		if(trfr.costMap) {
 			costmapname = paramsSim->getDir(1) + CostsFile;
-			rasterdata costsraster;
+			//rasterdata costsraster;  // made global for R-version
 			costsraster.ok = false;
-			costsraster = CheckRasterFile(costmapname);
+			costsraster = ParseRasterHead(costmapname);
 			// check that cost raster matches current landscape
 			if(!costsraster.ok) {
 				error = 51;
@@ -1814,9 +1819,16 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 			if(costsraster.xllcorner != origin.minEast || costsraster.yllcorner != origin.minNorth) {
 				error = 53;
 			}
-			int retcode = pLandscape->readCosts(costmapname);
-			if(retcode < 0)
-				error = 54;
+#if RS_RCPP
+			if(!error) {
+#endif
+				int retcode = pLandscape->readCosts(costmapname);
+				if(retcode < 0)
+					error = 54;
+
+#if RS_RCPP
+			}
+#endif
 		}
 
 		// read habitat costs for land types
@@ -2766,9 +2778,6 @@ void RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 		if(landOK) {
 
 			// Open all other batch files and read header records
-			// if(geneticsFile != "NULL") -> TODO
-			// ReadGenetics(0);  // NOT YET INCLUDED -> TODO
-
 #if VIRTUALECOLOGIST
 			if(virtEcolFile != "NULL")
 				ReadVirtEcol(0);
@@ -2779,7 +2788,7 @@ void RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 			string msgsim = "Simulation,";
 			string msgerr = ",ERROR CODE,";
 			string msgabt = ",simulation aborted";
-			for(int i = 0; i < nSimuls; i++) {
+			for(int i = 0; i < nSimuls; i++) { // this loop is useless at the moment since nSimuls is set to one in R entry function BatchMainR()
 				t00 = time(0);
 				params_ok = true;
 				read_error = ReadParametersR(pLandscape, ParMaster);
@@ -3065,6 +3074,7 @@ rasterdata ParseRasterHead(string file)
 #endif
 			r.ok = false;
 			r.errors = -211;
+			infile.close();
 			infile.clear();
 			return r;
 		}
@@ -3095,11 +3105,9 @@ rasterdata ParseRasterHead(string file)
 #if RSDEBUG
 		DEBUGLOG << "Raster file failed to open: " << file << std::endl;
 #endif
-		return r;
-
 	}
+	infile.close();
 	infile.clear();
-
 	return r;
 }
 
@@ -3492,12 +3500,20 @@ void FormatErrorR(string filename, int errors)
 
 void OpenErrorR(string ftype, string fname)
 {
-	Rcpp::Rcout << "*** Unable to open " << ftype << " " << fname << endl;
+	Rcpp::Rcout << "*** Unable to open " << ftype << " " << fname << std::endl;
 }
 
 void EOFerrorR(string filename)
 {
-	Rcpp::Rcout << "*** Failed to read to EOF in " << filename << endl;
+	Rcpp::Rcout << "*** Did not read to EOF in " << filename << std::endl;
+}
+
+void StreamErrorR(string filename)
+{
+	Rcpp::Rcout << "*** Corrupted file stream in " << filename << std::endl << "You can try to use a different file encoding, like UTF-8." << std::endl;
+#if RSDEBUG
+	DEBUGLOG << "Corrupted file stream in " << filename << std::endl;
+#endif
 }
 
 //---------------------------------------------------------------------------

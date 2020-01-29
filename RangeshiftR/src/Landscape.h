@@ -707,7 +707,9 @@ extern void MemoLine(string);
 #endif
 
 #if RS_RCPP
-extern rasterdata landraster,patchraster,spdistraster;
+extern rasterdata landraster,patchraster,spdistraster,costsraster;
+extern void EOFerrorR(string);
+extern void StreamErrorR(string);
 #endif
 
 //---------------------------------------------------------------------------

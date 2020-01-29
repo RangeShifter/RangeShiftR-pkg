@@ -146,19 +146,45 @@ void InitDist::resetDistribution(void)
 
 int InitDist::readDistribution(string distfile)
 {
+#if RS_RCPP
+	wstring header;
+#else
 	string header;
+#endif
 	int p,nodata;
 	int ncols,nrows;
+#if RS_RCPP
+	wifstream dfile; // species distribution file input stream
+#else
 	ifstream dfile; // species distribution file input stream
+#endif
 
 // open distribution file
+#if !RS_RCPP
 	dfile.open(distfile.c_str());
+#else
+	dfile.open(distfile, std::ios::binary);
+	if(spdistraster.utf) {
+		// apply BOM-sensitive UTF-16 facet
+		dfile.imbue(std::locale(dfile.getloc(), new std::codecvt_utf16<wchar_t, 0x10ffff, std::consume_header>));
+	}
+#endif
 	if (!dfile.is_open()) return 21;
 
 // read landscape data from header records of distribution file
 // NB headers of all files have already been compared
 	dfile >> header >> ncols >> header >> nrows >> header >> minEast >> header >> minNorth
 	      >> header >> resol >> header >> nodata;
+#if RS_RCPP
+	if (!dfile.good()) {
+		// corrupt file stream
+		StreamErrorR(distfile);
+		dfile.close();
+		dfile.clear();
+		return 133;
+	}
+#endif
+
 	maxX = ncols-1;
 	maxY = nrows-1;
 
@@ -169,22 +195,41 @@ int InitDist::readDistribution(string distfile)
 	for (int y = nrows-1; y >= 0; y--) {
 		for (int x = 0; x < ncols; x++) {
 			p = badvalue;
+#if RS_RCPP
+			if(dfile >> p) {
+#else
 			dfile >> p;
+#endif
 #if RSDEBUG
 //DEBUGLOG << "InitDist::readDistribution():"
 //	<< " y = " << y << " x = " << x << " p = " << p << endl;
 #endif
-			if (p == nodata || p == 0 || p == 1) { // only valid values
-				if (p == 1) { // species present
-					cells.push_back(new DistCell(x,y));
+				if (p == nodata || p == 0 || p == 1) { // only valid values
+					if (p == 1) { // species present
+						cells.push_back(new DistCell(x,y));
+					}
+				} else { // error in file
+					dfile.close();
+					dfile.clear();
+					return 22;
 				}
-			} else { // error in file
+#if RS_RCPP
+			} else {
+				// corrupt file stream
+				StreamErrorR(distfile);
 				dfile.close();
 				dfile.clear();
-				return 22;
+				return 143;
 			}
+#endif
 		}
 	}
+#if RS_RCPP
+	if (!dfile.eof())
+	{
+		EOFerrorR(distfile);
+	}
+#endif
 
 	dfile.close();
 	dfile.clear();
@@ -2295,8 +2340,9 @@ int Landscape::readLandscape(int fileNum,string habfile,string pchfile)
 	      >> header >> resol >> header >> habnodata;
 
 #if RS_RCPP
-	if (!hfile.good() || !pfile.good()) {
+	if (!hfile.good()) {
 		// corrupt file stream
+		StreamErrorR(habfile);
 		hfile.close();
 		hfile.clear();
 		if (patchModel) {
@@ -2325,6 +2371,17 @@ int Landscape::readLandscape(int fileNum,string habfile,string pchfile)
 			for (int i = 0; i < 5; i++) pfile >> header >> pfloat;
 			pfile >> header >> pchnodata;
 		}
+#if RS_RCPP
+		if (!pfile.good()) {
+			// corrupt file stream
+			StreamErrorR(pchfile);
+			hfile.close();
+			hfile.clear();
+			pfile.close();
+			pfile.clear();
+			return 132;
+		}
+#endif
 #if RS_CONTAIN
 		if (readdamage) {
 			for (int i = 0; i < 5; i++) dfile >> header >> dfloat;
@@ -2357,13 +2414,46 @@ int Landscape::readLandscape(int fileNum,string habfile,string pchfile)
 		for (int y = dimY-1; y >= 0; y--) {
 			for (int x = 0; x < dimX; x++) {
 				hfloat = badhfloat;
+#if RS_RCPP
+				if(hfile >> hfloat) {
+#else
 				hfile >> hfloat;
-				h = (int)hfloat;
-				if (patchModel) {
-					pfloat = badpfloat;
-					pfile >> pfloat;
-					p = (int)pfloat;
+#endif
+					h = (int)hfloat;
+					if (patchModel) {
+						pfloat = badpfloat;
+#if RS_RCPP
+						if(pfile >> pfloat) {
+#else
+						pfile >> pfloat;
+#endif
+							p = (int)pfloat;
+#if RS_RCPP
+						} else {
+							// corrupt file stream
+							StreamErrorR(pchfile);
+							hfile.close();
+							hfile.clear();
+							pfile.close();
+							pfile.clear();
+							return 142;
+						}
+#endif
+					}
+#if RS_RCPP
+				} else {
+					// corrupt file stream
+					StreamErrorR(habfile);
+					hfile.close();
+					hfile.clear();
+					if (patchModel) {
+						pfile.close();
+						pfile.clear();
+					}
+					return 141;
 				}
+#endif
+
 #if RSDEBUG
 //DebugGUI(("Landscape::readLandscape(): x=" + Int2Str(x) + " y=" + Int2Str(y)
 //	+ " h=" + Int2Str(h) + " p=" + Int2Str(p)
@@ -2442,83 +2532,130 @@ int Landscape::readLandscape(int fileNum,string habfile,string pchfile)
 #endif // RS_CONTAIN 
 			}
 		}
+#if RS_RCPP
+		if (!hfile.eof())
+		{
+			EOFerrorR(habfile);
+		}
+		if (patchModel && !pfile.eof())
+		{
+			EOFerrorR(pchfile);
+		}
+#endif
 		break;
 
 	case 1: // multiple % cover
-		for (int y = dimY-1; y >= 0; y--) {
+		for (int y = dimY-1; y >= 0; y--)
+		{
 			for (int x = 0; x < dimX; x++) {
 				hfloat = badhfloat;
+#if RS_RCPP
+				if(hfile >> hfloat) {
+#else
 				hfile >> hfloat;
-				h = (int)hfloat;
-				if (fileNum == 0) { // first habitat cover layer
-					if (patchModel) {
-						pfloat = badpfloat;
-						pfile >> pfloat;
-						p = (int)pfloat;
-					}
+#endif
+					h = (int)hfloat;
+					if (fileNum == 0) { // first habitat cover layer
+						if (patchModel) {
+							pfloat = badpfloat;
+#if RS_RCPP
+							if(pfile >> pfloat) {
+#else
+							pfile >> pfloat;
+#endif
+								p = (int)pfloat;
+#if RS_RCPP
+							} else {
+								// corrupt file stream
+								StreamErrorR(pchfile);
+								hfile.close();
+								hfile.clear();
+								pfile.close();
+								pfile.clear();
+								return 152;
+							}
+#endif
+						}
+
 #if RSDEBUG
 //MemoLine(("y=" + Int2Str(y) + " x=" + Int2Str(x) + " hfloat=" + Float2Str(hfloat)
 //	+ " p=" + Int2Str(p)).c_str());
 #endif
-					if (h == habnodata) {
-						addNewCellToLand(x,y,-1); // add cell only to landscape
-					} else {
-						if (hfloat < 0.0 || hfloat > 100.0) { // invalid cover score
-							hfile.close();
-							hfile.clear();
-							if (patchModel) {
-								pfile.close();
-								pfile.clear();
-							}
-							return 17;
+						if (h == habnodata) {
+							addNewCellToLand(x,y,-1); // add cell only to landscape
 						} else {
-							if (patchModel) {
-								if (p < 0) { // invalid patch code
-									hfile.close();
-									hfile.clear();
+							if (hfloat < 0.0 || hfloat > 100.0) { // invalid cover score
+								hfile.close();
+								hfile.clear();
+								if (patchModel) {
 									pfile.close();
 									pfile.clear();
-									return 14;
 								}
-								if (p == 0) { // cell is in the matrix
-									addNewCellToPatch(0,x,y,hfloat);
-								} else {
-									if (existsPatch(p)) {
-										pPatch = findPatch(p);
-										addNewCellToPatch(pPatch,x,y,hfloat);
-//									addNewCellToPatch(findPatch(p),x,y,hfloat);
-									} else {
-#if SEASONAL
-										pPatch = newPatch(seq++,p,nseasons);
-#else
-										pPatch = newPatch(seq++,p);
-#endif // SEASONAL 
-										addNewCellToPatch(pPatch,x,y,hfloat);
+								return 17;
+							} else {
+								if (patchModel) {
+									if (p < 0) { // invalid patch code
+										hfile.close();
+										hfile.clear();
+										pfile.close();
+										pfile.clear();
+										return 14;
 									}
+									if (p == 0) { // cell is in the matrix
+										addNewCellToPatch(0,x,y,hfloat);
+									} else {
+										if (existsPatch(p)) {
+											pPatch = findPatch(p);
+											addNewCellToPatch(pPatch,x,y,hfloat);
+//									addNewCellToPatch(findPatch(p),x,y,hfloat);
+										} else {
+#if SEASONAL
+											pPatch = newPatch(seq++,p,nseasons);
+#else
+											pPatch = newPatch(seq++,p);
+#endif // SEASONAL 
+											addNewCellToPatch(pPatch,x,y,hfloat);
+										}
+									}
+								} else { // cell-based model
+									// add cell to landscape (patches created later)
+									addNewCellToLand(x,y,hfloat);
 								}
-							} else { // cell-based model
-								// add cell to landscape (patches created later)
-								addNewCellToLand(x,y,hfloat);
 							}
 						}
+					} else { // additional habitat cover layers
+						if (h != habnodata) {
+							if (hfloat < 0.0 || hfloat > 100.0) { // invalid cover score
+								hfile.close();
+								hfile.clear();
+								if (patchModel) {
+									pfile.close();
+									pfile.clear();
+								}
+								return 17;
+							} else {
+								cells[y][x]->setHabitat(hfloat);
+							}
+						} // end of h != habnodata
 					}
-				} else { // additional habitat cover layers
-					if (h != habnodata) {
-						if (hfloat < 0.0 || hfloat > 100.0) { // invalid cover score
-							hfile.close();
-							hfile.clear();
-							if (patchModel) {
-								pfile.close();
-								pfile.clear();
-							}
-							return 17;
-						} else {
-							cells[y][x]->setHabitat(hfloat);
-						}
-					} // end of h != habnodata
+#if RS_RCPP
+				} else
+				{
+					// corrupt file stream
+					StreamErrorR(habfile);
+					hfile.close();
+					hfile.clear();
+					if (patchModel) {
+						pfile.close();
+						pfile.clear();
+					}
+					return 151;
 				}
+#endif
+
 #if RS_CONTAIN
-				if (readdamage) {
+				if (readdamage)
+				{
 					dfloat = baddfloat;
 					dfile >> dfloat;
 					d = (int)dfloat;
@@ -2542,30 +2679,72 @@ int Landscape::readLandscape(int fileNum,string habfile,string pchfile)
 			}
 		}
 		habIndexed = true; // habitats are already numbered 1...n in correct order
+#if RS_RCPP
+		if (!hfile.eof())
+		{
+			EOFerrorR(habfile);
+		}
+		if (patchModel && !pfile.eof())
+		{
+			EOFerrorR(pchfile);
+		}
+#endif
 		break;
 
 	case 2: // habitat quality
 		if (fileNum > 0) return 19; // error condition - should not occur
-		for (int y = dimY-1; y >= 0; y--) {
+		for (int y = dimY-1; y >= 0; y--)
+		{
 			for (int x = 0; x < dimX; x++) {
 				hfloat = badhfloat;
-				hfile >> hfloat;
-				h = (int)hfloat;
 #if RS_RCPP
-				wcout << x << ", "  << y << ", "  << hfloat << ", " << h << endl;
+				if(hfile >> hfloat) {
+#else
+				hfile >> hfloat;
+#endif
+					h = (int)hfloat;
+#if RS_RCPP
+				} else {
+					// corrupt file stream
+					StreamErrorR(habfile);
+					hfile.close();
+					hfile.clear();
+					if (patchModel) {
+						pfile.close();
+						pfile.clear();
+					}
+					return 161;
+				}
 #endif
 				if (patchModel) {
 					pfloat = badpfloat;
+#if RS_RCPP
+					if(pfile >> pfloat) {
+#else
 					pfile >> pfloat;
-					p = (int)pfloat;
+#endif
+						p = (int)pfloat;
+#if RS_RCPP
+					} else {
+						// corrupt file stream
+						StreamErrorR(pchfile);
+						hfile.close();
+						hfile.clear();
+						pfile.close();
+						pfile.clear();
+						return 162;
+					}
+#endif
 				}
 #if RSDEBUG
 //MemoLine(("y=" + Int2Str(y) + " x=" + Int2Str(x) + " hfloat=" + Float2Str(hfloat)
 //	+ " p=" + Int2Str(p)).c_str());
 #endif
-				if (h == habnodata) {
+				if (h == habnodata)
+				{
 					addNewCellToLand(x,y,-1); // add cell only to landscape
-				} else {
+				} else
+				{
 					if (hfloat < 0.0 || hfloat > 100.0) { // invalid quality score
 						hfile.close();
 						hfile.clear();
@@ -2607,7 +2786,8 @@ int Landscape::readLandscape(int fileNum,string habfile,string pchfile)
 					}
 				}
 #if RS_CONTAIN
-				if (readdamage) {
+				if (readdamage)
+				{
 					dfloat = baddfloat;
 					dfile >> dfloat;
 					d = (int)dfloat;
@@ -2630,26 +2810,39 @@ int Landscape::readLandscape(int fileNum,string habfile,string pchfile)
 #endif // RS_CONTAIN 
 			}
 		}
+#if RS_RCPP
+		if (!hfile.eof())
+		{
+			EOFerrorR(habfile);
+		}
+		if (patchModel && !pfile.eof())
+		{
+			EOFerrorR(pchfile);
+		}
+#endif
 		break;
 
 	default:
 		;
-	}
+	} // end switch(rasterType)
 
 #if RS_CONTAIN
 	dmgLoaded = readdamage;
 #endif // RS_CONTAIN 
 
-	if (hfile.is_open()) {
+	if (hfile.is_open())
+	{
 		hfile.close();
 		hfile.clear();
 	}
-	if (pfile.is_open()) {
+	if (pfile.is_open())
+	{
 		pfile.close();
 		pfile.clear();
 	}
 #if RS_CONTAIN
-	if (dfile.is_open()) {
+	if (dfile.is_open())
+	{
 		dfile.close();
 		dfile.clear();
 	}
@@ -2862,14 +3055,22 @@ int Landscape::readMortalityFiles(string mortfile0,string mortfile1)
 int Landscape::readCosts(string fname)
 {
 
-	ifstream costs;
+#if RS_RCPP
+	wifstream costs; // cost map file input stream
+#else
+	ifstream costs; // cost map file input stream
+#endif
 
 //int hc,maxYcost,maxXcost,NODATACost,hab;
 	int hc,maxYcost,maxXcost,NODATACost;
 	float minLongCost, minLatCost;
 	int resolCost;
 	float fcost;
+#if RS_RCPP
+	wstring header;
+#else
 	string header;
+#endif
 	Cell *pCell;
 	simView v = paramsSim->getViews();
 
@@ -2881,7 +3082,16 @@ int Landscape::readCosts(string fname)
 #endif
 #endif
 // open cost file
+#if !RS_RCPP
 	costs.open(fname.c_str());
+#else
+	costs.open(fname, std::ios::binary);
+	if(costsraster.utf) {
+		// apply BOM-sensitive UTF-16 facet
+		costs.imbue(std::locale(costs.getloc(), new std::codecvt_utf16<wchar_t, 0x10ffff, std::consume_header>));
+	}
+#endif
+
 //if (!costs.is_open()) {
 //	MessageDlg("COSTS IS NOT OPEN!!!!!",
 //				mtError, TMsgDlgButtons() << mbRetry,0);
@@ -2892,7 +3102,18 @@ int Landscape::readCosts(string fname)
 //}
 // read headers and check that they correspond to the landscape ones
 	costs >> header;
+#if RS_RCPP
+	if (!costs.good()) {
+		// corrupt file stream
+		StreamErrorR(fname);
+		costs.close();
+		costs.clear();
+		return 134;
+	}
+	if (header != L"ncols" && header != L"NCOLS") {
+#else
 	if (header != "ncols" && header != "NCOLS") {
+#endif
 //	MessageDlg("The selected file is not a raster.",
 //	MessageDlg("Header problem in import_CostsLand()",
 //				mtError, TMsgDlgButtons() << mbRetry,0);
@@ -2908,8 +3129,21 @@ int Landscape::readCosts(string fname)
 
 	for (int y = maxYcost - 1; y > -1; y--) {
 		for (int x = 0; x < maxXcost; x++) {
+#if RS_RCPP
+			if(costs >> fcost) {
+#else
 			costs >> fcost;
-			hc = (int)fcost; // read as float and convert to int
+#endif
+				hc = (int)fcost; // read as float and convert to int
+#if RS_RCPP
+			} else {
+				// corrupt file stream
+				StreamErrorR(fname);
+				costs.close();
+				costs.clear();
+				return 144;
+			}
+#endif
 			if ((hc < 1 && hc != NODATACost)) {
 #if RSDEBUG
 #if BATCH
@@ -2934,9 +3168,17 @@ int Landscape::readCosts(string fname)
 	}
 	costs.close();
 	costs.clear();
-
+#if RS_RCPP
+	if (costs.eof())
+	{
+		MemoLine("Costs map loaded.");
+	} else
+	{
+		EOFerrorR(fname);
+	}
+#else
 	MemoLine("Costs map loaded.");
-
+#endif
 	return maxcost;
 
 }
