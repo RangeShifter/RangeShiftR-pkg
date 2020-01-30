@@ -23,6 +23,7 @@
 #'            OutStartTraitCell = 0, OutStartTraitRow = 0, OutStartConn = 0,
 #'            OutStartGenetic = 0,
 #'            SaveMaps = FALSE, MapsInterval, DrawLoadedSp = FALSE,
+#'            SMSHeatMap = FALSE, 
 #'            ReturnPopRaster = FALSE, CreatePopFile = TRUE
 #'            )
 #' @param Simulation ID number of current simulation, defaults to \eqn{1}. (integer)
@@ -85,6 +86,7 @@
 #' @param MapsInterval Required if \code{SaveMaps=TRUE}: save maps every \eqn{n} reproductive seasons. (integer)
 #' @param DrawLoadedSp If \code{FALSE} (default), only the simulated distribution is drawn into the output map.\cr
 #' If \code{TRUE}, the initial species distribution is drawn additionally.
+#' @param SMSHeatMap Produce SMS heat map raster as output? Defaults to \code{FALSE}.
 #' @param ReturnPopRaster Return population data to R (as data frame)? Defaults to \code{TRUE}.
 #' @param CreatePopFile Create population output file? Defaults to \code{TRUE}.
 #' @details \emph{Environmental Gradient}\cr
@@ -272,6 +274,7 @@ Simulation <- setClass("SimulationParams", slots = c(Simulation = "integer_OR_nu
                                                  SaveMaps = "logical",
                                                  MapsInterval = "integer_OR_numeric",
                                                  DrawLoadedSp = "logical",
+                                                 SMSHeatMap = "logical",
                                                  ReturnPopRaster = "logical",
                                                  CreatePopFile = "logical"
                                                  #moved! PropMales = "integer_OR_numeric", #move to Demography
@@ -322,6 +325,7 @@ Simulation <- setClass("SimulationParams", slots = c(Simulation = "integer_OR_nu
                                           SaveMaps = FALSE,
                                           #MapsInterval,
                                           DrawLoadedSp = FALSE,
+                                          SMSHeatMap = FALSE,
                                           ReturnPopRaster = FALSE,
                                           CreatePopFile = TRUE
                                           #moved! PropMales,
@@ -731,6 +735,9 @@ setValidity('SimulationParams', function(object){
             }
         }
     }
+    if (is.na(object@SMSHeatMap) || length(object@SMSHeatMap)==0 ){
+        msg <- c(msg, 'SMSHeatMap has to be set')
+    }
     # R Output
     if (is.na(object@ReturnPopRaster) || length(object@ReturnPopRaster)==0 ){
         msg <- c(msg, 'ReturnPopRaster has to be set')
@@ -959,5 +966,8 @@ setMethod("show", "SimulationParams", function(object) {
         if (object@OutGenType==1) cat(" of all individuals")
         if (object@OutGenType==2) cat(" of adults")
         cat(",    every", object@OutIntGenetic, "years, starting year", object@OutStartGenetic, "\n")
+    }
+    if (object@SMSHeatMap) {
+        cat("   SMS heat map\n")
     }
 })

@@ -49,7 +49,7 @@ using namespace std;
 //---------------------------------------------------------------------------
 
 Rcpp::List run_from_R(Rcpp::S4, Rcpp::String);   // entry functions from R
-Rcpp::List BatchMainFile(string, Rcpp::S4);
+//Rcpp::List BatchMainFile(string, Rcpp::S4);	 // missing dependend functions for file reading/parsing, from BatchMode.h/.cpp
 #if RSDEBUG
 Rcpp::List BatchMainR(string, Rcpp::S4);
 #endif // RSDEBUG

@@ -31,8 +31,8 @@ setValidity("RSparams", function(object) {
         if (object@simul@EnvStoch==2) {
             msg <- c(msg, "Local environmental stochasticity (EnvStoch=2) is not implemented for patch-based models!")
         }
-        if (object@simul@OutIntTraitCell || object@simul@OutIntTraitRow) {
-            msg <- c(msg, "Traits output is only applicable for a cell-based model!")
+        if (object@simul@OutIntTraitRow) { # or rather both:  (object@simul@OutIntTraitCell || object@simul@OutIntTraitRow) ???
+            msg <- c(msg, "Traits output by row is only applicable for a cell-based model!")
         }
     }
     else {
@@ -49,6 +49,9 @@ setValidity("RSparams", function(object) {
         if (!object@dispersal@Emigration@IndVar && !object@dispersal@Transfer@IndVar && !object@dispersal@Settlement@IndVar) {
             msg <- c(msg, "Traits output is only applicable for a model with inter-individual variability in (at least one) dispersal trait(s)!")
         }
+    }
+    if (object@simul@SMSHeatMap && class(object@dispersal@Transfer)[1] != "StochMove"){
+        msg <- c(msg, "SMS heat map output is only applicable for a model with the transfer method StochMove!")
     }
     #LAND
     validObject(object@land)

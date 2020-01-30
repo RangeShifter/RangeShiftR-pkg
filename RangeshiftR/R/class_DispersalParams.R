@@ -901,19 +901,24 @@ setMethod("plotProbs", "DispersalKernel", function(x, mortality = FALSE, combine
 #' do not know a priori their final destination, which is a reasonable assumption for dispersing individuals. For a complete description of the
 #' method, see the Datails below or refer to Palmer et al. (2011).
 #'
-#' @usage SMS(PR = 1, PRMethod = 1, DP = 1.0, MemSize = 1,
-#'     GoalType = 0, GoalBias = 1.0, AlphaDB, BetaDB,
+#' @usage SMS(PR = 1, PRMethod = 1, MemSize = 1,
+#'     GoalType = 0, IndVar = FALSE, 
+#'     DP = 1.0, GoalBias = 1.0, AlphaDB, BetaDB,
 #'     StraightenPath = TRUE, Costs, StepMort = 0.0)
 #' @param PR Perceptual range. Given in number of cells, defaults to \eqn{1}. (integer)
 #' @param PRMethod Method to evaluate the effective cost of a particular step from the landscape within the perceptual range:\cr \eqn{1 = }Arithmetic mean (default)\cr \eqn{2 = }Harmonic
 #' mean\cr \eqn{3 = }Weighted arithmetic mean
-#' @param DP Directional persistence. Corresponds to the tendency to follow a correlated random walk, must be \eqn{\ge 1.0}, defaults to \eqn{1.0}.
 #' @param MemSize Size of memory, given as the number of previous steps over which to calculate current direction to apply directional persistence
 #' (\code{DP}). A maximum of \eqn{14} steps is supported, default is \eqn{1}. (integer)
 #' @param GoalType Goal bias type: \eqn{0 = } None (default), \eqn{3 = } Dispersal bias.
-#' @param GoalBias Goal bias strength. Must be must be \eqn{\ge 1.0}, defaults to \eqn{1.0}.
-#' @param AlphaDB Required if \code{GoalType=2}: Dispersal bias decay rate. Must be must be \eqn{> 0.0}.
-#' @param BetaDB Required if \code{GoalType=2}: Dispersal bias decay inflection point (given in number of steps). Must be must be \eqn{> 0.0}.
+#' @param IndVar Individual variability in SMS traits (i.e. \code{GoalBias}, \code{AlphaDB} and \code{BetaDB})? Defaults to \code{FALSE}.
+#' @param DP Directional persistence. Corresponds to the tendency to follow a correlated random walk, must be \eqn{\ge 1.0}, defaults to \eqn{1.0}.\cr
+#' If \code{IndVar=TRUE}, expects a vector of length three specifying (Mean, SD, MutationScale) of \code{DP}.
+#' @param GoalBias Goal bias strength. Must be must be \eqn{\ge 1.0}, defaults to \eqn{1.0}. \cr 
+#' @param AlphaDB Required if \code{GoalType=2}: Dispersal bias decay rate. Must be must be \eqn{> 0.0}.\cr If \code{IndVar=TRUE}, expects a vector of length three
+#' specifying (Mean, SD, MutationScale) of \code{AlphaDB}.
+#' @param BetaDB Required if \code{GoalType=2}: Dispersal bias decay inflection point (given in number of steps). Must be must be \eqn{> 0.0}.\cr If \code{IndVar=TRUE}, 
+#' expects a vector of length three specifying (Mean, SD, MutationScale) of \code{BetaDB}.
 #' @param StraightenPath Straighten path after decision not to settle in a patch? Defaults to \code{TRUE}, see Details below.
 #' @param Costs Describes the landscapes resistance to movement. Specify either \emph{habitat-specific} costs for each habitat type or
 #' the filename of a \emph{raster} map from which to import the cost values.\cr
@@ -947,8 +952,8 @@ setMethod("plotProbs", "DispersalKernel", function(x, mortality = FALSE, combine
 #' There is an option to include goal bias, i.e. a tendency to move towards a particular destination, which is implemented in a similar way to
 #' \code{DP} (Aben et al. 2014). However, as dispersers in RangeShifter are naïve and have no goal, it may be applied only in the ‘negative’
 #' sense of moving away from the natal location (\code{GoalType=2}), i.e. as a dispersal bias, which is subject to a decay in strength as a
-#' function of the total number of steps taken (set the decay rate \code{AlphaDB} and inflection point \code{BetaDB}). This enables a dispersal path to follow a straighter trajectory initially, and later become more
-#' responsive to perceived landscape costs.
+#' function of the total number of steps taken (set the decay rate \code{AlphaDB} and inflection point \code{BetaDB}). 
+#' This enables a dispersal path to follow a straighter trajectory initially, and later become more responsive to perceived landscape costs.
 #'
 #' The product of the reciprocals of effective cost, \code{DP} and dispersal bias, scaled to sum to one,
 #' give the probabilities that the individual will move to each neighbouring cell. All the dispersing individuals move simultaneously, i.e. at
@@ -989,9 +994,10 @@ setMethod("plotProbs", "DispersalKernel", function(x, mortality = FALSE, combine
 #' @export SMS
 SMS <- setClass("StochMove", slots = c(PR = "integer_OR_numeric",
                                        PRMethod = "integer_OR_numeric", #Perceptual range method: 1 = arithmetic mean; 2 = harmonic mean; 3 = weighted arithmtic mean
-                                       DP = "numeric",
                                        MemSize = "integer_OR_numeric",
                                        GoalType = "integer_OR_numeric", #0 (none) or 2 (dispersal bias)
+                                       IndVar = "logical",
+                                       DP = "numeric",
                                        GoalBias = "numeric",
                                        AlphaDB = "numeric",
                                        BetaDB = "integer_OR_numeric",
@@ -1001,9 +1007,10 @@ SMS <- setClass("StochMove", slots = c(PR = "integer_OR_numeric",
                                        StepMort = "numeric")           # will determine on C++ level the values of HabMort, MortConst, MortHab1 ... MortHabN, MortHabitat, MortMatrix
                 , prototype = list(PR = 1L,
                                    PRMethod = 1L,
-                                   DP = 1.0,
                                    MemSize = 1L,
                                    GoalType = 0L,
+                                   IndVar = FALSE,
+                                   DP = 1.0,
                                    GoalBias = 1.0,
                                    #AlphaDB = 1.0,
                                    #BetaDB = 100000,
@@ -1030,14 +1037,6 @@ setValidity("StochMove", function(object) {
             msg <- c(msg, "PRMethod must be either 1, 2 or 3!")
         }
     }
-    if (is.na(object@DP) || length(object@DP)==0) {
-        msg <- c(msg, "DP must be set!")
-    }
-    else{
-        if (object@DP < 1.0) {
-            msg <- c(msg, "DP must be >= 1.0 !")
-        }
-    }
     if (is.na(object@MemSize) || length(object@MemSize)==0) {
         msg <- c(msg, "MemSize must be set!")
     }
@@ -1053,33 +1052,156 @@ setValidity("StochMove", function(object) {
         if (object@GoalType != 0 && object@GoalType != 2) {
             msg <- c(msg, "GoalType must be either 0 or 2!")
         }
+    }
+    if (is.na(object@IndVar) || length(object@IndVar)==0) {
+        msg <- c(msg, "IndVar must be set!")
+    }
+    if(is.null(msg)){
+        if (anyNA(object@DP) || length(object@DP)==0) {
+            msg <- c(msg, "DP must be set!")
+        }
         else{
-            if (object@GoalType) { # GoalType = 2
-                if (is.na(object@AlphaDB) || length(object@AlphaDB)==0) {
-                    msg <- c(msg, "AlphaDB must be set!")
-                }
-                else{
-                    if (object@AlphaDB <= 0.0) {
-                        msg <- c(msg, "AlphaDB must be strictly positive!")
+            if(object@IndVar){
+                if(length(object@DP)==3){
+                    if (object@DP[1] < 1.0) {
+                        msg <- c(msg, "DP (mean) must be >= 1.0!")
+                    }
+                    if (object@DP[2] <= 0.0) {
+                        msg <- c(msg, "DP (SD) must be strictly positive!")
+                    }
+                    if (object@DP[3] <= 0.0) {
+                        msg <- c(msg, "DP (mutation scale) must be strictly positive !")
+                    }
+                    if(is.null(msg)){
+                        if (object@DP[3] < object@DP[2]) {
+                            msg <- c(msg, "DP mutation scale must be greater than or equal to its SD !")
+                        }
                     }
                 }
-                if (is.na(object@BetaDB) || length(object@BetaDB)==0) {
-                    msg <- c(msg, "BetaDB must be set!")
+                else{
+                    msg <- c(msg, "DP must have length 3 if IndVar=TRUE!")
+                }
+            }
+            else {
+                if(length(object@DP)==1){
+                    if (object@DP < 1.0) {
+                        msg <- c(msg, "DP must be >= 1.0 !")
+                    }
                 }
                 else{
-                    if (object@BetaDB <= 0.0) {
-                        msg <- c(msg, "BetaDB must be strictly positive!")
-                    }
+                    msg <- c(msg, "DP must have length 1 if IndVar=FALSE!")
                 }
             }
         }
-    }
-    if (is.na(object@GoalBias) || length(object@GoalBias)==0) {
-        msg <- c(msg, "GoalBias strength must be set!")
-    }
-    else{
-        if (object@GoalBias < 1.0 ) {
-            msg <- c(msg, "GoalBias strength must be >= 1.0 !")
+        if (anyNA(object@GoalBias) || length(object@GoalBias)==0) {
+            msg <- c(msg, "GoalBias strength must be set!")
+        }
+        else{
+            if(object@IndVar){
+                if(length(object@GoalBias)==3){
+                    if (object@GoalBias[1] < 1.0) {
+                        msg <- c(msg, "GoalBias strength (mean) must be >= 1.0!")
+                    }
+                    if (object@GoalBias[2] <= 0.0) {
+                        msg <- c(msg, "GoalBias strength (SD) must be strictly positive!")
+                    }
+                    if (object@GoalBias[3] <= 0.0) {
+                        msg <- c(msg, "GoalBias strength (mutation scale) must be strictly positive !")
+                    }
+                    if(is.null(msg)){
+                        if (object@GoalBias[3] < object@GoalBias[2]) {
+                            msg <- c(msg, "GoalBias strength mutation scale must be greater than or equal to its SD !")
+                        }
+                    }
+                }
+                else{
+                    msg <- c(msg, "GoalBias strength must have length 3 if IndVar=TRUE!")
+                }
+            }
+            else {
+                if(length(object@GoalBias)==1){
+                    if (object@GoalBias < 1.0 ) {
+                        msg <- c(msg, "GoalBias strength must be >= 1.0 !")
+                    }
+                }
+                else{
+                    msg <- c(msg, "GoalBias strength must have length 1 if IndVar=FALSE!")
+                }
+            }
+        }
+        if (object@GoalType) { # GoalType = 2
+            if (anyNA(object@AlphaDB) || length(object@AlphaDB)==0) {
+                msg <- c(msg, "AlphaDB must be set!")
+            }
+            else{
+                if(object@IndVar){
+                    if(length(object@AlphaDB)==3){
+                        if (object@AlphaDB[1] <= 0.0) {
+                            msg <- c(msg, "AlphaDB (mean) must be strictly positive!")
+                        }
+                        if (object@AlphaDB[2] <= 0.0) {
+                            msg <- c(msg, "AlphaDB (SD) must be strictly positive!")
+                        }
+                        if (object@AlphaDB[3] <= 0.0) {
+                            msg <- c(msg, "AlphaDB (mutation scale) must be strictly positive !")
+                        }
+                        if(is.null(msg)){
+                            if (object@AlphaDB[3] < object@AlphaDB[2]) {
+                                msg <- c(msg, "AlphaDB mutation scale must be greater than or equal to its SD !")
+                            }
+                        }
+                    }
+                    else{
+                        msg <- c(msg, "AlphaDB must have length 3 if IndVar=TRUE!")
+                    }
+                }
+                else {
+                    if(length(object@AlphaDB)==1){
+                        if (object@AlphaDB <= 0.0) {
+                            msg <- c(msg, "AlphaDB must be strictly positive!")
+                        }
+                    }
+                    else{
+                        msg <- c(msg, "AlphaDB must have length 1 if IndVar=FALSE!")
+                    }
+                }
+            }
+            if (anyNA(object@BetaDB) || length(object@BetaDB)==0) {
+                msg <- c(msg, "BetaDB must be set!")
+            }
+            else{
+                if(object@IndVar){
+                    if(length(object@BetaDB)==3){
+                        if (object@BetaDB[1] < 1.0) {
+                            msg <- c(msg, "BetaDB (mean) must be >= 1 steps!")
+                        }
+                        if (object@BetaDB[2] <= 0.0) {
+                            msg <- c(msg, "BetaDB (SD) must be strictly positive!")
+                        }
+                        if (object@BetaDB[3] <= 0.0) {
+                            msg <- c(msg, "BetaDB (mutation scale) must be strictly positive !")
+                        }
+                        if(is.null(msg)){
+                            if (object@BetaDB[3] < object@BetaDB[2]) {
+                                msg <- c(msg, "BetaDB mutation scale must be greater than or equal to its SD !")
+                            }
+                        }
+                    }
+                    else{
+                        msg <- c(msg, "BetaDB must have length 3 if IndVar=TRUE!")
+                    }
+                }
+                else {
+                    if(length(object@BetaDB)==1){
+                        if (object@BetaDB < 1.0) {
+                            msg <- c(msg, "BetaDB must be >= 1 steps!")
+                        }
+                    }
+                    else{
+                        msg <- c(msg, "BetaDB must have length 1 if IndVar=FALSE!")
+                    }
+                }
+            }
         }
     }
     if (is.na(object@StraightenPath) || length(object@StraightenPath)==0) {
@@ -1139,13 +1261,29 @@ setMethod("initialize", "StochMove", function(.Object,...) {
 )
 setMethod("show", "StochMove", function(object){
     callNextMethod()
-    cat("   PR =", object@PR, ", DP =", object@DP,  ", MemSize =", object@MemSize, "\n")
+    cat("   PR =", object@PR, ", MemSize =", object@MemSize, "\n")
     if (object@PRMethod == 1) cat("   Method: Arithmetic mean \n")
     if (object@PRMethod == 2) cat("   Method: Harmonic mean \n")
     if (object@PRMethod == 3) cat("   Method: Weighted arithmetic mean \n")
+    
+    if (object@IndVar) {
+        cat("   DP       =", object@DP[1], "\u00B1" , object@DP[2], ", scale \u03bc =", object@DP[3], "\n")
+        cat("   GoalBias =", object@GoalBias[1], "\u00B1" , object@GoalBias[2], ", scale \u03bc =", object@GoalBias[3], "\n")
+    }
+    else {
+        cat("   DP       =", object@DP, "\n")
+        cat("   GoalBias =", object@GoalBias, "\n")
+    }
+    
     if (object@GoalType) {
-        cat("   GoalBias: Dispersal bias, strength =", object@GoalBias, "\n")
-        cat("   AlphaDB =", object@AlphaDB, ", BetaDB =", object@BetaDB, "\n")
+        cat("   GoalType: Dispersal bias:\n")
+        if (object@IndVar) {
+            cat("   AlphaDB =", object@AlphaDB[1], "\u00B1" , object@AlphaDB[2], ", scale \u03bc =", object@AlphaDB[3], "\n")
+            cat("   BetaDB  =", object@BetaDB[1], "\u00B1" , object@BetaDB[2], ", scale \u03bc =", object@BetaDB[3], "\n")
+        }
+        else {
+            cat("   AlphaDB =", object@AlphaDB, ", BetaDB =", object@BetaDB, "\n")
+        }
     }
     cat("   StraightenPath =", object@StraightenPath, "\n")
     cat("   Costs =", object@Costs, "\n")
