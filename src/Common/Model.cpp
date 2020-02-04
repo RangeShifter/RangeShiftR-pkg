@@ -209,7 +209,7 @@ DEBUGLOG << endl << "RunModel(): finished generating populations" << endl;
 	}
 #if VCL
 	else {
-		if (sim.batchMode && sim.saveMaps) {
+		if (sim.batchMode && (sim.saveMaps || sim.saveVisits)) {
 			pLandscape->setLandMap();
 			pLandscape->drawLandscape(rep,0,0);
 		}
@@ -3081,7 +3081,7 @@ if (trfr.moveModel) {
 		}
 		outPar << "SETTLE IF: ";
 		for (int i = 0; i < nstages; i++) {
-			if (dem.stageStruct) outPar << "stage " << i << ": " << endl;
+			if (dem.stageStruct && nstages > 1) outPar << "stage " << i << ": " << endl;
 			outPar << "find a suitable cell/patch ";
 			srules = pSpecies->getSettRules(i,sx);
 			if (srules.densDep) {
