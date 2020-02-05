@@ -17,11 +17,12 @@
 #'            EnvStoch = 0, EnvStochType, std, ac, minR, maxR, minK, maxK,
 #'            OutIntRange = 1, OutIntOcc = 0,
 #'            OutIntPop = 1, OutIntInd = 0,
-#'            OutIntTraitCell = 0, OutIntTraitRow = 0, OutIntConn = 0,
-#'            OutIntGenetic = 0, OutGenType = 0, OutGenCrossTab = FALSE,
+#'            OutIntTraitCell = 0, OutIntTraitRow = 0, 
+#'            OutIntConn = 0, OutIntPaths = 0, OutIntGenetic = 0, 
+#'            OutGenType = 0, OutGenCrossTab = FALSE,
 #'            OutStartPop = 0, OutStartInd = 0,
-#'            OutStartTraitCell = 0, OutStartTraitRow = 0, OutStartConn = 0,
-#'            OutStartGenetic = 0,
+#'            OutStartTraitCell = 0, OutStartTraitRow = 0, 
+#'            OutStartConn = 0, OutStartPaths = 0, OutStartGenetic = 0,
 #'            SaveMaps = FALSE, MapsInterval, DrawLoadedSp = FALSE,
 #'            SMSHeatMap = FALSE, 
 #'            ReturnPopRaster = FALSE, CreatePopFile = TRUE
@@ -66,15 +67,16 @@
 #' @param ac Required if \code{EnvStoch} \ifelse{html}{\out{&ne; 0}}{\eqn{> 0}}: temporal autocorrelation coefficient. Must be \eqn{\ge 0.0} and \eqn{<1.0}.
 #' @param minR,maxR Required if \code{EnvStochType}\eqn{=0}: minimum and maximum growth rates.
 #' @param minK,maxK Required if \code{EnvStochType}\eqn{=1}: minimum and maximum carrying capacities.
-#' @param OutIntRange,OutIntOcc,OutIntPop,OutIntInd,OutIntTraitCell,OutIntTraitRow,OutIntConn,OutIntGenetic Control the various types
-#' of Output files, i.e. range, occupancy, populations, individuals, traits (by cell or by row), connectivity and genetics:\cr
+#' @param OutIntRange,OutIntOcc,OutIntPop,OutIntInd,OutIntTraitCell,OutIntTraitRow,OutIntConn,OutIntPaths,OutIntGenetic Control the various types
+#' of Output files, i.e. range, occupancy, populations, individuals, traits (by cell or by row), connectivity, SMS paths and genetics:\cr
 #'  \eqn{=0 }: Output disabled.\cr
 #'  \eqn{>0 }: Output enabled; sets interval (in years) in which output is generated.\cr
 #' If the output is enabled, start values are required. By default, only the output of Range and Population are enabled.\cr
 #' Occupancy output is only applicable if \code{Replicates>1}.
 #' Traits output is only applicable for a cell-based model with inter-individual variability.
 #' Connectivity output is only applicable for a patch-based model.
-#' @param OutStartPop,OutStartInd,OutStartTraitCell,OutStartTraitRow,OutStartConn,OutStartGenetic
+#' SMS paths is only applicable for a model with SMS transfer method.
+#' @param OutStartPop,OutStartInd,OutStartTraitCell,OutStartTraitRow,OutStartConn,OutStartPaths,OutStartGenetic
 #' Starting years for output generation. Note that the first year is year \eqn{0}. Defaults to \eqn{0} for all output types. (integer)
 #' @param OutGenType Required if \code{OutIntGenetic}\eqn{>0}: Genetics output will be generated for:\cr
 #' \eqn{0} = juveniles only (default), \eqn{1} =  all individuals, \eqn{2} = adults only.
@@ -225,6 +227,23 @@
 #' true \eqn{NxN} matrices, the data are presented in list format:\cr
 #' Replicate number (Rep), Year (Year), ID number of natal patch (StartPatch), ID number of settlement patch (EndPatch), Number of
 #' individuals dispersing from StartPatch to EndPatch (NInds).
+#' 
+#' - \emph{SMS paths} (\code{Sim0_Rep0_SMSpaths.txt})
+#' is available for a model with transfer method SMS only. It lists the cell-based trajectories of all (successfully or unsuccessfully) 
+#' dispersed individuals from the natal to the final (settlement or fatal) patch for each year specified by \code{OutIntPaths}, starting 
+#' from \code{OutStartPaths}. The data are presented in list format with the columns:\cr
+#' Year (Year), Individual ID (IndID), consecutive step number (Step), coordinates of cell at this step (\eqn{x} and \eqn{y}), 
+#' status of individual (Status).
+# 0 = natal patch
+# 1 = disperser
+# 2 = disperser awaiting settlement in possible suitable patch
+# 3 = waiting between dispersal events
+# 4 = completed settlement
+# 5 = completed settlement in a suitable neighbouring cell
+# 6 = died during transfer by failing to find a suitable patch (includes exceeding maximum number of steps or crossing absorbing boundary)
+# 7 = died during transfer by constant, step-dependent, habitat-dependent or distance-dependent mortality
+# 8 = failed to survive annual (demographic) mortality
+# 9 = exceeded maximum age
 #'
 #' - \emph{Genetics}
 # (\code{Sim0_Connect.txt})
@@ -265,12 +284,14 @@ Simulation <- setClass("SimulationParams", slots = c(Simulation = "integer_OR_nu
                                                  OutIntTraitCell = "integer_OR_numeric",
                                                  OutIntTraitRow = "integer_OR_numeric",
                                                  OutIntConn = "integer_OR_numeric",
+                                                 OutIntPaths = "integer_OR_numeric",
                                                  OutStartPop = "integer_OR_numeric",
                                                  OutStartInd = "integer_OR_numeric",
                                                  OutStartGenetic = "integer_OR_numeric",
                                                  OutStartTraitCell = "integer_OR_numeric",
                                                  OutStartTraitRow = "integer_OR_numeric",
                                                  OutStartConn = "integer_OR_numeric",
+                                                 OutStartPaths = "integer_OR_numeric",
                                                  SaveMaps = "logical",
                                                  MapsInterval = "integer_OR_numeric",
                                                  DrawLoadedSp = "logical",
@@ -316,12 +337,14 @@ Simulation <- setClass("SimulationParams", slots = c(Simulation = "integer_OR_nu
                                           OutIntTraitCell = 0L,
                                           OutIntTraitRow = 0L,
                                           OutIntConn = 0L,
+                                          OutIntPaths = 0L,
                                           OutStartPop = 0L,
                                           OutStartInd = 0L,
                                           OutStartGenetic = 0L,
                                           OutStartTraitCell = 0L,
                                           OutStartTraitRow = 0L,
                                           OutStartConn = 0L,
+                                          OutStartPaths = 0L,
                                           SaveMaps = FALSE,
                                           #MapsInterval,
                                           DrawLoadedSp = FALSE,
@@ -716,6 +739,27 @@ setValidity('SimulationParams', function(object){
             }
         }
     }
+    # Paths record
+    if (is.na(object@OutIntPaths || length(object@OutIntPaths)==0 )){
+        msg <- c(msg, 'Output interval of SMS paths (OutIntPaths) has to be set.')
+    }
+    else {
+        if (object@OutIntPaths > 0){
+            if (is.na(object@OutStartPaths) || length(object@OutStartPaths)==0 ){
+                msg <- c(msg, 'Start year of SMS paths output (OutStartPaths) has to be set.')
+            }
+            else {
+                if (object@OutStartPaths < 0 || object@OutStartPaths > object@Years){
+                    msg <- c(msg, 'Invalid value of output parameter OutStartPaths: Value has to be positive and less than simulated Years')
+                }
+            }
+        }
+        else {
+            if(object@OutIntPaths){
+                msg <- c(msg, 'Interval of SMS paths output (OutIntConn) must be positive or zero.')
+            }
+        }
+    }
     # Maps
     if (is.na(object@SaveMaps) || length(object@SaveMaps)==0 ){
         msg <- c(msg, 'SaveMaps has to be set')
@@ -877,6 +921,12 @@ setMethod("initialize", "SimulationParams", function(.Object, ...) {
             warning(this_func, 'OutStartConn', warn_msg_ignored, 'since OutIntConn is zero (output disabled).', call. = FALSE)
         }
     }
+    if (!.Object@OutIntPaths){
+        .Object@OutStartPaths = 0L
+        if(!is.null(args$OutStartPaths)){
+            warning(this_func, 'OutStartPaths', warn_msg_ignored, 'since OutIntPaths is zero (output disabled).', call. = FALSE)
+        }
+    }
     if (!.Object@OutIntGenetic){
         .Object@OutStartGenetic = 0L
         if(!is.null(args$OutStartGenetic)){
@@ -958,6 +1008,9 @@ setMethod("show", "SimulationParams", function(object) {
     }
     if (object@OutIntConn) {
         cat("   Connectivity,  every", object@OutIntConn, "years, starting year", object@OutStartConn, "\n")
+    }
+    if (object@OutIntPaths) {
+        cat("   SMS paths,  every", object@OutIntPaths, "years, starting year", object@OutStartPaths, "\n")
     }
     if (object@OutIntGenetic) {
         cat("   Genetics")

@@ -260,8 +260,8 @@ paramSim::paramSim(void) {
 	relMatSize = 1000;
 #endif
 #if RS_RCPP
-	ReturnPopRaster = false;
-	CreatePopFile = true;
+	outStartPaths = 0; outIntPaths = 0;
+	outPaths = false; ReturnPopRaster = false; CreatePopFile = true;
 #endif
 	drawLoaded = false;
 	viewLand = false; viewPatch = false; viewGrad = false; viewCosts = false;
@@ -327,6 +327,9 @@ mortMapLoaded = s.mortMapLoaded;
 if (s.relMatSize > 0) relMatSize = s.relMatSize;
 #endif
 #if RS_RCPP
+outStartPaths = s.outStartPaths;
+outIntPaths = s.outIntPaths;
+outPaths = s.outPaths;
 ReturnPopRaster = s.ReturnPopRaster;
 CreatePopFile = s.CreatePopFile;
 #endif
@@ -372,6 +375,9 @@ s.relMatSize = relMatSize;
 #endif
 s.mapInt = mapInt; s.traitInt = traitInt;
 #if RS_RCPP
+s.outStartPaths = outStartPaths;
+s.outIntPaths = outIntPaths;
+s.outPaths = outPaths;
 s.ReturnPopRaster = ReturnPopRaster;
 s.CreatePopFile = CreatePopFile;
 #endif

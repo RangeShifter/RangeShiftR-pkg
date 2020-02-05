@@ -1404,6 +1404,7 @@ int ReadParametersR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 	sim.outStartTraitCell = Rcpp::as<int>(ParamParamsR.slot("OutStartTraitCell"));
 	sim.outStartTraitRow = Rcpp::as<int>(ParamParamsR.slot("OutStartTraitRow"));
 	sim.outStartConn = Rcpp::as<int>(ParamParamsR.slot("OutStartConn"));
+	sim.outStartPaths = Rcpp::as<int>(ParamParamsR.slot("OutStartPaths"));
 #if RS_CONTAIN
 	sim.OutStartDamage = Rcpp::as<int>(ParamParamsR.slot("OutStartDamage"));
 #endif
@@ -1444,6 +1445,7 @@ int ReadParametersR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 	sim.outIntTraitCell = Rcpp::as<int>(ParamParamsR.slot("OutIntTraitCell"));
 	sim.outIntTraitRow = Rcpp::as<int>(ParamParamsR.slot("OutIntTraitRow"));
 	sim.outIntConn = Rcpp::as<int>(ParamParamsR.slot("OutIntConn"));
+	sim.outIntPaths = Rcpp::as<int>(ParamParamsR.slot("OutIntPaths"));
 	if(sim.outIntTraitCell > 0)
 		sim.outTraitsCells = true;
 	else
@@ -1456,6 +1458,10 @@ int ReadParametersR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 		sim.outConnect = true;
 	else
 		sim.outConnect = false;
+	if(sim.outIntPaths > 0)
+		sim.outPaths = true;
+	else
+		sim.outPaths = false;
 
 #if RS_CONTAIN
 	sim.OutIntDamage = Rcpp::as<int>(ParamParamsR.slot("OutIntDamage"));
@@ -1966,9 +1972,11 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 	trfrScales scale;
 	string CostsFile;
 	trfrSMSParams smsparams;
+	trfrCRWParams mparams;
 #if TEMPMORT
 	// string MortFile;
 #endif
+	Rcpp::NumericVector ReadVec;
 
 	switch(TransferType) {
 	case 0: { // dispersal kernel
@@ -1981,7 +1989,7 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 
 		// simulation = Rcpp::as<int>(TransParamsR.slot("Simulation")); // REMOVED in R-interface //Must match
 		// simulation numbers in ParamParams
-		trfr.stgDep = Rcpp::as<bool>(TransParamsR.slot("StageDep"));         // Stage-dependent transfer. Must be 0 if IndVar is 1
+		trfr.stgDep = Rcpp::as<bool>(TransParamsR.slot("StageDep")); // Stage-dependent transfer. Must be 0 if IndVar is 1
 		trfr.sexDep = Rcpp::as<bool>(TransParamsR.slot("SexDep")); // Sex-dependent transfer.
 #if RS_CONTAIN
 		trfr.kernType = Rcpp::as<bool>(TransParamsR.slot("KernType"));
@@ -2117,20 +2125,81 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 		Rcpp::S4 TransParamsR("StochMove");
 		TransParamsR = Rcpp::as<Rcpp::S4>(DispParamsR.slot("Transfer"));
 
-		// simulation = Rcpp::as<int>(TransParamsR.slot("Simulation")); // REMOVED in R-interface // Must match
-		// simulation numbers in ParamParams
+		// simulation = Rcpp::as<int>(TransParamsR.slot("Simulation")); // REMOVED in R-interface // Must match simulation numbers in ParamParams
 		movt.pr = Rcpp::as<short>(TransParamsR.slot("PR")); // Perceptual range (cells)
-		movt.prMethod = Rcpp::as<short>(TransParamsR.slot("PRMethod")); // Perceptual range method: 1 = arithmetic mean; 2 =
-		// harmonic mean; 3 = weighted arithmtic mean
-		trfr.indVar = Rcpp::as<bool>(TransParamsR.slot("IndVar"));
-
-		movt.dp = Rcpp::as<float>(TransParamsR.slot("DP")); // Directional persistence, Must be >= 1.0
-		movt.memSize = Rcpp::as<short>(TransParamsR.slot("MemSize")); // No. of previous steps over which to calculate current direction to apply DP [1-14]
-		movt.gb = Rcpp::as<float>(TransParamsR.slot("GoalBias"));         // Goal bias strength, Must be >= 1.0
+		movt.prMethod = Rcpp::as<short>(TransParamsR.slot("PRMethod")); // Perceptual range method: 1 = arithmetic mean; 2 = harmonic mean; 3 = weighted arithmtic mean
+		movt.memSize = Rcpp::as<short>(TransParamsR.slot("MemSize"));    // No. of previous steps over which to calculate current direction to apply DP [1-14]
 		movt.goalType = Rcpp::as<short>(TransParamsR.slot("GoalType"));   // Goal type: 0 (none) or 2 (dispersal bias)
-		if(movt.goalType == 2) {                                          // dispersal bias
-			movt.alphaDB = Rcpp::as<float>(TransParamsR.slot("AlphaDB")); // Dispersal bias decay rate (> 0)
-			movt.betaDB = Rcpp::as<int>(TransParamsR.slot("BetaDB")); // Dispersal bias decay inflection point (no. of steps) (> 0)
+		trfr.indVar = Rcpp::as<bool>(TransParamsR.slot("IndVar"));
+		if(trfr.indVar) {
+			smsparams = pSpecies->getSMSParams(0,0);
+			scale = pSpecies->getTrfrScales();
+		}
+		ReadVec = Rcpp::as<Rcpp::NumericVector>(TransParamsR.slot("DP")); // Directional persistence, Must be >= 1.0
+		if(trfr.indVar) {
+			if(ReadVec.size() == 3) {
+				smsparams.dpMean = (float)ReadVec[0]; //  Directional persistence initial mean (m); Required for IndVar = 1
+				smsparams.dpSD   = (float)ReadVec[1]; //  Directional persistence initial SD (m); Required for IndVar = 1
+				scale.dpScale  = (float)ReadVec[2]; //  Directional persistence scaling factor; Required for IndVar = 1
+			} else {
+				error = 435;
+			}
+		} else {
+			if(ReadVec.size() == 1) {
+				movt.dp = (float)ReadVec[0];
+			} else {
+				error = 436;
+			}
+		}
+		ReadVec = Rcpp::as<Rcpp::NumericVector>(TransParamsR.slot("GoalBias")); // Goal bias strength, Must be >= 1.0
+		if(trfr.indVar) {
+			if(ReadVec.size() == 3) {
+				smsparams.gbMean = (float)ReadVec[0]; //  Goal bias strength initial mean (m); Required for IndVar = 1
+				smsparams.gbSD   = (float)ReadVec[1]; // Goal bias strength initial SD (m); Required for IndVar = 1
+				scale.gbScale  = (float)ReadVec[2]; //  Goal bias strength scaling factor; Required for IndVar = 1
+			} else {
+				error = 435;
+			}
+		} else {
+			if(ReadVec.size() == 1) {
+				movt.gb = (float)ReadVec[0];
+			} else {
+				error = 436;
+			}
+		}
+		if(movt.goalType == 2) {	// dispersal bias
+			ReadVec = Rcpp::as<Rcpp::NumericVector>(TransParamsR.slot("AlphaDB")); // Dispersal bias decay rate (> 0)
+			if(trfr.indVar) {
+				if(ReadVec.size() == 3) {
+					smsparams.alphaDBMean = (float)ReadVec[0]; // decay rate initial mean (m); Required for IndVar = 1
+					smsparams.alphaDBSD   = (float)ReadVec[1]; // decay rate initial SD (m); Required for IndVar = 1
+					scale.alphaDBScale    = (float)ReadVec[2]; // decay rate scaling factor; Required for IndVar = 1
+				} else {
+					error = 435;
+				}
+			} else {
+				if(ReadVec.size() == 1) {
+					movt.alphaDB = (float)ReadVec[0];
+				} else {
+					error = 436;
+				}
+			}
+			ReadVec = Rcpp::as<Rcpp::NumericVector>(TransParamsR.slot("BetaDB")); // Dispersal bias decay inflection point (no. of steps) (> 0)
+			if(trfr.indVar) {
+				if(ReadVec.size() == 3) {
+					smsparams.alphaDBMean = (float)ReadVec[0]; // decay inflection point initial mean (m); Required for IndVar = 1
+					smsparams.alphaDBSD   = (float)ReadVec[1]; // decay inflection point initial SD (m); Required for IndVar = 1
+					scale.alphaDBScale    = (float)ReadVec[2]; // decay inflection point scaling factor; Required for IndVar = 1
+				} else {
+					error = 435;
+				}
+			} else {
+				if(ReadVec.size() == 1) {
+					movt.betaDB = (float)ReadVec[0];
+				} else {
+					error = 436;
+				}
+			}
 		}
 #if RSDEBUG
 		DEBUGLOG << "ReadTransferR(): SMS" << endl
@@ -2139,28 +2208,25 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 		         << " goaltype=" << movt.goalType << endl;
 #endif
 
-		smsparams = pSpecies->getSMSParams(0,0);
-		smsparams.dpMean = Rcpp::as<float>(TransParamsR.slot("DPMean"));
-		smsparams.dpSD = Rcpp::as<float>(TransParamsR.slot("DPSD"));
-		smsparams.gbMean = Rcpp::as<float>(TransParamsR.slot("GBMean"));
-		smsparams.gbSD = Rcpp::as<float>(TransParamsR.slot("GBSD"));
-		smsparams.alphaDBMean = Rcpp::as<float>(TransParamsR.slot("AlphaDBMean"));
-		smsparams.alphaDBSD = Rcpp::as<float>(TransParamsR.slot("AlphaDBSD"));
-		smsparams.betaDBMean = Rcpp::as<float>(TransParamsR.slot("BetaDBMean"));
-		smsparams.betaDBSD = Rcpp::as<float>(TransParamsR.slot("BetaDBSD"));
+		//smsparams.dpMean = Rcpp::as<float>(TransParamsR.slot("DPMean"));
+		//smsparams.dpSD = Rcpp::as<float>(TransParamsR.slot("DPSD"));
+		//smsparams.gbMean = Rcpp::as<float>(TransParamsR.slot("GBMean"));
+		//smsparams.gbSD = Rcpp::as<float>(TransParamsR.slot("GBSD"));
+		//smsparams.alphaDBMean = Rcpp::as<float>(TransParamsR.slot("AlphaDBMean"));
+		//smsparams.alphaDBSD = Rcpp::as<float>(TransParamsR.slot("AlphaDBSD"));
+		//smsparams.betaDBMean = Rcpp::as<float>(TransParamsR.slot("BetaDBMean"));
+		//smsparams.betaDBSD = Rcpp::as<float>(TransParamsR.slot("BetaDBSD"));
 
-		scale = pSpecies->getTrfrScales();
-		scale.dpScale = Rcpp::as<float>(TransParamsR.slot("DPScale"));
-		scale.gbScale = Rcpp::as<float>(TransParamsR.slot("GBScale"));
-		scale.alphaDBScale = Rcpp::as<float>(TransParamsR.slot("AlphaDBScale"));
-		scale.betaDBScale = Rcpp::as<float>(TransParamsR.slot("BetaDBScale"));
+		//scale.dpScale = Rcpp::as<float>(TransParamsR.slot("DPScale"));
+		//scale.gbScale = Rcpp::as<float>(TransParamsR.slot("GBScale"));
+		//scale.alphaDBScale = Rcpp::as<float>(TransParamsR.slot("AlphaDBScale"));
+		//scale.betaDBScale = Rcpp::as<float>(TransParamsR.slot("BetaDBScale"));
 
 		if (trfr.indVar) {
 			pSpecies->setSMSParams(0,0,smsparams);
 			pSpecies->setTrfrScales(scale);
 		}
 
-		// Mortality
 #if TEMPMORT
 		/*bTransferFile >> header;
 		if (header != "StraightenPath" ) errors++;
@@ -2221,7 +2287,6 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 			ReadMortalities(mortfilename);
 		} */
 #else
-
 		movt.straigtenPath = Rcpp::as<bool>(TransParamsR.slot("StraightenPath")); // Straighten path after decision not to settle?
 
 		// Mortality
@@ -2281,26 +2346,52 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 
 		if(trfr.costMap) {
 			costmapname = paramsSim->getDir(1) + CostsFile;
+			string ftype = "CostMap";
 			//rasterdata costsraster;  // made global for R-version
 			costsraster.ok = false;
 			costsraster = ParseRasterHead(costmapname);
 			// check that cost raster matches current landscape
-			if(!costsraster.ok) {
-				error = 51;
-			}
-			if(costsraster.ncols != paramsLand.maxX + 1 || costsraster.nrows != paramsLand.maxY + 1) {
-				error = 52;
-			}
-			landOrigin origin = pLandscape->getOrigin();
-			if((int)costsraster.xllcorner != (int)origin.minEast || (int)costsraster.yllcorner != (int)origin.minNorth) {
-				error = 53;
+			if(costsraster.ok) {
+				// check resolutions match
+				if(costsraster.cellsize == resolution) {
+					if(costsraster.cellsize == landraster.cellsize) {
+						// check that extent matches landscape extent
+						if(costsraster.ncols == paramsLand.maxX + 1 || costsraster.nrows == paramsLand.maxY + 1) {
+							// check origins match
+							//landOrigin origin = pLandscape->getOrigin();
+							//if((int)costsraster.xllcorner != (int)origin.minEast || (int)costsraster.yllcorner != (int)origin.minNorth)
+							if((int)costsraster.xllcorner == (int)landraster.xllcorner &&
+							   (int)costsraster.yllcorner == (int)landraster.yllcorner) {
+								Rcpp::Rcout << ftype << " headers OK: " << costmapname << endl;
+							} else {
+								Rcpp::Rcout << "*** Origin co-ordinates of " << ftype << msghdrs1 << endl;
+								error = 53;
+							}
+						} else {
+							Rcpp::Rcout << "*** Extent of " << ftype << " " << costmapname << msghdrs1 << endl;
+							error = 52;
+						}
+					} else {
+						Rcpp::Rcout << msgresol0 << ftype << " " << costmapname << msghdrs1 << endl;
+						error = 511;
+					}
+				} else {
+					Rcpp::Rcout << msgresol0 << ftype << " " << costmapname << msgresol1 << endl;
+					error = 51;
+				}
+			} else {
+				if(costsraster.errors == -111) OpenErrorR(ftype, costmapname);
+				else FormatErrorR(costmapname, costsraster.errors);
+				error = 512;
 			}
 #if RS_RCPP
 			if(!error) {
 #endif
 				int retcode = pLandscape->readCosts(costmapname);
-				if(retcode < 0)
-					error = 54;
+				if(retcode < 0) error = 54;
+#if RSDEBUG
+				else DEBUGLOG << "Costs map " << costmapname << " loaded." << endl;
+#endif
 #if RS_RCPP
 			}
 #endif
@@ -2337,10 +2428,8 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 				pSpecies->setHabCost(0, (int)HabCostVec[0]);
 			}
 		}
-
 		pSpecies->setTrfr(trfr);
 		pSpecies->setMovtTraits(movt);
-
 	}
 	break; // end of SMS
 
@@ -2348,10 +2437,6 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 
 		Rcpp::S4 TransParamsR("CorrRW");
 		TransParamsR = Rcpp::as<Rcpp::S4>(DispParamsR.slot("Transfer"));
-
-		// CRW params
-		trfrCRWParams mparams;
-		Rcpp::NumericVector ReadVec;
 
 		// simulation = Rcpp::as<int>(TransParamsR.slot("Simulation"));// REMOVED in R-interface  //Must match
 		// simulation numbers in ParamParams
@@ -2370,7 +2455,7 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 			if(ReadVec.size() == 1) {
 				movt.stepLength = (float)ReadVec[0]; // Step length (m); Required for IndVar = 0; must be > 0
 			} else {
-				error = 435;
+				error = 436;
 			}
 		}
 
@@ -2388,7 +2473,7 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 				movt.rho =
 				    (float)ReadVec[0]; // Step correlation coefficient; Required for IndVar = 0; must be > 0.0 and < 1.0
 			} else {
-				error = 435;
+				error = 436;
 			}
 		}
 
@@ -3304,6 +3389,9 @@ void RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 	int read_error;
 	bool params_ok;
 	simParams sim = paramsSim->getSim();
+#if SEASONAL
+	demogrParams dem = pSpecies->getDemogr();
+#endif
 
 	Landscape* pLandscape = NULL; // pointer to landscape
 
@@ -3604,7 +3692,8 @@ void RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 				ReadVirtEcol(9);
 #endif
 
-			if(landtype != 9) {
+//		if (landtype != 9) {
+			if (pLandscape != NULL) {
 				delete pLandscape;
 				pLandscape = NULL;
 			}
@@ -3617,7 +3706,7 @@ void RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 
 	} // end of nLandscapes loop
 
-	// Write performance data to log file
+// Write performance data to log file
 	t1 = time(0);
 	rsLog << endl << "Batch,,,," << t1 - t0 << endl;
 
@@ -3930,11 +4019,11 @@ int ParseInitIndsFileR(wifstream& initIndsFile)
 		if(initIndsFile.eof())
 			year = -98765;
 	} // end of while loop
+	initIndsFile >> prevyear;
 	if(!initIndsFile.eof()) {
 		EOFerrorR(filetype);
 		errors++;
 	}
-
 	return errors;
 }
 

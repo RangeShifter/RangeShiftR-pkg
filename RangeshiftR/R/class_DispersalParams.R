@@ -910,7 +910,7 @@ setMethod("plotProbs", "DispersalKernel", function(x, mortality = FALSE, combine
 #' mean\cr \eqn{3 = }Weighted arithmetic mean
 #' @param MemSize Size of memory, given as the number of previous steps over which to calculate current direction to apply directional persistence
 #' (\code{DP}). A maximum of \eqn{14} steps is supported, default is \eqn{1}. (integer)
-#' @param GoalType Goal bias type: \eqn{0 = } None (default), \eqn{3 = } Dispersal bias.
+#' @param GoalType Goal bias type: \eqn{0 = } None (default), \eqn{2 = } Dispersal bias.
 #' @param IndVar Individual variability in SMS traits (i.e. \code{GoalBias}, \code{AlphaDB} and \code{BetaDB})? Defaults to \code{FALSE}.
 #' @param DP Directional persistence. Corresponds to the tendency to follow a correlated random walk, must be \eqn{\ge 1.0}, defaults to \eqn{1.0}.\cr
 #' If \code{IndVar=TRUE}, expects a vector of length three specifying (Mean, SD, MutationScale) of \code{DP}.

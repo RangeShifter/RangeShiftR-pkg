@@ -14,6 +14,9 @@ ofstream outvisits;
 ofstream outdamage;
 ofstream outsummdmg;
 #endif // RS_CONTAIN 
+#if RS_RCPP
+ofstream outMovePaths;
+#endif // RS_RCPP 
 
 //---------------------------------------------------------------------------
 
@@ -225,10 +228,8 @@ int InitDist::readDistribution(string distfile)
 		}
 	}
 #if RS_RCPP
-	if (!dfile.eof())
-	{
-		EOFerrorR(distfile);
-	}
+	dfile >> p;
+	if (!dfile.eof()) EOFerrorR(distfile);
 #endif
 
 	dfile.close();
@@ -2533,13 +2534,12 @@ int Landscape::readLandscape(int fileNum,string habfile,string pchfile)
 			}
 		}
 #if RS_RCPP
-		if (!hfile.eof())
+		hfile >> hfloat;
+		if (!hfile.eof()) EOFerrorR(habfile);
+		if (patchModel)
 		{
-			EOFerrorR(habfile);
-		}
-		if (patchModel && !pfile.eof())
-		{
-			EOFerrorR(pchfile);
+			pfile >> pfloat;
+			if (!pfile.eof()) EOFerrorR(pchfile);
 		}
 #endif
 		break;
@@ -2680,13 +2680,12 @@ int Landscape::readLandscape(int fileNum,string habfile,string pchfile)
 		}
 		habIndexed = true; // habitats are already numbered 1...n in correct order
 #if RS_RCPP
-		if (!hfile.eof())
+		hfile >> hfloat;
+		if (!hfile.eof()) EOFerrorR(habfile);
+		if (patchModel)
 		{
-			EOFerrorR(habfile);
-		}
-		if (patchModel && !pfile.eof())
-		{
-			EOFerrorR(pchfile);
+			pfile >> pfloat;
+			if (!pfile.eof()) EOFerrorR(pchfile);
 		}
 #endif
 		break;
@@ -2811,13 +2810,12 @@ int Landscape::readLandscape(int fileNum,string habfile,string pchfile)
 			}
 		}
 #if RS_RCPP
-		if (!hfile.eof())
+		hfile >> hfloat;
+		if (!hfile.eof()) EOFerrorR(habfile);
+		if (patchModel)
 		{
-			EOFerrorR(habfile);
-		}
-		if (patchModel && !pfile.eof())
-		{
-			EOFerrorR(pchfile);
+			pfile >> pfloat;
+			if (!pfile.eof()) EOFerrorR(pchfile);
 		}
 #endif
 		break;
@@ -3108,7 +3106,7 @@ int Landscape::readCosts(string fname)
 		StreamErrorR(fname);
 		costs.close();
 		costs.clear();
-		return 134;
+		return -134;
 	}
 	if (header != L"ncols" && header != L"NCOLS") {
 #else
@@ -3123,7 +3121,6 @@ int Landscape::readCosts(string fname)
 	}
 	costs >> maxXcost >> header >> maxYcost >> header >> minLongCost;
 	costs >> header >> minLatCost >> header >> resolCost >> header >> NODATACost;
-
 
 	MemoLine("Loading costs map. Please wait...");
 
@@ -3141,16 +3138,19 @@ int Landscape::readCosts(string fname)
 				StreamErrorR(fname);
 				costs.close();
 				costs.clear();
-				return 144;
+				return -144;
 			}
 #endif
-			if ((hc < 1 && hc != NODATACost)) {
+			if (hc < 1 && hc != NODATACost) {
 #if RSDEBUG
 #if BATCH
 //		DEBUGLOG << "Landscape::readCosts(): x=" << x << " y=" << y
 //			<< " fcost=" << fcost << " hc=" << hc
 //			<< endl;
 #endif
+#endif
+#if RS_RCPP
+				Rcpp::Rcout << "Cost map my only contain values of 1 or higher, but found " << fcost << "." << endl;
 #endif
 				// error - zero / negative cost not allowed
 //			MessageDlg("Error in the costs map file : zero or negative cost detected."
@@ -3166,21 +3166,16 @@ int Landscape::readCosts(string fname)
 			}
 		}
 	}
-	costs.close();
-	costs.clear();
 #if RS_RCPP
-	if (costs.eof())
-	{
-		MemoLine("Costs map loaded.");
-	} else
-	{
-		EOFerrorR(fname);
-	}
+	costs >> fcost;
+	if (costs.eof()) Rcpp::Rcout << "Costs map loaded." << endl;
+	else EOFerrorR(fname);
 #else
 	MemoLine("Costs map loaded.");
 #endif
+	costs.close();
+	costs.clear();
 	return maxcost;
-
 }
 
 //---------------------------------------------------------------------------
@@ -3326,6 +3321,42 @@ bool Landscape::outConnectHeaders(int option)
 
 	return outConnMat.is_open();
 }
+
+#if RS_RCPP
+// Write movement paths file headers
+void Landscape::outPathsHeaders(int rep, int option)
+{
+	if (option == -999) { // close the file
+		if (outMovePaths.is_open()) outMovePaths.close();
+		outMovePaths.clear();
+	}
+	if (option == 0) { // open the file and write header
+
+		simParams sim = paramsSim->getSim();
+		string name = paramsSim->getDir(2);
+		if (sim.batchMode) {
+			name += "Batch" + Int2Str(sim.batchNum)
+				 +  "_Sim"  + Int2Str(sim.simulation)
+				 +  "_Land" + Int2Str(landNum)
+				 +  "_Rep"  + Int2Str(rep);
+		} else {
+			name += "Sim" + Int2Str(sim.simulation)
+				 +  "_Rep"  + Int2Str(rep);
+		}
+		name += "_MovePaths.txt";
+		
+		outMovePaths.open(name.c_str());
+		if( outMovePaths.is_open() ){
+			outMovePaths << "Year\tIndID\tStep\tx\ty\tStatus" << endl;
+		}else{
+			#if RSDEBUG
+			DEBUGLOG << "RunModel(): UNABLE TO OPEN MOVEMENT PATHS FILE" << endl;
+			#endif
+			outMovePaths.clear();
+		}
+	}
+}
+#endif
 
 #if SEASONAL
 void Landscape::outConnect(int rep,int yr,short season)

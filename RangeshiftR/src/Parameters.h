@@ -290,8 +290,8 @@ struct simParams {
 	int relMatSize;
 #endif // PEDIGREE
 #if RS_RCPP
-	bool ReturnPopRaster;
-	bool CreatePopFile;
+	int outStartPaths; int outIntPaths;
+	bool outPaths;	bool ReturnPopRaster; bool CreatePopFile;
 #endif
 };
 
@@ -436,6 +436,9 @@ private:
 	int relMatSize;			// size of pedigree relatedness matrix
 #endif // PEDIGREE
 #if RS_RCPP
+	int outStartPaths;
+	int outIntPaths;
+	bool outPaths;
 	bool ReturnPopRaster;
 	bool CreatePopFile;
 #endif

@@ -723,11 +723,11 @@ for (int i = 0; i < npops; i++) { // all populations
 }
 
 // Transfer through the matrix - run for the matrix sub-community only
-#if SEASONAL
+#if SEASONAL || RS_RCPP
 int SubCommunity::transfer(Landscape *pLandscape,short landIx,short nextseason) 
 #else
 int SubCommunity::transfer(Landscape *pLandscape,short landIx) 
-#endif // SEASONAL 
+#endif // SEASONAL || RS_RCPP 
 {
 #if RSDEBUG
 //DEBUGLOG << "SubCommunity::transfer(): this=" << this
@@ -743,11 +743,11 @@ for (int i = 0; i < npops; i++) { // all populations
 		ndispersers += popns[i]->grouptransfer(pLandscape,landIx);
 	else
 #else
-#if SEASONAL
+#if SEASONAL || RS_RCPP
 		ndispersers += popns[i]->transfer(pLandscape,landIx,nextseason);
 #else
 		ndispersers += popns[i]->transfer(pLandscape,landIx);
-#endif // SEASONAL 
+#endif // SEASONAL || RS_RCPP 
 #endif // GROUPDISP
 #if RSDEBUG
 //DEBUGLOG << "SubCommunity::transfer(): i = " << i

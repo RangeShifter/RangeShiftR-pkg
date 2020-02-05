@@ -286,7 +286,7 @@ setMethod("show", "ArtificialLandscape", function(object){
 #' \code{xllcorner} \tab x-coordinate (longitude) of the lower-left corner \cr
 #' \code{yllcorner} \tab y-coordinate (latitude) of the lower-left corner \cr
 #' \code{cellsize} \tab Resolution (in meters) \cr
-#' \code{NODATA_value} \tab Value for cells having missing data (usually -9999)
+#' \code{NODATA_value} \tab Value for cells having missing data (usually -9999) }
 #'
 #' The rest of the file is a grid containing a value for each cell, one line per row. \code{RangeShiftR} can read-in two different types of habitat maps:
 #'  - \emph{Raster with habitat codes} (\code{HabitatQuality=FALSE}):  In this option each habitat or land-cover type has a unique integer code. Each cell in the file contains a single habitat code and \eqn{100} percent coverage is assumed for the cell. The landscape is therefore composed of discrete habitat cells. The codes are required to be sequential integers starting from \eqn{1} and ranging to \code{Nhabitats}.

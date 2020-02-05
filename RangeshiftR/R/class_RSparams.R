@@ -50,8 +50,13 @@ setValidity("RSparams", function(object) {
             msg <- c(msg, "Traits output is only applicable for a model with inter-individual variability in (at least one) dispersal trait(s)!")
         }
     }
-    if (object@simul@SMSHeatMap && class(object@dispersal@Transfer)[1] != "StochMove"){
-        msg <- c(msg, "SMS heat map output is only applicable for a model with the transfer method StochMove!")
+    if (class(object@dispersal@Transfer)[1] != "StochMove"){
+        if (object@simul@OutIntPaths) {
+            msg <- c(msg, "SMS paths output is only applicable for a model with the SMS transfer method!")
+        }
+        if (object@simul@SMSHeatMap){
+            msg <- c(msg, "SMS heat map output is only applicable for a model with the SMS transfer method!")
+        }
     }
     #LAND
     validObject(object@land)
@@ -408,9 +413,6 @@ setValidity("RSparams", function(object) {
                             else {
                                 if (class(object@dispersal@Transfer@Costs)=="character") {
                                     msg <- c(msg, "SMS(): Costs can not be imported from a raster map for an artificial landscape!")
-                                }
-                                else {
-                                    msg <- c(msg, "SMS(): Costs has a wrong format!")
                                 }
                             }
                         }

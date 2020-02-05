@@ -624,11 +624,11 @@ void Community::dispersal(short landIx,bool obsconn)
 #if PEDIGREE
 void Community::dispersal(Pedigree *pPed,int rep,int yr,int gen,short landIx)
 #else
-#if SEASONAL
+#if SEASONAL || RS_RCPP
 void Community::dispersal(short landIx,short nextseason)
 #else
 void Community::dispersal(short landIx)
-#endif // SEASONAL 
+#endif // SEASONAL || RS_RCPP
 #endif // PEDIGREE
 #endif // RS_ABC
 {
@@ -678,11 +678,11 @@ do {
 		}
 	}
 #endif
-#if SEASONAL
+#if SEASONAL || RS_RCPP
 	ndispersers = matrix->transfer(pLandscape,landIx,nextseason);
 #else
 	ndispersers = matrix->transfer(pLandscape,landIx);
-#endif // SEASONAL 
+#endif // SEASONAL || RS_RCPP
 #if RSDEBUG
 //DEBUGLOG << "Community::dispersal() 2222: ndispersers=" << ndispersers << endl;
 #endif

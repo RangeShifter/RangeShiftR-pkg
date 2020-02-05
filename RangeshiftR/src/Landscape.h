@@ -494,6 +494,9 @@ public:
 	bool outConnectHeaders( // Write connectivity file headers
 	    int		// option - set to -999 to close the connectivity file
 	);
+#if RS_RCPP
+	void outPathsHeaders(int, int);
+#endif
 #if SEASONAL
 	void outConnect(
 	    int,	// replicate no.

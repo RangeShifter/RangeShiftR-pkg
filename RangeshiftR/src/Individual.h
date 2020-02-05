@@ -381,6 +381,11 @@ Individual* getMate(void);
 		const bool	 		// output as cross table?
 	);
 #endif
+#if RS_RCPP
+	void outMovePath( // Write records to movement paths file
+		const int		 	// year
+	);
+#endif 
 
 #if GROUPDISP
 
@@ -516,6 +521,10 @@ extern RSrandom *pRandom;
 
 #if RSDEBUG
 extern ofstream DEBUGLOG;
+#endif
+
+#if RS_RCPP
+extern ofstream outMovePaths;
 #endif
 
 //---------------------------------------------------------------------------

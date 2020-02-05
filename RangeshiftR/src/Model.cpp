@@ -457,7 +457,11 @@ int RunModel(Landscape *pLandscape,int seqsim)
 		if (sim.outInds)
 			pComm->outInds(rep,-1,-1,-1);
 #endif
-
+#if RS_RCPP
+		// open a new movement paths file for each replicate
+		if (sim.outPaths)
+			pLandscape->outPathsHeaders(rep,0);
+#endif 
 #if RS_ABC
 		ixABC = 0;
 		if (ixABC < nABCyears) yearABC = pABCmaster->getYear(ixABC++);
@@ -727,8 +731,12 @@ int RunModel(Landscape *pLandscape,int seqsim)
 #if SEASONAL
 				pComm->dispersal(landIx,0);
 #else
+#if RS_RCPP
+				pComm->dispersal(landIx,yr);
+#else
 				pComm->dispersal(landIx);
-#endif // SEASONAL 
+#endif // RS_RCPP
+#endif // SEASONAL
 #endif // PEDIGREE
 #endif // RS_ABC
 			}
@@ -989,9 +997,12 @@ int RunModel(Landscape *pLandscape,int seqsim)
 #if SEASONAL
 				if ((gen+1) < dem.nSeasons) pComm->dispersal(landIx,(gen+1));
 				else pComm->dispersal(landIx,0);
-
+#else
+#if RS_RCPP
+				pComm->dispersal(landIx,yr);
 #else
 				pComm->dispersal(landIx);
+#endif // RS_RCPP
 #endif // SEASONAL 
 #endif // PEDIGREE
 #endif // RS_ABC
@@ -1460,6 +1471,10 @@ int RunModel(Landscape *pLandscape,int seqsim)
 			pLandscape->resetVisits();
 		}
 
+#if RS_RCPP
+		if (sim.outPaths)
+			pLandscape->outPathsHeaders(rep,-999);
+#endif 
 #if VCL
 		if (stopRun) break;
 #endif
@@ -1532,7 +1547,7 @@ int RunModel(Landscape *pLandscape,int seqsim)
 	if (sim.outConnect && ppLand.patchModel) {
 		pLandscape->deleteConnectMatrix();
 		pLandscape->outConnectHeaders(-999); // close Connectivity Matrix file
-	}
+	} 
 
 // Occupancy outputs
 	if (sim.outOccup && sim.reps > 1) {
@@ -3590,6 +3605,14 @@ void OutParameters(Landscape *pLandscape)
 		if (sim.outStartConn > 0) outPar << " starting year " << sim.outStartConn;
 		outPar << endl;
 	}
+#if RS_RCPP
+	if (sim.outPaths) {
+		outPar << "SMS paths - every " << sim.outIntPaths << " year";
+		if (sim.outIntPaths > 1) outPar << "s";
+		if (sim.outStartPaths > 0) outPar << " starting year " << sim.outStartPaths;
+		outPar << endl;
+	}
+#endif
 #if RS_CONTAIN
 	if (sim.outDamage) {
 		outPar << "Damage indices - every " << sim.outIntDamage << " year";
