@@ -1936,10 +1936,17 @@ void Landscape::deleteLandChanges(void)
 	landchanges.clear();
 }
 
+#if RS_RCPP
+int Landscape::readLandChange(int filenum, wifstream& hfile, wifstream& pfile)
+#else
 int Landscape::readLandChange(int filenum)
+#endif
 {
-
+#if RS_RCPP
+	wstring header;
+#else
 	string header;
+#endif
 	int h,p,habnodata,pchnodata,pchseq;
 	int ncols,nrows;
 	float hfloat,pfloat;
@@ -1955,6 +1962,7 @@ int Landscape::readLandChange(int filenum)
 //}
 	if (patchModel) pchseq = patchCount();
 
+#if !RS_RCPP
 	ifstream hfile; // habitat file input stream
 	ifstream pfile; // patch file input stream
 
@@ -1978,6 +1986,7 @@ int Landscape::readLandChange(int filenum)
 		for (int i = 0; i < 5; i++) pfile >> header >> pfloat;
 		pfile >> header >> pchnodata;
 	}
+#endif
 
 // set up bad float values to ensure that valid values are read
 	float badhfloat = -9.0;
@@ -1991,12 +2000,42 @@ int Landscape::readLandChange(int filenum)
 		for (int y = dimY-1; y >= 0; y--) {
 			for (int x = 0; x < dimX; x++) {
 				hfloat = badhfloat;
+#if RS_RCPP
+				if(hfile >> hfloat) {
+#else
 				hfile >> hfloat;
-				h = (int)hfloat;
+#endif
+					h = (int)hfloat;
+#if RS_RCPP
+				} else {
+					// corrupt file stream
+					StreamErrorR("habitatfile");
+					hfile.close();
+					hfile.clear();
+					pfile.close();
+					pfile.clear();
+					return 171;
+				}
+#endif
 				if (patchModel) {
 					pfloat = badpfloat;
+#if RS_RCPP
+					if(pfile >> pfloat) {
+#else
 					pfile >> pfloat;
-					p = (int)pfloat;
+#endif
+						p = (int)pfloat;
+#if RS_RCPP
+					} else {
+						// corrupt file stream
+						StreamErrorR("patchfile");
+						hfile.close();
+						hfile.clear();
+						pfile.close();
+						pfile.clear();
+						return 172;
+					}
+#endif
 				}
 #if RSDEBUG
 //DebugGUI(("Landscape::readLandscape(): x=" + Int2Str(x) + " y=" + Int2Str(y)
@@ -2041,18 +2080,57 @@ int Landscape::readLandChange(int filenum)
 				}
 			}
 		}
+#if RS_RCPP
+		hfile >> hfloat;
+		if (!hfile.eof()) EOFerrorR("habitatfile");
+		if (patchModel)
+		{
+			pfile >> pfloat;
+			if (!pfile.eof()) EOFerrorR("patchfile");
+		}
+#endif
 		break;
 
 	case 2: // habitat quality
 		for (int y = dimY-1; y >= 0; y--) {
 			for (int x = 0; x < dimX; x++) {
 				hfloat = badhfloat;
+#if RS_RCPP
+				if(hfile >> hfloat) {
+#else
 				hfile >> hfloat;
-				h = (int)hfloat;
+#endif
+					h = (int)hfloat;
+#if RS_RCPP
+				} else {
+					// corrupt file stream
+					StreamErrorR("habitatfile");
+					hfile.close();
+					hfile.clear();
+					pfile.close();
+					pfile.clear();
+					return 173;
+				}
+#endif
 				if (patchModel) {
 					pfloat = badpfloat;
+#if RS_RCPP
+					if(pfile >> pfloat) {
+#else
 					pfile >> pfloat;
-					p = (int)pfloat;
+#endif
+						p = (int)pfloat;
+#if RS_RCPP
+					} else {
+						// corrupt file stream
+						StreamErrorR("patchfile");
+						hfile.close();
+						hfile.clear();
+						pfile.close();
+						pfile.clear();
+						return 174;
+					}
+#endif
 				}
 #if RSDEBUG
 //MemoLine(("y=" + Int2Str(y) + " x=" + Int2Str(x) + " hfloat=" + Float2Str(hfloat)
@@ -2098,6 +2176,15 @@ int Landscape::readLandChange(int filenum)
 				}
 			}
 		}
+#if RS_RCPP
+		hfile >> hfloat;
+		if (!hfile.eof()) EOFerrorR("habitatfile");
+		if (patchModel)
+		{
+			pfile >> pfloat;
+			if (!pfile.eof()) EOFerrorR("patchfile");
+		}
+#endif
 		break;
 
 	default:
@@ -2407,7 +2494,7 @@ int Landscape::readLandscape(int fileNum,string habfile,string pchfile)
 	p = 0; 		// initial patch number for cell-based landscape
 // create patch 0 - the matrix patch (even if there is no matrix)
 	if (fileNum == 0) newPatch(seq++,p++);
-
+ 
 	switch (rasterType) {
 
 	case 0: // raster with habitat codes - 100% habitat each cell

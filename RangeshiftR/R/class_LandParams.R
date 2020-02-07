@@ -264,8 +264,8 @@ setMethod("show", "ArtificialLandscape", function(object){
 #' @usage ImportedLandscape(LandscapeFile, Resolution = 100, HabitatQuality = FALSE,
 #'                   Nhabitats, K = 10, PatchFile = "NULL",
 #'                   SpDistFile = "NULL", SpDistResolution,
-#'                   DynamicLand = "NULL")
-#' @param LandscapeFile Filename of the landscape habitat map which shall be imported from the Inputs-folder. See the Details for information on the required format.
+#'                   DynamicLandYears = 0)
+#' @param LandscapeFile Filename(s) of the landscape habitat map(s) which shall be imported from the Inputs-folder. See the Details for information on the required format.
 #' @param Resolution Cell size in meters, defaults to \eqn{100}. (integer)
 #' @param HabitatQuality If FALSE (default), unique integer habitat codes are expected in the imported map to characterise the habitat of each cell. This requires to set \code{Nhabitats}. \cr
 #' If TRUE, continuous habitat quality values are expected, ranging from \eqn{0.0} to \eqn{100.0}.\cr
@@ -276,10 +276,12 @@ setMethod("show", "ArtificialLandscape", function(object){
 #' instead of interpreting it as limiting carrying capacity.\cr
 #' If \code{HabitatQuality=FALSE}, a vector of length \code{Nhabitats} is expected, specifying the respective carrying capacity for every habitat code.\cr
 #' If \code{HabitatQuality=TRUE}, \eqn{K} is interpreted as the maximum carrying capacity reached in cells with \eqn{100}\% habitat quality. All other cells have the respective fraction of \eqn{K}.
-#' @param PatchFile Filename of the patch map which shall be imported, Default is \code{NULL}.
+#' @param PatchFile Filename(s) of the patch map(s) which shall be imported, Default is \code{NULL}.
 #' @param SpDistFile Filename of the species initial distribution map which shall be imported (*.txt). Default is \code{NULL}.
 #' @param SpDistResolution Required if \code{SpDistFile} is given: Cell size of the distribution map in meters. (integer) Must be an integer multiple of the landscape resolution.
-#' @param DynamicLand Data.frame containing the named colums 'Year', 'ChLand', and - for a patch-based model - 'ChPatch'. Each row defines a change in the landscape.
+#' @param DynamicLandYears Integer vector indicating the years of landscape changes. For a non-dynamic landscape its only entry is \eqn{0} (default). 
+#' For a dynamic landscape, \code{DynamicLandYears} lists the years in which the corresponding habitat maps in \code{LandscapeFile} and - if applicable - their respective patch 
+#' maps in \code{PatchFile} are loaded and used in the simulation. More details below. 
 #' @details RangeShifter requires every input map to be a text file in ArcGIS raster export format, which has the following six header lines:
 #' \tabular{ll}{\code{ncols} \tab Number of columns \cr
 #' \code{nrows} \tab Number of rows \cr
@@ -300,6 +302,26 @@ setMethod("show", "ArtificialLandscape", function(object){
 #' A \emph{species distribution map} can be overlaid on top of the habitat map and can be used to define an initial distribution. The map is provided through \code{SpDistFile} must be in raster format and be aligned with the landscape map, i.e. the coordinates of the lower-left corner must be the same. The extent of the map does not have to be necessarily
 #' the same as the landscape. The resolution can be the same or coarser, provided that it is a multiple of the landscape resolution. For example, if the landscape cell size is \eqn{250m}, the species distribution can be at the resolution of \eqn{250m}, \eqn{500m}, \eqn{750m}, \eqn{1000m} etc.
 #' Each cell of the species distribution map must contain either \eqn{0} (species absent or not recorded) or \eqn{1} (species present).
+#' 
+#' \emph{Dynamic landscapes} \cr
+#' An imported landscape may be dynamic, i.e. the attributes of cells (either habitat class or quality index) and its patch number (if the model is patch-based) may be changed at specified years during the course of
+#' a simulation. Note that any landscape change occurs at the start of the year, i.e. before the first/only reproductive season. In a patch-based model, the shape of patches may change, patches may
+#' be removed and new patches may be created where there was previously inter-patch matrix. Thus some populations may be extirpated (in a non-structured population, all individuals die; in a stage-structured population, 
+#' all individuals either die or have an immediate opportunity to disperse), and new populations may arise from colonisation of newly suitable areas.
+#' 
+#' However, there are certain restrictions. Any part of the original landscape which was a ‘no-data’ region (e.g. the sea or land beyond a study area boundary) must remain in that state for the whole simulation. 
+#' The identity of patches is not cross-checked between changes, and care must therefore be taken to ensure consistency; otherwise, a patch (and its resident population) can jump to a distant location or be split into 
+#' two or more disjunct parts, with unpredictable and possibly weird consequences. It is legitimate for a patch to be split into two or more separate patches (e.g. by construction of a motorway or some other barrier), 
+#' but any existing population will remain with the part (if any) which retains the original patch number, and populations within the other parts (having a new patch number) must arise through colonisation. 
+#' Possible ways to work around this restriction include:
+#'    1. Assign to all post-change parts of the original patch a new, unique patch number and specify that dispersal is allowed after population destruction (which is possible only for a structured population), in which 
+#' case some colonisation of the new patches should occur. Note that the connectivity matrix will be misleading in such cases, as every successful ‘disperser’ will appear to have moved from patch N to patch M (where M 
+#' is the new patch number).
+#'    2. Instead of a single original patch, define two (or more) distinct but adjacent patches in the original landscape, so that they each retain their own populations when they become separated by the landscape change.
+#' 
+#' A dynamic landscape can be specified using the slots \code{LandscapeFile} (, \code{PatchFile}) and \code{DynamicLandYears}. \code{LandscapeFile} (and \code{PatchFile}) take a character vector with the filenames of the maps 
+#' to be loaded. All provided maps must agree in resolution, extent and origin. \code{DynamicLandYears} is a number vector that contains the years, in which these landscapes shall be loaded; it must have the same ordering so
+#' that years and maps can be matched. If a specific map is used multiple times, it must be listed each time nevertheless.
 #' @return A parameter object of class ImportedLandscape
 #' @name ImportedLandscape
 #' @export ImportedLandscape
@@ -311,7 +333,7 @@ ImportedLandscape <- setClass("ImportedLandscape", slots = c(LandscapeFile = "ch
                                                              PatchFile = "character",          # sets the patchmodel -switch in class ControlParams when added
                                                              SpDistFile = "character",         # sets the speciesdist -switch in class ControlParams when added
                                                              SpDistResolution = "integer_OR_numeric",
-                                                             DynamicLand = "data.frame")
+                                                             DynamicLandYears = "integer_OR_numeric") #= "data.frame")
                               , prototype = list(#LandscapeFile,
                                                  Resolution = 100L,
                                                  HabitatQuality = FALSE,
@@ -320,14 +342,14 @@ ImportedLandscape <- setClass("ImportedLandscape", slots = c(LandscapeFile = "ch
                                                  PatchFile = "NULL",
                                                  SpDistFile = "NULL",
                                                  #SpDistResolution,
-                                                 DynamicLand = data.frame())
+                                                 DynamicLandYears = 0L) #= data.frame())
                               , contains = "LandParams")
 
         # add interface and docu for Dynamic Landscapes
 
 setValidity("ImportedLandscape", function(object) {
     msg <- NULL
-    if (is.na(object@LandscapeFile) || length(object@LandscapeFile)==0) {
+    if (anyNA(object@LandscapeFile) || length(object@LandscapeFile)==0) {
         msg <- c(msg, "No filename to import Landscape from was given.")
     }
     if (is.na(object@Resolution) || length(object@Resolution)==0) {
@@ -371,6 +393,21 @@ setValidity("ImportedLandscape", function(object) {
             }
         }
     }
+    if (anyNA(object@PatchFile) || length(object@PatchFile)==0) {
+        msg <- c(msg, "No filename to import Patches from was given.")
+    }
+    else {
+        if (object@PatchFile == "NULL") {
+            if(length(object@PatchFile) != 1){
+                msg <- c(msg, "In a cell-based model PatchFile should have exactly one entry \'NULL\'!")
+            }
+        }
+        else {
+            if(length(object@PatchFile) != length(object@LandscapeFile)){
+                msg <- c(msg, "LandscapeFile and PatchFile must have the same number of entries!")
+            }
+        }
+    }
     if (object@SpDistFile!="NULL") {
         if (is.na(object@SpDistResolution) || length(object@SpDistResolution)==0) {
             msg <- c(msg, "Resolution of Species distribution must be set!")
@@ -391,24 +428,25 @@ setValidity("ImportedLandscape", function(object) {
             }
         }
     }
-    if (length(object@DynamicLand)>0) {
-        if (anyNA(object@DynamicLand)) {
-            msg <- c(msg, "All entries in DynamicLand must be set!")
+    if(anyNA(object@DynamicLandYears) || length(object@DynamicLandYears)==0) {
+        msg <- c(msg, "DynamicLandYears must be set!")
+    }
+    else {
+        if(length(object@LandscapeFile) != length(object@DynamicLandYears)){
+            msg <- c(msg, "LandscapeFile and DynamicLandYears must have the same number of entries!")
         }
         else{
-            if(PatchFile == "NULL"){
-                if(!all(names(object@DynamicLand)==c("Year","ChLand"))){
-                    msg <- c(msg, "DynamicLand must have the named clomuns 'Year','ChLand' for a cell-based landscape!")
-                }
+            if(object@DynamicLandYears[1] != 0){
+                msg <- c(msg, "The first entry of DynamicLandYears must be 0!")
             }
             else{
-                if(!all(names(object@DynamicLand)==c("Year","ChLand","ChPatch"))){
-                    msg <- c(msg, "DynamicLand must have the named clomuns 'Year','ChLand','ChPatch' for a patch-based landscape!")
+                if(!all(sort(object@DynamicLandYears) == object@DynamicLandYears)){
+                    msg <- c(msg, "DynamicLandYears must contain subsequent years!")
                 }
             }
         }
     }
-    if (is.null(msg)) TRUE else msg}
+   if (is.null(msg)) TRUE else msg}
 )
 setMethod("initialize", "ImportedLandscape", function(.Object, ...) {
     this_func = "ImportedLandscape(): "
@@ -432,8 +470,10 @@ setMethod("initialize", "ImportedLandscape", function(.Object, ...) {
     .Object}
 )
 setMethod("show", "ImportedLandscape", function(object){
-    cat(" Landscape imported from file:\n  ", paste(object@LandscapeFile), "\n")
-    #cat(" Landscapee #", object@LandNum, "imported from file:\n  ", paste(object@LandscapeFile), "\n")
+    cat(" Landscape imported from file")
+    if(length(object@DynamicLandYears)==1) {
+        cat(":\n  ", paste(object@LandscapeFile), "\n")
+    }
     if(object@HabitatQuality) {
         cat("   with continuous habitat quality\n")
         cat("   Maximum carrying capacity K =", paste(object@K), ".\n")
@@ -443,12 +483,29 @@ setMethod("show", "ImportedLandscape", function(object){
         cat("   Carrying capacities K =", paste(object@K), ".\n")
     }
     if (object@PatchFile!="NULL") {
-        cat("   Patches imported from file:\n  ", paste(object@PatchFile), "\n")
+        cat("   Patches imported from file:\n  ")
+        if(length(object@DynamicLandYears)==1) {
+            cat(paste(object@PatchFile), "\n")
+        }
     }
     cat ("   Resolution      :", paste(object@Resolution),"\n")
-    #if (object@DynLandFile!="NULL") {
-    #    cat(" Dynamic landscape imported from file:\n  ", paste(object@DynLandFile), "\n")
-    #}
+    if(length(object@DynamicLandYears)>1) {
+        if (object@PatchFile=="NULL") {
+            cat("   Land changes in\n    Year   to Habitat file:\n")
+        }
+        else {
+            cat("   Land changes in\n    Year   to Habitat and Patch file:\n")
+        }
+        for (a in 1:length(object@DynamicLandYears)) {
+            if (object@PatchFile=="NULL") {
+                cat("   ",paste(object@DynamicLandYears[a]),"  ",paste(object@LandscapeFile[a]),"\n")
+            }
+            else {
+                cat("   ",paste(object@DynamicLandYears[a]),"  ",paste(object@LandscapeFile[a]),"  ",paste(object@PatchFile[a]),"\n")
+            }
+        }
+        cat(paste(object@PatchFile), "\n")
+    }
     if(object@SpDistFile!="NULL") {
         cat(" Initial Species Distribution imported from file:\n  ", paste(object@SpDistFile), "\n")
         cat ("   Resolution      :", paste(object@SpDistResolution),"\n")

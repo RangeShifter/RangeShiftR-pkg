@@ -403,9 +403,17 @@ public:
 	    short	// change number
 	);
 	void deleteLandChanges(void);
+	#if RS_RCPP
+	int readLandChange(
+	    int,		// change file number
+		wifstream&, // habitat file stream, 
+		wifstream&  // patch file stream
+	);
+	#else
 	int readLandChange(
 	    int		// change file number
 	);
+	#endif
 	void createPatchChgMatrix(void);
 	void recordPatchChanges(int);
 	void deletePatchChgMatrix(void);

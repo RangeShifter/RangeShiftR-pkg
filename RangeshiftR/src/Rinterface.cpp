@@ -67,7 +67,8 @@ rasterdata mortraster;
 // ...including names of the input files
 // string parameterFile;
 string landFile;
-string name_landscape, name_patch, name_dynland, name_sp_dist;
+string name_landscape, name_patch, name_sp_dist;
+//string name_dynland;
 //#if RS_CONTAIN
 // string name_damagefile;
 // string name_managefile;
@@ -687,11 +688,24 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 		}
 	} else { // imported raster map
 		ppLand.landNum = Rcpp::as<int>(LandParamsR.slot("LandNum"));
-		ppLand.nHab =
-		    Rcpp::as<int>(LandParamsR.slot("Nhabitats")); // no longer necessary to read no. of habitats from landFile
-		name_landscape = Rcpp::as<string>(LandParamsR.slot("LandscapeFile"));
-		name_patch = Rcpp::as<string>(LandParamsR.slot("PatchFile"));
-		name_dynland = "NULL"; // Rcpp::as<string>(LandParamsR.slot("DynamicLand"));
+		ppLand.nHab = Rcpp::as<int>(LandParamsR.slot("Nhabitats")); // no longer necessary to read no. of habitats from landFile
+
+		Rcpp::IntegerVector dynland_years;
+		Rcpp::StringVector habitatmaps, patchmaps;
+		dynland_years = Rcpp::as<Rcpp::IntegerVector>(LandParamsR.slot("DynamicLandYears"));
+		if(dynland_years.size() == 1 && dynland_years[0] == 0 ) ppLand.dynamic = false;
+		else ppLand.dynamic = true;
+		if(ppLand.dynamic) {
+			habitatmaps = Rcpp::as<Rcpp::StringVector>(LandParamsR.slot("LandscapeFile"));
+			patchmaps = Rcpp::as<Rcpp::StringVector>(LandParamsR.slot("PatchFile"));
+			name_landscape = habitatmaps(0);
+			name_patch = patchmaps(0);
+		} else {
+			name_landscape = Rcpp::as<string>(LandParamsR.slot("LandscapeFile"));
+			name_patch = Rcpp::as<string>(LandParamsR.slot("PatchFile"));
+		}
+		if(!patchmodel && name_patch != "NULL") Rcpp::Rcout << "PatchFile must be NULL in a cell-based model!" << endl;
+
 		name_sp_dist = Rcpp::as<string>(LandParamsR.slot("SpDistFile"));
 #if RS_CONTAIN
 		name_damage = Rcpp::as<string>(LandParamsR.slot("DamageFile"));
@@ -782,32 +796,54 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 		}
 
 		// check dynamic landscape filename
-		ftype = "DynLandFile";
-		if(name_dynland != "NULL") { // landscape is dynamic  --> TODO
-			/*            fname = indir + name_dynland;
-			            Rcpp::Rcout << "Checking " << ftype << " " << fname << endl;
-			            bDynLandFile.open(fname.c_str());
-			            if(bDynLandFile.is_open()) {
-			                int something = ParseDynamicFile(indir);
-			                if(something < 0) {
-			                    errors++;
-			                }
-			                bDynLandFile.close();
-			                bDynLandFile.clear();
-			            } else {
-			                bDynLandFile.clear();
-			                errors++;
-			                OpenErrorR(ftype, fname);
-			            }*/
+		// ...most checks are done at reading time in ReadDynLandR()
+		ftype = "Dynamic landscape";
+		if(ppLand.dynamic) {
+			// check valid years
+			if(dynland_years[0]!=0) {
+				errors++;
+				Rcpp::Rcout << "First year in dynamic landscape must be 0." << endl;
+			} else {
+				for(int i=1; i<dynland_years.size(); i++ ) {
+					if(dynland_years[i-1] >= dynland_years[i]) {
+						errors++;
+						Rcpp::Rcout << "Year in dynamic landscape must strictly increase." << endl;
+					}
+				}
+			}
+			if(dynland_years.size() != habitatmaps.size()) {
+				errors++;
+				Rcpp::Rcout << "Dynamic landscape: Years must have as many elements as habitat maps." << endl;
+			}
+			if(patchmodel) {
+				if( dynland_years.size() != patchmaps.size() ||
+					habitatmaps.size()   != patchmaps.size() ) {
+					errors++;
+					Rcpp::Rcout << "Dynamic landscape: Patchmaps must have as many elements as Years and habitat maps." << endl;
+				}
+			}
+			if(errors==0) {
+				// store land changes
+				string landchangefile,patchchangefile;
+				landChange chg;
+				for(int i=1; i<dynland_years.size(); i++ ) {
+					chg.chgnum = i;
+					chg.chgyear = dynland_years[i];
+					chg.habfile = indir + habitatmaps(i);
+					if(patchmodel) chg.pchfile = indir + patchmaps(i);
+					else chg.pchfile = "NULL";
+					pLandscape->addLandChange(chg);
+				}
+			}
 		}
 
 		// check initial distribution map filename
-		ftype = "SpDistFile";
+		ftype = "Species Distribution map";
 		if(name_sp_dist == "NULL") {
 			if(speciesdist) {
 				BatchErrorR(filetype, line, 0, " ");
 				errors++;
-				Rcpp::Rcout << ftype << " is required as SpeciesDist is 1 in Control file" << endl;
+				Rcpp::Rcout << ftype << " is required as SpeciesDist is 1 in Control" << endl;
 			}
 		} else {
 			if(speciesdist) {
@@ -964,232 +1000,258 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 }
 
 //---------------------------------------------------------------------------
-/*
- *
- * int ParseDynamicFile(string indir) {
-string header,filename,fname,ftype,intext;
-int change,prevchange,year,prevyear;
-rasterdata landchgraster,patchchgraster;
-int errors = 0;
-string filetype = "DynLandFile";
-//int totlines = 0;
 
-bDynLandFile >> header; if (header != "Change" ) errors++;
-bDynLandFile >> header; if (header != "Year" ) errors++;
-bDynLandFile >> header; if (header != "LandChangeFile" ) errors++;
-bDynLandFile >> header; if (header != "PatchChangeFile" ) errors++;
+int ReadDynLandR(Landscape *pLandscape, Rcpp::S4 LandParamsR)
+{
 
-if (errors > 0) {
-	FormatError(filetype,errors);
-	return -111;
-}
+#if RSDEBUG
+	DEBUGLOG << "ReadDynLandR(): pLandscape=" << pLandscape << endl;
+#endif
 
-// Parse data lines
-int line = 1;
-change = -98765;
-bDynLandFile >> change; // first change number
-if (change != 1) {
-	batchlog << "*** Error in DynLandFile - first change number must be 1" << endl;
-	errors++;
-}
-else {
-	prevchange = change;
-}
-while (change != -98765) {
-
-	bDynLandFile >> year; if (year <= 0) { BatchError(filetype,line,10,"Year"); errors++; }
-	if (line > 1) {
-		if (year <= prevyear) {
-			BatchError(filetype,line,1,"Year","previous Year"); errors++;
-		}
+	Rcpp::StringVector habitatmaps,patchmaps;
+	habitatmaps = Rcpp::as<Rcpp::StringVector>(LandParamsR.slot("LandscapeFile"));
+	if (patchmodel) {
+		patchmaps = Rcpp::as<Rcpp::StringVector>(LandParamsR.slot("PatchFile"));
 	}
-	prevyear = year;
 
-	// check landscape filename
-	ftype = "LandChangeFile";
-	bDynLandFile >> intext;
-//batchlog << "***** indir=" << indir << " intext=" << intext << endl;
-	fname = indir + intext;
-	landchgraster = CheckRasterFile(fname);
-	if (landchgraster.ok) {
-		if (landchgraster.cellsize == resolution)
-			if (landchgraster.ncols == landraster.ncols
-			&&  landchgraster.nrows == landraster.nrows
-			&&  landchgraster.cellsize == landraster.cellsize
-			&&  (int)landchgraster.xllcorner == (int)landraster.xllcorner
-			&&  (int)landchgraster.yllcorner == (int)landraster.yllcorner) {
-				batchlog << ftype << " headers OK: " << fname << endl;
+	//------------ int ParseDynamicFile(string indir) {
+
+	string indir = paramsSim->getDir(1);
+	string fname,ftype;
+	wstring header;
+	wifstream hfile,pfile;
+	int errors,ncols,nrows,cellsize,inint;
+	double xllcorner,yllcorner;
+
+	errors = ncols = nrows = cellsize = inint = 0;
+	xllcorner = yllcorner = 0.0;
+
+	if (patchmodel){
+		pLandscape->createPatchChgMatrix();
+	}
+
+	for(int i=1; i < habitatmaps.size(); i++ ) {
+
+		// Habitat change file
+		fname = indir + habitatmaps(i);
+
+		// open file
+		hfile.open(fname, std::ios::binary);
+		if(!hfile.is_open()) {
+			OpenErrorR("Dynamic landscape habitat map ",  fname);
+#if RSDEBUG
+			DEBUGLOG << "Dynamic landscape habitat map failed to open: " << fname << std::endl;
+#endif
+			hfile.clear();
+			return -212;
+		} else {
+#if RSDEBUG
+			DEBUGLOG << "Dynamic landscape habitat map #" << i << " open to read" << std::endl;
+#endif
+			// check BOM for UTF-16
+			if(check_bom(fname) == "utf16")
+				// apply BOM-sensitive UTF-16 facet
+				hfile.imbue(std::locale(hfile.getloc(), new std::codecvt_utf16<wchar_t, 0x10ffff, std::consume_header>));
+			// ASCII header
+			hfile >> header;
+			if (!hfile.good()) {
+#if RSDEBUG
+				DEBUGLOG << "ReadDynLandR(): failed to read landscape habitat map #" << i << ": " << fname << std::endl;
+#endif
+				errors = -1112;
+				hfile.close();
+				hfile.clear();
+				return errors;
 			}
-			else {
-				batchlog << msghdrs0 << ftype << " " << fname
-					<< msghdrs1 << endl;
-				errors++;
-			}
-		else {
-			errors++;
-			batchlog << msgresol0 << ftype << " " << fname << msgresol1 << endl;
-		}
-	}
-	else {
-		errors++;
-		if (landchgraster.errors == -111)
-			OpenError(ftype,fname);
-		else
-			FormatError(fname,landchgraster.errors);
-	}
+			if (header != L"ncols" && header != L"NCOLS") errors++;
+			hfile >> ncols;
 
-	// check patch filename
-	ftype = "PatchChangeFile";
-	bDynLandFile >> intext;
-	if (intext == "NULL") {
-		if (patchmodel) {
-			BatchError(filetype,line,0," "); errors++;
-			batchlog << ftype << msgpatch << endl;
-		}
-	}
-	else {
-		if (patchmodel) {
-			fname = indir + intext;
-			patchchgraster = CheckRasterFile(fname);
-			if (patchchgraster.ok) {
-				if (patchchgraster.cellsize == resolution) {
-					if (patchchgraster.ncols == landraster.ncols
-					&&  patchchgraster.nrows == landraster.nrows
-					&&  patchchgraster.cellsize == landraster.cellsize
-					&&  (int)patchchgraster.xllcorner == (int)landraster.xllcorner
-					&&  (int)patchchgraster.yllcorner == (int)landraster.yllcorner) {
-						batchlog << ftype << " headers OK: " << fname << endl;
-					}
-					else {
-						batchlog << msghdrs0 << ftype << " " << fname
-							<< msghdrs1 << endl;
+			hfile >> header >> nrows;
+			if (header != L"nrows" && header != L"NROWS") errors++;
+
+			hfile >> header >> xllcorner;
+			if (header != L"xllcorner" && header != L"XLLCORNER") errors++;
+
+			hfile >> header >> yllcorner;
+			if (header != L"yllcorner" && header != L"YLLCORNER") errors++;
+
+			hfile >> header >> cellsize;
+			if (header != L"cellsize" && header != L"CELLSIZE") errors++;
+
+			hfile >> header >> inint;
+			if (header != L"NODATA_value" && header != L"NODATA_VALUE") errors++;
+
+			if (errors > 0)  {
+				FormatErrorR(fname,errors);
+#if RSDEBUG
+				DEBUGLOG << "ReadDynLandR(): failed to read Raster header of landscape habitat map #" << i << ": " << fname << std::endl;
+#endif
+				hfile.close();
+				hfile.clear();
+			} else {
+				// check resolution match
+				if (cellsize == resolution) {
+					// check that extent matches landscape extent
+					if(ncols == landraster.ncols && nrows == landraster.nrows) {
+						// check origins match
+						if((int)xllcorner == (int)landraster.xllcorner &&
+						   (int)yllcorner == (int)landraster.yllcorner) {
+							Rcpp::Rcout << "Dynamic landscape habitat map #" << i << ", headers OK: " << fname << endl;
+						} else {
+							Rcpp::Rcout << "*** Origin co-ordinates of " << fname << msghdrs1 << endl;
+							errors++;
+						}
+					} else {
+						Rcpp::Rcout << "*** Extent of " << fname << msghdrs1 << endl;
 						errors++;
 					}
-				}
-				else {
-					batchlog << msgresol0 << ftype << " " << fname
-						<< msgresol1 << endl;
+				} else {
+					Rcpp::Rcout << "*** Resolution of " << fname << msghdrs1 << endl;
 					errors++;
 				}
+				if (errors > 0)  {
+					FormatErrorR(fname,errors);
+#if RSDEBUG
+					DEBUGLOG << "ReadDynLandR(): Errors in raster header of landscape habitat map #" << i << ": " << fname << std::endl;
+#endif
+					hfile.close();
+					hfile.clear();
+				}
+			} // end of reading ASCII header
+		}
+
+		// Do the same for corresponding patch map, if applicable
+		if (patchmodel) {
+			// Patch change file
+			fname = indir + patchmaps(i);
+
+			// open file
+			pfile.open(fname, std::ios::binary);
+			if(!pfile.is_open()) {
+				OpenErrorR("Dynamic landscape patch map ",  fname);
+#if RSDEBUG
+				DEBUGLOG << "Dynamic landscape patch map failed to open: " << fname << std::endl;
+#endif
+				pfile.clear();
+				return -213;
+			} else {
+#if RSDEBUG
+				DEBUGLOG << "Dynamic landscape patch map #" << i << " open to read" << std::endl;
+#endif
+				// check BOM for UTF-16
+				if(check_bom(fname) == "utf16")
+					// apply BOM-sensitive UTF-16 facet
+					pfile.imbue(std::locale(pfile.getloc(), new std::codecvt_utf16<wchar_t, 0x10ffff, std::consume_header>));
+				// ASCII header
+				pfile >> header;
+				if (!pfile.good()) {
+#if RSDEBUG
+					DEBUGLOG << "ReadDynLandR(): failed to read landscape patch map #" << i << ": " << fname << std::endl;
+#endif
+					errors = -1113;
+					pfile.close();
+					pfile.clear();
+					return errors;
+				}
+				if (header != L"ncols" && header != L"NCOLS") errors++;
+				pfile >> ncols;
+
+				pfile >> header >> nrows;
+				if (header != L"nrows" && header != L"NROWS") errors++;
+
+				pfile >> header >> xllcorner;
+				if (header != L"xllcorner" && header != L"XLLCORNER") errors++;
+
+				pfile >> header >> yllcorner;
+				if (header != L"yllcorner" && header != L"YLLCORNER") errors++;
+
+				pfile >> header >> cellsize;
+				if (header != L"cellsize" && header != L"CELLSIZE") errors++;
+
+				pfile >> header >> inint;
+				if (header != L"NODATA_value" && header != L"NODATA_VALUE") errors++;
+
+				if (errors > 0)  {
+					FormatErrorR(fname,errors);
+#if RSDEBUG
+					DEBUGLOG << "ReadDynLandR(): failed to read Raster header of landscape patch map #" << i << ": " << fname << std::endl;
+#endif
+					pfile.close();
+					pfile.clear();
+				} else {
+					// check resolution match
+					if (cellsize == resolution) {
+						// check that extent matches landscape extent
+						if(ncols == landraster.ncols && nrows == landraster.nrows) {
+							// check origins match
+							if((int)xllcorner == (int)landraster.xllcorner &&
+							   (int)yllcorner == (int)landraster.yllcorner) {
+								Rcpp::Rcout << "Dynamic landscape patch map #" << i << ", headers OK: " << fname << endl;
+							} else {
+								Rcpp::Rcout << "*** Origin co-ordinates of " << fname << msghdrs1 << endl;
+								errors++;
+							}
+						} else {
+							Rcpp::Rcout << "*** Extent of " << fname << msghdrs1 << endl;
+							errors++;
+						}
+					} else {
+						Rcpp::Rcout << "*** Resolution of " << fname << msghdrs1 << endl;
+						errors++;
+					}
+					if (errors > 0)  {
+						FormatErrorR(fname,errors);
+#if RSDEBUG
+						DEBUGLOG << "ReadDynLandR(): Errors in raster header of landscape patch map #" << i << ": " << fname << std::endl;
+#endif
+						pfile.close();
+						pfile.clear();
+					}
+				} // end of reading ASCII header
 			}
-			else {
-				errors++;
-				if (patchchgraster.errors == -111)
-					OpenError(ftype,fname);
-				else
-					FormatError(fname,patchchgraster.errors);
+		} // end of if(patchmodel)
+		else {
+			pfile.clear();
+		}
+
+		// Now read raster data of both Habitat and Patch maps:
+		int imported = 0;
+		if (errors == 0)  {
+			imported = pLandscape->readLandChange(i-1, hfile, pfile);
+			if (imported != 0) {
+				if(hfile.is_open()) hfile.close();
+				hfile.clear();
+				if(patchmodel){
+					if(pfile.is_open()) pfile.close();
+					pfile.clear();
+				}
+	            return imported;
+	        }
+			if (patchmodel) {
+				pLandscape->recordPatchChanges(i);
 			}
 		}
-	}
-
-	line++;
-	// read first field on next line
-	change = -98765;
-	bDynLandFile >> change;
-	if (bDynLandFile.eof()) {
-		change = -98765;
-	}
-	else { // check for valid change number
-		if (change != prevchange+1) {
-			BatchError(filetype,line,0," ");
-			batchlog << "Change numbers must be sequential integers" << endl;
-			errors++;
+		
+		// Close files
+		if(hfile.is_open()) hfile.close();
+		hfile.clear();
+		if(patchmodel){
+			if(pfile.is_open()) pfile.close();
+			pfile.clear();
 		}
-		prevchange = change;
+	} // end of loop over landscape changes i
+
+	if(patchmodel) {
+	// record changes back to original landscape for multiple replicates
+		pLandscape->recordPatchChanges(0);
+		pLandscape->deletePatchChgMatrix();
 	}
-}
-
-if (errors > 0) return -111;
-else return 0;
-
-}
-
-//---------------------------------------------------------------------------
- *
- *
- *
-int ReadDynLandFileR(Landscape *pLandscape)   // TODO
-{
 #if RSDEBUG
-    DEBUGLOG << "ReadDynLandFile(): pLandscape=" << pLandscape
-             << " name_dynland=" << name_dynland
-             << endl;
+	DEBUGLOG << "ReadDynLandR(): finished" << endl;
 #endif
-//int change,year;
-    string landchangefile,patchchangefile;
-    int change,imported;
-    int nchanges = 0;
-    landChange chg;
-    landParams ppLand = pLandscape->getLandParams();
-    string fname = paramsSim->getDir(1) + name_dynland;
-
-    dynlandfile.open(fname.c_str());
-    if (dynlandfile.is_open())
-    {
-        string header;
-        int nheaders = 4;
-        for (int i = 0; i < nheaders; i++) dynlandfile >> header;
-    }
-    else
-    {
-        dynlandfile.clear();
-        return 72727;
-    }
-
-// read data lines
-    change = -98765;
-    dynlandfile >> change; // first change number
-    while (change != -98765)
-    {
-        chg.chgnum = change;
-        dynlandfile >> chg.chgyear >> landchangefile >> patchchangefile;
-//	dynlandfile >> chg.chgyear >> chg.habfile >> chg.pchfile;
-        chg.habfile = paramsSim->getDir(1) + landchangefile;
-        chg.pchfile = paramsSim->getDir(1) + patchchangefile;
-        nchanges++;
-        pLandscape->addLandChange(chg);
-// read first field on next line
-        change = -98765;
-        dynlandfile >> change;
-        if (dynlandfile.eof())
-        {
-            change = -98765;
-        }
-    }
-
-    dynlandfile.close();
-    dynlandfile.clear();
-
-// read landscape change maps
-    if (ppLand.patchModel)
-    {
-        pLandscape->createPatchChgMatrix();
-    }
-    for (int i = 0; i < nchanges; i++)
-    {
-        imported = pLandscape->readLandChange(i);
-        if (imported != 0)
-        {
-            return imported;
-        }
-        if (ppLand.patchModel)
-        {
-            pLandscape->recordPatchChanges(i+1);
-        }
-    }
-    if (ppLand.patchModel)
-    {
-// record changes back to original landscape for multiple replicates
-        pLandscape->recordPatchChanges(0);
-        pLandscape->deletePatchChgMatrix();
-    }
-
-#if RSDEBUG
-    DEBUGLOG << "ReadDynLandFile(): finished" << endl;
-#endif
-    return 0;
+	return 0;
 }
-*/
+
 
 //---------------------------------------------------------------------------
 
@@ -3467,10 +3529,10 @@ void RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 				paramsLand.nHab = 2;
 			} else {
 				paramsLand.generated = false;
-				if(name_dynland == "NULL")
+				/*if(name_dynland == "NULL")
 					paramsLand.dynamic = false;
 				else
-					paramsLand.dynamic = true;
+					paramsLand.dynamic = true;*/
 			}
 			paramsLand.nHabMax = maxNhab;
 			paramsLand.spDist = speciesdist;
@@ -3491,7 +3553,9 @@ void RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 					landOK = false;
 				}
 				if(paramsLand.dynamic) {
-					landcode = 1; // ReadDynLandFile(pLandscape); // NOT YET INCLUDED -> TODO
+					Rcpp::S4 LandParamsR("LandParams");
+					LandParamsR = Rcpp::as<Rcpp::S4>(ParMaster.slot("land"));
+					landcode = ReadDynLandR(pLandscape, LandParamsR);
 					if(landcode != 0) {
 						rsLog << "Landscape," << land_nr << ",ERROR,CODE," << landcode << endl;
 						Rcpp::Rcout << endl << "Error reading landscape " << land_nr << " - aborting" << endl;

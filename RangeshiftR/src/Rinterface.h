@@ -54,6 +54,7 @@ Rcpp::List run_from_R(Rcpp::S4, Rcpp::String);   // entry functions from R
 Rcpp::List BatchMainR(string, Rcpp::S4);
 #endif // RSDEBUG
 bool ReadLandParamsR(Landscape*, Rcpp::S4);
+int ReadDynLandR(Landscape*, Rcpp::S4);
 int ReadParametersR(Landscape*, Rcpp::S4);
 int ReadStageStructureR(Rcpp::S4);
 int ReadEmigrationR(Rcpp::S4);

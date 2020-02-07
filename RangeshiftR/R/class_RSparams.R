@@ -60,6 +60,11 @@ setValidity("RSparams", function(object) {
     }
     #LAND
     validObject(object@land)
+    if (any(object@control@landtype==c(0,1))){
+        if (any(object@land@DynamicLandYears>object@simul@Years)) {
+            warning("Dynamic landscape contains years that exceed the simulated years, so that some land changes will not apply.", call. = FALSE)
+        }
+    }
     #DEMOGRAPHY
     validObject(object@demog)
     #DISPERSAL

@@ -85,6 +85,7 @@ RSsim <- function(batchnum = 1L,
     if (!is.null(args$demog)) s <- s + demog
     if (!is.null(args$dispersal))  s <- s + dispersal
     if (!is.null(args$init))  s <- s + init
+    # check validity
     validObject(s)
     return(s)
 }
