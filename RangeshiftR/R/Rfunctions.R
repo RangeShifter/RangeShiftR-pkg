@@ -7,14 +7,22 @@
 #' Define a RangeShiftR parameter master object
 #'
 #' Set up a parameter master that can be used in \code{\link[RangeshiftR]{RunRS}}() to run a simulation.\cr
-#' All parameter modules can be added to an existing parameter master via the "+"-functions. However, note that the entire module will be overwritten.\cr
+#' All parameter modules can be added to an existing parameter master via the "+"-functions. However, note that the entire respective module will be overwritten.\cr
 #'
+#' @usage RSsim(batchnum = 1L,
+#'       simul = Simulation(),
+#'       land = ArtificialLandscape(),
+#'       demog = Demography(Rmax = 1.5),
+#'       dispersal = Dispersal(),
+#'       gene = Genetics(),
+#'       init = Initialise())
 #' @include class_RSparams.R
 #' @param batchnum Batch ID is part of output files names and can be used to prevent overwriting.
 #' @param simul Set \code{\link[RangeshiftR]{Simulation}} parameters
 #' @param land Set landscape parameters. Can be either \code{\link[RangeshiftR]{ArtificialLandscape}} or \code{\link[RangeshiftR]{ImportedLandscape}}.
 #' @param demog Set \code{\link[RangeshiftR]{Demography}} parameters
 #' @param dispersal Set \code{\link[RangeshiftR]{Dispersal}} parameters
+#' @param gene Set \code{\link[RangeshiftR]{Genetics}} parameters
 #' @param init Set \code{\link[RangeshiftR]{Initialise}} parameters
 #' @return returns a RangeShiftR parameter master object (class 'RSparams')
 #' @details The cell size (resolution) is specified by the user in meters. It is important to note an essential difference in spatial scale between
@@ -71,6 +79,7 @@ RSsim <- function(batchnum = 1L,
                   land = NULL,
                   demog = NULL,
                   dispersal = NULL,
+                  gene = NULL,
                   init = NULL){
     args <- as.list(match.call())
     # filter for names in ... that are also in slots(ControlParams) and pass them on
@@ -79,11 +88,13 @@ RSsim <- function(batchnum = 1L,
                   land = ArtificialLandscape(),
                   demog = Demography(Rmax = 1.5),
                   dispersal = Dispersal(),
+                  gene = Genetics(),
                   init = Initialise())
     if (!is.null(args$land))  s <- s + land
     if (!is.null(args$simul)) s <- s + simul
     if (!is.null(args$demog)) s <- s + demog
     if (!is.null(args$dispersal))  s <- s + dispersal
+    if (!is.null(args$gene))  s <- s + gene
     if (!is.null(args$init))  s <- s + init
     # check validity
     validObject(s)
@@ -260,6 +271,12 @@ setMethod("+", signature(e1 = "DispersalParams", e2 = "SettlementParams"), funct
     validObject(e2)
     e1@Settlement <- e2
     validObject(e1)
+    return(e1)}
+)
+
+setMethod("+", signature(e1 = "RSparams", e2 = "GeneticsParams"), function(e1, e2) {
+    validObject(e2)
+    e1@gene <- e2
     return(e1)}
 )
 

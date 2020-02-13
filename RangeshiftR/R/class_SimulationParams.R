@@ -160,7 +160,7 @@
 #' of the landscape to which the output refers. Additionally, for each simulation all the set parameters
 #' will be automatically written to a text file named \"Sim0_Parameters.txt\" in the case of simulation\eqn{#=0}.
 #'
-#' - \emph{Species range} (\code{Sim0_Range.txt})
+#' - \emph{Species range} (\code{Sim0_Range.txt}) \cr
 #' contains the following general information regarding the species’ range:\cr
 #' Replicate number (Rep), Year (Year), Reproductive season within the year (RepSeason), Total number of individuals (NInds),
 #' Total number of individuals in each stage (NInd_stageX; only in case of stage-structured models),
@@ -171,7 +171,7 @@
 #' Data are written before reproduction at each reproductive season at the specified yearly interval. An extra line is written
 #' at the end of the simulation.
 #'
-#' - \emph{Occupancy}
+#' - \emph{Occupancy} \cr
 #' reports the cell/patch probability of occupancy. This is only possible if the number of replicates is greater than \eqn{1}.
 #' Two files will be produced:\cr
 #'      1) \code{Sim0_Occupancy.txt}:  contains a list of all the cells in the landscape (\eqn{x-} and \eqn{y-}coordinates) or
@@ -184,7 +184,7 @@
 #'     Data will be recorded at the beginning of the year before any other process (and only once a year no matter the number
 #' of reproductive seasons per year).
 #'
-#' - \emph{Populations} (\code{Sim0_Pop.txt})
+#' - \emph{Populations} (\code{Sim0_Pop.txt}) \cr
 #' contains statistics regarding each population present in the landscape at a given time interval:\cr
 #' Replicate number (Rep), Year (Year), Reproductive season within the year (RepSeason), Cell location (\eqn{x-} and \eqn{y-}coordinates) or
 #' patch ID (PatchID), Species number (Species; not yet used, always \eqn{0}), Number of individuals in the population (NInd),
@@ -196,7 +196,7 @@
 #' As for the species’ range output, data are collected before reproduction at each reproductive
 #' season at the specified yearly interval and at the end of the simulation.
 #'
-#' - \emph{Individuals} (\code{Sim0_Rep0_Inds.txt})
+#' - \emph{Individuals} (\code{Sim0_Rep0_Inds.txt}) \cr
 #' contains information regarding each individual at a given time step. To avoid the production of huge files, a separate file is
 #' saved for each replicate. Data are recorded after settlement and before aging (in the case of overlapping generations). For each
 #' individual the following data are saved: \cr
@@ -205,7 +205,7 @@
 #' (Natal_patch and PatchID), Sex (0 = female, 1 = male), Age in years, Stage, Emigration traits, Transfer traits (depending on
 #' transfer method).
 #'
-#' - \emph{Traits}
+#' - \emph{Traits} \cr
 #' In the case of inter-individual variability and evolution of the dispersal traits, it is possible to output the mean traits of
 #' the population. There are two types of traits output:\cr
 #'     1) \code{Sim0_TraitsXcell.txt / Sim0_TraitsXpatch.txt} reports mean and standard deviation of the varying/evolving traits for each
@@ -220,7 +220,7 @@
 #' is greater than the variation in phenotypic expression; if the phenotypic s.d. is required, it must be calculated from
 #' individual-level output data).
 #'
-#' - \emph{Connectivity matrix} (\code{Sim0_Connect.txt})
+#' - \emph{Connectivity matrix} (\code{Sim0_Connect.txt}) \cr
 #' is available for a patch-based model only. It presents counts of the number of individuals successfully dispersing from each patch
 #' to each other patch for each year specified by \code{OutIntConn}, starting from \code{OutStartConn}. If there is more than one
 #' reproductive season during the year, cumulative year-end totals are reported. Although the file contains the data required for
@@ -228,25 +228,26 @@
 #' Replicate number (Rep), Year (Year), ID number of natal patch (StartPatch), ID number of settlement patch (EndPatch), Number of
 #' individuals dispersing from StartPatch to EndPatch (NInds).
 #' 
-#' - \emph{SMS paths} (\code{Sim0_Rep0_SMSpaths.txt})
+#' - \emph{SMS paths} (\code{Sim0_Rep0_SMSpaths.txt}) \cr
 #' is available for a model with transfer method SMS only. It lists the cell-based trajectories of all (successfully or unsuccessfully) 
 #' dispersed individuals from the natal to the final (settlement or fatal) patch for each year specified by \code{OutIntPaths}, starting 
 #' from \code{OutStartPaths}. The data are presented in list format with the columns:\cr
 #' Year (Year), Individual ID (IndID), consecutive step number (Step), coordinates of cell at this step (\eqn{x} and \eqn{y}), 
 #' status of individual (Status).
-# 0 = natal patch
-# 1 = disperser
-# 2 = disperser awaiting settlement in possible suitable patch
-# 3 = waiting between dispersal events
-# 4 = completed settlement
-# 5 = completed settlement in a suitable neighbouring cell
-# 6 = died during transfer by failing to find a suitable patch (includes exceeding maximum number of steps or crossing absorbing boundary)
-# 7 = died during transfer by constant, step-dependent, habitat-dependent or distance-dependent mortality
-# 8 = failed to survive annual (demographic) mortality
-# 9 = exceeded maximum age
+#' The status is an integer number that codes for the following possible states:
+#'    0 = natal patch,
+#'    1 = disperser,
+#'    2 = disperser awaiting settlement in possible suitable patch,
+#'    3 = waiting between dispersal events,
+#'    4 = completed settlement,
+#'    5 = completed settlement in a suitable neighbouring cell,
+#'    6 = died during transfer by failing to find a suitable patch (includes exceeding maximum number of steps or crossing absorbing boundary),
+#'    7 = died during transfer by constant, step-dependent, habitat-dependent or distance-dependent mortality,
+#'    8 = failed to survive annual (demographic) mortality,
+#'    9 = exceeded maximum age.
 #'
-#' - \emph{Genetics}
-# (\code{Sim0_Connect.txt})
+#' - \emph{Genetics} (\code{Sim0_Connect.txt}) \cr
+#' .....
 #'
 #' @references Travis & Dytham 2004
 #' @name Simulation

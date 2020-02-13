@@ -19,6 +19,7 @@ Collate:
     'RangeshiftR.R'
     'RcppExports.R'
     'class_InitialisationParams.R'
+    'class_GeneticsParams.R'
     'class_DispersalParams.R'
     'class_DemogParams.R'
     'class_LandParams.R'

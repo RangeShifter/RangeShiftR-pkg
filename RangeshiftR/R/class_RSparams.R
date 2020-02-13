@@ -7,12 +7,14 @@
 #' @include class_LandParams.R
 #' @include class_DemogParams.R
 #' @include class_DispersalParams.R
+#' @include class_GeneticsParams.R
 #' @include class_InitialisationParams.R
 RSparams <- setClass("RSparams", slots = c(control = "ControlParams",
                                            simul = "SimulationParams",
                                            land = "LandParams",
                                            demog = "DemogParams",
                                            dispersal = "DispersalParams",
+                                           gene = "GeneticsParams",
                                            init = "InitialisationParams")
 )
 setValidity("RSparams", function(object) {
@@ -607,6 +609,8 @@ setValidity("RSparams", function(object) {
             }
         }
     }
+    #GENETICS
+    validObject(object@gene)
     #INITIALISATION
     validObject(object@init)
     if (object@control@landtype == 9) { # artificial land
@@ -689,6 +693,8 @@ setMethod("show", "RSparams", function(object){
     print(object@demog)
     cat("\n")
     print(object@dispersal)
+    cat("\n")    
+    print(object@gene)
     cat("\n")
     print(object@init)}
 )

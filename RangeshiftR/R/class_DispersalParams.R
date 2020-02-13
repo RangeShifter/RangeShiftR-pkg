@@ -1634,7 +1634,6 @@ Settlement <- setClass("SettlementParams", slots = c(StageDep = "logical",
                                           MaxSteps = 0L,
                                           MaxStepsYear = 0L)
 )
-    # check if MaxSteps = 0 that StepMort > 0.0
 
 setValidity("SettlementParams", function(object) {
     msg <- NULL
@@ -1826,9 +1825,9 @@ setMethod("show", "SettlementParams", function(object){
 #' sex-biased, meaning that only certain stage or age classes disperse.
 #' \emph{Dispersal traits, genetic architecture and evolution:}
 #' RangeShiftR provides the possibility for inter-individual variability in different dispersal traits and a simple adaptive genetic
-#' module to simulate heritability and evolution of traits by setting \code{IndVar=TRUE} for the respective phase.\cr
-#' When inter-individual variability in dispersal traits is modelled - whether or not these traits
-#' are evolving - each individual carries alleles coding for each varying trait. If the reproductive model is asexual or female only,
+#' module to simulate heritability and evolution of traits by setting \code{IndVar=TRUE} for the respective transfer phase module.\cr
+#' When inter-individual variability in dispersal traits is modelled - whether or not these traits are evolving - each individual 
+#' carries alleles coding for each varying trait. If the reproductive model is asexual or female only,
 #' the species is assumed to be haploid and single loci code for each trait. Alleles take continuous values, assuming a
 #' continuum-of-alleles model (Hoban et al. 2011; Scheiner et al. 2012). Offspring inherit their alleles from their single parent/mother,
 #' and the phenotype is given directly by the genotype. In the case of sexual models, the species is assumed to be diploid with a
@@ -1836,7 +1835,7 @@ setMethod("show", "SettlementParams", function(object){
 #' father. The phenotype is given by the arithmetic mean of the two alleles, and the heritability is assumed to be equal to one.
 #' No dominance is modelled, and loci for different traits are assumed to be unlinked.\cr
 #' When traits vary between individuals, they can also be allowed to evolve. When an individual is born, each of its alleles can
-#' independently mutate with a set probability. In the case of mutation, a number drawn from the uniform distribution \eqn{U(-μ, μ)} is
+#' independently mutate with a set probability. In the case of mutation, a number drawn from the normal distribution \eqn{N(0, μ)} is
 #' added to the trait value, where \eqn{μ} is the mutation size set for the trait. A different mutation size can be set for each trait through \code{MutationScales}.
 #'
 #' @references Stenseth & Lidicker 1992; Clobert et al. 2001, 2009, 2012; Bowler & Benton 2005; Ronce 2007, Hoban et al. 2011; Scheiner et al. 2012
@@ -1853,6 +1852,7 @@ Dispersal <- setClass("DispersalParams", slots = c(Emigration = "EmigrationParam
     ## add references to all sub-classes to heres explanation of IndVar and MutationScales
 
 setValidity("DispersalParams", function(object) {
+    msg <- NULL
     validObject(object@Emigration)
     if (object@Emigration@UseFullKern) {
         if (!class(object@Transfer)[1] == "DispersalKernel") {
@@ -1860,13 +1860,18 @@ setValidity("DispersalParams", function(object) {
         }
     }
     validObject(object@Transfer)
+    validObject(object@Settlement)
     if (class(object@Transfer)[1] == "DispersalKernel") {
         if (object@Settlement@DensDep) {
             msg <- c(msg, "Dispersal(): Settlement can only be density-dependent (DensDep = TRUE) if a movement process is used as transfer method!")
         }
+    }else{
+        if (object@Settlement@MaxSteps<=0 && all(object@Transfer@StepMort<=0) ) {
+            msg <- c(msg, "Dispersal(): At least one of the two options MaxSteps and StepMort must be set (>0) if a movement process is used as transfer method!")
+        }
     }
-    validObject(object@Settlement)
-})
+    if (is.null(msg)) TRUE else msg}
+)
 setMethod("initialize", "DispersalParams", function(.Object,...) {
     this_func = "Dispersal(): "
     args <- list(...)

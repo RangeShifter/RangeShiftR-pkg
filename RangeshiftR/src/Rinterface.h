@@ -61,6 +61,7 @@ int ReadEmigrationR(Rcpp::S4);
 int ReadTransferR(Landscape*, Rcpp::S4);
 int ReadSettlementR(Rcpp::S4);
 int ReadInitialisationR(Landscape*, Rcpp::S4);
+int ReadGeneticsR(Rcpp::S4);
 
 void RunBatchR(int, int, Rcpp::S4);
 void clear_outPop();
@@ -74,6 +75,7 @@ rasterdata ParseRasterHead(string); //parse, read and return ASCII raster head d
 
 int ParseInitIndsFileR(wifstream&);
 int ReadInitIndsFileR(int,Landscape*);
+int ReadArchFileR(wifstream&);
 
 void BatchErrorR(string,int,int,string);
 void BatchErrorR(string,int,int,string,string);
@@ -87,6 +89,7 @@ void FormatErrorR(string,int);
 void OpenErrorR(string,string);
 void EOFerrorR(string);
 void StreamErrorR(string);
+void ArchFormatErrorR(void);
 //void FileOK(string,int,int);
 //void FileHeadersOK(string);
 //void SimulnCountError(string);

@@ -266,7 +266,7 @@ setValidity('InitialisationParams', function(object){
                 }
             }
             if (object@InitType == 2){  # Init IndsList
-                if (is.null(object@InitIndsFile)){
+                if (object@InitIndsFile == "NULL"){
                     msg <- c(msg, 'InitIndsFile is required if InitType = 2 (from loaded initial individuals list).')
                 }
             }
