@@ -5,31 +5,21 @@
 
 using namespace Rcpp;
 
-// run_from_R
-Rcpp::List run_from_R(Rcpp::S4 ParMaster, Rcpp::String dirpath);
-RcppExport SEXP _RangeshiftR_run_from_R(SEXP ParMasterSEXP, SEXP dirpathSEXP) {
+// BatchMainR
+Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster);
+RcppExport SEXP _RangeshiftR_BatchMainR(SEXP dirpathSEXP, SEXP ParMasterSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::string >::type dirpath(dirpathSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type ParMaster(ParMasterSEXP);
-    Rcpp::traits::input_parameter< Rcpp::String >::type dirpath(dirpathSEXP);
-    rcpp_result_gen = Rcpp::wrap(run_from_R(ParMaster, dirpath));
+    rcpp_result_gen = Rcpp::wrap(BatchMainR(dirpath, ParMaster));
     return rcpp_result_gen;
-END_RCPP
-}
-// clear_outPop
-void clear_outPop();
-RcppExport SEXP _RangeshiftR_clear_outPop() {
-BEGIN_RCPP
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    clear_outPop();
-    return R_NilValue;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_RangeshiftR_run_from_R", (DL_FUNC) &_RangeshiftR_run_from_R, 2},
-    {"_RangeshiftR_clear_outPop", (DL_FUNC) &_RangeshiftR_clear_outPop, 0},
+    {"_RangeshiftR_BatchMainR", (DL_FUNC) &_RangeshiftR_BatchMainR, 2},
     {NULL, NULL, 0}
 };
 

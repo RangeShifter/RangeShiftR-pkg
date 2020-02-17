@@ -13,7 +13,11 @@ ofstream outPar;
 #if RS_ABC
 int RunModel(Landscape *pLandscape,int seqsim,ABCmaster* pABCmaster)
 #else
+#if RS_RCPP && !R_CMD
+Rcpp::List RunModel(Landscape *pLandscape,int seqsim)
+#else
 int RunModel(Landscape *pLandscape,int seqsim)
+#endif
 #endif
 {
 //int Nsuit,yr,totalInds;
@@ -109,6 +113,9 @@ int RunModel(Landscape *pLandscape,int seqsim)
 	int ixABC;
 	bool abcYear;
 #endif
+#if RS_RCPP && !R_CMD
+	Rcpp::List list_outPop;
+#endif
 
 // Loop through replicates
 	for (int rep = 0; rep < sim.reps; rep++) {
@@ -116,7 +123,7 @@ int RunModel(Landscape *pLandscape,int seqsim)
 		DEBUGLOG << endl << "RunModel(): starting simulation=" << sim.simulation << " rep=" << rep << endl;
 #endif
 
-#if RS_RCPP && !R_CMD
+#if RS_RCPP
 		Rcpp::Rcout << endl << "starting replicate " << rep << endl;
 #else
 #if !VCL
@@ -357,7 +364,11 @@ int RunModel(Landscape *pLandscape,int seqsim)
 #if PEDIGREE
 			pComm->outGroupHeaders(-999); // close groups file
 #endif
+#if RS_RCPP && !R_CMD
+			return Rcpp::List::create(Rcpp::Named("Errors") = 666);
+#else
 			return 666;
+#endif
 		}
 
 #if VCL
@@ -488,6 +499,9 @@ int RunModel(Landscape *pLandscape,int seqsim)
 #if RSDEBUG
 			DEBUGLOG << endl << "RunModel(): starting simulation=" << sim.simulation
 			         << " rep=" << rep << " yr=" << yr << endl;
+#endif
+#if RS_RCPP && !R_CMD
+		Rcpp::checkUserInterrupt();
 #endif
 			bool updateCC = false;
 			if (yr < 4
@@ -822,6 +836,11 @@ int RunModel(Landscape *pLandscape,int seqsim)
 #else
 				if (!dem.stageStruct && (sim.outRange || sim.outPop))
 					RangePopOutput(pComm,rep,yr,gen);
+#endif
+#if RS_RCPP
+				if ( sim.ReturnPopRaster && sim.outPop && yr >= sim.outStartPop && yr%sim.outIntPop == 0) {
+					list_outPop.push_back(pComm->addYearToPopList(rep,yr), "rep" + std::to_string(rep) + "_year" + std::to_string(yr));
+				}
 #endif
 #if VIRTUALECOLOGIST
 				if (!dem.stageStruct && sim.virtualEcologist) {
@@ -1480,6 +1499,7 @@ int RunModel(Landscape *pLandscape,int seqsim)
 #endif
 #if RSDEBUG
 		DEBUGLOG << endl << "RunModel(): finished rep=" << rep << endl;
+		DEBUGLOG << endl << "Length(list_outPop): " << list_outPop.length() << endl; //remove
 #endif
 
 #if GROUPDISP
@@ -1623,7 +1643,7 @@ int RunModel(Landscape *pLandscape,int seqsim)
 //RSlog << "Simulation," << sim.simulation << "," << sim.reps << "," << sim.years
 //	<< "," << t1-t0 << endl;
 
-	return 0;
+	return list_outPop;
 
 }
 

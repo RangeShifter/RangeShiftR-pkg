@@ -114,7 +114,7 @@ validateRSparams <- function(x){validObject(x)}
 #' If NULL, the current \code{R} working directory will be used.
 #' @return returns an error code or, if \code{RSparams@simul@ReturnPopRaster = TRUE}, a data frame with population data output
 #' @export
-RunRS <- function(RSparams, dirpath = NULL){
+RunRS <- function(RSparams, dirpath = getwd()){
     if (missing(RSparams)) {
         stop("Missing parameter object")
     }
@@ -132,8 +132,7 @@ RunRS <- function(RSparams, dirpath = NULL){
     #ParMaster_name <- deparse(substitute(RSparams))
     #run_from_R(RSparams, dirpath)
 
-    out = run_from_R(RSparams, dirpath)
-    clear_outPop()
+    out = run_from_R(dirpath, RSparams)
 
     if (class(out)=="list" && is.null(out$Errors)) {
         if ( length(out)>0 ) {

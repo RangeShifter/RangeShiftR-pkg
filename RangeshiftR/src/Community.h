@@ -382,6 +382,9 @@ public:
 		int       // option: -999 to close the file
 	);
 #endif
+#if RS_RCPP
+    Rcpp::IntegerMatrix addYearToPopList(int,int);
+#endif
 
 private:
 	Landscape *pLandscape;
@@ -396,6 +399,10 @@ extern paramInit *paramsInit;
 
 #if VCL
 extern bool stopRun;
+#endif
+
+#if RS_RCPP
+//extern Rcpp::List list_outPop;
 #endif
 
 //---------------------------------------------------------------------------

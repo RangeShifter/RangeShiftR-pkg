@@ -110,19 +110,17 @@ string msgcase = " case-sensitive parameter names";
 // static Rcpp::Environment global = Rcpp::Environment::global_env();
 // static Rcpp::S4 ParMaster;
 // static Landscape *LandParamsR;
-// Rcpp::CharacterVector list_outPop_header;
 static bool anyIndVar;
-Rcpp::List list_outPop;
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-// # // [[Rcpp::export(name = ".run_from_R")]]
-// [[Rcpp::export]]
+/* # // [[Rcpp::export(name = ".run_from_R")]]
+// # // [[Rcpp::export]]
 Rcpp::List run_from_R(Rcpp::S4 ParMaster, Rcpp::String dirpath)
 {
 	return BatchMainR(dirpath, ParMaster);
-}
+}*/
 
 /* this function is for calling the file batch version from R;
  * it is excluded atm since it is not supposed to be used before the GUI can not generate the batch parameter files from the settings made;
@@ -277,13 +275,15 @@ Rcpp::List BatchMainFile(string dirpath, Rcpp::S4 ParMaster)
 //------ R interface --------------------------------------------------------
 //---------------------------------------------------------------------------
 
-Rcpp::List BatchMainR(string dirpath, Rcpp::S4 ParMaster)
+//[[Rcpp::export(name = "run_from_R")]]
+Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
 {
 	// int i,t0,t1,Nruns;
 	int t0, t1;
 	int nSimuls, nSimulss, nLandscapes; // no. of simulations and landscapes in batch
 
 	t0 = time(0);
+	//clear_outPop();
 
 	// set up parameter objects
 	paramsGrad = new paramGrad;
@@ -571,8 +571,6 @@ Rcpp::List BatchMainR(string dirpath, Rcpp::S4 ParMaster)
 	DEBUGLOG << "BatchMainR(): dem.repType = " << dem.repType << endl;
 #endif
 
-	clear_outPop();
-
 	// set up random number stream
 	int seed = Rcpp::as<int>(control.slot("seed"));
 	if(!seed) { // don't set seed from R
@@ -587,6 +585,7 @@ Rcpp::List BatchMainR(string dirpath, Rcpp::S4 ParMaster)
 #if RANDOMCHECK
 	randomCheck();
 #else
+	Rcpp::List list_outPop;
 	if(errors == 0) {
 		Rcpp::Rcout << endl << "Run Simulation(s)";
 		if(seed) {
@@ -594,7 +593,7 @@ Rcpp::List BatchMainR(string dirpath, Rcpp::S4 ParMaster)
 		}
 		Rcpp::Rcout << " ..." << endl;
 
-		RunBatchR(nSimuls, nLandscapes, ParMaster);
+		list_outPop = RunBatchR(nSimuls, nLandscapes, ParMaster);
 	}
 #endif
 
@@ -611,6 +610,8 @@ Rcpp::List BatchMainR(string dirpath, Rcpp::S4 ParMaster)
 	}
 #endif
 
+	simParams sim = paramsSim->getSim();
+	
 	delete paramsGrad;
 	delete paramsStoch;
 	delete paramsInit;
@@ -624,8 +625,6 @@ Rcpp::List BatchMainR(string dirpath, Rcpp::S4 ParMaster)
 	Rcpp::Rcout << "***** Simulation completed " << endl;
 	Rcpp::Rcout << "***** Outputs folder: " << outdir << endl;
 	Rcpp::Rcout << "*****" << endl;
-
-	simParams sim = paramsSim->getSim();
 
 	if(sim.ReturnPopRaster && sim.outIntPop > 0) {
 		// return Rcpp::List::create(Rcpp::Named("runs") = errors);
@@ -3707,7 +3706,7 @@ int ReadArchFileR(wifstream& archFile)
 
 //---------------------------------------------------------------------------
 
-void RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
+Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 {
 	int land_nr;
 	int t0, t1, t00, t01;
@@ -3718,6 +3717,7 @@ void RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 	demogrParams dem = pSpecies->getDemogr();
 #endif
 
+	Rcpp::List list_outPop;
 	Landscape* pLandscape = NULL; // pointer to landscape
 
 #if RSDEBUG
@@ -3740,7 +3740,7 @@ void RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 		Rcpp::Rcout << endl
 		            << "Error - unable to open Batch" << sim.batchNum << "_RS_log.csv file - aborting batch run"
 		            << endl;
-		return;
+		return Rcpp::List::create(Rcpp::Named("Errors") = -678);
 	}
 	rsLog << "Event,Number,Reps,Years,Time" << endl;
 #if RSDEBUG
@@ -3972,7 +3972,6 @@ void RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 #if RS_ABC
 
 					ABCmain(pLandscape);
-
 #else
 
 #if RSDEBUG
@@ -3990,9 +3989,10 @@ void RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 
 					// for batch processing, include landscape number in parameter file name
 					OutParameters(pLandscape);
-
+					
 					// run the model
-					RunModel(pLandscape, i);
+					list_outPop = RunModel(pLandscape, i);
+					DEBUGLOG << "list_outPop.length() =" << list_outPop.length() << endl; // remove
 #if RSDEBUG
 					// DEBUGLOG << endl << "RunBatchR(): real landscape, i = " << i
 					//	<< " simulation = " << sim.simulation << " landFile = " << landFile
@@ -4042,17 +4042,11 @@ void RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 		rsLog.close();
 		rsLog.clear();
 	}
+	
+	return list_outPop;
 }
 
 //---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-
-// [[Rcpp::export]]
-void clear_outPop()
-{
-	list_outPop.erase(list_outPop.begin(), list_outPop.end());
-}
-
 //---------------------------------------------------------------------------
 
 void setglobalvarsR(Rcpp::S4 control)

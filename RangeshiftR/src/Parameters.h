@@ -55,14 +55,14 @@ using namespace std;
 #define NHABITATS 10	// maximum number of SUITABLE habitats permitted
 #endif // RS_CONTAIN 
 
+#if RS_RCPP
+typedef intptr_t intptr;
+#else
 #if RSWIN64
 typedef unsigned long long intptr;
 #else
-    #if RS_RCPP
-    typedef intptr_t intptr;
-    #else
-    typedef unsigned int intptr;
-    #endif
+typedef unsigned int intptr;
+#endif
 #endif
 
 #if RS_RCPP

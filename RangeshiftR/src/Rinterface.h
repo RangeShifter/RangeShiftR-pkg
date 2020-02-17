@@ -48,10 +48,10 @@ using namespace std;
 
 //---------------------------------------------------------------------------
 
-Rcpp::List run_from_R(Rcpp::S4, Rcpp::String);   // entry functions from R
+//Rcpp::List run_from_R(Rcpp::S4, Rcpp::String); // entry functions from R
 //Rcpp::List BatchMainFile(string, Rcpp::S4);	 // missing dependend functions for file reading/parsing, from BatchMode.h/.cpp
 #if RSDEBUG
-Rcpp::List BatchMainR(string, Rcpp::S4);
+Rcpp::List BatchMainR(std::string, Rcpp::S4);
 #endif // RSDEBUG
 bool ReadLandParamsR(Landscape*, Rcpp::S4);
 int ReadDynLandR(Landscape*, Rcpp::S4);
@@ -63,8 +63,11 @@ int ReadSettlementR(Rcpp::S4);
 int ReadInitialisationR(Landscape*, Rcpp::S4);
 int ReadGeneticsR(Rcpp::S4);
 
-void RunBatchR(int, int, Rcpp::S4);
-void clear_outPop();
+int ParseInitIndsFileR(wifstream&);
+int ReadInitIndsFileR(int,Landscape*);
+int ReadArchFileR(wifstream&);
+
+Rcpp::List RunBatchR(int, int, Rcpp::S4);
 void setglobalvarsR(Rcpp::S4);
 
 
@@ -72,10 +75,6 @@ void setglobalvarsR(Rcpp::S4);
 
 string check_bom(string); // check BOM of a text file for UTF-16 encoding
 rasterdata ParseRasterHead(string); //parse, read and return ASCII raster head data
-
-int ParseInitIndsFileR(wifstream&);
-int ReadInitIndsFileR(int,Landscape*);
-int ReadArchFileR(wifstream&);
 
 void BatchErrorR(string,int,int,string);
 void BatchErrorR(string,int,int,string,string);
