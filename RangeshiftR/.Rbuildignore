@@ -3,3 +3,4 @@
 ^src/BatchMode\.cpp$
 ^src/Main\.cpp$
 ^src/BatchMode\.h$
+^LICENSE\.md$

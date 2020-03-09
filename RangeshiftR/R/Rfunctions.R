@@ -139,7 +139,7 @@ RunRS <- function(RSparams, dirpath = getwd()){
             resol = RSparams@control@resolution
             return(raster::stack(lapply(X = out, FUN = raster::raster, xmn=0, xmx=ncol(out[[1]])*resol, ymn=0, ymx=nrow(out[[1]])*resol)))
         }
-        else return(0L)
+        else return(NULL)
     }
     else {
         return(out)

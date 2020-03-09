@@ -163,7 +163,7 @@ int InitDist::readDistribution(string distfile)
 #endif
 
 // open distribution file
-#if !RS_RCPP
+#if !RS_RCPP || RSWIN64
 	dfile.open(distfile.c_str());
 #else
 	dfile.open(distfile, std::ios::binary);
@@ -219,6 +219,7 @@ int InitDist::readDistribution(string distfile)
 #if RS_RCPP
 			} else {
 				// corrupt file stream
+				Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
 				StreamErrorR(distfile);
 				dfile.close();
 				dfile.clear();
@@ -2009,6 +2010,7 @@ int Landscape::readLandChange(int filenum)
 #if RS_RCPP
 				} else {
 					// corrupt file stream
+					Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
 					StreamErrorR("habitatfile");
 					hfile.close();
 					hfile.clear();
@@ -2028,6 +2030,7 @@ int Landscape::readLandChange(int filenum)
 #if RS_RCPP
 					} else {
 						// corrupt file stream
+						Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
 						StreamErrorR("patchfile");
 						hfile.close();
 						hfile.clear();
@@ -2104,6 +2107,7 @@ int Landscape::readLandChange(int filenum)
 #if RS_RCPP
 				} else {
 					// corrupt file stream
+					Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
 					StreamErrorR("habitatfile");
 					hfile.close();
 					hfile.clear();
@@ -2123,6 +2127,7 @@ int Landscape::readLandChange(int filenum)
 #if RS_RCPP
 					} else {
 						// corrupt file stream
+						Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
 						StreamErrorR("patchfile");
 						hfile.close();
 						hfile.clear();
@@ -2383,7 +2388,7 @@ int Landscape::readLandscape(int fileNum,string habfile,string pchfile)
 	initParams init = paramsInit->getInit();
 
 // open habitat file and optionally also patch file
-#if !RS_RCPP
+#if !RS_RCPP || RSWIN64
 	hfile.open(habfile.c_str());
 #else
 	hfile.open(habfile, std::ios::binary);
@@ -2395,7 +2400,7 @@ int Landscape::readLandscape(int fileNum,string habfile,string pchfile)
 	if (!hfile.is_open()) return 11;
 	if (fileNum == 0) {
 		if (patchModel) {
-#if !RS_RCPP
+#if !RS_RCPP || RSWIN64
 			pfile.open(pchfile.c_str());
 #else
 			pfile.open(pchfile, std::ios::binary);
@@ -2519,6 +2524,7 @@ int Landscape::readLandscape(int fileNum,string habfile,string pchfile)
 #if RS_RCPP
 						} else {
 							// corrupt file stream
+							Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
 							StreamErrorR(pchfile);
 							hfile.close();
 							hfile.clear();
@@ -2531,6 +2537,7 @@ int Landscape::readLandscape(int fileNum,string habfile,string pchfile)
 #if RS_RCPP
 				} else {
 					// corrupt file stream
+					Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
 					StreamErrorR(habfile);
 					hfile.close();
 					hfile.clear();
@@ -2654,6 +2661,7 @@ int Landscape::readLandscape(int fileNum,string habfile,string pchfile)
 #if RS_RCPP
 							} else {
 								// corrupt file stream
+								Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
 								StreamErrorR(pchfile);
 								hfile.close();
 								hfile.clear();
@@ -2729,6 +2737,7 @@ int Landscape::readLandscape(int fileNum,string habfile,string pchfile)
 				} else
 				{
 					// corrupt file stream
+					Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
 					StreamErrorR(habfile);
 					hfile.close();
 					hfile.clear();
@@ -2792,6 +2801,7 @@ int Landscape::readLandscape(int fileNum,string habfile,string pchfile)
 #if RS_RCPP
 				} else {
 					// corrupt file stream
+					Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
 					StreamErrorR(habfile);
 					hfile.close();
 					hfile.clear();
@@ -2813,6 +2823,7 @@ int Landscape::readLandscape(int fileNum,string habfile,string pchfile)
 #if RS_RCPP
 					} else {
 						// corrupt file stream
+						Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
 						StreamErrorR(pchfile);
 						hfile.close();
 						hfile.clear();
@@ -3167,7 +3178,7 @@ int Landscape::readCosts(string fname)
 #endif
 #endif
 // open cost file
-#if !RS_RCPP
+#if !RS_RCPP || RSWIN64
 	costs.open(fname.c_str());
 #else
 	costs.open(fname, std::ios::binary);
@@ -3222,6 +3233,7 @@ int Landscape::readCosts(string fname)
 #if RS_RCPP
 			} else {
 				// corrupt file stream
+				Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
 				StreamErrorR(fname);
 				costs.close();
 				costs.clear();

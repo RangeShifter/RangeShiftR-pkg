@@ -693,8 +693,10 @@ setMethod("show", "RSparams", function(object){
     print(object@demog)
     cat("\n")
     print(object@dispersal)
-    cat("\n")    
-    print(object@gene)
     cat("\n")
+    if(any(object@dispersal@Emigration@IndVar,object@dispersal@Transfer@IndVar,object@dispersal@Settlement@IndVar)){
+        print(object@gene)
+        cat("\n")
+    }
     print(object@init)}
 )

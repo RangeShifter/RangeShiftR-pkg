@@ -6,7 +6,7 @@
 #define RSDEBUG 1
 
 #define CLUSTER	0
-#define RSWIN64 0
+// #define RSWIN64 0
 
 #define RANDOMCHECK 0
 

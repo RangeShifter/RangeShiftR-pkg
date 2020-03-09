@@ -401,9 +401,5 @@ extern paramInit *paramsInit;
 extern bool stopRun;
 #endif
 
-#if RS_RCPP
-//extern Rcpp::List list_outPop;
-#endif
-
 //---------------------------------------------------------------------------
 #endif

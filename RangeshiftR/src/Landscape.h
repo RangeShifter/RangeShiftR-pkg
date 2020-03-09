@@ -57,6 +57,7 @@ Last updated: 6 January 2020 by Steve Palmer
 //#include <iostream.h>
 //#include <stdio.h>
 #include <vector>
+
 using namespace std;
 
 #include "Parameters.h"
@@ -66,7 +67,9 @@ using namespace std;
 #include "FractalGenerator.h"
 #if RS_RCPP
 #include <locale>
+#if !RSWIN64
 #include <codecvt>
+#endif
 #if !R_CMD
 #include <Rcpp.h>
 #endif

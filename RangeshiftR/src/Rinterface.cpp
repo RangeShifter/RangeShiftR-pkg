@@ -305,7 +305,7 @@ Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
 		Rcpp::Rcout << "*****" << endl;
 		Rcpp::Rcout << "***** Simulation ABORTED " << endl;
 		Rcpp::Rcout << "*****" << endl;
-		return Rcpp::List::create(666);
+		return Rcpp::List::create(Rcpp::Named("Errors") = 666);
 	}
 
 #if RSDEBUG
@@ -524,7 +524,7 @@ Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
 	if(errors > 0) { // terminate batch error checking
 
 		Rcpp::Rcout << endl << "*** Control parameters must be corrected before proceeding" << endl;
-		return Rcpp::List::create(errors);
+		return Rcpp::List::create(Rcpp::Named("Errors") = errors);
 	}
 
 	//////////////////////////////////////
@@ -860,22 +860,24 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 									if(spdistraster.ncols == landraster.ncols && spdistraster.nrows == landraster.nrows) {
 										Rcpp::Rcout << ftype << " headers OK: " << fname << endl;
 									} else {
-										Rcpp::Rcout << "*** Extent of " << ftype << msghdrs1 << endl;
+										Rcpp::Rcout << "*** Extents of " << ftype << msghdrs1 << endl;
 										errors++;
 									}
 								} else { // different resolution
-									if(spdistraster.cellsize % landraster.cellsize) {
+									if((spdistraster.cellsize % landraster.cellsize)==0) {
+										double coarse = spdistraster.cellsize/landraster.cellsize;
+										double rightx = ceil(landraster.ncols/coarse);
+										double righty = ceil(landraster.nrows/coarse);
+										if( spdistraster.ncols == int(rightx) && spdistraster.nrows == int(righty) ) {
+											Rcpp::Rcout << ftype << " headers OK: " << fname << endl;
+										} else {
+											Rcpp::Rcout << "*** Extents of " << ftype << msghdrs1 << endl;
+											errors++;
+										}
+									} else {
 										BatchErrorR(filetype, -999, 0, "DistResolution");
 										Rcpp::Rcout << "Resolution of initial distribution must be an integer multiple of Landscape resolution" << endl;
 										errors++;
-									} else {
-										int coarse = (int)spdistraster.cellsize/landraster.cellsize;
-										if(spdistraster.ncols == (coarse*landraster.ncols) && spdistraster.nrows == (coarse*landraster.nrows)) {
-											Rcpp::Rcout << ftype << " headers OK: " << fname << endl;
-										} else {
-											Rcpp::Rcout << "*** Extent of " << ftype << msghdrs1 << endl;
-											errors++;
-										}
 									}
 								}
 							} else {
@@ -1036,7 +1038,11 @@ int ReadDynLandR(Landscape *pLandscape, Rcpp::S4 LandParamsR)
 		fname = indir + habitatmaps(i);
 
 		// open file
+#if RSWIN64
+		hfile.open(fname.c_str());
+#else
 		hfile.open(fname, std::ios::binary);
+#endif
 		if(!hfile.is_open()) {
 			OpenErrorR("Dynamic landscape habitat map ",  fname);
 #if RSDEBUG
@@ -1048,10 +1054,12 @@ int ReadDynLandR(Landscape *pLandscape, Rcpp::S4 LandParamsR)
 #if RSDEBUG
 			DEBUGLOG << "Dynamic landscape habitat map #" << i << " open to read" << std::endl;
 #endif
+#if !RSWIN64
 			// check BOM for UTF-16
 			if(check_bom(fname) == "utf16")
 				// apply BOM-sensitive UTF-16 facet
 				hfile.imbue(std::locale(hfile.getloc(), new std::codecvt_utf16<wchar_t, 0x10ffff, std::consume_header>));
+#endif
 			// ASCII header
 			hfile >> header;
 			if (!hfile.good()) {
@@ -1126,7 +1134,11 @@ int ReadDynLandR(Landscape *pLandscape, Rcpp::S4 LandParamsR)
 			fname = indir + patchmaps(i);
 
 			// open file
+#if RSWIN64
+			pfile.open(fname.c_str());
+#else
 			pfile.open(fname, std::ios::binary);
+#endif
 			if(!pfile.is_open()) {
 				OpenErrorR("Dynamic landscape patch map ",  fname);
 #if RSDEBUG
@@ -1138,10 +1150,12 @@ int ReadDynLandR(Landscape *pLandscape, Rcpp::S4 LandParamsR)
 #if RSDEBUG
 				DEBUGLOG << "Dynamic landscape patch map #" << i << " open to read" << std::endl;
 #endif
+#if !RSWIN64
 				// check BOM for UTF-16
 				if(check_bom(fname) == "utf16")
 					// apply BOM-sensitive UTF-16 facet
 					pfile.imbue(std::locale(pfile.getloc(), new std::codecvt_utf16<wchar_t, 0x10ffff, std::consume_header>));
+#endif
 				// ASCII header
 				pfile >> header;
 				if (!pfile.good()) {
@@ -3492,7 +3506,12 @@ int ReadGeneticsR(Rcpp::S4 GeneParamsR)
 		Rcpp::Rcout << "Checking Archiecture file " << archfile << endl;
 		string fname = paramsSim->getDir(1) + archfile;
 		wifstream archFile;
+		//open file
+#if RSWIN64
+		archFile.open(fname.c_str());
+#else
 		archFile.open(fname, std::ios::binary);
+#endif
 		if(!archFile.is_open()) {
 			OpenErrorR("Architecture file", fname);
 #if RSDEBUG
@@ -3503,10 +3522,12 @@ int ReadGeneticsR(Rcpp::S4 GeneParamsR)
 #if RSDEBUG
 			DEBUGLOG << "Architecture file open to read" << std::endl;
 #endif
+#if !RSWIN64
 			// check BOM for UTF-16
 			if(check_bom(fname) == "utf16")
 				// apply BOM-sensitive UTF-16 facet
 				archFile.imbue(std::locale(archFile.getloc(), new std::codecvt_utf16<wchar_t, 0x10ffff, std::consume_header>));
+#endif
 
 			error = ReadArchFileR(archFile);
 
@@ -4084,6 +4105,7 @@ void setglobalvarsR(Rcpp::S4 control)
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 
+#if !RSWIN64
 // check for UTF-16 encoding
 string check_bom(string file)
 {
@@ -4139,6 +4161,7 @@ string check_bom(string file)
 	}
 	return enc;
 }
+#endif
 
 //---------------------------------------------------------------------------
 
@@ -4153,12 +4176,18 @@ rasterdata ParseRasterHead(string file)
 	r.errors = r.ncols = r.nrows = r.cellsize = 0;
 	r.xllcorner = r.yllcorner = 0.0;
 	r.utf = false;
-
+	
+	// open file
+#if RSWIN64
+	infile.open(file.c_str());
+#else
 	infile.open(file, std::ios::binary);
+#endif
 	if (infile.is_open()) {
 #if RSDEBUG
 		DEBUGLOG << "Parsing raster file " << file << std::endl;
 #endif
+#if !RSWIN64
 		// check BOM for UTF-16
 		if(check_bom(file) == "utf16") {
 			// apply BOM-sensitive UTF-16 facet
@@ -4167,6 +4196,7 @@ rasterdata ParseRasterHead(string file)
 		} else {
 			r.utf = false;
 		}
+#endif
 		// parse ASCII header
 		infile >> header;
 		if (!infile.good()) {
@@ -4364,7 +4394,11 @@ int ReadInitIndsFileR(int option, Landscape* pLandscape)
 
 	if(option == 0) { // open file, parse and read header and lines
 		// open file
+#if RSWIN64
+		initIndsFile.open(indsfile.c_str());
+#else
 		initIndsFile.open(indsfile, std::ios::binary);
+#endif
 		if(!initIndsFile.is_open()) {
 			OpenErrorR("Initial individuals file", indsfile);
 #if RSDEBUG
@@ -4375,10 +4409,12 @@ int ReadInitIndsFileR(int option, Landscape* pLandscape)
 #if RSDEBUG
 			DEBUGLOG << "Initial individuals file open to read" << std::endl;
 #endif
+#if !RSWIN64
 			// check BOM for UTF-16
 			if(check_bom(indsfile) == "utf16")
 				// apply BOM-sensitive UTF-16 facet
 				initIndsFile.imbue(std::locale(initIndsFile.getloc(), new std::codecvt_utf16<wchar_t, 0x10ffff, std::consume_header>));
+#endif
 			// parse to check correct format
 			errors = ParseInitIndsFileR(initIndsFile);
 			// read headers to prepare reading values
@@ -4617,7 +4653,7 @@ void EOFerrorR(string filename)
 
 void StreamErrorR(string filename)
 {
-	Rcpp::Rcout << "*** Corrupted file stream in " << filename << std::endl << "You can try to use a different file encoding, like UTF-8." << std::endl;
+	Rcpp::Rcout << "*** Corrupted file stream in " << filename << std::endl << "Too few entries? Unsuppoerted file encoding? (You might try to use a different one, like UTF-8.)" << std::endl;
 #if RSDEBUG
 	DEBUGLOG << "Corrupted file stream in " << filename << std::endl;
 #endif

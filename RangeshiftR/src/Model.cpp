@@ -1644,7 +1644,6 @@ int RunModel(Landscape *pLandscape,int seqsim)
 //	<< "," << t1-t0 << endl;
 
 	return list_outPop;
-
 }
 
 // Check whether a specified directory path exists
@@ -1874,10 +1873,12 @@ void OutParameters(Landscape *pLandscape)
 	outPar << " ADAPTIVE MANAGEMENT ";
 #endif // RS_CONTAIN 
 
+#if !RS_RCPP
 #if RSWIN64
 	outPar << " - 64 bit implementation";
 #else
 	outPar << " - 32 bit implementation";
+#endif
 #endif
 	outPar << endl;
 
