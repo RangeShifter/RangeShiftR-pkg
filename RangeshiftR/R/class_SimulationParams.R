@@ -39,14 +39,14 @@
 #' \eqn{2} = decreasing growth rate \eqn{r} or, for a \code{\link[RangeshiftR]{StageStructure}}d population, fecundity (\eqn{\phi}), \cr
 #' \eqn{3} = increasing local extinction probability \eqn{e}. \cr
 #' If activated, a gradient will be imposed along the north-south (\eqn{y}-) axis in which the selected parameter varies linearly with distance from the
-#' optimum \eqn{y}-value \code{Optimum}. Note that \code{Gradient} must be \eqn{0} for patch-based models.
-#' @param GradSteep Required if \code{Gradient} \ifelse{html}{\out{&ne; 0}}{\eqn{> 0}}: gradient steepness in units of fraction of \code{Optimum} per cell. Must be \eqn{\ge 0}.
+#' optimum \eqn{y}-value \code{Optimum}. Note that a \code{Gradient} can not be applied in for patch-based models (must be \code{Gradient}\eqn{=0}).
+#' @param GradSteep Required if \code{Gradient} \ifelse{html}{\out{&ne; 0}}{\eqn{> 0}}: gradient steepness in units of (fraction of local value) per cell. Must be \eqn{\ge 0}.
 #' @param Optimum Required if \code{Gradient} \ifelse{html}{\out{&ne; 0}}{\eqn{> 0}}: \eqn{y}-value at which the extremum is obtained. Must be \eqn{\ge 0}.
-#' @param f Required if \code{Gradient} \ifelse{html}{\out{&ne; 0}}{\eqn{> 0}}: local scaling factor that determines the magnitude of local variation relative to the optimal value. Must be \eqn{\ge 0}.
+#' @param f Required if \code{Gradient} \ifelse{html}{\out{&ne; 0}}{\eqn{> 0}}: local scaling factor that determines the magnitude of stochastic local heterogeneity relative to the optimal value. Must be \eqn{\ge 0}.
 #' @param ExtinctOptim Required if \code{Gradient} \eqn{= 3}: optimum (i.e. minimal) local extinction probability at \code{Optimum}. Must be between \eqn{0} and \eqn{1}.
 #' @param Shifting Only applicable if \code{Gradient} \ifelse{html}{\out{&ne; 0}}{\eqn{> 0}}:\cr
 #' If \code{FALSE} (default), the gradient is stationary.\cr
-#' If \code{TRUE}, the \code{Gradient} shifts along the \eqn{y}-axis towards increasing \eqn{y} (northwards).
+#' If \code{TRUE}, the \code{Gradient} shifts along the \eqn{y}-axis towards increasing \eqn{y} (northwards). Requires to set \code{ShiftRate}, \code{ShiftStart} and \code{ShiftEnd}, 
 #' @param ShiftRate Required if \code{Shifting=TRUE}: shift rate of the gradient in units of rows per year. (integer)
 #' @param ShiftStart Required if \code{Shifting=TRUE}: year in which the gradient shifting starts (integer)
 #' @param ShiftEnd Required if \code{Shifting=TRUE}: year in which the gradient shifting stops. (integer)
@@ -117,9 +117,9 @@
 #' \ifelse{html}{\out{e<sub>opt</sub>}}{e_{opt}} (\code{ExtinctOptim}) the minimum extinction probability.
 #' The linear variability is specified by
 #' \ifelse{html}{\out{y<sub>opt</sub>}}{y_{opt}} (\code{Optimum}), the \eqn{y}-value at which the extremum (i.e. \ifelse{html}{\out{Z<sub>0</sub>}}{Z_0} or \ifelse{html}{\out{e<sub>opt</sub>}}{e_{opt}}) is obtained,
-#' and \eqn{G} (\code{GradSteep}), the gradient steepness in units of fraction of \code{Optimum} per cell.
+#' and \eqn{G} (\code{GradSteep}), the gradient steepness in units of fraction of the local value per cell.
 #' The local heterogeneity is determined by a random number drawn from a uniform distribution between \eqn{-1} and \eqn{1} for each cell
-#' and \code{f}, the local scaling factor that determines the magnitude of local variation relative to the extremal value.
+#' and \code{f}, the local scaling factor that determines the magnitude of this stochastic local variation relative to the extremal value.
 #'
 #' The gradient in fecundity φ applies to the fecundity of each stage. Negative local values in \eqn{z(x,y)} are set to \eqn{0}.
 #'

@@ -151,7 +151,7 @@ setMethod("plotOccupancy", "data.frame", function(s, sd = FALSE, replicates = TR
         polygon(c(rep_sd$Year,rev(rep_sd$Year)), c(rep_means$NOccup+rep_sd$NOccup, rev(pmax(0,rep_means$NOccup-rep_sd$NOccup))), border=NA, col='grey80')
     }
     # Plot occupancy
-    lines(rep_means$Year, rep_means$NOccup, type = "l", lwd = 3, col = "red")
+    lines(rep_means$Year, rep_means$NOccup, type = "l", lwd = 3, col = "blue")
     # plot replicates
     if (replicates) {
         for (i in 0:max(s$Rep)) {

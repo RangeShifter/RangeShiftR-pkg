@@ -21,7 +21,7 @@ RSrandom::RSrandom(int seed)
 {
     // get seed
     int random_seed;
-    if (seed < 0) {
+    if (seed == 0) {
         // random seed
         std::random_device device;
         random_seed = device();

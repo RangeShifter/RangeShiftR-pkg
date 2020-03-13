@@ -1499,7 +1499,6 @@ int RunModel(Landscape *pLandscape,int seqsim)
 #endif
 #if RSDEBUG
 		DEBUGLOG << endl << "RunModel(): finished rep=" << rep << endl;
-		DEBUGLOG << endl << "Length(list_outPop): " << list_outPop.length() << endl; //remove
 #endif
 
 #if GROUPDISP
@@ -1909,6 +1908,9 @@ void OutParameters(Landscape *pLandscape)
 	outPar << "BATCH MODE \t";
 	if (sim.batchMode) outPar << "yes" << endl;
 	else outPar << "no" << endl;
+#if RS_RCPP
+	outPar << "SEED \t" << RS_random_seed << endl;
+#endif
 	outPar << "REPLICATES \t" << sim.reps << endl;
 	outPar << "YEARS \t" << sim.years << endl;
 #if SEASONAL
@@ -1951,6 +1953,7 @@ void OutParameters(Landscape *pLandscape)
 			break;
 		}
 		outPar << "FILE NAME: ";
+#if !RS_RCPP
 		if (sim.batchMode) outPar << " (see batch file) " << landFile << endl;
 		else {
 			outPar << habmapname << endl;
@@ -1963,6 +1966,17 @@ void OutParameters(Landscape *pLandscape)
 				outPar << "PATCH FILE: " << patchmapname << endl;
 			}
 		}
+#else
+		if (ppLand.dynamic) {
+			outPar << name_landscape << endl;
+		}
+		else{
+			outPar << name_patch << endl;
+		}
+		if (ppLand.patchModel) {
+			outPar << "PATCH FILE: " << patchmapname << endl;
+		}
+#endif
 		outPar << "No. HABITATS:\t" << ppLand.nHab << endl;
 	}
 	outPar << "RESOLUTION (m): \t" << ppLand.resol << endl;
@@ -2002,16 +2016,20 @@ void OutParameters(Landscape *pLandscape)
 #endif // PARTMIGRN 
 #endif // SEASONAL 
 
-	outPar << endl << "SPECIES DISTRIBUTION UPLOADED: \t";
+	outPar << endl << "SPECIES DISTRIBUTION LOADED: \t";
 //if (sim.initDistLoaded)
 	if (ppLand.spDist) {
 		outPar << "yes" << endl;
 		outPar << "RESOLUTION (m)\t" << ppLand.spResol << endl;
 		outPar << "FILE NAME: ";
+#if !RS_RCPP
 		if (sim.batchMode) outPar << " (see batch file) " << landFile << endl;
 		else {
 			outPar << distnmapname << endl;
 		}
+#else
+		outPar << name_sp_dist << endl;
+#endif
 	} else outPar << "no" << endl;
 
 #if SPATIALMORT

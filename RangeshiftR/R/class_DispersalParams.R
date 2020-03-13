@@ -74,17 +74,17 @@
 #'  T \tab F \tab F \tab F \tab \ifelse{html}{\out{D<sub>0</sub>}}{\eqn{D_0}}, \eqn{α}, \eqn{β} \cr
 #'  F \tab T \tab F \tab F \tab mean\eqn{(d)}, sd\eqn{(d)} \cr
 #'  T \tab T \tab F \tab F \tab \ifelse{html}{\out{mean(D<sub>0</sub>)}}{mean\eqn{(D_0)}}, \ifelse{html}{\out{sd(D<sub>0</sub>)}}{sd\eqn{(D_0)}}, mean\eqn{(α)}, sd\eqn{(α)}, mean\eqn{(β)}, sd\eqn{(β)} \cr
-#'  &#8942; \tab &#8942; \tab &#8942; \tab &#8942; \tab &#8942; \cr
+#'  \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \cr
 #'  T \tab T \tab F \tab T \tab sex, \ifelse{html}{\out{mean(D<sub>0</sub>)}}{mean\eqn{(D_0)}}, \ifelse{html}{\out{sd(D<sub>0</sub>)}}{sd\eqn{(D_0)}}, mean\eqn{(α)}, sd\eqn{(α)}, mean\eqn{(β)}, sd\eqn{(β)}
 #'  }
 #'
 #' The column headings need not be included, only the numeric matrix is required. The rows require no particular order, but there must be exactly one row for each stage/sex combination. For example, in the case of density-, stage- and sex-dependent emigration with no individual variability:
-#' \tabular{ccccc}{ &emsp; 0 \tab &emsp; 0 \tab &emsp; 1.0 \tab &emsp; 20 \tab &emsp; 0.2 \cr
-#'  &emsp; 0 \tab &emsp; 1 \tab &emsp; 1.0 \tab &emsp; 20 \tab &emsp; 0.1 \cr
-#'  &emsp; 1 \tab &emsp; 0 \tab &emsp; 0.7 \tab &emsp; 25 \tab &emsp; 0.5 \cr
-#'  &emsp; 1 \tab &emsp; 1 \tab &emsp; 0.8 \tab &emsp; 50 \tab &emsp; 0.5 \cr
-#'  &emsp; 2 \tab &emsp; 0 \tab &emsp; 0.4 \tab &emsp; 10 \tab &emsp; 1.0 \cr
-#'  &emsp; 2 \tab &emsp; 1 \tab &emsp; 0.5 \tab &emsp; 20 \tab &emsp; 1.0
+#' \tabular{ccccc}{ \out{&emsp;} 0 \tab \out{&emsp;} 0 \tab \out{&emsp;} 1.0 \tab \out{&emsp;} 20 \tab \out{&emsp;} 0.2 \cr
+#'  \out{&emsp;} 0 \tab \out{&emsp;} 1 \tab \out{&emsp;} 1.0 \tab \out{&emsp;} 20 \tab \out{&emsp;} 0.1 \cr
+#'  \out{&emsp;} 1 \tab \out{&emsp;} 0 \tab \out{&emsp;} 0.7 \tab \out{&emsp;} 25 \tab \out{&emsp;} 0.5 \cr
+#'  \out{&emsp;} 1 \tab \out{&emsp;} 1 \tab \out{&emsp;} 0.8 \tab \out{&emsp;} 50 \tab \out{&emsp;} 0.5 \cr
+#'  \out{&emsp;} 2 \tab \out{&emsp;} 0 \tab \out{&emsp;} 0.4 \tab \out{&emsp;} 10 \tab \out{&emsp;} 1.0 \cr
+#'  \out{&emsp;} 2 \tab \out{&emsp;} 1 \tab \out{&emsp;} 0.5 \tab \out{&emsp;} 20 \tab \out{&emsp;} 1.0
 #' }
 #'
 #' In the special case that \code{DensDep=FALSE} and transfer is realised by \code{\link[RangeshiftR]{DispersalKernel}}, then the option \code{UseFullKern} may be switched on. It
@@ -497,18 +497,18 @@ setMethod("show", "TransferParams", function(object){
 #'  F \tab T \tab F \tab F \tab \ifelse{html}{\out{&delta;<sub>1</sub>, &delta;<sub>2</sub>, p<sub>I</sub>}}{\eqn{δ_1, δ_2, p_I}} \cr
 #'  T \tab F \tab F \tab F \tab mean\eqn{(δ)}, sd\eqn{(δ)} \cr
 #'  T \tab T \tab F \tab F \tab \ifelse{html}{\out{mean(&delta;<sub>1</sub>)}}{mean\eqn{(δ_1)}}, \ifelse{html}{\out{sd(&delta;<sub>1</sub>)}}{sd\eqn{(δ_1)}}, \ifelse{html}{\out{mean(&delta;<sub>2</sub>)}}{mean\eqn{(δ_2)}}, \ifelse{html}{\out{sd(&delta;<sub>2</sub>)}}{sd\eqn{(δ_2)}}, mean\ifelse{html}{\out{(p<sub>I</sub>)}}{\eqn{(p_I)}}, sd\ifelse{html}{\out{(p<sub>I</sub>)}}{\eqn{(p_I)}} \cr
-#'  &#8942; \tab &#8942; \tab &#8942; \tab &#8942; \tab &#8942; \cr
+#'  \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \cr
 #'  T \tab T \tab F \tab T \tab sex, \ifelse{html}{\out{mean(&delta;<sub>1</sub>)}}{mean\eqn{(δ_1)}}, \ifelse{html}{\out{sd(&delta;<sub>1</sub>)}}{sd\eqn{(δ_1)}}, \ifelse{html}{\out{mean(&delta;<sub>2</sub>)}}{mean\eqn{(δ_2)}}, \ifelse{html}{\out{sd(&delta;<sub>2</sub>)}}{sd\eqn{(δ_2)}}, mean\ifelse{html}{\out{(p<sub>I</sub>)}}{\eqn{(p_I)}}, sd\ifelse{html}{\out{(p<sub>I</sub>)}}{\eqn{(p_I)}}
 #'  }
 #'
 #' The column headings need not be included, only the numeric matrix is required. The rows require no particular order, but there must be exactly
 #' one row for each stage/sex combination. For example, in the case of a mixed kernel with stage- and sex-dependent distances and no individual variability:
-#' \tabular{ccccc}{ &emsp; 0 \tab &emsp; 0 \tab &emsp; 1000 \tab &emsp; 4500 \tab &emsp; 0.92 \cr
-#'  &emsp; 0 \tab &emsp; 1 \tab &emsp; 1400 \tab &emsp; 6000 \tab &emsp; 0.95 \cr
-#'  &emsp; 1 \tab &emsp; 0 \tab &emsp; 700 \tab &emsp; 500 \tab &emsp; 0.50 \cr
-#'  &emsp; 1 \tab &emsp; 1 \tab &emsp; 500 \tab &emsp; 600 \tab &emsp; 0.55 \cr
-#'  &emsp; 2 \tab &emsp; 0 \tab &emsp; 100 \tab &emsp; 0 \tab &emsp; 1.0 \cr
-#'  &emsp; 2 \tab &emsp; 1 \tab &emsp; 100 \tab &emsp; 0 \tab &emsp; 1.0
+#' \tabular{ccccc}{ \out{&emsp;} 0 \tab \out{&emsp;} 0 \tab \out{&emsp;} 1000 \tab \out{&emsp;} 4500 \tab \out{&emsp;} 0.92 \cr
+#'  \out{&emsp;} 0 \tab \out{&emsp;} 1 \tab \out{&emsp;} 1400 \tab \out{&emsp;} 6000 \tab \out{&emsp;} 0.95 \cr
+#'  \out{&emsp;} 1 \tab \out{&emsp;} 0 \tab \out{&emsp;} 700 \tab \out{&emsp;} 500 \tab \out{&emsp;} 0.50 \cr
+#'  \out{&emsp;} 1 \tab \out{&emsp;} 1 \tab \out{&emsp;} 500 \tab \out{&emsp;} 600 \tab \out{&emsp;} 0.55 \cr
+#'  \out{&emsp;} 2 \tab \out{&emsp;} 0 \tab \out{&emsp;} 100 \tab \out{&emsp;} 0 \tab \out{&emsp;} 1.0 \cr
+#'  \out{&emsp;} 2 \tab \out{&emsp;} 1 \tab \out{&emsp;} 100 \tab \out{&emsp;} 0 \tab \out{&emsp;} 1.0
 #' }
 #'
 #' When inter-individual variability is implemented, the dispersal kernel parameters can evolve.
@@ -902,7 +902,7 @@ setMethod("plotProbs", "DispersalKernel", function(x, mortality = FALSE, combine
 #' method, see the Datails below or refer to Palmer et al. (2011).
 #'
 #' @usage SMS(PR = 1, PRMethod = 1, MemSize = 1,
-#'     GoalType = 0, IndVar = FALSE, 
+#'     GoalType = 0, IndVar = FALSE,
 #'     DP = 1.0, GoalBias = 1.0, AlphaDB, BetaDB,
 #'     StraightenPath = TRUE, Costs, StepMort = 0.0)
 #' @param PR Perceptual range. Given in number of cells, defaults to \eqn{1}. (integer)
@@ -914,10 +914,10 @@ setMethod("plotProbs", "DispersalKernel", function(x, mortality = FALSE, combine
 #' @param IndVar Individual variability in SMS traits (i.e. \code{GoalBias}, \code{AlphaDB} and \code{BetaDB})? Defaults to \code{FALSE}.
 #' @param DP Directional persistence. Corresponds to the tendency to follow a correlated random walk, must be \eqn{\ge 1.0}, defaults to \eqn{1.0}.\cr
 #' If \code{IndVar=TRUE}, expects a vector of length three specifying (Mean, SD, MutationScale) of \code{DP}.
-#' @param GoalBias Goal bias strength. Must be must be \eqn{\ge 1.0}, defaults to \eqn{1.0}. \cr 
+#' @param GoalBias Goal bias strength. Must be must be \eqn{\ge 1.0}, defaults to \eqn{1.0}. \cr
 #' @param AlphaDB Required if \code{GoalType=2}: Dispersal bias decay rate. Must be must be \eqn{> 0.0}.\cr If \code{IndVar=TRUE}, expects a vector of length three
 #' specifying (Mean, SD, MutationScale) of \code{AlphaDB}.
-#' @param BetaDB Required if \code{GoalType=2}: Dispersal bias decay inflection point (given in number of steps). Must be must be \eqn{> 0.0}.\cr If \code{IndVar=TRUE}, 
+#' @param BetaDB Required if \code{GoalType=2}: Dispersal bias decay inflection point (given in number of steps). Must be must be \eqn{> 0.0}.\cr If \code{IndVar=TRUE},
 #' expects a vector of length three specifying (Mean, SD, MutationScale) of \code{BetaDB}.
 #' @param StraightenPath Straighten path after decision not to settle in a patch? Defaults to \code{TRUE}, see Details below.
 #' @param Costs Describes the landscapes resistance to movement. Specify either \emph{habitat-specific} costs for each habitat type or
@@ -952,7 +952,7 @@ setMethod("plotProbs", "DispersalKernel", function(x, mortality = FALSE, combine
 #' There is an option to include goal bias, i.e. a tendency to move towards a particular destination, which is implemented in a similar way to
 #' \code{DP} (Aben et al. 2014). However, as dispersers in RangeShifter are naïve and have no goal, it may be applied only in the ‘negative’
 #' sense of moving away from the natal location (\code{GoalType=2}), i.e. as a dispersal bias, which is subject to a decay in strength as a
-#' function of the total number of steps taken (set the decay rate \code{AlphaDB} and inflection point \code{BetaDB}). 
+#' function of the total number of steps taken (set the decay rate \code{AlphaDB} and inflection point \code{BetaDB}).
 #' This enables a dispersal path to follow a straighter trajectory initially, and later become more responsive to perceived landscape costs.
 #'
 #' The product of the reciprocals of effective cost, \code{DP} and dispersal bias, scaled to sum to one,
@@ -1265,7 +1265,7 @@ setMethod("show", "StochMove", function(object){
     if (object@PRMethod == 1) cat("   Method: Arithmetic mean \n")
     if (object@PRMethod == 2) cat("   Method: Harmonic mean \n")
     if (object@PRMethod == 3) cat("   Method: Weighted arithmetic mean \n")
-    
+
     if (object@IndVar) {
         cat("   DP       =", object@DP[1], "\u00B1" , object@DP[2], ", scale \u03bc =", object@DP[3], "\n")
         cat("   GoalBias =", object@GoalBias[1], "\u00B1" , object@GoalBias[2], ", scale \u03bc =", object@GoalBias[3], "\n")
@@ -1274,7 +1274,7 @@ setMethod("show", "StochMove", function(object){
         cat("   DP       =", object@DP, "\n")
         cat("   GoalBias =", object@GoalBias, "\n")
     }
-    
+
     if (object@GoalType) {
         cat("   GoalType: Dispersal bias:\n")
         if (object@IndVar) {
@@ -1536,7 +1536,7 @@ setMethod("show", "CorrRW", function(object){
 #' \eqn{2} = randomly choose a suitable neighbouring cell or die,\cr
 #' \eqn{3} = randomly choose a suitable neighbouring cell or wait (stage-structured models only).\cr
 #'
-#' Simple example for sex-dependence only: Females choose a neighbouring cell or wait, males wait: \tabular{cc}{&emsp; 0 \tab &emsp; 3 \cr &emsp; 1 \tab &emsp; 0 }
+#' Simple example for sex-dependence only: Females choose a neighbouring cell or wait, males wait: \tabular{cc}{\out{&emsp;} 0 \tab \out{&emsp;} 3 \cr \out{&emsp;} 1 \tab \out{&emsp;} 0 }
 #'
 #' \emph{Settlement with movement processes}\cr
 #' If individuals are dispersing by one of the two movement processes implemented (\code{\link[RangeshiftR]{SMS}} or
@@ -1576,7 +1576,7 @@ setMethod("show", "CorrRW", function(object){
 #'  F \tab F \tab F \tab T \tab sex \cr
 #'  F \tab F \tab T \tab T \tab stage, sex \cr
 #'  T \tab F \tab F \tab F \tab \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}}, \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{α_S}}, \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}} \cr
-#'  &#8942; \tab &#8942; \tab &#8942; \tab &#8942; \tab &#8942; \cr
+#'  \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \cr
 #'  T \tab F \tab T \tab T \tab stage, sex, \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}}, \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{α_S}}, \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}} \cr
 #'  T \tab T \tab F \tab F \tab mean\ifelse{html}{\out{(S<sub>0</sub>)}}{\eqn{(S_0)}}, sd\ifelse{html}{\out{(S<sub>0</sub>)}}{\eqn{(S_0)}}, mean\ifelse{html}{\out{(&alpha;<sub>S</sub>)}}{(\eqn{α_S})}, sd\ifelse{html}{\out{(&alpha;<sub>S</sub>)}}{(\eqn{α_S})}, mean\ifelse{html}{\out{(&beta;<sub>S</sub>)}}{(\eqn{β_S})}, sd\ifelse{html}{\out{(&beta;<sub>S</sub>)}}{(\eqn{β_S})} \cr
 #'  T \tab T \tab F \tab T \tab sex, mean\ifelse{html}{\out{(S<sub>0</sub>)}}{\eqn{(S_0)}}, sd\ifelse{html}{\out{(S<sub>0</sub>)}}{\eqn{(S_0)}}, mean\ifelse{html}{\out{(&alpha;<sub>S</sub>)}}{(\eqn{α_S})}, sd\ifelse{html}{\out{(&alpha;<sub>S</sub>)}}{(\eqn{α_S})}, mean\ifelse{html}{\out{(&beta;<sub>S</sub>)}}{(\eqn{β_S})}, sd\ifelse{html}{\out{(&beta;<sub>S</sub>)}}{(\eqn{β_S})}
@@ -1584,12 +1584,12 @@ setMethod("show", "CorrRW", function(object){
 #'
 #' The column headings need not be included, only the numeric matrix is required. The rows require no particular order, but there must be exactly one row for each stage/sex combination.
 #' For example, in the case of density-, stage- and sex-dependent settlement with no individual variability:
-#' \tabular{ccccc}{ &emsp; 0 \tab &emsp; 0 \tab &emsp; 1.0 \tab &emsp; 0.2 \tab &emsp; 4.0 \cr
-#'  &emsp; 0 \tab &emsp; 1 \tab &emsp; 1.0 \tab &emsp; 0.1 \tab &emsp; 6.0 \cr
-#'  &emsp; 1 \tab &emsp; 0 \tab &emsp; 0.7 \tab &emsp; 0.5 \tab &emsp; 2.0 \cr
-#'  &emsp; 1 \tab &emsp; 1 \tab &emsp; 0.5 \tab &emsp; 0.5 \tab &emsp; 2.0 \cr
-#'  &emsp; 2 \tab &emsp; 0 \tab &emsp; 0.05 \tab &emsp; 1.0 \tab &emsp; 1.0 \cr
-#'  &emsp; 2 \tab &emsp; 1 \tab &emsp; 0.05 \tab &emsp; 1.0 \tab &emsp; 1.0
+#' \tabular{ccccc}{ \out{&emsp;} 0 \tab \out{&emsp;} 0 \tab \out{&emsp;} 1.0 \tab \out{&emsp;} 0.2 \tab \out{&emsp;} 4.0 \cr
+#'  \out{&emsp;} 0 \tab \out{&emsp;} 1 \tab \out{&emsp;} 1.0 \tab \out{&emsp;} 0.1 \tab \out{&emsp;} 6.0 \cr
+#'  \out{&emsp;} 1 \tab \out{&emsp;} 0 \tab \out{&emsp;} 0.7 \tab \out{&emsp;} 0.5 \tab \out{&emsp;} 2.0 \cr
+#'  \out{&emsp;} 1 \tab \out{&emsp;} 1 \tab \out{&emsp;} 0.5 \tab \out{&emsp;} 0.5 \tab \out{&emsp;} 2.0 \cr
+#'  \out{&emsp;} 2 \tab \out{&emsp;} 0 \tab \out{&emsp;} 0.05 \tab \out{&emsp;} 1.0 \tab \out{&emsp;} 1.0 \cr
+#'  \out{&emsp;} 2 \tab \out{&emsp;} 1 \tab \out{&emsp;} 0.05 \tab \out{&emsp;} 1.0 \tab \out{&emsp;} 1.0
 #' }
 #' To avoid having individuals moving perpetually because they cannot find suitable conditions to settle, the model requires a maximum number
 #' of steps (\code{MaxSteps}) or a per-step mortality (within the \code{Transfer} object), or both, to be set.
@@ -1826,7 +1826,7 @@ setMethod("show", "SettlementParams", function(object){
 #' \emph{Dispersal traits, genetic architecture and evolution:}
 #' RangeShiftR provides the possibility for inter-individual variability in different dispersal traits and a simple adaptive genetic
 #' module to simulate heritability and evolution of traits by setting \code{IndVar=TRUE} for the respective transfer phase module.\cr
-#' When inter-individual variability in dispersal traits is modelled - whether or not these traits are evolving - each individual 
+#' When inter-individual variability in dispersal traits is modelled - whether or not these traits are evolving - each individual
 #' carries alleles coding for each varying trait. If the reproductive model is asexual or female only,
 #' the species is assumed to be haploid and single loci code for each trait. Alleles take continuous values, assuming a
 #' continuum-of-alleles model (Hoban et al. 2011; Scheiner et al. 2012). Offspring inherit their alleles from their single parent/mother,

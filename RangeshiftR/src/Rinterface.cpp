@@ -66,7 +66,7 @@ rasterdata mortraster;
 #endif // SPATIALMORT 
 // ...including names of the input files
 // string parameterFile;
-string landFile;
+// string landFile;
 string name_landscape, name_patch, name_sp_dist;
 //string name_dynland;
 //#if RS_CONTAIN
@@ -225,7 +225,7 @@ Rcpp::List BatchMainFile(string dirpath, Rcpp::S4 ParMaster)
 #if RSDEBUG
 	pRandom = new RSrandom(666);
 #else
-	pRandom = new RSrandom(-1);
+	pRandom = new RSrandom(0);
 #endif
 
 #if RANDOMCHECK
@@ -577,7 +577,7 @@ Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
 #if RSDEBUG
 		seed = 666;
 #else
-		seed = -1; // random seed
+		seed = 0; // random seed
 #endif
 	}
 	pRandom = new RSrandom(seed);
@@ -588,8 +588,10 @@ Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
 	Rcpp::List list_outPop;
 	if(errors == 0) {
 		Rcpp::Rcout << endl << "Run Simulation(s)";
-		if(seed) {
-			Rcpp::Rcout << " with seed " << seed;
+		if(seed == 0) {
+			Rcpp::Rcout << " with random seed";
+		}else{
+			Rcpp::Rcout << " with seed " << RS_random_seed;
 		}
 		Rcpp::Rcout << " ..." << endl;
 
@@ -4013,7 +4015,6 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 					
 					// run the model
 					list_outPop = RunModel(pLandscape, i);
-					DEBUGLOG << "list_outPop.length() =" << list_outPop.length() << endl; // remove
 #if RSDEBUG
 					// DEBUGLOG << endl << "RunBatchR(): real landscape, i = " << i
 					//	<< " simulation = " << sim.simulation << " landFile = " << landFile
