@@ -406,7 +406,7 @@ public:
 	    short	// change number
 	);
 	void deleteLandChanges(void);
-	#if RS_RCPP
+	#if RS_RCPP && !R_CMD
 	int readLandChange(
 	    int,		// change file number
 		wifstream&, // habitat file stream, 

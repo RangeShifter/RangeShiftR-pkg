@@ -318,13 +318,13 @@ DEBUGLOG << "Main(): dem.repType = " << dem.repType << endl;
 
 // set up random number class
 #if RS_RCPP
-#if RSDEBUG
-pRandom = new RSrandom(666);
-#else
-pRandom = new RSrandom(0);  // need to be replaced with parameter from control file
-#endif
-#else
-pRandom = new RSrandom();
+	#if RSDEBUG
+		pRandom = new RSrandom(666);
+		#else
+		pRandom = new RSrandom(-1);  // need to be replaced with parameter from control file
+	#endif
+	#else
+		pRandom = new RSrandom();
 #endif
 
 

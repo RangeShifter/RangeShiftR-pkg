@@ -123,7 +123,7 @@ int RunModel(Landscape *pLandscape,int seqsim)
 		DEBUGLOG << endl << "RunModel(): starting simulation=" << sim.simulation << " rep=" << rep << endl;
 #endif
 
-#if RS_RCPP
+#if RS_RCPP && !R_CMD
 		Rcpp::Rcout << endl << "starting replicate " << rep << endl;
 #else
 #if !VCL
@@ -837,7 +837,7 @@ int RunModel(Landscape *pLandscape,int seqsim)
 				if (!dem.stageStruct && (sim.outRange || sim.outPop))
 					RangePopOutput(pComm,rep,yr,gen);
 #endif
-#if RS_RCPP
+#if RS_RCPP && !R_CMD
 				if ( sim.ReturnPopRaster && sim.outPop && yr >= sim.outStartPop && yr%sim.outIntPop == 0) {
 					list_outPop.push_back(pComm->addYearToPopList(rep,yr), "rep" + std::to_string(rep) + "_year" + std::to_string(yr));
 				}
@@ -1642,7 +1642,12 @@ int RunModel(Landscape *pLandscape,int seqsim)
 //RSlog << "Simulation," << sim.simulation << "," << sim.reps << "," << sim.years
 //	<< "," << t1-t0 << endl;
 
+#if RS_RCPP && !R_CMD
 	return list_outPop;
+#else
+	return 0;
+#endif
+
 }
 
 // Check whether a specified directory path exists

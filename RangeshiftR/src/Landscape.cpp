@@ -219,7 +219,9 @@ int InitDist::readDistribution(string distfile)
 #if RS_RCPP
 			} else {
 				// corrupt file stream
-				Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
+				#if !R_CMD
+					Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
+				#endif
 				StreamErrorR(distfile);
 				dfile.close();
 				dfile.clear();
@@ -1937,7 +1939,7 @@ void Landscape::deleteLandChanges(void)
 	landchanges.clear();
 }
 
-#if RS_RCPP
+#if RS_RCPP && !R_CMD
 int Landscape::readLandChange(int filenum, wifstream& hfile, wifstream& pfile)
 #else
 int Landscape::readLandChange(int filenum)
@@ -1963,10 +1965,17 @@ int Landscape::readLandChange(int filenum)
 //}
 	if (patchModel) pchseq = patchCount();
 
+#if RS_RCPP && R_CMD
+	wifstream hfile; // habitat file input stream
+	wifstream pfile; // patch file input stream
+#else
 #if !RS_RCPP
 	ifstream hfile; // habitat file input stream
 	ifstream pfile; // patch file input stream
+#endif
+#endif
 
+#if RS_RCPP && R_CMD
 // open habitat file and optionally also patch file
 	hfile.open(landchanges[filenum].habfile.c_str());
 	if (!hfile.is_open()) return 31;
@@ -2010,7 +2019,9 @@ int Landscape::readLandChange(int filenum)
 #if RS_RCPP
 				} else {
 					// corrupt file stream
-					Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
+					#if !R_CMD
+						Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
+					#endif
 					StreamErrorR("habitatfile");
 					hfile.close();
 					hfile.clear();
@@ -2030,7 +2041,9 @@ int Landscape::readLandChange(int filenum)
 #if RS_RCPP
 					} else {
 						// corrupt file stream
-						Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
+						#if !R_CMD
+							Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
+						#endif
 						StreamErrorR("patchfile");
 						hfile.close();
 						hfile.clear();
@@ -2107,7 +2120,9 @@ int Landscape::readLandChange(int filenum)
 #if RS_RCPP
 				} else {
 					// corrupt file stream
-					Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
+					#if !R_CMD
+						Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
+					#endif
 					StreamErrorR("habitatfile");
 					hfile.close();
 					hfile.clear();
@@ -2127,7 +2142,9 @@ int Landscape::readLandChange(int filenum)
 #if RS_RCPP
 					} else {
 						// corrupt file stream
-						Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
+						#if !R_CMD
+							Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
+						#endif
 						StreamErrorR("patchfile");
 						hfile.close();
 						hfile.clear();
@@ -2524,7 +2541,9 @@ int Landscape::readLandscape(int fileNum,string habfile,string pchfile)
 #if RS_RCPP
 						} else {
 							// corrupt file stream
-							Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
+							#if !R_CMD
+								Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
+							#endif
 							StreamErrorR(pchfile);
 							hfile.close();
 							hfile.clear();
@@ -2537,7 +2556,9 @@ int Landscape::readLandscape(int fileNum,string habfile,string pchfile)
 #if RS_RCPP
 				} else {
 					// corrupt file stream
-					Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
+					#if !R_CMD
+						Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
+					#endif
 					StreamErrorR(habfile);
 					hfile.close();
 					hfile.clear();
@@ -2661,7 +2682,9 @@ int Landscape::readLandscape(int fileNum,string habfile,string pchfile)
 #if RS_RCPP
 							} else {
 								// corrupt file stream
-								Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
+								#if !R_CMD
+									Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
+								#endif
 								StreamErrorR(pchfile);
 								hfile.close();
 								hfile.clear();
@@ -2737,7 +2760,9 @@ int Landscape::readLandscape(int fileNum,string habfile,string pchfile)
 				} else
 				{
 					// corrupt file stream
-					Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
+					#if !R_CMD
+						Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
+					#endif
 					StreamErrorR(habfile);
 					hfile.close();
 					hfile.clear();
@@ -2801,7 +2826,9 @@ int Landscape::readLandscape(int fileNum,string habfile,string pchfile)
 #if RS_RCPP
 				} else {
 					// corrupt file stream
-					Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
+					#if !R_CMD
+						Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
+					#endif
 					StreamErrorR(habfile);
 					hfile.close();
 					hfile.clear();
@@ -2823,7 +2850,9 @@ int Landscape::readLandscape(int fileNum,string habfile,string pchfile)
 #if RS_RCPP
 					} else {
 						// corrupt file stream
-						Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
+						#if !R_CMD
+							Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
+						#endif
 						StreamErrorR(pchfile);
 						hfile.close();
 						hfile.clear();
@@ -3233,7 +3262,9 @@ int Landscape::readCosts(string fname)
 #if RS_RCPP
 			} else {
 				// corrupt file stream
-				Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
+				#if !R_CMD
+					Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
+				#endif
 				StreamErrorR(fname);
 				costs.close();
 				costs.clear();
@@ -3248,7 +3279,7 @@ int Landscape::readCosts(string fname)
 //			<< endl;
 #endif
 #endif
-#if RS_RCPP
+#if RS_RCPP && !R_CMD
 				Rcpp::Rcout << "Cost map my only contain values of 1 or higher, but found " << fcost << "." << endl;
 #endif
 				// error - zero / negative cost not allowed
@@ -3267,7 +3298,11 @@ int Landscape::readCosts(string fname)
 	}
 #if RS_RCPP
 	costs >> fcost;
-	if (costs.eof()) Rcpp::Rcout << "Costs map loaded." << endl;
+	if (costs.eof()) {
+		#if !R_CMD
+		Rcpp::Rcout << "Costs map loaded." << endl;
+		#endif
+	}
 	else EOFerrorR(fname);
 #else
 	MemoLine("Costs map loaded.");

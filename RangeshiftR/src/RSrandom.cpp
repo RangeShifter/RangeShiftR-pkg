@@ -9,7 +9,6 @@
 #if RSDEBUG
 #include "Parameters.h"
 extern paramSim *paramsSim;
-#include <fstream>
 //ofstream RSRANDOMLOG;
 #endif
 
@@ -20,35 +19,38 @@ int RS_random_seed = 0;
 RSrandom::RSrandom(int seed)
 {
     // get seed
-    int random_seed;
-    if (seed == 0) {
+	std::vector<std::uint32_t> random_seed(3);
+	random_seed[0] = 15935;
+    random_seed[1] = 92754;
+    if (seed < 0) {
         // random seed
         std::random_device device;
-        random_seed = device();
+        random_seed[2] = device();
         #if RSDEBUG
             DEBUGLOG << "RSrandom::RSrandom(): Generate random seed = ";
         #endif 
     }
     else{
         // fixed seed
-        random_seed = seed;
+        random_seed[2] = seed;
         #if RSDEBUG
             DEBUGLOG << "RSrandom::RSrandom(): Use fixed seed = ";
         #endif 
     }
+	
+    RS_random_seed = random_seed[2];
     #if RSDEBUG
-        DEBUGLOG << random_seed << endl;
+        DEBUGLOG << RS_random_seed << endl;
     #endif
-    RS_random_seed = random_seed;
     
-    // set up Mersenne Twister random number generator
-    gen = new mt19937(random_seed);
+    // set up Mersenne Twister random number generator with seed sequence
+	std::seed_seq seq(random_seed.begin(),random_seed.end());
+    gen = new mt19937(seq);
     
     // Set up standard uniform distribution
     pRandom01 = new uniform_real_distribution<double> (0.0,1.0);
     // Set up standard normal distribution
     pNormal = new normal_distribution<double> (0.0,1.0);
-
 }
 
 RSrandom::~RSrandom(void) {

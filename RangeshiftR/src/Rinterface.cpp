@@ -115,6 +115,7 @@ static bool anyIndVar;
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
+
 /* # // [[Rcpp::export(name = ".run_from_R")]]
 // # // [[Rcpp::export]]
 Rcpp::List run_from_R(Rcpp::S4 ParMaster, Rcpp::String dirpath)
@@ -275,7 +276,7 @@ Rcpp::List BatchMainFile(string dirpath, Rcpp::S4 ParMaster)
 //------ R interface --------------------------------------------------------
 //---------------------------------------------------------------------------
 
-//[[Rcpp::export(name = "run_from_R")]]
+//[[Rcpp::export(name = "run_from_R", rng=false)]]
 Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
 {
 	// int i,t0,t1,Nruns;
@@ -573,14 +574,17 @@ Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
 
 	// set up random number stream
 	int seed = Rcpp::as<int>(control.slot("seed"));
-	if(!seed) { // don't set seed from R
+	
+	if(seed == 0) { // don't set seed from R
 #if RSDEBUG
 		seed = 666;
 #else
-		seed = 0; // random seed
+		seed = -1;  // random seed
 #endif
 	}
 	pRandom = new RSrandom(seed);
+
+	Rcpp::RNGScope rngScope;
 
 #if RANDOMCHECK
 	randomCheck();
@@ -588,7 +592,7 @@ Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
 	Rcpp::List list_outPop;
 	if(errors == 0) {
 		Rcpp::Rcout << endl << "Run Simulation(s)";
-		if(seed == 0) {
+		if(seed < 0) {
 			Rcpp::Rcout << " with random seed";
 		}else{
 			Rcpp::Rcout << " with seed " << RS_random_seed;
@@ -598,8 +602,6 @@ Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
 		list_outPop = RunBatchR(nSimuls, nLandscapes, ParMaster);
 	}
 #endif
-
-	delete pRandom;
 
 #if RSDEBUG
 	if(DEBUGLOG.is_open()) {
@@ -619,6 +621,8 @@ Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
 	delete paramsInit;
 	delete paramsSim;
 	delete pSpecies;
+	
+	delete pRandom;
 
 	t1 = time(0);
 	Rcpp::Rcout << endl << "***** Elapsed time: " << t1 - t0 << " seconds" << endl << endl;

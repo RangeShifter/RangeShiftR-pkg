@@ -132,6 +132,10 @@ RunRS <- function(RSparams, dirpath = getwd()){
     #ParMaster_name <- deparse(substitute(RSparams))
     #run_from_R(RSparams, dirpath)
 
+    if(RSparams@control@seed>0){
+        #print(paste0("set seed ",RSparams@control@seed))
+        #set.seed(RSparams@control@seed)
+    }
     out = run_from_R(dirpath, RSparams)
 
     if (class(out)=="list" && is.null(out$Errors)) {

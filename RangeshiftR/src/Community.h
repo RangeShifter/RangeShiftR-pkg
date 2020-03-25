@@ -382,7 +382,7 @@ public:
 		int       // option: -999 to close the file
 	);
 #endif
-#if RS_RCPP
+#if RS_RCPP && !R_CMD
     Rcpp::IntegerMatrix addYearToPopList(int,int);
 #endif
 
@@ -400,6 +400,7 @@ extern paramInit *paramsInit;
 #if VCL
 extern bool stopRun;
 #endif
+
 
 //---------------------------------------------------------------------------
 #endif
