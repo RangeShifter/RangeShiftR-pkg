@@ -47,11 +47,11 @@
 #'
 #' where \eqn{b} represents the strength of density dependence used for the population dynamics.
 #'
-#' The emigration probability can be allowed to vary between individuals (set \code{IndVar=TRUE}). In the this case, individuals carry - respectively for
-#' haploid/diploid genotype - either one/two allele(s) determining the density-independent \eqn{d} (when \code{DensDep=FALSE}),
-#' or three/six alleles coding for \ifelse{html}{\out{D<sub>0</sub>}}{\eqn{D_0}}, \eqn{α} and \eqn{β} (when \code{DensDep=TRUE}).
-#' For a diploid genotype, the phenotypic value is simply the mean of the two alleles.
-#' If \code{IndVar=TRUE} is set for a stage-structured population, it is required to specify the stage which emigrates via \code{EmigStage}.
+#' The emigration probability can be allowed to vary between individuals (set \code{IndVar=TRUE}) and to evolve. In the this case, individuals exhibit either one trait
+#' determining the density-independent \eqn{d} (when \code{DensDep=FALSE}), or the three traits \ifelse{html}{\out{D<sub>0</sub>}}{\eqn{D_0}}, \eqn{α} and
+#' \eqn{β} determining the density-dependent emigration probability (when \code{DensDep=TRUE}).
+#' For each tiations must be set (instead of only one constant value).
+#' Also, if \code{IndVar=TRUE} is set for a stage-structured population, it is required to specify the stage which emigrates via \code{EmigStage}.
 #'
 #' It is possible to model sex-specific emigration strategies (set \code{SexDep=TRUE}) in which case the number of loci is doubled; one set coding for the trait
 #' in females and the other for the trait in males. As well as being sex-biased, emigration parameters can be stage-biased (set \code{StageDep=TRUE}) when modelling
@@ -472,11 +472,13 @@ setMethod("show", "TransferParams", function(object){
 #'
 #' \ifelse{html}{\out{&emsp;&emsp; p(d; &delta;<sub>1</sub>,&delta;<sub>2</sub>) = p<sub>I</sub> p(d;&delta;<sub>1</sub>) + (1-p<sub>I</sub>) p(d;&delta;<sub>1</sub>)}}{\deqn{ p(d; δ_1,δ_2) = p_I p(d;δ_1) + (1-p_I) p(d;δ_2)}}
 #'
-#' For both types of kernel, inter-individual variability is possible (set \code{IndVar=TRUE}). Individuals will
-#' carry either one allele for \eqn{δ} or three alleles for \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{δ_1}}, \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{δ_2}} and \ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}}, which they inherit from the parents. Dispersal
-#' kernels can also be sex-dependent (set \code{SexDep=TRUE}). In the case of inter-individual variability, individuals will carry either two alleles (female \eqn{δ}
-#' and male δ) or six alleles (female and male \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{δ_1}}, \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{δ_2}} and \ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}}). Finally, dispersal kernels can be stage-specific (set \code{StageDep=TRUE}). For this
-#' case, inter-individual variability is not implemented.
+#' For both types of kernel, inter-individual variability of the kernel traits is possible (set \code{IndVar=TRUE}). Individuals will
+#' carry either one trait for \eqn{δ} or three trait for \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{δ_1}}, \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{δ_2}} and \ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}}, which they inherit from the parents. Dispersal
+#' kernels can also be sex-dependent (set \code{SexDep=TRUE}). In the case of inter-individual variability, individuals will carry either two trait (female \eqn{δ}
+#' and male δ) or six trait (female and male \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{δ_1}}, \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{δ_2}} and \ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}}).
+#' For each trait the initial mean and standard deviations must be set (instead of only one constant value each).\cr
+#'
+#' Finally, dispersal kernels can be stage-specific (set \code{StageDep=TRUE}). For this case, inter-individual variability is not implemented.
 #'
 #' All dispersal kernel parameters have to be provided via \code{Distances}, which generally takes a matrix, or - if only a single constant mean distance is
 #' used - a single numeric. The format of the matrix is defined as follows: The number of columns depend on the options \code{IndVar} and \code{DoubleKernel}.
@@ -510,13 +512,6 @@ setMethod("show", "TransferParams", function(object){
 #'  \out{&emsp;} 2 \tab \out{&emsp;} 0 \tab \out{&emsp;} 100 \tab \out{&emsp;} 0 \tab \out{&emsp;} 1.0 \cr
 #'  \out{&emsp;} 2 \tab \out{&emsp;} 1 \tab \out{&emsp;} 100 \tab \out{&emsp;} 0 \tab \out{&emsp;} 1.0
 #' }
-#'
-#' When inter-individual variability is implemented, the dispersal kernel parameters can evolve.
-#' Each trait (\eqn{δ} for the negative exponential or \ifelse{html}{\out{&delta;<sub>1</sub>, &delta;<sub>2</sub>, p<sub>I</sub>}}{\eqn{δ_1, δ_2, p_I}} for the
-#' mixed kernel) can mutate independently according to a given mutation probability. In the case of mutation, a number drawn from the uniform
-#' distribution \eqn{U(-μ, μ)} is added to the trait value, where \eqn{μ} is the mutation size specific for the trait and is set via
-#' \code{MutationScales} as (\ifelse{html}{\out{&mu;<sub>&delta;</sub>}}{\eqn{(μ_δ)}}) or \ifelse{html}{\out{(&mu;<sub>&delta;<sub>1</sub></sub>, &mu;<sub>&delta;<sub>2</sub></sub>, &mu;<sub>p<sub>I</sub></sub>)}}{\eqn{(μ_{δ_1}, μ_{δ_2}, μ_(p_I)}}, respectively. When dispersal kernels
-#' are sex-specific, alleles for male and female traits can mutate independently.
 #'
 #' In the case that the dispersal kernel is applied to the entire
 #' population (i.e. density-independent emigration probability of \eqn{1.0}), the mean dispersal distance can evolve down to zero (i.e.
@@ -968,7 +963,10 @@ setMethod("plotProbs", "DispersalKernel", function(x, mortality = FALSE, combine
 #' advisable to disable the feature (\code{StraightenPath=FALSE}), although care must be taken that individuals do not become trapped in patches
 #' surrounded by very high cost matrix.
 #'
-#' As currently implemented, there is no inter-individual variability, evolution or sex/stage specificity of SMS traits.
+#' When inter-individual variability is activated (set \code{IndVar=TRUE}), the movement traits \code{DP}, \code{AlphaDB} and \code{BetaDB} can evolve.
+#' For each trait the initial mean and standard deviations must be set, as well as the MutationScale (instead of only one constant value each).\cr
+#'
+#' As currently implemented, there is no sex- or stage- dependence of SMS traits.
 #'
 #' \emph{Costs layer} \cr
 #' Critical for the outcomes of SMS are the relative costs assigned to the different habitats (as it is also the case for
@@ -1316,8 +1314,10 @@ setMethod("show", "StochMove", function(object){
 #' correlation parameter \eqn{Rho} in the range \eqn{0} to \eqn{1}. As for \code{\link[RangeshiftR]{SMS}}, all individuals take each step
 #' simultaneously. In the case of patch-based models,
 #' \eqn{Rho} is automatically set to \eqn{0.99} until the individual steps outside its natal patch, after which the value of
-#' \eqn{Rho} set by the user is restored. The \code{StepLength} and \eqn{Rho} can vary between individuals and can evolve. In this case,
-#' each individual exhibits two traits for these two parameters. Note that the step length may not evolve below one fifth of
+#' \eqn{Rho} set by the user is restored. The \code{StepLength} and \eqn{Rho} can vary between individuals and can evolve (set \code{IndVar=TRUE}).
+#' In this case, each individual exhibits two traits for these two parameters.
+#' For each trait the initial mean and standard deviations must be set, as well as the MutationScale (instead of only one constant value each).\cr
+#' Note that the step length may not evolve below one fifth of
 #' the landscape resolution, and correlation may not evolve above \eqn{0.999}. Per-step mortality is not allowed to vary between
 #' individuals or to evolve. There is no implementation of sex- or stage-specific CRW.
 #'
@@ -1563,8 +1563,9 @@ setMethod("show", "CorrRW", function(object){
 #' used - a single numeric. The format of the matrix is defined as follows: The number of columns depend on the options \code{DensDep} and \code{IndVar}. If \code{DensDep=FALSE}, the
 #' density-independent probability \ifelse{html}{\out{p<sub>S</sub>}}{\eqn{p_S}} must be specified. If \code{DensDep=TRUE}, the functional parameters \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}},
 #' \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{α_S}} and \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}} (cp. equation above) must be specified.
-#' Additionally, if \code{IndVar=FALSE}, these parameters are fixed, but if \code{IndVar=TRUE} each of them is replaced by two parameters: their respective mean and
-#' standard deviation. They are used to normally distribute the traits values among the individuals of the initial population.
+#' Additionally, if \code{IndVar=FALSE}, these traits are fixed, but if \code{IndVar=TRUE} each of them is replaced by two parameters: their respective initial mean and
+#' standard deviation. They are used to normally distribute the traits values among the individuals of the initial population. Additionally, the \code{MutationScales} of
+#' these traits have to be set.
 #'
 #' All parameters have to be given for each stage/sex if the respective dependence is enabled. If \code{StageDep=TRUE}, state the corresponding stage in the first column.
 #' If \code{SexDep=TRUE}, state the corresponding stage in the next (i.e. first/second) column, with \eqn{0} for \emph{female} and \eqn{1} for \emph{male}. The following table lists the required columns and their correct order for different settings:
@@ -1802,15 +1803,17 @@ setMethod("show", "SettlementParams", function(object){
 
 #' Set Dispersal Parameters
 #'
-#' Dispersal is defined as movement leading to spatial gene flow. It typically involves three phases:
-#' \code{\link[RangeshiftR]{Emigration}}, \code{\link[RangeshiftR]{Transfer}} and \code{\link[RangeshiftR]{Settlement}}.
+#' Dispersal is defined as movement leading to spatial gene flow. It typically involves three phases, which are all modelled explicitly:
+#' \code{\link[RangeshiftR]{Emigration}}, \code{\link[RangeshiftR]{Transfer}} and \code{\link[RangeshiftR]{Settlement}}.\cr
+#' The specific parameters of each phase are set through their respective functions. For more details, see their documentation.\cr
 #' \cr
-#' The potential evolution of several key dispersal traits is implemented through the possibility of inter-individual variability.
-#' How heritability and evolution work is described in the Details below, since that is consistent across traits acting at the three dispersal phases.
-#' \cr
-#' The parameters of each phase are set through their respective functions. For more details, see their respective documentations.
+#' The potential evolution of several key dispersal traits is implemented through the possibility of inter-individual variability and heritability.
+#' This option (called \code{IndVar}) can be enabled for each dispersal phase in their respective modules. See the Datails below for information on how
+#' to set the associated parameters. Additionally, the \code{\link[RangeshiftR]{Genetics}} module must be defined.
 #'
-#' @usage Dispersal(Emigration = Emigration(), Transfer = DispersalKernel(), Settlement = Settlement())
+#' @usage Dispersal(Emigration = Emigration(),
+#'           Transfer   = DispersalKernel(),
+#'           Settlement = Settlement())
 #' @param Emigration The first phase of dispersal; determines if an individual leaves its natal patch.
 #' @param Transfer (or transience) The second phase of dispersal; consists of the movement of an individual departing from its natal patch towards
 #' a potential new patch, ending with settlement or mortality. This movement can be modelled by one of three alternative processes:\cr
@@ -1820,23 +1823,17 @@ setMethod("show", "SettlementParams", function(object){
 #' @param Settlement (or immigration) The last phase of dispersal; determines when the individual stops in a new cell or patch of
 #' breeding habitat.
 #' @details It is possible to model all three phases - emigration, transfer and settlement - with stage- and/or sex-specific parameters via the
-#' switches \code{StageDep} and \code{SexDep} in the respective functions. In the case of sex-specific traits, the number of loci is doubled, with
-#' one set coding for the trait in females and the other for the trait in males. As well as being stage-biased, all dispersal phases can be
-#' sex-biased, meaning that only certain stage or age classes disperse.
-#' \emph{Dispersal traits, genetic architecture and evolution:}
-#' RangeShiftR provides the possibility for inter-individual variability in different dispersal traits and a simple adaptive genetic
-#' module to simulate heritability and evolution of traits by setting \code{IndVar=TRUE} for the respective transfer phase module.\cr
-#' When inter-individual variability in dispersal traits is modelled - whether or not these traits are evolving - each individual
-#' carries alleles coding for each varying trait. If the reproductive model is asexual or female only,
-#' the species is assumed to be haploid and single loci code for each trait. Alleles take continuous values, assuming a
-#' continuum-of-alleles model (Hoban et al. 2011; Scheiner et al. 2012). Offspring inherit their alleles from their single parent/mother,
-#' and the phenotype is given directly by the genotype. In the case of sexual models, the species is assumed to be diploid with a
-#' single locus with ‘infinite’ alleles coding for each trait. Offspring inherit one random allele from the mother and one from the
-#' father. The phenotype is given by the arithmetic mean of the two alleles, and the heritability is assumed to be equal to one.
-#' No dominance is modelled, and loci for different traits are assumed to be unlinked.\cr
-#' When traits vary between individuals, they can also be allowed to evolve. When an individual is born, each of its alleles can
-#' independently mutate with a set probability. In the case of mutation, a number drawn from the normal distribution \eqn{N(0, μ)} is
-#' added to the trait value, where \eqn{μ} is the mutation size set for the trait. A different mutation size can be set for each trait through \code{MutationScales}.
+#' switches \code{StageDep} and \code{SexDep} in the respective functions. In the case of sex-dependence, the number of traits is doubled, with
+#' one set coding for the trait in females and the other for the trait in males. As well as being sex-biased, all dispersal phases can be
+#' stage-biased, meaning that parameters can vary for different stage or age classes.
+#'
+#' The options of inter-individual variability in the various dispersal traits is enabled by setting \code{IndVar=TRUE} for the respective transfer phase
+#' module and defining the genetic module to simulate heritability and evolution of traits (\code{\link[RangeshiftR]{Genetics}}).\cr
+#' For each such heritable dispersal trait, this requires to set the mean and standard deviation of the initial distribution of the trait values,
+#' (instead of a contant value as in the case of \code{IndVar=FALSE})
+#' as well as the \code{MutationScale} (see \code{\link[RangeshiftR]{Genetics}} documentaion).\cr
+#'
+#' Note, however, that not all combinations of sex-/stage-dependencies with inter-individual variability are implemented.\cr
 #'
 #' @references Stenseth & Lidicker 1992; Clobert et al. 2001, 2009, 2012; Bowler & Benton 2005; Ronce 2007, Hoban et al. 2011; Scheiner et al. 2012
 #' @return a parameter object of class "DispersalParams"
