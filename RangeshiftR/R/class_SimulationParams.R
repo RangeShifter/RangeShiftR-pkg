@@ -3,7 +3,7 @@
 
 # from RS 'Parameter' file
 
-#' Set simulation parameters
+#' Set Simulation parameters
 #'
 #' @description Set basic simulation parameters and control output types.\cr
 #' Furthermore, optionally define a (\code{Shifting}) Environmental \code{Gradient}, Environmental Stochasticity (\code{EnvStoch}) and/or Local extinction (\code{LocalExt}).
@@ -17,16 +17,15 @@
 #'            EnvStoch = 0, EnvStochType, std, ac, minR, maxR, minK, maxK,
 #'            OutIntRange = 1, OutIntOcc = 0,
 #'            OutIntPop = 1, OutIntInd = 0,
-#'            OutIntTraitCell = 0, OutIntTraitRow = 0, 
-#'            OutIntConn = 0, OutIntPaths = 0, OutIntGenetic = 0, 
+#'            OutIntTraitCell = 0, OutIntTraitRow = 0,
+#'            OutIntConn = 0, OutIntPaths = 0, OutIntGenetic = 0,
 #'            OutGenType = 0, OutGenCrossTab = FALSE,
 #'            OutStartPop = 0, OutStartInd = 0,
-#'            OutStartTraitCell = 0, OutStartTraitRow = 0, 
+#'            OutStartTraitCell = 0, OutStartTraitRow = 0,
 #'            OutStartConn = 0, OutStartPaths = 0, OutStartGenetic = 0,
-#'            SaveMaps = FALSE, MapsInterval, DrawLoadedSp = FALSE,
-#'            SMSHeatMap = FALSE, 
-#'            ReturnPopRaster = FALSE, CreatePopFile = TRUE
-#'            )
+# #'            SaveMaps = FALSE, MapsInterval, DrawLoadedSp = FALSE,
+#'            SMSHeatMap = FALSE,
+#'            ReturnPopRaster = FALSE, CreatePopFile = TRUE)
 #' @param Simulation ID number of current simulation, defaults to \eqn{1}. (integer)
 #' @param Replicates Number of simulation iterations, defaults to \eqn{2}. (integer)
 #' @param Years The number of simulated years, defaults to \eqn{50}. (integer)
@@ -46,7 +45,7 @@
 #' @param ExtinctOptim Required if \code{Gradient} \eqn{= 3}: optimum (i.e. minimal) local extinction probability at \code{Optimum}. Must be between \eqn{0} and \eqn{1}.
 #' @param Shifting Only applicable if \code{Gradient} \ifelse{html}{\out{&ne; 0}}{\eqn{> 0}}:\cr
 #' If \code{FALSE} (default), the gradient is stationary.\cr
-#' If \code{TRUE}, the \code{Gradient} shifts along the \eqn{y}-axis towards increasing \eqn{y} (northwards). Requires to set \code{ShiftRate}, \code{ShiftStart} and \code{ShiftEnd}, 
+#' If \code{TRUE}, the \code{Gradient} shifts along the \eqn{y}-axis towards increasing \eqn{y} (northwards). Requires to set \code{ShiftRate}, \code{ShiftStart} and \code{ShiftEnd},
 #' @param ShiftRate Required if \code{Shifting=TRUE}: shift rate of the gradient in units of rows per year. (integer)
 #' @param ShiftStart Required if \code{Shifting=TRUE}: year in which the gradient shifting starts (integer)
 #' @param ShiftEnd Required if \code{Shifting=TRUE}: year in which the gradient shifting stops. (integer)
@@ -83,11 +82,11 @@
 #' @param OutGenCrossTab Required if \code{OutIntGenetic}\eqn{>0}:\cr
 #' If \code{FALSE} (default), Genetics output will be written to several files.
 #' \cr If \code{TRUE} Genetics output is generated as a cross table.
-#' @param SaveMaps If \code{FALSE} (default), no maps will be created.\cr If \code{TRUE}, maps will be generated.
-#' beginning in the first year in accordance to \code{MapsInterval}.
-#' @param MapsInterval Required if \code{SaveMaps=TRUE}: save maps every \eqn{n} reproductive seasons. (integer)
-#' @param DrawLoadedSp If \code{FALSE} (default), only the simulated distribution is drawn into the output map.\cr
-#' If \code{TRUE}, the initial species distribution is drawn additionally.
+# #' @param SaveMaps If \code{FALSE} (default), no maps will be created.\cr If \code{TRUE}, maps will be generated.
+# #' beginning in the first year in accordance to \code{MapsInterval}.
+# #' @param MapsInterval Required if \code{SaveMaps=TRUE}: save maps every \eqn{n} reproductive seasons. (integer)
+# #' @param DrawLoadedSp If \code{FALSE} (default), only the simulated distribution is drawn into the output map.\cr
+# #' If \code{TRUE}, the initial species distribution is drawn additionally.
 #' @param SMSHeatMap Produce SMS heat map raster as output? Defaults to \code{FALSE}.
 #' @param ReturnPopRaster Return population data to R (as data frame)? Defaults to \code{TRUE}.
 #' @param CreatePopFile Create population output file? Defaults to \code{TRUE}.
@@ -227,12 +226,12 @@
 #' true \eqn{NxN} matrices, the data are presented in list format:\cr
 #' Replicate number (Rep), Year (Year), ID number of natal patch (StartPatch), ID number of settlement patch (EndPatch), Number of
 #' individuals dispersing from StartPatch to EndPatch (NInds).
-#' 
+#'
 #' - \emph{SMS paths} (\code{Sim0_Rep0_SMSpaths.txt}) \cr
-#' is available for a model with transfer method SMS only. It lists the cell-based trajectories of all (successfully or unsuccessfully) 
-#' dispersed individuals from the natal to the final (settlement or fatal) patch for each year specified by \code{OutIntPaths}, starting 
+#' is available for a model with transfer method SMS only. It lists the cell-based trajectories of all (successfully or unsuccessfully)
+#' dispersed individuals from the natal to the final (settlement or fatal) patch for each year specified by \code{OutIntPaths}, starting
 #' from \code{OutStartPaths}. The data are presented in list format with the columns:\cr
-#' Year (Year), Individual ID (IndID), consecutive step number (Step), coordinates of cell at this step (\eqn{x} and \eqn{y}), 
+#' Year (Year), Individual ID (IndID), consecutive step number (Step), coordinates of cell at this step (\eqn{x} and \eqn{y}),
 #' status of individual (Status).
 #' The status is an integer number that codes for the following possible states:
 #'    0 = natal patch,

@@ -4376,8 +4376,10 @@ int ParseInitIndsFileR(wifstream& initIndsFile)
 		if(initIndsFile.eof())
 			year = -98765;
 	} // end of while loop
-	initIndsFile >> prevyear;
-	if(!initIndsFile.eof()) {
+	if(initIndsFile.eof()) {
+		initIndsFile.clear();
+	}
+	else{
 		EOFerrorR(filetype);
 		errors++;
 	}
@@ -4422,21 +4424,34 @@ int ReadInitIndsFileR(int option, Landscape* pLandscape)
 #endif
 			// parse to check correct format
 			errors = ParseInitIndsFileR(initIndsFile);
-			// read headers to prepare reading values
-			wstring header;
-			int nheaders = 3;
-			if(paramsLand.patchModel)
-				nheaders++;
-			else
-				nheaders += 2;
-			if(dem.repType > 0)
-				nheaders++;
-			if(dem.stageStruct)
-				nheaders += 2;
-			for(int i = 0; i < nheaders; i++)
-				initIndsFile >> header;
-			paramsInit->resetInitInds();
-			//	return 0;
+			if(errors){
+				Rcpp::Rcout << "Error in format of Initial individuals file: " << indsfile << endl;
+				return -223;
+			}
+			else{
+				initIndsFile.seekg(0);
+				if(initIndsFile.good()) {
+					// read headers to prepare reading values
+					wstring header;
+					int nheaders = 3;
+					if(paramsLand.patchModel)
+						nheaders++;
+					else
+						nheaders += 2;
+					if(dem.repType > 0)
+						nheaders++;
+					if(dem.stageStruct)
+						nheaders += 2;
+					for(int i = 0; i < nheaders; i++)
+						initIndsFile >> header;
+					paramsInit->resetInitInds();
+					//	return 0;
+				}
+				else{
+					Rcpp::Rcout << "Error re-reading Initial individuals file with state " << initIndsFile.rdstate() << endl;
+					return -221;
+				}
+			}
 		}
 	}
 
@@ -4488,7 +4503,7 @@ int ReadInitIndsFileR(int option, Landscape* pLandscape)
 	}
 	initIndsFile.clear();
 
-	return totinds;
+	return 0; //totinds;
 }
 
 //---------------------------------------------------------------------------
