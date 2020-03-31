@@ -85,6 +85,9 @@ struct rgb { // colour scheme for drawing maps
 };
 
 const string Int2Str(const int);
+#if RS_RCPP
+const string Int2Str(const int, unsigned int);
+#endif
 const string Float2Str(const float);
 const string Double2Str(const double);
 const rgb draw_wheel(int);

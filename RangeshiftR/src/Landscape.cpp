@@ -3627,9 +3627,15 @@ void Landscape::outVisits(int rep, int landNr)
 
 	if (sim.batchMode) {
 		name = paramsSim->getDir(3)
+#if RS_RCPP
+		       + "Batch" + Int2Str(sim.batchNum) + "_"
+		       + "Sim" + Int2Str(sim.simulation)
+		       + "_Land" + Int2Str(landNr) + "_rep" + Int2Str(rep)
+#else
 		       + "Batch" + Int2Str(sim.batchNum) + "_"
 		       + "Sim" + Int2Str(sim.simulation)
 		       + "_land" + Int2Str(landNr) + "_rep" + Int2Str(rep)
+#endif
 //		+ "_yr" + Int2Str(yr)
 		       + "_Visits.txt";
 	} else {

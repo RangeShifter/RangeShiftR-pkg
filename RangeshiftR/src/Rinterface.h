@@ -108,9 +108,11 @@ void ArchFormatErrorR(void);
 /* Batch mode of v2.0 currently has no facility to save maps (unless initiated from GUI).
 */
 
-const string Int2Str(const int);
-const string Float2Str(const float);
-const string Double2Str(const double);
+	// already declared in Parametrers.h:
+//const string Int2Str(const int);
+//const string Int2Str(const int, unsigned int);
+//const string Float2Str(const float);
+//const string Double2Str(const double);
 void MemoLine(string);
 #if RSDEBUG
 void DebugGUI(string);

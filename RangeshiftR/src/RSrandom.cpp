@@ -12,7 +12,7 @@ extern paramSim *paramsSim;
 //ofstream RSRANDOMLOG;
 #endif
 
-int RS_random_seed = 0;
+std::uint32_t RS_random_seed = 0;
 
 // C'tor
 // if parameter seed is negative, a random seed will be generated, else it is used as seed
@@ -20,8 +20,8 @@ RSrandom::RSrandom(int seed)
 {
     // get seed
 	std::vector<std::uint32_t> random_seed(3);
-	random_seed[0] = 15935;
-    random_seed[1] = 92754;
+	random_seed[0] = 1593562;
+    random_seed[1] = 9275416;
     if (seed < 0) {
         // random seed
         std::random_device device;

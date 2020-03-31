@@ -3454,7 +3454,7 @@ int ReadInitialisationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 	case 2: { // from initial individuals file
 		// if (init.indsFile != prevInitialIndsFile) {
 		// read and store the list of individuals to be initialised
-		ReadInitIndsFileR(0, pLandscape); //open, parse, read header and lines, store in vector "initinds"
+		error = ReadInitIndsFileR(0, pLandscape); //open, parse, read header and lines, store in vector "initinds"
 		// prevInitialIndsFile = init.indsFile;
 		//}
 	}
@@ -4502,6 +4502,8 @@ int ReadInitIndsFileR(int option, Landscape* pLandscape)
 		initIndsFile.close();
 	}
 	initIndsFile.clear();
+	
+	Rcpp::Rcout << "Initial individuals file OK:" << indsfile << std::endl;
 
 	return 0; //totinds;
 }
@@ -4690,6 +4692,13 @@ const string Int2Str(const int x)
 {
 	ostringstream o;
 	if(!(o << x))
+		return "ERROR";
+	return o.str();
+}
+const string Int2Str(const int x, unsigned int width)
+{
+	ostringstream o;
+	if(!(o << std::setfill('0') << std::setw(width) << x))
 		return "ERROR";
 	return o.str();
 }

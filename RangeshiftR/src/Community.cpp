@@ -1409,9 +1409,16 @@ DEBUGLOG << "Community::outRangeHeaders(): simulation=" << sim.simulation
 
 if (sim.batchMode) {
 	name = paramsSim->getDir(2)
+#if RS_RCPP
 		+ "Batch" + Int2Str(sim.batchNum) + "_"
 		+ "Sim" + Int2Str(sim.simulation) + "_Land"
-		+ Int2Str(landNr) + "_Range.txt";
+		+ Int2Str(landNr) 
+#else
+		+ "Batch" + Int2Str(sim.batchNum) + "_"
+		+ "Sim" + Int2Str(sim.simulation) + "_Land"
+		+ Int2Str(landNr) 
+#endif
+		+ "_Range.txt";
 }
 else {
 	name = paramsSim->getDir(2) + "Sim" + Int2Str(sim.simulation) + "_Range.txt";

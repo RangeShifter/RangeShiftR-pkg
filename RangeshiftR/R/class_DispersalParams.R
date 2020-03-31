@@ -788,7 +788,7 @@ setMethod("plotProbs", "DispersalKernel", function(x, mortality = FALSE, combine
         }
         if (combinekernels){
             if (!x@DoubleKernel) {
-                print("Kernels are only be combined if a mixed kernel (DoubleKernel = TRUE) is given.\n")
+                print("Kernels can only be combined if a mixed kernel (DoubleKernel = TRUE) is given.\n")
                 combinekernels = FALSE
             }
         }

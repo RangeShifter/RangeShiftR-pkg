@@ -45,7 +45,7 @@ warn_msg_ignored = " will be ignored "
 
 #' Plot parameterised probabilities
 #'
-#' visualizse the dependencies or distributions of probabilities of the various processes that are defined by the different parameter modules,
+#' Visualise the dependencies or distributions of probabilities of the various processes that are defined by the different parameter modules,
 #' like e.g. fecundity or mortality.
 #'
 #' @param x a RangeShiftR parameter object
@@ -53,18 +53,21 @@ warn_msg_ignored = " will be ignored "
 #' @param stage,sex stage(s) and sexe(s) to plot, default: all
 #' @param ... various options, depend on the given parameter module type
 #' @details
-#' Available methods and their options:\cr
-#' - \code{\link[RangeshiftR]{Emigration}}\cr
-#' plot emigration probability
-#' - \code{\link[RangeshiftR]{DispersalKernel}}\cr
-#' \code{mortality=FALSE} - plot dispersal distance probability density  (default)\cr
-#' \code{mortality= TRUE} - plot mortality probability \cr
-#' If a mixed kernel was defined (\code{DoubleKernel=TRUE}) plot the resulting dispersal probability by...\cr
-#' \code{combinekernels=FALSE} - ...plotting both kernels separately (default)\cr
-#' \code{combinekernels= TRUE} - ...combining both kernels, i.e.
-#' \ifelse{html}{ \out{p(d; &delta;<sub>1</sub>,&delta;<sub>2</sub>) = p<sub>I</sub> p(d;&delta;<sub>1</sub>) + (1-p<sub>I</sub>) p(d;&delta;<sub>1</sub>) } }{\deqn{ p(d; δ_1,δ_2) = p_I p(d;δ_1) + (1-p_I) p(d;δ_2)} } \cr
-#' - \code{\link[RangeshiftR]{StageStructure}}\cr
-#' plot fecundity as well as survival and development probabilities
+#' Available methods and their options:
+#' \itemize{
+#'   \item \code{\link[RangeshiftR]{Emigration}}: plot emigration probability
+#'   \item \code{\link[RangeshiftR]{DispersalKernel}}:
+#'   \itemize{
+#'     \item \code{mortality=FALSE} - plot dispersal distance probability density  (default)
+#'     \item \code{mortality= TRUE} - plot mortality probability
+#'   }
+#'   If a mixed kernel was defined (i.e. \code{DoubleKernel=TRUE}), plot the resulting dispersal probability by...
+#'   \itemize{
+#'     \item \code{combinekernels=FALSE} - ...plotting both kernels separately (default)
+#'     \item \code{combinekernels= TRUE} - ...combining both kernels, i.e. \ifelse{html}{ \out{p(d; &delta;<sub>1</sub>,&delta;<sub>2</sub>) = p<sub>I</sub> p(d;&delta;<sub>1</sub>) + (1-p<sub>I</sub>) p(d;&delta;<sub>1</sub>) } }{\deqn{ p(d; δ_1,δ_2) = p_I p(d;δ_1) + (1-p_I) p(d;δ_2)} }
+#'   }
+#'   \item \code{\link[RangeshiftR]{StageStructure}}: plot fecundity as well as survival and development probabilities
+#' }
 #' @export
 setGeneric("plotProbs", function(x, ...) standardGeneric("plotProbs") )
 

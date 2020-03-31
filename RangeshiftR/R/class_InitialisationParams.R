@@ -61,7 +61,7 @@
 #' individuals (of given sex, age and stage, if appropriate) in specified cells/patches. This option allows simulation of a reintroduction
 #' scenario.\cr The list has to be loaded from a file in the path given by \code{InitIndsFile}. It must be a tab-seperated list with
 #' explicit column headers and one row for each individual to be initialized. The expected column headers depend on the model settings and
-#' must match the following order exactly: 'Year', 'Species', for cell-/patch-based: 'X', 'Y' / 'PatchID', 'NInds', for sexual model: 'Sex',
+#' must match the following order exactly: 'Year', 'Species', for cell-/patch-based: 'X', 'Y' / 'PatchID', 'Ninds', for sexual model: 'Sex',
 #' for stage-structured population: 'Age', 'Stage'.
 #'
 #' \emph{Initialial density, stage, and age}\cr
