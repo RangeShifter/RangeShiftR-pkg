@@ -373,7 +373,7 @@ setMethod('initialize', 'InitialisationParams', function(.Object, ...) {
     if (.Object@InitType == 2) {
         .Object@InitDens <- 0
         .Object@PropStages <- -9L
-        .Object@InitAge <--9L
+        .Object@InitAge <- -9L
         if (!is.null(args$InitDens)) {
             warning(this_func, "InitDens", warn_msg_ignored, "since InitType = 2.", call. = FALSE)
         }

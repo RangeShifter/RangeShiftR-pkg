@@ -24,8 +24,12 @@ RSrandom::RSrandom(int seed)
     random_seed[1] = 9275416;
     if (seed < 0) {
         // random seed
+		#if RSWIN64
+		random_seed[2] = time(NULL);
+		#else
         std::random_device device;
         random_seed[2] = device();
+		#endif
         #if RSDEBUG
             DEBUGLOG << "RSrandom::RSrandom(): Generate random seed = ";
         #endif 

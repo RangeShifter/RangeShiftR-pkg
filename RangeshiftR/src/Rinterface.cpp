@@ -4376,12 +4376,13 @@ int ParseInitIndsFileR(wifstream& initIndsFile)
 		if(initIndsFile.eof())
 			year = -98765;
 	} // end of while loop
-	if(initIndsFile.eof()) {
-		initIndsFile.clear();
-	}
-	else{
+	if(!initIndsFile.eof()) {
 		EOFerrorR(filetype);
 		errors++;
+	}
+	if(errors){
+		initIndsFile.close();
+		initIndsFile.clear();
 	}
 	return errors;
 }
@@ -4429,7 +4430,8 @@ int ReadInitIndsFileR(int option, Landscape* pLandscape)
 				return -223;
 			}
 			else{
-				initIndsFile.seekg(0);
+				initIndsFile.clear();
+				initIndsFile.seekg(0, ios::beg);
 				if(initIndsFile.good()) {
 					// read headers to prepare reading values
 					wstring header;
@@ -4448,6 +4450,8 @@ int ReadInitIndsFileR(int option, Landscape* pLandscape)
 					//	return 0;
 				}
 				else{
+					initIndsFile.close();
+					initIndsFile.clear();
 					Rcpp::Rcout << "Error re-reading Initial individuals file with state " << initIndsFile.rdstate() << endl;
 					return -221;
 				}

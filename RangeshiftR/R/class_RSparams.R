@@ -677,7 +677,7 @@ setValidity("RSparams", function(object) {
         }
     }
     else{
-        if (length(object@init@PropStages)>1 || object@init@PropStages[1] != 0.0) {
+        if (length(object@init@PropStages)>1 || !any(object@init@PropStages[1] == c(0,-9))) {
             msg <- c(msg, 'PropStages is not used for a population without stage structure.')
         }
     }
