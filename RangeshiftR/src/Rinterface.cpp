@@ -3658,29 +3658,26 @@ int ReadArchFileR(wifstream& archFile)
 
 	if (chromsize != 0) delete[] chromsize;
 
-// final read should hit EOF
-	if (!archFile.eof()) {
-		EOFerrorR(filetype);
-		errors++;
-	} else {
-		archFile.clear();
-		archFile.seekg(0);
-		if(!archFile.good()) {
-			Rcpp::Rcout << "Error re-reading Architecture file with state " << archFile.rdstate() << endl;
-			return -331;
-		}
-	}
-
 // check if parsing was successful before starting to read
 	if (formatError || errors > 0) { // terminate batch error checking
 		if (formatError) ArchFormatErrorR();
 		return -111;
 	} else {
-		if (errors == 0) Rcpp::Rcout << "Architecture file OK" << endl;
+		// final read should have hit EOF
+		if (!archFile.eof()) {
+			EOFerrorR(filetype);
+		}
+		archFile.clear();
+		archFile.seekg(0);
+		archFile.sync();
+		if(!archFile.good()) {
+			Rcpp::Rcout << "Error re-opening Architecture file with state " << archFile.rdstate() << endl;
+			return -331;
+		}
+		else Rcpp::Rcout << "Architecture file OK" << endl;
 	}
 
 	// READING
-
 	//int ReadArchFile(string archfile){
 
 	emigRules emig = pSpecies->getEmig();
@@ -4381,7 +4378,9 @@ int ParseInitIndsFileR(wifstream& initIndsFile)
 		errors++;
 	}
 	if(errors){
-		initIndsFile.close();
+		if(initIndsFile.is_open()) {
+			initIndsFile.close();
+		}
 		initIndsFile.clear();
 	}
 	return errors;
@@ -4398,6 +4397,7 @@ int ReadInitIndsFileR(int option, Landscape* pLandscape)
 
 	string indsfile = paramsSim->getDir(1) + init.indsFile;
 	wifstream initIndsFile;
+	
 	int errors = 0;
 
 	if(option == 0) { // open file, parse and read header and lines
@@ -4423,15 +4423,16 @@ int ReadInitIndsFileR(int option, Landscape* pLandscape)
 				// apply BOM-sensitive UTF-16 facet
 				initIndsFile.imbue(std::locale(initIndsFile.getloc(), new std::codecvt_utf16<wchar_t, 0x10ffff, std::consume_header>));
 #endif
-			// parse to check correct format
+			// parse to check correct format and close
 			errors = ParseInitIndsFileR(initIndsFile);
 			if(errors){
 				Rcpp::Rcout << "Error in format of Initial individuals file: " << indsfile << endl;
 				return -223;
 			}
-			else{
+			else{  // parse OK, clear stream
 				initIndsFile.clear();
 				initIndsFile.seekg(0, ios::beg);
+				initIndsFile.sync();
 				if(initIndsFile.good()) {
 					// read headers to prepare reading values
 					wstring header;
@@ -4450,7 +4451,8 @@ int ReadInitIndsFileR(int option, Landscape* pLandscape)
 					//	return 0;
 				}
 				else{
-					initIndsFile.close();
+					if(initIndsFile.is_open())
+						initIndsFile.close();
 					initIndsFile.clear();
 					Rcpp::Rcout << "Error re-reading Initial individuals file with state " << initIndsFile.rdstate() << endl;
 					return -221;
@@ -4502,9 +4504,8 @@ int ReadInitIndsFileR(int option, Landscape* pLandscape)
 			iind.year = -98765;
 	} // end of while loop
 
-	if(initIndsFile.is_open()) {
+	if(initIndsFile.is_open())
 		initIndsFile.close();
-	}
 	initIndsFile.clear();
 	
 	Rcpp::Rcout << "Initial individuals file OK:" << indsfile << std::endl;

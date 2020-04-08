@@ -25,32 +25,32 @@ RSrandom::RSrandom(int seed)
     if (seed < 0) {
         // random seed
 		#if RSWIN64
-		random_seed[2] = time(NULL);
+		random_seed[2] = std::time(NULL);
 		#else
         std::random_device device;
         random_seed[2] = device();
 		#endif
         #if RSDEBUG
             DEBUGLOG << "RSrandom::RSrandom(): Generate random seed = ";
-        #endif 
+        #endif
     }
     else{
         // fixed seed
         random_seed[2] = seed;
         #if RSDEBUG
             DEBUGLOG << "RSrandom::RSrandom(): Use fixed seed = ";
-        #endif 
+        #endif
     }
-	
+
     RS_random_seed = random_seed[2];
     #if RSDEBUG
         DEBUGLOG << RS_random_seed << endl;
     #endif
-    
+
     // set up Mersenne Twister random number generator with seed sequence
 	std::seed_seq seq(random_seed.begin(),random_seed.end());
     gen = new mt19937(seq);
-    
+
     // Set up standard uniform distribution
     pRandom01 = new uniform_real_distribution<double> (0.0,1.0);
     // Set up standard normal distribution
@@ -121,7 +121,7 @@ return  gamma;
 }
 
 // Cauchy distribution
-double RSrandom::Cauchy(double loc, double scale) { 
+double RSrandom::Cauchy(double loc, double scale) {
     double res;
     if (scale > 0.0) { // valid scale parameter
         cauchy_distribution<double> cauchy(loc,scale);

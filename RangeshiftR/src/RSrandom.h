@@ -23,8 +23,10 @@ Modified: 14 January 2020 by Anne-Kathleen Malchow, Humboldt University Berlin
 #include "Version.h"
 
 #include <cmath>
-
 #include <random>
+#if RSWIN64
+#include <ctime>
+#endif
 
 using namespace std;
 
@@ -40,7 +42,7 @@ public:
 	int Poisson(double);
 /* ADDITIONAL DISTRIBUTIONS
 	double Beta(double,double);
-	double Gamma(double,double); // !! make sure coorect definition is used: using shape and scale (as defined here) OR using shape/alpha and rate/beta (=1/scale) 
+	double Gamma(double,double); // !! make sure coorect definition is used: using shape and scale (as defined here) OR using shape/alpha and rate/beta (=1/scale)
     double Cauchy(double,double);
 */
 
