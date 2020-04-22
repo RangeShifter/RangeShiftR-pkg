@@ -985,7 +985,7 @@ if (nLoci != NULL) deleteLoci();
 if (c > 0) {
 	nChromosomes = nNLoci = c;
 	nLoci = new short [c];
-	for (int i; i < nNLoci; i++) nLoci[i] = 0;
+	for (int i = 0; i < nNLoci; i++) nLoci[i] = 0;
 }
 else nChromosomes = nNLoci = 0;
 }

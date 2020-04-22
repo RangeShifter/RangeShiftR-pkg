@@ -410,7 +410,9 @@ public:
 	int readLandChange(
 	    int,		// change file number
 		wifstream&, // habitat file stream, 
-		wifstream&  // patch file stream
+		wifstream&,  // patch file stream
+		int,		// habnodata
+		int			// pchnodata
 	);
 	#else
 	int readLandChange(

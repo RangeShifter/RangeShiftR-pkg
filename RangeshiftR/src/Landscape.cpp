@@ -1940,7 +1940,7 @@ void Landscape::deleteLandChanges(void)
 }
 
 #if RS_RCPP && !R_CMD
-int Landscape::readLandChange(int filenum, wifstream& hfile, wifstream& pfile)
+int Landscape::readLandChange(int filenum, wifstream& hfile, wifstream& pfile, int habnodata, int pchnodata)
 #else
 int Landscape::readLandChange(int filenum)
 #endif
@@ -1949,9 +1949,9 @@ int Landscape::readLandChange(int filenum)
 	wstring header;
 #else
 	string header;
+	int ncols,nrows,habnodata,pchnodata;
 #endif
-	int h,p,habnodata,pchnodata,pchseq;
-	int ncols,nrows;
+	int h,p,pchseq;
 	float hfloat,pfloat;
 	simParams sim = paramsSim->getSim();
 
@@ -1975,7 +1975,7 @@ int Landscape::readLandChange(int filenum)
 #endif
 #endif
 
-#if RS_RCPP && R_CMD
+#if !RS_RCPP || R_CMD
 // open habitat file and optionally also patch file
 	hfile.open(landchanges[filenum].habfile.c_str());
 	if (!hfile.is_open()) return 31;
@@ -2373,7 +2373,8 @@ int Landscape::readLandscape(int fileNum,string habfile,string pchfile)
 #else
 	string header;
 #endif
-	int h,seq,p,habnodata,pchnodata;
+	int h,seq,p,habnodata;
+	int pchnodata = 0;
 	int ncols,nrows;
 	float hfloat,pfloat;
 #if RS_CONTAIN
@@ -2497,10 +2498,9 @@ int Landscape::readLandscape(int fileNum,string habfile,string pchfile)
 			for (int i = 0; i < 5; i++) dfile >> header >> dfloat;
 			dfile >> header >> dmgnodata;
 		}
-#endif // RS_CONTAIN 
+#endif // RS_CONTAIN
+	setCellArray();
 	}
-
-	if (fileNum == 0) setCellArray();
 
 // set up bad float values to ensure that valid values are read
 	float badhfloat = -9.0;

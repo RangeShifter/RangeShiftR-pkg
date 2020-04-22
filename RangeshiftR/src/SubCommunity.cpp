@@ -791,7 +791,9 @@ Population *pPop;
 Patch *pPrevPatch;
 Patch *pNewPatch;
 Cell *pPrevCell;
+#if GROUPDISP
 Cell *pNewCell;
+#endif
 SubCommunity *pSubComm;
 
 int npops = (int)popns.size();

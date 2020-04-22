@@ -281,7 +281,7 @@ Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
 {
 	// int i,t0,t1,Nruns;
 	int t0, t1;
-	int nSimuls, nSimulss, nLandscapes; // no. of simulations and landscapes in batch
+	int nSimuls, nLandscapes; // no. of simulations and landscapes in batch
 
 	t0 = time(0);
 	//clear_outPop();
@@ -725,7 +725,6 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 			ppLand.nHab = 1; // habitat quality landscape has one habitat class
 
 		// CHECK IMPORTED RASTER FILES
-		simParams sim = paramsSim->getSim();
 		string indir = paramsSim->getDir(1);
 		string ftype, fname;
 		string filetype = "LandFile";
@@ -755,7 +754,7 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 		ftype = "PatchFile";
 		if(name_patch == "NULL") {
 			if(patchmodel) {
-				BatchErrorR(filetype, line, 0, " ");
+				BatchErrorR(filetype, -999, 0, " ");
 				errors++;
 				Rcpp::Rcout << ftype << msgpatch << endl;
 			}
@@ -847,7 +846,7 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 		ftype = "Species Distribution map";
 		if(name_sp_dist == "NULL") {
 			if(speciesdist) {
-				BatchErrorR(filetype, line, 0, " ");
+				BatchErrorR(filetype, -999, 0, " ");
 				errors++;
 				Rcpp::Rcout << ftype << " is required as SpeciesDist is 1 in Control" << endl;
 			}
@@ -1028,10 +1027,10 @@ int ReadDynLandR(Landscape *pLandscape, Rcpp::S4 LandParamsR)
 	string fname,ftype;
 	wstring header;
 	wifstream hfile,pfile;
-	int errors,ncols,nrows,cellsize,inint;
+	int errors,ncols,nrows,cellsize,habnodata,pchnodata;
 	double xllcorner,yllcorner;
 
-	errors = ncols = nrows = cellsize = inint = 0;
+	errors = ncols = nrows = cellsize = habnodata = pchnodata = 0;
 	xllcorner = yllcorner = 0.0;
 
 	if (patchmodel) {
@@ -1092,7 +1091,7 @@ int ReadDynLandR(Landscape *pLandscape, Rcpp::S4 LandParamsR)
 			hfile >> header >> cellsize;
 			if (header != L"cellsize" && header != L"CELLSIZE") errors++;
 
-			hfile >> header >> inint;
+			hfile >> header >> habnodata;
 			if (header != L"NODATA_value" && header != L"NODATA_VALUE") errors++;
 
 			if (errors > 0)  {
@@ -1188,7 +1187,7 @@ int ReadDynLandR(Landscape *pLandscape, Rcpp::S4 LandParamsR)
 				pfile >> header >> cellsize;
 				if (header != L"cellsize" && header != L"CELLSIZE") errors++;
 
-				pfile >> header >> inint;
+				pfile >> header >> pchnodata;
 				if (header != L"NODATA_value" && header != L"NODATA_VALUE") errors++;
 
 				if (errors > 0)  {
@@ -1237,7 +1236,7 @@ int ReadDynLandR(Landscape *pLandscape, Rcpp::S4 LandParamsR)
 		// Now read raster data of both Habitat and Patch maps:
 		int imported = 0;
 		if (errors == 0)  {
-			imported = pLandscape->readLandChange(i-1, hfile, pfile);
+			imported = pLandscape->readLandChange(i-1, hfile, pfile, habnodata, pchnodata);
 			if (imported != 0) {
 				if(hfile.is_open()) hfile.close();
 				hfile.clear();
@@ -3336,7 +3335,7 @@ int ReadInitialisationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 	initParams init = paramsInit->getInit();
 	string Inputs = paramsSim->getDir(1);
 
-	int simulation, maxcells;
+	int maxcells; //,simulation
 	float p, check;
 	int error = 0;
 
@@ -3554,7 +3553,7 @@ int ReadArchFileR(wifstream& archFile)
 	//int ParseArchFile(void){
 
 	wstring paramname;
-	int traitnum,prevtrait,nchromosomes,nlocitraitnum,chrom,locus,nloci;
+	int traitnum,prevtrait,nchromosomes,chrom,locus,nloci;
 	int errors = 0;
 	int fileNtraits = 0;
 	bool formatError = false;

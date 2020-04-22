@@ -1682,7 +1682,9 @@ bool CheckDirectory(void)
 //For outputs and population visualisations pre-reproduction
 void PreReproductionOutput(Landscape *pLand,Community *pComm,int rep,int yr,int gen)
 {
+#if RSDEBUG || VCL
 	landParams ppLand = pLand->getLandParams();
+#endif
 	simParams sim = paramsSim->getSim();
 	simView v = paramsSim->getViews();
 
