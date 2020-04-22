@@ -4243,148 +4243,6 @@ rasterdata ParseRasterHead(string file)
 	return r;
 }
 
-//---------------------------------------------------------------------------
-
-
-
-int ParseInitIndsFileR(wifstream& initIndsFile)
-{
-	wstring header;
-	int year, species, patchID, x, y, ninds, sex, age, stage, prevyear;
-
-	int errors = 0;
-	string filetype = "InitIndsFile";
-
-	// Parse header line
-	initIndsFile >> header;
-	if(!initIndsFile.good()) {
-		Rcpp::Rcout << "Initial individuals failed to read" << std::endl;
-#if RSDEBUG
-		DEBUGLOG << "Initial individuals failed to read" << std::endl;
-#endif
-		return -211;
-	}
-	if(header != L"Year")
-		errors++;
-	initIndsFile >> header;
-	if(header != L"Species")
-		errors++;
-	if(patchmodel) {
-		initIndsFile >> header;
-		if(header != L"PatchID")
-			errors++;
-	} else {
-		initIndsFile >> header;
-		if(header != L"X")
-			errors++;
-		initIndsFile >> header;
-		if(header != L"Y")
-			errors++;
-	}
-	initIndsFile >> header;
-	if(header != L"Ninds")
-		errors++;
-	if(reproductn > 0) {
-		initIndsFile >> header;
-		if(header != L"Sex")
-			errors++;
-	}
-	if(stagestruct) {
-		initIndsFile >> header;
-		if(header != L"Age")
-			errors++;
-		initIndsFile >> header;
-		if(header != L"Stage")
-			errors++;
-	}
-
-	// Report any errors in headers, and if so, terminate validation
-	if(errors > 0) {
-		FormatErrorR(filetype, errors);
-		return -111;
-	}
-
-	// Parse data lines
-	int line = 1;
-	string filename, ftype2, fname;
-	year = prevyear = -98765;
-	initIndsFile >> year;
-	while(year != -98765) {
-		if(year < 0) {
-			BatchErrorR(filetype, line, 19, "Year");
-			errors++;
-		} else {
-			if(year < prevyear) {
-				BatchErrorR(filetype, line, 2, "Year", "previous Year");
-				errors++;
-			}
-		}
-		prevyear = year;
-		initIndsFile >> species;
-		if(species != 0) {
-			BatchErrorR(filetype, line, 0, " ");
-			errors++;
-			Rcpp::Rcout << "Species must be 0" << endl;
-		}
-		if(patchmodel) {
-			initIndsFile >> patchID;
-			if(patchID < 1) {
-				BatchErrorR(filetype, line, 11, "PatchID");
-				errors++;
-			}
-		} else {
-			initIndsFile >> x >> y;
-			if(x < 0 || y < 0) {
-				BatchErrorR(filetype, line, 19, "X and Y");
-				errors++;
-			}
-		}
-		initIndsFile >> ninds;
-		if(ninds < 1) {
-			BatchErrorR(filetype, line, 11, "Ninds");
-			errors++;
-		}
-		if(reproductn > 0) {
-			initIndsFile >> sex;
-			if(sex < 0 || sex > 1) {
-				BatchErrorR(filetype, line, 1, "Sex");
-				errors++;
-			}
-		}
-		if(stagestruct) {
-			initIndsFile >> age >> stage;
-			if(age < 1) {
-				BatchErrorR(filetype, line, 11, "Age");
-				errors++;
-			}
-			if(stage < 1) {
-				BatchErrorR(filetype, line, 11, "Stage");
-				errors++;
-			}
-			if(stage >= stages) {
-				BatchErrorR(filetype, line, 4, "Stage", "no. of stages");
-				errors++;
-			}
-		}
-		line++;
-		year = -98765;
-		initIndsFile >> year;
-		if(initIndsFile.eof())
-			year = -98765;
-	} // end of while loop
-	if(!initIndsFile.eof()) {
-		EOFerrorR(filetype);
-		errors++;
-	}
-	if(errors){
-		if(initIndsFile.is_open()) {
-			initIndsFile.close();
-		}
-		initIndsFile.clear();
-	}
-	return errors;
-}
-
 //----------------------------------------------------------------------------------------------
 
 int ReadInitIndsFileR(int option, Landscape* pLandscape)
@@ -4397,6 +4255,12 @@ int ReadInitIndsFileR(int option, Landscape* pLandscape)
 	string indsfile = paramsSim->getDir(1) + init.indsFile;
 	wifstream initIndsFile;
 	
+	wstring header;
+	string filetype = "InitIndsFile";
+	string filename, ftype2, fname;
+	
+	int line, year, species, patchID, x, y, ninds, sex, age, stage, prevyear;
+
 	int errors = 0;
 
 	if(option == 0) { // open file, parse and read header and lines
@@ -4422,94 +4286,176 @@ int ReadInitIndsFileR(int option, Landscape* pLandscape)
 				// apply BOM-sensitive UTF-16 facet
 				initIndsFile.imbue(std::locale(initIndsFile.getloc(), new std::codecvt_utf16<wchar_t, 0x10ffff, std::consume_header>));
 #endif
-			// parse to check correct format and close
-			errors = ParseInitIndsFileR(initIndsFile);
-			if(errors){
-				Rcpp::Rcout << "Error in format of Initial individuals file: " << indsfile << endl;
-				return -223;
-			}
-			else{  // parse OK, clear stream
-				initIndsFile.clear();
-				initIndsFile.seekg(0, ios::beg);
-				initIndsFile.sync();
-				if(initIndsFile.good()) {
-					// read headers to prepare reading values
-					wstring header;
-					int nheaders = 3;
-					if(paramsLand.patchModel)
-						nheaders++;
-					else
-						nheaders += 2;
-					if(dem.repType > 0)
-						nheaders++;
-					if(dem.stageStruct)
-						nheaders += 2;
-					for(int i = 0; i < nheaders; i++)
-						initIndsFile >> header;
-					paramsInit->resetInitInds();
-					//	return 0;
-				}
-				else{
-					if(initIndsFile.is_open())
-						initIndsFile.close();
-					initIndsFile.clear();
-					Rcpp::Rcout << "Error re-reading Initial individuals file with state " << initIndsFile.rdstate() << endl;
-					return -221;
-				}
-			}
-		}
-	}
 
+			// Check right headers format
+			initIndsFile >> header;
+			if(!initIndsFile.good()) {
+				Rcpp::Rcout << "Initial individuals failed to read" << std::endl;
+#if RSDEBUG
+				DEBUGLOG << "Initial individuals failed to read" << std::endl;
+#endif
+				return -211;
+			}
+			if(header != L"Year")
+				errors++;
+			initIndsFile >> header;
+			if(header != L"Species")
+				errors++;
+			if(patchmodel) {
+				initIndsFile >> header;
+				if(header != L"PatchID")
+					errors++;
+			} else {
+				initIndsFile >> header;
+				if(header != L"X")
+					errors++;
+				initIndsFile >> header;
+				if(header != L"Y")
+					errors++;
+			}
+			initIndsFile >> header;
+			if(header != L"Ninds")
+				errors++;
+			if(reproductn > 0) {
+				initIndsFile >> header;
+				if(header != L"Sex")
+					errors++;
+			}
+			if(stagestruct) {
+				initIndsFile >> header;
+				if(header != L"Age")
+					errors++;
+				initIndsFile >> header;
+				if(header != L"Stage")
+					errors++;
+			}
+			// Report any errors in headers, and if so, terminate validation
+			if(errors > 0) {
+				FormatErrorR(filetype, errors);
+				return -111;
+			}
+			
+			paramsInit->resetInitInds();
+			
+			// Read data lines
+			initInd iind;
+			int ninds;
+			int totinds = 0;
+			
+			line = 1;
+			iind.year = prevyear = -98765;
+			initIndsFile >> iind.year;
+			
+			while(iind.year != -98765) {
+				// Year
+				if(iind.year < 0) {
+					BatchErrorR(filetype, line, 19, "Year");
+					errors++;
+				} else {
+					if(iind.year < prevyear) {
+						BatchErrorR(filetype, line, 2, "Year", "previous Year");
+						errors++;
+					}
+				}
+				prevyear = year;
+				
+				// Species
+				initIndsFile >> iind.species;
+				if(iind.species != 0) {
+					BatchErrorR(filetype, line, 0, " ");
+					errors++;
+					Rcpp::Rcout << "Species must be 0" << endl;
+				}
+				
+				// Patch | Coordinates
+				if(paramsLand.patchModel) {
+					initIndsFile >> iind.patchID;
+					if(iind.patchID < 1) {
+						BatchErrorR(filetype, line, 11, "PatchID");
+						errors++;
+						iind.x = iind.y = 0;
+					}
+				} else {
+					initIndsFile >> iind.x >> iind.y;
+					if(iind.x < 0 || iind.y < 0) {
+						BatchErrorR(filetype, line, 19, "X and Y");
+						errors++;
+						iind.patchID = 0;
+					}
+				}
+				
+				// No of individuals
+				initIndsFile >> ninds;
+				if(ninds < 1) {
+					BatchErrorR(filetype, line, 11, "Ninds");
+					errors++;
+				}
+				
+				// Sex
+				if(dem.repType > 0){
+					initIndsFile >> iind.sex;
+					if(iind.sex < 0 || iind.sex > 1) {
+						BatchErrorR(filetype, line, 1, "Sex");
+						errors++;
+					}
+				}
+				else iind.sex = 0;
+				
+				// Stage
+				if(dem.stageStruct) {
+					initIndsFile >> iind.age >> iind.stage;
+					if(iind.age < 1) {
+						BatchErrorR(filetype, line, 11, "Age");
+						errors++;
+					}
+					if(iind.stage < 1) {
+						BatchErrorR(filetype, line, 11, "Stage");
+						errors++;
+					}
+					if(iind.stage >= stages) {
+						BatchErrorR(filetype, line, 4, "Stage", "no. of stages");
+						errors++;
+					}
+				} else {
+					iind.age = iind.stage = 0;
+				}
+				
+				for(int i = 0; i < ninds; i++) {
+					totinds++;
+					paramsInit->addInitInd(iind);
+				}
+				
+				line++;
+				iind.year = -98765;				// finished current line
+				if(!errors){					// check for format errors
+					if(!initIndsFile.eof())		// check for EOF to end loop
+					initIndsFile >> iind.year;		// read next year
+				}
+			} // end of while loop over lines
+			if(!initIndsFile.eof()) {
+				EOFerrorR(filetype);
+				errors++;
+			}
+			
+		} // end of "file is open"
+		
+		if(initIndsFile.is_open())
+			initIndsFile.close();
+		initIndsFile.clear();
+	
+		Rcpp::Rcout << "Initial individuals file OK:" << indsfile << std::endl;
+
+		return errors; //totinds;
+		
+	} // end of option 0
+	
 	if(option == 9) { // close file
 		if(initIndsFile.is_open()) {
 			initIndsFile.close();
-			initIndsFile.clear();
 		}
+		initIndsFile.clear();
 		return 0;
 	}
-
-	// Read data lines;
-	initInd iind;
-	int ninds;
-	int totinds = 0;
-	iind.year = -98765;
-	initIndsFile >> iind.year;
-	while(iind.year != -98765) {
-		initIndsFile >> iind.species;
-		if(paramsLand.patchModel) {
-			initIndsFile >> iind.patchID;
-			iind.x = iind.y = 0;
-		} else {
-			initIndsFile >> iind.x >> iind.y;
-			iind.patchID = 0;
-		}
-		initIndsFile >> ninds;
-		if(dem.repType > 0)
-			initIndsFile >> iind.sex;
-		else
-			iind.sex = 0;
-		if(dem.stageStruct) {
-			initIndsFile >> iind.age >> iind.stage;
-		} else {
-			iind.age = iind.stage = 0;
-		}
-		for(int i = 0; i < ninds; i++) {
-			totinds++;
-			paramsInit->addInitInd(iind);
-		}
-		iind.year = -98765;
-		initIndsFile >> iind.year;
-		if(initIndsFile.eof())
-			iind.year = -98765;
-	} // end of while loop
-
-	if(initIndsFile.is_open())
-		initIndsFile.close();
-	initIndsFile.clear();
-	
-	Rcpp::Rcout << "Initial individuals file OK:" << indsfile << std::endl;
-
-	return 0; //totinds;
 }
 
 //---------------------------------------------------------------------------
