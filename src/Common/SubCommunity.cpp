@@ -742,7 +742,6 @@ for (int i = 0; i < npops; i++) { // all populations
 	if (emig.groupdisp)  
 		ndispersers += popns[i]->grouptransfer(pLandscape,landIx);
 	else
-#else
 #if SEASONAL
 		ndispersers += popns[i]->transfer(pLandscape,landIx,nextseason);
 #else

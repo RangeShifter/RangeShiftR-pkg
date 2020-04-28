@@ -5342,7 +5342,7 @@ if (simul != firstsimul) {
 }
 while (simul != -98765) {
 	// read and validate columns relating to stage and sex-dependency (NB none here)
-	current = CheckStageSex(filetype,line,simul,prev,0,0,0,0,0,false);
+	current = CheckStageSex(filetype,line,simul,prev,0,0,0,0,0,false,false);
 	if (current.newsimul) simuls++;
 	errors += current.errors;
 	prev = current;
