@@ -2,6 +2,7 @@
 
 export("+")
 export(ArtificialLandscape)
+export(ColonisationStats)
 export(CorrRW)
 export(Demography)
 export(Dispersal)

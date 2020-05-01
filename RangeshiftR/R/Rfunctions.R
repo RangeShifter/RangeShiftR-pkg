@@ -163,7 +163,7 @@ setMethod("+", signature(e1 = "RSparams", e2 = "SimulationParams"), function(e1,
 setMethod("+", signature(e1 = "RSparams", e2 = "LandParams"), function(e1, e2) {
     validObject(e2)
     if (class(e2)[1] == "ImportedLandscape") {
-        if (e2@PatchFile=="NULL") {
+        if (any(e2@PatchFile=="NULL")) {
             e1@control@patchmodel = FALSE
         }
         else {

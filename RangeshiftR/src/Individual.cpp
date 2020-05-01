@@ -3226,23 +3226,46 @@ void Individual::outGenetics(const int rep,const int year,const int spnum,
 // Write records to movement paths file
 void Individual::outMovePath(const int year)
 {
-	locn loc;
-	if(path->total == 1){
-		loc = pPrevCell->getLocn();
-		outMovePaths << year << "\t" << indId << "\t" 
-					 << "0\t" << loc.x << "\t" << loc.y << "\t"
-					 << "0\t"
-					 << endl;
-	}
-	//else{
+	locn loc, prev_loc;
+
 	//if (pPatch != pNatalPatch) {
-		loc = pCurrCell->getLocn();
+	loc = pCurrCell->getLocn();
+	// if still dispersing...
+	if(status > 0 && status < 4){
+		// at first step, record start cell first
+		if(path->total == 1){
+			prev_loc = pPrevCell->getLocn();
+			outMovePaths << year << "\t" << indId << "\t" 
+						 << "0\t" << prev_loc.x << "\t" << prev_loc.y << "\t"
+						 << "0\t"	// status at start cell is 0
+						<< endl;
+		}
+		// then record current step
 		outMovePaths << year << "\t" << indId << "\t" 
-					 << path->total << "\t" << loc.x << "\t" << loc.y << "\t"
-					 << status << "\t"
-					 << endl;
-		//}
-	//}
+			 << path->total << "\t" << loc.x << "\t" << loc.y << "\t"
+			 << status << "\t"
+			 << endl;
+	}
+	// if not anymore dispersing...
+	if(status > 3 && status < 10){
+		prev_loc = pPrevCell->getLocn();
+		// record only if this is the first step as non-disperser
+		if (prev_loc.x != loc.x || prev_loc.y != loc.y) {
+			// if this is also the first step taken at all, record the start cell first
+			if(path->total == 1){
+				outMovePaths << year << "\t" << indId << "\t" 
+							 << "0\t" << prev_loc.x << "\t" << prev_loc.y << "\t"
+							 << "0\t"	// status at start cell is 0
+							<< endl;
+			}
+			outMovePaths << year << "\t" << indId << "\t" 
+						 << path->total << "\t" << loc.x << "\t" << loc.y << "\t"
+						 << status << "\t"
+						 << endl;
+			// current cell will be invalid (zero), so set back to previous cell
+			pPrevCell = pCurrCell;
+		}
+	}
 }
 #endif
 

@@ -279,9 +279,9 @@ setMethod("show", "ArtificialLandscape", function(object){
 #' @param PatchFile Filename(s) of the patch map(s) which shall be imported, Default is \code{NULL}.
 #' @param SpDistFile Filename of the species initial distribution map which shall be imported (*.txt). Default is \code{NULL}.
 #' @param SpDistResolution Required if \code{SpDistFile} is given: Cell size of the distribution map in meters. (integer) Must be an integer multiple of the landscape resolution.
-#' @param DynamicLandYears Integer vector indicating the years of landscape changes. For a non-dynamic landscape its only entry is \eqn{0} (default). 
-#' For a dynamic landscape, \code{DynamicLandYears} lists the years in which the corresponding habitat maps in \code{LandscapeFile} and - if applicable - their respective patch 
-#' maps in \code{PatchFile} are loaded and used in the simulation. More details below. 
+#' @param DynamicLandYears Integer vector indicating the years of landscape changes. For a non-dynamic landscape its only entry is \eqn{0} (default).
+#' For a dynamic landscape, \code{DynamicLandYears} lists the years in which the corresponding habitat maps in \code{LandscapeFile} and - if applicable - their respective patch
+#' maps in \code{PatchFile} are loaded and used in the simulation. More details below.
 #' @details RangeShifter requires every input map to be a text file in ArcGIS raster export format, which has the following six header lines:
 #' \tabular{ll}{\code{ncols} \tab Number of columns \cr
 #' \code{nrows} \tab Number of rows \cr
@@ -302,24 +302,24 @@ setMethod("show", "ArtificialLandscape", function(object){
 #' A \emph{species distribution map} can be overlaid on top of the habitat map and can be used to define an initial distribution. The map is provided through \code{SpDistFile} must be in raster format and be aligned with the landscape map, i.e. the coordinates of the lower-left corner must be the same. The extent of the map does not have to be necessarily
 #' the same as the landscape. The resolution can be the same or coarser, provided that it is a multiple of the landscape resolution. For example, if the landscape cell size is \eqn{250m}, the species distribution can be at the resolution of \eqn{250m}, \eqn{500m}, \eqn{750m}, \eqn{1000m} etc.
 #' Each cell of the species distribution map must contain either \eqn{0} (species absent or not recorded) or \eqn{1} (species present).
-#' 
+#'
 #' \emph{Dynamic landscapes} \cr
 #' An imported landscape may be dynamic, i.e. the attributes of cells (either habitat class or quality index) and its patch number (if the model is patch-based) may be changed at specified years during the course of
 #' a simulation. Note that any landscape change occurs at the start of the year, i.e. before the first/only reproductive season. In a patch-based model, the shape of patches may change, patches may
-#' be removed and new patches may be created where there was previously inter-patch matrix. Thus some populations may be extirpated (in a non-structured population, all individuals die; in a stage-structured population, 
+#' be removed and new patches may be created where there was previously inter-patch matrix. Thus some populations may be extirpated (in a non-structured population, all individuals die; in a stage-structured population,
 #' all individuals either die or have an immediate opportunity to disperse), and new populations may arise from colonisation of newly suitable areas.
-#' 
-#' However, there are certain restrictions. Any part of the original landscape which was a ‘no-data’ region (e.g. the sea or land beyond a study area boundary) must remain in that state for the whole simulation. 
-#' The identity of patches is not cross-checked between changes, and care must therefore be taken to ensure consistency; otherwise, a patch (and its resident population) can jump to a distant location or be split into 
-#' two or more disjunct parts, with unpredictable and possibly weird consequences. It is legitimate for a patch to be split into two or more separate patches (e.g. by construction of a motorway or some other barrier), 
-#' but any existing population will remain with the part (if any) which retains the original patch number, and populations within the other parts (having a new patch number) must arise through colonisation. 
+#'
+#' However, there are certain restrictions. Any part of the original landscape which was a ‘no-data’ region (e.g. the sea or land beyond a study area boundary) must remain in that state for the whole simulation.
+#' The identity of patches is not cross-checked between changes, and care must therefore be taken to ensure consistency; otherwise, a patch (and its resident population) can jump to a distant location or be split into
+#' two or more disjunct parts, with unpredictable and possibly weird consequences. It is legitimate for a patch to be split into two or more separate patches (e.g. by construction of a motorway or some other barrier),
+#' but any existing population will remain with the part (if any) which retains the original patch number, and populations within the other parts (having a new patch number) must arise through colonisation.
 #' Possible ways to work around this restriction include:
-#'    1. Assign to all post-change parts of the original patch a new, unique patch number and specify that dispersal is allowed after population destruction (which is possible only for a structured population), in which 
-#' case some colonisation of the new patches should occur. Note that the connectivity matrix will be misleading in such cases, as every successful ‘disperser’ will appear to have moved from patch N to patch M (where M 
+#'    1. Assign to all post-change parts of the original patch a new, unique patch number and specify that dispersal is allowed after population destruction (which is possible only for a structured population), in which
+#' case some colonisation of the new patches should occur. Note that the connectivity matrix will be misleading in such cases, as every successful ‘disperser’ will appear to have moved from patch N to patch M (where M
 #' is the new patch number).
 #'    2. Instead of a single original patch, define two (or more) distinct but adjacent patches in the original landscape, so that they each retain their own populations when they become separated by the landscape change.
-#' 
-#' A dynamic landscape can be specified using the slots \code{LandscapeFile} (, \code{PatchFile}) and \code{DynamicLandYears}. \code{LandscapeFile} (and \code{PatchFile}) take a character vector with the filenames of the maps 
+#'
+#' A dynamic landscape can be specified using the slots \code{LandscapeFile} (, \code{PatchFile}) and \code{DynamicLandYears}. \code{LandscapeFile} (and \code{PatchFile}) take a character vector with the filenames of the maps
 #' to be loaded. All provided maps must agree in resolution, extent and origin. \code{DynamicLandYears} is a number vector that contains the years, in which these landscapes shall be loaded; it must have the same ordering so
 #' that years and maps can be matched. If a specific map is used multiple times, it must be listed each time nevertheless.
 #' @return A parameter object of class ImportedLandscape
@@ -397,7 +397,7 @@ setValidity("ImportedLandscape", function(object) {
         msg <- c(msg, "No filename to import Patches from was given.")
     }
     else {
-        if (object@PatchFile == "NULL") {
+        if (any(object@PatchFile == "NULL")) {
             if(length(object@PatchFile) != 1){
                 msg <- c(msg, "In a cell-based model PatchFile should have exactly one entry \'NULL\'!")
             }

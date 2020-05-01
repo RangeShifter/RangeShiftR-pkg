@@ -27,7 +27,7 @@
 #' @param SpType,NrCells Option for \emph{initialisation from species distribution map}, i.e. required only if \code{InitType}\eqn{ = 1}:\cr
 #' \eqn{0} = All suitable cells within all distribution presence cells (default), \cr
 #' \eqn{1} = All suitable cells within some randomly chosen presence cells; set number of cells to initialise in \code{NrCells}.
-#' @param InitIndsFile Path to \emph{initial individuals list file}, required only if \code{InitType}\eqn{ = 2}.\cr
+#' @param InitIndsFile Name of \emph{initial individuals list file}, required only if \code{InitType}\eqn{ = 2}.\cr
 #' For informaton on the required file format see the Details below.
 #' @param InitDens,IndsHaCell Number of individuals to be seeded in each cell/patch:\cr
 #' \eqn{0} = At carrying capacity \eqn{K}, \cr
