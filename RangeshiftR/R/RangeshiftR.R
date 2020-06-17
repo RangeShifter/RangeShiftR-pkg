@@ -21,9 +21,30 @@ NULL
 
 
 # #' @references \url{https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.12162%4010.1111/%28ISSN%292041-210X.Biogeographys}
-## define ClassUnions
 
 
+
+
+##------- TODO
+
+# add citation()
+
+# write setters and getters
+
+# think about hierarchy of sub-classes and "+"-methods
+
+# add references to documentation
+
+# new class EnvGradient to move these params into from SimulationParams? Maybe as sub-class to Land-Params?
+
+# write new output (plotting) functions
+
+# clean C++ code to address warnings
+
+
+
+
+##------ define ClassUnions
 
 #for Integer and Numerical so that 'Integer'-slots can also accept 'Numerical' input
 setClassUnion("integer_OR_numeric", c("integer", "numeric"))
@@ -76,19 +97,3 @@ densdep <- function(x, A0 = 1.0, alpha = 1.0, beta = 0.0) {
     A0/(1+exp(alpha*(beta-x)))
 }
 
-
-### TODO
-
-# add citation()
-
-# write setters and getters
-
-# think about hierarchy of sub-classes and "+"-methods
-
-# add references to documentation
-
-# new class EnvGradient to move these params into from SimulationParams? Maybe as sub-class to Land-Params?
-
-# write new output (plotting) functions
-
-# clean C++ code to address warnings

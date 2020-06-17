@@ -3231,7 +3231,7 @@ void Individual::outMovePath(const int year)
 	//if (pPatch != pNatalPatch) {
 	loc = pCurrCell->getLocn();
 	// if still dispersing...
-	if(status > 0 && status < 4){
+	if(status == 1){
 		// at first step, record start cell first
 		if(path->total == 1){
 			prev_loc = pPrevCell->getLocn();
@@ -3247,7 +3247,7 @@ void Individual::outMovePath(const int year)
 			 << endl;
 	}
 	// if not anymore dispersing...
-	if(status > 3 && status < 10){
+	if(status > 1 && status < 10){
 		prev_loc = pPrevCell->getLocn();
 		// record only if this is the first step as non-disperser
 		if (prev_loc.x != loc.x || prev_loc.y != loc.y) {

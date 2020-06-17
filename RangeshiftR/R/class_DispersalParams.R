@@ -328,7 +328,8 @@ setMethod("plotProbs", "EmigrationParams", function(x, stage = NULL, sex = NULL,
         }
         xvals = seq(0, xmax, length.out = 100)
     }
-    else {xmax <- 3}
+    else {if(is.null(xmax)) xmax <- 1} # !DensDep
+
     if (is.null(ymax)) {ymax = 1}
     plot(NULL, type = "n", ylab = "Emigration probability", xlab = "relative population density (N/K or Nb)", xlim = c(0,xmax), ylim = c(0,ymax))
     leg.txt <- c()
@@ -909,7 +910,8 @@ setMethod("plotProbs", "DispersalKernel", function(x, mortality = FALSE, combine
 #' @param IndVar Individual variability in SMS traits (i.e. \code{GoalBias}, \code{AlphaDB} and \code{BetaDB})? Defaults to \code{FALSE}.
 #' @param DP Directional persistence. Corresponds to the tendency to follow a correlated random walk, must be \eqn{\ge 1.0}, defaults to \eqn{1.0}.\cr
 #' If \code{IndVar=TRUE}, expects a vector of length three specifying (Mean, SD, MutationScale) of \code{DP}.
-#' @param GoalBias Goal bias strength. Must be must be \eqn{\ge 1.0}, defaults to \eqn{1.0}. \cr
+#' @param GoalBias Goal bias strength. Must be must be \eqn{\ge 1.0}, defaults to \eqn{1.0}. \cr If \code{IndVar=TRUE}, expects a vector of length three
+#' specifying (Mean, SD, MutationScale) of \code{GoalBias}.
 #' @param AlphaDB Required if \code{GoalType=2}: Dispersal bias decay rate. Must be must be \eqn{> 0.0}.\cr If \code{IndVar=TRUE}, expects a vector of length three
 #' specifying (Mean, SD, MutationScale) of \code{AlphaDB}.
 #' @param BetaDB Required if \code{GoalType=2}: Dispersal bias decay inflection point (given in number of steps). Must be must be \eqn{> 0.0}.\cr If \code{IndVar=TRUE},
@@ -1288,6 +1290,50 @@ setMethod("show", "StochMove", function(object){
     cat("   StepMort =", object@StepMort, "\n")
     }
 )
+setMethod("plotProbs", "StochMove", function(x, xmax = NULL, ymax = NULL){
+    # get parameters
+    gb  <- x@GoalBias
+    if (x@GoalType == 2) {
+        alp <- x@AlphaDB
+        bet <- x@BetaDB
+        main = "Dispersal Bias"
+    } else main = "Goal Bias"
+    # New plot
+    if (x@GoalType == 2) {
+        if (is.null(xmax)) xmax = 2*bet[1]
+        xvals = seq(0, xmax)
+    }
+    else {if(is.null(xmax)) xmax <- 100}
+    if (is.null(ymax)) {ymax = gb[1]*1.1}
+    plot(NULL, type = "n", main = main, xlab = "Nr of steps", ylab = "Bias strength", xlim = c(0,xmax), ylim = c(1.0,ymax))
+    leg.txt <- c()
+    # add to plot:
+    if (x@IndVar) {
+    # plot shaded sd interval
+        if (x@GoalType == 2) {
+            res <- matrix(ncol = 8, nrow = length(xvals))
+            res[,1] <- 1+densdep(xvals, A0 = (gb[1]-gb[2]-1), alpha = -(alp[1]-alp[2]), beta = (bet[1]-bet[2]))
+            res[,2] <- 1+densdep(xvals, A0 = (gb[1]-gb[2]-1), alpha = -(alp[1]-alp[2]), beta = (bet[1]+bet[2]))
+            res[,3] <- 1+densdep(xvals, A0 = (gb[1]-gb[2]-1), alpha = -(alp[1]+alp[2]), beta = (bet[1]-bet[2]))
+            res[,4] <- 1+densdep(xvals, A0 = (gb[1]-gb[2]-1), alpha = -(alp[1]+alp[2]), beta = (bet[1]+bet[2]))
+            res[,5] <- 1+densdep(xvals, A0 = (gb[1]+gb[2]-1), alpha = -(alp[1]-alp[2]), beta = (bet[1]-bet[2]))
+            res[,6] <- 1+densdep(xvals, A0 = (gb[1]+gb[2]-1), alpha = -(alp[1]-alp[2]), beta = (bet[1]+bet[2]))
+            res[,7] <- 1+densdep(xvals, A0 = (gb[1]+gb[2]-1), alpha = -(alp[1]+alp[2]), beta = (bet[1]-bet[2]))
+            res[,8] <- 1+densdep(xvals, A0 = (gb[1]+gb[2]-1), alpha = -(alp[1]+alp[2]), beta = (bet[1]+bet[2]))
+            polygon(c(xvals,rev(xvals)), c(apply(res, 1, min), rev(apply(res, 1, max))), border=NA, col='grey80')
+        }
+        else {#constant
+            polygon(c(0,xmax,xmax,0), c(rep(gb[1]-gb[2],2),rep(gb[1]+gb[2],2)), border=NA, col='grey80')
+        }
+    }
+    # plot lines
+    if (x@GoalType == 2) {
+        lines(xvals, 1+densdep(xvals, A0 = (gb[1]-1), alpha = -alp[1], beta = bet[1]), type = "b", lty = 1, col = "blue")
+    }else { # constant
+        lines(x=c(0,xmax), y=rep(gb[1],2), type = "b", lty = 1, col = "blue")
+    }
+})
+
 
 ## Transfer-class CORRRW
 
@@ -1486,7 +1532,8 @@ setMethod("show", "CorrRW", function(object){
 #'            MinSteps = 0, MaxSteps = 0, MaxStepsYear = 0)
 #' @param StageDep Stage-dependent settlement requirements? (default: \code{FALSE})
 #' @param SexDep Sex-dependent settlement requirements? (default: \code{FALSE})
-#' @param Settle Settlement codes (for \code{DispersalKernel}) or settlement probability parameters (for \emph{Movement process}) for all stages/sexes, defaults to \eqn{0}. See the Details below.
+#' @param Settle Settlement codes (for \code{DispersalKernel}) or settlement probability parameters (for \emph{Movement process}) for all stages/sexes, defaults to \eqn{0} (i.e. 'die when unsuitable' for \emph{DispersalKernel} and
+#' 'always settle when suitable' for \emph{Movement process}). See the Details below.
 #' @param FindMate Mating requirements to settle? Set for all stages/sexes. Must be \code{FALSE} (default) in a female-only model.
 #' @param DensDep Movement process only: Density-dependent settlement probability? (default: \code{FALSE})
 #' @param IndVar Movement process only: Individual variability in settlement probability traits? Must be \code{FALSE} (default) if \code{DensDep=FALSE} or \code{StageDep=TRUE}.
@@ -1542,8 +1589,10 @@ setMethod("show", "CorrRW", function(object){
 #' If individuals are dispersing by one of the two movement processes implemented (\code{\link[RangeshiftR]{SMS}} or
 #' \code{\link[RangeshiftR]{CorrRW}}), at each step (made simultaneously) they each evaluate their current cell or patch for the
 #' possibility of settling. This allows for the implementation of more complex settlement rules. The simplest one is that the individual
-#' decides to stop if there is suitable habitat (set \code{DensDep=FALSE}); this is in any case a necessary condition. Additionally, the settlement decision can be
-#' density-dependent (set \code{DensDep=TRUE}). In this case, the individual has a probability \ifelse{html}{\out{p<sub>S</sub>}}{\eqn{p_S}}
+#' decides to stop if there is suitable habitat; this is in any case a necessary condition (set \code{DensDep=FALSE}).\cr
+# If a Settlement module with \eqn{S_0=0} (the default) is used in a model with \emph{movement process}, it gets converted to \eqn{S_0=1.0}, i.e. always settle when habitat is suitable. \cr
+#' \cr
+#' Furthermore, the settlement decision can be density-dependent (set \code{DensDep=TRUE}). In this case, the individual has a probability \ifelse{html}{\out{p<sub>S</sub>}}{\eqn{p_S}}
 #' of settling in the cell or patch \eqn{i}, given by:
 #'
 #' \ifelse{html}{\out{&emsp;&emsp; p<sub>S</sub> = S<sub>0</sub> / ( 1 + e<sup>-&alpha;<sub>S</sub> (N<sub>i,t</sub> / K<sub>i,t</sub> - &beta;<sub>S</sub>) </sup> ) } }{\deqn{ p_S = S_0 / ( 1 + exp[-α_S (N_(i,t)/K_(i,t) - β_S) ] ) } }
@@ -1795,6 +1844,70 @@ setMethod("show", "SettlementParams", function(object){
     cat("   FindMate =", object@FindMate, "\n")
     }
 )
+setMethod("plotProbs", "SettlementParams", function(x, stage = NULL, sex = NULL, xmax = NULL, ymax = NULL){
+    sett <- x@Settle
+    if (x@DensDep) {
+        # error messages
+        if (!is.null(stage)){
+            if (x@StageDep) {
+                sett <- subset(sett, sett[,1] %in% stage)
+            }
+            else{ print("This settlement module has no stage-dependency.\n") }
+        }
+        if (!is.null(sex)){
+            if (x@SexDep) {
+                if (x@StageDep) sett <- subset(sett, sett[,2] %in% sex)
+                else sett <- subset(sett, sett[,1] %in% sex)
+            }
+            else{ print("This settlement module has no sex-dependency.\n") }
+        }
+        # get column indices
+        if (x@StageDep) {
+            if (x@SexDep) {ind_D0 <- 3} else {ind_D0 <- 2}
+        }else{
+            if (x@SexDep) {ind_D0 <- 2} else {ind_D0 <- 1}
+        }
+        if (x@IndVar) {IV <- 2} else {IV <- 1}
+        # New plot
+        if (is.null(xmax)) {
+            ind_max <- which.max(sett[,ind_D0+2*IV])
+            xmax = min(2*sett[ind_max,ind_D0+2*IV], sett[ind_max,ind_D0+2*IV] + 4.0/sett[ind_max,ind_D0+IV])
+        }
+        xvals = seq(0, xmax, length.out = 100)
+
+        if (is.null(ymax)) {ymax = 1}
+
+        plot(NULL, type = "n", ylab = "Settlement probability", xlab = "relative population density (N/K or Nb)", xlim = c(0,xmax), ylim = c(0,ymax))
+        leg.txt <- c()
+        # Go through lines of distances matrix and add curves to plot
+        for(line in 1:nrow(sett)){
+            if (x@IndVar) {
+                res <- matrix(ncol = 8, nrow = length(xvals))
+                res[,1] <- densdep(xvals, A0 = sett[line,ind_D0]-sett[line,ind_D0+1], alpha = sett[line,ind_D0+2]-sett[line,ind_D0+3], beta = sett[line,ind_D0+4]-sett[line,ind_D0+5])
+                res[,2] <- densdep(xvals, A0 = sett[line,ind_D0]-sett[line,ind_D0+1], alpha = sett[line,ind_D0+2]-sett[line,ind_D0+3], beta = sett[line,ind_D0+4]+sett[line,ind_D0+5])
+                res[,3] <- densdep(xvals, A0 = sett[line,ind_D0]-sett[line,ind_D0+1], alpha = sett[line,ind_D0+2]+sett[line,ind_D0+3], beta = sett[line,ind_D0+4]-sett[line,ind_D0+5])
+                res[,4] <- densdep(xvals, A0 = sett[line,ind_D0]-sett[line,ind_D0+1], alpha = sett[line,ind_D0+2]+sett[line,ind_D0+3], beta = sett[line,ind_D0+4]+sett[line,ind_D0+5])
+                res[,5] <- densdep(xvals, A0 = sett[line,ind_D0]+sett[line,ind_D0+1], alpha = sett[line,ind_D0+2]-sett[line,ind_D0+3], beta = sett[line,ind_D0+4]-sett[line,ind_D0+5])
+                res[,6] <- densdep(xvals, A0 = sett[line,ind_D0]+sett[line,ind_D0+1], alpha = sett[line,ind_D0+2]-sett[line,ind_D0+3], beta = sett[line,ind_D0+4]+sett[line,ind_D0+5])
+                res[,7] <- densdep(xvals, A0 = sett[line,ind_D0]+sett[line,ind_D0+1], alpha = sett[line,ind_D0+2]+sett[line,ind_D0+3], beta = sett[line,ind_D0+4]-sett[line,ind_D0+5])
+                res[,8] <- densdep(xvals, A0 = sett[line,ind_D0]+sett[line,ind_D0+1], alpha = sett[line,ind_D0+2]+sett[line,ind_D0+3], beta = sett[line,ind_D0+4]+sett[line,ind_D0+5])
+                polygon(c(xvals,rev(xvals)), c(apply(res, 1, min), rev(apply(res, 1, max))), border=NA, col='grey80')
+            }
+            lines(xvals, densdep(xvals, A0 = sett[line,ind_D0], alpha = sett[line,ind_D0+IV], beta = sett[line,ind_D0+2*IV]), type = "l", lty = 1, col = line)
+
+            if (x@StageDep) {
+                if (x@SexDep) {leg.txt <- c(leg.txt, paste0("Stage ",sett[line,1], ifelse(sett[line,2]," male"," female")))} else {leg.txt <- c(leg.txt, paste0("Stage ",sett[line,1]))}
+            }
+            else {
+                if (x@SexDep) {leg.txt <- c(leg.txt, ifelse(sett[line,1],"male","female"))}
+            }
+        }
+        if (length(leg.txt)>0) {
+            legend("topright", leg.txt, col = 1:nrow(sett), lwd = 1.5)
+        }
+    }
+    else{ print("Plotting is only implemented for density-dependent settlement (in a movement process).\n") }
+})
 
 
 #### CLASS DISPERSALPARAMS

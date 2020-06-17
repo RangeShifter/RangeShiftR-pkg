@@ -33,17 +33,17 @@ setMethod("readRange", c(s="RSparams", dirpath="character"), function(s,dirpath)
 #' Read the Rangeshifter output file 'pop' into a data.frame, if it was generated.
 #' @param s RSmaster parameter object
 #' @param dirpath RS directory path
-#' @details The x- and y- coordinates (in a cell-based model) differ from those in the text file in that they will be shifted from the
-#' lower left corner to the center of their respective cell.
+#' @param center In a cell-based model, the x- and y- coordinates will be converted from *nrow* and *ncol* (as in the 'pop' output file)
+#' to true coordinates of the center of the cell measured in metres.
 #' @return a data.frame
 #' @export
-setGeneric("readPop", function(s,dirpath) standardGeneric("readPop") )
+setGeneric("readPop", function(s,dirpath,...) standardGeneric("readPop") )
 
-setMethod("readPop", c(s="RSparams", dirpath="character"), function(s,dirpath) {
+setMethod("readPop", c(s="RSparams", dirpath="character"), function(s,dirpath,center=TRUE) {
     path <- paste0(dirpath, "Outputs/Batch", s@control@batchnum, "_Sim", s@simul@Simulation, "_Land", s@land@LandNum, "_Pop.txt")
     if(file.exists(path)){
         pop_table <- read.table(path, h = T, sep = "\t")
-        if (sum(grepl('x',names(pop_table)))){
+        if (sum(grepl('x',names(pop_table))) & center){
             pop_table$x <- (pop_table$x+0.5)*s@land@Resolution
             pop_table$y <- (pop_table$y+0.5)*s@land@Resolution
         }
@@ -63,9 +63,9 @@ setMethod("readPop", c(s="RSparams", dirpath="character"), function(s,dirpath) {
 #'
 #' This function produces patch statistics and maps on occupancy probability and mean time to colonisation.
 #'
-#' It uses the Rangeshifter 'population' output data and, as of now, is only implemented for patch-based models.
-#' @usage ColonisationStats(x, y = NULL, years = numeric(0), maps = FALSE)
-#' ColonisationStats(x, y = NULL, years = numeric(0))
+#' It uses the Rangeshifter 'population' output data.
+#' @usage ColonisationStats(x, y = getwd(), years = numeric(0), maps = FALSE)
+#' ColonisationStats(x, y = NULL,    years = numeric(0))
 #' @param x,y Either the parameter master (\code{x}) and RS directory path (\code{y}) of the simulation or, alternatively,\cr
 #' the population output as a dataframe (\code{x}). In this case \code{y} is an optional parameter taking the patch map(s) as a raster layer (stack),
 #' which will then be used to produce maps of the patch statistics. For more info on this, see the Details.
@@ -87,187 +87,262 @@ setMethod("readPop", c(s="RSparams", dirpath="character"), function(s,dirpath) {
 #' @export
 setGeneric("ColonisationStats", function(x, ...) standardGeneric("ColonisationStats") )
 
+#library(raster)
+#patch
+#r <- raster("../../Tutorials/Tutorial_04/Inputs/patches_03.asc")
+#pop <- read.table("../../Tutorials/Tutorial_04/Outputs/Batch11_Sim1_Land1_Pop.txt", h = T, sep = "\t")
+#years <- c(180,190)
+#
+#cell
+#r <- raster("../../Tutorials/Tutorial_01/Inputs/UKmap_1km.txt")
+#pop <- read.table("../../Tutorials/Tutorial_01/Outputs/Batch1_Sim0_Land1_Pop.txt", h = T, sep = "\t")
+#r <- raster("../../Tutorials/Tutorial_04/Inputs/habitat1_2.asc")
+#pop <- read.table("../../Tutorials/Tutorial_04/Outputs/Batch1_Sim1_Land1_Pop.txt", h = T, sep = "\t")
+#years <- unique(pop$Year)[c(2,4,8,10,15,20)]
+
 setMethod("ColonisationStats", "data.frame", function(x, y = NULL, years = numeric(0)) { # y="BasicRaster"
 #test <- function(x, y = NULL, years = numeric(0)) {
-    if("PatchID" %in% names(x)){    # include cell-based models?
-
-        if("PatchID" %in% names(x)) x <- x[x$PatchID!=0,]   # added this, ok?
-
         if(class(years) %in% c("integer","numeric") ){
-            # check that requested years are in dataset
-            if(!all(years %in% unique(x$Year))){
-                years <- sort(years[years %in% unique(x$Year)])
-                warning("ColonisationStats(): Some given years are not included in the population dataframe.", call. = FALSE)
+            if(length(years)==0) {
+                years <- max(x$Year)
+            }else{
+                # check that requested years are in dataset
+                if(!all(years %in% unique(x$Year))){
+                    years <- sort(years[years %in% unique(x$Year)])
+                    warning("ColonisationStats(): Some of the given years are not included in the population dataframe. They will be ignored.", call. = FALSE)
+                }
             }
-            if(length(years)==0) years==max(x$Year)
-        }
-        else{
+        }else{
             warning("ColonisationStats(): Years must be of class numeric or integer.", call. = FALSE)
             return(NULL)
         }
 
-        patches <- sort(unique(x$PatchID))
-        # Occupancy probability in a given year over all replicates
-        occ_prob <- sapply(patches,
-                           FUN=function(patch,n=length(unique(x$Rep))){
-                               sapply(years,
-                                      FUN=function(year){
-                                          sum(subset(x,PatchID==patch & Year==year)$NInd>0)/n
-                                          }
-                                   )
-                               }
-                           )
-        if(length(years)>1){
-            colnames(occ_prob) <- patches
-            rownames(occ_prob) <- years
-        }else  names(occ_prob) <- patches
+        if("PatchID" %in% names(x)) {
+            patchbased <- TRUE
+            x <- x[x$PatchID!=0,] # exclude matrix patch
+        } else { # cell-based -> create PatchIDs from (x,y)-coordinates:
+            patchbased <- FALSE
+            x[c("x","y")] <- x[c("x","y")]+1  # have counting start at 1
+            maxX <- max(x$x)
+            maxY <- max(x$y)
+            digitsY <- ifelse(maxY < 1, 0, floor(log10(maxY)) + 1)
+            x$PatchID <- (x$x*(10^digitsY)) + (x$y) #+ (maxY+1-x$y)
+        }
 
-        # Time to colonisation:
-        col_time <- data.frame(sapply(patches,
-                                      FUN=function(p){sapply(sort(unique(x$Rep)),
-                                                             FUN=function(r){
-                                                                 ifelse(nrow(subset(x,PatchID==p & Rep==r & NInd>0)),
-                                                                        min(subset(x,PatchID==p & Rep==r & NInd>0)$Year),
-                                                                        NA)
-                                                                 }
-                                                             )
-                                          }
-                                      )
-                               )
-        names(col_time) <- patches
-        col_time_mean <- colMeans(col_time, na.rm = TRUE)
+        x <- subset(x, NInd>0, select = c("Rep","PatchID","Year","NInd") )
+        reps <- sort(unique(x$Rep))
+        n=length(reps)
+
+        # calculate per patch
+        patchstats <- sapply(split(x, f=x$PatchID),
+                             FUN=function(xs){
+                                 return(list(occprob = sapply(years,
+                                                              FUN=function(year){
+                                                                  sum(xs$Year==year)/n
+                                                              }),
+                                             coltime = sapply(reps,
+                                                              FUN=function(rep){
+                                                                  xxs <- xs[xs$Rep==rep,"Year"]
+                                                                  ifelse(length(xxs),min(xxs),NA)
+                                                              }
+                                             )
+                                 ))
+                             }
+        )
+        patches <- as.integer(colnames(patchstats))
+
+        # Occupancy Probability
+        occ_prob <- data.frame(patchstats["occprob",])
+        rownames(occ_prob) <- years
+        if(patchbased) occ_prob <- cbind(data.frame(patch=patches), t(occ_prob))
+        else occ_prob <- cbind(data.frame(x=floor(patches/(10^digitsY)),y=patches%%(10^digitsY)), t(occ_prob))
+        rownames(occ_prob) <- NULL
+
+        # Time to Colonisation
+        col_time <- data.frame(patchstats["coltime",])
+        if(patchbased){
+            col_time <- cbind(data.frame(patch=patches), t(col_time))
+            names(col_time) <- c("patch",paste0("rep.",as.character(reps)))
+        }else{
+            col_time <- cbind(data.frame(x=occ_prob$x,y=occ_prob$y), t(col_time))
+            names(col_time) <- c("x","y",paste0("rep.",as.character(reps)))
+        }
+        rownames(col_time) <- NULL
+
 
         # create maps
         if(!is.null(y)){
+            if(patchbased){
+                col_time_mean <- rowMeans(col_time[,-1], na.rm = TRUE)
+                names(col_time_mean) <- patches
+            }else{
+                col_time_mean <- rowMeans(col_time[,-(1:2)], na.rm = TRUE)
+            }
             require('raster')
 
-            # non-dynamic landscape
-            if(class(y) == "RasterLayer" || (class(y) == "RasterStack" && length(y@layers)==1) ){
+            if(patchbased){
+                # non-dynamic landscape
+                if(class(y) == "RasterLayer" || (class(y) == "RasterStack" && length(y@layers)==1) ){
 
-                # initialise output rasters
-                if(class(y) == "RasterStack") y <- y[[1]]
-                patch_occ_prob <- patch_col_time <- y
-                # denote matrix with NA
-                values(patch_occ_prob)[values(y)==0] <- values(patch_col_time)[values(y)==0] <- NA
-                # all habitat patches to address those that never had a population
-                values(patch_occ_prob)[values(y) >0] <- 0
-                values(patch_col_time)[values(y) >0] <- -9
-
-                # fill output rasters
-                if(length(years)>1){
-                    patch_outstack <- stack()
-                    for (j in 1:length(years)){
-                        patch_outstack <- addLayer(patch_outstack, patch_occ_prob)
-                        for (i in patches){
-                            values(patch_outstack[[j]])[values(y)==i] <- occ_prob[j,paste(i)]
-                        }
-                    }
-                }
-                else{
-                    for (i in patches){
-                        values(patch_occ_prob)[values(y)==i] <- occ_prob[paste(i)]
-                    }
-                    patch_outstack <- patch_occ_prob
-                }
-
-                for (i in patches){
-                    values(patch_col_time)[values(y)==i] <- ifelse(is.na(col_time_mean[paste(i)]),-9,col_time_mean[paste(i)])
-                }
-
-                return(list(occ_prob=occ_prob, col_time=col_time, map_occ_prob=patch_outstack, map_col_time=patch_col_time))
-            }
-
-            # dynamic landscape
-            if(class(y) == "RasterStack" && length(y@layers)>1 ){
-                N_layers <- length(years)+1
-                if( length(y@layers) != N_layers ){
-                    warning("ColonisationStats(): Number of raster layers must be either 1 or number of years plus 1.", call. = FALSE)
-                }
-                else{
                     # initialise output rasters
-                    patch_outstack <- y
+                    if(class(y) == "RasterStack") y <- y[[1]]
+                    patch_occ_prob <- patch_col_time <- y
                     # denote matrix with NA
-                    values(patch_outstack)[values(y)==0] <- NA
-                    # all habitat patches to address those that never had a population
-                    values(patch_outstack)[values(y)>0] <- 0.0
-                    values(patch_outstack[[N_layers]])[values(y[[N_layers]])>0] <- -9
+                    values(patch_occ_prob)[values(y)==0] <- values(patch_col_time)[values(y)==0] <- NA
+                    # init all habitat patches to also address those that never had a population (these don't occur in RS output)
+                    values(patch_occ_prob)[values(y) >0] <- 0
+                    values(patch_col_time)[values(y) >0] <- -9
 
                     # fill output rasters
-                    for (i in patches){
-                        if(N_layers==2){
-                            values(patch_outstack[[1]])[values(y[[1]])==i] <- occ_prob[paste(i)]
-                        }else {
-                            for (j in 1:length(years)){
-                                values(patch_outstack[[j]])[values(y[[j]])==i] <- occ_prob[j,paste(i)]
+                    if(length(years)>1){
+                        patch_outstack <- stack()
+                        for (j in 1:length(years)){
+                            patch_outstack <- addLayer(patch_outstack, patch_occ_prob)
+                            for (i in patches){
+                                values(patch_outstack[[j]])[values(y)==i] <- occ_prob[occ_prob$patch==i,paste(years[j])]
                             }
                         }
-                        values(patch_outstack[[N_layers]])[values(y[[N_layers]])==i] <- ifelse(is.na(col_time_mean[paste(i)]),-9,col_time_mean[paste(i)])
                     }
-                    return(list(occ_prob=occ_prob, col_time=col_time, map_occ_prob=patch_outstack[[-N_layers]], map_col_time=patch_outstack[[N_layers]]))
+                    else{
+                        for (i in patches){
+                            values(patch_occ_prob)[values(y)==i] <- occ_prob[occ_prob$patch==i,"occ_prob"]
+                        }
+                        patch_outstack <- patch_occ_prob
+                    }
+
+                    for (i in patches){
+                        values(patch_col_time)[values(y)==i] <- ifelse(is.na(col_time_mean[paste(i)]),-9,col_time_mean[paste(i)])
+                    }
+
+                    return(list(occ_prob=occ_prob, col_time=col_time, map_occ_prob=patch_outstack, map_col_time=patch_col_time))
                 }
+
+                # dynamic landscape
+                if(class(y) == "RasterStack" && length(y@layers)>1 ){
+                    N_layers <- length(years)+1
+                    if( length(y@layers) != N_layers ){
+                        warning("ColonisationStats(): Number of raster layers must be either 1 or number of years plus 1.", call. = FALSE)
+                    }
+                    else{
+                        # initialise output rasters
+                        patch_outstack <- y
+                        # denote matrix with NA
+                        values(patch_outstack)[values(y)==0] <- NA
+                        # all habitat patches to address those that never had a population
+                        values(patch_outstack)[values(y)>0] <- 0.0
+                        values(patch_outstack[[N_layers]])[values(y[[N_layers]])>0] <- -9
+
+                        # fill output rasters
+                        for (i in patches){
+                            if(N_layers==2){
+                                values(patch_outstack[[1]])[values(y[[1]])==i] <- occ_prob[occ_prob$patch==i,"occ_prob"]
+                            }else {
+                                for (j in 1:length(years)){
+                                    values(patch_outstack[[j]])[values(y[[j]])==i] <- occ_prob[occ_prob$patch==i,paste(years[j])]
+                                }
+                            }
+                            values(patch_outstack[[N_layers]])[values(y[[N_layers]])==i] <- ifelse(is.na(col_time_mean[paste(i)]),-9,col_time_mean[paste(i)])
+                        }
+                        return(list(occ_prob=occ_prob, col_time=col_time, map_occ_prob=patch_outstack[[-N_layers]], map_col_time=patch_outstack[[N_layers]]))
+                    }
+                } else warning("ColonisationStats(): Given map is not a raster layer or raster stack.", call. = FALSE)
+
+            }else{ # cell-based
+                if(class(y) == "RasterLayer" || (class(y) == "RasterStack" && length(y@layers)==1) ){
+
+                    # initialise output rasters
+                    if(class(y) == "RasterStack") y <- y[[1]]
+                    patch_occ_prob <- patch_col_time <- y
+                    # init all habitat patches to also address those that never had a population (these don't occur in RS output)
+                    values(patch_occ_prob)[!is.na(values(y))] <- 0
+                    values(patch_col_time)[!is.na(values(y))] <- -9
+                    # make value index from patchIDs
+                    value_ix <- floor(patches/(10^digitsY))+(nrow(y)-patches%%(10^digitsY))*ncol(y)
+
+                    # fill output rasters
+                    #if(length(years)>1){
+                        patch_outstack <- stack()
+                        for (j in 1:length(years)){
+                            patch_outstack <- addLayer(patch_outstack, patch_occ_prob)
+                            values(patch_outstack[[j]])[value_ix] <- occ_prob[,j+2]
+                        }
+                    #} else{
+                    #    values(patch_occ_prob)[value_ix] <- occ_prob[,1]
+                    #    patch_outstack <- patch_occ_prob
+                    #}
+                    values(patch_col_time)[value_ix] <- ifelse(is.na(col_time_mean[]),-9,col_time_mean[])
+
+                    return(list(occ_prob=occ_prob, col_time=col_time, map_occ_prob=patch_outstack, map_col_time=patch_col_time))
+
+                } else warning("ColonisationStats(): The given map is not a raster.", call. = FALSE)
             }
         }
         return(list(occ_prob=occ_prob, col_time=col_time))
-
-    }else{warning("ColonisationStats(): This function is implemented for patch-based models only.", call. = FALSE)}
 })
 
-setMethod("ColonisationStats", "RSparams", function(x, y = NULL, years = numeric(0), maps = FALSE) {
-    if(s@control@patchmodel){
+setMethod("ColonisationStats", "RSparams", function(x, y = getwd(), years = numeric(0), maps = FALSE) {
+    if(class(s@land)=="ImportedLandscape" || class(maps)=="logical") {
         if(s@simul@OutIntPop>0){
             if(!is.null(y) & class(y)=="character" ){
                 if(class(years) %in% c("integer","numeric") ){
 
                     # read population output
-                    pop_df <- try(readPop(x, y))
-                    if ( class(pop_df) == "try-error" ) warning("ColonisationStats(): Couldn't read population output for this simulation.", call. = FALSE)
+                    pop_df <- try(readPop(x, y, center=FALSE))
+                    if ( class(pop_df) == "try-error" ) {
+                        warning("ColonisationStats(): Couldn't read population output for this simulation.", call. = FALSE)
+                        #return(NULL)
+                    }
+                    #print(head(pop_df))
                     if(length(years)==0) years <- max(pop_df$Year)
 
                     # read patch rasters if needed
                     if(maps){
                         require('raster')
-                        #non-dynamic landscape
-                        if(length(s@land@LandscapeFile)==1){
-                            patch_r <- try(raster(paste0(dirpath, "Inputs/", s@land@PatchFile)))
-                            if ( class(patch_r) == "try-error" ) warning("ColonisationStats(): Couldn't read patch raster file nr ", current , " for this simulation.", call. = FALSE)
-                        }
-                        #dynamic landscape
-                        else{
-                            patch_r <- stack()
-                            # rasters for occ_prob output
-                            for(year in years){
+                        if(s@control@patchmodel){ # for patch-based model, read all relevant patch-maps
+                            # non-dynamic landscape
+                            if(length(s@land@LandscapeFile)==1){
+                                patch_r <- try(raster(paste0(dirpath, "Inputs/", s@land@PatchFile)))
+                                if ( class(patch_r) == "try-error" ) warning("ColonisationStats(): Couldn't read patch raster file nr ", current , " for this simulation.", call. = FALSE)
+                            }
+                            # dynamic landscape
+                            else{
+                                patch_r <- stack()
+                                # rasters for occ_prob output
+                                for(year in years){
+                                    current <- which(s@land@DynamicLandYears == max(s@land@DynamicLandYears[s@land@DynamicLandYears<=year]) )
+                                    patch_curr <- try(raster(paste0(dirpath, "Inputs/", s@land@PatchFile[current])))
+                                    if ( class(patch_curr) == "try-error" ) warning("ColonisationStats(): Couldn't read patch raster file nr ", current , " for this simulation.", call. = FALSE)
+                                    else patch_r <- addLayer(patch_r ,patch_curr)
+                                }
+                                # rasters for col_time output
+                                year <- max(pop_df$Year)
                                 current <- which(s@land@DynamicLandYears == max(s@land@DynamicLandYears[s@land@DynamicLandYears<=year]) )
                                 patch_curr <- try(raster(paste0(dirpath, "Inputs/", s@land@PatchFile[current])))
                                 if ( class(patch_curr) == "try-error" ) warning("ColonisationStats(): Couldn't read patch raster file nr ", current , " for this simulation.", call. = FALSE)
                                 else patch_r <- addLayer(patch_r ,patch_curr)
                             }
-                            # rasters for col_time output
-                            year <- max(pop_df$Year)
-                            current <- which(s@land@DynamicLandYears == max(s@land@DynamicLandYears[s@land@DynamicLandYears<=year]) )
-                            patch_curr <- try(raster(paste0(dirpath, "Inputs/", s@land@PatchFile[current])))
-                            patch_r <- addLayer(patch_r ,patch_curr)
+                            if(class(pop_df) != "try-error" & length(patch_r@layers)==(length(years)+1) ) res <- ColonisationStats(pop_df,patch_r,years)
+                        }else{
+                            # for cell-based model, read only main habitat maps to use as raster template
+                            patch_r <- try(raster(paste0(dirpath, "Inputs/", s@land@LandscapeFile[1])))
+                            if ( class(patch_r) == "try-error" ) warning("ColonisationStats(): Couldn't read patch raster file nr ", current , " for this simulation.", call. = FALSE)
+                            if(class(pop_df) != "try-error" & class(patch_r) == "RasterLayer" ) res <- ColonisationStats(pop_df,patch_r,years)
                         }
-                        if(class(pop_df) != "try-error" & length(patch_r@layers)==(length(years)+1) ) ColonisationStats(pop_df,patch_r,years)
                     }else {
-                        if(class(pop_df) != "try-error") ColonisationStats(pop_df,NULL,years)
+                        if(class(pop_df) != "try-error") res <- ColonisationStats(pop_df,NULL,years)
                     }
+                    return(res)
                 }else {
                     warning("ColonisationStats(): Years must be of class numeric or integer.", call. = FALSE)}
             }else {
-                warning("ColonisationStats(): Dirpath must be set", call. = FALSE)}
+                warning("ColonisationStats(): dirpath must be set", call. = FALSE)}
         }else{
             warning("ColonisationStats(): This simulation has population output turned off (OutIntPop=0), but that is needed to calculate the colonisation statistics.", call. = FALSE)}
     }else {
-        warning("ColonisationStats(): This function is implemented for patch-based models only.", call. = FALSE)}
+        warning("ColonisationStats(): For Artificial Landscape models, maps must be FALSE", call. = FALSE)}
 })
 
 
-
-
-
-#if(length(s@land@LandscapeFile)==1 && all(s@land@DynamicLandYears==0) ){
-#}else {
-#    warning("ColonisationStats(): This function is implemented for non-dynamic landscape models only. However, you can specify a patch raster and use the method for signature c(data.frame,RasterLayer),", call. = FALSE)}
 
 
 #---------------------------------------------------------
@@ -392,3 +467,311 @@ setMethod("plotOccupancy", "RSparams", function(s, dirpath, ...) {
         warning("plotOccupancy(): dirpath must be of type character.", call. = TRUE)
     }
 })
+
+
+
+#---------------------------------------------------------
+
+### B FUNCTION
+
+
+
+## ---- Backend Simul function -----
+
+get_eq_pop <- function(b, demog, N_0 = NULL, t_max = 1000, t_rec = 1, delta = .1, diagnostics = FALSE, rm.stage0 = TRUE){
+    require(RangeshiftR)
+    if(class(demog)!="DemogParams"){
+        warning("This function expects an object of class DemogParams.", call. = FALSE)
+        return(NULL)
+    }
+    else{
+        if(class(demog@StageStruct)!="StagesParams"){
+            warning("demog needs to have a StageStructure", call. = FALSE)
+            return(NULL)
+        }
+    }
+
+    TraMa <- demog@StageStruct@TransMatrix
+
+    if(demog@ReproductionType>1){
+        # for sex-specific (ReproductionType = 2) need to include Sex-ratio to weigh fecundities and make transition matrix quadratic
+        SexDep <- TRUE
+        TraMa <- rbind(TraMa[1,]*demog@PropMales,TraMa)
+        TraMa[2,] <- TraMa[2,]*(1-demog@PropMales)
+    }
+    else SexDep <- FALSE
+    TraMa_t <- TraMa
+    lines <- nrow(TraMa)
+    N_rec <- matrix(0, ncol = t_rec, nrow = lines-rm.stage0*(1+SexDep))
+
+    if(demog@StageStruct@FecDensDep){
+        FecDensDep <- TRUE
+        if(demog@StageStruct@FecStageWts) {
+            FecStageDep <- TRUE
+            FecStageWts <- demog@StageStruct@FecStageWtsMatrix
+        }
+        else FecStageDep <- FALSE
+    }
+    else FecDensDep <- FALSE
+
+    if(demog@StageStruct@DevDensDep){
+        DevDensDep <- TRUE
+        C_dev <- demog@StageStruct@DevDensCoeff
+        if(demog@StageStruct@DevStageWts) {
+            DevStageDep <- TRUE
+            DevStageWts <- demog@StageStruct@DevStageWtsMatrix
+        }
+        else DevStageDep <- FALSE
+        # disentangle survival and development rates:
+        surv <- devs <- rep(0,lines)
+        for(s in 1:lines ){
+            ss <- TraMa[s,s]
+            if (SexDep) if((s+2)>lines) dd <- 0 else dd <- TraMa[s+2,s]
+            else if(s==lines) dd <- 0 else dd <- TraMa[s+1,s]
+            surv[s] <- ss+dd
+            devs[s] <- dd/(ss+dd)
+        }
+        surv_t <- surv
+        devs_t <- devs
+    }
+    else DevDensDep <- FALSE
+
+    if(demog@StageStruct@SurvDensDep){
+        SurvDensDep <- TRUE
+        C_surv <- demog@StageStruct@SurvDensCoeff
+        if(demog@StageStruct@SurvStageWts) {
+            SurvStageDep <- TRUE
+            SurvStageWts <- demog@StageStruct@SurvStageWtsMatrix
+        }
+        else SurvStageDep <- FALSE
+    }
+    else SurvDensDep <- FALSE
+
+    if(is.null(N_0)) N_0 <- matrix( rep(1/b/lines, lines), ncol = 1)
+    N_t2 <- N_0
+    t <- 0
+    repeat{
+        # reset abundance vector and time-dependent transition matrix
+        N_t1 <- N_t2
+        TraMa_t <- TraMa
+        # calculate density-dependent rates
+        abund <- sum(N_t1)
+        if(SexDep){
+            if(FecDensDep) {
+                if(FecStageDep) {
+                    TraMa_t[1:2,] <- TraMa[1:2,]*rep(exp(-b*FecStageWts%*%N_t1),each=2)
+                }
+                else TraMa_t[1:2,] <- TraMa[1:2,]*exp(-b*abund)
+            }
+            if(DevDensDep) {
+                if(DevStageDep) {
+                    # dev diagonals
+                    devs_t <- devs*exp(-C_dev*b*DevStageWts%*%N_t1)
+                    diag(TraMa_t) <- surv*(1-devs_t)
+                    # dev off-diagonals
+                    TraMa_t[row(TraMa)==col(TraMa)+2] <- TraMa[row(TraMa)==col(TraMa)+2]*exp(-C_dev*b*(DevStageWts%*%N_t1)[-c(lines-1,lines)])
+                }
+                else {
+                    # dev diagonals
+                    devs_t <- devs*exp(-C_dev*b*abund)
+                    diag(TraMa_t) <- surv*(1-devs_t)
+                    # dev off-diagonals
+                    TraMa_t[row(TraMa)==col(TraMa)+2] <- TraMa[row(TraMa)==col(TraMa)+2]*exp(-C_dev*b*abund)
+                }
+                if(SurvDensDep) {
+                    if(SurvStageDep){
+                        # surv diagonals
+                        diag(TraMa_t) <- diag(TraMa_t)*exp(-C_surv*b*SurvStageWts%*%N_t1)
+                        # surv off-diagonals
+                        TraMa_t[row(TraMa_t)==col(TraMa_t)+2] <- TraMa_t[row(TraMa_t)==col(TraMa_t)+2]*exp(-C_surv*b*(SurvStageWts%*%N_t1)[-c(lines-1,lines)])
+                    }
+                    else {
+                        # surv diagonals
+                        diag(TraMa_t) <- diag(TraMa_t)*exp(-C_surv*b*abund)
+                        # surv off-diagonals
+                        TraMa_t[row(TraMa_t)==col(TraMa_t)+2] <- TraMa_t[row(TraMa_t)==col(TraMa_t)+2]*exp(-C_surv*b*abund)
+                    }
+                }
+            }
+            else{
+                if(SurvDensDep) {
+                    if(SurvStageDep){
+                        # surv diagonals
+                        diag(TraMa_t) <- diag(TraMa)*exp(-C_surv*b*SurvStageWts%*%N_t1)
+                        # surv off-diagonals
+                        TraMa_t[row(TraMa)==col(TraMa)+2] <- TraMa[row(TraMa)==col(TraMa)+2]*exp(-C_surv*b*(SurvStageWts%*%N_t1)[-c(lines-1,lines)])
+                    }
+                    else {
+                        # surv diagonals
+                        diag(TraMa_t) <- diag(TraMa)*exp(-C_surv*b*abund)
+                        # surv off-diagonals
+                        TraMa_t[row(TraMa)==col(TraMa)+2] <- TraMa[row(TraMa)==col(TraMa)+2]*exp(-C_surv*b*abund)
+                    }
+                }
+            }
+        }
+        else{ # !SexDep
+            if(FecDensDep) {
+                if(FecStageDep) TraMa_t[1,] <- TraMa[1,]*exp(-b*FecStageWts%*%N_t1)
+                else TraMa_t[1,] <- TraMa[1,]*exp(-b*abund)
+            }
+            if(DevDensDep) {
+                if(DevStageDep) {
+                    # dev diagonals
+                    devs_t <- devs*exp(-C_dev*b*DevStageWts%*%N_t1)
+                    diag(TraMa_t) <- surv*(1-devs_t)
+                    # dev off-diagonals
+                    TraMa_t[row(TraMa)==col(TraMa)+1] <- TraMa[row(TraMa)==col(TraMa)+1]*exp(-C_dev*b*(DevStageWts%*%N_t1)[-lines])
+                }
+                else {
+                    # dev diagonals
+                    devs_t <- devs*exp(-C_dev*b*abund)
+                    diag(TraMa_t) <- surv*(1-devs_t)
+                    # dev off-diagonals
+                    TraMa_t[row(TraMa)==col(TraMa)+1] <- TraMa[row(TraMa)==col(TraMa)+1]*exp(-C_dev*b*abund)
+                }
+                if(SurvDensDep) {
+                    if(SurvStageDep){
+                        # surv diagonals
+                        diag(TraMa_t) <- diag(TraMa_t)*exp(-C_surv*b*SurvStageWts%*%N_t1)
+                        # surv off-diagonals
+                        TraMa_t[row(TraMa_t)==col(TraMa_t)+1] <- TraMa_t[row(TraMa_t)==col(TraMa_t)+1]*exp(-C_surv*b*(SurvStageWts%*%N_t1)[-lines])
+                    }
+                    else {
+                        # surv diagonals
+                        diag(TraMa_t) <- diag(TraMa_t)*exp(-C_surv*b*abund)
+                        # surv off-diagonals
+                        TraMa_t[row(TraMa_t)==col(TraMa_t)+1] <- TraMa_t[row(TraMa_t)==col(TraMa_t)+1]*exp(-C_surv*b*abund)
+                    }
+                }
+            }
+            else{
+                if(SurvDensDep) {
+                    if(SurvStageDep){
+                        # surv diagonals
+                        diag(TraMa_t) <- diag(TraMa)*exp(-C_surv*b*SurvStageWts%*%N_t1)
+                        # surv off-diagonals
+                        TraMa_t[row(TraMa)==col(TraMa)+1] <- TraMa[row(TraMa)==col(TraMa)+1]*exp(-C_surv*b*(SurvStageWts%*%N_t1)[-lines])
+                    }
+                    else {
+                        # surv diagonals
+                        diag(TraMa_t) <- diag(TraMa)*exp(-C_surv*b*abund)
+                        # surv off-diagonals
+                        TraMa_t[row(TraMa)==col(TraMa)+1] <- TraMa[row(TraMa)==col(TraMa)+1]*exp(-C_surv*b*abund)
+                    }
+                }
+            }
+        }
+        # turn RS transition matrix into actual Leslie matrix (i.e. remove zeroth stage)
+        if(rm.stage0){
+            if(SexDep){
+                TraMa_t[1:2,] <- TraMa_t[1:2,] * diag(TraMa_t[c(3,4),c(1,2)]) # put survival rate into fecundity
+                TraMa_t[3:4,] <- TraMa_t[3:4,] + TraMa_t[1:2,]
+                TraMa_t <- TraMa_t[3:lines,3:lines]                          # get rid of stage 0
+                # compress state vector as well
+                N_t1[3] <- sum(N_t1[c(1,3)])
+                N_t1[4] <- sum(N_t1[c(2,4)])
+                N_t1 <- matrix(N_t1[3:lines], ncol = 1)
+            }
+            else{ # !SexDep
+                TraMa_t[1,] <- TraMa_t[1,] * TraMa_t[2,1]                   # -"-
+                TraMa_t[2,] <- TraMa_t[2,] + TraMa_t[1,]
+                TraMa_t <- TraMa_t[2:lines,2:lines]
+                # compress state vector as well
+                N_t1[2] <- sum(N_t1[1:2])
+                N_t1 <- matrix(N_t1[2:lines], ncol = 1)
+            }
+        }
+        # take a time step
+        N_t2 <- TraMa_t %*% N_t1
+        # evaluate convergence
+        del <- sqrt(sum((N_t2-N_t1)^2))
+        N_rec[,1+(t%%t_rec)] <- N_t2
+        if(del < delta || t >= t_max ){
+            if(t >= t_max) warning("No convergence")
+            if(t < t_rec )  N_rec <- N_rec[,1:t]
+            if(diagnostics) return(list(N=N_rec, TraMa_t=TraMa_t, t=t, del=del))
+            else return(N_rec)
+            break
+        }
+        # end time step
+        t <- t+1
+        # expand state vector again
+        if(rm.stage0){
+            if(SexDep){
+                N_t2[1:2] <- N_t2[1:2]/2
+                N_t2 <- matrix(c(N_t2[1:2],N_t2), ncol = 1)
+            }
+            else{ # !SexDep
+                N_t2[1] <- N_t2[1]/2
+                N_t2 <- matrix(c(N_t2[1],N_t2), ncol = 1)
+            }
+        }
+    }
+}
+
+
+## ---- Frontend Plot function -----
+
+#' Run Matrix Model
+#'
+#' Uses the Rangeshifter Demography module to create the corresponding matrix model and run it locally, i.e.
+#' as one population in a single cell, without dispersal.
+#' @param demog DemogParams object with a \code{StageStructure}
+#' @param K_vector K-values (corresponding to 1/b) to run the matrix model for
+#' @param plot plot the equilibrium population? (default is \code{TRUE})
+#' @param stages_out which stages to plot? (defaults to all)
+#' @param juv.stage use explicit juvenile (zeroth) stage? (default is \code{TRUE})
+#' @param t_rec time steps to record (defaults to \eqn{1}); if \code{t_rec}\eqn{>1}, the mean over all time steps is returned
+#' @param N_0 initial condition, i.e. population at time zero; must include stage zero regardless of the value of \code{juv.stage}
+#' @param t_max allowed number of time steps to reach equilibrium (default is \eqn{1000})
+#' @param delta tolerance to define equilibrium (default is \eqn{.1}); the utilised measure is euclidian distance of current to previous time steps
+#' @param diagnostics in addition to recorded population vectors, returns the number of steps taken as well as the transition matrix and the value if delta at the last step (default is \code{FALSE})
+#' @details Rangeshifter requires an additional juvenile stage to be added to the common transition matrix as stage 0 (in order
+#' to allow for juvenile dispersal). For the simulation with \code{RunMatrixModel()}, this stage can be kept (\code{juv.stage=TRUE})
+#' or remove to yield the corresponding Lefkovitch matrix (\code{juv.stage=FALSE}).\cr
+#' The default initial condition \code{N_0} is a population at its respective carrying capacity with unpopulated juvenile stage and
+#' all higer stages equally populated.\cr
+#' @export
+setGeneric("RunMatrixModel", function(demog,...) standardGeneric("RunMatrixModel") )
+
+setMethod("RunMatrixModel", "DemogParams", function(demog, K_vector, plot=TRUE, stages_out=NULL, juv.stage=TRUE, t_rec=1,
+                                                    t_max = 1000, N_0 = NULL, delta=.1, diagnostics=FALSE){
+    # make b from K
+    b_vector <- 1/K_vector
+    # calculate eqilibrium population
+    if(t_rec==1) res <- sapply(b_vector, get_eq_pop, demog=demog, t_rec = t_rec, rm.stage0 = !juv.stage)
+    if(t_rec>1) {res <- lapply(b_vector, get_eq_pop, demog=demog, t_rec = t_rec, rm.stage0 = !juv.stage)
+                 res <- sapply(res, rowMeans)}
+    # name rows
+    if(demog@ReproductionType <2){row.names(res) <- seq((!juv.stage),demog@StageStruct@Stages-1)}
+    if(demog@ReproductionType==2){row.names(res) <- rep(seq((!juv.stage),demog@StageStruct@Stages-1), each = 2)}
+    # plot stages ?
+    if(plot) {
+        # which stages to plot?
+        if(is.null(stages_out)) stages_out = seq((!juv.stage),demog@StageStruct@Stages-1)
+        colors <- hcl.colors(length(stages_out), palette = "Harmonic")
+        if(demog@ReproductionType <2){
+            barplot(res[as.character(stages_out),], names.arg = as.integer(K_vector), beside = F, col = colors,
+                          main = "Localised Equilibrium Populations", xlab = "1/b", ylab = "Abundance")
+        }
+        if(demog@ReproductionType==2){
+            if(length(stages_out)<2) warning("RunMatrixModel(): Please specify more than one stage when plottinf a sex-explicit model.", call. = TRUE)
+            else {
+                res_2 <- res[which(rownames(res) %in% stages_out),]
+                mal <- seq.int(1,length(stages_out)*2,2)
+                fem <- seq.int(2,length(stages_out)*2,2)
+                res_2 <- cbind(res_2[mal,1:length(K_vector)],res_2[fem,1:length(K_vector)])
+                res_2 <- cbind(res_2[,c(sapply(1:length(K_vector), function(i){c(0,1)*length(K_vector)+i}))])
+                barplot(res_2, space=c(0.3,0.1), names.arg = c(rbind(K_vector,NA)), beside = F, col = rep(colors, 2),
+                        main = "Localised Equilibrium Populations", xlab = "1/b", ylab = "Abundance")
+                text(seq(0.5,length(K_vector)*2,2)*1.2, colSums(res_2[,seq(1,length(K_vector)*2,2)])*1.1, "m", cex=1, col="black")
+                text(seq(1.5,length(K_vector)*2,2)*1.2, colSums(res_2[,seq(2,length(K_vector)*2,2)])*1.1, "f", cex=1, col="black")
+            }
+        }
+        legend("topleft", legend = rev(sapply(stages_out, function(s){paste("Stage",s)})), col = rev(colors), pch = 16)
+    }
+    # return eqilibrium populations
+    return(res)
+})
+

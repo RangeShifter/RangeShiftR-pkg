@@ -177,6 +177,7 @@
 #' of all the patches (PatchID). The remaining columns give the occupancy probability of the cell/patch at defined time steps.
 #' The occupancy probability is obtained by dividing the number of times (replicates) that the cell/patch has been occupied in
 #' a given year, by the total number of replicates.
+#'
 #'      2) \code{Sim0_Occupancy_Stats.txt}: Summary occupancy statistics, i.e. the mean ratio between occupied and suitable cells
 #' (Mean_OccupSuit) and its standard error (Std_error) at the set time interval.
 #'

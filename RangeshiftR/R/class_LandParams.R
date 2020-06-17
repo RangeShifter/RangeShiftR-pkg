@@ -482,7 +482,7 @@ setMethod("show", "ImportedLandscape", function(object){
         cat("   with", paste(object@Nhabitats), "unique integer habitat code(s)\n")
         cat("   Carrying capacities K =", paste(object@K), ".\n")
     }
-    if (object@PatchFile!="NULL") {
+    if (any(object@PatchFile!="NULL")) {
         cat("   Patches imported from file:\n  ")
         if(length(object@DynamicLandYears)==1) {
             cat(paste(object@PatchFile), "\n")
@@ -490,14 +490,14 @@ setMethod("show", "ImportedLandscape", function(object){
     }
     cat ("   Resolution      :", paste(object@Resolution),"\n")
     if(length(object@DynamicLandYears)>1) {
-        if (object@PatchFile=="NULL") {
+        if (any(object@PatchFile=="NULL")) {
             cat("   Land changes in\n    Year   to Habitat file:\n")
         }
         else {
             cat("   Land changes in\n    Year   to Habitat and Patch file:\n")
         }
         for (a in 1:length(object@DynamicLandYears)) {
-            if (object@PatchFile=="NULL") {
+            if (any(object@PatchFile=="NULL")) {
                 cat("   ",paste(object@DynamicLandYears[a]),"  ",paste(object@LandscapeFile[a]),"\n")
             }
             else {

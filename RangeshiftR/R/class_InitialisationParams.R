@@ -10,7 +10,7 @@
 #' Free initialisation according to the habitat map (\code{InitType}\eqn{= 0}),
 #' initialisation from a loaded species distribution map (\code{InitType} \eqn{= 1}),
 #' and the initialisation from an initial individuals list (\code{InitType} \eqn{= 2}),
-#' with additional options for each type. Additionally, initialial density and, if applicable, initial stage and age distributions are defined.
+#' with additional options for each type. Additionally, initial density and, if applicable, initial stage and age distributions are defined.
 #'
 ##' @author Anne-Kathleen Malchow
 #' @usage Initialise(InitType = 0, FreeType = 1, SpType = 0, NrCells, InitIndsFile = "NULL",
