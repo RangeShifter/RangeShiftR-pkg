@@ -196,9 +196,9 @@ void __fastcall TfrmMain::BatchModeClick(TObject *Sender)
 {
 batchfiles b;
 landParams ppLand;
-demogrParams dem;
-stageParams sstruct;
-trfrRules trfr;
+demogrParams dem = pSpecies->getDemogr();
+stageParams sstruct = pSpecies->getStage();
+trfrRules trfr = pSpecies->getTrfr();
 simParams sim = paramsSim->getSim();
 
 // create a new landscape

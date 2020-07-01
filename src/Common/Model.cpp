@@ -1441,8 +1441,8 @@ DEBUGLOG << "RunModel(): yr=" << yr << " completed reset"
 		pComm->outGenetics(rep,0,0,-999);
 
 	if (sim.saveVisits) {
-#if VCL
-		pLandscape->saveVisits(rep,ppLand.landNum);
+#if VCL		
+		if (!sim.batchMode) pLandscape->saveVisits(rep,ppLand.landNum);
 #endif
 		pLandscape->outVisits(rep,ppLand.landNum);
 		pLandscape->resetVisits();
@@ -3658,7 +3658,7 @@ if (sim.saveTraitMaps) {
 	outPar << endl;
 }
 else outPar << "no" << endl;
-if (trfr.moveType == 1) {
+if (trfr.moveModel && trfr.moveType == 1) {
 	outPar << "SMS HEAT MAPS: ";
 	if (sim.saveVisits) outPar << "yes" << endl;
 	else outPar << "no" << endl;
