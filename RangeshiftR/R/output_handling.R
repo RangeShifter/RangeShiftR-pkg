@@ -78,29 +78,15 @@ setMethod("readPop", c(s="RSparams", dirpath="character"), function(s,dirpath,ce
 #' (3) y is a RasterStack with 2 layers: The first will be used for probabilty of occupancy for all years, the second will be used for time to colonisation.
 #' (4) y is a RasterStack with length(years)+1 layers: The first ones will be used for probabilty of occupancy on each year, the last for time to colonisation.
 #' @return a list with the elements
-#' \code{occ_prob} (If one year is given: a named numeric with probabilty of occupancy at the given year over all replicates.
-#' If a vector of years is given: a numeric array with rows named by years and columns by patch-IDs.),
-#' \code{col_time} (a dataframe with first recorded year of colonisation for each patch; with replicates in rows and columns named by patch-IDs),
-#' Optional:\cr
-#' \code{patch_occ_prob} (a raster (stack) with the data from \code{occ_prob} stored in the respective patch cells per given year),
+#' \code{occ_prob} (a dataframe with mean (over all replicates) probabilty of occupancy for each patch (in rows) at the given year(s) in columns),\cr
+#' \code{col_time} (a dataframe with first recorded year of colonisation for each patch; with replicates in columns and rows named by patch-IDs),\cr
+#' Optional:\cr\cr
+#' \code{patch_occ_prob} (a raster (stack) with the data from \code{occ_prob} stored in the respective patch cells per given year),\cr
 #' \code{patch_col_time} (a raster with the data from \code{col_time_mean} stored in their respective patch cells)
 #' @export
 setGeneric("ColonisationStats", function(x, ...) standardGeneric("ColonisationStats") )
 
-#library(raster)
-#patch
-#r <- raster("../../Tutorials/Tutorial_04/Inputs/patches_03.asc")
-#pop <- read.table("../../Tutorials/Tutorial_04/Outputs/Batch11_Sim1_Land1_Pop.txt", h = T, sep = "\t")
-#years <- c(180,190)
-#
-#cell
-#r <- raster("../../Tutorials/Tutorial_01/Inputs/UKmap_1km.txt")
-#pop <- read.table("../../Tutorials/Tutorial_01/Outputs/Batch1_Sim0_Land1_Pop.txt", h = T, sep = "\t")
-#r <- raster("../../Tutorials/Tutorial_04/Inputs/habitat1_2.asc")
-#pop <- read.table("../../Tutorials/Tutorial_04/Outputs/Batch1_Sim1_Land1_Pop.txt", h = T, sep = "\t")
-#years <- unique(pop$Year)[c(2,4,8,10,15,20)]
-
-setMethod("ColonisationStats", "data.frame", function(x, y = NULL, years = numeric(0)) { # y="BasicRaster"
+setMethod("ColonisationStats", "data.frame", function(x, y = NULL, years = numeric(0)) {
 #test <- function(x, y = NULL, years = numeric(0)) {
         if(class(years) %in% c("integer","numeric") ){
             if(length(years)==0) {
@@ -469,6 +455,75 @@ setMethod("plotOccupancy", "RSparams", function(s, dirpath, ...) {
 })
 
 
+#---------------------------------------------------------
+
+#--- SMS PathLenghts
+
+#' Get the distribution of SMS Path Lengths
+#'
+#' Reads the Rangeshifter output files 'MovePaths' (if they were generated) to get the distribution of lengths of SMS
+#' paths taken in all recorded years.
+#' @param s RSmaster parameter object
+#' @param dirpath RS directory path
+#' @return a data.frame that contains the mean (over replicates) number of SNS paths of a given length (rows) per simulated map (columns)
+#' @export
+setGeneric("SMSpathLengths", function(s,dirpath,...) standardGeneric("SMSpathLengths") )
+
+setMethod("SMSpathLengths", c(s="RSparams", dirpath="character"), function(s,dirpath) {
+    if(class(s@dispersal@Transfer)!="StochMove"){
+        warning("SMSpathLengths(): Transfer must be of type SMS.", call. = TRUE)
+        return(NULL)
+    }
+    if(s@simul@OutIntPaths<1){
+        warning("SMSpathLengths(): Output of SMS paths ('OutIntPaths') is disabled in this RS simulation.", call. = TRUE)
+        return(NULL)
+    }
+
+    maxLength = s@dispersal@Settlement@MaxSteps
+    if(maxLength<1) maxLength = as.integer(log(.015)/log(1-s@dispersal@Transfer@StepMort)) + 1
+    year_blocks = s@land@DynamicLandYears
+    nr_maps = length(year_blocks)
+
+    steps_sum <- matrix(0, nrow = maxLength, ncol = nr_maps)
+    rownames(steps_sum) <- sapply(1:maxLength, FUN=paste0)
+    null_tb <- rep(0,maxLength)
+    names(null_tb) <- sapply(1:maxLength, FUN=paste0)
+    for(i in 0:(s@simul@Replicates-1)){
+        steps <- try(read.table(paste0(dirpath,
+                                   "Outputs/Batch",s@control@batchnum,
+                                   "_Sim",s@simul@Simulation,
+                                   "_Land",s@land@LandNum,
+                                   "_Rep",i,
+                                   "_MovePaths.txt"),
+                            header = T))
+        if ( class(steps) == "try-error" ) {
+            warning(cat("SMSpathLengths(): Couldn't read MovePaths output for replicate",i,", skipping it."), call. = FALSE)
+            #return(NULL)
+        }else{
+            steps_y <- sapply(seq(nr_maps), FUN = function(y){
+                tb <- null_tb
+                lo <- year_blocks[y]
+                if (y==nr_maps) tb_n <- table(aggregate(Step~IndID, data=subset(steps, Year >= lo), FUN = max)$Step)
+                else {
+                    up <- year_blocks[y+1]
+                    tb_n <- table(aggregate(Step~IndID, data=subset(steps, Year >= lo & Year < up), FUN = max)$Step)
+                }
+                ix <- names(tb) %in% names(tb_n)
+                tb[ix] <- tb_n[1:sum(ix)]
+                tb
+            })
+            steps_sum <- steps_sum + steps_y
+        }
+    }
+    colnames(steps_sum) <- sapply(1:nr_maps, function(m){paste0('Map_',m)})
+    # mean over replicates
+    steps_sum <- data.frame(steps_sum / s@simul@Replicates)
+
+    return(steps_sum)
+})
+
+
+
 
 #---------------------------------------------------------
 
@@ -713,10 +768,11 @@ get_eq_pop <- function(b, demog, N_0 = NULL, t_max = 1000, t_rec = 1, delta = .1
 
 ## ---- Frontend Plot function -----
 
-#' Run Matrix Model
+#' Calculates the equilibrium distribution for a localised (i.e. non-spatial) closed population
 #'
-#' Uses the Rangeshifter Demography module to create the corresponding matrix model and run it locally, i.e.
-#' as one population in a single cell, without dispersal.
+#' Uses the Rangeshifter Demography module to create the corresponding matrix model and runs it until equilibrium is reached.
+#' This corresponds to a population in a single cell without dispersal.
+#' Since the matrix model representation is used, some options (e.g. maximum age) of the \code{\link[RangeshiftR]{Demography}} module can not be taken into account.
 #' @param demog DemogParams object with a \code{StageStructure}
 #' @param K_vector K-values (corresponding to 1/b) to run the matrix model for
 #' @param plot plot the equilibrium population? (default is \code{TRUE})
@@ -733,9 +789,9 @@ get_eq_pop <- function(b, demog, N_0 = NULL, t_max = 1000, t_rec = 1, delta = .1
 #' The default initial condition \code{N_0} is a population at its respective carrying capacity with unpopulated juvenile stage and
 #' all higer stages equally populated.\cr
 #' @export
-setGeneric("RunMatrixModel", function(demog,...) standardGeneric("RunMatrixModel") )
+setGeneric("getLocalisedEquilPop", function(demog,...) standardGeneric("getLocalisedEquilPop") )
 
-setMethod("RunMatrixModel", "DemogParams", function(demog, K_vector, plot=TRUE, stages_out=NULL, juv.stage=TRUE, t_rec=1,
+setMethod("getLocalisedEquilPop", "DemogParams", function(demog, K_vector, plot=TRUE, stages_out=NULL, juv.stage=TRUE, t_rec=1,
                                                     t_max = 1000, N_0 = NULL, delta=.1, diagnostics=FALSE){
     # make b from K
     b_vector <- 1/K_vector
@@ -756,7 +812,7 @@ setMethod("RunMatrixModel", "DemogParams", function(demog, K_vector, plot=TRUE, 
                           main = "Localised Equilibrium Populations", xlab = "1/b", ylab = "Abundance")
         }
         if(demog@ReproductionType==2){
-            if(length(stages_out)<2) warning("RunMatrixModel(): Please specify more than one stage when plottinf a sex-explicit model.", call. = TRUE)
+            if(length(stages_out)<2) warning("getLocalisedEquilPop(): Please specify more than one stage when plotting a sex-explicit model.", call. = TRUE)
             else {
                 res_2 <- res[which(rownames(res) %in% stages_out),]
                 mal <- seq.int(1,length(stages_out)*2,2)
