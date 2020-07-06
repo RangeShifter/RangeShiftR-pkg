@@ -2755,10 +2755,10 @@ if (trfr.moveModel) {
 		outPar << pr << " METHOD: " << move.prMethod << endl;
 		if (!trfr.indVar) outPar << "DIRECTIONAL PERSISTENCE: " << move.dp << endl;
 		outPar << "MEMORY SIZE: " << move.memSize << endl;
-		if (!trfr.indVar) outPar << "GOAL BIAS:   " << move.gb << endl;
 		outPar << "GOAL TYPE:   " << move.goalType << endl;
 		if (!trfr.indVar) {
 			if (move.goalType == 2) { //  dispersal bias
+				outPar << "GOAL BIAS:   " << move.gb << endl;
 				outPar << "ALPHA DB:    " << move.alphaDB << endl;
 				outPar << "BETA DB:     " << move.betaDB << endl;
 			}
