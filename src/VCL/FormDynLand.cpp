@@ -118,6 +118,7 @@ maxchgyr = chgyear;
 chg.chgnum = chgnum; chg.chgyear = chgyear;
 chg.habfile = habchgmapname;
 chg.pchfile = pchchgmapname;
+chg.costfile = "NULL";
 pLandscape->addLandChange(chg);
 chgnum++; chgyear++;
 edtChange->Text = chgnum;
@@ -150,7 +151,7 @@ MemoLine("Recording landscape changes...");
 int nchanges = pLandscape->numLandChanges();
 for (int i = 0; i < nchanges; i++) {
 	MemoLine(("..." + Int2Str(i+1) + "...").c_str());
-	imported = pLandscape->readLandChange(i);
+	imported = pLandscape->readLandChange(i,false);
 	if (imported != 0) {
 		msg = msgReadError + "change " + Int2Str(i+1) + " file: " + Int2Str(imported);
 		MessageDlg(msg.c_str(),mtError, TMsgDlgButtons() << mbOK,0);
