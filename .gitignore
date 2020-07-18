@@ -57,3 +57,38 @@ Output_Maps/
 Backup*/
 Bacup*/
 
+
+################
+
+#.gitignore
+#README.md
+
+# CodeLite
+/.build-debug/
+/Debug/
+/Release/
+RNG_test/
+.codelite/
+compile_commands.json
+Makefile
+.build-release/
+build-Release/
+*.txt
+*.project
+*.workspace
+*.mk
+*.txt
+*.tar.gz
+
+
+# Package files
+/RangeshiftR/
+
+# RStudio files
+.Rhistory
+.Rapp.history
+.Rproj.user/
+.RData
+.Ruserdata
+RangeshiftR.Rcheck/
+

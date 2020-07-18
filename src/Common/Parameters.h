@@ -12,9 +12,9 @@ paramStoch - Environmental stochasticity parameters
 Also declares some structures and functions used throughout the program.
 
 For full details of RangeShifter, please see:
-Bocedi G., Palmer S.C.F., Pe’er G., Heikkinen R.K., Matsinos Y.G., Watts K.
+Bocedi G., Palmer S.C.F., PeÂ’er G., Heikkinen R.K., Matsinos Y.G., Watts K.
 and Travis J.M.J. (2014). RangeShifter: a platform for modelling spatial
-eco-evolutionary dynamics and species’ responses to environmental changes.
+eco-evolutionary dynamics and speciesÂ’ responses to environmental changes.
 Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
@@ -55,14 +55,25 @@ using namespace std;
 #define NHABITATS 10	// maximum number of SUITABLE habitats permitted
 #endif // RS_CONTAIN 
 
+#if RS_RCPP
+typedef intptr_t intptr;
+#else
 #if RSWIN64
 typedef unsigned long long intptr;
 #else
 typedef unsigned int intptr;
 #endif
+#endif
 
-const double PI = 3.141592654;
-const double SQRT2 = sqrt(2.0); // more efficient than calculating every time
+#if RS_RCPP
+    #ifndef R_EXT_CONSTANTS_H_  // the R headers define PI as a macro, so that the 'else' line results in an error
+        const double PI = 3.141592653589793238462643383279502884197169399375;
+    #endif
+#else
+    const double PI = 3.141592654;
+#endif
+
+const double SQRT2 = std::sqrt(double(2.0)); // more efficient than calculating every time
 
 //---------------------------------------------------------------------------
 
@@ -74,6 +85,9 @@ struct rgb { // colour scheme for drawing maps
 };
 
 const string Int2Str(const int);
+#if RS_RCPP
+const string Int2Str(const int, unsigned int);
+#endif
 const string Float2Str(const float);
 const string Double2Str(const double);
 const rgb draw_wheel(int);
@@ -278,6 +292,10 @@ struct simParams {
 #if PEDIGREE
 	int relMatSize;
 #endif // PEDIGREE
+#if RS_RCPP
+	int outStartPaths; int outIntPaths;
+	bool outPaths;	bool ReturnPopRaster; bool CreatePopFile;
+#endif
 };
 
 #if VIRTUALECOLOGIST
@@ -336,7 +354,11 @@ public:
 	void addSamplePatch(const unsigned int);
 	unsigned int nSamplePatches(void);
 	unsigned int getSamplePatch(unsigned int);
-#endif // VIRTUALECOLOGIST 
+#endif // VIRTUALECOLOGIST
+#if RS_RCPP
+	bool getReturnPopRaster(void);
+	bool getCreatePopFile(void);
+#endif
 
 private:
 	int batchNum;						// batch number
@@ -416,6 +438,13 @@ private:
 #if PEDIGREE
 	int relMatSize;			// size of pedigree relatedness matrix
 #endif // PEDIGREE
+#if RS_RCPP
+	int outStartPaths;
+	int outIntPaths;
+	bool outPaths;
+	bool ReturnPopRaster;
+	bool CreatePopFile;
+#endif
 	bool drawLoaded;				// draw initial distribution on landscape/population maps?
 	bool saveTraitMaps;			// save summary traits maps?
 	bool viewLand;					// view landscape map on screen?

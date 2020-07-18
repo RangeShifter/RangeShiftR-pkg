@@ -71,7 +71,11 @@ int sexesDisp;	// no. of explicit sexes for dispersal model
 int firstsimul;
 int fileNtraits; // no. of traits defined in genetic architecture file
 //rasterdata landraster,patchraster,spdistraster;
+#if !RS_RCPP
 rasterdata landraster;
+#else
+rasterdata landraster,patchraster,spdistraster,costsraster;
+#endif
 // ...including names of the input files
 string parameterFile;
 string landFile;
@@ -1484,7 +1488,9 @@ int ParseLandFile(int landtype, string indir)
 string fname,header,intext,ftype;
 int j,inint,line;
 float infloat;
+#if !RS_RCPP
 rasterdata patchraster,spdistraster;
+#endif
 #if RS_CONTAIN
 rasterdata damageraster;
 #endif // RS_CONTAIN 
@@ -8179,7 +8185,9 @@ DEBUGLOG << "ReadTransfer(): CostsFile=" << CostsFile << endl;
 	if (trfr.costMap) {
 	
 		costmapname = paramsSim->getDir(1) + CostsFile;
+#if !RS_RCPP
 		rasterdata costsraster;
+#endif
 		costsraster.ok = false;
 		costsraster = CheckRasterFile(costmapname);
 		// check that cost raster matches current landscape 
@@ -9798,3 +9806,17 @@ if (rsLog.is_open()) {
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 
+
+#if RS_RCPP
+void EOFerrorR(string filename)
+{
+	std::cout << "*** Did not read to EOF in " << filename << std::endl;
+}
+void StreamErrorR(string filename)
+{
+	std::cout << "*** Corrupted file stream in " << filename << std::endl << "You can try to use a different file encoding, like UTF-8." << std::endl;
+#if RSDEBUG
+	DEBUGLOG << "Corrupted file stream in " << filename << std::endl;
+#endif
+}
+#endif // RS_RCPP

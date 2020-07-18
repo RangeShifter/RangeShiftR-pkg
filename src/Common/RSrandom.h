@@ -8,6 +8,9 @@ Author: Steve Palmer, University of Aberdeen
 
 Last updated: 6 January 2020 by Steve Palmer
 
+Modified: 14 January 2020 by Anne-Kathleen Malchow, Humboldt University Berlin
+
+
 ------------------------------------------------------------------------------*/
 
 #ifndef RSrandomH
@@ -18,47 +21,35 @@ Last updated: 6 January 2020 by Steve Palmer
 //#include <iostream>
 
 #include "Version.h"
-#if CLUSTER
-//#include <random>
-//#include <tr1/random>
-#include "maths.h"
-#else
+
+#include <cmath>
+#include <random>
 #if RSWIN64
-#include <dinkumware64/random>
-#else
-#include <dinkumware/random>
+#include <ctime>
 #endif
-#endif
+
 using namespace std;
 
 class RSrandom {
 
 public:
-#if RS_ABC
-	RSrandom(int);
-#else
-	RSrandom(void);
-#endif
+	RSrandom(int);              // if int is negative, a random seed will be generated, else it is used as seed
 	~RSrandom(void);
 	double Random(void);
 	int IRandom(int,int);
 	int Bernoulli(double);
 	double Normal(double,double);
 	int Poisson(double);
-#if RS_ABC
+/* ADDITIONAL DISTRIBUTIONS
 	double Beta(double,double);
-	double Gamma(double,double);
-#endif
+	double Gamma(double,double); // !! make sure coorect definition is used: using shape and scale (as defined here) OR using shape/alpha and rate/beta (=1/scale)
+    double Cauchy(double,double);
+*/
 
 private:
-	double normal_x2; int normal_x2_valid; // variables used by Normal distribution
-#if !CLUSTER
-	tr1::uniform_real<> *pRandom01;
-	tr1::normal_distribution<> *pNormal;
-#if RS_ABC
-	tr1::mt19937 *gen;
-#endif
-#endif
+	mt19937 *gen;
+	std::uniform_real_distribution<> *pRandom01;
+	std::normal_distribution<> *pNormal;
 };
 
 #if RSDEBUG
@@ -67,5 +58,3 @@ extern ofstream DEBUGLOG;
 
 //---------------------------------------------------------------------------
 #endif
-
-

@@ -226,8 +226,8 @@ paramSim::paramSim(void) {
 	outIntOcc = outIntPop = outIntInd = outIntGenetic = 10;
 	outIntTraitCell = outIntTraitRow = outIntConn = 10;
 #if RS_CONTAIN
-	int outStartDamage = 0; 		
-	int outIntDamage = 10;				
+	int outStartDamage = 0;
+	int outIntDamage = 10;
 #endif // RS_CONTAIN 
 	mapInt = traitInt = 10;
 	slowFactor = 1;
@@ -258,6 +258,10 @@ paramSim::paramSim(void) {
 #endif
 #if PEDIGREE
 	relMatSize = 1000;
+#endif
+#if RS_RCPP
+	outStartPaths = 0; outIntPaths = 0;
+	outPaths = false; ReturnPopRaster = false; CreatePopFile = true;
 #endif
 	drawLoaded = false;
 	viewLand = false; viewPatch = false; viewGrad = false; viewCosts = false;
@@ -322,6 +326,13 @@ mortMapLoaded = s.mortMapLoaded;
 #if PEDIGREE
 if (s.relMatSize > 0) relMatSize = s.relMatSize;
 #endif
+#if RS_RCPP
+outStartPaths = s.outStartPaths;
+outIntPaths = s.outIntPaths;
+outPaths = s.outPaths;
+ReturnPopRaster = s.ReturnPopRaster;
+CreatePopFile = s.CreatePopFile;
+#endif
 drawLoaded = s.drawLoaded;
 }
 
@@ -363,6 +374,13 @@ s.mortChgYear = mortChgYear; s.mortMapLoaded = mortMapLoaded;
 s.relMatSize = relMatSize;
 #endif
 s.mapInt = mapInt; s.traitInt = traitInt;
+#if RS_RCPP
+s.outStartPaths = outStartPaths;
+s.outIntPaths = outIntPaths;
+s.outPaths = outPaths;
+s.ReturnPopRaster = ReturnPopRaster;
+s.CreatePopFile = CreatePopFile;
+#endif
 s.drawLoaded = drawLoaded;
 return s;
 }
@@ -404,7 +422,7 @@ switch (option) {
 case 0: // working directory
 	s = dir;
 	break;
-#if CLUSTER
+#if CLUSTER || RS_RCPP
 case 1: // Inputs folder
 	s = dir + "Inputs/";
 	break;
@@ -499,7 +517,11 @@ int npatches = (int)samplePatches.size();
 if (ii >= 0 && ii < npatches) return samplePatches[ii];
 else return -1;  
 }
+#endif
 
+#if RS_RCPP
+bool paramSim::getReturnPopRaster(void) { return ReturnPopRaster; }
+bool paramSim::getCreatePopFile(void) { return CreatePopFile; }
 #endif
 
 #if SPATIALMORT

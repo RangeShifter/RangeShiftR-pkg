@@ -11,9 +11,9 @@ Further functions are declared here, but defined differently in main function of
 GUI and batch versions.
 
 For full details of RangeShifter, please see:
-Bocedi G., Palmer S.C.F., Pe’er G., Heikkinen R.K., Matsinos Y.G., Watts K.
+Bocedi G., Palmer S.C.F., PeÂ’er G., Heikkinen R.K., Matsinos Y.G., Watts K.
 and Travis J.M.J. (2014). RangeShifter: a platform for modelling spatial
-eco-evolutionary dynamics and species’ responses to environmental changes.
+eco-evolutionary dynamics and speciesÂ’ responses to environmental changes.
 Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
@@ -58,11 +58,18 @@ int RunModel(
 	ABCmaster*	// pointer to ABC master object
 );
 #else
+#if RS_RCPP && !R_CMD
+Rcpp::List RunModel(
+	Landscape*,	// pointer to Landscape
+	int					// sequential simulation number (always 0 for VCL version)
+);
+#else
 int RunModel(
 	Landscape*,	// pointer to Landscape
 	int					// sequential simulation number (always 0 for VCL version)
 );
-#endif
+#endif // RS_RCPP && !R_CMD
+#endif // RS_ABC
 bool CheckDirectory(void);
 void PreReproductionOutput(
 	Landscape*,	// pointer to Landscape
@@ -165,5 +172,9 @@ void GUIsetLandScale(
 	int		// landscape image width  (pixels)
 );
 
+#if RS_RCPP
+extern int RS_random_seed;
+extern string name_landscape, name_patch, name_sp_dist;
+#endif
 //---------------------------------------------------------------------------
 #endif
