@@ -307,13 +307,13 @@ if (landraster.ok) {
 	if (ppLand.patchModel) {
 		if (patchraster.ok) {
 			MemoLine("Reading landscape files...");
-			imported = pLandscape->readLandscape(0,habmapname,patchmapname);
+			imported = pLandscape->readLandscape(0,habmapname,patchmapname,"NULL");
 		}
 		else return;
 	}
 	else {
 		MemoLine("Reading landscape file...");
-		imported = pLandscape->readLandscape(0,habmapname," ");
+		imported = pLandscape->readLandscape(0,habmapname," ","NULL");
 	}
 	if (imported != 0) {
 		msg = msgReadError + "landscape file: " + Int2Str(imported);
@@ -333,7 +333,7 @@ if (ppLand.rasterType == 1 && ppLand.nHab > 1) { // % cover and multiple layers
 		string fname = hfnames[i-1];
 //		string hfsize = Int2Str(hfnames.size());
 //		MemoLine(("i=" + Int2Str(i) + " hfsize=" + hfsize + " fname=" + fname).c_str());
-		imported = pLandscape->readLandscape(i,fname," ");
+		imported = pLandscape->readLandscape(i,fname," ","NULL");
 		if (imported != 0) {
 			msg = msgReadError + "habitat " + Int2Str(i+1) + " file: " + Int2Str(imported);
 			MessageDlg(msgReadError.c_str(),mtError, TMsgDlgButtons() << mbOK,0);

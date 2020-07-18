@@ -108,6 +108,7 @@ else {
 fileNtraits = 0;
 if (fileSelected) {
 	// check selected file
+	geneticfileOK = false;
 	fileNtraits = checkArchFile(genfilename);
 	if (fileNtraits >= 0) {
 		geneticfileOK = true;

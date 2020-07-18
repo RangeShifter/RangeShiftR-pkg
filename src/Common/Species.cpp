@@ -1161,7 +1161,15 @@ if (indVarEmig) {
 
 if (indVarTrfr) {
 	if (moveModel) {
-		if (moveType == 2) {
+		if (moveType == 1) { // SMS
+			traitnames[trait++] = "DP";
+			traitnames[trait++] = "GB";
+			if (goalType == 2) {
+				traitnames[trait++] = "alphaDB";
+				traitnames[trait++] = "betaDB";				
+			}
+		}
+		if (moveType == 2) { // CRW
 			traitnames[trait++] = "stepL";
 			traitnames[trait++] = "rho";
 		}

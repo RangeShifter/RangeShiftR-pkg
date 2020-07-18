@@ -160,12 +160,12 @@ if (directoryChosen) {
 	if (!DEBUGLOGGUI.is_open()) {
 		DEBUGLOGGUI.open(name.c_str());
 	}
-	DEBUGLOGGUI << "TfrmMain::SetDirectoryClick(): ";
-	for (int i = 0; i < 5; i++) {
-		int rrrr = pRandom->IRandom(1000,2000);
-		DEBUGLOGGUI << " " << rrrr;
-	}
-	DEBUGLOGGUI << endl;
+//	DEBUGLOGGUI << "TfrmMain::SetDirectoryClick(): ";
+//	for (int i = 0; i < 5; i++) {
+//		int rrrr = pRandom->IRandom(1000,2000);
+//		DEBUGLOGGUI << " " << rrrr;
+//	}
+//	DEBUGLOGGUI << endl;
 //	if (DEBUGLOGGUI.is_open())
 //		MessageDlg("TfrmMain: DEBUGLOGGUI is open",mtWarning,TMsgDlgButtons() << mbOK,0);
 //	else
@@ -196,9 +196,9 @@ void __fastcall TfrmMain::BatchModeClick(TObject *Sender)
 {
 batchfiles b;
 landParams ppLand;
-demogrParams dem;
-stageParams sstruct;
-trfrRules trfr;
+demogrParams dem = pSpecies->getDemogr();
+stageParams sstruct = pSpecies->getStage();
+trfrRules trfr = pSpecies->getTrfr();
 simParams sim = paramsSim->getSim();
 
 // create a new landscape
@@ -567,12 +567,12 @@ if (!DEBUGLOG.is_open()) {
 		mtError, TMsgDlgButtons() << mbOK,0);
 	return;
 }
-DEBUGLOG << "Run1Click(): random integers:";
-for (int i = 0; i < 5; i++) {
-	int rrrr = pRandom->IRandom(1000,2000);
-DEBUGLOG << " " << rrrr;
-}
-DEBUGLOG << endl;
+//DEBUGLOG << "Run1Click(): random integers:";
+//for (int i = 0; i < 5; i++) {
+//	int rrrr = pRandom->IRandom(1000,2000);
+//DEBUGLOG << " " << rrrr;
+//}
+//DEBUGLOG << endl;
 //if (DEBUGLOG.is_open())
 //	MessageDlg("Run1Click 222: DEBUGLOG is open",mtWarning,TMsgDlgButtons() << mbOK,0);
 //else

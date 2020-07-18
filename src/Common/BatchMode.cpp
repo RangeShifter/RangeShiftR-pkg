@@ -75,7 +75,7 @@ rasterdata landraster;
 // ...including names of the input files
 string parameterFile;
 string landFile;
-string name_landscape,name_patch,name_dynland,name_sp_dist;
+string name_landscape,name_patch,name_dynland,name_sp_dist,name_costfile;
 #if RS_CONTAIN
 string name_damagefile;
 string name_managefile;
@@ -1481,10 +1481,10 @@ else return nSimuls;
 
 int ParseLandFile(int landtype, string indir)
 {
-string fname,header,intext,ftype;
+string fname,header,intext,ftype,costfile;
 int j,inint,line;
 float infloat;
-rasterdata patchraster,spdistraster;
+rasterdata patchraster,spdistraster,costraster;
 #if RS_CONTAIN
 rasterdata damageraster;
 #endif // RS_CONTAIN 
@@ -1506,6 +1506,7 @@ if (landtype == 0 || landtype == 2) { // real landscape
 	bLandFile >> header; if (header != "Nhabitats" ) errors++;
 	bLandFile >> header; if (header != "LandscapeFile" ) errors++;
 	bLandFile >> header; if (header != "PatchFile" ) errors++;
+	bLandFile >> header; if (header != "CostMapFile" ) errors++;
 	bLandFile >> header; if (header != "DynLandFile" ) errors++;
 	bLandFile >> header; if (header != "SpDistFile" ) errors++;
 #if RS_CONTAIN
@@ -1618,6 +1619,56 @@ if (landtype == 0 || landtype == 2) { // real landscape
 			}
 		}
 
+		// check initial distribution map filename
+		ftype = "CostMapFile";
+		bLandFile >> costfile;
+		if (costfile == "NULL") {
+			if (transfer == 1) { // SMS
+				if (landtype == 2) {
+					BatchError(filetype,line,0," "); errors++;
+					batchlog << ftype << " is required for a habitat quality landscape" << endl;					
+				}
+			}
+		}
+		else {
+			if (transfer == 1) { // SMS
+				fname = indir + costfile;
+				costraster = CheckRasterFile(fname);
+				if (costraster.ok) {
+					if (costraster.cellsize == resolution) {
+						if (costraster.ncols == landraster.ncols
+						&&  costraster.nrows == landraster.nrows
+						&&  costraster.cellsize == landraster.cellsize
+						&&  (int)costraster.xllcorner == (int)landraster.xllcorner
+						&&  (int)costraster.yllcorner == (int)landraster.yllcorner) {
+							batchlog << ftype << " headers OK: " << fname << endl;
+						}
+						else {
+							batchlog << msghdrs0 << ftype << " " << fname
+								<< msghdrs1 << endl;
+							errors++;
+						}
+					}
+					else {
+						batchlog << msgresol0 << ftype << " " << fname
+							<< msgresol1 << endl;
+						errors++;
+					}
+				}
+				else {
+					errors++;
+					if (costraster.errors == -111)
+						OpenError(ftype,fname);
+					else
+						FormatError(fname,costraster.errors);
+				}
+			}
+			else {
+				BatchError(filetype,line,0," "); errors++;
+				batchlog << ftype << " must be NULL if transfer model is not SMS" << endl;
+			}
+		}
+
 		// check dynamic landscape filename
 		ftype = "DynLandFile";
 		bLandFile >> intext;
@@ -1626,7 +1677,7 @@ if (landtype == 0 || landtype == 2) { // real landscape
 			batchlog << "Checking " << ftype << " " << fname << endl;
 			bDynLandFile.open(fname.c_str());
 			if (bDynLandFile.is_open()) {
-				int something = ParseDynamicFile(indir);
+				int something = ParseDynamicFile(indir,costfile);
 				if (something < 0) {
 						errors++;
 				}
@@ -1703,7 +1754,7 @@ if (landtype == 0 || landtype == 2) { // real landscape
 				}
 			}
 		}
-
+		
 #if RS_CONTAIN
 		// check economic / environmental damage map filename
 		ftype = "DamageFile";
@@ -1916,10 +1967,13 @@ else return totlines;
 
 }
 
-int ParseDynamicFile(string indir) {
+int ParseDynamicFile(string indir,string costfile) {
+#if RSDEBUG
+DEBUGLOG << "ParseDynamicFile(): costfile=" << costfile << endl;
+#endif
 string header,filename,fname,ftype,intext;
 int change,prevchange,year,prevyear;
-rasterdata landchgraster,patchchgraster;
+rasterdata landchgraster,patchchgraster,costchgraster;
 int errors = 0;
 string filetype = "DynLandFile";
 //int totlines = 0;
@@ -1928,6 +1982,7 @@ bDynLandFile >> header; if (header != "Change" ) errors++;
 bDynLandFile >> header; if (header != "Year" ) errors++;
 bDynLandFile >> header; if (header != "LandChangeFile" ) errors++;
 bDynLandFile >> header; if (header != "PatchChangeFile" ) errors++;
+bDynLandFile >> header; if (header != "CostChangeFile" ) errors++;
 
 if (errors > 0) {
 	FormatError(filetype,errors);
@@ -2028,6 +2083,54 @@ while (change != -98765) {
 					OpenError(ftype,fname);
 				else
 					FormatError(fname,patchchgraster.errors);
+			}
+		}
+	}
+
+	// check costs filename
+	ftype = "CostChangeFile";
+	bDynLandFile >> intext;
+	if (intext == "NULL") {
+		if (costfile != "NULL") {
+			BatchError(filetype,line,0," "); errors++;
+			batchlog << ftype << " must be supplied " << endl;
+		}
+	}
+	else {
+		if (costfile == "NULL") {
+			BatchError(filetype,line,0," "); errors++;
+			batchlog << ftype << " must be NULL to match LandFile " << endl;
+		}
+		else {
+			fname = indir + intext;
+			costchgraster = CheckRasterFile(fname);
+			if (costchgraster.ok) {
+				if (costchgraster.cellsize == resolution) {
+					if (costchgraster.ncols == landraster.ncols
+					&&  costchgraster.nrows == landraster.nrows
+					&&  costchgraster.cellsize == landraster.cellsize
+					&&  (int)costchgraster.xllcorner == (int)landraster.xllcorner
+					&&  (int)costchgraster.yllcorner == (int)landraster.yllcorner) {
+						batchlog << ftype << " headers OK: " << fname << endl;
+					}
+					else {
+						batchlog << msghdrs0 << ftype << " " << fname
+							<< msghdrs1 << endl;
+						errors++;
+					}
+				}
+				else {
+					batchlog << msgresol0 << ftype << " " << fname
+						<< msgresol1 << endl;
+					errors++;
+				}
+			}
+			else {
+				errors++;
+				if (costchgraster.errors == -111)
+					OpenError(ftype,fname);
+				else
+					FormatError(fname,costchgraster.errors);
 			}
 		}
 	}
@@ -3413,8 +3516,6 @@ case 1: { // SMS
 			colheader = "MortHab" + Int2Str(i+1);
 			bTransferFile >> header; if (header != colheader ) morthaberrors++;
 		}
-		bTransferFile >> header; if (header != "CostMap" ) errors++;
-		bTransferFile >> header; if (header != "CostMapFile" ) errors++;
 		for (i = 0; i < maxNhab; i++) {
 			colheader = "CostHab" + Int2Str(i+1);
 			bTransferFile >> header; if (header != colheader ) costerrors++;
@@ -3423,16 +3524,12 @@ case 1: { // SMS
 	} // end of raster map with unique habitat codes
 	case 2: { // raster map with habitat quality
 		batchlog << "for LandType = 2" << endl;
-		bTransferFile >> header; if (header != "CostMap" ) errors++;
-		bTransferFile >> header; if (header != "CostMapFile" ) errors++;
 		break;
 	} // end of raster map with habitat quality
 	case 9: { // artificial landscape
 		batchlog << "for LandType = 9" << endl;
 		bTransferFile >> header; if (header != "MortHabitat" ) errors++;
 		bTransferFile >> header; if (header != "MortMatrix" ) errors++;
-		bTransferFile >> header; if (header != "CostMap" ) errors++;
-		bTransferFile >> header; if (header != "CostMapFile" ) errors++;
 		bTransferFile >> header; if (header != "CostHabitat" ) errors++;
 		bTransferFile >> header; if (header != "CostMatrix" ) errors++;
 		break;
@@ -3822,36 +3919,6 @@ while (simul != -98765) {
 					}
 				}
 			}
-			bTransferFile >> costmap >> intext;
-			if (costmap < 0 || costmap > 1) {
-				BatchError(filetype,line,1,"CostMap"); errors++;
-			}
-			ftype = "CostMapFile";
-			if (costmap) {
-				if (intext == "NULL") {
-					BatchError(filetype,line,0," "); errors++;
-					batchlog << ftype << " is required if CostMap = 1" << endl;
-				}
-				else {
-					checkfile = true;
-					for (i = 0; i < (int)costsfiles.size(); i++) {
-						if (intext == costsfiles[i]) { // file has already been checked
-						checkfile = false;
-						}
-					}
-					if (checkfile) {
-						fname = indir + intext;
-						errors += CheckCostRaster(ftype,fname);
-					} // end of checkfile
-					costsfiles.push_back(intext);
-				} // end of intext != NULL
-			}
-			else { // CostMap = 0
-				if (intext != "NULL") {
-					BatchError(filetype,line,0," "); errors++;
-					batchlog << ftype << " should be NULL if CostMap = 0" << endl;
-				}
-			}
 			for (i = 0; i < maxNhab; i++) {
 				bTransferFile >> costhab;
 				if (!costmap) {
@@ -3866,37 +3933,12 @@ while (simul != -98765) {
 		
 		case 2: { // raster map with habitat quality
 //			batchlog << "for LandType = 2" << endl;
-			bTransferFile >> costmap >> intext;
-			if (costmap != 1) {
-				BatchError(filetype,line,0," "); errors++;
-				batchlog << "CostMap must be 1 for a habitat quality landscape" << endl;
-			}
-			ftype = "CostMapFile";
-			if (costmap) {
-				if (intext == "NULL") {
-					BatchError(filetype,line,0," "); errors++;
-					batchlog << ftype << " is required if CostMap = 1" << endl;
-				}
-				else {
-					checkfile = true;
-					for (i = 0; i < (int)costsfiles.size(); i++) {
-						if (intext == costsfiles[i]) { // file has already been checked
-						checkfile = false;
-						}
-					}
-					if (checkfile) {
-						fname = indir + intext;
-						errors += CheckCostRaster(ftype,fname);
-					} // end of checkfile
-					costsfiles.push_back(intext);
-				} // end of intext != NULL
-			}
 			break;
 		} // end of raster map with habitat quality
 		
 		case 9: { // artificial landscape
 //			batchlog << "for LandType = 9" << endl;
-			bTransferFile >> morthab >> mortmatrix >> costmap >> intext;
+			bTransferFile >> morthab >> mortmatrix;
 			bTransferFile >> costhab >> costmatrix;
 			if (smtype) { // validate habitat-dependent mortality
 				if (morthab < 0.0 || morthab >= 1.0) {
@@ -3905,15 +3947,6 @@ while (simul != -98765) {
 				if (mortmatrix < 0.0 || mortmatrix >= 1.0) {
 					BatchError(filetype,line,20,"MortMatrix"); errors++;
 				}
-			}
-			if (costmap != 0) {
-				BatchError(filetype,line,0," "); errors++;
-				batchlog << "CostMap must be 0 for an artificial landscape" << endl;
-			}
-			ftype = "CostMapFile";
-			if (intext != "NULL") {
-				BatchError(filetype,line,0," "); errors++;
-				batchlog << ftype << " must be NULL for an artificial landscape" << endl;
 			}
 			if (costhab < 1) {
 				BatchError(filetype,line,11,"CostHabitat"); errors++;
@@ -5342,7 +5375,7 @@ if (simul != firstsimul) {
 }
 while (simul != -98765) {
 	// read and validate columns relating to stage and sex-dependency (NB none here)
-	current = CheckStageSex(filetype,line,simul,prev,0,0,0,0,0,false);
+	current = CheckStageSex(filetype,line,simul,prev,0,0,0,0,0,false,false);
 	if (current.newsimul) simuls++;
 	errors += current.errors;
 	prev = current;
@@ -6129,44 +6162,6 @@ else return simuls;
 */
 
 //---------------------------------------------------------------------------
-int CheckCostRaster(string ftype, string fname)
-{
-rasterdata costraster;
-int errors = 0;
-
-costraster = CheckRasterFile(fname);
-if (costraster.ok) {
-	if (costraster.cellsize == resolution) {
-		/* NOTE
-		Ideally, header records of all cost map raster files should be forced to
-		match headers of landscape file(s). However, there may be more than one
-		landscape, and they need not have the same extent and/or origin (although
-		they must all have the same resolution). Therefore, when validating landscapes,
-		we would need to determine whether all landscapes are coincident, and, if not,
-		reject the option of SMS costs being loaded from a cost map file.
-		Instead, only the headers and resolution are checked here at the time the batch
-		files are parsed. Correspondence between the cost map file and the current
-		landscape is checked when the cost map for the simulation is read, and if there 
-		is a mis-match, the simulation is aborted with an appropriate error code.
-		*/
-		batchlog << ftype << " headers OK: " << fname << endl;
-	}
-	else {
-		batchlog << msgresol0 << ftype << " " << fname
-			<< msgresol1 << endl;
-		errors++;
-	}
-}
-else {
-	errors++;
-	if (costraster.errors == -111) OpenError(ftype,fname);
-	else FormatError(fname,costraster.errors);
-}
-
-return errors;
-}
-
-//---------------------------------------------------------------------------
 
 // Functions to handle and report error conditions
 
@@ -6403,7 +6398,8 @@ if (option == 0) { // open file and read header line
 		int nheaders;
 		if (landtype == 9) nheaders = 9; // artificial landscape
 		else { // imported raster map
-			nheaders = 6;
+//			nheaders = 6;
+			nheaders = 7;
 #if RS_CONTAIN
 			nheaders += 1; 
 #endif // RS_CONTAIN 
@@ -6469,7 +6465,8 @@ DEBUGLOG << "ReadLandFile(): ppLand.landNum=" << ppLand.landNum
 else { // imported raster map
 	string dummy; // no longer necessary to read no. of habitats from landFile
 //	landfile >> ppGenLand.landNum >> ppLand.nHab >> name_landscape >> name_patch >> name_sp_dist;
-	landfile >> ppLand.landNum >> dummy >> name_landscape >> name_patch >> name_dynland >> name_sp_dist;
+	landfile >> ppLand.landNum >> dummy >> name_landscape >> name_patch;
+	landfile >> name_costfile >> name_dynland >> name_sp_dist;
 #if RS_CONTAIN
 	landfile >> name_damagefile;
 #endif // RS_CONTAIN 
@@ -6481,6 +6478,7 @@ else { // imported raster map
 DEBUGLOG << "ReadLandFile(): ppLand.landNum=" << ppLand.landNum
 	<< " name_landscape=" << name_landscape
 	<< " name_patch=" << name_patch
+	<< " name_costfile=" << name_costfile
 	<< " name_dynland=" << name_dynland
 	<< " name_sp_dist=" << name_sp_dist
 #if RS_CONTAIN
@@ -6511,7 +6509,7 @@ DEBUGLOG << "ReadDynLandFile(): pLandscape=" << pLandscape
 	<< endl;
 #endif
 //int change,year;
-string landchangefile,patchchangefile;
+string landchangefile,patchchangefile,costchangefile;
 int change,imported;
 int nchanges = 0;
 landChange chg;
@@ -6521,7 +6519,7 @@ string fname = paramsSim->getDir(1) + name_dynland;
 dynlandfile.open(fname.c_str());
 if (dynlandfile.is_open()) {
 	string header;
-	int nheaders = 4;
+	int nheaders = 5;
 	for (int i = 0; i < nheaders; i++) dynlandfile >> header;
 }
 else {
@@ -6534,10 +6532,12 @@ change = -98765;
 dynlandfile >> change; // first change number
 while (change != -98765) {
 	chg.chgnum = change;                   
-	dynlandfile >> chg.chgyear >> landchangefile >> patchchangefile;
+	dynlandfile >> chg.chgyear >> landchangefile >> patchchangefile >> costchangefile;
 //	dynlandfile >> chg.chgyear >> chg.habfile >> chg.pchfile;
 	chg.habfile = paramsSim->getDir(1) + landchangefile;
 	chg.pchfile = paramsSim->getDir(1) + patchchangefile;
+	if (costchangefile == "NULL") chg.costfile = "none";
+	else chg.costfile = paramsSim->getDir(1) + costchangefile;
 	nchanges++;
 	pLandscape->addLandChange(chg);
 	// read first field on next line
@@ -6554,19 +6554,30 @@ dynlandfile.close(); dynlandfile.clear();
 if (ppLand.patchModel) {
 	pLandscape->createPatchChgMatrix();
 }
+if (costchangefile != "NULL") {
+	pLandscape->createCostsChgMatrix();
+}
 for (int i = 0; i < nchanges; i++) {
-	imported = pLandscape->readLandChange(i);
+	if (costchangefile == "NULL") imported = pLandscape->readLandChange(i,false);
+	else imported = pLandscape->readLandChange(i,true);
 	if (imported != 0) {
 		return imported;
 	}
 	if (ppLand.patchModel) {
 		pLandscape->recordPatchChanges(i+1);
 	}
+	if (costchangefile != "NULL") {
+		pLandscape->recordCostChanges(i+1);
+	}
 }
 if (ppLand.patchModel) {
 	// record changes back to original landscape for multiple replicates
 	pLandscape->recordPatchChanges(0);
 	pLandscape->deletePatchChgMatrix();
+}
+if (costchangefile != "NULL") {
+	pLandscape->recordCostChanges(0);
+	pLandscape->deleteCostsChgMatrix();
 }
 
 #if RSDEBUG
@@ -7822,7 +7833,8 @@ DEBUGLOG << endl;
 		else
 			pSpecies->createHabCostMort(paramsLand.nHabMax);
 		if (trfr.moveType == 1) { // SMS
-			int standardcols = 25;
+//			int standardcols = 25;
+			int standardcols = 23;
 #if TEMPMORT
 			standardcols += 1;
 #endif
@@ -8117,7 +8129,7 @@ DEBUGLOG << "ReadTransfer(): SMtype=" << trfr.smType << " SMconst=" << move.step
 #else
 DEBUGLOG << "ReadTransfer(): SMtype=" << trfr.habMort << " SMconst=" << move.stepMort << endl;
 #endif // TEMPMORT 
-#endif // RSDEBUG 
+#endif // RSDEBUG
 
 	if (!paramsLand.generated) { // real landscape
 		if (paramsLand.rasterType == 0) { // habitat codes
@@ -8167,36 +8179,8 @@ DEBUGLOG << "ReadTransfer(): MortHabitat=" << pSpecies->getHabMort(1)
 		}
 	}
 
-	transFile >> iiii >> CostsFile;
-	if (iiii == 0) trfr.costMap = false; else trfr.costMap = true;
-#if RSDEBUG
-DEBUGLOG << "ReadTransfer(): CostsFile=" << CostsFile << endl;
-#endif
-
-	if (!paramsLand.generated) // real landscape
-		pLandscape->resetCosts();
-
-	if (trfr.costMap) {
-	
-		costmapname = paramsSim->getDir(1) + CostsFile;
-		rasterdata costsraster;
-		costsraster.ok = false;
-		costsraster = CheckRasterFile(costmapname);
-		// check that cost raster matches current landscape 
-		if (!costsraster.ok) {      
-			error = 51;
-		}
-		if (costsraster.ncols != paramsLand.maxX+1 || costsraster.nrows != paramsLand.maxY+1) {
-			error = 52;          
-		}
-		landOrigin origin = pLandscape->getOrigin();      
-		if ((int)costsraster.xllcorner != (int)origin.minEast 
-		|| (int)costsraster.yllcorner != (int)origin.minNorth) {
-			error = 53;          
-		}
-		int retcode = pLandscape->readCosts(costmapname);  
-		if (retcode < 0) error = 54;
-	}
+	if (name_costfile != "NULL") trfr.costMap = true;
+	else trfr.costMap = false;
 
 	if (!paramsLand.generated) { // real landscape
 		if (paramsLand.rasterType == 0) { // habitat codes
@@ -9415,7 +9399,9 @@ DEBUGLOG << endl << "RunBatch(): j=" << j << " land_nr=" << land_nr
 	<< " landtype=" << landtype;
 if (landtype != 9)
 	DEBUGLOG << " name_landscape=" << name_landscape
-		<< " name_patch=" << name_patch << " name_sp_dist=" << name_sp_dist;
+		<< " name_patch=" << name_patch 
+		<< " name_costfile=" << name_costfile 
+		<< " name_sp_dist=" << name_sp_dist;
 DEBUGLOG << endl;
 #endif
 	landParams paramsLand = pLandscape->getLandParams();
@@ -9439,6 +9425,9 @@ DEBUGLOG << endl;
 	if (landtype != 9) { // imported landscape
 		string hname = paramsSim->getDir(1) + name_landscape;
 		int landcode;
+		string cname;
+		if (name_costfile == "NULL" || name_costfile == "none") cname = "NULL";
+		else cname = paramsSim->getDir(1) + name_costfile;
 #if RS_CONTAIN
 		string dname;
 		if (name_damagefile == "NULL") dname = name_damagefile;
@@ -9448,18 +9437,18 @@ DEBUGLOG << endl;
 			string pname = paramsSim->getDir(1) + name_patch;
 #if RS_CONTAIN
 #if SEASONAL
-			landcode = pLandscape->readLandscape(nseasons,0,hname,pname,dname);
+			landcode = pLandscape->readLandscape(nseasons,0,hname,pname,cname,dname);
 #else
-			landcode = pLandscape->readLandscape(0,hname,pname,dname);
+			landcode = pLandscape->readLandscape(0,hname,pname,cname,dname);
 #endif // SEASONAL 
 #else
 #if SEASONAL
-			landcode = pLandscape->readLandscape(nseasons,0,hname,pname);
+			landcode = pLandscape->readLandscape(nseasons,0,hname,pname,cname);
 #else
 #if RSDEBUG
 int t02a = time(0);
 #endif
-			landcode = pLandscape->readLandscape(0,hname,pname);
+			landcode = pLandscape->readLandscape(0,hname,pname,cname);
 #if RSDEBUG
 int t02b = time(0);
 DEBUGLOG << "RunBatch(): TIME for readLandscape() " << t02b-t02a << endl;
@@ -9470,15 +9459,15 @@ DEBUGLOG << "RunBatch(): TIME for readLandscape() " << t02b-t02a << endl;
 		else {
 #if RS_CONTAIN
 #if SEASONAL
-			landcode = pLandscape->readLandscape(nseasons,0,hname," ",dname);
+			landcode = pLandscape->readLandscape(nseasons,0,hname," ",cname,dname);
 #else
-			landcode = pLandscape->readLandscape(0,hname," ",dname);
+			landcode = pLandscape->readLandscape(0,hname," ",cname,dname);
 #endif // SEASONAL 
 #else
 #if SEASONAL
-			landcode = pLandscape->readLandscape(nseasons,0,hname," ");
+			landcode = pLandscape->readLandscape(nseasons,0,hname," ",cname);
 #else
-			landcode = pLandscape->readLandscape(0,hname," ");
+			landcode = pLandscape->readLandscape(0,hname," ",cname);
 #endif // SEASONAL 
 #endif // RS_CONTAIN 
     }

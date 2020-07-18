@@ -61,14 +61,14 @@ RS_random_seed = 666;
 gen = new tr1::mt19937 (RS_random_seed);
 // RS random initialisation log
 #else
-RS_random_seed = time(0)+seed;
+RS_random_seed = time(0) + 17 * seed;
 gen = new tr1::mt19937 (RS_random_seed);
 #endif // RSDEBUG
 #endif // !CLUSTER
 
 #else
 
-#if RSDEBUG
+#if BATCH && RSDEBUG
 DEBUGLOG << "RSrandom::RSrandom(): RS_random_seed=" << RS_random_seed
 	<< endl;
 #endif // RSDEBUG 
