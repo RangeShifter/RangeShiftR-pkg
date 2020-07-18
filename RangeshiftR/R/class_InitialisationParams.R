@@ -10,29 +10,30 @@
 #' Free initialisation according to the habitat map (\code{InitType}\eqn{= 0}),
 #' initialisation from a loaded species distribution map (\code{InitType} \eqn{= 1}),
 #' and the initialisation from an initial individuals list (\code{InitType} \eqn{= 2}),
-#' with additional options for each type. Additionally, initial density and, if applicable, initial stage and age distributions are defined.
+#' with additional options for each type, see the Details.\cr
+#' Additionally, initial density and, if applicable, initial stage and age distributions can be set.
 #'
 ##' @author Anne-Kathleen Malchow
 #' @usage Initialise(InitType = 0, FreeType = 1, SpType = 0, NrCells, InitIndsFile = "NULL",
 #'            InitDens = 1, IndsHaCell, PropStages = 0, InitAge = 2, minX, minY, maxX, maxY,
 #'            InitFreezeYear = 0, RestrictRows = 0, RestrictFreq = 0, FinalFreezeYear = 0)
 #' @param InitType Type of initialisation:\cr
-#' \eqn{0} = Free initialisation according to habitat map (default), \cr
-#' \eqn{1} = From loaded species distribution map,\cr
-#' \eqn{2} = From initial individuals list file.
+#' \eqn{0} = Free initialisation according to habitat map (default) (set \code{FreeType}), \cr
+#' \eqn{1} = From loaded species distribution map (set \code{SpType}),\cr
+#' \eqn{2} = From initial individuals list file (set \code{InitIndsFile}).
 #' \cr Must to be \eqn{0} for an \code{\link[RangeshiftR]{ArtificialLandscape}}.
 #' @param FreeType,NrCells Option for \emph{free initialisation}, i.e. required only if \code{InitType}\eqn{ = 0}:\cr
-#' \eqn{0} = Random; provide number of cells/patches to initialise in \code{NrCells}. \cr
-#' \eqn{1} = All suitable cells/patches (default).
+#' \code{FreeType} = \eqn{0}: Random; provide number of cells/patches to initialise in \code{NrCells}. \cr
+#' \code{FreeType} = \eqn{1}: All suitable cells/patches (default).
 #' @param SpType,NrCells Option for \emph{initialisation from species distribution map}, i.e. required only if \code{InitType}\eqn{ = 1}:\cr
-#' \eqn{0} = All suitable cells within all distribution presence cells (default), \cr
-#' \eqn{1} = All suitable cells within some randomly chosen presence cells; set number of cells to initialise in \code{NrCells}.
+#' \code{SpType} = \eqn{0}: All suitable cells within all distribution presence cells (default), \cr
+#' \code{SpType} = \eqn{1}: All suitable cells within some randomly chosen presence cells; set number of cells to initialise in \code{NrCells}.
 #' @param InitIndsFile Name of \emph{initial individuals list file}, required only if \code{InitType}\eqn{ = 2}.\cr
 #' For informaton on the required file format see the Details below.
 #' @param InitDens,IndsHaCell Number of individuals to be seeded in each cell/patch:\cr
-#' \eqn{0} = At carrying capacity \eqn{K}, \cr
-#' \eqn{1} = At half carrying capacity \eqn{K/2} (default)\cr
-#' \eqn{2} = Set the number of individuals per cell/hectare to initialise in \code{IndsHaCell}.
+#' \code{InitDens} = \eqn{0}: At carrying capacity \eqn{K}, \cr
+#' \code{InitDens} = \eqn{1}: At half carrying capacity \eqn{K/2} (default)\cr
+#' \code{InitDens} = \eqn{2}: Set the number of individuals per cell/hectare to initialise in \code{IndsHaCell}.
 #' @param PropStages For \code{\link[RangeshiftR]{StageStructure}}d models only: Proportion of individuals initialised in each stage.
 #' Requires a vector of length equal to the number of stages; its entries must be \eqn{\ge 0} and sum to \eqn{1.0}. However, juveniles
 #' can't be initialised and thus stage \eqn{0} (first entry) must have a value of \eqn{0.0}.

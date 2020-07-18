@@ -910,7 +910,7 @@ setMethod("plotProbs", "DispersalKernel", function(x, mortality = FALSE, combine
 #' @param IndVar Individual variability in SMS traits (i.e. \code{GoalBias}, \code{AlphaDB} and \code{BetaDB})? Defaults to \code{FALSE}.
 #' @param DP Directional persistence. Corresponds to the tendency to follow a correlated random walk, must be \eqn{\ge 1.0}, defaults to \eqn{1.0}.\cr
 #' If \code{IndVar=TRUE}, expects a vector of length three specifying (Mean, SD, MutationScale) of \code{DP}.
-#' @param GoalBias Goal bias strength. Must be must be \eqn{\ge 1.0}, defaults to \eqn{1.0}. \cr If \code{IndVar=TRUE}, expects a vector of length three
+#' @param GoalBias Only if \code{GoalType=2}: Goal bias strength. Must be must be \eqn{\ge 1.0}, defaults to \eqn{1.0}. \cr If \code{IndVar=TRUE}, expects a vector of length three
 #' specifying (Mean, SD, MutationScale) of \code{GoalBias}.
 #' @param AlphaDB Required if \code{GoalType=2}: Dispersal bias decay rate. Must be must be \eqn{> 0.0}.\cr If \code{IndVar=TRUE}, expects a vector of length three
 #' specifying (Mean, SD, MutationScale) of \code{AlphaDB}.
@@ -1093,43 +1093,43 @@ setValidity("StochMove", function(object) {
                 }
             }
         }
-        if (anyNA(object@GoalBias) || length(object@GoalBias)==0) {
-            msg <- c(msg, "GoalBias strength must be set!")
-        }
-        else{
-            if(object@IndVar){
-                if(length(object@GoalBias)==3){
-                    if (object@GoalBias[1] < 1.0) {
-                        msg <- c(msg, "GoalBias strength (mean) must be >= 1.0!")
-                    }
-                    if (object@GoalBias[2] <= 0.0) {
-                        msg <- c(msg, "GoalBias strength (SD) must be strictly positive!")
-                    }
-                    if (object@GoalBias[3] <= 0.0) {
-                        msg <- c(msg, "GoalBias strength (mutation scale) must be strictly positive !")
-                    }
-                    if(is.null(msg)){
-                        if (object@GoalBias[3] < object@GoalBias[2]) {
-                            msg <- c(msg, "GoalBias strength mutation scale must be greater than or equal to its SD !")
+        if (object@GoalType) { # GoalType = 2
+            if (anyNA(object@GoalBias) || length(object@GoalBias)==0) {
+                msg <- c(msg, "GoalBias strength must be set!")
+            }
+            else{
+                if(object@IndVar){
+                    if(length(object@GoalBias)==3){
+                        if (object@GoalBias[1] < 1.0) {
+                            msg <- c(msg, "GoalBias strength (mean) must be >= 1.0!")
+                        }
+                        if (object@GoalBias[2] <= 0.0) {
+                            msg <- c(msg, "GoalBias strength (SD) must be strictly positive!")
+                        }
+                        if (object@GoalBias[3] <= 0.0) {
+                            msg <- c(msg, "GoalBias strength (mutation scale) must be strictly positive !")
+                        }
+                        if(is.null(msg)){
+                            if (object@GoalBias[3] < object@GoalBias[2]) {
+                                msg <- c(msg, "GoalBias strength mutation scale must be greater than or equal to its SD !")
+                            }
                         }
                     }
-                }
-                else{
-                    msg <- c(msg, "GoalBias strength must have length 3 if IndVar=TRUE!")
-                }
-            }
-            else {
-                if(length(object@GoalBias)==1){
-                    if (object@GoalBias < 1.0 ) {
-                        msg <- c(msg, "GoalBias strength must be >= 1.0 !")
+                    else{
+                        msg <- c(msg, "GoalBias strength must have length 3 if IndVar=TRUE!")
                     }
                 }
-                else{
-                    msg <- c(msg, "GoalBias strength must have length 1 if IndVar=FALSE!")
+                else {
+                    if(length(object@GoalBias)==1){
+                        if (object@GoalBias < 1.0 ) {
+                            msg <- c(msg, "GoalBias strength must be >= 1.0 !")
+                        }
+                    }
+                    else{
+                        msg <- c(msg, "GoalBias strength must have length 1 if IndVar=FALSE!")
+                    }
                 }
             }
-        }
-        if (object@GoalType) { # GoalType = 2
             if (anyNA(object@AlphaDB) || length(object@AlphaDB)==0) {
                 msg <- c(msg, "AlphaDB must be set!")
             }
@@ -1240,6 +1240,10 @@ setMethod("initialize", "StochMove", function(.Object,...) {
         validObject(.Object)
     }
     if (!.Object@GoalType) { # GoalType = 0
+        .Object@GoalBias = 1.0
+        if (!is.null(args$GoalBias)) {
+            warning(this_func, "GoalBias", warn_msg_ignored, "since GoalType = 0.", call. = FALSE)
+        }
         .Object@AlphaDB = -9L
         if (!is.null(args$AlphaDB)) {
             warning(this_func, "AlphaDB", warn_msg_ignored, "since GoalType = 0.", call. = FALSE)
@@ -1268,20 +1272,20 @@ setMethod("show", "StochMove", function(object){
 
     if (object@IndVar) {
         cat("   DP       =", object@DP[1], "\u00B1" , object@DP[2], ", scale \u03bc =", object@DP[3], "\n")
-        cat("   GoalBias =", object@GoalBias[1], "\u00B1" , object@GoalBias[2], ", scale \u03bc =", object@GoalBias[3], "\n")
     }
     else {
         cat("   DP       =", object@DP, "\n")
-        cat("   GoalBias =", object@GoalBias, "\n")
     }
 
     if (object@GoalType) {
         cat("   GoalType: Dispersal bias:\n")
         if (object@IndVar) {
+            cat("   GoalBias =", object@GoalBias[1], "\u00B1" , object@GoalBias[2], ", scale \u03bc =", object@GoalBias[3], "\n")
             cat("   AlphaDB =", object@AlphaDB[1], "\u00B1" , object@AlphaDB[2], ", scale \u03bc =", object@AlphaDB[3], "\n")
             cat("   BetaDB  =", object@BetaDB[1], "\u00B1" , object@BetaDB[2], ", scale \u03bc =", object@BetaDB[3], "\n")
         }
         else {
+            cat("   GoalBias =", object@GoalBias, "\n")
             cat("   AlphaDB =", object@AlphaDB, ", BetaDB =", object@BetaDB, "\n")
         }
     }
@@ -1297,7 +1301,7 @@ setMethod("plotProbs", "StochMove", function(x, xmax = NULL, ymax = NULL){
         alp <- x@AlphaDB
         bet <- x@BetaDB
         main = "Dispersal Bias"
-    } else main = "Goal Bias"
+    } else main = "Goal Bias is disabled"
     # New plot
     if (x@GoalType == 2) {
         if (is.null(xmax)) xmax = 2*bet[1]
