@@ -139,10 +139,13 @@ DEBUGLOG << endl << "RunModel(): starting simulation=" << sim.simulation << " re
 	}
 
 	patchChange patchchange;
+	costChange costchange;
 	int npatchchanges = pLandscape->numPatchChanges();
+	int ncostchanges = pLandscape->numCostChanges();
 	int ixpchchg = 0;
+	int ixcostchg = 0;
 #if RSDEBUG
-DEBUGLOG << "RunModel(): npatchchanges=" << npatchchanges << endl;
+DEBUGLOG << "RunModel(): npatchchanges=" << npatchchanges << " ncostchanges=" << ncostchanges << endl;
 #endif
 
 	if (ppLand.generated) {
@@ -221,7 +224,7 @@ DEBUGLOG << endl << "RunModel(): finished generating populations" << endl;
 	}
 #if VCL
 	else {
-		if (sim.batchMode && sim.saveMaps) {
+		if (sim.batchMode && (sim.saveMaps || sim.saveVisits)) {
 			pLandscape->setLandMap();
 			pLandscape->drawLandscape(rep,0,0);
 		}
@@ -607,8 +610,8 @@ DEBUGLOG << "RunModel(): final restriction yr=" << yr
 #if RSDEBUG
 DEBUGLOG << "RunModel(): yr=" << yr << " landChg.chgnum=" << landChg.chgnum
 	<< " landChg.chgyear=" << landChg.chgyear
-	<< " npatchchanges=" << npatchchanges
-	<< " ixpchchg=" << ixpchchg
+	<< " npatchchanges=" << npatchchanges << " ncostchanges=" << ncostchanges
+	<< " ixpchchg=" << ixpchchg << " ixcostchg=" << ixcostchg
 	<< endl;
 #endif
 				if (yr == landChg.chgyear) { // apply landscape change
@@ -647,6 +650,31 @@ DEBUGLOG << "RunModel(): yr=" << yr << " landChg.chgnum=" << landChg.chgnum
 						}
 						ixpchchg--;
 						pLandscape->resetPatches(); // reset patch limits
+					}
+					if (landChg.costfile != "NULL") { // apply any SMS cost changes
+#if RSDEBUG
+DEBUGLOG << "RunModel(): yr=" << yr << " landChg.costfile=" << landChg.costfile << endl;
+#endif
+						Cell *pCell;
+						costchange = pLandscape->getCostChange(ixcostchg++);
+						while (costchange.chgnum <= landIx && ixcostchg <= ncostchanges) {
+#if RSDEBUG
+//DEBUGLOG << "RunModel(): yr=" << yr << " landIx=" << landIx
+//	<< " ncostchanges=" << ncostchanges << " ixcostchg=" << ixcostchg
+//	<< " costchange.chgnum=" << costchange.chgnum
+//	<< " .x=" << costchange.x << " .y=" << costchange.y
+//	<< " .oldcost=" << costchange.oldcost
+//	<< " .newcost=" << costchange.newcost
+//	<< endl;
+#endif
+							pCell = pLandscape->findCell(costchange.x,costchange.y);
+							if (pCell != 0) {
+								pCell->setCost(costchange.newcost);
+							}
+							costchange = pLandscape->getCostChange(ixcostchg++);
+						}
+						ixcostchg--;
+						pLandscape->resetEffCosts();
 					}
 					if (landIx < pLandscape->numLandChanges()) { // get next change
 						landChg = pLandscape->getLandChange(landIx);
@@ -1411,7 +1439,8 @@ DEBUGLOG << "RunModel(): yr=" << yr << " completed final summary output" << endl
 	pLandscape->resetLandLimits();
 #if RSDEBUG
 DEBUGLOG << "RunModel(): yr=" << yr << " landIx=" << "reset"
-	<< " npatchchanges=" << npatchchanges << " ixpchchg=" << ixpchchg
+	<< " npatchchanges=" << npatchchanges << " ncostchanges=" << ncostchanges
+	<< " ixpchchg=" << ixpchchg << " ixcostchg=" << ixcostchg
 	<< endl;
 #endif
 	if (ppLand.patchModel && ppLand.dynamic && ixpchchg > 0) {
@@ -1454,6 +1483,30 @@ DEBUGLOG << "RunModel(): yr=" << yr << " landIx=" << "reset"
 	if (ppLand.dynamic) {
 		trfrRules trfr = pSpecies->getTrfr();
 		if (trfr.moveModel && trfr.moveType == 1) { // SMS
+			if (ixcostchg > 0) {
+				// apply any cost changes to reset landscape to original configuration
+				// (provided that at least one has already occurred)
+						Cell *pCell;
+						costchange = pLandscape->getCostChange(ixcostchg++);
+						while (costchange.chgnum <= 666666 && ixcostchg <= ncostchanges) {
+#if RSDEBUG
+//DEBUGLOG << "RunModel(): yr=" << yr << " landIx=" << landIx
+//	<< " ncostchanges=" << ncostchanges << " ixcostchg=" << ixcostchg
+//	<< " costchange.chgnum=" << costchange.chgnum
+//	<< " .x=" << costchange.x << " .y=" << costchange.y
+//	<< " .oldcost=" << costchange.oldcost
+//	<< " .newcost=" << costchange.newcost
+//	<< endl;
+#endif
+							pCell = pLandscape->findCell(costchange.x,costchange.y);
+							if (pCell != 0) {
+								pCell->setCost(costchange.newcost);
+							}
+							costchange = pLandscape->getCostChange(ixcostchg++);
+						}
+						ixcostchg--;
+				pLandscape->resetEffCosts();
+			}
 			if (!trfr.costMap) pLandscape->resetCosts(); // in case habitats have changed
 		}
 	}
@@ -1488,7 +1541,7 @@ DEBUGLOG << "RunModel(): yr=" << yr << " completed reset"
 
 	if (sim.saveVisits) {
 #if VCL
-		pLandscape->saveVisits(rep,ppLand.landNum);
+		if (!sim.batchMode) pLandscape->saveVisits(rep,ppLand.landNum);
 #endif
 		pLandscape->outVisits(rep,ppLand.landNum);
 		pLandscape->resetVisits();
@@ -2001,6 +2054,9 @@ if (!ppLand.generated && ppLand.dynamic) {
 		outPar << "Landscape: " << chg.habfile << endl;
 		if (ppLand.patchModel) {
 			outPar << "Patches  : " << chg.pchfile << endl;
+		}
+		if (chg.costfile != "none" && chg.costfile != "NULL") {
+			outPar << "Costs    : " << chg.costfile << endl;
 		}
 //		outPar << "Change no. " << chg.chgnum << " in year " << chg.chgyear
 //			<< " habitat map: " << chg.habfile << endl;
@@ -2832,10 +2888,10 @@ if (trfr.moveModel) {
 		outPar << pr << " METHOD: " << move.prMethod << endl;
 		if (!trfr.indVar) outPar << "DIRECTIONAL PERSISTENCE: " << move.dp << endl;
 		outPar << "MEMORY SIZE: " << move.memSize << endl;
-		if (!trfr.indVar) outPar << "GOAL BIAS:   " << move.gb << endl;
 		outPar << "GOAL TYPE:   " << move.goalType << endl;
 		if (!trfr.indVar) {
 			if (move.goalType == 2) { //  dispersal bias
+				outPar << "GOAL BIAS:   " << move.gb << endl;
 				outPar << "ALPHA DB:    " << move.alphaDB << endl;
 				outPar << "BETA DB:     " << move.betaDB << endl;
 			}
@@ -3158,7 +3214,7 @@ if (trfr.moveModel) {
 		}
 		outPar << "SETTLE IF: ";
 		for (int i = 0; i < nstages; i++) {
-			if (dem.stageStruct) outPar << "stage " << i << ": " << endl;
+			if (dem.stageStruct && nstages > 1) outPar << "stage " << i << ": " << endl;
 			outPar << "find a suitable cell/patch ";
 			srules = pSpecies->getSettRules(i,sx);
 			if (srules.densDep) {
@@ -3743,7 +3799,7 @@ if (sim.saveTraitMaps) {
 	outPar << endl;
 }
 else outPar << "no" << endl;
-if (trfr.moveType == 1) {
+if (trfr.moveModel && trfr.moveType == 1) {
 	outPar << "SMS HEAT MAPS: ";
 	if (sim.saveVisits) outPar << "yes" << endl;
 	else outPar << "no" << endl;

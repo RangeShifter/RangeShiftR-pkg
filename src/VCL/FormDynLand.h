@@ -12,7 +12,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Steve Palmer, University of Aberdeen
 
-Last updated: 14 November 2016 by Steve Palmer
+Last updated: 14 July 2020 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 

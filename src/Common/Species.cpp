@@ -1062,8 +1062,8 @@ int movttraits = 0;
 if (indVarTrfr) {
 	if (moveModel) {
 		if (moveType == 1) { // SMS
-			movttraits = 2;
-			if (goalType == 2) movttraits += 2;
+			movttraits = 1;
+			if (goalType == 2) movttraits += 3;
 		}
 		if (moveType == 2) movttraits = 2;
 	}
@@ -1163,7 +1163,11 @@ if (indVarTrfr) {
 	if (moveModel) {
 		if (moveType == 1) { // SMS
 			traitnames[trait++] = "DP";
-			traitnames[trait++] = "GB";
+			if (goalType == 2) {
+				traitnames[trait++] = "GB";
+				traitnames[trait++] = "alphaDB";
+				traitnames[trait++] = "betaDB";
+			}
 		}
 		if (moveType == 2) { // CRW
 			traitnames[trait++] = "stepL";

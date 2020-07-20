@@ -43,7 +43,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 6 January 2020 by Steve Palmer
+Last updated: 15 July 2020 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -171,10 +171,13 @@ struct patchData {
 	Patch *pPatch; int patchNum,nCells; int x,y;
 };
 struct landChange {
-	int chgnum,chgyear; string habfile,pchfile;
+	int chgnum,chgyear; string habfile,pchfile,costfile;
 };
 struct patchChange {
 	int chgnum,x,y,oldpatch,newpatch;
+};
+struct costChange {
+	int chgnum,x,y,oldcost,newcost;
 };
 
 #if SEASONAL
@@ -375,6 +378,7 @@ public:
 	);
 	void updateLocalStoch(void);
 	void resetCosts(void);
+	void resetEffCosts(void);
 
 	// functions to handle dynamic changes
 
@@ -390,14 +394,16 @@ public:
 #if RS_RCPP && !R_CMD
 	int readLandChange(
 	    int,		// change file number
+		bool		// change SMS costs?
 		wifstream&, // habitat file stream, 
-		wifstream&,  // patch file stream
+		wifstream&, // patch file stream
 		int,		// habnodata
 		int			// pchnodata
 	);
 #else
 	int readLandChange(
-	    int		// change file number
+		int,	// change file number
+		bool	// change SMS costs?
 	);
 #endif
 	void createPatchChgMatrix(void);
@@ -406,6 +412,13 @@ public:
 	int numPatchChanges(void);
 	patchChange getPatchChange(
 		int	// patch change number
+	);
+	void createCostsChgMatrix(void);
+	void recordCostChanges(int);
+	void deleteCostsChgMatrix(void);
+	int numCostChanges(void);
+	costChange getCostChange(
+		int	// cost change number
 	);
 
 #if SPATIALMORT
@@ -514,6 +527,7 @@ public:
 						// fileNum > 0  for subsequent habitat files under the %cover option
 		string,	// habitat file name
 		string,	// patch file name
+		string,	// cost file name (may be NULL)
 		string	// damage file name (may be NULL)
 	);
 #else
@@ -522,6 +536,7 @@ public:
 						// fileNum > 0  for subsequent habitat files under the %cover option
 		string,	// habitat file name
 		string,	// patch file name
+		string,	// cost file name (may be NULL)
 		string	// damage file name (may be NULL)
 	);
 #endif // SEASONAL 
@@ -549,17 +564,19 @@ public:
 		int,		// fileNum == 0 for (first) habitat file and optional patch file
 						// fileNum > 0  for subsequent habitat files under the %cover option
 		string,	// habitat file name
-		string	// patch file name
+		string,	// patch file name
+		string	// cost file name (may be NULL)
 	);
 #else
 	int readLandscape(
 		int,		// fileNum == 0 for (first) habitat file and optional patch file
 						// fileNum > 0  for subsequent habitat files under the %cover option
 		string,	// habitat file name
-		string	// patch file name
+		string,	// patch file name
+		string	// cost file name (may be NULL)
 	);
-#endif // SEASONAL 
-#endif // RS_CONTAIN 
+#endif // SEASONAL
+#endif // RS_CONTAIN
 	void listPatches(void);
 	int readCosts(
 		string	// costs file name
@@ -649,6 +666,7 @@ private:
 	// list of dynamic landscape changes
 	std::vector <landChange> landchanges;
 	std::vector <patchChange> patchchanges;
+	std::vector <costChange> costschanges;
 
 	// list of initial individual species distributions
 	std::vector <InitDist*> distns;
@@ -663,10 +681,11 @@ private:
 	// global environmental stochasticity (epsilon)
 	float *epsGlobal;	// pointer to time-series
 
-	// patch change matrix (temporary - used when reading dynamic landscape)
+	// patch and costs change matrices (temporary - used when reading dynamic landscape)
 	// indexed by [descending y][x][period]
 	// where there are three periods, 0=original 1=previous 2=current
 	int ***patchChgMatrix;
+	int ***costsChgMatrix;
 
 #if SEASONAL
 //#if PARTMIGRN
