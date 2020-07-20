@@ -43,7 +43,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 6 January 2020 by Steve Palmer
+Last updated: 15 July 2020 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -82,36 +82,35 @@ using namespace std;
 
 // Initial species distribution
 
-class InitDist
-{
+class InitDist{
 public:
 	InitDist(Species*);
 	~InitDist();
 	int readDistribution(
-	    string // name of species distribution file
+		string // name of species distribution file
 	);
 	void setDistribution(
-	    int	// no. of distribution cells to be initialised (0 for all cells)
+		int	// no. of distribution cells to be initialised (0 for all cells)
 	);
 	void setDistCell( // Set a specified cell (by position in cells vector)
-	    int,	// index no. of DistCell in cells vector
-	    bool  // value to be set
+		int,	// index no. of DistCell in cells vector
+		bool  // value to be set
 	);
 	void setDistCell( // Set a specified cell (by co-ordinates)
-	    locn,	// structure holding x (column) and y (row) co-ordinates
-	    bool
+		locn,	// structure holding x (column) and y (row) co-ordinates
+		bool
 	);
 	bool inInitialDist( // Specified location is within the initial distribution?
-	    locn  // structure holding x (column) and y (row) co-ordinates
+		locn  // structure holding x (column) and y (row) co-ordinates
 	);
 	int cellCount(void);
 	locn getCell( // Return the co-ordinates of a specified initial distribution cell
-	    int  // index no. of DistCell in cells vector
+		int  // index no. of DistCell in cells vector
 	);
 	locn getSelectedCell( // Return the co-ordinates of a specified initial distribution
-	    // cell if it has been selected
-	    // otherwise return negative co-ordinates
-	    int  // index no. of DistCell in cells vector
+												// cell if it has been selected
+												// otherwise return negative co-ordinates
+		int  // index no. of DistCell in cells vector
 	);
 	locn getDimensions(void);
 	void resetDistribution(void);
@@ -132,41 +131,28 @@ private:
 
 //---------------------------------------------------------------------------
 
-struct landParams {
-	bool patchModel;
-	bool spDist;
-	bool generated;
+struct landParams {       
+	bool patchModel; bool spDist; bool generated;
 	bool dynamic;
 #if RS_CONTAIN
 	bool dmgLoaded;
 #endif // RS_CONTAIN 
-	int landNum;
-	int resol;
-	int spResol;
-	int nHab;
-	int nHabMax;
+	int landNum; int resol; int spResol; int nHab; int nHabMax;
 	int dimX,dimY,minX,minY,maxX,maxY;
 	short rasterType;
 };
 struct landData {
-	int resol;
-	int dimX,dimY,minX,minY,maxX,maxY;
+	int resol; int dimX,dimY,minX,minY,maxX,maxY;
 };
 struct genLandParams {
-	bool fractal;
-	bool continuous;
-	float minPct,maxPct;
-	float propSuit;
-	float hurst;
-	int maxCells;
+	bool fractal; bool continuous;
+	float minPct,maxPct; float propSuit; float hurst; int maxCells;
 };
 struct landPix {
-	int pix;
-	float gpix;
+	int pix; float gpix;
 };
 struct landOrigin {
-	double minEast;
-	double minNorth;
+	double minEast; double minNorth;
 };
 struct rasterHdr {
 	bool ok;
@@ -182,29 +168,27 @@ struct rasterdata {
 #endif
 };
 struct patchData {
-	Patch *pPatch;
-	int patchNum,nCells;
-	int x,y;
+	Patch *pPatch; int patchNum,nCells; int x,y;
 };
 struct landChange {
-	int chgnum,chgyear;
-	string habfile,pchfile;
+	int chgnum,chgyear; string habfile,pchfile,costfile;
 };
 struct patchChange {
 	int chgnum,x,y,oldpatch,newpatch;
+};
+struct costChange {
+	int chgnum,x,y,oldcost,newcost;
 };
 
 #if SEASONAL
 //#if PARTMIGRN
 struct extEvent { // extreme event
-	int year,season,patchID,x,y;
-	float probMort;
+	int year,season,patchID,x,y; float probMort;
 };
-//#endif // PARTMIGRN
+//#endif // PARTMIGRN 
 #endif // SEASONAL
 
-class Landscape
-{
+class Landscape{
 public:
 	Landscape();
 	~Landscape();
@@ -213,18 +197,18 @@ public:
 	// functions to set and return parameter values
 
 	void setLandParams(
-	    landParams,	// structure holding landscape parameters
-	    bool				// batch mode
+		landParams,	// structure holding landscape parameters
+		bool				// batch mode
 	);
 	landParams getLandParams(void);
 	landData getLandData(void);
 	void setGenLandParams(genLandParams);
 	genLandParams getGenLandParams(void);
 	void setLandLimits(
-	    int,	// minimum available X
-	    int,	// minimum available Y
-	    int,	// maximum available X
-	    int		// maximum available Y
+		int,	// minimum available X
+		int,	// minimum available Y
+		int,	// maximum available X
+		int		// maximum available Y
 	);
 	void resetLandLimits(void);
 	void setLandPix(landPix);
@@ -253,77 +237,77 @@ public:
 	void generatePatches(void); 		// create an artificial landscape
 #if SEASONAL
 	void allocatePatches( // create patches for a cell-based landscape
-	    Species*,		// pointer to Species
-	    short				// no. of seasons
+		Species*,		// pointer to Species
+		short				// no. of seasons
+	);	
+	Patch* newPatch(
+		int,		// patch sequential no. (id no. is set to equal sequential no.)
+		short		// no. of seasons
 	);
 	Patch* newPatch(
-	    int,		// patch sequential no. (id no. is set to equal sequential no.)
-	    short		// no. of seasons
-	);
-	Patch* newPatch(
-	    int,	  // patch sequential no.
-	    int,		// patch id no.
-	    short		// no. of seasons
+		int,	  // patch sequential no.
+		int,		// patch id no.
+		short		// no. of seasons
 	);
 #else
 	void allocatePatches(Species*);	// create patches for a cell-based landscape
 	Patch* newPatch(
-	    int		// patch sequential no. (id no. is set to equal sequential no.)
+		int		// patch sequential no. (id no. is set to equal sequential no.)
 	);
 	Patch* newPatch(
-	    int,  // patch sequential no.
-	    int		// patch id no.
+		int,  // patch sequential no.
+		int		// patch id no.
 	);
 #endif // SEASONAL 
 	void resetPatches(void);
 	void addNewCellToLand(
-	    int,    // x co-ordinate
-	    int,    // y co-ordinate
-	    float   // habitat quality value
+		int,    // x co-ordinate
+		int,    // y co-ordinate
+		float   // habitat quality value
 	);
 	void addNewCellToLand(
-	    int,    // x co-ordinate
-	    int,    // y co-ordinate
-	    int     // habitat class no.
+		int,    // x co-ordinate
+		int,    // y co-ordinate
+		int     // habitat class no.
 	);
 	void addCellToPatch(
-	    Cell*,	// pointer to Cell
-	    Patch*	// pointer to Patch
+		Cell*,	// pointer to Cell
+		Patch*	// pointer to Patch
 	);
 	void addCellToPatch(
-	    Cell*,  // pointer to Cell
-	    Patch*, // pointer to Patch
-	    float		// habitat quality value
+		Cell*,  // pointer to Cell
+		Patch*, // pointer to Patch
+		float		// habitat quality value
 	);
 	void addCellToPatch(
-	    Cell*,	// pointer to Cell
-	    Patch*, // pointer to Patch
-	    int     // habitat class no.
+		Cell*,	// pointer to Cell
+		Patch*, // pointer to Patch
+		int     // habitat class no.
 	);
 	void addNewCellToPatch(
-	    Patch*, // pointer to Patch
-	    int,    // x co-ordinate
-	    int,    // y co-ordinate
-	    int     // habitat class no.
+		Patch*, // pointer to Patch
+		int,    // x co-ordinate
+		int,    // y co-ordinate
+		int     // habitat class no.
 	);
 	void addNewCellToPatch(
-	    Patch*, // pointer to Patch
-	    int,    // x co-ordinate
-	    int,    // y co-ordinate
-	    float   // habitat quality value
+		Patch*, // pointer to Patch
+		int,    // x co-ordinate
+		int,    // y co-ordinate
+		float   // habitat quality value
 	);
 #if RS_CONTAIN
 	void setDamage(
 //		Patch*, // pointer to Patch
-	    int,    // x co-ordinate
-	    int,    // y co-ordinate
-	    intptr,	// pointer (cast as integer) to the Patch in which cell lies (if any)
-	    int			// damage index
+		int,    // x co-ordinate
+		int,    // y co-ordinate
+		intptr,	// pointer (cast as integer) to the Patch in which cell lies (if any)
+		int			// damage index 
 	);
 	void updateDamage(
-	    int,    // x co-ordinate
-	    int,    // y co-ordinate
-	    intptr	// pointer (cast as integer) to the Patch in which cell lies (if any)
+		int,    // x co-ordinate
+		int,    // y co-ordinate
+		intptr	// pointer (cast as integer) to the Patch in which cell lies (if any)
 	);
 	void updateDamageIndices(void);
 	void setAlpha(double);
@@ -331,167 +315,177 @@ public:
 	void resetDamageLocns(void);
 //	void updateDamageLocns(Species*);
 	double totalDamage(
-	    bool		// transfer by SMS?
+		bool		// transfer by SMS?
 	);
 	void viewDamage(	// Update the damage graph on the screen
-	    // NULL for the batch version
-	    int,		// year
-	    double,	// mean damage
-	    double,	// standard error of damage
-	    bool		// show standard error?
+										// NULL for the batch version
+		int,		// year
+		double,	// mean damage
+		double,	// standard error of damage
+		bool		// show standard error?
 	);
 	void createTotDamage(int nrows,int reps);
-	void updateTotDamage(unsigned short row,unsigned short rep,float damage);
+	void updateTotDamage(unsigned short row,unsigned short rep,float damage); 
 	void deleteTotDamage(int nrows);
 	void outTotDamage(bool view);
 //	void resetPrevDamage(void);
 #endif // RS_CONTAIN 
 	patchData getPatchData(
-	    int		// index no. of Patch in patches vector
+		int		// index no. of Patch in patches vector
 	);
 	bool existsPatch(
-	    int		// Patch id no.
+		int		// Patch id no.
 	);
 	Patch* findPatch(
-	    int   // Patch id no.
+		int   // Patch id no.
 	);
 	int checkTotalCover(void);
 	void resetPatchPopns(void);
 	void updateCarryingCapacity(
-	    Species*,	// pointer to Species
-	    int,			// year
-	    short			// landscape change index (always zero if not dynamic)
+		Species*,	// pointer to Species
+		int,			// year
+		short			// landscape change index (always zero if not dynamic)
 	);
 	Cell* findCell(
-	    int,		// x co-ordinate
-	    int			// y co-ordinate
+		int,		// x co-ordinate
+		int			// y co-ordinate
 	);
 	int patchCount(void);
 	void updateHabitatIndices(void);
 #if SEASONAL
 	void setEnvGradient(
-	    Species*,	// pointer to Species
-	    short,		// no. of seasons
-	    bool      // TRUE for initial instance that gradient is set
+		Species*,	// pointer to Species
+		short,		// no. of seasons
+		bool      // TRUE for initial instance that gradient is set
 	);
 #else
 	void setEnvGradient(
-	    Species*, // pointer to Species
-	    bool      // TRUE for initial instance that gradient is set
+		Species*, // pointer to Species
+		bool      // TRUE for initial instance that gradient is set
 	);
 #endif // SEASONAL 
 	void setGlobalStoch(
-	    int		// no. of years
+		int		// no. of years
 	);
 #if BUTTERFLYDISP
 	void readGlobalStoch(
-	    int,		// no. of years
-	    string	// filename
+		int,		// no. of years
+		string	// filename
 	);
 #endif // BUTTERFLYDISP 
 	float getGlobalStoch(
-	    int		// year
+		int		// year
 	);
 	void updateLocalStoch(void);
 	void resetCosts(void);
+	void resetEffCosts(void);
 
 	// functions to handle dynamic changes
 
 	void setDynamicLand(bool);
 	void addLandChange(
-	    landChange	// structure holding landscape change data
+		landChange	// structure holding landscape change data
 	);
 	int numLandChanges(void);
 	landChange getLandChange(
-	    short	// change number
+		short	// change number
 	);
 	void deleteLandChanges(void);
-	#if RS_RCPP && !R_CMD
+#if RS_RCPP && !R_CMD
 	int readLandChange(
 	    int,		// change file number
-		wifstream&, // habitat file stream, 
-		wifstream&,  // patch file stream
+		bool		// change SMS costs?
+		wifstream&, // habitat file stream
+		wifstream&, // patch file stream
 		int,		// habnodata
 		int			// pchnodata
 	);
-	#else
+#else
 	int readLandChange(
-	    int		// change file number
+		int,	// change file number
+		bool	// change SMS costs?
 	);
-	#endif
+#endif
 	void createPatchChgMatrix(void);
 	void recordPatchChanges(int);
 	void deletePatchChgMatrix(void);
 	int numPatchChanges(void);
 	patchChange getPatchChange(
-	    int	// patch change number
+		int	// patch change number
+	);
+	void createCostsChgMatrix(void);
+	void recordCostChanges(int);
+	void deleteCostsChgMatrix(void);
+	int numCostChanges(void);
+	costChange getCostChange(
+		int	// cost change number
 	);
 
 #if SPATIALMORT
 	// functions to handle spatial mortality
 
 	int readMortalityFiles(
-	    string,	// mortality file name period 0
-	    string	// mortality file name period 1
+		string,	// mortality file name period 0
+		string	// mortality file name period 1
 	);
 #endif // SPATIALMORT 
 
 	// functions to handle species distributions
 
 	int newDistribution(
-	    Species*,	// pointer to Species
-	    string		// name of initial distribution file
+		Species*,	// pointer to Species
+		string		// name of initial distribution file
 	);
 	void setDistribution(
-	    Species*, // pointer to Species
-	    int				// no. of distribution squares to initialise
+		Species*, // pointer to Species
+		int				// no. of distribution squares to initialise
 	);
 	bool inInitialDist( // Specified cell matches one of the distn cells to be initialised?
-	    Species*, // pointer to Species
-	    locn			// structure holding co-ordinates of Cell
+		Species*, // pointer to Species
+		locn			// structure holding co-ordinates of Cell
 	);
 	void deleteDistribution(
-	    Species*  // pointer to Species
+		Species*  // pointer to Species
 	);
 	int distnCount(void);	// Return no. of initial distributions in the Landscape
 	int distCellCount(    // Return no. of distribution cells in an initial distribution
-	    int // index no. of InitDist in distns vector
+		int // index no. of InitDist in distns vector
 	);
 	locn getDistnCell( // Get co-ordinates of a specified cell in a specified initial distn
-	    int,	// index no. of InitDist in distns vector
-	    int		// index no. of DistCell in cells vector
+		int,	// index no. of InitDist in distns vector
+		int		// index no. of DistCell in cells vector
 	);
 	locn getSelectedDistnCell(	// Get co-ordinates of a specified cell in a specified initial distn
-	    // Returns negative co-ordinates if the cell is not selected
-	    int,  // index no. of InitDist in distns vector
-	    int   // index no. of DistCell in cells vector
+															// Returns negative co-ordinates if the cell is not selected
+		int,  // index no. of InitDist in distns vector
+		int   // index no. of DistCell in cells vector
 	);
 	locn getDistnDimensions(	// Get the dimensions of a specified initial distribution
-	    int   // index no. of InitDist in distns vector
+		int   // index no. of InitDist in distns vector
 	);
 	void setDistnCell( // Set a cell in a specified init distn (by posn in cells vector)
-	    int,  // index no. of InitDist in distns vector
-	    int,  // index no. of DistCell in cells vector
-	    bool	// value to be set
+		int,  // index no. of InitDist in distns vector
+		int,  // index no. of DistCell in cells vector
+		bool	// value to be set
 	);
 	void setDistnCell( // Set a cell in a specified init distn (by given co-ordinates)
-	    int,  // index no. of InitDist in distns vector
-	    locn, // structure holding co-ordinates of DistCell
-	    bool  // value to be set
+		int,  // index no. of InitDist in distns vector
+		locn, // structure holding co-ordinates of DistCell
+		bool  // value to be set
 	);
 	void resetDistribution(
-	    Species*	// pointer to Species
+		Species*	// pointer to Species
 	);
 
 	// functions to handle initialisation cells
 
 	int initCellCount(void);
 	void addInitCell( // Create a new DistCell and add to the initcells vector
-	    int,	// x co-ordinate
-	    int   // y co-ordinate
+		int,	// x co-ordinate
+		int   // y co-ordinate
 	);
 	locn getInitCell(
-	    int   // index no. of DistCell in initcells vector
+		int   // index no. of DistCell in initcells vector
 	);
 	void clearInitCells(void);
 
@@ -500,26 +494,26 @@ public:
 	void createConnectMatrix(void);
 	void resetConnectMatrix(void);
 	void incrConnectMatrix(
-	    int,	// sequential no. of origin Patch
-	    int   // sequential no. of settlement Patch
+		int,	// sequential no. of origin Patch
+		int   // sequential no. of settlement Patch
 	);
 	void deleteConnectMatrix(void);
 	bool outConnectHeaders( // Write connectivity file headers
-	    int		// option - set to -999 to close the connectivity file
+		int		// option - set to -999 to close the connectivity file
 	);
 #if RS_RCPP
 	void outPathsHeaders(int, int);
 #endif
 #if SEASONAL
 	void outConnect(
-	    int,	// replicate no.
-	    int,  // year
-	    short // season
+		int,	// replicate no.
+		int,  // year
+		short // season
 	);
 #else
 	void outConnect(
-	    int,	// replicate no.
-	    int   // year
+		int,	// replicate no.
+		int   // year
 	);
 #endif // SEASONAL 
 
@@ -528,72 +522,76 @@ public:
 #if RS_CONTAIN
 #if SEASONAL
 	int readLandscape(
-	    int,		// no. of seasonss
-	    int,		// fileNum == 0 for (first) habitat file and optional patch file
-	    // fileNum > 0  for subsequent habitat files under the %cover option
-	    string,	// habitat file name
-	    string,	// patch file name
-	    string	// damage file name (may be NULL)
+		int,		// no. of seasonss
+		int,		// fileNum == 0 for (first) habitat file and optional patch file
+						// fileNum > 0  for subsequent habitat files under the %cover option
+		string,	// habitat file name
+		string,	// patch file name
+		string,	// cost file name (may be NULL)
+		string	// damage file name (may be NULL)
 	);
 #else
 	int readLandscape(
-	    int,		// fileNum == 0 for (first) habitat file and optional patch file
-	    // fileNum > 0  for subsequent habitat files under the %cover option
-	    string,	// habitat file name
-	    string,	// patch file name
-	    string	// damage file name (may be NULL)
+		int,		// fileNum == 0 for (first) habitat file and optional patch file
+						// fileNum > 0  for subsequent habitat files under the %cover option
+		string,	// habitat file name
+		string,	// patch file name
+		string,	// cost file name (may be NULL)
+		string	// damage file name (may be NULL)
 	);
 #endif // SEASONAL 
 	bool outSummDmgHeaders( // Open summary damage file and write header record
-	    int				// Landscape number (-999 to close the file)
+		int				// Landscape number (-999 to close the file)
 	);
 	void outSummDmg( // Write record to summary damage file
-	    int,			// replicate
-	    int,			// year
-	    bool,			// transfer by SMS?
-	    bool			// view damage on screen
+		int,			// replicate
+		int,			// year
+		bool,			// transfer by SMS?
+		bool			// view damage on screen
 	);
 	bool outDamageHeaders( // Open damage file and write header record
-	    int				// Landscape number (-999 to close the file)
+		int				// Landscape number (-999 to close the file)
 	);
 	void outDamage( // Write record to damage file
-	    int,			// replicate
-	    int,			// year
-	    bool			// transfer by SMS?
+		int,			// replicate
+		int,			// year
+		bool			// transfer by SMS?
 	);
 #else
 #if SEASONAL
 	int readLandscape(
-	    int,		// no. of seasonss
-	    int,		// fileNum == 0 for (first) habitat file and optional patch file
-	    // fileNum > 0  for subsequent habitat files under the %cover option
-	    string,	// habitat file name
-	    string	// patch file name
+		int,		// no. of seasonss
+		int,		// fileNum == 0 for (first) habitat file and optional patch file
+						// fileNum > 0  for subsequent habitat files under the %cover option
+		string,	// habitat file name
+		string,	// patch file name
+		string	// cost file name (may be NULL)
 	);
 #else
 	int readLandscape(
-	    int,		// fileNum == 0 for (first) habitat file and optional patch file
-	    // fileNum > 0  for subsequent habitat files under the %cover option
-	    string,	// habitat file name
-	    string	// patch file name
+		int,		// fileNum == 0 for (first) habitat file and optional patch file
+						// fileNum > 0  for subsequent habitat files under the %cover option
+		string,	// habitat file name
+		string,	// patch file name
+		string	// cost file name (may be NULL)
 	);
-#endif // SEASONAL 
-#endif // RS_CONTAIN 
+#endif // SEASONAL
+#endif // RS_CONTAIN
 	void listPatches(void);
 	int readCosts(
-	    string	// costs file name
+		string	// costs file name
 	);
 	// the following four functions are implemented for the GUI version only
 	// in the batch version, they are defined, but empty
 	void setLandMap(void);
 	void drawLandscape(
-	    int,	// replicate no.
-	    int,	// landscape index number (always 0 if landscape is not dynamic)
-	    int		// landscape no.
+		int,	// replicate no.
+		int,	// landscape index number (always 0 if landscape is not dynamic)
+		int		// landscape no.
 	);
 	void drawGradient(void); // Draw environmental gradient map
 	void drawGlobalStoch(	// Draw environmental stochasticity time-series
-	    int		// no. of years
+		int		// no. of years
 	);
 
 	void resetVisits(void);
@@ -604,7 +602,7 @@ public:
 
 #if RS_ABC
 // Returns connectivity (no. of successful dispersers) for given start and end patches
-	int outABCconnect(int,int);
+int outABCconnect(int,int);
 #endif
 
 #if SEASONAL
@@ -614,7 +612,7 @@ public:
 	extEvent getExtEvent(int);
 	void resetExtEvents(void);
 	int numExtEvents(void);
-//#endif // PARTMIGRN
+//#endif // PARTMIGRN 
 #endif // SEASONAL
 
 private:
@@ -668,6 +666,7 @@ private:
 	// list of dynamic landscape changes
 	std::vector <landChange> landchanges;
 	std::vector <patchChange> patchchanges;
+	std::vector <costChange> costschanges;
 
 	// list of initial individual species distributions
 	std::vector <InitDist*> distns;
@@ -682,23 +681,24 @@ private:
 	// global environmental stochasticity (epsilon)
 	float *epsGlobal;	// pointer to time-series
 
-	// patch change matrix (temporary - used when reading dynamic landscape)
+	// patch and costs change matrices (temporary - used when reading dynamic landscape)
 	// indexed by [descending y][x][period]
 	// where there are three periods, 0=original 1=previous 2=current
 	int ***patchChgMatrix;
+	int ***costsChgMatrix;
 
 #if SEASONAL
 //#if PARTMIGRN
 	// extreme events
 	std::vector <extEvent> extevents;
-//#endif // PARTMIGRN
+//#endif // PARTMIGRN 
 #endif // SEASONAL 
 
 #if RS_CONTAIN
 	std::vector <DamageLocn*> dmglocns;
 	float **totDamage;	// total damage record to view on screen
 #endif // RS_CONTAIN 
-
+	
 };
 
 // NOTE: the following function is not a behaviour of Landscape, as it is run by the

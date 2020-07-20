@@ -320,11 +320,11 @@ DEBUGLOG << "Main(): dem.repType = " << dem.repType << endl;
 #if RS_RCPP
 	#if RSDEBUG
 		pRandom = new RSrandom(666);
-		#else
+	#else
 		pRandom = new RSrandom(-1);  // need to be replaced with parameter from control file
 	#endif
-	#else
-		pRandom = new RSrandom();
+#else
+	pRandom = new RSrandom();
 #endif
 
 

@@ -2523,7 +2523,14 @@ for (int i = 0; i < ninds; i++) {
 for (int i = 0; i < ninds; i++) {
 	ind = inds[i]->getStats();
 	if (ind.sex == 0) othersex = 1; else othersex = 0;
-	sett = pSpecies->getSettRules(ind.stage,ind.sex);
+	if (settletype.stgDep) {
+		if (settletype.sexDep) sett = pSpecies->getSettRules(ind.stage,ind.sex);
+		else sett = pSpecies->getSettRules(ind.stage,0);
+	}
+	else {
+		if (settletype.sexDep) sett = pSpecies->getSettRules(0,ind.sex);
+		else sett = pSpecies->getSettRules(0,0);
+	}
 	if (ind.status == 2)
 	{ // awaiting settlement
 		pCell = inds[i]->getLocn(1);
@@ -2552,16 +2559,16 @@ for (int i = 0; i < ninds; i++) {
 			if (sett.findMate) {
 				// determine whether at least one individual of the opposite sex is present in the
 				// new population
-#if RSDEBUG
-//DEBUGLOG << "Population::transfer(): 7777: othersex = " << othersex
-//	<< " this = " << this << " pNewPopn = " << pNewPopn << " popsize = " << popsize
-//	<< endl;
-#endif
 #if SEASONAL
 				if (matePresent(pCell,othersex,nextseason)) mateOK = true;
 #else
 				if (matePresent(pCell,othersex)) mateOK = true;
-#endif // SEASONAL 
+#endif // SEASONAL
+#if RSDEBUG
+//DEBUGLOG << "Population::transfer(): 7777: othersex=" << othersex
+//	<< " this=" << this << " pNewPopn=" << pNewPopn << " popsize=" << popsize << " mateOK=" << mateOK
+//	<< endl;
+#endif
 			}
 			else { // no requirement to find a mate
 				mateOK = true;
@@ -2698,7 +2705,7 @@ for (int i = 0; i < ninds; i++) {
 #endif
 	}
 #if RS_RCPP
-	// write each individuals current movement step and status to paths file 
+	// write each individuals current movement step and status to paths file
 	if (trfr.moveModel && sim.outPaths) {
 		if(nextseason >= sim.outStartPaths && nextseason%sim.outIntPaths==0) {
 				inds[i]->outMovePath(nextseason);

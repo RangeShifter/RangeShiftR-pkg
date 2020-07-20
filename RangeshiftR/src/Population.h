@@ -19,7 +19,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 6 January 2020 by Steve Palmer
+Last updated: 1 February 2020 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -314,7 +314,7 @@ public:
 		Cell*,	// pointer to the Cell which the potential settler has reached
 		short		// sex of the required mate (0 = female, 1 = male)
 	);
-#endif // RS_RCPP 
+#endif // RS_RCPP
 #endif // SEASONAL 
 	// Determine survival and development and record in individual's status code
 	// Changes are NOT applied to the Population at this stage

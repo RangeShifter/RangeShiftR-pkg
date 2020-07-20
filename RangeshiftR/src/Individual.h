@@ -385,7 +385,7 @@ Individual* getMate(void);
 	void outMovePath( // Write records to movement paths file
 		const int		 	// year
 	);
-#endif 
+#endif
 
 #if GROUPDISP
 

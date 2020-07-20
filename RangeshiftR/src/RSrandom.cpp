@@ -25,25 +25,25 @@ RSrandom::RSrandom(int seed)
     if (seed < 0) {
         // random seed
 		#if RSWIN64
-		random_seed[2] = std::time(NULL);
+		random_seed[2] = std::time(NULL) + 17 * seed;
 		#else
         std::random_device device;
         random_seed[2] = device();
 		#endif
-        #if RSDEBUG
+        #if BATCH && RSDEBUG
             DEBUGLOG << "RSrandom::RSrandom(): Generate random seed = ";
         #endif
     }
     else{
         // fixed seed
         random_seed[2] = seed;
-        #if RSDEBUG
+        #if BATCH && RSDEBUG
             DEBUGLOG << "RSrandom::RSrandom(): Use fixed seed = ";
         #endif
     }
 
     RS_random_seed = random_seed[2];
-    #if RSDEBUG
+    #if BATCH && RSDEBUG
         DEBUGLOG << RS_random_seed << endl;
     #endif
 

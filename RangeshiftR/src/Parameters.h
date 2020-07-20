@@ -72,7 +72,7 @@ typedef unsigned int intptr;
 #else
     const double PI = 3.141592654;
 #endif
-//const double PI = 3.141592654;
+
 const double SQRT2 = std::sqrt(double(2.0)); // more efficient than calculating every time
 
 //---------------------------------------------------------------------------

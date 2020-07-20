@@ -12,7 +12,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 7 January 2020 by Steve Palmer
+Last updated: 15 July 2020 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -85,7 +85,7 @@ int ParseParameterFile(string);
 int ParseParameterFile(void);
 #endif
 int ParseLandFile(int,string);
-int ParseDynamicFile(string);
+int ParseDynamicFile(string,string);
 int ParseStageFile(string);
 int ParseTransitionFile(short,short);
 int ParseWeightsFile(string);
@@ -97,7 +97,7 @@ int ParseManageFile(string);
 int ParseSeasonFile(string);
 //#if PARTMIGRN
 int ParseExtremeFile(string);
-//#endif // PARTMIGRN
+//#endif // PARTMIGRN 
 #endif // SEASONAL
 int ParseEmigFile(void);
 int ParseTransferFile(string);
@@ -119,14 +119,13 @@ int ParseABCObsFile(void);
 int ParseMortFile(void);
 int ReadMortalities(string);
 #endif // TEMPMORT 
-int CheckCostRaster(string,string);
 simCheck CheckStageSex(string,int,int,simCheck,int,int,int,int,int,bool,bool);
 
 void BatchError(
-    string,	// file name
-    int,		// line number
-    int,		// option
-    string	// fieldname
+	string,	// file name
+	int,		// line number
+	int,		// option
+	string	// fieldname
 );
 /* Write error message to batch log file. Options are as follows:
 0 - general message only, no reference to field name
@@ -159,11 +158,11 @@ void BatchError(
 666 - fieldname must be a unique positive integer
 */
 void BatchError(
-    string,	// file name
-    int,		// line number
-    int,		// option
-    string,	// fieldname
-    string	// fieldname2
+	string,	// file name
+	int,		// line number
+	int,		// option
+	string,	// fieldname
+	string	// fieldname2
 );
 /* Write error message to batch log file. Options are as follows:
 1 - fieldname must be greater than fieldname2
@@ -201,10 +200,10 @@ int ReadHabDemFile(const short,const short);
 int ReadManageFile(int,Landscape*);
 #endif // RS_CONTAIN 
 int ReadTransitionMatrix(
-    short,	// no. of stages
-    short,	// no. of sexes represented for demography
-    short,	// habitat index
-    short		// season
+	short,	// no. of stages
+	short,	// no. of sexes represented for demography 
+	short,	// habitat index
+	short		// season
 );
 int ReadStageWeights(int);
 int ReadEmigration(int);
@@ -218,7 +217,7 @@ int ReadInitIndsFile(int,Landscape*,string);
 int ReadSeasonFile(const short,const short);
 //#if PARTMIGRN
 int ReadExtremeFile(Landscape*,const short);
-//#endif // PARTMIGRN
+//#endif // PARTMIGRN 
 #endif // SEASONAL
 #if VIRTUALECOLOGIST
 int ReadVirtEcol(int);
