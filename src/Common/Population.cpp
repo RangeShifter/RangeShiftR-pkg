@@ -2705,7 +2705,7 @@ for (int i = 0; i < ninds; i++) {
 #endif
 	}
 #if RS_RCPP
-	// write each individuals current movement step and status to paths file 
+	// write each individuals current movement step and status to paths file
 	if (trfr.moveModel && sim.outPaths) {
 		if(nextseason >= sim.outStartPaths && nextseason%sim.outIntPaths==0) {
 				inds[i]->outMovePath(nextseason);

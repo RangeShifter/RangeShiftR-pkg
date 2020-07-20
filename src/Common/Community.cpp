@@ -1412,11 +1412,11 @@ if (sim.batchMode) {
 #if RS_RCPP
 		+ "Batch" + Int2Str(sim.batchNum) + "_"
 		+ "Sim" + Int2Str(sim.simulation) + "_Land"
-		+ Int2Str(landNr) 
+		+ Int2Str(landNr)
 #else
 		+ "Batch" + Int2Str(sim.batchNum) + "_"
 		+ "Sim" + Int2Str(sim.simulation) + "_Land"
-		+ Int2Str(landNr) 
+		+ Int2Str(landNr)
 #endif
 		+ "_Range.txt";
 }
@@ -2618,7 +2618,7 @@ return fileOK;
 
 #if RS_RCPP && !R_CMD
 Rcpp::IntegerMatrix Community::addYearToPopList(int rep, int yr) {  // TODO: define new simparams to control start and interval of output
-	
+
 	landParams ppLand = pLandscape->getLandParams();
 	Rcpp::IntegerMatrix pop_map_year(ppLand.dimY,ppLand.dimX);
 	intptr ppatch = 0;
@@ -2626,9 +2626,9 @@ Rcpp::IntegerMatrix Community::addYearToPopList(int rep, int yr) {  // TODO: def
 	intptr subcomm = 0;
 	SubCommunity *pSubComm = 0;
 	popStats pop;
-	//pop.breeding = false; 
+	//pop.breeding = false;
 	pop.nInds = pop.nAdults = pop.nNonJuvs = 0;
-	
+
 	for (int y = 0; y < ppLand.dimY; y++) {
 		for (int x = 0; x < ppLand.dimX; x++) {
 			Cell *pCell = pLandscape->findCell(x,y); //if (pLandscape->cells[y][x] == 0) {

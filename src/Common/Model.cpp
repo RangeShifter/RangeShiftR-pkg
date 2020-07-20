@@ -516,7 +516,7 @@ DEBUGLOG << endl << "RunModel(): starting simulation=" << sim.simulation
 		|| (yr < 30001 && yr%10000 == 0)
 		|| (yr < 300001 && yr%100000 == 0)
 		|| (yr < 3000001 && yr%1000000 == 0)
-		) { 
+		) {
 #if RS_RCPP && !R_CMD
 			Rcpp::Rcout << "starting year " << yr << "..." << endl;
 #else
@@ -1550,7 +1550,7 @@ DEBUGLOG << "RunModel(): yr=" << yr << " completed reset"
 #if RS_RCPP
 	if (sim.outPaths)
 		pLandscape->outPathsHeaders(rep,-999);
-#endif 
+#endif
 #if VCL
 	if (stopRun) break;
 #endif

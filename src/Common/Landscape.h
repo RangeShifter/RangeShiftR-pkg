@@ -395,7 +395,7 @@ public:
 	int readLandChange(
 	    int,		// change file number
 		bool		// change SMS costs?
-		wifstream&, // habitat file stream, 
+		wifstream&, // habitat file stream
 		wifstream&, // patch file stream
 		int,		// habnodata
 		int			// pchnodata

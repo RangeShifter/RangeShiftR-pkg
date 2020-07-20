@@ -3142,13 +3142,13 @@ void Individual::outMovePath(const int year)
 		// at first step, record start cell first
 		if(path->total == 1){
 			prev_loc = pPrevCell->getLocn();
-			outMovePaths << year << "\t" << indId << "\t" 
+			outMovePaths << year << "\t" << indId << "\t"
 						 << "0\t" << prev_loc.x << "\t" << prev_loc.y << "\t"
 						 << "0\t"	// status at start cell is 0
 						<< endl;
 		}
 		// then record current step
-		outMovePaths << year << "\t" << indId << "\t" 
+		outMovePaths << year << "\t" << indId << "\t"
 			 << path->total << "\t" << loc.x << "\t" << loc.y << "\t"
 			 << status << "\t"
 			 << endl;
@@ -3160,12 +3160,12 @@ void Individual::outMovePath(const int year)
 		if (prev_loc.x != loc.x || prev_loc.y != loc.y) {
 			// if this is also the first step taken at all, record the start cell first
 			if(path->total == 1){
-				outMovePaths << year << "\t" << indId << "\t" 
+				outMovePaths << year << "\t" << indId << "\t"
 							 << "0\t" << prev_loc.x << "\t" << prev_loc.y << "\t"
 							 << "0\t"	// status at start cell is 0
 							<< endl;
 			}
-			outMovePaths << year << "\t" << indId << "\t" 
+			outMovePaths << year << "\t" << indId << "\t"
 						 << path->total << "\t" << loc.x << "\t" << loc.y << "\t"
 						 << status << "\t"
 						 << endl;

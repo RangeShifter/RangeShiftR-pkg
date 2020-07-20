@@ -8135,7 +8135,7 @@ DEBUGLOG << "ReadTransfer(): SMtype=" << trfr.smType << " SMconst=" << move.step
 #else
 DEBUGLOG << "ReadTransfer(): SMtype=" << trfr.habMort << " SMconst=" << move.stepMort << endl;
 #endif // TEMPMORT 
-#endif // RSDEBUG 
+#endif // RSDEBUG
 
 	if (!paramsLand.generated) { // real landscape
 		if (paramsLand.rasterType == 0) { // habitat codes

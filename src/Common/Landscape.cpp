@@ -16,7 +16,7 @@ ofstream outsummdmg;
 #endif // RS_CONTAIN
 #if RS_RCPP
 ofstream outMovePaths;
-#endif // RS_RCPP 
+#endif // RS_RCPP
 
 //---------------------------------------------------------------------------
 
@@ -3526,7 +3526,7 @@ void Landscape::outPathsHeaders(int rep, int option)
 				 +  "_Rep"  + Int2Str(rep);
 		}
 		name += "_MovePaths.txt";
-		
+
 		outMovePaths.open(name.c_str());
 		if( outMovePaths.is_open() ){
 			outMovePaths << "Year\tIndID\tStep\tx\ty\tStatus" << endl;
