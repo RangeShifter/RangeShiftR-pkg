@@ -394,11 +394,13 @@ public:
 #if RS_RCPP && !R_CMD
 	int readLandChange(
 	    int,		// change file number
-		bool		// change SMS costs?
+		bool,		// change SMS costs?
 		wifstream&, // habitat file stream
 		wifstream&, // patch file stream
+		wifstream&, // cost file stream
 		int,		// habnodata
-		int			// pchnodata
+		int,		// pchnodata
+		int			// costnodata
 	);
 #else
 	int readLandChange(
