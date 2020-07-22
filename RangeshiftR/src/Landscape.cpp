@@ -1716,15 +1716,15 @@ landchanges.clear();
 }
 
 #if RS_RCPP && !R_CMD
-int Landscape::readLandChange(int filenum, bool costs, wifstream& hfile, wifstream& pfile, int habnodata, int pchnodata, int costnodata)
+int Landscape::readLandChange(int filenum, bool costs, wifstream& hfile, wifstream& pfile, wifstream& cfile, int habnodata, int pchnodata, int costnodata)
 #else
 int Landscape::readLandChange(int filenum,bool costs)
 #endif
+{
 #if RSDEBUG
 DEBUGLOG << "Landscape::readLandChange(): filenum=" << filenum << " costs=" << int(costs)
 	<< endl;
 #endif
-{
 #if RS_RCPP
 wstring header;
 #else

@@ -174,7 +174,7 @@ void GUIsetLandScale(
 
 #if RS_RCPP
 extern int RS_random_seed;
-extern string name_landscape, name_patch, name_sp_dist;
+extern string name_landscape, name_patch, name_costfile, name_sp_dist;
 #endif
 //---------------------------------------------------------------------------
 #endif

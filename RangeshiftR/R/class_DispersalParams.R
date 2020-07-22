@@ -917,12 +917,14 @@ setMethod("plotProbs", "DispersalKernel", function(x, mortality = FALSE, combine
 #' @param BetaDB Required if \code{GoalType=2}: Dispersal bias decay inflection point (given in number of steps). Must be must be \eqn{> 0.0}.\cr If \code{IndVar=TRUE},
 #' expects a vector of length three specifying (Mean, SD, MutationScale) of \code{BetaDB}.
 #' @param StraightenPath Straighten path after decision not to settle in a patch? Defaults to \code{TRUE}, see Details below.
-#' @param Costs Describes the landscapes resistance to movement. Specify either \emph{habitat-specific} costs for each habitat type or
-#' the filename of a \emph{raster} map from which to import the cost values.\cr
-#' In case of \emph{habitat-specific} costs a numeric vector is expected with, respectively, length \code{Nhabitats} for an \code{\link[RangeshiftR]{ImportedLandscape}}
+#' @param Costs Describes the landscapes resistance to movement. Set either: \cr
+#'  - \emph{habitat-specific} costs for each habitat type, or\cr
+#'  - \code{"file"}, to indictae to use the \emph{cost raster} map(s) specified in the landscape module and import the cost values from them.\cr
+#' In the first case of \emph{habitat-specific} costs a numeric vector is expected with, respectively, length \code{Nhabitats} for an \code{\link[RangeshiftR]{ImportedLandscape}}
 #' with habitat codes (i.e. \code{HabitatQuality=FALSE})) or length \eqn{2} for an \code{\link[RangeshiftR]{ArtificialLandscape}} (matrix and habitat costs).\cr
-#' Importing a \emph{cost raster} is the only option for an \code{\link[RangeshiftR]{ImportedLandscape}} with habitat quality (i.e. \code{HabitatQuality=TRUE})
-#' The specified map has to match the landscape raster in extent, coordinates and resolution, and each cell contains a cost value.
+#' In the second case of importing a \emph{cost raster} file, specify the file name(s) in the \code{\link[RangeshiftR]{ImportedLandscape}} module.
+#' The specified map has to match the landscape raster in extent, coordinates and resolution, and each cell contains a cost value (\eqn{\ge 1}).
+#' This is the only option for an imported landscape with habitat quality (i.e. \code{HabitatQuality=TRUE}).
 #' @param StepMort Per-step mortality probability. Can be either \emph{constant}, in which case a single numeric is expected (the default, with
 #' value \eqn{0.0}) or \emph{habitat-specific}, in which case a numeric vector (with a length as described above for \code{Costs}) is expected.
 #' All values must be within the half-open interval \eqn{[0,1)}.\cr
@@ -972,10 +974,11 @@ setMethod("plotProbs", "DispersalKernel", function(x, mortality = FALSE, combine
 #'
 #' \emph{Costs layer} \cr
 #' Critical for the outcomes of SMS are the relative costs assigned to the different habitats (as it is also the case for
-#' the LCP approach). Habitat costs or resistance to movement can be set manually for each habitat code or imported as a raster map.
-#' The specified map has to match the landscape raster in extent, coordinates and resolution, and each cell contains a cost value. Importing a
-#' cost layer is the only option when the landscape comprises habitat coverage or quality. Moreover, using a costs layer allows for costs to be
-#' a function of multiple variables instead of a simple value associated to the habitat type.
+#' the LCP approach). Habitat costs or resistance to movement can be set manually for each habitat code or imported as a raster map, which
+#' allows for costs to be a function of multiple variables instead of a simple value associated to the habitat type.
+#' In the latter case, the filenames are provided in the \code{\link[RangeshiftR]{ImportedLandscape}} module.
+#' The specified map has to match the landscape raster in extent, coordinates and resolution, and each cell contains a cost value, with the minimal possible cost being \eqn{1}.
+#' Importing a cost layer is the only option when the landscape comprises habitat coverage or quality.
 #'
 #' \emph{Mortality} \cr
 #' There are two main sources of mortality: First, dispersal mortality can arise as a result of individuals failing to reach suitable habitat. Some individuals may fail
@@ -993,9 +996,9 @@ setMethod("plotProbs", "DispersalKernel", function(x, mortality = FALSE, combine
 #' @name SMS
 #' @export SMS
 SMS <- setClass("StochMove", slots = c(PR = "integer_OR_numeric",
-                                       PRMethod = "integer_OR_numeric", #Perceptual range method: 1 = arithmetic mean; 2 = harmonic mean; 3 = weighted arithmtic mean
+                                       PRMethod = "integer_OR_numeric", # Perceptual range method: 1 = arithmetic mean; 2 = harmonic mean; 3 = weighted arithmtic mean
                                        MemSize = "integer_OR_numeric",
-                                       GoalType = "integer_OR_numeric", #0 (none) or 2 (dispersal bias)
+                                       GoalType = "integer_OR_numeric", # 0 (none) or 2 (dispersal bias)
                                        IndVar = "logical",
                                        DP = "numeric",
                                        GoalBias = "numeric",
@@ -1217,7 +1220,12 @@ setValidity("StochMove", function(object) {
             }
         }
         else {
-            if (class(object@Costs)!="character") {
+            if (class(object@Costs)=="character") {
+                if (object@Costs != "file") {
+                    msg <- c(msg, "Costs has a wrong format! Must be either numeric or the keyword \"file\".")
+                }
+            }
+            else{ # neither numeric nor character
                 msg <- c(msg, "Costs has a wrong format!")
             }
         }
@@ -1254,7 +1262,7 @@ setMethod("initialize", "StochMove", function(.Object,...) {
         }
     }
     if (class(.Object@Costs)=="character") {
-        .Object@CostMap = TRUE
+        if (.Object@Costs == "file") .Object@CostMap = TRUE
     }
     else {
         if (class(.Object@Costs)=="numeric") {
@@ -1290,7 +1298,9 @@ setMethod("show", "StochMove", function(object){
         }
     }
     cat("   StraightenPath =", object@StraightenPath, "\n")
-    cat("   Costs =", object@Costs, "\n")
+    cat("   Costs ")
+    if (object@CostMap) cat(" read from file \n")
+    else cat("=", object@Costs, "\n")
     cat("   StepMort =", object@StepMort, "\n")
     }
 )

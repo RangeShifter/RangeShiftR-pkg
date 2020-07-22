@@ -64,7 +64,17 @@ setValidity("RSparams", function(object) {
     validObject(object@land)
     if (any(object@control@landtype==c(0,1))){
         if (any(object@land@DynamicLandYears>object@simul@Years)) {
-            warning("Dynamic landscape contains years that exceed the simulated years, so that some land changes will not apply.", call. = FALSE)
+            warning("ImportedLandscape(): Dynamic landscape contains years that exceed the simulated years, so that some land changes will not apply.", call. = FALSE)
+        }
+        if (object@land@CostsFile[1] !="NULL") {
+            if (class(object@dispersal@Transfer)[1] == "StochMove") {
+                if (object@dispersal@Transfer@Costs[1] != "file") {
+                    warning("ImportedLandscape(): Landscape module contains SMS cost layers, but SMS module does not use them.", call. = FALSE)
+                }
+            }
+            else{
+                warning("ImportedLandscape(): Landscape module contains SMS cost layers, but Transfer module does not use SMS().", call. = FALSE)
+            }
         }
     }
     #DEMOGRAPHY
@@ -398,13 +408,33 @@ setValidity("RSparams", function(object) {
                         msg <- c(msg, "SMS(): Costs must have Nhabitat entries for an imported landscape with habitat codes!")
                     }
                 }
+                if (class(object@dispersal@Transfer@Costs)=="character") {
+                    if (object@dispersal@Transfer@Costs == "file") {
+                        if (object@land@CostsFile[1] == "NULL") {
+                            msg <- c(msg, "SMS(): No cost map filenames found in the landscape module!")
+                        }
+                    }
+                    else{
+                        msg <- c(msg, "SMS(): Costs has a wrong format! Must be either numeric or the keyword \"file\".")
+                    }
+                }
             }
             else {
                 if (object@control@landtype==2) { # imported land with habitat quality
                     if (length(object@dispersal@Transfer@StepMort)!=1) {
                         msg <- c(msg, "SMS(): Per-step mortality probability must be a constant for an imported habitat quality landscape!")
                     }
-                    if (class(object@dispersal@Transfer@Costs)!="character") {
+                    if (class(object@dispersal@Transfer@Costs)=="character") {
+                        if (object@dispersal@Transfer@Costs == "file") {
+                            if (object@land@CostsFile[1] == "NULL") {
+                                msg <- c(msg, "SMS(): No cost map filenames found in the landscape module!")
+                            }
+                        }
+                        else{
+                            msg <- c(msg, "SMS(): Costs has a wrong format! Must be either numeric or the keyword \"file\".")
+                        }
+                    }
+                    else{
                         msg <- c(msg, "SMS(): Costs must be imported from a raster map for an imported habitat quality landscape!")
                     }
                 }
@@ -431,6 +461,19 @@ setValidity("RSparams", function(object) {
             }
             if(length(object@dispersal@Transfer@CostMap)==0) {
                 msg <- c(msg, "SMS(): Something went wrong adding a SMS Transfer method to the Parameter Master: No set CostMap switch.")
+            }
+            else{
+                if(object@dispersal@Transfer@CostMap){
+                    if(object@dispersal@Transfer@Costs[1] != "file") {
+                        msg <- c(msg, "SMS(): Something went wrong adding a SMS Transfer method to the Parameter Master: CostMap switch incorrect.")
+                    }
+                }
+                else{
+                    if(object@dispersal@Transfer@Costs[1] == "file") {
+                        msg <- c(msg, "SMS(): Something went wrong adding a SMS Transfer method to the Parameter Master: CostMap switch incorrect.")
+                    }
+
+                }
             }
         }
     }

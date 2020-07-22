@@ -2024,6 +2024,9 @@ else {
 	if (ppLand.patchModel) {
 		outPar << "PATCH FILE: " << name_patch << endl;
 	}
+	if (trfr.costMap) {
+		outPar << "COSTS FILE: " << name_costfile << endl;
+	}
 #else
 	if (sim.batchMode) outPar << " (see batch file) " << landFile << endl;
 	else {
@@ -2868,7 +2871,9 @@ if (trfr.moveModel) {
 		straigtenPath = move.straigtenPath;
 		if (trfr.costMap) {
 			outPar << "SMS\tcosts from imported cost map" << endl;
+#if !RS_RCPP
 			outPar << "FILE NAME: " << costmapname << endl;
+#endif
 		}
 		else {
 			outPar << "SMS\tcosts:" << endl;
