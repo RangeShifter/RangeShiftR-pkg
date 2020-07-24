@@ -36,9 +36,9 @@ to be intialised, which are specified by the user in FormSeeding. This option is
 available in the GUI version only.
 
 For full details of RangeShifter, please see:
-Bocedi G., Palmer S.C.F., Pe’er G., Heikkinen R.K., Matsinos Y.G., Watts K.
+Bocedi G., Palmer S.C.F., Peâ€™er G., Heikkinen R.K., Matsinos Y.G., Watts K.
 and Travis J.M.J. (2014). RangeShifter: a platform for modelling spatial
-eco-evolutionary dynamics and species’ responses to environmental changes.
+eco-evolutionary dynamics and speciesâ€™ responses to environmental changes.
 Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
@@ -57,6 +57,7 @@ Last updated: 15 July 2020 by Steve Palmer
 //#include <iostream.h>
 //#include <stdio.h>
 #include <vector>
+
 using namespace std;
 
 #include "Parameters.h"
@@ -64,6 +65,15 @@ using namespace std;
 #include "Cell.h"
 #include "Species.h"
 #include "FractalGenerator.h"
+#if RS_RCPP
+#include <locale>
+#if !RSWIN64
+#include <codecvt>
+#endif
+#if !R_CMD
+#include <Rcpp.h>
+#endif
+#endif
 #if RS_CONTAIN
 #include "Control.h"
 #endif // RS_CONTAIN 
@@ -153,6 +163,9 @@ struct rasterdata {
 	bool ok;
 	int errors,ncols,nrows,cellsize;
 	double xllcorner,yllcorner;
+#if RS_RCPP
+	bool utf;
+#endif
 };
 struct patchData {
 	Patch *pPatch; int patchNum,nCells; int x,y;
@@ -378,10 +391,23 @@ public:
 		short	// change number
 	);
 	void deleteLandChanges(void);
+#if RS_RCPP && !R_CMD
+	int readLandChange(
+	    int,		// change file number
+		bool,		// change SMS costs?
+		wifstream&, // habitat file stream
+		wifstream&, // patch file stream
+		wifstream&, // cost file stream
+		int,		// habnodata
+		int,		// pchnodata
+		int			// costnodata
+	);
+#else
 	int readLandChange(
 		int,	// change file number
 		bool	// change SMS costs?
 	);
+#endif
 	void createPatchChgMatrix(void);
 	void recordPatchChanges(int);
 	void deletePatchChgMatrix(void);
@@ -477,6 +503,9 @@ public:
 	bool outConnectHeaders( // Write connectivity file headers
 		int		// option - set to -999 to close the connectivity file
 	);
+#if RS_RCPP
+	void outPathsHeaders(int, int);
+#endif
 #if SEASONAL
 	void outConnect(
 		int,	// replicate no.
@@ -548,8 +577,8 @@ public:
 		string,	// patch file name
 		string	// cost file name (may be NULL)
 	);
-#endif // SEASONAL 
-#endif // RS_CONTAIN 
+#endif // SEASONAL
+#endif // RS_CONTAIN
 	void listPatches(void);
 	int readCosts(
 		string	// costs file name
@@ -693,6 +722,12 @@ extern void DebugGUI(string);
 extern void MemoLine(UnicodeString);
 #else
 extern void MemoLine(string);
+#endif
+
+#if RS_RCPP
+extern rasterdata landraster,patchraster,spdistraster,costsraster;
+extern void EOFerrorR(string);
+extern void StreamErrorR(string);
 #endif
 
 //---------------------------------------------------------------------------

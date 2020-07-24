@@ -2426,10 +2426,10 @@ for (int i = 0; i < ngroups; i++) { // all groups
 #endif // GROUPDISP 
 
 // Transfer is run for populations in the matrix only
-#if SEASONAL
+#if SEASONAL || RS_RCPP
 int Population::transfer(Landscape *pLandscape,short landIx,short nextseason) 
 #else
-int Population::transfer(Landscape *pLandscape,short landIx) 
+int Population::transfer(Landscape *pLandscape,short landIx)
 #endif
 {
 int ndispersers = 0;
@@ -2699,12 +2699,19 @@ for (int i = 0; i < ninds; i++) {
 				}
 			}
 		}
-
 	inds[i]->setStatus(ind.status);
 #if SEASONAL
 //	inds[i]->setMigrnStatus(ind.migrnstatus);
 #endif
 	}
+#if RS_RCPP
+	// write each individuals current movement step and status to paths file
+	if (trfr.moveModel && sim.outPaths) {
+		if(nextseason >= sim.outStartPaths && nextseason%sim.outIntPaths==0) {
+				inds[i]->outMovePath(nextseason);
+		}
+	}
+#endif
 
 	if (!trfr.moveModel && sett.go2nbrLocn && (ind.status == 3 || ind.status == 6))
 	{
@@ -2773,6 +2780,7 @@ for (int i = 0; i < ninds; i++) {
 //DEBUGLOG << "Population::transfer(): 9999: ninds = " << ninds
 //	<< " ndispersers = " << ndispersers << endl;
 #endif
+
 
 return ndispersers;
 }

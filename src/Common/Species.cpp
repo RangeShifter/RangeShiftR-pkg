@@ -985,7 +985,7 @@ if (nLoci != NULL) deleteLoci();
 if (c > 0) {
 	nChromosomes = nNLoci = c;
 	nLoci = new short [c];
-	for (int i; i < nNLoci; i++) nLoci[i] = 0;
+	for (int i = 0; i < nNLoci; i++) nLoci[i] = 0;
 }
 else nChromosomes = nNLoci = 0;
 }
@@ -1062,8 +1062,8 @@ int movttraits = 0;
 if (indVarTrfr) {
 	if (moveModel) {
 		if (moveType == 1) { // SMS
-			movttraits = 2;
-			if (goalType == 2) movttraits += 2;
+			movttraits = 1;
+			if (goalType == 2) movttraits += 3;
 		}
 		if (moveType == 2) movttraits = 2;
 	}
@@ -1163,10 +1163,10 @@ if (indVarTrfr) {
 	if (moveModel) {
 		if (moveType == 1) { // SMS
 			traitnames[trait++] = "DP";
-			traitnames[trait++] = "GB";
 			if (goalType == 2) {
+				traitnames[trait++] = "GB";
 				traitnames[trait++] = "alphaDB";
-				traitnames[trait++] = "betaDB";				
+				traitnames[trait++] = "betaDB";
 			}
 		}
 		if (moveType == 2) { // CRW

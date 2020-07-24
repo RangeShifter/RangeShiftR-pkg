@@ -12,9 +12,9 @@ The matrix Population(s) hold(s) Individuals which are currently in the process
 of transfer through the matrix.
 
 For full details of RangeShifter, please see:
-Bocedi G., Palmer S.C.F., Pe’er G., Heikkinen R.K., Matsinos Y.G., Watts K.
+Bocedi G., Palmer S.C.F., Peâ€™er G., Heikkinen R.K., Matsinos Y.G., Watts K.
 and Travis J.M.J. (2014). RangeShifter: a platform for modelling spatial
-eco-evolutionary dynamics and species’ responses to environmental changes.
+eco-evolutionary dynamics and speciesâ€™ responses to environmental changes.
 Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
@@ -291,6 +291,19 @@ public:
 		short		// season
 	);
 #else
+#if RS_RCPP
+	int transfer( // Executed for the Population(s) in the matrix only
+		Landscape*,	// pointer to Landscape
+		short,				// landscape change index
+		short				// year
+	);
+	// Determine whether there is a potential mate present in a patch which a potential
+	// settler has reached
+	bool matePresent(
+		Cell*,	// pointer to the Cell which the potential settler has reached
+		short		// sex of the required mate (0 = female, 1 = male)
+	);
+#else
 	int transfer( // Executed for the Population(s) in the matrix only
 		Landscape*,	// pointer to Landscape
 		short				// landscape change index
@@ -301,6 +314,7 @@ public:
 		Cell*,	// pointer to the Cell which the potential settler has reached
 		short		// sex of the required mate (0 = female, 1 = male)
 	);
+#endif // RS_RCPP
 #endif // SEASONAL 
 	// Determine survival and development and record in individual's status code
 	// Changes are NOT applied to the Population at this stage
