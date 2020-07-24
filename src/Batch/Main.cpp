@@ -7,9 +7,9 @@ Entry level function for BATCH MODE version
 For compilation in Embarcadero
 
 For full details of RangeShifter, please see:
-Bocedi G., Palmer S.C.F., Pe’er G., Heikkinen R.K., Matsinos Y.G., Watts K.
+Bocedi G., Palmer S.C.F., PeÂ’er G., Heikkinen R.K., Matsinos Y.G., Watts K.
 and Travis J.M.J. (2014). RangeShifter: a platform for modelling spatial
-eco-evolutionary dynamics and species’ responses to environmental changes.
+eco-evolutionary dynamics and speciesÂ’ responses to environmental changes.
 Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Author: Steve Palmer, University of Aberdeen
@@ -85,7 +85,7 @@ ofstream MUTNLOG;
 #endif
 
 //---------------------------------------------------------------------------
-#if CLUSTER
+#if CLUSTER || RS_RCPP
 int main(int argc, char* argv[])
 #else
 int _tmain(int argc, _TCHAR* argv[])
@@ -106,7 +106,7 @@ paramsSim = new paramSim;
 
 // set up working directory and control file name
 string cname;
-#if CLUSTER
+#if CLUSTER || RS_RCPP
 if (argc > 1) {
 	// full path name of directory passed as a parameter
 	paramsSim->setDir(argv[1]);
@@ -316,7 +316,17 @@ else {
 DEBUGLOG << "Main(): dem.repType = " << dem.repType << endl;
 #endif
 
-pRandom = new RSrandom();
+// set up random number class
+#if RS_RCPP
+	#if RSDEBUG
+		pRandom = new RSrandom(666);
+	#else
+		pRandom = new RSrandom(-1);  // need to be replaced with parameter from control file
+	#endif
+#else
+	pRandom = new RSrandom();
+#endif
+
 
 #if RANDOMCHECK
 randomCheck();
@@ -326,6 +336,8 @@ if (b.ok) {
 }
 #endif
 
+delete pRandom;
+
 #if RSDEBUG
 if (DEBUGLOG.is_open()) {
 	DEBUGLOG.close(); DEBUGLOG.clear();
@@ -334,6 +346,12 @@ if (MUTNLOG.is_open()) {
 	MUTNLOG.close(); MUTNLOG.clear();
 }
 #endif
+
+delete paramsGrad;
+delete paramsStoch;
+delete paramsInit;
+delete paramsSim;     
+delete pSpecies;
 
 t1 = time(0);
 cout << endl << "***** Elapsed time " << t1-t0 << " seconds" << endl << endl;

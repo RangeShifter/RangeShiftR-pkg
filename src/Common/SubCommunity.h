@@ -10,9 +10,9 @@ each Species represented in the simulation.
 CURRENTLY the number of Populations withn a SubCommunity is LIMITED TO ONE.
 
 For full details of RangeShifter, please see:
-Bocedi G., Palmer S.C.F., Pe’er G., Heikkinen R.K., Matsinos Y.G., Watts K.
+Bocedi G., Palmer S.C.F., Peâ€™er G., Heikkinen R.K., Matsinos Y.G., Watts K.
 and Travis J.M.J. (2014). RangeShifter: a platform for modelling spatial
-eco-evolutionary dynamics and species’ responses to environmental changes.
+eco-evolutionary dynamics and speciesâ€™ responses to environmental changes.
 Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
@@ -184,18 +184,18 @@ public:
 		Individual*,	// pointer to Individual
 		Species*			// pointer to Species
 	);
-#if SEASONAL
+#if SEASONAL || RS_RCPP
 	int transfer( // Transfer through matrix - run for matrix SubCommunity only
 		Landscape*,	// pointer to Landscape
 		short,			// landscape change index
-		short				// season
+		short				// season / year
 	);
 #else
 	int transfer( // Transfer through matrix - run for matrix SubCommunity only
 		Landscape*,	// pointer to Landscape
 		short				// landscape change index
 	);
-#endif // SEASONAL 
+#endif // SEASONAL || RS_RCPP
 	// Remove emigrants from patch 0 (matrix) and transfer to SubCommunity in which
 	// their destination co-ordinates fall (executed for the matrix patch only)
 #if PEDIGREE

@@ -2162,7 +2162,7 @@ else { // take a step
 			else {
 				pPatch = (Patch*)patch; patchnum = pPatch->getPatchNum();
 			}
-			if (sim.saveVisits && pPatch != pNatalPatch && patchnum == 0) {
+			if (sim.saveVisits && pPatch != pNatalPatch) {
 				pCurrCell->incrVisits();
 			}
 #if VCL
@@ -3124,6 +3124,54 @@ else { // open/close file
 }
 #endif
 
+#if RS_RCPP
+//---------------------------------------------------------------------------
+// Write records to movement paths file
+void Individual::outMovePath(const int year)
+{
+	locn loc, prev_loc;
+
+	//if (pPatch != pNatalPatch) {
+	loc = pCurrCell->getLocn();
+	// if still dispersing...
+	if(status == 1){
+		// at first step, record start cell first
+		if(path->total == 1){
+			prev_loc = pPrevCell->getLocn();
+			outMovePaths << year << "\t" << indId << "\t"
+						 << "0\t" << prev_loc.x << "\t" << prev_loc.y << "\t"
+						 << "0\t"	// status at start cell is 0
+						<< endl;
+		}
+		// then record current step
+		outMovePaths << year << "\t" << indId << "\t"
+			 << path->total << "\t" << loc.x << "\t" << loc.y << "\t"
+			 << status << "\t"
+			 << endl;
+	}
+	// if not anymore dispersing...
+	if(status > 1 && status < 10){
+		prev_loc = pPrevCell->getLocn();
+		// record only if this is the first step as non-disperser
+		if (prev_loc.x != loc.x || prev_loc.y != loc.y) {
+			// if this is also the first step taken at all, record the start cell first
+			if(path->total == 1){
+				outMovePaths << year << "\t" << indId << "\t"
+							 << "0\t" << prev_loc.x << "\t" << prev_loc.y << "\t"
+							 << "0\t"	// status at start cell is 0
+							<< endl;
+			}
+			outMovePaths << year << "\t" << indId << "\t"
+						 << path->total << "\t" << loc.x << "\t" << loc.y << "\t"
+						 << status << "\t"
+						 << endl;
+			// current cell will be invalid (zero), so set back to previous cell
+			pPrevCell = pCurrCell;
+		}
+	}
+}
+#endif
+
 //---------------------------------------------------------------------------
 
 #if PEDIGREE
@@ -3170,4 +3218,3 @@ return location + scale * tan(M_PI * pRandom->Random());
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-

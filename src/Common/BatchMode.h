@@ -5,9 +5,9 @@ RangeShifter v2.0 BatchMode
 Functions for running in BATCH MODE
 
 For full details of RangeShifter, please see:
-Bocedi G., Palmer S.C.F., Pe’er G., Heikkinen R.K., Matsinos Y.G., Watts K.
+Bocedi G., Palmer S.C.F., Peâ€™er G., Heikkinen R.K., Matsinos Y.G., Watts K.
 and Travis J.M.J. (2014). RangeShifter: a platform for modelling spatial
-eco-evolutionary dynamics and species’ responses to environmental changes.
+eco-evolutionary dynamics and speciesâ€™ responses to environmental changes.
 Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
@@ -247,10 +247,14 @@ extern string patchfilename;	// see [NOT YET CODED FOR GUI] (VCL) OR Main.cpp (b
 #endif // VIRTUALECOLOGIST 
 #if TEMPMORT
 extern string mortfilename;	// see [NOT YET CODED FOR GUI] (VCL) OR Main.cpp (batch)
-#endif // TEMPMORT 
-#if !CLUSTER
-extern int RS_random_seed;			// see RSrandom.cpp 
-#endif // !CLUSTER
+#endif // TEMPMORT
+#if !CLUSTER || RS_RCPP
+extern int RS_random_seed;			// see RSrandom.cpp
+#if RS_RCPP
+void EOFerrorR(string);
+void StreamErrorR(string);
+#endif // RS_RCPP
+#endif // !CLUSTER || RS_RCPP
 
 //---------------------------------------------------------------------------
 #endif
