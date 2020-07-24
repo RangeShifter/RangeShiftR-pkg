@@ -1893,7 +1893,11 @@ case 0: // raster with habitat codes - 100% habitat each cell
 					}
 				}
 				if (patchModel) {
-					if (p < 0) { // invalid patch code
+					if (p < 0 || p == pchnodata) { // invalid patch code
+						#if RS_RCPP && !R_CMD
+						if (p == pchnodata) Rcpp::Rcout << "Found patch NA in valid habitat cell." <<  std::endl;
+						else Rcpp::Rcout << "Found negative patch ID in valid habitat cell." <<  std::endl;
+						#endif
 						hfile.close(); hfile.clear();
 						pfile.close(); pfile.clear();
 						return 34;
@@ -2028,7 +2032,11 @@ case 0: // raster with habitat codes - 100% habitat each cell
 					}
 				}
 				if (patchModel) {
-					if (p < 0) { // invalid patch code
+					if (p < 0 || p == pchnodata) { // invalid patch code
+						#if RS_RCPP && !R_CMD
+						if (p == pchnodata) Rcpp::Rcout << "Found patch NA in valid habitat cell." <<  std::endl;
+						else Rcpp::Rcout << "Found negative patch ID in valid habitat cell." <<  std::endl;
+						#endif
 						hfile.close(); hfile.clear();
 						pfile.close(); pfile.clear();
 						return 34;
@@ -2655,8 +2663,8 @@ case 0: // raster with habitat codes - 100% habitat each cell
 					if (patchModel) {
 						if (p < 0 || p == pchnodata) { // invalid patch code
 							#if RS_RCPP && !R_CMD
-								if (p == pchnodata) Rcpp::Rcout << "Found patch NA in valid habitat cell." <<  std::endl;
-								if (p < 0 && p != pchnodata) Rcpp::Rcout << "Found negative patch ID in valid habitat cell." <<  std::endl;
+							if (p == pchnodata) Rcpp::Rcout << "Found patch NA in valid habitat cell." <<  std::endl;
+							else Rcpp::Rcout << "Found negative patch ID in valid habitat cell." <<  std::endl;
 							#endif
 							hfile.close(); hfile.clear();
 							pfile.close(); pfile.clear();
@@ -2772,10 +2780,10 @@ case 1: // multiple % cover
 					}
 					else {
 						if (patchModel) {
-								if (p < 0 || p == pchnodata) { // invalid patch code
+							if (p < 0 || p == pchnodata) { // invalid patch code
 								#if RS_RCPP && !R_CMD
 								if (p == pchnodata) Rcpp::Rcout << "Found patch NA in valid habitat cell." <<  std::endl;
-								if (p < 0 && p != pchnodata) Rcpp::Rcout << "Found negative patch ID in valid habitat cell." <<  std::endl;
+								else Rcpp::Rcout << "Found negative patch ID in valid habitat cell." <<  std::endl;
 								#endif
 								hfile.close(); hfile.clear();
 								pfile.close(); pfile.clear();
@@ -2944,8 +2952,8 @@ case 2: // habitat quality
 					if (patchModel) {
 						if (p < 0 || p == pchnodata) { // invalid patch code
 							#if RS_RCPP && !R_CMD
-								if (p == pchnodata) Rcpp::Rcout << "Found patch NA in valid habitat cell." <<  std::endl;
-								if (p < 0 && p != pchnodata) Rcpp::Rcout << "Found negative patch ID in valid habitat cell." <<  std::endl;
+							if (p == pchnodata) Rcpp::Rcout << "Found patch NA in valid habitat cell." <<  std::endl;
+							else Rcpp::Rcout << "Found negative patch ID in valid habitat cell." <<  std::endl;
 							#endif
 							hfile.close(); hfile.clear();
 							pfile.close(); pfile.clear();
