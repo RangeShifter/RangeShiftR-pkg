@@ -2162,11 +2162,7 @@ else { // take a step
 			else {
 				pPatch = (Patch*)patch; patchnum = pPatch->getPatchNum();
 			}
-#if RS_RCPP
 			if (sim.saveVisits && pPatch != pNatalPatch) {
-#else
-			if (sim.saveVisits && pPatch != pNatalPatch && patchnum == 0) {
-#endif
 				pCurrCell->incrVisits();
 			}
 #if VCL
