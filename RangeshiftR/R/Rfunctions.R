@@ -25,7 +25,7 @@
 #' @param dispersal Set \code{\link[RangeshiftR]{Dispersal}} parameters
 #' @param gene Set \code{\link[RangeshiftR]{Genetics}} parameters
 #' @param init Set \code{\link[RangeshiftR]{Initialise}} parameters
-#' @param seed Set seed for random number generator. If non-positive, a random seed will be used.
+#' @param seed Set seed for random number generator. If non-positive, a random seed will be generated.
 #' @return returns a RangeShiftR parameter master object (class 'RSparams')
 #' @details
 #' \emph{Demographic stochasticity} \cr Demographic stochasticity is fundamentally important for the dynamics of populations that are naturally small or have declined to low abundances owing to

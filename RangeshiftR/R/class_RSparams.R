@@ -727,8 +727,8 @@ setValidity("RSparams", function(object) {
     if (is.null(msg)) TRUE else msg}
 )
 setMethod("show", "RSparams", function(object){
-    #print(object@control)
-    #cat("\n")
+    print(object@control)
+    cat("\n")
     print(object@simul)
     cat("\n")
     print(object@land)

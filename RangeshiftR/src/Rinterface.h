@@ -145,7 +145,7 @@ extern string patchfilename;	// see [NOT YET CODED FOR GUI] (VCL) OR Main.cpp (b
 extern string mortfilename;	// see [NOT YET CODED FOR GUI] (VCL) OR Main.cpp (batch)
 #endif // TEMPMORT
 #if !CLUSTER || RS_RCPP
-extern int RS_random_seed;			// see RSrandom.cpp
+//extern std::uint32_t RS_random_seed;			// see RSrandom.cpp
 #endif // !CLUSTER || RS_RCPP
 
 //---------------------------------------------------------------------------

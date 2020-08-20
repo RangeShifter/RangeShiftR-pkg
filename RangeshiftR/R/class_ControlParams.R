@@ -42,6 +42,17 @@ setValidity("ControlParams", function(object){
         if(stg < 2 || stg > 10) msg <- c(msg, "Number of Stages must be in the interval [2; 10]")
                                                           #paste("Unequal x,y lengths: ", length(object@x), ", ", length(object@y), sep="")
     }
+    if(object@seed > 4000000000) {
+        warning("RSsim(): Seeds greater than 4e9 should be avoided, since they might not be handled correctly.", call. = FALSE)
+    }
     if (is.null(msg)) TRUE else msg}
 )
-setMethod("show", "ControlParams", function(object){cat(" Batch #", object@batchnum, "\n")})
+setMethod("show", "ControlParams", function(object){
+    cat(" Batch #", object@batchnum, "\n")
+    if(object@seed){
+        cat(" Seed =", object@seed)
+        if(object@seed<0) cat("  (generate random seed)")
+        if(object@seed>0) cat("  (fixed seed)")
+        cat("\n")
+    }
+})

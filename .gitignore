@@ -5,7 +5,6 @@
 /.build-debug/
 /Debug/
 /Release/
-RNG_test/
 .codelite/
 compile_commands.json
 Makefile
@@ -30,7 +29,7 @@ build-Release/
 # RStudio files
 .Rproj.user/
 /RangeshiftR/.Rproj.user/
-/RangeshiftR/RangeshiftR.Rproj
+#/RangeshiftR/RangeshiftR.Rproj
 /RangeshiftR/Read-and-delete-me
 /RangeshiftR/.Rhistory
 #/RangeshiftR/.Rbuildignore
@@ -66,7 +65,7 @@ build-Release/
 # produced vignettes
 vignettes/*.html
 vignettes/*.pdf
-/RangeshiftR/man/
+#/RangeshiftR/man/
 
 # OAuth2 token, see https://github.com/hadley/httr/releases/tag/v0.3
 .httr-oauth
@@ -79,66 +78,4 @@ vignettes/*.pdf
 *.utf8.md
 *.knit.md
 
-
-
-#-----
-
-# Embarcadero junk
-*.ilc
-*.ild
-*.ilf
-*.ils
-*.map
-*.pdi
-*.tds
-*.#0?
-*.~*
-*.local
-*.res
-*.stat
-
-# Prerequisites
-*.d
-
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
-
-# Test input and output files
-Debug/
-Release/
-Inputs/
-Outputs/
-Output_Maps/
-
-# Documentation
-*.wbk
-Backup*/
-Bacup*/
 

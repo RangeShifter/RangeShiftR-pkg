@@ -603,7 +603,7 @@ setValidity("DispersalKernel", function(object) {
             }
         }
         else {
-            if (class(object@Distances)=="numeric") {
+            if (class(object@Distances)!="matrix") {
                 msg <- c(msg, "Distances must be a matrix!")
             }
         }

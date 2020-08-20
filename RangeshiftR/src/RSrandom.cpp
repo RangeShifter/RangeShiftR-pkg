@@ -1,10 +1,12 @@
-#if !RS_RCPP
-
 
 #pragma hdrstop
 
 #include "RSrandom.h"
 //---------------------------------------------------------------------------
+
+
+#if !RS_RCPP
+
 #pragma package(smart_init)
 
 #if RSDEBUG
@@ -299,8 +301,6 @@ return  gamma;
 
 #else // if RS_RCPP 
 
-	#include "RSrandom.h"
-
 	#if RSDEBUG
 	#include "Parameters.h"
 	extern paramSim *paramsSim;
@@ -311,22 +311,22 @@ return  gamma;
 
 	// C'tor
 	// if parameter seed is negative, a random seed will be generated, else it is used as seed
-	RSrandom::RSrandom(int seed)
+	RSrandom::RSrandom(std::int64_t seed)
 	{
 		// get seed
 		std::vector<std::uint32_t> random_seed(3);
-		random_seed[0] = 1593562;
-		random_seed[1] = 9275416;
+		random_seed[0] = 1967593562;
+		random_seed[1] = 3271254416;
 		if (seed < 0) {
 			// random seed
 			#if RSWIN64
-			random_seed[2] = std::time(NULL) + 17 * seed;
+			random_seed[2] = std::time(NULL) + ( seed * (-17) );
 			#else
 			std::random_device device;
 			random_seed[2] = device();
 			#endif
 			#if BATCH && RSDEBUG
-				DEBUGLOG << "RSrandom::RSrandom(): Generate random seed = ";
+				DEBUGLOG << "RSrandom::RSrandom(): Generated random seed = ";
 			#endif
 		}
 		else{

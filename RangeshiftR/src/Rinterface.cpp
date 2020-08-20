@@ -573,7 +573,7 @@ Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
 #endif
 
 	// set up random number stream
-	int seed = Rcpp::as<int>(control.slot("seed"));
+	std::int64_t seed = Rcpp::as<std::int64_t>(control.slot("seed"));
 	
 	if(seed == 0) { // don't set seed from R
 #if RSDEBUG
