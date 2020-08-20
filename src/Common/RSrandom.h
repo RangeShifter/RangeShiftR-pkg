@@ -21,6 +21,8 @@ Modified: 19 February 2020 by Anne-Kathleen Malchow, Humboldt University Berlin
 
 #include "Version.h"
 
+using namespace std;
+
 #if RSDEBUG
 extern ofstream DEBUGLOG;
 #endif
@@ -38,7 +40,6 @@ extern ofstream DEBUGLOG;
 	#include <dinkumware/random>
 	#endif
 	#endif
-	using namespace std;
 
 	class RSrandom {
 
@@ -78,12 +79,10 @@ extern ofstream DEBUGLOG;
 	#include <ctime>
 	#endif
 
-	using namespace std;
-
 	class RSrandom {
 
 	public:
-		RSrandom(int);              // if int is negative, a random seed will be generated, else it is used as seed
+		RSrandom(std::int64_t);              // if int is negative, a random seed will be generated, else it is used as seed
 		~RSrandom(void);
 		double Random(void);
 		int IRandom(int,int);

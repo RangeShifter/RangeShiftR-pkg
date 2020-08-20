@@ -11,9 +11,9 @@ Further functions are declared here, but defined differently in main function of
 GUI and batch versions.
 
 For full details of RangeShifter, please see:
-Bocedi G., Palmer S.C.F., Pe’er G., Heikkinen R.K., Matsinos Y.G., Watts K.
+Bocedi G., Palmer S.C.F., Peer G., Heikkinen R.K., Matsinos Y.G., Watts K.
 and Travis J.M.J. (2014). RangeShifter: a platform for modelling spatial
-eco-evolutionary dynamics and species’ responses to environmental changes.
+eco-evolutionary dynamics and species responses to environmental changes.
 Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
@@ -173,7 +173,7 @@ void GUIsetLandScale(
 );
 
 #if RS_RCPP
-extern int RS_random_seed;
+extern std::uint32_t RS_random_seed;
 extern string name_landscape, name_patch, name_costfile, name_sp_dist;
 #endif
 //---------------------------------------------------------------------------
