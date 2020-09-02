@@ -1540,11 +1540,7 @@ DEBUGLOG << "RunModel(): yr=" << yr << " completed reset"
 		pComm->outGenetics(rep,0,0,-999);
 
 	if (sim.saveVisits) {
-<<<<<<< HEAD
 #if VCL		
-=======
-#if VCL
->>>>>>> Rcpp_additions
 		if (!sim.batchMode) pLandscape->saveVisits(rep,ppLand.landNum);
 #endif
 		pLandscape->outVisits(rep,ppLand.landNum);
@@ -2063,11 +2059,7 @@ if (!ppLand.generated && ppLand.dynamic) {
 			outPar << "Patches  : " << chg.pchfile << endl;
 		}
 		if (chg.costfile != "none" && chg.costfile != "NULL") {
-<<<<<<< HEAD
 			outPar << "Costs    : " << chg.costfile << endl;			
-=======
-			outPar << "Costs    : " << chg.costfile << endl;
->>>>>>> Rcpp_additions
 		}
 //		outPar << "Change no. " << chg.chgnum << " in year " << chg.chgyear
 //			<< " habitat map: " << chg.habfile << endl;
