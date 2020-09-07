@@ -15,7 +15,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 24 July 2020 by Anne-Kathleen Malchow, Potsdam University
+Last updated: 07 September 2020 by Anne-Kathleen Malchow, Potsdam University
 
 ------------------------------------------------------------------------------*/
 
@@ -68,6 +68,9 @@ struct pathData { // to hold path data common to SMS and CRW models
 												// 0 = not set, 1 = debarred through density dependence rule
 												// 2 = OK to settle subject to finding a mate
 //	bool leftNatalPatch;	// individual has moved out of its natal patch
+#if RS_RCPP
+	short pathoutput;
+#endif
 };
 struct pathSteps { // nos. of steps for movement model
 	int year, total, out;
