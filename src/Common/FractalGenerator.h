@@ -6,18 +6,18 @@ Implements the midpoint displacement algorithm for generating a fractal Landscap
 following:
 
 Saupe, D. (1988). Algorithms for random fractals. In: The Science of Fractal Images
-(eds. Pietgen, H.O. & Saupe, D.). Springer, New York, pp. 71Â–113.
+(eds. Pietgen, H.O. & Saupe, D.). Springer, New York, pp. 71–113.
 
 
 For full details of RangeShifter, please see:
-Bocedi G., Palmer S.C.F., Peâ€™er G., Heikkinen R.K., Matsinos Y.G., Watts K.
+Bocedi G., Palmer S.C.F., Pe’er G., Heikkinen R.K., Matsinos Y.G., Watts K.
 and Travis J.M.J. (2014). RangeShifter: a platform for modelling spatial
-eco-evolutionary dynamics and speciesâ€™ responses to environmental changes.
+eco-evolutionary dynamics and species’ responses to environmental changes.
 Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
-Authors: Greta Bocedi, University of Aberdeen
+Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 6 January 2020 by Steve Palmer
+Last updated: 24 July 2020 by Anne-Kathleen Malchow, Potsdam University
 
 ------------------------------------------------------------------------------*/
 
