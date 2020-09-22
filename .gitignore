@@ -5,6 +5,7 @@
 /.build-debug/
 /Debug/
 /Release/
+/RNG_test/
 .codelite/
 compile_commands.json
 Makefile

@@ -110,6 +110,9 @@ if (movt) {
 #endif
 	path->pSettPatch = 0; path->settleStatus = 0;
 //	path->leftNatalPatch = false;
+#if RS_RCPP
+	path->pathoutput = 1;
+#endif
 	if (moveType == 1) { // SMS
 		// set up location data for SMS
 		smsData = new smsdata;
@@ -821,6 +824,9 @@ if (path == 0) {
 	path->year = 0; path->total = 0; path->out = 0; path->settleStatus = 0;
 #if SEASONAL
 	path->season = 0;
+#endif
+#if RS_RCPP
+	path->pathoutput = 1;
 #endif
 }
 if (s.settleStatus >= 0 && s.settleStatus <= 2) path->settleStatus = s.settleStatus;
@@ -3153,7 +3159,7 @@ void Individual::outMovePath(const int year)
 	if(status > 1 && status < 10){
 		prev_loc = pPrevCell->getLocn();
 		// record only if this is the first step as non-disperser
-		if (prev_loc.x != loc.x || prev_loc.y != loc.y) {
+		if (path->pathoutput) {
 			// if this is also the first step taken at all, record the start cell first
 			if(path->total == 1){
 				outMovePaths << year << "\t" << indId << "\t"
@@ -3166,7 +3172,8 @@ void Individual::outMovePath(const int year)
 						 << status << "\t"
 						 << endl;
 			// current cell will be invalid (zero), so set back to previous cell
-			pPrevCell = pCurrCell;
+			// pPrevCell = pCurrCell;
+			path->pathoutput = 0;
 		}
 	}
 }

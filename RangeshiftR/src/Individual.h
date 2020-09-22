@@ -68,6 +68,9 @@ struct pathData { // to hold path data common to SMS and CRW models
 												// 0 = not set, 1 = debarred through density dependence rule
 												// 2 = OK to settle subject to finding a mate
 //	bool leftNatalPatch;	// individual has moved out of its natal patch
+#if RS_RCPP
+	short pathoutput;
+#endif
 };
 struct pathSteps { // nos. of steps for movement model
 	int year, total, out;
