@@ -15,7 +15,7 @@
 "_PACKAGE"
 
 
-#' @useDynLib RangeshiftR
+#' @useDynLib RangeShiftR
 #' @importFrom Rcpp sourceCpp
 NULL
 
@@ -76,8 +76,8 @@ warn_msg_ignored = " will be ignored "
 #' @details
 #' Available methods and their options:
 #' \itemize{
-#'   \item \code{\link[RangeshiftR]{Emigration}}: plot emigration probability
-#'   \item \code{\link[RangeshiftR]{DispersalKernel}}:
+#'   \item \code{\link[RangeShiftR]{Emigration}}: plot emigration probability
+#'   \item \code{\link[RangeShiftR]{DispersalKernel}}:
 #'   \itemize{
 #'     \item \code{mortality=FALSE} - plot dispersal distance probability density  (default)
 #'     \item \code{mortality= TRUE} - plot mortality probability
@@ -87,7 +87,7 @@ warn_msg_ignored = " will be ignored "
 #'     \item \code{combinekernels=FALSE} - ...plotting both kernels separately (default)
 #'     \item \code{combinekernels= TRUE} - ...combining both kernels, i.e. \ifelse{html}{ \out{p(d; &delta;<sub>1</sub>,&delta;<sub>2</sub>) = p<sub>I</sub> p(d;&delta;<sub>1</sub>) + (1-p<sub>I</sub>) p(d;&delta;<sub>1</sub>) } }{\deqn{ p(d; δ_1,δ_2) = p_I p(d;δ_1) + (1-p_I) p(d;δ_2)} }
 #'   }
-#'   \item \code{\link[RangeshiftR]{StageStructure}}: plot fecundity as well as survival and development probabilities
+#'   \item \code{\link[RangeShiftR]{StageStructure}}: plot fecundity as well as survival and development probabilities
 #' }
 #' @export
 setGeneric("plotProbs", function(x, ...) standardGeneric("plotProbs") )

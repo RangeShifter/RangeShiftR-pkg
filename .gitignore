@@ -18,10 +18,10 @@ build-Release/
 *.txt
 
 # Hidden source
-/RangeshiftR/src/.*
+/RangeShiftR/src/.*
 
 # Windows files
-/RangeshiftR/src/*.dll
+/RangeShiftR/src/*.dll
 
 # History files
 .Rhistory
@@ -29,11 +29,11 @@ build-Release/
 
 # RStudio files
 .Rproj.user/
-/RangeshiftR/.Rproj.user/
-#/RangeshiftR/RangeshiftR.Rproj
-/RangeshiftR/Read-and-delete-me
-/RangeshiftR/.Rhistory
-#/RangeshiftR/.Rbuildignore
+/RangeShiftR/.Rproj.user/
+#/RangeShiftR/RangeShiftR.Rproj
+/RangeShiftR/Read-and-delete-me
+/RangeShiftR/.Rhistory
+#/RangeShiftR/.Rbuildignore
 
 # Session Data files
 .RData
@@ -46,19 +46,19 @@ build-Release/
 
 # Output files from R CMD build
 *.tar.gz
-/RangeshiftR/src/*.o
-/RangeshiftR/src/RangeshiftR.so
+/RangeShiftR/src/*.o
+/RangeShiftR/src/RangeShiftR.so
 
 
 # Windows files
-/RangeshiftR/src/*.dll
+/RangeShiftR/src/*.dll
 
 # Output files from R CMD check
 /*.Rcheck/
 
 # Output from Rcpp compile.attributes()
-#/RangeshiftR/R/RcppExports.R
-#/RangeshiftR/src/RcppExports.cpp
+#/RangeShiftR/R/RcppExports.R
+#/RangeShiftR/src/RcppExports.cpp
 
 # RStudio files
 .Rproj.user/
@@ -66,7 +66,7 @@ build-Release/
 # produced vignettes
 vignettes/*.html
 vignettes/*.pdf
-#/RangeshiftR/man/
+#/RangeShiftR/man/
 
 # OAuth2 token, see https://github.com/hadley/httr/releases/tag/v0.3
 .httr-oauth

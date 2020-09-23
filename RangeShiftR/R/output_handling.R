@@ -11,7 +11,7 @@
 
 #' Read 'range' file
 #'
-#' Read the Rangeshifter output file 'range' into a data.frame, if it was generated.
+#' Read the RangeShiftR output file 'range' into a data.frame, if it was generated.
 #' @param s RSmaster parameter object
 #' @param dirpath RS directory path
 #' @return a data.frame
@@ -30,7 +30,7 @@ setMethod("readRange", c(s="RSparams", dirpath="character"), function(s,dirpath)
 
 #' Read 'pop' file
 #'
-#' Read the Rangeshifter output file 'pop' into a data.frame, if it was generated.
+#' Read the RangeShiftR output file 'pop' into a data.frame, if it was generated.
 #' @param s RSmaster parameter object
 #' @param dirpath RS directory path
 #' @param center In a cell-based model, the x- and y- coordinates will be converted from *nrow* and *ncol* (as in the 'pop' output file)
@@ -63,7 +63,7 @@ setMethod("readPop", c(s="RSparams", dirpath="character"), function(s,dirpath,ce
 #'
 #' This function produces patch statistics and maps on occupancy probability and mean time to colonisation.
 #'
-#' It uses the Rangeshifter 'population' output data.
+#' It uses the RangeShiftR 'population' output data.
 #' @usage ColonisationStats(x, y = getwd(), years = numeric(0), maps = FALSE)
 #' ColonisationStats(x, y = NULL,    years = numeric(0))
 #' @param x,y Either the parameter master (\code{x}) and RS directory path (\code{y}) of the simulation or, alternatively,\cr
@@ -349,7 +349,7 @@ setMethod("ColonisationStats", "RSparams", function(x, y = getwd(), years = nume
 
 #' Plot Abundance
 #'
-#' Uses the Rangeshifter output data 'range' to generate abundance time series.
+#' Uses the RangeShiftR output data 'range' to generate abundance time series.
 #' Plots the mean abundance over all replicates, and optionally the standard deviation and/or the single replicates.
 #' @param s RSparams object or a data.frame in the 'range' file format
 #' @param dirpath RS directory path; required if \code{s} is a \code{RSparams}
@@ -408,7 +408,7 @@ setMethod("plotAbundance", "RSparams", function(s, dirpath, ...) {
 
 #' Plot Occupancy
 #'
-#' Uses the Rangeshifter output data 'range' to generate occupancy time series.
+#' Uses the RangeShiftR output data 'range' to generate occupancy time series.
 #' Plots the mean occupancy over all replicates, and optionally the standard deviation and/or the single replicates.
 #' @param s RSparams object or a data.frame in the 'range' file format
 #' @param dirpath RS directory path; required if \code{s} is a \code{RSparams}
@@ -472,7 +472,7 @@ setMethod("plotOccupancy", "RSparams", function(s, dirpath, ...) {
 
 #' Get the distribution of SMS Path Lengths
 #'
-#' Reads the Rangeshifter output files 'MovePaths' (if they were generated) to get the distribution of lengths of SMS
+#' Reads the RangeShiftR output files 'MovePaths' (if they were generated) to get the distribution of lengths of SMS
 #' paths taken in all recorded years.
 #' @param s RSmaster parameter object
 #' @param dirpath RS directory path
@@ -545,7 +545,7 @@ setMethod("SMSpathLengths", c(s="RSparams", dirpath="character"), function(s,dir
 ## ---- Backend Simul function -----
 
 get_eq_pop <- function(b, demog, N_0 = NULL, t_max = 1000, t_rec = 1, delta = .1, diagnostics = FALSE, rm.stage0 = TRUE){
-    require(RangeshiftR)
+    require(RangeShiftR)
     if(class(demog)!="DemogParams"){
         warning("This function expects an object of class DemogParams.", call. = FALSE)
         return(NULL)
@@ -781,9 +781,9 @@ get_eq_pop <- function(b, demog, N_0 = NULL, t_max = 1000, t_rec = 1, delta = .1
 
 #' Calculates the equilibrium distribution for a localised (i.e. non-spatial) closed population
 #'
-#' Uses the Rangeshifter Demography module to create the corresponding matrix model and runs it until equilibrium is reached.
+#' Uses the RangeShiftR Demography module to create the corresponding matrix model and runs it until equilibrium is reached.
 #' This corresponds to a population in a single cell without dispersal.
-#' Since the matrix model representation is used, some options (e.g. maximum age) of the \code{\link[RangeshiftR]{Demography}} module can not be taken into account.
+#' Since the matrix model representation is used, some options (e.g. maximum age) of the \code{\link[RangeShiftR]{Demography}} module can not be taken into account.
 #' @param demog DemogParams object with a \code{StageStructure}
 #' @param K_vector K-values (corresponding to 1/b) to run the matrix model for
 #' @param plot plot the equilibrium population? (default is \code{TRUE})
@@ -794,7 +794,7 @@ get_eq_pop <- function(b, demog, N_0 = NULL, t_max = 1000, t_rec = 1, delta = .1
 #' @param t_max allowed number of time steps to reach equilibrium (default is \eqn{1000})
 #' @param delta tolerance to define equilibrium (default is \eqn{.1}); the utilised measure is euclidian distance of current to previous time steps
 #' @param diagnostics in addition to recorded population vectors, returns the number of steps taken as well as the transition matrix and the value if delta at the last step (default is \code{FALSE})
-#' @details Rangeshifter requires an additional juvenile stage to be added to the common transition matrix as stage 0 (in order
+#' @details RangeShiftR requires an additional juvenile stage to be added to the common transition matrix as stage 0 (in order
 #' to allow for juvenile dispersal). For the simulation with \code{RunMatrixModel()}, this stage can be kept (\code{juv.stage=TRUE})
 #' or remove to yield the corresponding Lefkovitch matrix (\code{juv.stage=FALSE}).\cr
 #' The default initial condition \code{N_0} is a population at its respective carrying capacity with unpopulated juvenile stage and

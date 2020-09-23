@@ -23,7 +23,7 @@
 #' If the emigration probability is constant (i.e. all four above parameters are set to \code{FALSE}), \code{EmigProb} can take a single numeric. Defaults to \eqn{0.0}.
 #' @param MutationScales Required if \code{IndVar=TRUE}: The scaling factor(s) for the mutation of emigration traits. A numeric of length \eqn{1} (if \code{DensDep=FALSE}) or \eqn{3} (if \code{DensDep=TRUE}).
 #' @param EmigStage Required for stage-structured populations with \code{IndVar=TRUE}: Stage which emigrates. (\code{StageDep} must be \code{FALSE})
-#' @param UseFullKern Applicable only if transfer phase is modelled by a \code{\link[RangeshiftR]{DispersalKernel}} and \code{DensDep=FALSE}: Shall the emigration probability be derived from dispersal kernel?
+#' @param UseFullKern Applicable only if transfer phase is modelled by a \code{\link[RangeShiftR]{DispersalKernel}} and \code{DensDep=FALSE}: Shall the emigration probability be derived from dispersal kernel?
 #' @details Emigration is modelled as the probability \eqn{d} that an individual leaves its natal patch during the present year or season (every reproductive event
 #' is always followed by dispersal).
 #' Populations with non-overlapping generations have only a single opportunity to emigrate, whereas in a stage-structured population the realised overall emigration
@@ -87,7 +87,7 @@
 #'  \out{&emsp;} 2 \tab \out{&emsp;} 1 \tab \out{&emsp;} 0.5 \tab \out{&emsp;} 20 \tab \out{&emsp;} 1.0
 #' }
 #'
-#' In the special case that \code{DensDep=FALSE} and transfer is realised by \code{\link[RangeshiftR]{DispersalKernel}}, then the option \code{UseFullKern} may be switched on. It
+#' In the special case that \code{DensDep=FALSE} and transfer is realised by \code{\link[RangeShiftR]{DispersalKernel}}, then the option \code{UseFullKern} may be switched on. It
 #' will prevent re-sampling from the kernel if the distance sampled does not move the individual out of its natal cell/patch. Such individuals
 #' are treated as philopatric recruits, and hence the kernel determines the probability of emigration. In this case, the emigration probability
 #' for all stages/sexes which potentially disperse should be set to \eqn{1.0}.
@@ -380,9 +380,9 @@ setMethod("plotProbs", "EmigrationParams", function(x, stage = NULL, sex = NULL,
 #'
 #' Transfer (or transience) is the second phase of dispersal. It consists of the movement of an individual departing from its natal patch towards
 #' a potential new patch, ending with settlement or mortality. This movement can be modelled by one of three alternative processes:\cr
-#' - Dispersal kernel: use \code{\link[RangeshiftR]{DispersalKernel}}\cr
-#' - Stochastic movement simulator (SMS): use \code{\link[RangeshiftR]{SMS}}\cr
-#' - Correlated random walk (CRW): use \code{\link[RangeshiftR]{CorrRW}}
+#' - Dispersal kernel: use \code{\link[RangeShiftR]{DispersalKernel}}\cr
+#' - Stochastic movement simulator (SMS): use \code{\link[RangeShiftR]{SMS}}\cr
+#' - Correlated random walk (CRW): use \code{\link[RangeShiftR]{CorrRW}}
 #'
 #' The choice between the two main methods to model the transfer phase, i.e. phenomenological dispersal kernels or mechanistic movement processes
 #' (SMS and CRW) depends on the information available for a given species and the level of detail that is considered important to represent in models
@@ -409,7 +409,7 @@ setMethod("show", "TransferParams", function(object){
 
 #' Set up a Dispersal Kernel
 #'
-#' A method to describe \code{\link[RangeshiftR]{Transfer}}: Dispersal kernels are statistical distributions that are largely used to describe dispersal distances. The main assumption behind them
+#' A method to describe \code{\link[RangeShiftR]{Transfer}}: Dispersal kernels are statistical distributions that are largely used to describe dispersal distances. The main assumption behind them
 #' is that the principal determinant of the probability of an individual dispersing to a particular site is the distance from the starting
 #' location.
 #' \cr
@@ -434,11 +434,11 @@ setMethod("show", "TransferParams", function(object){
 #' @param InflPoint Required if \code{DistMort=TRUE}: Inflection point for the mortality distance dependence function.
 #' @details Two types of kernels are implemented: negative exponential and a mixed kernel given by two different negative exponentials.
 #' Here, kernels are considered as ‘distance kernels’, i.e. the statistical distribution of the probability that an individual will move a
-#' certain distance (Hovestadt et al. 2012; Nathan et al. 2012). These kernels are specifically used for the \code{\link[RangeshiftR]{Transfer}} phase, meaning that they do
-#' not incorporate information on the \code{\link[RangeshiftR]{Emigration}} or \code{\link[RangeshiftR]{Settlement}} probabilities, which are modelled independently. Therefore, dispersal kernels are
+#' certain distance (Hovestadt et al. 2012; Nathan et al. 2012). These kernels are specifically used for the \code{\link[RangeShiftR]{Transfer}} phase, meaning that they do
+#' not incorporate information on the \code{\link[RangeShiftR]{Emigration}} or \code{\link[RangeShiftR]{Settlement}} probabilities, which are modelled independently. Therefore, dispersal kernels are
 #' applied only to dispersing individuals and not normally to the entire population. However, the program allows a particular setting where
 #' emigration and transfer are not explicitly separated but are both modelled through the kernel (see the parameter \code{UseFullKern} in
-#' \code{\link[RangeshiftR]{Emigration}} and the Details there).
+#' \code{\link[RangeShiftR]{Emigration}} and the Details there).
 #'
 #' There are many possible statistical distributions that have been fitted to dispersal data, which in many cases perform better
 #' than the negative exponential (Nathan et al. 2012). However, the negative exponential is still commonly used, has been found useful for
@@ -459,7 +459,7 @@ setMethod("show", "TransferParams", function(object){
 #' random point in the patch and this position, the dispersal distance and direction are drawn until the individual leaves the patch. In order
 #' to separate emigration and transfer explicitly, and to avoid potential infinite re-sampling, the program requires the mean of the kernel
 #' to be greater or equal the cell resolution. This condition is relaxed only in the special case where emigration probability is set to be
-#' density-independent and the kernel is applied to the entire population without re-sampling (the \code{UseFullKern} option in \code{\link[RangeshiftR]{Emigration}}). Individuals
+#' density-independent and the kernel is applied to the entire population without re-sampling (the \code{UseFullKern} option in \code{\link[RangeShiftR]{Emigration}}). Individuals
 #' which draw a short movement distance do not leave the natal cell/patch and implicitly become sedentary, and therefore the kernel itself
 #' defines the proportion of individuals which emigrate. When this option is selected, the emigration probability for those stages/sexes
 #' which disperse should be set to \eqn{1.0}; otherwise, only a proportion of such individuals would use the kernel to determine whether or
@@ -521,7 +521,7 @@ setMethod("show", "TransferParams", function(object){
 #'
 #' \emph{Mortality}\cr
 #' There are two main sources of mortality: First, dispersal mortality can arise as a result of individuals failing to reach suitable habitat. When a simple dispersal
-#' kernel is used with no possibility for individuals to search for locally-suitable habitat (see \code{\link[RangeshiftR]{Settlement}}),
+#' kernel is used with no possibility for individuals to search for locally-suitable habitat (see \code{\link[RangeShiftR]{Settlement}}),
 #' mortality occurs to all individuals that arrive in unsuitable habitat. In this first case, dispersal mortality clearly depends upon the
 #' proportion of suitable habitat in the landscape and will increase as the availability of habitat declines.\cr
 #' A second source of dispersal mortality can be specified via the option \code{DistMort}: The probability of mortality is either a constant
@@ -890,7 +890,7 @@ setMethod("plotProbs", "DispersalKernel", function(x, mortality = FALSE, combine
 
 #' Set up a Stochastic Movement Simulator
 #'
-#' A method to describe \code{\link[RangeshiftR]{Transfer}}:
+#' A method to describe \code{\link[RangeShiftR]{Transfer}}:
 #' SMS is a stochastic individual-based movement model where organisms move through grid-based, heterogeneous landscapes. The model uses similar
 #' cost surfaces as the least cost path (LCP) method, but it relaxes two of its main assumptions: Firstly, individuals are not assumed to be
 #' omniscient, but move according to what they can perceive of the landscape within their perceptual range (\code{PR}). Secondly, individuals
@@ -920,9 +920,9 @@ setMethod("plotProbs", "DispersalKernel", function(x, mortality = FALSE, combine
 #' @param Costs Describes the landscapes resistance to movement. Set either: \cr
 #'  - \emph{habitat-specific} costs for each habitat type, or\cr
 #'  - \code{"file"}, to indictae to use the \emph{cost raster} map(s) specified in the landscape module and import the cost values from them.\cr
-#' In the first case of \emph{habitat-specific} costs a numeric vector is expected with, respectively, length \code{Nhabitats} for an \code{\link[RangeshiftR]{ImportedLandscape}}
-#' with habitat codes (i.e. \code{HabitatQuality=FALSE})) or length \eqn{2} for an \code{\link[RangeshiftR]{ArtificialLandscape}} (matrix and habitat costs).\cr
-#' In the second case of importing a \emph{cost raster} file, specify the file name(s) in the \code{\link[RangeshiftR]{ImportedLandscape}} module.
+#' In the first case of \emph{habitat-specific} costs a numeric vector is expected with, respectively, length \code{Nhabitats} for an \code{\link[RangeShiftR]{ImportedLandscape}}
+#' with habitat codes (i.e. \code{HabitatQuality=FALSE})) or length \eqn{2} for an \code{\link[RangeShiftR]{ArtificialLandscape}} (matrix and habitat costs).\cr
+#' In the second case of importing a \emph{cost raster} file, specify the file name(s) in the \code{\link[RangeShiftR]{ImportedLandscape}} module.
 #' The specified map has to match the landscape raster in extent, coordinates and resolution, and each cell contains a cost value (\eqn{\ge 1}).
 #' This is the only option for an imported landscape with habitat quality (i.e. \code{HabitatQuality=TRUE}).
 #' @param StepMort Per-step mortality probability. Can be either \emph{constant}, in which case a single numeric is expected (the default, with
@@ -949,7 +949,7 @@ setMethod("plotProbs", "DispersalKernel", function(x, mortality = FALSE, combine
 #' certain direction, and hence paths tend to become somewhat smoother.
 #'
 #' There is an option to include goal bias, i.e. a tendency to move towards a particular destination, which is implemented in a similar way to
-#' \code{DP} (Aben et al. 2014). However, as dispersers in RangeShifter are naïve and have no goal, it may be applied only in the ‘negative’
+#' \code{DP} (Aben et al. 2014). However, as dispersers in RangeShiftR are naïve and have no goal, it may be applied only in the ‘negative’
 #' sense of moving away from the natal location (\code{GoalType=2}), i.e. as a dispersal bias, which is subject to a decay in strength as a
 #' function of the total number of steps taken (set the decay rate \code{AlphaDB} and inflection point \code{BetaDB}).
 #' This enables a dispersal path to follow a straighter trajectory initially, and later become more responsive to perceived landscape costs.
@@ -960,7 +960,7 @@ setMethod("plotProbs", "DispersalKernel", function(x, mortality = FALSE, combine
 #' \code{DP} ten-fold until it has taken a number of steps (\eqn{=2*}\code{PR}) outside the natal patch.
 #'
 #' When an individual arrives in a non-natal patch and decides not to settle there (as a result of a density-dependent or mate-finding settlement
-#' rule; see \code{\link[RangeshiftR]{Settlement}}), then there is the option that its path is straightened (\code{StraightenPath=TRUE}). This means
+#' rule; see \code{\link[RangeShiftR]{Settlement}}), then there is the option that its path is straightened (\code{StraightenPath=TRUE}). This means
 #' that it leaves the patch as soon as possible in order to search for another patch. This is achieved by increasing its \code{DP} ten-fold. However, in
 #' certain types of model, e.g. when arbitrary contiguous patches have been defined for what is basically a continuous population, this can lead
 #' to the path always being straightened, as an individual enters a new patch as soon as it has left the one it has rejected. In such cases, it is
@@ -976,13 +976,13 @@ setMethod("plotProbs", "DispersalKernel", function(x, mortality = FALSE, combine
 #' Critical for the outcomes of SMS are the relative costs assigned to the different habitats (as it is also the case for
 #' the LCP approach). Habitat costs or resistance to movement can be set manually for each habitat code or imported as a raster map, which
 #' allows for costs to be a function of multiple variables instead of a simple value associated to the habitat type.
-#' In the latter case, the filenames are provided in the \code{\link[RangeshiftR]{ImportedLandscape}} module.
+#' In the latter case, the filenames are provided in the \code{\link[RangeShiftR]{ImportedLandscape}} module.
 #' The specified map has to match the landscape raster in extent, coordinates and resolution, and each cell contains a cost value, with the minimal possible cost being \eqn{1}.
 #' Importing a cost layer is the only option when the landscape comprises habitat coverage or quality.
 #'
 #' \emph{Mortality} \cr
 #' There are two main sources of mortality: First, dispersal mortality can arise as a result of individuals failing to reach suitable habitat. Some individuals may fail
-#' to find suitable habitat before they use up their maximum number of movement steps (\code{MaxSteps} in \code{\link[RangeshiftR]{Settlement}}).
+#' to find suitable habitat before they use up their maximum number of movement steps (\code{MaxSteps} in \code{\link[RangeShiftR]{Settlement}}).
 #' In this first case, dispersal mortality clearly depends upon the proportion of suitable habitat in the landscape and will increase as the
 #' availability of habitat declines.\cr
 #' A second source of dispersal mortality can be specified by the user in form of a per-step probability of mortality (\code{StepMort}.
@@ -1353,7 +1353,7 @@ setMethod("plotProbs", "StochMove", function(x, xmax = NULL, ymax = NULL){
 
 #' Set up a Correlated Randon Walk
 #'
-#' A method to describe \code{\link[RangeshiftR]{Transfer}}:
+#' A method to describe \code{\link[RangeShiftR]{Transfer}}:
 #' A simple correlated random walk without any bias; implemented in continuous space on the top of the landscape grid.
 #'
 #' @usage CorrRW(IndVar = FALSE, StepLength = 1, Rho = 0.5,
@@ -1366,12 +1366,12 @@ setMethod("plotProbs", "StochMove", function(x, xmax = NULL, ymax = NULL){
 #' @param StraightenPath Straighten path after decision not to settle in a patch? Defaults to \code{TRUE}, see Details below.
 #' @param StepMort Per-step mortality probability. Can be either \emph{constant}, in which case a single numeric is expected (the default, with
 #' value \eqn{0.0}) or \emph{habitat-specific}, in which case a numeric vector is expected with a length of, respectively, \code{Nhabitats} for an
-#' \code{\link[RangeshiftR]{ImportedLandscape}} with habitat codes (i.e. \code{HabitatQuality=FALSE})) or length \eqn{2} for an
-#' \code{\link[RangeshiftR]{ArtificialLandscape}} (mortality probabilities for matrix and habitat cells).\cr
+#' \code{\link[RangeShiftR]{ImportedLandscape}} with habitat codes (i.e. \code{HabitatQuality=FALSE})) or length \eqn{2} for an
+#' \code{\link[RangeShiftR]{ArtificialLandscape}} (mortality probabilities for matrix and habitat cells).\cr
 #' All values must be within the half-open interval \eqn{[0,1)}.\cr
 #' For an imported habitat quality landscape (\code{HabitatQuality=TRUE}), only constant per-step mortality is allowed.
 #' @details Individuals take steps of a constant \code{StepLength}; the direction is sampled from a wrapped Cauchy distribution having a
-#' correlation parameter \eqn{Rho} in the range \eqn{0} to \eqn{1}. As for \code{\link[RangeshiftR]{SMS}}, all individuals take each step
+#' correlation parameter \eqn{Rho} in the range \eqn{0} to \eqn{1}. As for \code{\link[RangeShiftR]{SMS}}, all individuals take each step
 #' simultaneously. In the case of patch-based models,
 #' \eqn{Rho} is automatically set to \eqn{0.99} until the individual steps outside its natal patch, after which the value of
 #' \eqn{Rho} set by the user is restored. The \code{StepLength} and \eqn{Rho} can vary between individuals and can evolve (set \code{IndVar=TRUE}).
@@ -1382,7 +1382,7 @@ setMethod("plotProbs", "StochMove", function(x, xmax = NULL, ymax = NULL){
 #' individuals or to evolve. There is no implementation of sex- or stage-specific CRW.
 #'
 #' When an individual arrives in a non-natal patch and decides not to settle there (as a result of a density-dependent or mate-finding settlement
-#' rule, see \code{\link[RangeshiftR]{Settlement}}), then there is the option that its path is straightened (\code{StraightenPath=TRUE}). This means
+#' rule, see \code{\link[RangeShiftR]{Settlement}}), then there is the option that its path is straightened (\code{StraightenPath=TRUE}). This means
 #' that it leaves the patch as soon as possible in order to search for another patch. This is achieved by increasing its path correlation to
 #' \code{Rho}\eqn{=0.999}. However, in certain types of model, e.g. when arbitrary contiguous patches have been defined for what is basically a continuous
 #' population, this can lead to the path always being straightened, as an individual enters a new patch as soon as it has left the one it has
@@ -1391,7 +1391,7 @@ setMethod("plotProbs", "StochMove", function(x, xmax = NULL, ymax = NULL){
 #'
 #' \emph{Mortality}\cr
 #' There are two main sources of mortality: First, dispersal mortality can arise as a result of individuals failing to reach suitable habitat. Some individuals may fail
-#' to find suitable habitat before they use up their maximum number of movement steps (\code{MaxSteps} in \code{\link[RangeshiftR]{Settlement}}).
+#' to find suitable habitat before they use up their maximum number of movement steps (\code{MaxSteps} in \code{\link[RangeShiftR]{Settlement}}).
 #' In this first case, dispersal mortality clearly depends upon the proportion of suitable habitat in the landscape and will increase as the
 #' availability of habitat declines.\cr
 #' A second source of dispersal mortality can be specified by the user in form of a per-step probability of mortality (\code{StepMort}.
@@ -1537,7 +1537,7 @@ setMethod("show", "CorrRW", function(object){
 #' Set Settlement Parameters
 #'
 #' Settlement, or immigration, is the last phase of dispersal, when the organism stops in a new cell or patch of breeding habitat. The
-#' available settlement conditions vary depending on the used \code{\link[RangeshiftR]{Transfer}} type. In any case, dispersing individuals
+#' available settlement conditions vary depending on the used \code{\link[RangeShiftR]{Transfer}} type. In any case, dispersing individuals
 #' are not allowed to settle in their natal cell or patch and can only settle in suitable habitat.\cr
 #' The settlement rules can be stage- or sex-specific or both (set \code{StageDep}, \code{SexDep}). If a movement process is used,
 #' density-dependence (\code{DensDep}) and inter-individual variability (\code{IndVar}) available.
@@ -1554,7 +1554,7 @@ setMethod("show", "CorrRW", function(object){
 #' @param MutationScales Movement process only, required if \code{IndVar=TRUE}: The scaling factor(s) for the mutation of settlement traits. A numeric of length \eqn{1} (if \code{DensDep=FALSE}) or \eqn{3} (if \code{DensDep=TRUE}).
 #' @param MinSteps Movement process only: Minimum number of steps. Defaults to \eqn{0}.
 #' @param MaxSteps Movement process only: Maximum number of steps. Must be \eqn{0} or more; set to \eqn{0} (default) for “per-step mortality only”.
-#' @param MaxStepsYear Movement process and stage-structured population only: Maximum number of steps per year, if there are more than \eqn{1} reproductive seasons (option \code{RepSeasons} in \code{\link[RangeshiftR]{StageStructure}}).
+#' @param MaxStepsYear Movement process and stage-structured population only: Maximum number of steps per year, if there are more than \eqn{1} reproductive seasons (option \code{RepSeasons} in \code{\link[RangeShiftR]{StageStructure}}).
 #' Must be \eqn{0} or more. If \eqn{0}, every individual completes the dispersal phase in one year, i.e. between two successive reproduction phases.
 #' @details
 #' The settlement phase is determined by a suite of strategies, behaviours and reaction norms that lead individuals to the decision to stop
@@ -1562,7 +1562,7 @@ setMethod("show", "CorrRW", function(object){
 #' but not the only ones. Like emigration, settlement is a complex process affected by multiple criteria including inter-individual
 #' variability and context dependencies.
 #'
-#' The type of implemented settlement rules depends on the movement model utilized for the \code{\link[RangeshiftR]{Transfer}}.
+#' The type of implemented settlement rules depends on the movement model utilized for the \code{\link[RangeShiftR]{Transfer}}.
 #' In any case, dispersing individuals are not allowed to settle in their natal cell or patch.\cr
 #' The settlement rules can be stage- or sex-specific or both (set \code{StageDep}, \code{SexDep}). Inter-individual variability (\code{IndVar})
 #' is implemented only for movement processes and the three traits
@@ -1570,7 +1570,7 @@ setMethod("show", "CorrRW", function(object){
 #' \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}}; see below), and if so, it may not be stage-dependent.\cr
 #'
 #' \emph{Settlement with dispersal kernels}\cr
-#' When using a \code{\link[RangeshiftR]{DispersalKernel}}, individuals are displaced directly from the starting location to the arrival location. The suitability
+#' When using a \code{\link[RangeShiftR]{DispersalKernel}}, individuals are displaced directly from the starting location to the arrival location. The suitability
 #' of the arrival cell or patch determines whether the disperser is successful or not.\cr For species with \emph{non-overlapping generations},
 #' where individuals have only one chance to disperse and reproduce, the model has two options if the arrival cell is unsuitable: the
 #' individual either dies (\code{Settle} code \eqn{0}) or it can move to one of the eight neighbouring cells in the case that at least one
@@ -1578,7 +1578,7 @@ setMethod("show", "CorrRW", function(object){
 #' the latter case, if more than one of the neighbouring cells is suitable, the individual is placed in one of them chosen randomly.
 #' For patch-based models, if the arrival patch is unsuitable, the individual either dies or can move to a randomly chosen neighbouring
 #' suitable patch, provided that the new patch is only one cell apart from the arrival patch.\cr For species with \emph{overlapping generations}
-#' (i.e. a \code{\link[RangeshiftR]{StageStructure}}d population),
+#' (i.e. a \code{\link[RangeShiftR]{StageStructure}}d population),
 #' where individuals can disperse over multiple seasons, there are two additional options: First, if the arrival cell/patch is unsuitable,
 #' the individual can stay there waiting until the next dispersal event when it will disperse again according to the set kernel (\code{Settle} code \eqn{1}). Second,
 #' if both the arrival cell/patch and all eight neighbouring cells, or all eventual neighbouring patches, are unsuitable the individual
@@ -1600,8 +1600,8 @@ setMethod("show", "CorrRW", function(object){
 #' Simple example for sex-dependence only: Females choose a neighbouring cell or wait, males wait: \tabular{cc}{\out{&emsp;} 0 \tab \out{&emsp;} 3 \cr \out{&emsp;} 1 \tab \out{&emsp;} 0 }
 #'
 #' \emph{Settlement with movement processes}\cr
-#' If individuals are dispersing by one of the two movement processes implemented (\code{\link[RangeshiftR]{SMS}} or
-#' \code{\link[RangeshiftR]{CorrRW}}), at each step (made simultaneously) they each evaluate their current cell or patch for the
+#' If individuals are dispersing by one of the two movement processes implemented (\code{\link[RangeShiftR]{SMS}} or
+#' \code{\link[RangeShiftR]{CorrRW}}), at each step (made simultaneously) they each evaluate their current cell or patch for the
 #' possibility of settling. This allows for the implementation of more complex settlement rules. The simplest one is that the individual
 #' decides to stop if there is suitable habitat; this is in any case a necessary condition (set \code{DensDep=FALSE}).\cr
 # If a Settlement module with \eqn{S_0=0} (the default) is used in a model with \emph{movement process}, it gets converted to \eqn{S_0=1.0}, i.e. always settle when habitat is suitable. \cr
@@ -1931,12 +1931,12 @@ setMethod("plotProbs", "SettlementParams", function(x, stage = NULL, sex = NULL,
 #' Set Dispersal Parameters
 #'
 #' Dispersal is defined as movement leading to spatial gene flow. It typically involves three phases, which are all modelled explicitly:
-#' \code{\link[RangeshiftR]{Emigration}}, \code{\link[RangeshiftR]{Transfer}} and \code{\link[RangeshiftR]{Settlement}}.\cr
+#' \code{\link[RangeShiftR]{Emigration}}, \code{\link[RangeShiftR]{Transfer}} and \code{\link[RangeShiftR]{Settlement}}.\cr
 #' The specific parameters of each phase are set through their respective functions. For more details, see their documentation.\cr
 #' \cr
 #' The potential evolution of several key dispersal traits is implemented through the possibility of inter-individual variability and heritability.
 #' This option (called \code{IndVar}) can be enabled for each dispersal phase in their respective modules. See the Datails below for information on how
-#' to set the associated parameters. Additionally, the \code{\link[RangeshiftR]{Genetics}} module must be defined.
+#' to set the associated parameters. Additionally, the \code{\link[RangeShiftR]{Genetics}} module must be defined.
 #'
 #' @usage Dispersal(Emigration = Emigration(),
 #'           Transfer   = DispersalKernel(),
@@ -1944,9 +1944,9 @@ setMethod("plotProbs", "SettlementParams", function(x, stage = NULL, sex = NULL,
 #' @param Emigration The first phase of dispersal; determines if an individual leaves its natal patch.
 #' @param Transfer (or transience) The second phase of dispersal; consists of the movement of an individual departing from its natal patch towards
 #' a potential new patch, ending with settlement or mortality. This movement can be modelled by one of three alternative processes:\cr
-#' - Dispersal kernel: use \code{\link[RangeshiftR]{DispersalKernel}}\cr
-#' - Stochastic movement simulator (SMS): use \code{\link[RangeshiftR]{SMS}}\cr
-#' - Correlated random walk (CRW): use \code{\link[RangeshiftR]{CorrRW}}
+#' - Dispersal kernel: use \code{\link[RangeShiftR]{DispersalKernel}}\cr
+#' - Stochastic movement simulator (SMS): use \code{\link[RangeShiftR]{SMS}}\cr
+#' - Correlated random walk (CRW): use \code{\link[RangeShiftR]{CorrRW}}
 #' @param Settlement (or immigration) The last phase of dispersal; determines when the individual stops in a new cell or patch of
 #' breeding habitat.
 #' @details It is possible to model all three phases - emigration, transfer and settlement - with stage- and/or sex-specific parameters via the
@@ -1955,10 +1955,10 @@ setMethod("plotProbs", "SettlementParams", function(x, stage = NULL, sex = NULL,
 #' stage-biased, meaning that parameters can vary for different stage or age classes.
 #'
 #' The options of inter-individual variability in the various dispersal traits is enabled by setting \code{IndVar=TRUE} for the respective transfer phase
-#' module and defining the genetic module to simulate heritability and evolution of traits (\code{\link[RangeshiftR]{Genetics}}).\cr
+#' module and defining the genetic module to simulate heritability and evolution of traits (\code{\link[RangeShiftR]{Genetics}}).\cr
 #' For each such heritable dispersal trait, this requires to set the mean and standard deviation of the initial distribution of the trait values,
 #' (instead of a contant value as in the case of \code{IndVar=FALSE})
-#' as well as the \code{MutationScale} (see \code{\link[RangeshiftR]{Genetics}} documentaion).\cr
+#' as well as the \code{MutationScale} (see \code{\link[RangeShiftR]{Genetics}} documentaion).\cr
 #'
 #' Note, however, that not all combinations of sex-/stage-dependencies with inter-individual variability are implemented.\cr
 #'

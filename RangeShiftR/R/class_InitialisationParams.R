@@ -21,7 +21,7 @@
 #' \eqn{0} = Free initialisation according to habitat map (default) (set \code{FreeType}), \cr
 #' \eqn{1} = From loaded species distribution map (set \code{SpType}),\cr
 #' \eqn{2} = From initial individuals list file (set \code{InitIndsFile}).
-#' \cr Must to be \eqn{0} for an \code{\link[RangeshiftR]{ArtificialLandscape}}.
+#' \cr Must to be \eqn{0} for an \code{\link[RangeShiftR]{ArtificialLandscape}}.
 #' @param FreeType,NrCells Option for \emph{free initialisation}, i.e. required only if \code{InitType}\eqn{ = 0}:\cr
 #' \code{FreeType} = \eqn{0}: Random; provide number of cells/patches to initialise in \code{NrCells}. \cr
 #' \code{FreeType} = \eqn{1}: All suitable cells/patches (default).
@@ -34,7 +34,7 @@
 #' \code{InitDens} = \eqn{0}: At carrying capacity \eqn{K}, \cr
 #' \code{InitDens} = \eqn{1}: At half carrying capacity \eqn{K/2} (default)\cr
 #' \code{InitDens} = \eqn{2}: Set the number of individuals per cell/hectare to initialise in \code{IndsHaCell}.
-#' @param PropStages For \code{\link[RangeshiftR]{StageStructure}}d models only: Proportion of individuals initialised in each stage.
+#' @param PropStages For \code{\link[RangeShiftR]{StageStructure}}d models only: Proportion of individuals initialised in each stage.
 #' Requires a vector of length equal to the number of stages; its entries must be \eqn{\ge 0} and sum to \eqn{1.0}. However, juveniles
 #' can't be initialised and thus stage \eqn{0} (first entry) must have a value of \eqn{0.0}.
 #' @param InitAge For \code{StageStructure}d models only: Initial age distribution within each stage:\cr
@@ -55,7 +55,7 @@
 #' Either all (\code{FreeType}\eqn{=1}), or a specified number (\code{NrCells}) of randomly selected (\code{FreeType}\eqn{=0}) cells/patches
 #' will be seeded. When using an artificial landscape, this is the only option available.\cr
 #' 2) \emph{From loaded species distribution map.} (\code{InitType}\eqn{ = 1}) The population is initialised according to a loaded
-#' species distribution map, which needs to be provided through the module \code{\link[RangeshiftR]{ImportedLandscape}}, option \code{SpDistFile}.
+#' species distribution map, which needs to be provided through the module \code{\link[RangeShiftR]{ImportedLandscape}}, option \code{SpDistFile}.
 #' All habitat cells/patches within either all (\code{SpType}\eqn{=0}), or a specified number (\code{NrCells}) of randomly selected
 #' (\code{SpType}\eqn{=1}) presence cells (which can have a lower resolution) specified by this distribution map will seeded.\cr
 #' 3) \emph{From initial individuals list file.} (\code{InitType}\eqn{ = 2}) The population is initialised according to a list of specific
@@ -73,7 +73,7 @@
 #' 3) \emph{Set value} \code{IndsHaCell}. (\code{InitDens}\eqn{=2}) Set the number of individuals to be seeded in each cell or the density
 #' in each patch (in units of individuals per hectare).
 #'
-#' In the case of \code{\link[RangeshiftR]{StageStructure}}d models, the initial stage and age distributions must be specified.
+#' In the case of \code{\link[RangeShiftR]{StageStructure}}d models, the initial stage and age distributions must be specified.
 #' If \code{InitType}\eqn{ = 2}, this is done via the \code{InitIndsFile}, whereas for \code{InitType}\eqn{ = {0,1}},
 #' the proportion of individuals that should be initialised at each stage class is set via the numeric vector \code{PropStages}. It needs
 #' to have as many entries as number of stages, starting from the juvenile stage (\eqn{0}). Note that these proportions must sum up to \eqn{1.0},

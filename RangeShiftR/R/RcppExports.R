@@ -2,6 +2,6 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 run_from_R <- function(dirpath, ParMaster) {
-    .Call('_RangeshiftR_BatchMainR', PACKAGE = 'RangeshiftR', dirpath, ParMaster)
+    .Call('_RangeShiftR_BatchMainR', PACKAGE = 'RangeShiftR', dirpath, ParMaster)
 }
 

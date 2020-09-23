@@ -1,21 +1,20 @@
-Package: RangeshiftR
+Package: RangeShiftR
 Type: Package
 Title: An R interface to the RangeShifter simulation software
 Version: 0.1-0
-Date: 2020-03-10
+Date: 2020-09-22
 Author: Greta Bocedi, Justin Travis, Steve Palmer, Anne-Kathleen Malchow, Damaris Zurell
-Maintainer: Anne-Kathleen Malchow <malchowa@geo.hu-berlin.de>
-Description: RangeShifter: Modelling eco-evolutionary dispersal dynamics & Investigating species’ responses to environmental changes.
-	This package contains the simulation software (as C++ code) and R-level entry functions to set parameters and start simulations, as well as some output handling functions.  
+Maintainer: Anne-Kathleen Malchow <malchow@uni-potsdam.de>
+Description: RangeShiftR: an R package for individual-based simulation of spatial eco-evolutionary dynamics and species' responses to environmental changes
 License: GPL-3
 Depends: R (>= 3.6)
 SystemRequirements: C++11
 Imports: Rcpp (>= 1.0.0), raster
 LinkingTo: Rcpp
 Encoding: UTF-8
-RoxygenNote: 6.1.1
+RoxygenNote: 7.0.2
 Collate: 
-    'RangeshiftR.R'
+    'RangeShiftR.R'
     'RcppExports.R'
     'class_InitialisationParams.R'
     'class_GeneticsParams.R'

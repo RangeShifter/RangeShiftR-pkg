@@ -4386,9 +4386,9 @@ int ReadInitIndsFileR(int option, Landscape* pLandscape)
 {
 	landParams paramsLand = pLandscape->getLandParams();
 	demogrParams dem = pSpecies->getDemogr();
-	// stageParams sstruct = pSpecies->getStage();
+	//stageParams sstruct = pSpecies->getStage();
 	initParams init = paramsInit->getInit();
-
+	
 	string indsfile = paramsSim->getDir(1) + init.indsFile;
 	wifstream initIndsFile;
 	
@@ -4593,6 +4593,7 @@ int ReadInitIndsFileR(int option, Landscape* pLandscape)
 		initIndsFile.clear();
 		return 0;
 	}
+	return -1;
 }
 
 //---------------------------------------------------------------------------

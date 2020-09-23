@@ -41,7 +41,7 @@
 #' In this way, the transition matrix describes the effect of each individuals current stage (column) on all stages at the next timestep (rows).
 #' Since all offspring is born into the juvenile stage (stage 0), all fecundities are always located in the first row of the matrix.
 #'
-#' However, in \pkg{RangeshifteR}, these parameters are not used deterministically as \emph{rates} (like it is typical for matrix models) but, instead, as \emph{probabilities} which are
+#' However, in \pkg{RangeShiftR}, these parameters are not used deterministically as \emph{rates} (like it is typical for matrix models) but, instead, as \emph{probabilities} which are
 #' applied stochastically at the individual level. Hence, each female at stage \eqn{i}, if it reproduces, produces a number of offspring given by \eqn{Poisson}(\ifelse{html}{\out{&phi;<sub>i</sub>}}{\eqn{φ_i}}),
 #' while Bernoulli trials \eqn{Bern}(\ifelse{html}{\out{&sigma;<sub>i</sub>}}{\eqn{σ_i}}) and \eqn{Bern}(\ifelse{html}{\out{&gamma;<sub>i,i+1</sub>}}{\eqn{γ_(i,i+1)}}) determine if an individual/female survives or not
 #' and - if it survives - if it develops to the next stage or not.
@@ -63,7 +63,7 @@
 #' \eqn{0} \tab | \tab \eqn{1.0} \tab | \tab \eqn{0} \tab | \tab \ifelse{html}{\out{&sigma;<sub>1f</sub> &gamma;<sub>1-2,f</sub>}}{\eqn{σ_1f γ_(1-2,f)}} \tab | \tab \eqn{0} \tab | \tab \eqn{0} \cr
 #' \eqn{0} \tab | \tab \eqn{0} \tab | \tab \ifelse{html}{\out{&sigma;<sub>1m</sub> &gamma;<sub>1-2,m</sub>}}{\eqn{σ_1m γ_(1-2,m)}} \tab | \tab \eqn{0} \tab | \tab \ifelse{html}{\out{&sigma;<sub>2m</sub>}}{\eqn{σ_2m}} \tab | \tab \eqn{0} \cr
 #' \eqn{0} \tab | \tab \eqn{0} \tab | \tab \eqn{0} \tab | \tab \ifelse{html}{\out{&sigma;<sub>1f</sub> &gamma;<sub>1-2,f</sub>}}{\eqn{σ_1f γ_(1-2,f)}} \tab | \tab \eqn{0} \tab | \tab \ifelse{html}{\out{&sigma;<sub>2f</sub>}}{\eqn{σ_2f}} \cr}
-#' The mating system is explicitly modelled and a female’s probability of reproducing is determined as described in \code{\link[RangeshiftR]{Demography}}.
+#' The mating system is explicitly modelled and a female’s probability of reproducing is determined as described in \code{\link[RangeShiftR]{Demography}}.
 #'
 #' A common mistake in building a transition matrix is made when offspring produced at year \eqn{t} develop to the next stage in the same year (Caswell 2001: pg. 60-62). To avoid this problem without losing the offspring stage, and hence the chance for simulating post-natal dispersal,
 #' we require an additional explicit juvenile stage (stage 0). Juveniles have to develop to stage 1 in the same year they are born. Hence the minimum number of stages of a stage-structured model is always \eqn{2}. It is important to note that juvenile mortality can be accounted for in
@@ -80,7 +80,7 @@
 #' \enumerate{
 #' \item First, it is determined whether a reproductively mature female is a potential reproducer. The user specifies a minimum interval (\code{RepInterval}) before an individual, that has
 #' already reproduced, is able to reproduce again. Only those mature individuals that are either yet to reproduce, or last reproduced more than this number of reproductive seasons previously, are potential breeders.
-#' \item Potential breeders all reproduce with a set probability (\code{PRep}). Note that this probability is different from the probability of reproducing \ifelse{html}{\out{p<sub>r</sub>}}{\eqn{p_r}} described in \code{\link[RangeshiftR]{Demography}}.
+#' \item Potential breeders all reproduce with a set probability (\code{PRep}). Note that this probability is different from the probability of reproducing \ifelse{html}{\out{p<sub>r</sub>}}{\eqn{p_r}} described in \code{\link[RangeShiftR]{Demography}}.
 #' The latter will be additionally applied only in the case of more complex modelling of the mating system (\code{ReproductionType=2}) and it is determined by the number of reproductive males and females present in the cell/patch.
 #' }
 #' Note that in the current implementation, reproductive attempts that result in zero offspring still count in terms of an individual having to wait for the chance to reproduce again.
@@ -489,7 +489,7 @@ setClassUnion("StagesSlot", c("logical", "StagesParams"))
 #' Set Demographic Parameters
 #'
 #' For a simple non-structured population, set its basic demographic parameters here, i.e. the maximum growth rate (\code{Rmax}) and the competition coefficient (\code{bc}).
-#' For a stage-structured population, define its corresponding parameters via \code{\link[RangeshiftR]{StageStructure}} and add to Demography.\cr
+#' For a stage-structured population, define its corresponding parameters via \code{\link[RangeShiftR]{StageStructure}} and add to Demography.\cr
 #' \cr
 #' Choose the Reproduction model that determines if sexes are considered implicitly or explicitly and if a mating system is used. If applicable, set the corresponding parameters, i.e. the proportion of males (\code{PropMales}) and the maximum harem size (\code{Harem}).
 #'
@@ -497,7 +497,7 @@ setClassUnion("StagesSlot", c("logical", "StagesParams"))
 #'            ReproductionType = 0, PropMales = 0.5, Harem = 1)
 #' @param Rmax Maximum growth rate. Describes the mean number of offspring per female and reproductive event at very low density. Only required if \code{StageStruct=FALSE}.
 #' @param bc Competition coefficient. Describes the type of density regulation, providing the possibility for under-compensatory (\eqn{bc < 1}), compensatory (\eqn{bc = 1}) (default) or over-compensatory (\eqn{bc < 1}) dynamics. Only required if \code{StageStruct=FALSE}.
-#' @param StageStruct \code{FALSE} (default) yields a population model with non-overlapping generations.\cr For a stage-structured population, this takes the corresponding parameter object generated by \code{\link[RangeshiftR]{StageStructure}}, which holds all demographic parameters.
+#' @param StageStruct \code{FALSE} (default) yields a population model with non-overlapping generations.\cr For a stage-structured population, this takes the corresponding parameter object generated by \code{\link[RangeShiftR]{StageStructure}}, which holds all demographic parameters.
 #' @param ReproductionType 0 = asexual / only female model (default)\cr1 = simple sexual model\cr2 = sexual model with explicit mating system
 #' @param PropMales Required if \code{ReproductionType={1,2}}: Proportion of males in the population, between \code{0} and \code{1}. Defaults to \eqn{0.5}.
 #' @param Harem Required if \code{ReproductionType=2}: Maximum harem size. The maximum number of pair bonds that a male can establish. \eqn{Harem = 1} (default) corresponds to monogamy, \eqn{0<Harem<1} to polyandry and \eqn{Harem>1} to polygyny.
@@ -535,7 +535,7 @@ setClassUnion("StagesSlot", c("logical", "StagesParams"))
 #' \cr
 #' Populations with overlapping generations, i.e. with \strong{with stage-structure} are the appropriate choice for species in which generations can overlap and individuals can be classified in different stages
 #' (e.g. immature vs. breeding individuals) differing in their demographic parameters. Individuals are characterized by their age and stage. Each stage has a certain fecundity (which will be used as expected value of the Poisson distribution for reproduction), survival
-#' and probability of developing to the next stage. The parameters are provided as classical transition matrices (Caswell 2001) through a \"\code{\link[RangeshiftR]{StageStructure}}\"
+#' and probability of developing to the next stage. The parameters are provided as classical transition matrices (Caswell 2001) through a \"\code{\link[RangeShiftR]{StageStructure}}\"
 #' parameter object. For more information, see the details there.
 #' @references Maynard-Smith and Slatkin (1973), Caswell (2001), Lindström & Kokko (1998), Legendre (2004), Bessa-Gomes et al. (2010)
 #' @return a parameter object of class "DemogParams"

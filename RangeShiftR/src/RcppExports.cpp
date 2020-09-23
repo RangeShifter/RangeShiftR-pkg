@@ -7,7 +7,7 @@ using namespace Rcpp;
 
 // BatchMainR
 Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster);
-RcppExport SEXP _RangeshiftR_BatchMainR(SEXP dirpathSEXP, SEXP ParMasterSEXP) {
+RcppExport SEXP _RangeShiftR_BatchMainR(SEXP dirpathSEXP, SEXP ParMasterSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< std::string >::type dirpath(dirpathSEXP);
@@ -18,11 +18,11 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_RangeshiftR_BatchMainR", (DL_FUNC) &_RangeshiftR_BatchMainR, 2},
+    {"_RangeShiftR_BatchMainR", (DL_FUNC) &_RangeShiftR_BatchMainR, 2},
     {NULL, NULL, 0}
 };
 
-RcppExport void R_init_RangeshiftR(DllInfo *dll) {
+RcppExport void R_init_RangeShiftR(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }

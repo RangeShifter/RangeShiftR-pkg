@@ -29,13 +29,13 @@
 #' @param Simulation ID number of current simulation, defaults to \eqn{1}. (integer)
 #' @param Replicates Number of simulation iterations, defaults to \eqn{2}. (integer)
 #' @param Years The number of simulated years, defaults to \eqn{50}. (integer)
-#' @param Absorbing If \code{FALSE} (default), every move in the \code{\link[RangeshiftR]{Transfer}} process will be
+#' @param Absorbing If \code{FALSE} (default), every move in the \code{\link[RangeShiftR]{Transfer}} process will be
 #' repeated until a valid cell is met. \cr If \code{TRUE}, an individual which hits a non-valid cell or
 #' transgresses the landscape boundary during the dispersal act is eliminated from the simulation.
 #' @param Gradient \eqn{0} = None (default), \cr
-#' \eqn{1} = decreasing carrying capacity \eqn{K} or, for a \code{\link[RangeshiftR]{StageStructure}}d population, \eqn{1/b}
+#' \eqn{1} = decreasing carrying capacity \eqn{K} or, for a \code{\link[RangeShiftR]{StageStructure}}d population, \eqn{1/b}
 #' (with \eqn{b} the competition coefficient), \cr
-#' \eqn{2} = decreasing growth rate \eqn{r} or, for a \code{\link[RangeshiftR]{StageStructure}}d population, fecundity (\eqn{\phi}), \cr
+#' \eqn{2} = decreasing growth rate \eqn{r} or, for a \code{\link[RangeShiftR]{StageStructure}}d population, fecundity (\eqn{\phi}), \cr
 #' \eqn{3} = increasing local extinction probability \eqn{e}. \cr
 #' If activated, a gradient will be imposed along the north-south (\eqn{y}-) axis in which the selected parameter varies linearly with distance from the
 #' optimum \eqn{y}-value \code{Optimum}. Note that a \code{Gradient} can not be applied in for patch-based models (must be \code{Gradient}\eqn{=0}).
@@ -60,8 +60,8 @@
 #' \eqn{2} = local (each cell fluctuates independently, only permitted for cell-based model).\cr
 #' Environmental stochasticity is always applied on a yearly basis.
 #' @param EnvStochType Required if \code{EnvStoch} \ifelse{html}{\out{&ne; 0}}{\eqn{> 0}}: Parameter to which environmental stochasticity is applied:\cr
-#' \eqn{0} = growth rate \eqn{r} or, for a \code{\link[RangeshiftR]{StageStructure}}d population, fecundity (\eqn{\phi}).\cr
-#' \eqn{1} = carrying capacity \eqn{K} or, for a \code{\link[RangeshiftR]{StageStructure}}d population, \eqn{1/b} (allowed for artificial landscapes only!).
+#' \eqn{0} = growth rate \eqn{r} or, for a \code{\link[RangeShiftR]{StageStructure}}d population, fecundity (\eqn{\phi}).\cr
+#' \eqn{1} = carrying capacity \eqn{K} or, for a \code{\link[RangeShiftR]{StageStructure}}d population, \eqn{1/b} (allowed for artificial landscapes only!).
 #' @param std Required if \code{EnvStoch} \ifelse{html}{\out{&ne; 0}}{\eqn{> 0}}: magnitude of stochastic fluctuations. Must be \eqn{> 0.0} and \eqn{\le 1.0}.
 #' @param ac Required if \code{EnvStoch} \ifelse{html}{\out{&ne; 0}}{\eqn{> 0}}: temporal autocorrelation coefficient. Must be \eqn{\ge 0.0} and \eqn{<1.0}.
 #' @param minR,maxR Required if \code{EnvStochType}\eqn{=0}: minimum and maximum growth rates.

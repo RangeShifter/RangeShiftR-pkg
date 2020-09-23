@@ -39,7 +39,7 @@ setMethod("initialize", "LandParams", function(.Object, ...) {
 #'                     fractal = FALSE, hurst, continuous = FALSE, minPct, maxPct)
 #' @param propSuit Proportion of suitable habitat cells, defaults to \eqn{0.5}.
 #' @param K Carrying capacity of habitat cells in units of number of individuals per hectare. Defaults to \eqn{10}. (integer)
-#' If combined with a \code{\link[RangeshiftR]{StageStructure}}d model, \code{K} will be used to calculate the \emph{strength of density dependence} \ifelse{html}{\out{b=K<sup>-1</sup>}}{\eqn{b=1/K}}
+#' If combined with a \code{\link[RangeShiftR]{StageStructure}}d model, \code{K} will be used to calculate the \emph{strength of density dependence} \ifelse{html}{\out{b=K<sup>-1</sup>}}{\eqn{b=1/K}}
 #' instead of interpreting it as limiting carrying capacity.\cr
 #' @param Resolution Cell size in meters, defaults to \eqn{100}. (integer)
 #' @param dimX,dimY Number of cells along the x- and y-axis, both default to \eqn{65}. (integer) \cr
@@ -279,7 +279,7 @@ setMethod("show", "ArtificialLandscape", function(object){
 #' Make sure your imported landscape file uses the specified standard (see Details below).
 #' @param Nhabitats Required if \code{HabitatQuality=FALSE}: Number of habitats in the imported landscape if unique integer habitat codes are used. (integer)
 #' @param K Carrying capacity of habitat cells in units of number of individuals per hectare (integer), defaults to \eqn{10}.\cr
-#' If combined with a \code{\link[RangeshiftR]{StageStructure}}d model, \code{K} will be used to calculate the \emph{strength of density dependence} \ifelse{html}{\out{b=K<sup>-1</sup>}}{\eqn{b=1/K}}
+#' If combined with a \code{\link[RangeShiftR]{StageStructure}}d model, \code{K} will be used to calculate the \emph{strength of density dependence} \ifelse{html}{\out{b=K<sup>-1</sup>}}{\eqn{b=1/K}}
 #' instead of interpreting it as limiting carrying capacity.\cr
 #' If \code{HabitatQuality=FALSE}, a vector of length \code{Nhabitats} is expected, specifying the respective carrying capacity for every habitat code.\cr
 #' If \code{HabitatQuality=TRUE}, \eqn{K} is interpreted as the maximum carrying capacity reached in cells with \eqn{100}\% habitat quality. All other cells have the respective fraction of \eqn{K}.
@@ -290,7 +290,7 @@ setMethod("show", "ArtificialLandscape", function(object){
 #' maps (in \code{PatchFile},\code{CostsFile}) are loaded and used in the simulation. More details below.
 #' @param SpDistFile Filename of the species initial distribution map which shall be imported (*.txt). Default is \code{NULL}.
 #' @param SpDistResolution Required if \code{SpDistFile} is given: Cell size of the distribution map in meters. (integer) Must be an integer multiple of the landscape resolution.
-#' @details RangeShifter requires every input map to be a text file in ArcGIS raster export format, which has the following six header lines:
+#' @details RangeShiftR requires every input map to be a text file in ArcGIS raster export format, which has the following six header lines:
 #' \tabular{ll}{\code{ncols} \tab Number of columns \cr
 #' \code{nrows} \tab Number of rows \cr
 #' \code{xllcorner} \tab x-coordinate (longitude) of the lower-left corner \cr
@@ -309,7 +309,7 @@ setMethod("show", "ArtificialLandscape", function(object){
 #' are assumed not to affect the dynamics, or on the other hand, patch cells that are not physically contiguous to the rest of the patch cells.
 #'
 #' \emph{Costs layer} \cr
-#' Only used if the simulation is run with \code{\link[RangeshiftR]{SMS}} as its transfer module and the landscapes resistance to movement is given via a costs raster map (see argument \code{Costs} in \code{SMS()} ).
+#' Only used if the simulation is run with \code{\link[RangeShiftR]{SMS}} as its transfer module and the landscapes resistance to movement is given via a costs raster map (see argument \code{Costs} in \code{SMS()} ).
 #' In this case, the specified map has to match the landscape raster in extent, coordinates and resolution, and each cell contains a cost value, with the minimal possible cost being \eqn{1}.
 #' Importing a cost layer is the only option when the landscape comprises habitat coverage or quality.
 #'

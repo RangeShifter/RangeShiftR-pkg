@@ -6,7 +6,7 @@
 
 #' Define a RangeShiftR parameter master object
 #'
-#' Set up a parameter master that can be used in \code{\link[RangeshiftR]{RunRS}}() to run a simulation.\cr
+#' Set up a parameter master that can be used in \code{\link[RangeShiftR]{RunRS}}() to run a simulation.\cr
 #' All parameter modules can be added to an existing parameter master via the "+"-functions. However, note that the entire respective module will be overwritten.\cr
 #'
 #' @usage RSsim(batchnum = 1L,
@@ -19,23 +19,23 @@
 #'       seed = 0)
 #' @include class_RSparams.R
 #' @param batchnum Batch ID is part of output files names and can be used to prevent overwriting.
-#' @param simul Set \code{\link[RangeshiftR]{Simulation}} parameters
-#' @param land Set landscape parameters. Can be either \code{\link[RangeshiftR]{ArtificialLandscape}} or \code{\link[RangeshiftR]{ImportedLandscape}}.
-#' @param demog Set \code{\link[RangeshiftR]{Demography}} parameters
-#' @param dispersal Set \code{\link[RangeshiftR]{Dispersal}} parameters
-#' @param gene Set \code{\link[RangeshiftR]{Genetics}} parameters
-#' @param init Set \code{\link[RangeshiftR]{Initialise}} parameters
+#' @param simul Set \code{\link[RangeShiftR]{Simulation}} parameters
+#' @param land Set landscape parameters. Can be either \code{\link[RangeShiftR]{ArtificialLandscape}} or \code{\link[RangeShiftR]{ImportedLandscape}}.
+#' @param demog Set \code{\link[RangeShiftR]{Demography}} parameters
+#' @param dispersal Set \code{\link[RangeShiftR]{Dispersal}} parameters
+#' @param gene Set \code{\link[RangeShiftR]{Genetics}} parameters
+#' @param init Set \code{\link[RangeShiftR]{Initialise}} parameters
 #' @param seed Set seed for random number generator. If non-positive, a random seed will be generated.
 #' @return returns a RangeShiftR parameter master object (class 'RSparams')
 #' @details
 #' \emph{Demographic stochasticity} \cr Demographic stochasticity is fundamentally important for the dynamics of populations that are naturally small or have declined to low abundances owing to
 #' anthropogenic pressures. Additionally, inter-individual variability within populations can have a major influence on dynamics. Modelling stochastic events
 #' that happen to individuals is crucial for avoiding systematic overestimation of population viability or rate of spread (Clark et al. 2001; Kendall & Fox 2003;
-#' Robert et al. 2003; Grimm & Railsback 2005; Jongejans et al. 2008; Travis et al. 2011). Thus, population dynamics in RangeShifter were constructed to be
+#' Robert et al. 2003; Grimm & Railsback 2005; Jongejans et al. 2008; Travis et al. 2011). Thus, population dynamics in RangeShiftR were constructed to be
 #' fully individual-based and stochastic. Each reproductive individual produces a discrete number of offspring sampled from a Poisson distribution with a mean
-#' that is influenced by the species’ demographic parameters and the local population density. As RangeShifter has been designed for modelling a variety of
+#' that is influenced by the species’ demographic parameters and the local population density. As RangeShiftR has been designed for modelling a variety of
 #' species with different life-history traits, a range of different population models can be chosen, depending on the species being modelled and on the
-#' available information (see \code{\link[RangeshiftR]{Demography}}). In all cases demographic stochasticity is implemented.
+#' available information (see \code{\link[RangeShiftR]{Demography}}). In all cases demographic stochasticity is implemented.
 #'
 #' \emph{Cell-based vs. patch-based model} \cr
 #' RangeShiftR can be run as a cell-based or patch-based model (Bian 2003). It should be noted
@@ -46,7 +46,7 @@
 #' act. The individuals present in a cell define a distinct population, and density-dependencies for reproduction, emigration and settlement
 #' all operate at this scale. Even in the case where two habitat cells are adjacent, they still hold separate populations. In contrast, in
 #' the patch-based model, population dynamics happen at the patch level, a patch being an assemblage of landscape cells of potentially
-#' different habitat types. Patches are not defined automatically by RangeShiftR (see \code{\link[RangeshiftR]{ImportedLandscape}}).
+#' different habitat types. Patches are not defined automatically by RangeShiftR (see \code{\link[RangeShiftR]{ImportedLandscape}}).
 #' Rather, the user is required to define which cells belong
 #' to which patch, taking into account the ecological understanding of the study species. Density-dependencies regarding reproduction,
 #' development, survival, emigration and settlement will depend on the density of individuals in a patch. However, discrete step-wise
