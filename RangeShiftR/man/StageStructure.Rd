@@ -41,7 +41,7 @@ a parameter object of class "StagesParams"
 }
 \description{
 Set all demographic parameters for a stage-structured population. All elements of the transition matrix, i.e. Fecundity, Development, and Survival can be subjected to a density-dependent scaling.
-In this case, the base probabilities given via the transition matrix will be reduced exponentially with the strength of density dependence \eqn{b}, which is defined as abundance over carrying capacity.
+In this case, the base probabilities given via the transition matrix will be reduced exponentially with the strength of density dependence \eqn{b(i,t)} times abundance \eqn{N(i,t)}, in patch \eqn{i} at time \eqn{t}.
 Additionally, the effect of the abundances of each stage/sex on these parameters can be weighted. For more information, see the details.
 }
 \details{
@@ -55,7 +55,7 @@ and \ifelse{html}{\out{&gamma;<sub>i-j</sub>}}{\eqn{γ_(i-j)}} is the probabilit
 In this way, the transition matrix describes the effect of each individuals current stage (column) on all stages at the next timestep (rows).
 Since all offspring is born into the juvenile stage (stage 0), all fecundities are always located in the first row of the matrix.
 
-However, in \pkg{RangeshifteR}, these parameters are not used deterministically as \emph{rates} (like it is typical for matrix models) but, instead, as \emph{probabilities} which are
+However, in \pkg{RangeShiftR}, these parameters are not used deterministically as \emph{rates} (like it is typical for matrix models) but, instead, as \emph{probabilities} which are
 applied stochastically at the individual level. Hence, each female at stage \eqn{i}, if it reproduces, produces a number of offspring given by \eqn{Poisson}(\ifelse{html}{\out{&phi;<sub>i</sub>}}{\eqn{φ_i}}),
 while Bernoulli trials \eqn{Bern}(\ifelse{html}{\out{&sigma;<sub>i</sub>}}{\eqn{σ_i}}) and \eqn{Bern}(\ifelse{html}{\out{&gamma;<sub>i,i+1</sub>}}{\eqn{γ_(i,i+1)}}) determine if an individual/female survives or not
 and - if it survives - if it develops to the next stage or not.
@@ -77,7 +77,7 @@ An example transition matrix for a 3-staged explicit sexual populaton model:
 \eqn{0} \tab | \tab \eqn{1.0} \tab | \tab \eqn{0} \tab | \tab \ifelse{html}{\out{&sigma;<sub>1f</sub> &gamma;<sub>1-2,f</sub>}}{\eqn{σ_1f γ_(1-2,f)}} \tab | \tab \eqn{0} \tab | \tab \eqn{0} \cr
 \eqn{0} \tab | \tab \eqn{0} \tab | \tab \ifelse{html}{\out{&sigma;<sub>1m</sub> &gamma;<sub>1-2,m</sub>}}{\eqn{σ_1m γ_(1-2,m)}} \tab | \tab \eqn{0} \tab | \tab \ifelse{html}{\out{&sigma;<sub>2m</sub>}}{\eqn{σ_2m}} \tab | \tab \eqn{0} \cr
 \eqn{0} \tab | \tab \eqn{0} \tab | \tab \eqn{0} \tab | \tab \ifelse{html}{\out{&sigma;<sub>1f</sub> &gamma;<sub>1-2,f</sub>}}{\eqn{σ_1f γ_(1-2,f)}} \tab | \tab \eqn{0} \tab | \tab \ifelse{html}{\out{&sigma;<sub>2f</sub>}}{\eqn{σ_2f}} \cr}
-The mating system is explicitly modelled and a female’s probability of reproducing is determined as described in \code{\link[RangeshiftR]{Demography}}.
+The mating system is explicitly modelled and a female’s probability of reproducing is determined as described in \code{\link[RangeShiftR]{Demography}}.
 
 A common mistake in building a transition matrix is made when offspring produced at year \eqn{t} develop to the next stage in the same year (Caswell 2001: pg. 60-62). To avoid this problem without losing the offspring stage, and hence the chance for simulating post-natal dispersal,
 we require an additional explicit juvenile stage (stage 0). Juveniles have to develop to stage 1 in the same year they are born. Hence the minimum number of stages of a stage-structured model is always \eqn{2}. It is important to note that juvenile mortality can be accounted for in
@@ -94,7 +94,7 @@ control the likelihood that each individual / female reproduces:
 \enumerate{
 \item First, it is determined whether a reproductively mature female is a potential reproducer. The user specifies a minimum interval (\code{RepInterval}) before an individual, that has
 already reproduced, is able to reproduce again. Only those mature individuals that are either yet to reproduce, or last reproduced more than this number of reproductive seasons previously, are potential breeders.
-\item Potential breeders all reproduce with a set probability (\code{PRep}). Note that this probability is different from the probability of reproducing \ifelse{html}{\out{p<sub>r</sub>}}{\eqn{p_r}} described in \code{\link[RangeshiftR]{Demography}}.
+\item Potential breeders all reproduce with a set probability (\code{PRep}). Note that this probability is different from the probability of reproducing \ifelse{html}{\out{p<sub>r</sub>}}{\eqn{p_r}} described in \code{\link[RangeShiftR]{Demography}}.
 The latter will be additionally applied only in the case of more complex modelling of the mating system (\code{ReproductionType=2}) and it is determined by the number of reproductive males and females present in the cell/patch.
 }
 Note that in the current implementation, reproductive attempts that result in zero offspring still count in terms of an individual having to wait for the chance to reproduce again.
@@ -111,23 +111,23 @@ Option 1 gives results that are comparable with the deterministic solution of th
 
 \emph{Density dependence} can act on each of the three demographic phases (i.e. reproduction, survival and development) and is controlled by \code{FecDensDep,DevDensDep,SurvDensDep}. It is implemented as an exponential decay:
 
-\ifelse{html}{\out{&emsp;&emsp; &phi;<sub>i</sub>(r,t) = &phi;<sub>0,i</sub> &ast; e<sup> - b<sub>r</sub> N<sub>t</sub></sup>}}{\deqn{φ_i(r,t)=φ_(0,i) * exp(- b_r N_t)}}
+\ifelse{html}{\out{&emsp;&emsp; &phi;<sub>i</sub>(r,t) = &phi;<sub>0,i</sub> &ast; e<sup> - b(r) N(t) </sup>}}{\deqn{φ_i(r,t)=φ_(0,i) * exp(- b(r) N(t) ) }}
 
-\ifelse{html}{\out{&emsp;&emsp; &sigma;<sub>i</sub>(r,t) = &sigma;<sub>0,i</sub> &ast; e<sup> - C<sub>&sigma;</sub> b<sub>r</sub> N<sub>t</sub></sup>}}{\deqn{σ_i(r,t)=σ_(0,i) * exp(- C_\sigma b_r N_t)}}
+\ifelse{html}{\out{&emsp;&emsp; &sigma;<sub>i</sub>(r,t) = &sigma;<sub>0,i</sub> &ast; e<sup> - C<sub>&sigma;</sub> b(r) N(t) </sup>}}{\deqn{σ_i(r,t)=σ_(0,i) * exp(- C_\sigma b(r) N(t) ) }}
 
-\ifelse{html}{\out{&emsp;&emsp; &gamma;<sub>i</sub>(r,t) = &gamma;<sub>0,i</sub> &ast; e<sup> - C<sub>&gamma;</sub> b<sub>r</sub> N<sub>t</sub></sup>}}{\deqn{γ_i(r,t)=γ_(0,i) * exp(- C_γ b_r N_t)}}
+\ifelse{html}{\out{&emsp;&emsp; &gamma;<sub>i</sub>(r,t) = &gamma;<sub>0,i</sub> &ast; e<sup> - C<sub>&gamma;</sub> b(r) N(t) </sup>}}{\deqn{γ_i(r,t)=γ_(0,i) * exp(- C_γ b(r) N(t) ) }}
 
-where \ifelse{html}{\out{b<sub>r</sub>=K<sup>-1</sup>}}{\eqn{b_r=K_r^-1}} is the strength of density dependence in fecundity at site \eqn{r}, which is given by the inverse of its carrying capacity \ifelse{html}{\out{K<sub>r</sub>}}{\eqn{K_r}}.
-Furthermore, \ifelse{html}{\out{C<sub>&sigma;</sub>}}{\eqn{C_\sigma}} and \ifelse{html}{\out{C<sub>&gamma;</sub>}}{\eqn{C_γ}} (\code{DevDensCoeff,SurvDensCoeff}) scale the strength of density dependence in survival and development relative to
-that in fecundity.
+where \eqn{b(r)} is the strength of density dependence in fecundity at site \eqn{r}, which is given by the argument \code{HabQuality} in the landscape module.
+Furthermore, \ifelse{html}{\out{C<sub>&sigma;</sub>}}{\eqn{C_\sigma}} and \ifelse{html}{\out{C<sub>&gamma;</sub>}}{\eqn{C_γ}} (\code{DevDensCoeff,SurvDensCoeff})
+scale the strength of density dependence in survival and development relative to that in fecundity.
 
 Moreover, the strength of density-dependence can be uniform for all stages or stage-dependent. Even greater complexity can be incorporated with different stages contributing differently to density-dependence:
 
-\ifelse{html}{\out{&emsp; &phi;<sub>i</sub>(r,t) = &phi;<sub>0,i</sub> &ast; e<sup> - b<sub>r</sub> &Sigma;<sub>j</sub><sup>S</sup> &omega;<sub>&phi;,ij</sub> N<sub>j,t</sub></sup>}}{\deqn{φ_i(r,t)=φ_(0,i) * exp(- b_r N_t)}}
+\ifelse{html}{\out{&emsp; &phi;<sub>i</sub>(r,t) = &phi;<sub>0,i</sub> &ast; e<sup> - b(r) &Sigma;<sub>j</sub><sup>S</sup> &omega;<sub>&phi;,ij</sub> N(j,t)</sup>}}{\deqn{φ_i(r,t)=φ_(0,i) * exp(- b(r) \Sigma_j^S ω_{φ,ij} N_j(t) ) }}
 
-\ifelse{html}{\out{&emsp; &sigma;<sub>i</sub>(r,t) = &sigma;<sub>0,i</sub> &ast; e<sup> - C<sub>&sigma;</sub> b<sub>r</sub>  &Sigma;<sub>j</sub><sup>S</sup> &omega;<sub>&sigma;,ij</sub> N<sub>j,t</sub></sup>}}{\deqn{σ_i(r,t)=σ_(0,i) * exp(- C_\sigma b_r N_t)}}
+\ifelse{html}{\out{&emsp; &sigma;<sub>i</sub>(r,t) = &sigma;<sub>0,i</sub> &ast; e<sup> - C<sub>&sigma;</sub> b(r) &Sigma;<sub>j</sub><sup>S</sup> &omega;<sub>&sigma;,ij</sub> N(j,t) </sup>}}{\deqn{σ_i(r,t)=σ_(0,i) * exp(- C_\sigma b(r) \Sigma_j^S ω_{σ,ij} N_j(t) )}}
 
-\ifelse{html}{\out{&emsp; &gamma;<sub>i</sub>(r,t) = &gamma;<sub>0,i</sub> &ast; e<sup> - C<sub>&gamma;</sub> b<sub>r</sub>  &Sigma;<sub>j</sub><sup>S</sup> &omega;<sub>&gamma;,ij</sub> N<sub>j,t</sub></sup>}}{\deqn{γ_i(r,t)=γ_(0,i) * exp(- C_γ b_r N_t)}}
+\ifelse{html}{\out{&emsp; &gamma;<sub>i</sub>(r,t) = &gamma;<sub>0,i</sub> &ast; e<sup> - C<sub>&gamma;</sub> b(r) &Sigma;<sub>j</sub><sup>S</sup> &omega;<sub>&gamma;,ij</sub> N(j,t)</sup>}}{\deqn{γ_i(r,t)=γ_(0,i) * exp(- C_γ b(r) \Sigma_j^S ω_{γ,ij} N_j(t) )}}
 
 where \ifelse{html}{\out{&omega;<sub>&phi;</sub>}}{\eqn{ω_φ}}, \ifelse{html}{\out{&omega;<sub>&sigma;</sub>}}{\eqn{ω_σ}}, \ifelse{html}{\out{&omega;<sub>&gamma;</sub>}}{\eqn{ω_γ}} are weight matrices given by \code{FecStageWtsMatrix, DevStageWtsMatrix, SurvStageWtsMatrix}. Their elements \ifelse{html}{\out{&omega;<sub>ij</sub>}}{\eqn{ω_ij}}
 represent the contributions of the abundance of stage \eqn{j} to the density dependence in the fecundity / survival / development of stage \eqn{i}, thus they are quadratic matrices of size \code{Stages}\eqn{^2}. Note that the row sums are not required to be normalized, therefore they can be used

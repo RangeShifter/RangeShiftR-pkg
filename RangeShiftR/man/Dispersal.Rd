@@ -14,9 +14,9 @@ Dispersal(Emigration = Emigration(),
 
 \item{Transfer}{(or transience) The second phase of dispersal; consists of the movement of an individual departing from its natal patch towards
 a potential new patch, ending with settlement or mortality. This movement can be modelled by one of three alternative processes:\cr
-- Dispersal kernel: use \code{\link[RangeshiftR]{DispersalKernel}}\cr
-- Stochastic movement simulator (SMS): use \code{\link[RangeshiftR]{SMS}}\cr
-- Correlated random walk (CRW): use \code{\link[RangeshiftR]{CorrRW}}}
+- Dispersal kernel: use \code{\link[RangeShiftR]{DispersalKernel}}\cr
+- Stochastic movement simulator (SMS): use \code{\link[RangeShiftR]{SMS}}\cr
+- Correlated random walk (CRW): use \code{\link[RangeShiftR]{CorrRW}}}
 
 \item{Settlement}{(or immigration) The last phase of dispersal; determines when the individual stops in a new cell or patch of
 breeding habitat.}
@@ -26,12 +26,12 @@ a parameter object of class "DispersalParams"
 }
 \description{
 Dispersal is defined as movement leading to spatial gene flow. It typically involves three phases, which are all modelled explicitly:
-\code{\link[RangeshiftR]{Emigration}}, \code{\link[RangeshiftR]{Transfer}} and \code{\link[RangeshiftR]{Settlement}}.\cr
+\code{\link[RangeShiftR]{Emigration}}, \code{\link[RangeShiftR]{Transfer}} and \code{\link[RangeShiftR]{Settlement}}.\cr
 The specific parameters of each phase are set through their respective functions. For more details, see their documentation.\cr
 \cr
 The potential evolution of several key dispersal traits is implemented through the possibility of inter-individual variability and heritability.
 This option (called \code{IndVar}) can be enabled for each dispersal phase in their respective modules. See the Datails below for information on how
-to set the associated parameters. Additionally, the \code{\link[RangeshiftR]{Genetics}} module must be defined.
+to set the associated parameters. Additionally, the \code{\link[RangeShiftR]{Genetics}} module must be defined.
 }
 \details{
 It is possible to model all three phases - emigration, transfer and settlement - with stage- and/or sex-specific parameters via the
@@ -40,10 +40,10 @@ one set coding for the trait in females and the other for the trait in males. As
 stage-biased, meaning that parameters can vary for different stage or age classes.
 
 The options of inter-individual variability in the various dispersal traits is enabled by setting \code{IndVar=TRUE} for the respective transfer phase
-module and defining the genetic module to simulate heritability and evolution of traits (\code{\link[RangeshiftR]{Genetics}}).\cr
+module and defining the genetic module to simulate heritability and evolution of traits (\code{\link[RangeShiftR]{Genetics}}).\cr
 For each such heritable dispersal trait, this requires to set the mean and standard deviation of the initial distribution of the trait values,
 (instead of a contant value as in the case of \code{IndVar=FALSE})
-as well as the \code{MutationScale} (see \code{\link[RangeshiftR]{Genetics}} documentaion).\cr
+as well as the \code{MutationScale} (see \code{\link[RangeShiftR]{Genetics}} documentaion).\cr
 
 Note, however, that not all combinations of sex-/stage-dependencies with inter-individual variability are implemented.\cr
 }

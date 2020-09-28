@@ -35,12 +35,13 @@ setMethod("initialize", "LandParams", function(.Object, ...) {
 #' An artificial landscape can be generated with a random or fractal spatial structure, and may be using binary or continuous habitat values to characterise each cell.
 #'
 #' @author Anne-Kathleen Malchow
-#' @usage ArtificialLandscape(propSuit = 0.5, K = 10, Resolution = 100, dimX = 65, dimY = 65,
+#' @usage ArtificialLandscape(propSuit = 0.5, HabQuality = 10, Resolution = 100, dimX = 65, dimY = 65,
 #'                     fractal = FALSE, hurst, continuous = FALSE, minPct, maxPct)
 #' @param propSuit Proportion of suitable habitat cells, defaults to \eqn{0.5}.
-#' @param K Carrying capacity of habitat cells in units of number of individuals per hectare. Defaults to \eqn{10}. (integer)
-#' If combined with a \code{\link[RangeShiftR]{StageStructure}}d model, \code{K} will be used to calculate the \emph{strength of density dependence} \ifelse{html}{\out{b=K<sup>-1</sup>}}{\eqn{b=1/K}}
-#' instead of interpreting it as limiting carrying capacity.\cr
+#' @param HabQuality Habitat quality determines the demographic density dependence of the modelled species and is given in units of the number of individuals per hectare (defaults to \eqn{10}).
+#' Its precise interpretation thus depends on the structure of the species' \code{\link[RangeShiftR]{Demography}}:\cr
+#' If combined with a \code{\link[RangeShiftR]{StageStructure}}d model, \code{HabQuality} will be used as the \emph{strength of demographic density dependence} \ifelse{html}{\out{b<sup>-1</sup>}}{\eqn{1/b}}.
+#' If combined with a non-structured model, \code{HabQuality} will be interpreted as \emph{limiting carrying capacity} \eqn{K}.\cr
 #' @param Resolution Cell size in meters, defaults to \eqn{100}. (integer)
 #' @param dimX,dimY Number of cells along the x- and y-axis, both default to \eqn{65}. (integer) \cr
 #' If \code{fractal=TRUE}, \code{dimX} and \code{dimY} must be powers of \eqn{2} plus \eqn{1} (\eqn{2^n+1}) and \code{dimX} \eqn{\le} \code{dimY} .
@@ -49,7 +50,7 @@ setMethod("initialize", "LandParams", function(.Object, ...) {
 #' @param hurst Required if \code{fractal=TRUE}: Hurst exponent. Can be any number in the open interval \eqn{(0,1)}.
 #' @param continuous Use continuous or binary habitat values to describe each cell?\cr If \code{FALSE} (default), the resulting landscape
 #' is binary, with the two values \emph{Habitat} and \emph{Matrix} (i.e. Non-habitat).\cr If \code{TRUE}, each cell is given a continuous value which describes the percentage of habitat cover
-#' within a cell. The carrying capacity of that cell is calculated as the respective fraction of the value of \eqn{K}.
+#' within a cell. The effective habitat quality of that cell is calculated as the respective fraction of the value of \eqn{HabQuality}.
 #' @param minPct,maxPct Required if \code{continuous=TRUE}: Minimum and Maximum percentage of habitat cover within a cell. Can be any number in the open interval \eqn{(0,1)},
 #' \code{maxPct} may be exactly \eqn{1}. \code{minPct} must be smaller than \code{maxPct}.
 #' @details The fractal landscape generator uses the midpoint displacemeant algorithm. The Hurst exponent, often referred to as \eqn{H},
@@ -65,7 +66,7 @@ setMethod("initialize", "LandParams", function(.Object, ...) {
 #' @name ArtificialLandscape
 #' @export ArtificialLandscape
 ArtificialLandscape <- setClass("ArtificialLandscape", slots = c(propSuit = "numeric",
-                                                                 K = "integer_OR_numeric",
+                                                                 HabQuality = "integer_OR_numeric",
                                                                  Resolution = "integer_OR_numeric",
                                                                  dimX = "integer_OR_numeric",
                                                                  dimY = "integer_OR_numeric",
@@ -75,7 +76,7 @@ ArtificialLandscape <- setClass("ArtificialLandscape", slots = c(propSuit = "num
                                                                  minPct = "numeric",
                                                                  maxPct = "numeric")
                            , prototype = list(propSuit = 0.5,
-                                              K = 10L,
+                                              HabQuality = 10L,
                                               Resolution = 100L,
                                               dimX = 65L,
                                               dimY = 65L,
@@ -96,12 +97,12 @@ setValidity("ArtificialLandscape", function(object) {
             msg <- c(msg, "Proportion of suitable habitat must be in the interval [0,1].")
         }
     }
-    if (is.na(object@K) || length(object@K)==0) {
-        msg <- c(msg, "Carrying capacity K must be set!")
+    if (is.na(object@HabQuality) || length(object@HabQuality)==0) {
+        msg <- c(msg, "HabQuality must be set!")
     }
     else {
-        if (object@K<0) {
-            msg <- c(msg, "Carrying capacity K must not be smaller than 0.")
+        if (object@HabQuality<0) {
+            msg <- c(msg, "HabQuality must not be smaller than 0.")
         }
     }
     if (is.na(object@Resolution) || length(object@Resolution)==0) {
@@ -237,10 +238,10 @@ setMethod("show", "ArtificialLandscape", function(object){
     else {
         cat("binary habitat/matrix code\n")
     }
-    cat ("   Size              :", paste(object@dimX), "x", paste(object@dimY), "cells\n")
-    cat ("   Resolution        :      ", paste(object@Resolution) , "meters\n")
+    cat ("   Size             :", paste(object@dimX), "x", paste(object@dimY), "cells\n")
+    cat ("   Resolution       :      ", paste(object@Resolution) , "meters\n")
     cat ("   Proportion of suitable habitat:", object@propSuit,"\n")
-    cat ("   Carrying capacity :", object@K,"\n")
+    cat ("   Habitat quality  :", object@HabQuality,"\n")
     if(object@fractal) {
         cat ("   Hurst exponent    : H =", object@hurst, "\n")
     }
@@ -255,36 +256,39 @@ setMethod("show", "ArtificialLandscape", function(object){
 
 #' Import a Landscape from file
 #'
-#' @description Provide the filename(s) (\code{LandscapeFile}), the resolution and, if applicable, the number of habitat codes (\code{Nhabitats})
-#' as well as their respective carrying capacities (\code{K}) of the map(s) to be imported.
+#' @description Provide the filename(s) (\code{LandscapeFile}) of the map(s) to be imported, their
+#' resolution and, if applicable, the number of habitat codes (\code{Nhabitats})
+#' as well as their respective habitat qualities (\code{HabQuality}).
 #'
-#' For a dynamic landscape, the year in which each landscape is loaded has to be given.
+#' For a dynamic landscape, the year in which each landscape is loaded has to be provided.
 #'
 #' Other, optional input maps are:\cr
 #' - Patch map(s) to define habitat patches,\cr
 #' - SMS cost map(s) to define landscape resistance to,\cr
 #' - a distribution map to define an initial species distribution.
 #'
-# #' @author Anne-Kathleen Malchow
-#' @usage ImportedLandscape(LandscapeFile, Resolution = 100, HabitatQuality = FALSE,
-#'                   Nhabitats, K = 10,
+#' @author Anne-Kathleen Malchow
+#' @usage ImportedLandscape(LandscapeFile, Resolution = 100, PercentCover = FALSE,
+#'                   Nhabitats, HabQuality = 10,
 #'                   PatchFile = "NULL",
-#'                   CostsFile = "NULL",,
-#'                   DynamicLandYears = 0
+#'                   CostsFile = "NULL",
+#'                   DynamicLandYears = 0,
 #'                   SpDistFile = "NULL", SpDistResolution)
 #' @param LandscapeFile Filename(s) of the landscape habitat map(s) which shall be imported from the Inputs-folder. See the Details for information on the required format.
 #' @param Resolution Cell size in meters, defaults to \eqn{100}. (integer)
-#' @param HabitatQuality If FALSE (default), unique integer habitat codes are expected in the imported map to characterise the habitat of each cell. This requires to set \code{Nhabitats}. \cr
-#' If TRUE, continuous habitat quality values are expected, ranging from \eqn{0.0} to \eqn{100.0}.\cr
+#' @param PercentCover If \code{FALSE} (default), unique integer habitat codes are expected in the imported map to characterise the habitat of each cell. This requires to set \code{Nhabitats}. \cr
+#' If \code{TRUE}, continuous values are expected, ranging from \eqn{0.0} to \eqn{100.0}, that represent percentages of habitat cover or quality.\cr
 #' Make sure your imported landscape file uses the specified standard (see Details below).
-#' @param Nhabitats Required if \code{HabitatQuality=FALSE}: Number of habitats in the imported landscape if unique integer habitat codes are used. (integer)
-#' @param K Carrying capacity of habitat cells in units of number of individuals per hectare (integer), defaults to \eqn{10}.\cr
-#' If combined with a \code{\link[RangeShiftR]{StageStructure}}d model, \code{K} will be used to calculate the \emph{strength of density dependence} \ifelse{html}{\out{b=K<sup>-1</sup>}}{\eqn{b=1/K}}
-#' instead of interpreting it as limiting carrying capacity.\cr
-#' If \code{HabitatQuality=FALSE}, a vector of length \code{Nhabitats} is expected, specifying the respective carrying capacity for every habitat code.\cr
-#' If \code{HabitatQuality=TRUE}, \eqn{K} is interpreted as the maximum carrying capacity reached in cells with \eqn{100}\% habitat quality. All other cells have the respective fraction of \eqn{K}.
-#' @param PatchFile Filename(s) of the patch map(s) which shall be imported, Default is \code{NULL}.
-#' @param CostsFile Filename(s) of the SMS cost map(s) which shall be imported, Default is \code{NULL}.
+#' @param Nhabitats Required if \code{PercentCover=FALSE}: Number of habitats in the imported landscape if unique integer habitat codes are used. (integer)
+#' @param HabQuality Habitat quality determines the demographic density dependence of the modelled species and is given in units of the number of individuals per hectare (defaults to \eqn{10}).
+#' Its precise interpretation thus depends on the structure of the species' \code{\link[RangeShiftR]{Demography}}:\cr
+#' If combined with a \code{\link[RangeShiftR]{StageStructure}}d model, \code{HabQuality} will be used as the \emph{strength of demographic density dependence} \ifelse{html}{\out{b<sup>-1</sup>}}{\eqn{1/b}}.
+#' If combined with a non-structured model, \code{HabQuality} will be interpreted as \emph{limiting carrying capacity} \eqn{K}.\cr
+#' The expected format:\cr
+#' If \code{PercentCover=FALSE}: a vector of length \code{Nhabitats}, specifying the respective habitat quality for every habitat code.\cr
+#' If \code{PercentCover=TRUE}: \code{HabQuality} is interpreted as the maximum habitat quality reached in cells with \eqn{100}\% habitat. All other cells hold the respective fraction of \eqn{HabQuality}.
+#' @param PatchFile Filename(s) of the patch map(s) which shall be imported, default is \code{NULL}.
+#' @param CostsFile Filename(s) of the SMS cost map(s) which shall be imported, default is \code{NULL}.
 #' @param DynamicLandYears Integer vector indicating the years of landscape changes. For a non-dynamic landscape its only entry is \eqn{0} (default).
 #' For a dynamic landscape, \code{DynamicLandYears} lists the years in which the corresponding habitat maps in \code{LandscapeFile} and - if applicable - their respective patch and/or costs
 #' maps (in \code{PatchFile},\code{CostsFile}) are loaded and used in the simulation. More details below.
@@ -299,8 +303,10 @@ setMethod("show", "ArtificialLandscape", function(object){
 #' \code{NODATA_value} \tab Value for cells having missing data (usually -9999) }
 #'
 #' The rest of the file is a grid containing a value for each cell, one line per row. \code{RangeShiftR} can read-in two different types of habitat maps:\cr
-#'  - \emph{Raster with habitat codes} (\code{HabitatQuality=FALSE}):  In this option each habitat or land-cover type has a unique integer code. Each cell in the file contains a single habitat code and \eqn{100} percent coverage is assumed for the cell. The landscape is therefore composed of discrete habitat cells. The codes are required to be sequential integers starting from \eqn{1} and ranging to \code{Nhabitats}.\cr
-#'  - \emph{Raster with habitat quality} (\code{HabitatQuality=TRUE}): Each cell in the landscape is assigned a continuous quality value between \eqn{0.0} and \eqn{100.0}. There are no explicit habitat or land-cover types. This allows integrating different methods for calculating the habitat suitability for a given species. For example, qualities can result from different methods of suitability modelling, which incorporate multiple variables like habitat types, elevation, climate, etc. In the current version of the program, a straight-line relationship between carrying capacity and quality is assumed. Therefore, the quality should be scaled accordingly in case of a curvilinear relationship.\cr
+#'  - \emph{Raster with habitat codes} (\code{PercentCover=FALSE}):  In this option each habitat or land-cover type has a unique integer code. Each cell in the file contains a single habitat code and \eqn{100} percent coverage is assumed for the cell. The landscape is therefore composed of discrete habitat cells. The codes are required to be sequential integers starting from \eqn{1} and ranging to \code{Nhabitats}.\cr
+#'  - \emph{Raster with habitat quality} (\code{PercentCover=TRUE}): Each cell in the landscape is assigned a continuous percentage value between \eqn{0.0} and \eqn{100.0} of the maximum habitat quality set in \code{HabQuality}. There are no explicit habitat or land-cover types. This allows integrating different methods for calculating the habitat suitability for a given species. For example, qualities can result from
+#'  different methods of suitability modelling, which incorporate multiple variables like habitat types, elevation, climate, etc. In the current version of the program, a straight-line relationship between the habitat quality and the density-dependence of the population dynamics (i.e. \eqn{K} or \eqn{1/b} in a non-structured or structured population, respectively) is assumed.
+#'  Therefore, the quality should be scaled accordingly in case of a curvilinear relationship.\cr
 #'
 #' \emph{Patch map} \cr
 #' The simulation can be run as a \emph{patch-based model} on the same habitat map described above. An additional file must be provided through \code{PatchFile}: a raster map of the same landscape, where
@@ -342,9 +348,9 @@ setMethod("show", "ArtificialLandscape", function(object){
 #' @export ImportedLandscape
 ImportedLandscape <- setClass("ImportedLandscape", slots = c(LandscapeFile = "character",
                                                              Resolution = "integer_OR_numeric",
-                                                             HabitatQuality = "logical",
+                                                             PercentCover = "logical",
                                                              Nhabitats = "integer_OR_numeric", # not used in RS anymore. In R is used to define maxNhab in ControlParams
-                                                             K = "integer_OR_numeric",
+                                                             HabQuality = "integer_OR_numeric",
                                                              PatchFile = "character",          # sets the patchmodel -switch in class ControlParams when added
                                                              CostsFile = "character",
                                                              SpDistFile = "character",         # sets the speciesdist -switch in class ControlParams when added
@@ -352,9 +358,9 @@ ImportedLandscape <- setClass("ImportedLandscape", slots = c(LandscapeFile = "ch
                                                              DynamicLandYears = "integer_OR_numeric") #= "data.frame")
                               , prototype = list(#LandscapeFile,
                                                  Resolution = 100L,
-                                                 HabitatQuality = FALSE,
+                                                 PercentCover = FALSE,
                                                  #Nhabitats,
-                                                 K = 10L,
+                                                 HabQuality = 10L,
                                                  PatchFile = "NULL",
                                                  CostsFile = "NULL",
                                                  SpDistFile = "NULL",
@@ -377,20 +383,20 @@ setValidity("ImportedLandscape", function(object) {
             msg <- c(msg, "Resolution of landscape must be positive.")
         }
     }
-    if (is.na(object@HabitatQuality) || length(object@HabitatQuality)==0) {
-        msg <- c(msg, "HabitatQuality must be set!")
+    if (is.na(object@PercentCover) || length(object@PercentCover)==0) {
+        msg <- c(msg, "PercentCover must be set!")
     }
-    if (anyNA(object@K) || length(object@K)==0) {
-        msg <- c(msg, "Carrying capacity K must be set!")
+    if (anyNA(object@HabQuality) || length(object@HabQuality)==0) {
+        msg <- c(msg, "HabQuality must be set!")
     }
     else {
-        if (any(object@K<0)) {
-            msg <- c(msg, "Carrying capacity K must not be smaller than 0 for any habitat type.")
+        if (any(object@HabQuality<0)) {
+            msg <- c(msg, "HabQuality must not be smaller than 0 for any habitat type.")
         }
     }
-    if (!object@HabitatQuality) {
+    if (!object@PercentCover) {
         if (is.na(object@Nhabitats) || length(object@Nhabitats)==0) {
-            msg <- c(msg, "Number of habitat codes must be given for the imported landscape. If your landscape is specified by habitat quality, please set \"HabitatQuality = TRUE\". ")
+            msg <- c(msg, "Number of habitat codes must be given for the imported landscape. If your landscape is specified by a habitat cover percentage, please set \"PercentCover = TRUE\". ")
         }
         else {
             if (object@Nhabitats < 2){
@@ -399,14 +405,14 @@ setValidity("ImportedLandscape", function(object) {
         }
     }
     if (is.null(msg)) {
-        if (object@HabitatQuality) {
-            if (length(object@K) != 1) {
-                msg <- c(msg, "Carrying capacity K must be of length 1, specifying the maximum carrying capacity for 100% habitat.")
+        if (object@PercentCover) {
+            if (length(object@HabQuality) != 1) {
+                msg <- c(msg, "HabQuality must be of length 1, specifying the maximum habitat quality for 100% habitat.")
             }
         }
         else {
-            if (length(object@K) != object@Nhabitats) {
-                msg <- c(msg, "Carrying capacity K must be a vector of length 'Nhabitats', specifying the respective carrying capacity for every habitat code.")
+            if (length(object@HabQuality) != object@Nhabitats) {
+                msg <- c(msg, "HabQuality must be a vector of length 'Nhabitats', specifying the respective habitat quality for every habitat code.")
             }
         }
     }
@@ -487,10 +493,10 @@ setMethod("initialize", "ImportedLandscape", function(.Object, ...) {
     if ( length(args) == 0 ) {
         validObject(.Object)
     }
-    if (.Object@HabitatQuality) {
+    if (.Object@PercentCover) {
         .Object@Nhabitats = 1L
         if (!is.null(args$Nhabitats)) {
-            warning(this_func, "Nhabitats", warn_msg_ignored, "for continuous habitat quality landscape.", call. = FALSE)
+            warning(this_func, "Nhabitats", warn_msg_ignored, "for continuous habitat percentage landscape.", call. = FALSE)
         }
     }
     if (.Object@SpDistFile=="NULL") {
@@ -507,13 +513,13 @@ setMethod("show", "ImportedLandscape", function(object){
         cat(":\n  ", paste(object@LandscapeFile))
     }
     cat("\n")
-    if(object@HabitatQuality) {
-        cat("   with continuous habitat quality\n")
-        cat("   Maximum carrying capacity K =", paste(object@K), ".\n")
+    if(object@PercentCover) {
+        cat("   with continuous habitat percentages,\n")
+        cat("   at 100%: HabQuality =", paste(object@HabQuality), "[inds per ha].\n")
     }
     else {
         cat("   with", paste(object@Nhabitats), "unique integer habitat code(s)\n")
-        cat("   Carrying capacities K =", paste(object@K), ".\n")
+        cat("   habitat qualities: ", paste(object@HabQuality), "[inds per ha].\n")
     }
     if (object@PatchFile[1] !="NULL") {
         cat("   Patches imported from file \n")

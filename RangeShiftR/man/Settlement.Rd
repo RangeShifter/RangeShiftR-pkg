@@ -29,7 +29,7 @@ Settlement(StageDep = FALSE, SexDep = FALSE, Settle = 0, FindMate = FALSE,
 
 \item{MaxSteps}{Movement process only: Maximum number of steps. Must be \eqn{0} or more; set to \eqn{0} (default) for “per-step mortality only”.}
 
-\item{MaxStepsYear}{Movement process and stage-structured population only: Maximum number of steps per year, if there are more than \eqn{1} reproductive seasons (option \code{RepSeasons} in \code{\link[RangeshiftR]{StageStructure}}).
+\item{MaxStepsYear}{Movement process and stage-structured population only: Maximum number of steps per year, if there are more than \eqn{1} reproductive seasons (option \code{RepSeasons} in \code{\link[RangeShiftR]{StageStructure}}).
 Must be \eqn{0} or more. If \eqn{0}, every individual completes the dispersal phase in one year, i.e. between two successive reproduction phases.}
 }
 \value{
@@ -37,7 +37,7 @@ a parameter object of class "SettlementParams"
 }
 \description{
 Settlement, or immigration, is the last phase of dispersal, when the organism stops in a new cell or patch of breeding habitat. The
-available settlement conditions vary depending on the used \code{\link[RangeshiftR]{Transfer}} type. In any case, dispersing individuals
+available settlement conditions vary depending on the used \code{\link[RangeShiftR]{Transfer}} type. In any case, dispersing individuals
 are not allowed to settle in their natal cell or patch and can only settle in suitable habitat.\cr
 The settlement rules can be stage- or sex-specific or both (set \code{StageDep}, \code{SexDep}). If a movement process is used,
 density-dependence (\code{DensDep}) and inter-individual variability (\code{IndVar}) available.
@@ -48,7 +48,7 @@ in a particular place. Habitat selection, mate finding and density dependence ar
 but not the only ones. Like emigration, settlement is a complex process affected by multiple criteria including inter-individual
 variability and context dependencies.
 
-The type of implemented settlement rules depends on the movement model utilized for the \code{\link[RangeshiftR]{Transfer}}.
+The type of implemented settlement rules depends on the movement model utilized for the \code{\link[RangeShiftR]{Transfer}}.
 In any case, dispersing individuals are not allowed to settle in their natal cell or patch.\cr
 The settlement rules can be stage- or sex-specific or both (set \code{StageDep}, \code{SexDep}). Inter-individual variability (\code{IndVar})
 is implemented only for movement processes and the three traits
@@ -56,7 +56,7 @@ determining density-dependent settlement (\ifelse{html}{\out{S<sub>0</sub>}}{\eq
 \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}}; see below), and if so, it may not be stage-dependent.\cr
 
 \emph{Settlement with dispersal kernels}\cr
-When using a \code{\link[RangeshiftR]{DispersalKernel}}, individuals are displaced directly from the starting location to the arrival location. The suitability
+When using a \code{\link[RangeShiftR]{DispersalKernel}}, individuals are displaced directly from the starting location to the arrival location. The suitability
 of the arrival cell or patch determines whether the disperser is successful or not.\cr For species with \emph{non-overlapping generations},
 where individuals have only one chance to disperse and reproduce, the model has two options if the arrival cell is unsuitable: the
 individual either dies (\code{Settle} code \eqn{0}) or it can move to one of the eight neighbouring cells in the case that at least one
@@ -64,7 +64,7 @@ of them is suitable (\code{Settle} code \eqn{2}). In
 the latter case, if more than one of the neighbouring cells is suitable, the individual is placed in one of them chosen randomly.
 For patch-based models, if the arrival patch is unsuitable, the individual either dies or can move to a randomly chosen neighbouring
 suitable patch, provided that the new patch is only one cell apart from the arrival patch.\cr For species with \emph{overlapping generations}
-(i.e. a \code{\link[RangeshiftR]{StageStructure}}d population),
+(i.e. a \code{\link[RangeShiftR]{StageStructure}}d population),
 where individuals can disperse over multiple seasons, there are two additional options: First, if the arrival cell/patch is unsuitable,
 the individual can stay there waiting until the next dispersal event when it will disperse again according to the set kernel (\code{Settle} code \eqn{1}). Second,
 if both the arrival cell/patch and all eight neighbouring cells, or all eventual neighbouring patches, are unsuitable the individual
@@ -86,26 +86,26 @@ Settlement condition codes: If the individuals current step ends in unsuitable h
 Simple example for sex-dependence only: Females choose a neighbouring cell or wait, males wait: \tabular{cc}{\out{&emsp;} 0 \tab \out{&emsp;} 3 \cr \out{&emsp;} 1 \tab \out{&emsp;} 0 }
 
 \emph{Settlement with movement processes}\cr
-If individuals are dispersing by one of the two movement processes implemented (\code{\link[RangeshiftR]{SMS}} or
-\code{\link[RangeshiftR]{CorrRW}}), at each step (made simultaneously) they each evaluate their current cell or patch for the
+If individuals are dispersing by one of the two movement processes implemented (\code{\link[RangeShiftR]{SMS}} or
+\code{\link[RangeShiftR]{CorrRW}}), at each step (made simultaneously) they each evaluate their current cell or patch for the
 possibility of settling. This allows for the implementation of more complex settlement rules. The simplest one is that the individual
 decides to stop if there is suitable habitat; this is in any case a necessary condition (set \code{DensDep=FALSE}).\cr
 \cr
 Furthermore, the settlement decision can be density-dependent (set \code{DensDep=TRUE}). In this case, the individual has a probability \ifelse{html}{\out{p<sub>S</sub>}}{\eqn{p_S}}
 of settling in the cell or patch \eqn{i}, given by:
 
-\ifelse{html}{\out{&emsp;&emsp; p<sub>S</sub> = S<sub>0</sub> / ( 1 + e<sup>-&alpha;<sub>S</sub> (N<sub>i,t</sub> / K<sub>i,t</sub> - &beta;<sub>S</sub>) </sup> ) } }{\deqn{ p_S = S_0 / ( 1 + exp[-α_S (N_(i,t)/K_(i,t) - β_S) ] ) } }
-
-Here, \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}} is the maximum settlement probability,
-\ifelse{html}{\out{N<sub>i</sub>}}{\eqn{N_i}} and \ifelse{html}{\out{K<sub>i</sub>}}{\eqn{K_i}} are the number of individuals in and the carrying capacity of the cell/patch \eqn{i},
-\ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}} is the inflection point of the function and
-\ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{α_S}} is the slope at the inflection point.
+\ifelse{html}{\out{&emsp;&emsp; p<sub>S</sub>(i,t) = S<sub>0</sub> / ( 1 + e<sup>-&alpha;<sub>S</sub> (N(i,t) / K(i,t) - &beta;<sub>S</sub>) </sup> ) } }{\deqn{ p_S(i,t) = S_0 / ( 1 + exp[-α_S (N(i,t)/K(i,t) - β_S) ] ) } }
 
 In the case of stage-structured models the above equation is modified to:
 
-\ifelse{html}{\out{&emsp;&emsp; p<sub>S</sub> = S<sub>0</sub> / ( 1 + e<sup>-&alpha;<sub>S</sub> (b N<sub>i,t</sub> - &beta;<sub>S</sub>) </sup> ) } }{\deqn{ p_S = S_0 / ( 1 + exp[-α_S (b N_(i,t) - β_S) ] ) } }
+\ifelse{html}{\out{&emsp;&emsp; p<sub>S</sub>(i,t) = S<sub>0</sub> / ( 1 + e<sup>-&alpha;<sub>S</sub> (b(i,t) * N(i,t) - &beta;<sub>S</sub>) </sup> ) } }{\deqn{ p_S(i,t) = S_0 / ( 1 + exp[-α_S (b(i,t) N(i,t) - β_S) ] ) } }
 
-where \eqn{b} represents the strength of density dependence used for the population dynamics.
+In the first case, \eqn{K(i,t)} is the carrying capacity of the cell/patch \eqn{i} at time \eqn{t} given by \code{HabQuality}.
+In the latter case, \eqn{b(i,t)} represents the strength of density dependence that is given by the inverse of the habitat quality \code{HabQuality}.\cr
+Further, \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}} is the maximum settlement probability,
+\eqn{N(i,t)} is the number of individuals in the cell/patch \eqn{i} at time \eqn{t},
+\ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}} is the inflection point of the function and
+\ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{α_S}} is the slope at the inflection point.\cr
 
 The parameters that determine the settlement probabilities have to be provided via the parameter \code{Settle}, which generally takes a numeric matrix, or - if only a single constant probability is
 used - a single numeric. The format of the matrix is defined as follows: The number of columns depend on the options \code{DensDep} and \code{IndVar}. If \code{DensDep=FALSE}, the

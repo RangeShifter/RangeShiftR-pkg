@@ -1,7 +1,7 @@
 Package: RangeShiftR
 Type: Package
 Title: An R interface to the RangeShifter simulation software
-Version: 0.1-0
+Version: 0.1.0
 Date: 2020-09-22
 Author: Greta Bocedi, Justin Travis, Steve Palmer, Anne-Kathleen Malchow, Damaris Zurell
 Maintainer: Anne-Kathleen Malchow <malchow@uni-potsdam.de>

@@ -9,7 +9,7 @@
 #' Define a Stage-structure
 #'
 #' Set all demographic parameters for a stage-structured population. All elements of the transition matrix, i.e. Fecundity, Development, and Survival can be subjected to a density-dependent scaling.
-#' In this case, the base probabilities given via the transition matrix will be reduced exponentially with the strength of density dependence \eqn{b}, which is defined as abundance over carrying capacity.
+#' In this case, the base probabilities given via the transition matrix will be reduced exponentially with the strength of density dependence \eqn{b(i,t)} times abundance \eqn{N(i,t)}, in patch \eqn{i} at time \eqn{t}.
 #' Additionally, the effect of the abundances of each stage/sex on these parameters can be weighted. For more information, see the details.
 #'
 #' @usage StageStructure(Stages, TransMatrix, MaxAge = 100, MinAge = 0,
@@ -97,23 +97,23 @@
 #'
 #' \emph{Density dependence} can act on each of the three demographic phases (i.e. reproduction, survival and development) and is controlled by \code{FecDensDep,DevDensDep,SurvDensDep}. It is implemented as an exponential decay:
 #'
-#' \ifelse{html}{\out{&emsp;&emsp; &phi;<sub>i</sub>(r,t) = &phi;<sub>0,i</sub> &ast; e<sup> - b<sub>r</sub> N<sub>t</sub></sup>}}{\deqn{φ_i(r,t)=φ_(0,i) * exp(- b_r N_t)}}
+#' \ifelse{html}{\out{&emsp;&emsp; &phi;<sub>i</sub>(r,t) = &phi;<sub>0,i</sub> &ast; e<sup> - b(r) N(t) </sup>}}{\deqn{φ_i(r,t)=φ_(0,i) * exp(- b(r) N(t) ) }}
 #'
-#' \ifelse{html}{\out{&emsp;&emsp; &sigma;<sub>i</sub>(r,t) = &sigma;<sub>0,i</sub> &ast; e<sup> - C<sub>&sigma;</sub> b<sub>r</sub> N<sub>t</sub></sup>}}{\deqn{σ_i(r,t)=σ_(0,i) * exp(- C_\sigma b_r N_t)}}
+#' \ifelse{html}{\out{&emsp;&emsp; &sigma;<sub>i</sub>(r,t) = &sigma;<sub>0,i</sub> &ast; e<sup> - C<sub>&sigma;</sub> b(r) N(t) </sup>}}{\deqn{σ_i(r,t)=σ_(0,i) * exp(- C_\sigma b(r) N(t) ) }}
 #'
-#' \ifelse{html}{\out{&emsp;&emsp; &gamma;<sub>i</sub>(r,t) = &gamma;<sub>0,i</sub> &ast; e<sup> - C<sub>&gamma;</sub> b<sub>r</sub> N<sub>t</sub></sup>}}{\deqn{γ_i(r,t)=γ_(0,i) * exp(- C_γ b_r N_t)}}
+#' \ifelse{html}{\out{&emsp;&emsp; &gamma;<sub>i</sub>(r,t) = &gamma;<sub>0,i</sub> &ast; e<sup> - C<sub>&gamma;</sub> b(r) N(t) </sup>}}{\deqn{γ_i(r,t)=γ_(0,i) * exp(- C_γ b(r) N(t) ) }}
 #'
-#' where \ifelse{html}{\out{b<sub>r</sub>=K<sup>-1</sup>}}{\eqn{b_r=K_r^-1}} is the strength of density dependence in fecundity at site \eqn{r}, which is given by the inverse of its carrying capacity \ifelse{html}{\out{K<sub>r</sub>}}{\eqn{K_r}}.
-#' Furthermore, \ifelse{html}{\out{C<sub>&sigma;</sub>}}{\eqn{C_\sigma}} and \ifelse{html}{\out{C<sub>&gamma;</sub>}}{\eqn{C_γ}} (\code{DevDensCoeff,SurvDensCoeff}) scale the strength of density dependence in survival and development relative to
-#' that in fecundity.
+#' where \eqn{b(r)} is the strength of density dependence in fecundity at site \eqn{r}, which is given by the argument \code{HabQuality} in the landscape module.
+#' Furthermore, \ifelse{html}{\out{C<sub>&sigma;</sub>}}{\eqn{C_\sigma}} and \ifelse{html}{\out{C<sub>&gamma;</sub>}}{\eqn{C_γ}} (\code{DevDensCoeff,SurvDensCoeff})
+#' scale the strength of density dependence in survival and development relative to that in fecundity.
 #'
 #' Moreover, the strength of density-dependence can be uniform for all stages or stage-dependent. Even greater complexity can be incorporated with different stages contributing differently to density-dependence:
 #'
-#' \ifelse{html}{\out{&emsp; &phi;<sub>i</sub>(r,t) = &phi;<sub>0,i</sub> &ast; e<sup> - b<sub>r</sub> &Sigma;<sub>j</sub><sup>S</sup> &omega;<sub>&phi;,ij</sub> N<sub>j,t</sub></sup>}}{\deqn{φ_i(r,t)=φ_(0,i) * exp(- b_r N_t)}}
+#' \ifelse{html}{\out{&emsp; &phi;<sub>i</sub>(r,t) = &phi;<sub>0,i</sub> &ast; e<sup> - b(r) &Sigma;<sub>j</sub><sup>S</sup> &omega;<sub>&phi;,ij</sub> N(j,t)</sup>}}{\deqn{φ_i(r,t)=φ_(0,i) * exp(- b(r) \Sigma_j^S ω_{φ,ij} N_j(t) ) }}
 #'
-#' \ifelse{html}{\out{&emsp; &sigma;<sub>i</sub>(r,t) = &sigma;<sub>0,i</sub> &ast; e<sup> - C<sub>&sigma;</sub> b<sub>r</sub>  &Sigma;<sub>j</sub><sup>S</sup> &omega;<sub>&sigma;,ij</sub> N<sub>j,t</sub></sup>}}{\deqn{σ_i(r,t)=σ_(0,i) * exp(- C_\sigma b_r N_t)}}
+#' \ifelse{html}{\out{&emsp; &sigma;<sub>i</sub>(r,t) = &sigma;<sub>0,i</sub> &ast; e<sup> - C<sub>&sigma;</sub> b(r) &Sigma;<sub>j</sub><sup>S</sup> &omega;<sub>&sigma;,ij</sub> N(j,t) </sup>}}{\deqn{σ_i(r,t)=σ_(0,i) * exp(- C_\sigma b(r) \Sigma_j^S ω_{σ,ij} N_j(t) )}}
 #'
-#' \ifelse{html}{\out{&emsp; &gamma;<sub>i</sub>(r,t) = &gamma;<sub>0,i</sub> &ast; e<sup> - C<sub>&gamma;</sub> b<sub>r</sub>  &Sigma;<sub>j</sub><sup>S</sup> &omega;<sub>&gamma;,ij</sub> N<sub>j,t</sub></sup>}}{\deqn{γ_i(r,t)=γ_(0,i) * exp(- C_γ b_r N_t)}}
+#' \ifelse{html}{\out{&emsp; &gamma;<sub>i</sub>(r,t) = &gamma;<sub>0,i</sub> &ast; e<sup> - C<sub>&gamma;</sub> b(r) &Sigma;<sub>j</sub><sup>S</sup> &omega;<sub>&gamma;,ij</sub> N(j,t)</sup>}}{\deqn{γ_i(r,t)=γ_(0,i) * exp(- C_γ b(r) \Sigma_j^S ω_{γ,ij} N_j(t) )}}
 #'
 #' where \ifelse{html}{\out{&omega;<sub>&phi;</sub>}}{\eqn{ω_φ}}, \ifelse{html}{\out{&omega;<sub>&sigma;</sub>}}{\eqn{ω_σ}}, \ifelse{html}{\out{&omega;<sub>&gamma;</sub>}}{\eqn{ω_γ}} are weight matrices given by \code{FecStageWtsMatrix, DevStageWtsMatrix, SurvStageWtsMatrix}. Their elements \ifelse{html}{\out{&omega;<sub>ij</sub>}}{\eqn{ω_ij}}
 #' represent the contributions of the abundance of stage \eqn{j} to the density dependence in the fecundity / survival / development of stage \eqn{i}, thus they are quadratic matrices of size \code{Stages}\eqn{^2}. Note that the row sums are not required to be normalized, therefore they can be used
@@ -496,23 +496,32 @@ setClassUnion("StagesSlot", c("logical", "StagesParams"))
 #' @usage Demography(Rmax, bc = 1.0, StageStruct = FALSE,
 #'            ReproductionType = 0, PropMales = 0.5, Harem = 1)
 #' @param Rmax Maximum growth rate. Describes the mean number of offspring per female and reproductive event at very low density. Only required if \code{StageStruct=FALSE}.
-#' @param bc Competition coefficient. Describes the type of density regulation, providing the possibility for under-compensatory (\eqn{bc < 1}), compensatory (\eqn{bc = 1}) (default) or over-compensatory (\eqn{bc < 1}) dynamics. Only required if \code{StageStruct=FALSE}.
+#' @param bc Competition coefficient. Describes the type of density regulation, providing the possibility for under-compensatory (\eqn{b_c < 1}), compensatory (\eqn{b_c = 1}) (default) or over-compensatory (\eqn{b_c < 1}) dynamics. Only required if \code{StageStruct=FALSE}.
 #' @param StageStruct \code{FALSE} (default) yields a population model with non-overlapping generations.\cr For a stage-structured population, this takes the corresponding parameter object generated by \code{\link[RangeShiftR]{StageStructure}}, which holds all demographic parameters.
 #' @param ReproductionType 0 = asexual / only female model (default)\cr1 = simple sexual model\cr2 = sexual model with explicit mating system
-#' @param PropMales Required if \code{ReproductionType={1,2}}: Proportion of males in the population, between \code{0} and \code{1}. Defaults to \eqn{0.5}.
+#' @param PropMales Required if \code{ReproductionType={1,2}}: Proportion of males in the population, between \eqn{0} and \eqn{1}. Defaults to \eqn{0.5}.
 #' @param Harem Required if \code{ReproductionType=2}: Maximum harem size. The maximum number of pair bonds that a male can establish. \eqn{Harem = 1} (default) corresponds to monogamy, \eqn{0<Harem<1} to polyandry and \eqn{Harem>1} to polygyny.
-#' @details Populations with non-overlapping generations, i.e. with \strong{no stage-structure} (\code{StageStruct=FALSE}) are the appropriate way to model species that have discrete generations.
-#' At each generation the life cycle comprises - in that order - reproduction, death of the adults and offspring dispersal. These discrete generation models can be applied to asexual
-#' species, species for which it is assumed that females play the dominant role in spatial dynamics and for species for which it is considered crucial to model both sexes explicitly.
+#' @details The following information regards the population dynamics of a \strong{non-structured} (\code{StageStruct=FALSE}) population.\cr
+#' For more information on the population dynamics of a \strong{structured} population, see \code{\link[RangeShiftR]{StageStructure}}.
+#'
+#' Populations with non-overlapping generations, i.e. with \strong{no stage-structure} are the appropriate way to model species that have discrete generations.
+#' At each generation the life cycle comprises - in that order - reproduction, death of the adults and offspring dispersal.
+#' Two parameters determine the nature of the demographic density dependence:
+#' the carrying capacity \eqn{K} (given by the argument \code{HabQuality} in the landscape module) and
+#' the competition coefficient \eqn{b_c} (given by the argument \code{bc}).
+#' These discrete generation models can be applied to asexual species, species for which it is assumed that females play the dominant role in spatial dynamics
+#' and for species for which it is considered crucial to model both sexes explicitly.
 #'
 #' \emph{Asexual / only-female models:}  (\code{ReproductionType=0})\cr
 #' Recruitment is determined by a stochastic, individual-based formulation of Maynard-Smith and Slatkin’s (1973) population model, where the number of offspring produced by a single individual in the cell/patch \eqn{i} at time \eqn{t}, is drawn from the following distribution:\cr
 #'
-#' \ifelse{html}{\out{&emsp;&emsp;N<sub>juv</sub>(i,t) = Poisson( R<sub>i,t</sub> / (1+|R<sub>i,t</sub> - 1| &ast; (N<sub>i,t</sub> / K<sub>i,t</sub>)<sup>b<sub>c</sub></sup> ) ) } }{\deqn{N_juv(i,t) = Poisson( R_(i,t) / (1 + |R_(i,t) - 1|*( N_(i,t) / K_(i,t) )^bc ) ) } }
+#' \ifelse{html}{\out{&emsp;&emsp;N<sub>juv</sub>(i,t) = Poisson( R(i,t) / (1+|R(i,t) - 1| &ast; (N(i,t) / K(i,t))<sup>b<sub>c</sub></sup> ) ) } }{\deqn{N_juv(i,t) = Poisson( R(i,t) / (1 + |R(i,t) - 1|*( N(i,t) / K(i,t) )^bc ) ) } }
 #'
-#' Here, \ifelse{html}{\out{R<sub>i,t</sub>}}{\eqn{R_(i,t)}} is the maximum growth rate \code{Rmax} (obtained at very low density only) and \ifelse{html}{\out{K<sub>i,t</sub>}}{\eqn{K_(i,t)}} is the carrying capacity.
-#' Both \ifelse{html}{\out{R<sub>i,t</sub>}}{\eqn{R_(i,t)}} and \ifelse{html}{\out{K<sub>i,t</sub>}}{\eqn{K_(i,t)}} can vary in space and time, depending on the model setting. \ifelse{html}{\out{b<sub>c</sub>}}{\eqn{b_c}}
-#' is the competition coefficient which describes the type of density regulation, providing the possibility for under-compensatory (\ifelse{html}{\out{b<sub>c</sub> < 1}}{\eqn{b_c < 1}}), compensatory (\ifelse{html}{\out{b<sub>c</sub> = 1}}{\eqn{b_c = 1}}) or
+#' Here, \eqn{R(i,t)} is the maximum growth rate \code{Rmax} (obtained at very low density only) and \eqn{K(i,t)} is the carrying capacity
+#' at patch \eqn{i} and time \eqn{t}.
+#' Both \eqn{R(i,t)} and \eqn{K(i,t)} can vary in space and time, depending on the model setting. \ifelse{html}{\out{b<sub>c</sub>}}{\eqn{b_c}}
+#' is the competition coefficient which describes the type of density regulation, providing the possibility for under-compensatory
+#' (\ifelse{html}{\out{b<sub>c</sub> < 1}}{\eqn{b_c < 1}}), compensatory (\ifelse{html}{\out{b<sub>c</sub> = 1}}{\eqn{b_c = 1}}) or
 #' over-compensatory (\ifelse{html}{\out{b<sub>c</sub> > 1}}{\eqn{b_c > 1}}) dynamics.\cr
 #' \cr
 #' \emph{Sexual models}\cr
@@ -522,7 +531,7 @@ setClassUnion("StagesSlot", c("logical", "StagesParams"))
 #' This is the simplest form of mate limitation. Each female individual is assumed to mate, as long as there is at least one male in the population. As for the asexual case, the Maynard Smith and Slatkin model is used to determine the expected number of
 #' offspring produced by each female. To maintain equivalence between the asexual and sexual versions, the expected value of the Poisson distribution is multiplied by \eqn{2} (Lindström & Kokko 1998):\cr
 #'
-#' \ifelse{html}{\out{&emsp;&emsp;N<sub>juv</sub>(i,t) = Poisson( 2 R<sub>i,t</sub> / (1+|R<sub>i,t</sub> - 1| &ast; (N<sub>i,t</sub> / K<sub>i,t</sub>)<sup>b<sub>c</sub></sup> ) ) } }{\deqn{N_juv(i,t) = Poisson( 2 R_(i,t) / (1 + |R_(i,t) - 1|*( N_(i,t) / K_(i,t) )^bc ) ) } }
+#' \ifelse{html}{\out{&emsp;&emsp;N<sub>juv</sub>(i,t) = Poisson( 2 R(i,t) / (1+|R(i,t) - 1| &ast; (N(i,t) / K(i,t) )<sup>b<sub>c</sub></sup> ) ) } }{\deqn{N_juv(i,t) = Poisson( 2 R(i,t) / (1 + |R(i,t) - 1|*( N(i,t) / K(i,t) )^bc ) ) } }
 #'
 #' \emph{Complex mating system:}  (\code{ReproductionType=2})\cr
 #' More complex and flexible mating system. Mating is explicitly modelled through a mating function (Lindström & Kokko 1998, Legendre 2004, Bessa-Gomes et al. 2010), where the number of mated females \eqn{c} is given by:
@@ -535,8 +544,8 @@ setClassUnion("StagesSlot", c("logical", "StagesParams"))
 #' \cr
 #' Populations with overlapping generations, i.e. with \strong{with stage-structure} are the appropriate choice for species in which generations can overlap and individuals can be classified in different stages
 #' (e.g. immature vs. breeding individuals) differing in their demographic parameters. Individuals are characterized by their age and stage. Each stage has a certain fecundity (which will be used as expected value of the Poisson distribution for reproduction), survival
-#' and probability of developing to the next stage. The parameters are provided as classical transition matrices (Caswell 2001) through a \"\code{\link[RangeShiftR]{StageStructure}}\"
-#' parameter object. For more information, see the details there.
+#' and probability of developing to the next stage. The parameters are provided as classical transition matrices (Caswell 2001) through a \code{\link[RangeShiftR]{StageStructure}}
+#' parameter object. For more information on the population dynamics in this case, see the details there.
 #' @references Maynard-Smith and Slatkin (1973), Caswell (2001), Lindström & Kokko (1998), Legendre (2004), Bessa-Gomes et al. (2010)
 #' @return a parameter object of class "DemogParams"
 #' @name Demography

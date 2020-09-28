@@ -5,11 +5,11 @@
 \alias{ImportedLandscape}
 \title{Import a Landscape from file}
 \usage{
-ImportedLandscape(LandscapeFile, Resolution = 100, HabitatQuality = FALSE,
-                  Nhabitats, K = 10,
+ImportedLandscape(LandscapeFile, Resolution = 100, PercentCover = FALSE,
+                  Nhabitats, HabQuality = 10,
                   PatchFile = "NULL",
-                  CostsFile = "NULL",,
-                  DynamicLandYears = 0
+                  CostsFile = "NULL",
+                  DynamicLandYears = 0,
                   SpDistFile = "NULL", SpDistResolution)
 }
 \arguments{
@@ -17,21 +17,23 @@ ImportedLandscape(LandscapeFile, Resolution = 100, HabitatQuality = FALSE,
 
 \item{Resolution}{Cell size in meters, defaults to \eqn{100}. (integer)}
 
-\item{HabitatQuality}{If FALSE (default), unique integer habitat codes are expected in the imported map to characterise the habitat of each cell. This requires to set \code{Nhabitats}. \cr
-If TRUE, continuous habitat quality values are expected, ranging from \eqn{0.0} to \eqn{100.0}.\cr
+\item{PercentCover}{If \code{FALSE} (default), unique integer habitat codes are expected in the imported map to characterise the habitat of each cell. This requires to set \code{Nhabitats}. \cr
+If \code{TRUE}, continuous values are expected, ranging from \eqn{0.0} to \eqn{100.0}, that represent percentages of habitat cover or quality.\cr
 Make sure your imported landscape file uses the specified standard (see Details below).}
 
-\item{Nhabitats}{Required if \code{HabitatQuality=FALSE}: Number of habitats in the imported landscape if unique integer habitat codes are used. (integer)}
+\item{Nhabitats}{Required if \code{PercentCover=FALSE}: Number of habitats in the imported landscape if unique integer habitat codes are used. (integer)}
 
-\item{K}{Carrying capacity of habitat cells in units of number of individuals per hectare (integer), defaults to \eqn{10}.\cr
-If combined with a \code{\link[RangeshiftR]{StageStructure}}d model, \code{K} will be used to calculate the \emph{strength of density dependence} \ifelse{html}{\out{b=K<sup>-1</sup>}}{\eqn{b=1/K}}
-instead of interpreting it as limiting carrying capacity.\cr
-If \code{HabitatQuality=FALSE}, a vector of length \code{Nhabitats} is expected, specifying the respective carrying capacity for every habitat code.\cr
-If \code{HabitatQuality=TRUE}, \eqn{K} is interpreted as the maximum carrying capacity reached in cells with \eqn{100}\% habitat quality. All other cells have the respective fraction of \eqn{K}.}
+\item{HabQuality}{Habitat quality determines the demographic density dependence of the modelled species and is given in units of the number of individuals per hectare (defaults to \eqn{10}).
+Its precise interpretation thus depends on the structure of the species' \code{\link[RangeShiftR]{Demography}}:\cr
+If combined with a \code{\link[RangeShiftR]{StageStructure}}d model, \code{HabQuality} will be used as the \emph{strength of demographic density dependence} \ifelse{html}{\out{b<sup>-1</sup>}}{\eqn{1/b}}.
+If combined with a non-structured model, \code{HabQuality} will be interpreted as \emph{limiting carrying capacity} \eqn{K}.\cr
+The expected format:\cr
+If \code{PercentCover=FALSE}: a vector of length \code{Nhabitats}, specifying the respective habitat quality for every habitat code.\cr
+If \code{PercentCover=TRUE}: \code{HabQuality} is interpreted as the maximum habitat quality reached in cells with \eqn{100}\% habitat. All other cells hold the respective fraction of \eqn{HabQuality}.}
 
-\item{PatchFile}{Filename(s) of the patch map(s) which shall be imported, Default is \code{NULL}.}
+\item{PatchFile}{Filename(s) of the patch map(s) which shall be imported, default is \code{NULL}.}
 
-\item{CostsFile}{Filename(s) of the SMS cost map(s) which shall be imported, Default is \code{NULL}.}
+\item{CostsFile}{Filename(s) of the SMS cost map(s) which shall be imported, default is \code{NULL}.}
 
 \item{DynamicLandYears}{Integer vector indicating the years of landscape changes. For a non-dynamic landscape its only entry is \eqn{0} (default).
 For a dynamic landscape, \code{DynamicLandYears} lists the years in which the corresponding habitat maps in \code{LandscapeFile} and - if applicable - their respective patch and/or costs
@@ -45,10 +47,11 @@ maps (in \code{PatchFile},\code{CostsFile}) are loaded and used in the simulatio
 A parameter object of class ImportedLandscape
 }
 \description{
-Provide the filename(s) (\code{LandscapeFile}), the resolution and, if applicable, the number of habitat codes (\code{Nhabitats})
-as well as their respective carrying capacities (\code{K}) of the map(s) to be imported.
+Provide the filename(s) (\code{LandscapeFile}) of the map(s) to be imported, their
+resolution and, if applicable, the number of habitat codes (\code{Nhabitats})
+as well as their respective habitat qualities (\code{HabQuality}).
 
-For a dynamic landscape, the year in which each landscape is loaded has to be given.
+For a dynamic landscape, the year in which each landscape is loaded has to be provided.
 
 Other, optional input maps are:\cr
 - Patch map(s) to define habitat patches,\cr
@@ -56,7 +59,7 @@ Other, optional input maps are:\cr
 - a distribution map to define an initial species distribution.
 }
 \details{
-RangeShifter requires every input map to be a text file in ArcGIS raster export format, which has the following six header lines:
+RangeShiftR requires every input map to be a text file in ArcGIS raster export format, which has the following six header lines:
 \tabular{ll}{\code{ncols} \tab Number of columns \cr
 \code{nrows} \tab Number of rows \cr
 \code{xllcorner} \tab x-coordinate (longitude) of the lower-left corner \cr
@@ -65,8 +68,10 @@ RangeShifter requires every input map to be a text file in ArcGIS raster export 
 \code{NODATA_value} \tab Value for cells having missing data (usually -9999) }
 
 The rest of the file is a grid containing a value for each cell, one line per row. \code{RangeShiftR} can read-in two different types of habitat maps:\cr
- - \emph{Raster with habitat codes} (\code{HabitatQuality=FALSE}):  In this option each habitat or land-cover type has a unique integer code. Each cell in the file contains a single habitat code and \eqn{100} percent coverage is assumed for the cell. The landscape is therefore composed of discrete habitat cells. The codes are required to be sequential integers starting from \eqn{1} and ranging to \code{Nhabitats}.\cr
- - \emph{Raster with habitat quality} (\code{HabitatQuality=TRUE}): Each cell in the landscape is assigned a continuous quality value between \eqn{0.0} and \eqn{100.0}. There are no explicit habitat or land-cover types. This allows integrating different methods for calculating the habitat suitability for a given species. For example, qualities can result from different methods of suitability modelling, which incorporate multiple variables like habitat types, elevation, climate, etc. In the current version of the program, a straight-line relationship between carrying capacity and quality is assumed. Therefore, the quality should be scaled accordingly in case of a curvilinear relationship.\cr
+ - \emph{Raster with habitat codes} (\code{PercentCover=FALSE}):  In this option each habitat or land-cover type has a unique integer code. Each cell in the file contains a single habitat code and \eqn{100} percent coverage is assumed for the cell. The landscape is therefore composed of discrete habitat cells. The codes are required to be sequential integers starting from \eqn{1} and ranging to \code{Nhabitats}.\cr
+ - \emph{Raster with habitat quality} (\code{PercentCover=TRUE}): Each cell in the landscape is assigned a continuous percentage value between \eqn{0.0} and \eqn{100.0} of the maximum habitat quality set in \code{HabQuality}. There are no explicit habitat or land-cover types. This allows integrating different methods for calculating the habitat suitability for a given species. For example, qualities can result from
+ different methods of suitability modelling, which incorporate multiple variables like habitat types, elevation, climate, etc. In the current version of the program, a straight-line relationship between the habitat quality and the density-dependence of the population dynamics (i.e. \eqn{K} or \eqn{1/b} in a non-structured or structured population, respectively) is assumed.
+ Therefore, the quality should be scaled accordingly in case of a curvilinear relationship.\cr
 
 \emph{Patch map} \cr
 The simulation can be run as a \emph{patch-based model} on the same habitat map described above. An additional file must be provided through \code{PatchFile}: a raster map of the same landscape, where
@@ -75,7 +80,7 @@ Note that a single patch is the unit at which the density dependence in the popu
 are assumed not to affect the dynamics, or on the other hand, patch cells that are not physically contiguous to the rest of the patch cells.
 
 \emph{Costs layer} \cr
-Only used if the simulation is run with \code{\link[RangeshiftR]{SMS}} as its transfer module and the landscapes resistance to movement is given via a costs raster map (see argument \code{Costs} in \code{SMS()} ).
+Only used if the simulation is run with \code{\link[RangeShiftR]{SMS}} as its transfer module and the landscapes resistance to movement is given via a costs raster map (see argument \code{Costs} in \code{SMS()} ).
 In this case, the specified map has to match the landscape raster in extent, coordinates and resolution, and each cell contains a cost value, with the minimal possible cost being \eqn{1}.
 Importing a cost layer is the only option when the landscape comprises habitat coverage or quality.
 
@@ -103,4 +108,7 @@ is the new patch number).
 A dynamic landscape can be specified using the slots \code{LandscapeFile} (, \code{PatchFile}, \code{CostsFile}) and \code{DynamicLandYears}. \code{LandscapeFile} (and \code{PatchFile}, \code{CostsFile}) take a character vector with the filenames of the maps
 to be loaded. All provided maps must agree in resolution, extent and origin. \code{DynamicLandYears} is a number vector that contains the years, in which these landscapes shall be loaded; it must have the same ordering so
 that years and maps can be matched. If a specific map is used multiple times, it must be listed each time nevertheless.
+}
+\author{
+Anne-Kathleen Malchow
 }

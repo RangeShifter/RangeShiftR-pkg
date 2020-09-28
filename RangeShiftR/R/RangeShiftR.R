@@ -1,7 +1,5 @@
 #' @author Anne-Kathleen Malchow, \email{malchowa@geo.hu-berlin.de}
-#' @details The only function you're likely to need from roxygen2 is [roxygenize()].
-#' Otherwise refer to the vignettes to see how to format the documentation.
-#'
+#' @details
 #' Bocedi, Greta, et al. "RangeShifter: a platform for modelling spatial eco‐evolutionary dynamics and species' responses to environmental changes." Methods in Ecology and Evolution 5.4 (2014): 388-396.
 #'
 #' @section Warning:
@@ -23,11 +21,48 @@ NULL
 # #' @references \url{https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.12162%4010.1111/%28ISSN%292041-210X.Biogeographys}
 
 
+.onAttach <- function(libname, pkgname) {
+    packageStartupMessage("\nRangeshiftR version 1.0.0 (01.10.2020)\n",
+                          "Copyright (C) 2020 Greta Bocedi, Justin Travis, Steve Palmer, Anne-Kathleen Malchow, Damaris Zurell\n\n",
+                          "This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.\n",
+                          "You are welcome to redistribute it and/or modify it under certain conditions;\n",
+                          "type 'RangeShiftR_license()' for details.\n")
+}
+
+#' Display RangeShiftR license information
+#'
+#' @export
+RangeShiftR_license <- function ()
+{
+    cat("\nRangeshiftR version 1.0.0 (01.10.2020)\n")
+    cat("Copyright (C) 2020 Greta Bocedi, Justin Travis, Steve Palmer, Anne-Kathleen Malchow, Damaris Zurell\n\n")
+    cat("This program is free software: you can redistribute it and/or modify\n")
+    cat("it under the terms of the GNU General Public License as published by\n")
+    cat("the Free Software Foundation, either version 3 of the License, or\n")
+    cat("(at your option) any later version.\n\n")
+    cat("This software is distributed in the hope that it will be useful,\n")
+    cat("but WITHOUT ANY WARRANTY; without even the implied warranty of\n")
+    cat("MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the\n")
+    cat("GNU General Public License for more details.\n\n")
+    cat("You should have received a copy of the GNU General Public License\n")
+    cat("along with this software. Copies of the license can also be found at\n")
+    cat("http://www.gnu.org/licenses/\n")
+    cat("\n")
+    cat("'Share and Enjoy.'\n\n")
+}
+
+#'\ Display citation
+#'
+#' @export
+RangeShiftR_citation <- function ()
+{
+    citation(package = "RangeShiftR", lib.loc = NULL, auto = NULL)
+}
 
 
 ##------- TODO
 
-# add citation()
+# complete package RangeShiftR.R , meta data
 
 # write setters and getters
 

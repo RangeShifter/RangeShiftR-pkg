@@ -21,21 +21,21 @@ expects a vector of length three specifying (Mean, SD, MutationScale) of \code{R
 
 \item{StepMort}{Per-step mortality probability. Can be either \emph{constant}, in which case a single numeric is expected (the default, with
 value \eqn{0.0}) or \emph{habitat-specific}, in which case a numeric vector is expected with a length of, respectively, \code{Nhabitats} for an
-\code{\link[RangeshiftR]{ImportedLandscape}} with habitat codes (i.e. \code{HabitatQuality=FALSE})) or length \eqn{2} for an
-\code{\link[RangeshiftR]{ArtificialLandscape}} (mortality probabilities for matrix and habitat cells).\cr
+\code{\link[RangeShiftR]{ImportedLandscape}} with habitat codes (i.e. \code{PercentCover=FALSE})) or length \eqn{2} for an
+\code{\link[RangeShiftR]{ArtificialLandscape}} (mortality probabilities for matrix and habitat cells).\cr
 All values must be within the half-open interval \eqn{[0,1)}.\cr
-For an imported habitat quality landscape (\code{HabitatQuality=TRUE}), only constant per-step mortality is allowed.}
+For an imported habitat percentage landscape (\code{PercentCover=TRUE}), only constant per-step mortality is allowed.}
 }
 \value{
 a parameter object of class "CorrRW"
 }
 \description{
-A method to describe \code{\link[RangeshiftR]{Transfer}}:
+A method to describe \code{\link[RangeShiftR]{Transfer}}:
 A simple correlated random walk without any bias; implemented in continuous space on the top of the landscape grid.
 }
 \details{
 Individuals take steps of a constant \code{StepLength}; the direction is sampled from a wrapped Cauchy distribution having a
-correlation parameter \eqn{Rho} in the range \eqn{0} to \eqn{1}. As for \code{\link[RangeshiftR]{SMS}}, all individuals take each step
+correlation parameter \eqn{Rho} in the range \eqn{0} to \eqn{1}. As for \code{\link[RangeShiftR]{SMS}}, all individuals take each step
 simultaneously. In the case of patch-based models,
 \eqn{Rho} is automatically set to \eqn{0.99} until the individual steps outside its natal patch, after which the value of
 \eqn{Rho} set by the user is restored. The \code{StepLength} and \eqn{Rho} can vary between individuals and can evolve (set \code{IndVar=TRUE}).
@@ -46,7 +46,7 @@ the landscape resolution, and correlation may not evolve above \eqn{0.999}. Per-
 individuals or to evolve. There is no implementation of sex- or stage-specific CRW.
 
 When an individual arrives in a non-natal patch and decides not to settle there (as a result of a density-dependent or mate-finding settlement
-rule, see \code{\link[RangeshiftR]{Settlement}}), then there is the option that its path is straightened (\code{StraightenPath=TRUE}). This means
+rule, see \code{\link[RangeShiftR]{Settlement}}), then there is the option that its path is straightened (\code{StraightenPath=TRUE}). This means
 that it leaves the patch as soon as possible in order to search for another patch. This is achieved by increasing its path correlation to
 \code{Rho}\eqn{=0.999}. However, in certain types of model, e.g. when arbitrary contiguous patches have been defined for what is basically a continuous
 population, this can lead to the path always being straightened, as an individual enters a new patch as soon as it has left the one it has
@@ -55,7 +55,7 @@ do not become trapped in patches surrounded by very high cost matrix.
 
 \emph{Mortality}\cr
 There are two main sources of mortality: First, dispersal mortality can arise as a result of individuals failing to reach suitable habitat. Some individuals may fail
-to find suitable habitat before they use up their maximum number of movement steps (\code{MaxSteps} in \code{\link[RangeshiftR]{Settlement}}).
+to find suitable habitat before they use up their maximum number of movement steps (\code{MaxSteps} in \code{\link[RangeShiftR]{Settlement}}).
 In this first case, dispersal mortality clearly depends upon the proportion of suitable habitat in the landscape and will increase as the
 availability of habitat declines.\cr
 A second source of dispersal mortality can be specified by the user in form of a per-step probability of mortality (\code{StepMort}.

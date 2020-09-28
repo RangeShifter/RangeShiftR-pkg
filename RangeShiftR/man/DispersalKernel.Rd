@@ -37,7 +37,7 @@ If the mean dispersal distance is constant (i.e. all four above parameters are s
 a parameter object of class "DispersalKernel"
 }
 \description{
-A method to describe \code{\link[RangeshiftR]{Transfer}}: Dispersal kernels are statistical distributions that are largely used to describe dispersal distances. The main assumption behind them
+A method to describe \code{\link[RangeShiftR]{Transfer}}: Dispersal kernels are statistical distributions that are largely used to describe dispersal distances. The main assumption behind them
 is that the principal determinant of the probability of an individual dispersing to a particular site is the distance from the starting
 location.
 \cr
@@ -47,11 +47,11 @@ As a result, the realized dispersal kernels will themselves evolve.
 \details{
 Two types of kernels are implemented: negative exponential and a mixed kernel given by two different negative exponentials.
 Here, kernels are considered as ‘distance kernels’, i.e. the statistical distribution of the probability that an individual will move a
-certain distance (Hovestadt et al. 2012; Nathan et al. 2012). These kernels are specifically used for the \code{\link[RangeshiftR]{Transfer}} phase, meaning that they do
-not incorporate information on the \code{\link[RangeshiftR]{Emigration}} or \code{\link[RangeshiftR]{Settlement}} probabilities, which are modelled independently. Therefore, dispersal kernels are
+certain distance (Hovestadt et al. 2012; Nathan et al. 2012). These kernels are specifically used for the \code{\link[RangeShiftR]{Transfer}} phase, meaning that they do
+not incorporate information on the \code{\link[RangeShiftR]{Emigration}} or \code{\link[RangeShiftR]{Settlement}} probabilities, which are modelled independently. Therefore, dispersal kernels are
 applied only to dispersing individuals and not normally to the entire population. However, the program allows a particular setting where
 emigration and transfer are not explicitly separated but are both modelled through the kernel (see the parameter \code{UseFullKern} in
-\code{\link[RangeshiftR]{Emigration}} and the Details there).
+\code{\link[RangeShiftR]{Emigration}} and the Details there).
 
 There are many possible statistical distributions that have been fitted to dispersal data, which in many cases perform better
 than the negative exponential (Nathan et al. 2012). However, the negative exponential is still commonly used, has been found useful for
@@ -72,7 +72,7 @@ re-sampled until the individual leaves the natal cell. In the case of patch-base
 random point in the patch and this position, the dispersal distance and direction are drawn until the individual leaves the patch. In order
 to separate emigration and transfer explicitly, and to avoid potential infinite re-sampling, the program requires the mean of the kernel
 to be greater or equal the cell resolution. This condition is relaxed only in the special case where emigration probability is set to be
-density-independent and the kernel is applied to the entire population without re-sampling (the \code{UseFullKern} option in \code{\link[RangeshiftR]{Emigration}}). Individuals
+density-independent and the kernel is applied to the entire population without re-sampling (the \code{UseFullKern} option in \code{\link[RangeShiftR]{Emigration}}). Individuals
 which draw a short movement distance do not leave the natal cell/patch and implicitly become sedentary, and therefore the kernel itself
 defines the proportion of individuals which emigrate. When this option is selected, the emigration probability for those stages/sexes
 which disperse should be set to \eqn{1.0}; otherwise, only a proportion of such individuals would use the kernel to determine whether or
@@ -134,7 +134,7 @@ lower limit which can evolve equal to the landscape resolution.
 
 \emph{Mortality}\cr
 There are two main sources of mortality: First, dispersal mortality can arise as a result of individuals failing to reach suitable habitat. When a simple dispersal
-kernel is used with no possibility for individuals to search for locally-suitable habitat (see \code{\link[RangeshiftR]{Settlement}}),
+kernel is used with no possibility for individuals to search for locally-suitable habitat (see \code{\link[RangeShiftR]{Settlement}}),
 mortality occurs to all individuals that arrive in unsuitable habitat. In this first case, dispersal mortality clearly depends upon the
 proportion of suitable habitat in the landscape and will increase as the availability of habitat declines.\cr
 A second source of dispersal mortality can be specified via the option \code{DistMort}: The probability of mortality is either a constant

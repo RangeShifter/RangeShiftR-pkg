@@ -15,5 +15,5 @@ readRange(s, dirpath)
 a data.frame
 }
 \description{
-Read the Rangeshifter output file 'range' into a data.frame, if it was generated.
+Read the RangeShiftR output file 'range' into a data.frame, if it was generated.
 }

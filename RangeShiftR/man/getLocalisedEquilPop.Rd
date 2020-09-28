@@ -9,7 +9,7 @@ getLocalisedEquilPop(demog, ...)
 \arguments{
 \item{demog}{DemogParams object with a \code{StageStructure}}
 
-\item{K_vector}{K-values (corresponding to 1/b) to run the matrix model for}
+\item{DensDep_values}{values of \eqn{1/b} to run the matrix model for}
 
 \item{plot}{plot the equilibrium population? (default is \code{TRUE})}
 
@@ -28,14 +28,14 @@ getLocalisedEquilPop(demog, ...)
 \item{diagnostics}{in addition to recorded population vectors, returns the number of steps taken as well as the transition matrix and the value if delta at the last step (default is \code{FALSE})}
 }
 \description{
-Uses the Rangeshifter Demography module to create the corresponding matrix model and runs it until equilibrium is reached.
+Uses the RangeShiftR Demography module to create the corresponding matrix model and runs it until equilibrium is reached.
 This corresponds to a population in a single cell without dispersal.
-Since the matrix model representation is used, some options (e.g. maximum age) of the \code{\link[RangeshiftR]{Demography}} module can not be taken into account.
+Since the matrix model representation is used, some options (e.g. maximum age) of the \code{\link[RangeShiftR]{Demography}} module can not be taken into account.
 }
 \details{
-Rangeshifter requires an additional juvenile stage to be added to the common transition matrix as stage 0 (in order
+RangeShiftR requires an additional juvenile stage to be added to the common transition matrix as stage \eqn{0} (in order
 to allow for juvenile dispersal). For the simulation with \code{RunMatrixModel()}, this stage can be kept (\code{juv.stage=TRUE})
-or remove to yield the corresponding Lefkovitch matrix (\code{juv.stage=FALSE}).\cr
-The default initial condition \code{N_0} is a population at its respective carrying capacity with unpopulated juvenile stage and
-all higer stages equally populated.\cr
+or removed to yield the corresponding Lefkovitch matrix (\code{juv.stage=FALSE}).\cr
+The default initial state \code{N_0} is a population at its respective density \eqn{1/b} with unpopulated juvenile stage and
+all higher stages equally populated.\cr
 }

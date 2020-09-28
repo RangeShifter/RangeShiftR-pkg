@@ -40,22 +40,22 @@ expects a vector of length three specifying (Mean, SD, MutationScale) of \code{B
 \item{Costs}{Describes the landscapes resistance to movement. Set either: \cr
  - \emph{habitat-specific} costs for each habitat type, or\cr
  - \code{"file"}, to indictae to use the \emph{cost raster} map(s) specified in the landscape module and import the cost values from them.\cr
-In the first case of \emph{habitat-specific} costs a numeric vector is expected with, respectively, length \code{Nhabitats} for an \code{\link[RangeshiftR]{ImportedLandscape}}
-with habitat codes (i.e. \code{HabitatQuality=FALSE})) or length \eqn{2} for an \code{\link[RangeshiftR]{ArtificialLandscape}} (matrix and habitat costs).\cr
-In the second case of importing a \emph{cost raster} file, specify the file name(s) in the \code{\link[RangeshiftR]{ImportedLandscape}} module.
+In the first case of \emph{habitat-specific} costs a numeric vector is expected with, respectively, length \code{Nhabitats} for an \code{\link[RangeShiftR]{ImportedLandscape}}
+with habitat codes (i.e. \code{PercentCover=FALSE})) or length \eqn{2} for an \code{\link[RangeShiftR]{ArtificialLandscape}} (matrix and habitat costs).\cr
+In the second case of importing a \emph{cost raster} file, specify the file name(s) in the \code{\link[RangeShiftR]{ImportedLandscape}} module.
 The specified map has to match the landscape raster in extent, coordinates and resolution, and each cell contains a cost value (\eqn{\ge 1}).
-This is the only option for an imported landscape with habitat quality (i.e. \code{HabitatQuality=TRUE}).}
+This is the only option for an imported landscape with habitat percentage (i.e. \code{PercentCover=TRUE}).}
 
 \item{StepMort}{Per-step mortality probability. Can be either \emph{constant}, in which case a single numeric is expected (the default, with
 value \eqn{0.0}) or \emph{habitat-specific}, in which case a numeric vector (with a length as described above for \code{Costs}) is expected.
 All values must be within the half-open interval \eqn{[0,1)}.\cr
-For an imported habitat quality landscape (\code{HabitatQuality=TRUE}), only constant per-step mortality is allowed.}
+For an imported habitat percentage landscape (\code{PercentCover=TRUE}), only constant per-step mortality is allowed.}
 }
 \value{
 a parameter object of class "StochMove"
 }
 \description{
-A method to describe \code{\link[RangeshiftR]{Transfer}}:
+A method to describe \code{\link[RangeShiftR]{Transfer}}:
 SMS is a stochastic individual-based movement model where organisms move through grid-based, heterogeneous landscapes. The model uses similar
 cost surfaces as the least cost path (LCP) method, but it relaxes two of its main assumptions: Firstly, individuals are not assumed to be
 omniscient, but move according to what they can perceive of the landscape within their perceptual range (\code{PR}). Secondly, individuals
@@ -83,7 +83,7 @@ calculated over more steps than just the previous one (up to a maximum of \eqn{1
 certain direction, and hence paths tend to become somewhat smoother.
 
 There is an option to include goal bias, i.e. a tendency to move towards a particular destination, which is implemented in a similar way to
-\code{DP} (Aben et al. 2014). However, as dispersers in RangeShifter are naïve and have no goal, it may be applied only in the ‘negative’
+\code{DP} (Aben et al. 2014). However, as dispersers in RangeShiftR are naïve and have no goal, it may be applied only in the ‘negative’
 sense of moving away from the natal location (\code{GoalType=2}), i.e. as a dispersal bias, which is subject to a decay in strength as a
 function of the total number of steps taken (set the decay rate \code{AlphaDB} and inflection point \code{BetaDB}).
 This enables a dispersal path to follow a straighter trajectory initially, and later become more responsive to perceived landscape costs.
@@ -94,7 +94,7 @@ each time-step they all make one move. In the case of patch-based models, the in
 \code{DP} ten-fold until it has taken a number of steps (\eqn{=2*}\code{PR}) outside the natal patch.
 
 When an individual arrives in a non-natal patch and decides not to settle there (as a result of a density-dependent or mate-finding settlement
-rule; see \code{\link[RangeshiftR]{Settlement}}), then there is the option that its path is straightened (\code{StraightenPath=TRUE}). This means
+rule; see \code{\link[RangeShiftR]{Settlement}}), then there is the option that its path is straightened (\code{StraightenPath=TRUE}). This means
 that it leaves the patch as soon as possible in order to search for another patch. This is achieved by increasing its \code{DP} ten-fold. However, in
 certain types of model, e.g. when arbitrary contiguous patches have been defined for what is basically a continuous population, this can lead
 to the path always being straightened, as an individual enters a new patch as soon as it has left the one it has rejected. In such cases, it is
@@ -110,13 +110,13 @@ As currently implemented, there is no sex- or stage- dependence of SMS traits.
 Critical for the outcomes of SMS are the relative costs assigned to the different habitats (as it is also the case for
 the LCP approach). Habitat costs or resistance to movement can be set manually for each habitat code or imported as a raster map, which
 allows for costs to be a function of multiple variables instead of a simple value associated to the habitat type.
-In the latter case, the filenames are provided in the \code{\link[RangeshiftR]{ImportedLandscape}} module.
+In the latter case, the filenames are provided in the \code{\link[RangeShiftR]{ImportedLandscape}} module.
 The specified map has to match the landscape raster in extent, coordinates and resolution, and each cell contains a cost value, with the minimal possible cost being \eqn{1}.
 Importing a cost layer is the only option when the landscape comprises habitat coverage or quality.
 
 \emph{Mortality} \cr
 There are two main sources of mortality: First, dispersal mortality can arise as a result of individuals failing to reach suitable habitat. Some individuals may fail
-to find suitable habitat before they use up their maximum number of movement steps (\code{MaxSteps} in \code{\link[RangeshiftR]{Settlement}}).
+to find suitable habitat before they use up their maximum number of movement steps (\code{MaxSteps} in \code{\link[RangeShiftR]{Settlement}}).
 In this first case, dispersal mortality clearly depends upon the proportion of suitable habitat in the landscape and will increase as the
 availability of habitat declines.\cr
 A second source of dispersal mortality can be specified by the user in form of a per-step probability of mortality (\code{StepMort}.

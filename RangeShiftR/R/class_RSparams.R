@@ -422,7 +422,7 @@ setValidity("RSparams", function(object) {
             else {
                 if (object@control@landtype==2) { # imported land with habitat quality
                     if (length(object@dispersal@Transfer@StepMort)!=1) {
-                        msg <- c(msg, "SMS(): Per-step mortality probability must be a constant for an imported habitat quality landscape!")
+                        msg <- c(msg, "SMS(): Per-step mortality probability must be a constant for an imported habitat percentage landscape!")
                     }
                     if (class(object@dispersal@Transfer@Costs)=="character") {
                         if (object@dispersal@Transfer@Costs == "file") {
@@ -435,7 +435,7 @@ setValidity("RSparams", function(object) {
                         }
                     }
                     else{
-                        msg <- c(msg, "SMS(): Costs must be imported from a raster map for an imported habitat quality landscape!")
+                        msg <- c(msg, "SMS(): Costs must be imported from a raster map for an imported habitat percentage landscape!")
                     }
                 }
                 else {

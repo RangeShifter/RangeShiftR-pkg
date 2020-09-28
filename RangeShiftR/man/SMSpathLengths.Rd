@@ -15,6 +15,6 @@ SMSpathLengths(s, dirpath, ...)
 a data.frame that contains the mean (over replicates) number of SNS paths of a given length (rows) per simulated map (columns)
 }
 \description{
-Reads the Rangeshifter output files 'MovePaths' (if they were generated) to get the distribution of lengths of SMS
+Reads the RangeShiftR output files 'MovePaths' (if they were generated) to get the distribution of lengths of SMS
 paths taken in all recorded years.
 }

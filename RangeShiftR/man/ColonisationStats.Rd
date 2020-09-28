@@ -29,7 +29,7 @@ Optional:\cr\cr
 This function produces patch statistics and maps on occupancy probability and mean time to colonisation.
 }
 \details{
-It uses the Rangeshifter 'population' output data.
+It uses the RangeShiftR 'population' output data.
 
 In the population dataframe (=\code{x}) notation, there are 3 options on how many maps to produce:
 (1) y = NULL: no raster maps produced.

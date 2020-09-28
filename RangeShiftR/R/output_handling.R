@@ -164,7 +164,7 @@ setMethod("ColonisationStats", "data.frame", function(x, y = NULL, years = numer
             }else{
                 col_time_mean <- rowMeans(col_time[,-(1:2)], na.rm = TRUE)
             }
-            require('raster')
+            #require('raster')
 
             if(class(y) == "RasterLayer" || class(y) == "RasterStack" ){
                 onelayer = FALSE
@@ -291,7 +291,7 @@ setMethod("ColonisationStats", "RSparams", function(x, y = getwd(), years = nume
 
                     # read patch rasters if needed
                     if(maps){
-                        require('raster')
+                        #require('raster')
                         if(s@control@patchmodel){ # for patch-based model, read all relevant patch-maps
                             # non-dynamic landscape
                             if(length(s@land@LandscapeFile)==1){
@@ -541,11 +541,9 @@ setMethod("SMSpathLengths", c(s="RSparams", dirpath="character"), function(s,dir
 ### B FUNCTION
 
 
-
-## ---- Backend Simul function -----
+## ---- Backend matrix model simulation function -----
 
 get_eq_pop <- function(b, demog, N_0 = NULL, t_max = 1000, t_rec = 1, delta = .1, diagnostics = FALSE, rm.stage0 = TRUE){
-    require(RangeShiftR)
     if(class(demog)!="DemogParams"){
         warning("This function expects an object of class DemogParams.", call. = FALSE)
         return(NULL)
@@ -785,7 +783,7 @@ get_eq_pop <- function(b, demog, N_0 = NULL, t_max = 1000, t_rec = 1, delta = .1
 #' This corresponds to a population in a single cell without dispersal.
 #' Since the matrix model representation is used, some options (e.g. maximum age) of the \code{\link[RangeShiftR]{Demography}} module can not be taken into account.
 #' @param demog DemogParams object with a \code{StageStructure}
-#' @param K_vector K-values (corresponding to 1/b) to run the matrix model for
+#' @param DensDep_values values of \eqn{1/b} to run the matrix model for
 #' @param plot plot the equilibrium population? (default is \code{TRUE})
 #' @param stages_out which stages to plot? (defaults to all)
 #' @param juv.stage use explicit juvenile (zeroth) stage? (default is \code{TRUE})
@@ -794,18 +792,18 @@ get_eq_pop <- function(b, demog, N_0 = NULL, t_max = 1000, t_rec = 1, delta = .1
 #' @param t_max allowed number of time steps to reach equilibrium (default is \eqn{1000})
 #' @param delta tolerance to define equilibrium (default is \eqn{.1}); the utilised measure is euclidian distance of current to previous time steps
 #' @param diagnostics in addition to recorded population vectors, returns the number of steps taken as well as the transition matrix and the value if delta at the last step (default is \code{FALSE})
-#' @details RangeShiftR requires an additional juvenile stage to be added to the common transition matrix as stage 0 (in order
+#' @details RangeShiftR requires an additional juvenile stage to be added to the common transition matrix as stage \eqn{0} (in order
 #' to allow for juvenile dispersal). For the simulation with \code{RunMatrixModel()}, this stage can be kept (\code{juv.stage=TRUE})
-#' or remove to yield the corresponding Lefkovitch matrix (\code{juv.stage=FALSE}).\cr
-#' The default initial condition \code{N_0} is a population at its respective carrying capacity with unpopulated juvenile stage and
-#' all higer stages equally populated.\cr
+#' or removed to yield the corresponding Lefkovitch matrix (\code{juv.stage=FALSE}).\cr
+#' The default initial state \code{N_0} is a population at its respective density \eqn{1/b} with unpopulated juvenile stage and
+#' all higher stages equally populated.\cr
 #' @export
 setGeneric("getLocalisedEquilPop", function(demog,...) standardGeneric("getLocalisedEquilPop") )
 
-setMethod("getLocalisedEquilPop", "DemogParams", function(demog, K_vector, plot=TRUE, stages_out=NULL, juv.stage=TRUE, t_rec=1,
+setMethod("getLocalisedEquilPop", "DemogParams", function(demog, DensDep_values, plot=TRUE, stages_out=NULL, juv.stage=TRUE, t_rec=1,
                                                     t_max = 1000, N_0 = NULL, delta=.1, diagnostics=FALSE){
-    # make b from K
-    b_vector <- 1/K_vector
+    # make b from 1/b
+    b_vector <- 1/DensDep_values
     # calculate eqilibrium population
     if(t_rec==1) res <- sapply(b_vector, get_eq_pop, demog=demog, t_rec = t_rec, rm.stage0 = !juv.stage)
     if(t_rec>1) {res <- lapply(b_vector, get_eq_pop, demog=demog, t_rec = t_rec, rm.stage0 = !juv.stage)
@@ -819,7 +817,7 @@ setMethod("getLocalisedEquilPop", "DemogParams", function(demog, K_vector, plot=
         if(is.null(stages_out)) stages_out = seq((!juv.stage),demog@StageStruct@Stages-1)
         colors <- hcl.colors(length(stages_out), palette = "Harmonic")
         if(demog@ReproductionType <2){
-            barplot(res[as.character(stages_out),], names.arg = as.integer(K_vector), beside = F, col = colors,
+            barplot(res[as.character(stages_out),], names.arg = as.integer(DensDep_values), beside = F, col = colors,
                           main = "Localised Equilibrium Populations", xlab = "1/b", ylab = "Abundance")
         }
         if(demog@ReproductionType==2){
@@ -828,12 +826,12 @@ setMethod("getLocalisedEquilPop", "DemogParams", function(demog, K_vector, plot=
                 res_2 <- res[which(rownames(res) %in% stages_out),]
                 mal <- seq.int(1,length(stages_out)*2,2)
                 fem <- seq.int(2,length(stages_out)*2,2)
-                res_2 <- cbind(res_2[mal,1:length(K_vector)],res_2[fem,1:length(K_vector)])
-                res_2 <- cbind(res_2[,c(sapply(1:length(K_vector), function(i){c(0,1)*length(K_vector)+i}))])
-                barplot(res_2, space=c(0.3,0.1), names.arg = c(rbind(K_vector,NA)), beside = F, col = rep(colors, 2),
+                res_2 <- cbind(res_2[mal,1:length(DensDep_values)],res_2[fem,1:length(DensDep_values)])
+                res_2 <- cbind(res_2[,c(sapply(1:length(DensDep_values), function(i){c(0,1)*length(DensDep_values)+i}))])
+                barplot(res_2, space=c(0.3,0.1), names.arg = c(rbind(DensDep_values,NA)), beside = F, col = rep(colors, 2),
                         main = "Localised Equilibrium Populations", xlab = "1/b", ylab = "Abundance")
-                text(seq(0.5,length(K_vector)*2,2)*1.2, colSums(res_2[,seq(1,length(K_vector)*2,2)])*1.1, "m", cex=1, col="black")
-                text(seq(1.5,length(K_vector)*2,2)*1.2, colSums(res_2[,seq(2,length(K_vector)*2,2)])*1.1, "f", cex=1, col="black")
+                text(seq(0.5,length(DensDep_values)*2,2)*1.2, colSums(res_2[,seq(1,length(DensDep_values)*2,2)])*1.1, "m", cex=1, col="black")
+                text(seq(1.5,length(DensDep_values)*2,2)*1.2, colSums(res_2[,seq(2,length(DensDep_values)*2,2)])*1.1, "f", cex=1, col="black")
             }
         }
         legend("topleft", legend = rev(sapply(stages_out, function(s){paste("Stage",s)})), col = rev(colors), pch = 16)

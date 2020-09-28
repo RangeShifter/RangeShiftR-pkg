@@ -1,5 +1,5 @@
 
-### CLASS GENERALPARAMS
+### CLASS SIMULATIONPARAMS
 
 # from RS 'Parameter' file
 
@@ -9,7 +9,7 @@
 #' Furthermore, optionally define a (\code{Shifting}) Environmental \code{Gradient}, Environmental Stochasticity (\code{EnvStoch}) and/or Local extinction (\code{LocalExt}).
 #' (These options are to be moved to separate classes in future versions.)
 #'
-# #' @author Anne-Kathleen Malchow
+#' @author Anne-Kathleen Malchow
 #' @usage Simulation(Simulation = 1, Replicates = 2, Years = 50, Absorbing = FALSE,
 #'            Gradient = 0, GradSteep, Optimum, f, ExtinctOptim,
 #'            Shifting = FALSE, ShiftRate, ShiftStart, ShiftEnd,
@@ -30,12 +30,14 @@
 #' @param Replicates Number of simulation iterations, defaults to \eqn{2}. (integer)
 #' @param Years The number of simulated years, defaults to \eqn{50}. (integer)
 #' @param Absorbing If \code{FALSE} (default), every move in the \code{\link[RangeShiftR]{Transfer}} process will be
-#' repeated until a valid cell is met. \cr If \code{TRUE}, an individual which hits a non-valid cell or
+#' repeated until a valid cell is met.\cr
+#' If \code{TRUE}, an individual which hits a non-valid cell or
 #' transgresses the landscape boundary during the dispersal act is eliminated from the simulation.
-#' @param Gradient \eqn{0} = None (default), \cr
-#' \eqn{1} = decreasing carrying capacity \eqn{K} or, for a \code{\link[RangeShiftR]{StageStructure}}d population, \eqn{1/b}
-#' (with \eqn{b} the competition coefficient), \cr
-#' \eqn{2} = decreasing growth rate \eqn{r} or, for a \code{\link[RangeShiftR]{StageStructure}}d population, fecundity (\eqn{\phi}), \cr
+#' @param Gradient Whether to apply north-south gradient:
+#' \eqn{0} = None (default), \cr
+#' \eqn{1} = decreasing habitat quality \code{HabQuality}\cr
+#' \eqn{2} = decreasing growth rate \eqn{r} or, for a \code{\link[RangeShiftR]{StageStructure}}d population,
+#' fecundity \ifelse{html}{\out{&phi;}}{\eqn{\phi}}, \cr
 #' \eqn{3} = increasing local extinction probability \eqn{e}. \cr
 #' If activated, a gradient will be imposed along the north-south (\eqn{y}-) axis in which the selected parameter varies linearly with distance from the
 #' optimum \eqn{y}-value \code{Optimum}. Note that a \code{Gradient} can not be applied in for patch-based models (must be \code{Gradient}\eqn{=0}).
@@ -61,11 +63,11 @@
 #' Environmental stochasticity is always applied on a yearly basis.
 #' @param EnvStochType Required if \code{EnvStoch} \ifelse{html}{\out{&ne; 0}}{\eqn{> 0}}: Parameter to which environmental stochasticity is applied:\cr
 #' \eqn{0} = growth rate \eqn{r} or, for a \code{\link[RangeShiftR]{StageStructure}}d population, fecundity (\eqn{\phi}).\cr
-#' \eqn{1} = carrying capacity \eqn{K} or, for a \code{\link[RangeShiftR]{StageStructure}}d population, \eqn{1/b} (allowed for artificial landscapes only!).
+#' \eqn{1} = habitat quality \code{HabQuality} (allowed for artificial landscapes only!).
 #' @param std Required if \code{EnvStoch} \ifelse{html}{\out{&ne; 0}}{\eqn{> 0}}: magnitude of stochastic fluctuations. Must be \eqn{> 0.0} and \eqn{\le 1.0}.
 #' @param ac Required if \code{EnvStoch} \ifelse{html}{\out{&ne; 0}}{\eqn{> 0}}: temporal autocorrelation coefficient. Must be \eqn{\ge 0.0} and \eqn{<1.0}.
 #' @param minR,maxR Required if \code{EnvStochType}\eqn{=0}: minimum and maximum growth rates.
-#' @param minK,maxK Required if \code{EnvStochType}\eqn{=1}: minimum and maximum carrying capacities.
+#' @param minK,maxK Required if \code{EnvStochType}\eqn{=1}: minimum and maximum habitat qualities.
 #' @param OutIntRange,OutIntOcc,OutIntPop,OutIntInd,OutIntTraitCell,OutIntTraitRow,OutIntConn,OutIntPaths,OutIntGenetic Control the various types
 #' of Output files, i.e. range, occupancy, populations, individuals, traits (by cell or by row), connectivity, SMS paths and genetics:\cr
 #'  \eqn{=0 }: Output disabled.\cr
@@ -93,8 +95,9 @@
 #' @details \emph{Environmental Gradient}\cr
 #' An environmental gradient can be superimposed on the habitat map to describe gradual change in abiotic factors through space. Use the option \code{Gradient}
 #' and choose one of three implemented parameter gradients. These are - respectively for non-structured / stage-structured population models - :
-#' Decreasing carrying capacity \eqn{K} / inverse competition coefficient \eqn{1/b} (set \code{Gradient=1}),
-#' decreasing growth rate \eqn{r} / fecundity (\eqn{\phi}) (set \code{Gradient=2}),
+#' Decreasing habitat quality \code{HabQuality}, that is interpreted as
+#' the \emph{carrying capacity} \eqn{K} / the \emph{strength of density dependence} \ifelse{html}{\out{b<sup>-1</sup>}}{\eqn{1/b}} (set \code{Gradient=1});
+#' decreasing growth rate \eqn{r} / fecundity (\eqn{\phi}) (set \code{Gradient=2});
 #' or increasing local extinction probability \eqn{e} (set \code{Gradient=3}).
 #' The gradient is restrictively implemented along the north-south (\eqn{y})-axis and the selected parameter declines linearly with (\eqn{y})-distance from
 #' an optimum location (\code{Optimum}).
@@ -136,7 +139,7 @@
 #'
 #' \emph{Environmental Stochasticity}\cr
 #' It is possible to model environmental stochasticity via the option \code{EnvStoch} acting at a global or local scale
-#' and can be appied to carrying capacity (\code{EnvStoch=1}) or to growth rate (fecundity) (\code{EnvStoch=0}).
+#' and can be applied to habitat quality (\code{EnvStoch=1}) or to growth rate / fecundity (\code{EnvStoch=0}).
 #' It is implemented using a first order autoregressive process to generate time series of the noise value \eqn{ε}:
 #'
 #' \deqn{ε(t+1) = κ ε(t) + \omega(t) \sqrt(1-\kappa^2)}
@@ -256,7 +259,7 @@ Simulation <- setClass("SimulationParams", slots = c(Simulation = "integer_OR_nu
                                                  Replicates = "integer_OR_numeric",
                                                  Years = "integer_OR_numeric",
                                                  Absorbing = "logical",
-                                                 Gradient = "integer_OR_numeric",  #Environmental gradient: 0 = none, 1  = carrying capacity (or 1/b), 2 = growth rate (or fecundity), 3 = local extinction probability.
+                                                 Gradient = "integer_OR_numeric",  #Environmental gradient: 0 = none, 1  = habitat quality (= K or 1/b), 2 = growth rate (or fecundity), 3 = local extinction probability.
                                                  GradSteep = "numeric",
                                                  Optimum = "numeric",
                                                  f = "numeric",
@@ -268,7 +271,7 @@ Simulation <- setClass("SimulationParams", slots = c(Simulation = "integer_OR_nu
                                                  LocalExt = "logical",
                                                  LocalExtProb = "numeric",
                                                  EnvStoch = "integer_OR_numeric", #Environmental stochasticity: 0 = none, 1 = global, 2 = local
-                                                 EnvStochType = "integer_OR_numeric",   #Environmental stochasticity type: FALSE = in growth rate, TRUE = in carrying capacity
+                                                 EnvStochType = "integer_OR_numeric",   #Environmental stochasticity type: FALSE = in growth rate, TRUE = in habitat quality
                                                  std = "numeric",
                                                  ac = "numeric",
                                                  minR = "numeric",
@@ -962,8 +965,8 @@ setMethod("show", "SimulationParams", function(object) {
     if (object@Gradient) {
         if (object@Shifting) cat(" Shifting Environmental Gradient in")
         else cat(" Environmental Gradient in")
-        if (object@Gradient==1) cat(" K:\n")
-        if (object@Gradient==2) cat(" r:\n")
+        if (object@Gradient==1) cat(" HabQuality:\n")
+        if (object@Gradient==2) cat(" r/phi:\n")
         if (object@Gradient==3) cat(" e:\n")
         cat("   G = ", object@GradSteep, ", y_opt = ", object@Optimum , sep = "")
         if (object@Gradient==3) cat(", e_opt =", object@ExtinctOptim, "\n") else cat("\n")
@@ -979,7 +982,7 @@ setMethod("show", "SimulationParams", function(object) {
         if (object@EnvStoch==1) cat("  Global")
         if (object@EnvStoch==2) cat("  Local")
         cat(" Environmental Stochasticity in:")
-        if (object@EnvStochType) cat(" K\n") else cat(" r\n")
+        if (object@EnvStochType) cat(" HabQuality\n") else cat(" r/phi \n")
         cat(" Std = ", object@std, "\n")
         cat(" ac = ", object@ac, "\n Min/Max limits = ")
         if (object@EnvStochType) cat(object@minK, object@maxK, "\n") else cat(object@minR, object@maxR, "\n")

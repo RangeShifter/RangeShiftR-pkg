@@ -31,8 +31,8 @@
 #' @param InitIndsFile Name of \emph{initial individuals list file}, required only if \code{InitType}\eqn{ = 2}.\cr
 #' For informaton on the required file format see the Details below.
 #' @param InitDens,IndsHaCell Number of individuals to be seeded in each cell/patch:\cr
-#' \code{InitDens} = \eqn{0}: At carrying capacity \eqn{K}, \cr
-#' \code{InitDens} = \eqn{1}: At half carrying capacity \eqn{K/2} (default)\cr
+#' \code{InitDens} = \eqn{0}: At habitat quality \code{HabQuality},\cr
+#' \code{InitDens} = \eqn{1}: At half habitat quality (default),\cr
 #' \code{InitDens} = \eqn{2}: Set the number of individuals per cell/hectare to initialise in \code{IndsHaCell}.
 #' @param PropStages For \code{\link[RangeShiftR]{StageStructure}}d models only: Proportion of individuals initialised in each stage.
 #' Requires a vector of length equal to the number of stages; its entries must be \eqn{\ge 0} and sum to \eqn{1.0}. However, juveniles
@@ -68,8 +68,8 @@
 #' \emph{Initialial density, stage, and age}\cr
 #' For \code{InitType}\eqn{ = {0,1}}, the number of individuals that should be seeded in each cell or patch has to be set.
 #' Has no effect for \code{InitType}\eqn{ = 2}. There are three options:
-#' 1) \emph{At K.} (\code{InitDens}\eqn{=0}) The cell/patch will be saturated at its carrying capacity.
-#' 2) \emph{At half K.} (\code{InitDens}\eqn{=1}) The cell/patch will be saturated at half its carrying capacity.
+#' 1) \emph{At} \code{HabQuality}. (\code{InitDens}\eqn{=0}) The cell/patch will be saturated at its habitat quality.
+#' 2) \emph{At half} \code{HabQuality}. (\code{InitDens}\eqn{=1}) The cell/patch will be saturated at half its habitat quality.
 #' 3) \emph{Set value} \code{IndsHaCell}. (\code{InitDens}\eqn{=2}) Set the number of individuals to be seeded in each cell or the density
 #' in each patch (in units of individuals per hectare).
 #'
@@ -482,10 +482,10 @@ setMethod("show", "InitialisationParams", function(object){
     if (object@InitType != 2) {
         cat("   InitDens =", object@InitDens, ": ")
         if (object@InitDens == 0) {
-            cat("At carrying capacity K \n")
+            cat("At HabQuality \n")
         }
         if (object@InitDens == 1) {
-            cat("At half carrying capacity K/2 \n")
+            cat("At half HabQuality \n")
         }
         if (object@InitDens == 2) {
             cat(object@IndsHaCell," individuals per cell/hectare \n")

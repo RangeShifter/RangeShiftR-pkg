@@ -28,14 +28,16 @@ Simulation(Simulation = 1, Replicates = 2, Years = 50, Absorbing = FALSE,
 
 \item{Years}{The number of simulated years, defaults to \eqn{50}. (integer)}
 
-\item{Absorbing}{If \code{FALSE} (default), every move in the \code{\link[RangeshiftR]{Transfer}} process will be
-repeated until a valid cell is met. \cr If \code{TRUE}, an individual which hits a non-valid cell or
+\item{Absorbing}{If \code{FALSE} (default), every move in the \code{\link[RangeShiftR]{Transfer}} process will be
+repeated until a valid cell is met.\cr
+If \code{TRUE}, an individual which hits a non-valid cell or
 transgresses the landscape boundary during the dispersal act is eliminated from the simulation.}
 
-\item{Gradient}{\eqn{0} = None (default), \cr
-\eqn{1} = decreasing carrying capacity \eqn{K} or, for a \code{\link[RangeshiftR]{StageStructure}}d population, \eqn{1/b}
-(with \eqn{b} the competition coefficient), \cr
-\eqn{2} = decreasing growth rate \eqn{r} or, for a \code{\link[RangeshiftR]{StageStructure}}d population, fecundity (\eqn{\phi}), \cr
+\item{Gradient}{Whether to apply north-south gradient:
+\eqn{0} = None (default), \cr
+\eqn{1} = decreasing habitat quality \code{HabQuality}\cr
+\eqn{2} = decreasing growth rate \eqn{r} or, for a \code{\link[RangeShiftR]{StageStructure}}d population,
+fecundity \ifelse{html}{\out{&phi;}}{\eqn{\phi}}, \cr
 \eqn{3} = increasing local extinction probability \eqn{e}. \cr
 If activated, a gradient will be imposed along the north-south (\eqn{y}-) axis in which the selected parameter varies linearly with distance from the
 optimum \eqn{y}-value \code{Optimum}. Note that a \code{Gradient} can not be applied in for patch-based models (must be \code{Gradient}\eqn{=0}).}
@@ -72,8 +74,8 @@ Note that \code{LocalExt} must be \code{FALSE} for a patch-based model or if \co
 Environmental stochasticity is always applied on a yearly basis.}
 
 \item{EnvStochType}{Required if \code{EnvStoch} \ifelse{html}{\out{&ne; 0}}{\eqn{> 0}}: Parameter to which environmental stochasticity is applied:\cr
-\eqn{0} = growth rate \eqn{r} or, for a \code{\link[RangeshiftR]{StageStructure}}d population, fecundity (\eqn{\phi}).\cr
-\eqn{1} = carrying capacity \eqn{K} or, for a \code{\link[RangeshiftR]{StageStructure}}d population, \eqn{1/b} (allowed for artificial landscapes only!).}
+\eqn{0} = growth rate \eqn{r} or, for a \code{\link[RangeShiftR]{StageStructure}}d population, fecundity (\eqn{\phi}).\cr
+\eqn{1} = habitat quality \code{HabQuality} (allowed for artificial landscapes only!).}
 
 \item{std}{Required if \code{EnvStoch} \ifelse{html}{\out{&ne; 0}}{\eqn{> 0}}: magnitude of stochastic fluctuations. Must be \eqn{> 0.0} and \eqn{\le 1.0}.}
 
@@ -81,7 +83,7 @@ Environmental stochasticity is always applied on a yearly basis.}
 
 \item{minR, maxR}{Required if \code{EnvStochType}\eqn{=0}: minimum and maximum growth rates.}
 
-\item{minK, maxK}{Required if \code{EnvStochType}\eqn{=1}: minimum and maximum carrying capacities.}
+\item{minK, maxK}{Required if \code{EnvStochType}\eqn{=1}: minimum and maximum habitat qualities.}
 
 \item{OutIntRange, OutIntOcc, OutIntPop, OutIntInd, OutIntTraitCell, OutIntTraitRow, OutIntConn, OutIntPaths, OutIntGenetic}{Control the various types
 of Output files, i.e. range, occupancy, populations, individuals, traits (by cell or by row), connectivity, SMS paths and genetics:\cr
@@ -117,8 +119,9 @@ Furthermore, optionally define a (\code{Shifting}) Environmental \code{Gradient}
 \emph{Environmental Gradient}\cr
 An environmental gradient can be superimposed on the habitat map to describe gradual change in abiotic factors through space. Use the option \code{Gradient}
 and choose one of three implemented parameter gradients. These are - respectively for non-structured / stage-structured population models - :
-Decreasing carrying capacity \eqn{K} / inverse competition coefficient \eqn{1/b} (set \code{Gradient=1}),
-decreasing growth rate \eqn{r} / fecundity (\eqn{\phi}) (set \code{Gradient=2}),
+Decreasing habitat quality \code{HabQuality}, that is interpreted as
+the \emph{carrying capacity} \eqn{K} / the \emph{strength of density dependence} \ifelse{html}{\out{b<sup>-1</sup>}}{\eqn{1/b}} (set \code{Gradient=1});
+decreasing growth rate \eqn{r} / fecundity (\eqn{\phi}) (set \code{Gradient=2});
 or increasing local extinction probability \eqn{e} (set \code{Gradient=3}).
 The gradient is restrictively implemented along the north-south (\eqn{y})-axis and the selected parameter declines linearly with (\eqn{y})-distance from
 an optimum location (\code{Optimum}).
@@ -160,7 +163,7 @@ This does not affect any demographic parameters but simply kills-off the local p
 
 \emph{Environmental Stochasticity}\cr
 It is possible to model environmental stochasticity via the option \code{EnvStoch} acting at a global or local scale
-and can be appied to carrying capacity (\code{EnvStoch=1}) or to growth rate (fecundity) (\code{EnvStoch=0}).
+and can be applied to habitat quality (\code{EnvStoch=1}) or to growth rate / fecundity (\code{EnvStoch=0}).
 It is implemented using a first order autoregressive process to generate time series of the noise value \eqn{ε}:
 
 \deqn{ε(t+1) = κ ε(t) + \omega(t) \sqrt(1-\kappa^2)}
@@ -275,4 +278,7 @@ The status is an integer number that codes for the following possible states:
 }
 \references{
 Travis & Dytham 2004
+}
+\author{
+Anne-Kathleen Malchow
 }

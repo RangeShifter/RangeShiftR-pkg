@@ -18,6 +18,6 @@ plotAbundance(s, ...)
 \item{ylim}{upper limit to the y-axis}
 }
 \description{
-Uses the Rangeshifter output data 'range' to generate abundance time series.
+Uses the RangeShiftR output data 'range' to generate abundance time series.
 Plots the mean abundance over all replicates, and optionally the standard deviation and/or the single replicates.
 }

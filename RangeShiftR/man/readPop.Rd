@@ -18,5 +18,5 @@ to true coordinates of the center of the cell measured in metres.}
 a data.frame
 }
 \description{
-Read the Rangeshifter output file 'pop' into a data.frame, if it was generated.
+Read the RangeShiftR output file 'pop' into a data.frame, if it was generated.
 }

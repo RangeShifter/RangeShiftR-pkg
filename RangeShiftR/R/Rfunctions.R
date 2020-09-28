@@ -41,7 +41,7 @@
 #' RangeShiftR can be run as a cell-based or patch-based model (Bian 2003). It should be noted
 #' that the selection between cell-based or patch-based model is of fundamental importance for population dynamics calculations because
 #' it influences the spatial extent at which density dependence operates. In both cases, the landscape is represented as a grid with cells
-#' belonging to a particular habitat type, holding proportions of different habitats or being assigned a habitat quality index. However,
+#' belonging to a particular habitat type, holding a percerntage of habitat cover or being assigned a habitat quality index. However,
 #' when RangeShiftR is run using the cell-based setting, the cell is the scale at which processes such as population dynamics and dispersal
 #' act. The individuals present in a cell define a distinct population, and density-dependencies for reproduction, emigration and settlement
 #' all operate at this scale. Even in the case where two habitat cells are adjacent, they still hold separate populations. In contrast, in
@@ -170,7 +170,7 @@ setMethod("+", signature(e1 = "RSparams", e2 = "LandParams"), function(e1, e2) {
             e1@control@patchmodel = TRUE
         }
         e1@control@resolution = e2@Resolution
-        if (e2@HabitatQuality) {
+        if (e2@PercentCover) {
             e1@control@landtype = 2L
             e1@control@maxNhab = 1L
         }

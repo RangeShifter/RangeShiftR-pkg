@@ -5,15 +5,16 @@
 \alias{ArtificialLandscape}
 \title{Create an Artificial Landscape}
 \usage{
-ArtificialLandscape(propSuit = 0.5, K = 10, Resolution = 100, dimX = 65, dimY = 65,
+ArtificialLandscape(propSuit = 0.5, HabQuality = 10, Resolution = 100, dimX = 65, dimY = 65,
                     fractal = FALSE, hurst, continuous = FALSE, minPct, maxPct)
 }
 \arguments{
 \item{propSuit}{Proportion of suitable habitat cells, defaults to \eqn{0.5}.}
 
-\item{K}{Carrying capacity of habitat cells in units of number of individuals per hectare. Defaults to \eqn{10}. (integer)
-If combined with a \code{\link[RangeshiftR]{StageStructure}}d model, \code{K} will be used to calculate the \emph{strength of density dependence} \ifelse{html}{\out{b=K<sup>-1</sup>}}{\eqn{b=1/K}}
-instead of interpreting it as limiting carrying capacity.\cr}
+\item{HabQuality}{Habitat quality determines the demographic density dependence of the modelled species and is given in units of the number of individuals per hectare (defaults to \eqn{10}).
+Its precise interpretation thus depends on the structure of the species' \code{\link[RangeShiftR]{Demography}}:\cr
+If combined with a \code{\link[RangeShiftR]{StageStructure}}d model, \code{HabQuality} will be used as the \emph{strength of demographic density dependence} \ifelse{html}{\out{b<sup>-1</sup>}}{\eqn{1/b}}.
+If combined with a non-structured model, \code{HabQuality} will be interpreted as \emph{limiting carrying capacity} \eqn{K}.\cr}
 
 \item{Resolution}{Cell size in meters, defaults to \eqn{100}. (integer)}
 
@@ -27,7 +28,7 @@ If \code{TRUE}, a fractal landscape is generated. These landscapes contain a gre
 
 \item{continuous}{Use continuous or binary habitat values to describe each cell?\cr If \code{FALSE} (default), the resulting landscape
 is binary, with the two values \emph{Habitat} and \emph{Matrix} (i.e. Non-habitat).\cr If \code{TRUE}, each cell is given a continuous value which describes the percentage of habitat cover
-within a cell. The carrying capacity of that cell is calculated as the respective fraction of the value of \eqn{K}.}
+within a cell. The effective habitat quality of that cell is calculated as the respective fraction of the value of \eqn{HabQuality}.}
 
 \item{minPct, maxPct}{Required if \code{continuous=TRUE}: Minimum and Maximum percentage of habitat cover within a cell. Can be any number in the open interval \eqn{(0,1)},
 \code{maxPct} may be exactly \eqn{1}. \code{minPct} must be smaller than \code{maxPct}.}

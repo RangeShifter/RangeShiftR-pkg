@@ -31,21 +31,23 @@
 #'
 #' The emigration probability \eqn{d} can be density-dependent (set \code{DensDep=TRUE}), in which case it is given by the following function, introduced by Kun and Scheuring (2006):
 #'
-#' \ifelse{html}{\out{&emsp;&emsp; d = D<sub>0</sub> / ( 1 + e<sup>-&alpha; (N<sub>i,t</sub> / K<sub>i,t</sub> - &beta;) </sup> ) } }{\deqn{ d = D_0 / ( 1 + exp[-α (N_(i,t)/K_(i,t) - β) ] ) } }
+#' \ifelse{html}{\out{&emsp;&emsp; d(i,t) = D<sub>0</sub> / ( 1 + e<sup>-&alpha;sub>E</sub> (N(i,t) / K(i,t) - &beta;sub>E</sub>) </sup> ) } }{\deqn{ d(i,t) = D_0 / ( 1 + exp[-α_E (N(i,t)/K(i,t) - β_E) ] ) } }
 #'
-#' Here, \ifelse{html}{\out{D<sub>0</sub>}}{\eqn{D_0}} is the maximum emigration probability,
-#' \ifelse{html}{\out{N<sub>i</sub>}}{\eqn{N_i}} and \ifelse{html}{\out{K<sub>i</sub>}}{\eqn{K_i}} are the number of individuals in and the carrying capacity of the cell/patch \eqn{i},
-#' \eqn{β} is the inflection point of the function and \eqn{α} is the slope at the inflection point.
+#' In the case of stage-structured models this equation is modified to:
+#'
+#' \ifelse{html}{\out{&emsp;&emsp; d(i,t) = D<sub>0</sub> / ( 1 + e<sup>-&alpha;sub>E</sub> (b(i,t) * N(i,t) - &beta;sub>E</sub>) </sup> ) } }{\deqn{ d(i,t) = D_0 / ( 1 + exp[-α_E (b(i,t) N(i,t) - β_E) ] ) } }.
+#'
+#' In the first case, \eqn{K(i,t)} is the carrying capacity of the cell/patch \eqn{i} at time \eqn{t} given by \code{HabQuality}.
+#' In the latter case, \eqn{b(i,t)} represents the strength of density dependence and is given by the inverse of the habitat quality \code{HabQuality}.\cr
+#' Further, \ifelse{html}{\out{D<sub>0</sub>}}{\eqn{D_0}} is the maximum emigration probability,
+#' \eqn{N(i,t)} is the number of individuals in the cell/patch \eqn{i} at time \eqn{t},
+#' \ifelse{html}{\out{&beta;<sub>E</sub>}}{\eqn{β_S}} is the inflection point of the function and
+#' \ifelse{html}{\out{&alpha;<sub>E</sub>}}{\eqn{α_S}} is the slope at the inflection point.\cr
+#'
 #' Various functions have been proposed for density dependent emigration. This one was chosen here because it is a flexible function that
 #' allows for modelling a range of different reaction norms, as well as their emergence through evolution. In the case of density-dependent
 #' emigration, we assume individuals to have full knowledge of the population density and habitat quality in their natal patch. Information
 #' acquisition is not explicitly modelled.
-#'
-#' In the case of stage-structured models the above equation is modified to:
-#'
-#' \ifelse{html}{\out{&emsp;&emsp; d = D<sub>0</sub> / ( 1 + e<sup>-&alpha; (b N<sub>i,t</sub> - &beta;) </sup> ) } }{\deqn{ d = D_0 / ( 1 + exp[-α (b N_(i,t) - β) ] ) } }
-#'
-#' where \eqn{b} represents the strength of density dependence used for the population dynamics.
 #'
 #' The emigration probability can be allowed to vary between individuals (set \code{IndVar=TRUE}) and to evolve. In the this case, individuals exhibit either one trait
 #' determining the density-independent \eqn{d} (when \code{DensDep=FALSE}), or the three traits \ifelse{html}{\out{D<sub>0</sub>}}{\eqn{D_0}}, \eqn{α} and
@@ -921,14 +923,14 @@ setMethod("plotProbs", "DispersalKernel", function(x, mortality = FALSE, combine
 #'  - \emph{habitat-specific} costs for each habitat type, or\cr
 #'  - \code{"file"}, to indictae to use the \emph{cost raster} map(s) specified in the landscape module and import the cost values from them.\cr
 #' In the first case of \emph{habitat-specific} costs a numeric vector is expected with, respectively, length \code{Nhabitats} for an \code{\link[RangeShiftR]{ImportedLandscape}}
-#' with habitat codes (i.e. \code{HabitatQuality=FALSE})) or length \eqn{2} for an \code{\link[RangeShiftR]{ArtificialLandscape}} (matrix and habitat costs).\cr
+#' with habitat codes (i.e. \code{PercentCover=FALSE})) or length \eqn{2} for an \code{\link[RangeShiftR]{ArtificialLandscape}} (matrix and habitat costs).\cr
 #' In the second case of importing a \emph{cost raster} file, specify the file name(s) in the \code{\link[RangeShiftR]{ImportedLandscape}} module.
 #' The specified map has to match the landscape raster in extent, coordinates and resolution, and each cell contains a cost value (\eqn{\ge 1}).
-#' This is the only option for an imported landscape with habitat quality (i.e. \code{HabitatQuality=TRUE}).
+#' This is the only option for an imported landscape with habitat percentage (i.e. \code{PercentCover=TRUE}).
 #' @param StepMort Per-step mortality probability. Can be either \emph{constant}, in which case a single numeric is expected (the default, with
 #' value \eqn{0.0}) or \emph{habitat-specific}, in which case a numeric vector (with a length as described above for \code{Costs}) is expected.
 #' All values must be within the half-open interval \eqn{[0,1)}.\cr
-#' For an imported habitat quality landscape (\code{HabitatQuality=TRUE}), only constant per-step mortality is allowed.
+#' For an imported habitat percentage landscape (\code{PercentCover=TRUE}), only constant per-step mortality is allowed.
 #' @details SMS uses cost maps where a relative cost to movement is assigned to each habitat type. Costs are integer numbers and represent the cost of
 #' moving through a particular land cover relative to the cost of moving through breeding habitat (which is conventionally set to a cost of \eqn{1}).
 #' Individuals take single cell steps basing their decisions on three parameters: their perceptual range (\code{PR}) (given in number of cells),
@@ -1366,10 +1368,10 @@ setMethod("plotProbs", "StochMove", function(x, xmax = NULL, ymax = NULL){
 #' @param StraightenPath Straighten path after decision not to settle in a patch? Defaults to \code{TRUE}, see Details below.
 #' @param StepMort Per-step mortality probability. Can be either \emph{constant}, in which case a single numeric is expected (the default, with
 #' value \eqn{0.0}) or \emph{habitat-specific}, in which case a numeric vector is expected with a length of, respectively, \code{Nhabitats} for an
-#' \code{\link[RangeShiftR]{ImportedLandscape}} with habitat codes (i.e. \code{HabitatQuality=FALSE})) or length \eqn{2} for an
+#' \code{\link[RangeShiftR]{ImportedLandscape}} with habitat codes (i.e. \code{PercentCover=FALSE})) or length \eqn{2} for an
 #' \code{\link[RangeShiftR]{ArtificialLandscape}} (mortality probabilities for matrix and habitat cells).\cr
 #' All values must be within the half-open interval \eqn{[0,1)}.\cr
-#' For an imported habitat quality landscape (\code{HabitatQuality=TRUE}), only constant per-step mortality is allowed.
+#' For an imported habitat percentage landscape (\code{PercentCover=TRUE}), only constant per-step mortality is allowed.
 #' @details Individuals take steps of a constant \code{StepLength}; the direction is sampled from a wrapped Cauchy distribution having a
 #' correlation parameter \eqn{Rho} in the range \eqn{0} to \eqn{1}. As for \code{\link[RangeShiftR]{SMS}}, all individuals take each step
 #' simultaneously. In the case of patch-based models,
@@ -1609,18 +1611,18 @@ setMethod("show", "CorrRW", function(object){
 #' Furthermore, the settlement decision can be density-dependent (set \code{DensDep=TRUE}). In this case, the individual has a probability \ifelse{html}{\out{p<sub>S</sub>}}{\eqn{p_S}}
 #' of settling in the cell or patch \eqn{i}, given by:
 #'
-#' \ifelse{html}{\out{&emsp;&emsp; p<sub>S</sub> = S<sub>0</sub> / ( 1 + e<sup>-&alpha;<sub>S</sub> (N<sub>i,t</sub> / K<sub>i,t</sub> - &beta;<sub>S</sub>) </sup> ) } }{\deqn{ p_S = S_0 / ( 1 + exp[-α_S (N_(i,t)/K_(i,t) - β_S) ] ) } }
-#'
-#' Here, \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}} is the maximum settlement probability,
-#' \ifelse{html}{\out{N<sub>i</sub>}}{\eqn{N_i}} and \ifelse{html}{\out{K<sub>i</sub>}}{\eqn{K_i}} are the number of individuals in and the carrying capacity of the cell/patch \eqn{i},
-#' \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}} is the inflection point of the function and
-#' \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{α_S}} is the slope at the inflection point.
+#' \ifelse{html}{\out{&emsp;&emsp; p<sub>S</sub>(i,t) = S<sub>0</sub> / ( 1 + e<sup>-&alpha;<sub>S</sub> (N(i,t) / K(i,t) - &beta;<sub>S</sub>) </sup> ) } }{\deqn{ p_S(i,t) = S_0 / ( 1 + exp[-α_S (N(i,t)/K(i,t) - β_S) ] ) } }
 #'
 #' In the case of stage-structured models the above equation is modified to:
 #'
-#' \ifelse{html}{\out{&emsp;&emsp; p<sub>S</sub> = S<sub>0</sub> / ( 1 + e<sup>-&alpha;<sub>S</sub> (b N<sub>i,t</sub> - &beta;<sub>S</sub>) </sup> ) } }{\deqn{ p_S = S_0 / ( 1 + exp[-α_S (b N_(i,t) - β_S) ] ) } }
+#' \ifelse{html}{\out{&emsp;&emsp; p<sub>S</sub>(i,t) = S<sub>0</sub> / ( 1 + e<sup>-&alpha;<sub>S</sub> (b(i,t) * N(i,t) - &beta;<sub>S</sub>) </sup> ) } }{\deqn{ p_S(i,t) = S_0 / ( 1 + exp[-α_S (b(i,t) N(i,t) - β_S) ] ) } }
 #'
-#' where \eqn{b} represents the strength of density dependence used for the population dynamics.
+#' In the first case, \eqn{K(i,t)} is the carrying capacity of the cell/patch \eqn{i} at time \eqn{t} given by \code{HabQuality}.
+#' In the latter case, \eqn{b(i,t)} represents the strength of density dependence that is given by the inverse of the habitat quality \code{HabQuality}.\cr
+#' Further, \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}} is the maximum settlement probability,
+#' \eqn{N(i,t)} is the number of individuals in the cell/patch \eqn{i} at time \eqn{t},
+#' \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}} is the inflection point of the function and
+#' \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{α_S}} is the slope at the inflection point.\cr
 #'
 #' The parameters that determine the settlement probabilities have to be provided via the parameter \code{Settle}, which generally takes a numeric matrix, or - if only a single constant probability is
 #' used - a single numeric. The format of the matrix is defined as follows: The number of columns depend on the options \code{DensDep} and \code{IndVar}. If \code{DensDep=FALSE}, the

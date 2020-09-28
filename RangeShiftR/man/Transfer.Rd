@@ -8,9 +8,9 @@
 \description{
 Transfer (or transience) is the second phase of dispersal. It consists of the movement of an individual departing from its natal patch towards
 a potential new patch, ending with settlement or mortality. This movement can be modelled by one of three alternative processes:\cr
-- Dispersal kernel: use \code{\link[RangeshiftR]{DispersalKernel}}\cr
-- Stochastic movement simulator (SMS): use \code{\link[RangeshiftR]{SMS}}\cr
-- Correlated random walk (CRW): use \code{\link[RangeshiftR]{CorrRW}}
+- Dispersal kernel: use \code{\link[RangeShiftR]{DispersalKernel}}\cr
+- Stochastic movement simulator (SMS): use \code{\link[RangeShiftR]{SMS}}\cr
+- Correlated random walk (CRW): use \code{\link[RangeShiftR]{CorrRW}}
 }
 \details{
 The choice between the two main methods to model the transfer phase, i.e. phenomenological dispersal kernels or mechanistic movement processes

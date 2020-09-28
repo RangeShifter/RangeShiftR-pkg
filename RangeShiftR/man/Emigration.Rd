@@ -24,7 +24,7 @@ If the emigration probability is constant (i.e. all four above parameters are se
 
 \item{EmigStage}{Required for stage-structured populations with \code{IndVar=TRUE}: Stage which emigrates. (\code{StageDep} must be \code{FALSE})}
 
-\item{UseFullKern}{Applicable only if transfer phase is modelled by a \code{\link[RangeshiftR]{DispersalKernel}} and \code{DensDep=FALSE}: Shall the emigration probability be derived from dispersal kernel?}
+\item{UseFullKern}{Applicable only if transfer phase is modelled by a \code{\link[RangeShiftR]{DispersalKernel}} and \code{DensDep=FALSE}: Shall the emigration probability be derived from dispersal kernel?}
 }
 \value{
 a parameter object of class "EmigrationParams"
@@ -43,21 +43,23 @@ rate can be larger than \eqn{d}, if a stage with \eqn{d>0} lasts for more than o
 
 The emigration probability \eqn{d} can be density-dependent (set \code{DensDep=TRUE}), in which case it is given by the following function, introduced by Kun and Scheuring (2006):
 
-\ifelse{html}{\out{&emsp;&emsp; d = D<sub>0</sub> / ( 1 + e<sup>-&alpha; (N<sub>i,t</sub> / K<sub>i,t</sub> - &beta;) </sup> ) } }{\deqn{ d = D_0 / ( 1 + exp[-α (N_(i,t)/K_(i,t) - β) ] ) } }
+\ifelse{html}{\out{&emsp;&emsp; d(i,t) = D<sub>0</sub> / ( 1 + e<sup>-&alpha;sub>E</sub> (N(i,t) / K(i,t) - &beta;sub>E</sub>) </sup> ) } }{\deqn{ d(i,t) = D_0 / ( 1 + exp[-α_E (N(i,t)/K(i,t) - β_E) ] ) } }
 
-Here, \ifelse{html}{\out{D<sub>0</sub>}}{\eqn{D_0}} is the maximum emigration probability,
-\ifelse{html}{\out{N<sub>i</sub>}}{\eqn{N_i}} and \ifelse{html}{\out{K<sub>i</sub>}}{\eqn{K_i}} are the number of individuals in and the carrying capacity of the cell/patch \eqn{i},
-\eqn{β} is the inflection point of the function and \eqn{α} is the slope at the inflection point.
+In the case of stage-structured models this equation is modified to:
+
+\ifelse{html}{\out{&emsp;&emsp; d(i,t) = D<sub>0</sub> / ( 1 + e<sup>-&alpha;sub>E</sub> (b(i,t) * N(i,t) - &beta;sub>E</sub>) </sup> ) } }{\deqn{ d(i,t) = D_0 / ( 1 + exp[-α_E (b(i,t) N(i,t) - β_E) ] ) } }.
+
+In the first case, \eqn{K(i,t)} is the carrying capacity of the cell/patch \eqn{i} at time \eqn{t} given by \code{HabQuality}.
+In the latter case, \eqn{b(i,t)} represents the strength of density dependence and is given by the inverse of the habitat quality \code{HabQuality}.\cr
+Further, \ifelse{html}{\out{D<sub>0</sub>}}{\eqn{D_0}} is the maximum emigration probability,
+\eqn{N(i,t)} is the number of individuals in the cell/patch \eqn{i} at time \eqn{t},
+\ifelse{html}{\out{&beta;<sub>E</sub>}}{\eqn{β_S}} is the inflection point of the function and
+\ifelse{html}{\out{&alpha;<sub>E</sub>}}{\eqn{α_S}} is the slope at the inflection point.\cr
+
 Various functions have been proposed for density dependent emigration. This one was chosen here because it is a flexible function that
 allows for modelling a range of different reaction norms, as well as their emergence through evolution. In the case of density-dependent
 emigration, we assume individuals to have full knowledge of the population density and habitat quality in their natal patch. Information
 acquisition is not explicitly modelled.
-
-In the case of stage-structured models the above equation is modified to:
-
-\ifelse{html}{\out{&emsp;&emsp; d = D<sub>0</sub> / ( 1 + e<sup>-&alpha; (b N<sub>i,t</sub> - &beta;) </sup> ) } }{\deqn{ d = D_0 / ( 1 + exp[-α (b N_(i,t) - β) ] ) } }
-
-where \eqn{b} represents the strength of density dependence used for the population dynamics.
 
 The emigration probability can be allowed to vary between individuals (set \code{IndVar=TRUE}) and to evolve. In the this case, individuals exhibit either one trait
 determining the density-independent \eqn{d} (when \code{DensDep=FALSE}), or the three traits \ifelse{html}{\out{D<sub>0</sub>}}{\eqn{D_0}}, \eqn{α} and
@@ -99,7 +101,7 @@ The column headings need not be included, only the numeric matrix is required. T
  \out{&emsp;} 2 \tab \out{&emsp;} 1 \tab \out{&emsp;} 0.5 \tab \out{&emsp;} 20 \tab \out{&emsp;} 1.0
 }
 
-In the special case that \code{DensDep=FALSE} and transfer is realised by \code{\link[RangeshiftR]{DispersalKernel}}, then the option \code{UseFullKern} may be switched on. It
+In the special case that \code{DensDep=FALSE} and transfer is realised by \code{\link[RangeShiftR]{DispersalKernel}}, then the option \code{UseFullKern} may be switched on. It
 will prevent re-sampling from the kernel if the distance sampled does not move the individual out of its natal cell/patch. Such individuals
 are treated as philopatric recruits, and hence the kernel determines the probability of emigration. In this case, the emigration probability
 for all stages/sexes which potentially disperse should be set to \eqn{1.0}.
