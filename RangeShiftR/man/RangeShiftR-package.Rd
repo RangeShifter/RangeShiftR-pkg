@@ -4,26 +4,37 @@
 \name{RangeShiftR-package}
 \alias{RangeShiftR}
 \alias{RangeShiftR-package}
-\title{RangeShiftR: An R interface to the RangeShifter simulation software}
+\title{RangeShiftR: An R package for individual-based simulation of spatial eco-evolutionary dynamics and species' responses to environmental changes}
 \description{
-RangeShiftR: an R package for individual-based simulation of spatial eco-evolutionary dynamics and species' responses to environmental changes
+An R interface to the RangeShifter simulation software
 }
 \details{
-Bocedi, Greta, et al. "RangeShifter: a platform for modelling spatial eco‐evolutionary dynamics and species' responses to environmental changes." Methods in Ecology and Evolution 5.4 (2014): 388-396.
-}
-\section{Warning}{
+\emph{RangeShiftR} offers an interface to the RangeShifter simulation software \insertCite{bocedi2014}{RangeShiftR},
+making it available for all machines that can build and run \emph{R}.
 
-You must not call this function unless ...
-
-\subsection{Exceptions}{
-   Apart from the following special cases...
+To get started, please find a package overview and a range of tutorials on our website
+\url{https://rangeshifter.github.io/RangeshiftR-tutorials/}.
 }
-}
-
 \references{
-\url{https://en.wikipedia.org/wiki/List_of_Crayola_crayon_colors}
+\insertAllCited{}
+}
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://rangeshifter.github.io/}
+}
+
 }
 \author{
-Anne-Kathleen Malchow, \email{malchowa@geo.hu-berlin.de}
+\strong{Maintainer}: Anne-Kathleen Malchow \email{rangeshiftr@uni-potsdam.de}
+
+Authors:
+\itemize{
+  \item Greta Bocedi
+  \item Steve Palmer
+  \item Justin Travis
+  \item Damaris Zurell
+}
+
 }
 \keyword{internal}

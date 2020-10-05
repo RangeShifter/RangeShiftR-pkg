@@ -60,10 +60,10 @@ rasterdata landraster,patchraster,spdistraster,costsraster;
 // rasterdata landraster;
 #if RS_CONTAIN
 rasterdata damageraster;
-#endif // RS_CONTAIN 
+#endif // RS_CONTAIN
 #if SPATIALMORT
 rasterdata mortraster;
-#endif // SPATIALMORT 
+#endif // SPATIALMORT
 // ...including names of the input files
 // string parameterFile;
 // string landFile;
@@ -376,7 +376,7 @@ Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
 			errors++;
 		}
 	}
-#endif // SEASONAL 
+#endif // SEASONAL
 
 	if(landtype == 0) { // raster with unique habitat codes
 		if(maxNhab < 2) {
@@ -513,7 +513,7 @@ Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
 		BatchErrorR(filetype, -999, 2, "Transfer");
 		errors++;
 	}
-#endif // RS_CONTAIN 
+#endif // RS_CONTAIN
 
 #if RS_ABC
 	if(nABCsamples < 1) {
@@ -574,7 +574,7 @@ Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
 
 	// set up random number stream
 	std::int64_t seed = Rcpp::as<std::int64_t>(control.slot("seed"));
-	
+
 	if(seed == 0) { // don't set seed from R
 #if RSDEBUG
 		seed = 666;
@@ -615,13 +615,13 @@ Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
 #endif
 
 	simParams sim = paramsSim->getSim();
-	
+
 	delete paramsGrad;
 	delete paramsStoch;
 	delete paramsInit;
 	delete paramsSim;
 	delete pSpecies;
-	
+
 	delete pRandom;
 
 	t1 = time(0);
@@ -718,11 +718,11 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 		name_sp_dist = Rcpp::as<string>(LandParamsR.slot("SpDistFile"));
 #if RS_CONTAIN
 		name_damage = Rcpp::as<string>(LandParamsR.slot("DamageFile"));
-#endif // RS_CONTAIN 
+#endif // RS_CONTAIN
 #if SPATIALMORT
 		name_mort1 = Rcpp::as<string>(LandParamsR.slot("MortFile1"));
 		name_mort2 = Rcpp::as<string>(LandParamsR.slot("MortFile2"));
-#endif // SPATIALMORT 
+#endif // SPATIALMORT
 
 		if(landtype == 2)
 			ppLand.nHab = 1; // habitat quality landscape has one habitat class
@@ -731,7 +731,6 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 		string indir = paramsSim->getDir(1);
 		string ftype, fname;
 		string filetype = "LandFile";
-		int line;
 		//rasterdata patchraster, spdistraster; //declared globally
 
 		// check landscape filename
@@ -975,7 +974,8 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 		}
 
 #if RS_CONTAIN
-		/* // check economic / environmental damage map filename  /* *** not implemented in R-version
+		// check economic / environmental damage map filename  /* *** not implemented in R-version
+		/* 
 		ftype = "DamageFile";
 		bLandFile >> intext;
 		if (intext != "NULL") {
@@ -1009,10 +1009,11 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 				}
 			}
 		}*/
-#endif // RS_CONTAIN 
+#endif // RS_CONTAIN
 
 #if SPATIALMORT
-		/* // check mortality map filenames  /* *** not implemented in R-version
+			// check mortality map filenames  /* *** not implemented in R-version
+			/* 
 			bool filenull[2];
 			for (int mm = 0; mm < 2; mm++) {
 				int fnum = mm+1;
@@ -1600,8 +1601,8 @@ int ReadParametersR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 		pSpecies->createHabK(2,1);
 #else
 		pSpecies->createHabK(2);
-#endif // SEASONAL 
-		k = Rcpp::as<float>(LandParamsR.slot("K"));
+#endif // SEASONAL
+		k = Rcpp::as<float>(LandParamsR.slot("K_or_DensDep"));
 		k *= ((double)(pow(paramsLand.resol, double(2)))) / 10000.0;
 #if SEASONAL
 		pSpecies->setHabK(0,1,0);
@@ -1609,12 +1610,12 @@ int ReadParametersR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 #else
 		pSpecies->setHabK(0,0);
 		pSpecies->setHabK(1,k);
-#endif // SEASONAL 
+#endif // SEASONAL
 	} else {
 #if SEASONAL
 		pSpecies->createHabK(paramsLand.nHabMax,dem.nSeasons);
 		Rcpp::NumericVector k_vec;
-		k_vec = Rcpp::as<Rcpp::NumericVector>(LandParamsR.slot("K"));
+		k_vec = Rcpp::as<Rcpp::NumericVector>(LandParamsR.slot("K_or_DensDep"));
 		for (int j = 0; j < dem.nSeasons; j++) {
 			for (int i = 0; i < paramsLand.nHabMax; i++) {
 				k = k_vec[i] * ((double)(pow(paramsLand.resol, double(2)))) / 10000.0;
@@ -1624,12 +1625,12 @@ int ReadParametersR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 #else
 		pSpecies->createHabK(paramsLand.nHabMax);
 		Rcpp::NumericVector k_vec;
-		k_vec = Rcpp::as<Rcpp::NumericVector>(LandParamsR.slot("K"));
+		k_vec = Rcpp::as<Rcpp::NumericVector>(LandParamsR.slot("K_or_DensDep"));
 		for (int i = 0; i < paramsLand.nHabMax; i++) {
 			k = k_vec[i] * ((double)(pow(paramsLand.resol, double(2)))) / 10000.0;
 			pSpecies->setHabK(i,k);
 		}
-#endif // SEASONAL 
+#endif // SEASONAL
 	}
 
 #if RSDEBUG
@@ -1638,7 +1639,7 @@ int ReadParametersR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 	         << " habK[0] = " << pSpecies->getHabK(0,0)
 #else
 	         << " habK[0] = " << pSpecies->getHabK(0)
-#endif // SEASONAL 
+#endif // SEASONAL
 	         << " nHabMax = " << paramsLand.nHabMax << endl;
 #endif
 
@@ -2182,9 +2183,9 @@ int ReadEmigrationR(Rcpp::S4 ParMaster)
 		}
 		pSpecies->setEmigScales(scale);
 	}
-	
+
 	if(emig.indVar) anyIndVar = true;
-	
+
 	return error;
 }
 
@@ -2968,11 +2969,11 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 		} // end of WALD dispersal kernel
 
 		*/
-#endif // RS_CONTAIN 
+#endif // RS_CONTAIN
 	default:
 		error = 440;
 	} // end of switch (TransferType)
-	
+
 	if(trfr.indVar) anyIndVar = true;
 
 	return error;
@@ -3016,7 +3017,7 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
 	if (transfer == 0 || transfer == 3 || transfer == 4) {
 #else
 	if (transfer == 0) {
-#endif // RS_CONTAIN 
+#endif // RS_CONTAIN
 		// dispersal kernel                                         // dispersal kernel
 		sett.indVar = false;
 		if(dem.repType == 0) {
@@ -3442,9 +3443,9 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
 		} // end of dispersal kernel
 
 	} // end of for line loop
-	
+
 	if(sett.indVar) anyIndVar = true;
-	
+
 	return error;
 }
 
@@ -4052,7 +4053,7 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 			string msgabt = ",simulation aborted";
 			for(int i = 0; i < nSimuls; i++) { // this loop is useless at the moment since nSimuls is set to one in R entry function BatchMainR()
 				t00 = time(0);
-				params_ok = true;	
+				params_ok = true;
 				anyIndVar = false;
 				read_error = ReadParametersR(pLandscape, ParMaster);
 				simParams sim = paramsSim->getSim();
@@ -4149,7 +4150,7 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 
 					// for batch processing, include landscape number in parameter file name
 					OutParameters(pLandscape);
-					
+
 					// run the model
 					list_outPop = RunModel(pLandscape, i);
 #if RSDEBUG
@@ -4201,7 +4202,7 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 		rsLog.close();
 		rsLog.clear();
 	}
-	
+
 	return list_outPop;
 }
 
@@ -4314,7 +4315,7 @@ rasterdata ParseRasterHead(string file)
 	r.errors = r.ncols = r.nrows = r.cellsize = 0;
 	r.xllcorner = r.yllcorner = 0.0;
 	r.utf = false;
-	
+
 	// open file
 #if RSWIN64
 	infile.open(file.c_str());
@@ -4388,15 +4389,16 @@ int ReadInitIndsFileR(int option, Landscape* pLandscape)
 	demogrParams dem = pSpecies->getDemogr();
 	//stageParams sstruct = pSpecies->getStage();
 	initParams init = paramsInit->getInit();
-	
+
 	string indsfile = paramsSim->getDir(1) + init.indsFile;
 	wifstream initIndsFile;
-	
+
 	wstring header;
 	string filetype = "InitIndsFile";
 	string filename, ftype2, fname;
-	
-	int line, year, species, patchID, x, y, ninds, sex, age, stage, prevyear;
+
+	int line, prevyear;
+	//int year, sex, species, patchID, x, y, ninds, age, stage;
 
 	int errors = 0;
 
@@ -4471,18 +4473,18 @@ int ReadInitIndsFileR(int option, Landscape* pLandscape)
 				FormatErrorR(filetype, errors);
 				return -111;
 			}
-			
+
 			paramsInit->resetInitInds();
-			
+
 			// Read data lines
 			initInd iind;
 			int ninds;
 			int totinds = 0;
-			
+
 			line = 1;
 			iind.year = prevyear = -98765;
 			initIndsFile >> iind.year;
-			
+
 			while(iind.year != -98765) {
 				// Year
 				if(iind.year < 0) {
@@ -4494,8 +4496,8 @@ int ReadInitIndsFileR(int option, Landscape* pLandscape)
 						errors++;
 					}
 				}
-				prevyear = year;
-				
+				prevyear = iind.year;
+
 				// Species
 				initIndsFile >> iind.species;
 				if(iind.species != 0) {
@@ -4503,7 +4505,7 @@ int ReadInitIndsFileR(int option, Landscape* pLandscape)
 					errors++;
 					Rcpp::Rcout << "Species must be 0" << endl;
 				}
-				
+
 				// Patch | Coordinates
 				if(paramsLand.patchModel) {
 					initIndsFile >> iind.patchID;
@@ -4520,14 +4522,14 @@ int ReadInitIndsFileR(int option, Landscape* pLandscape)
 						iind.patchID = 0;
 					}
 				}
-				
+
 				// No of individuals
 				initIndsFile >> ninds;
 				if(ninds < 1) {
 					BatchErrorR(filetype, line, 11, "Ninds");
 					errors++;
 				}
-				
+
 				// Sex
 				if(dem.repType > 0){
 					initIndsFile >> iind.sex;
@@ -4537,7 +4539,7 @@ int ReadInitIndsFileR(int option, Landscape* pLandscape)
 					}
 				}
 				else iind.sex = 0;
-				
+
 				// Stage
 				if(dem.stageStruct) {
 					initIndsFile >> iind.age >> iind.stage;
@@ -4556,12 +4558,12 @@ int ReadInitIndsFileR(int option, Landscape* pLandscape)
 				} else {
 					iind.age = iind.stage = 0;
 				}
-				
+
 				for(int i = 0; i < ninds; i++) {
 					totinds++;
 					paramsInit->addInitInd(iind);
 				}
-				
+
 				line++;
 				iind.year = -98765;				// finished current line
 				if(!errors){					// check for format errors
@@ -4573,19 +4575,19 @@ int ReadInitIndsFileR(int option, Landscape* pLandscape)
 				EOFerrorR(filetype);
 				errors++;
 			}
-			
+
 		} // end of "file is open"
-		
+
 		if(initIndsFile.is_open())
 			initIndsFile.close();
 		initIndsFile.clear();
-	
+
 		Rcpp::Rcout << "Initial individuals file OK:" << indsfile << std::endl;
 
 		return errors; //totinds;
-		
+
 	} // end of option 0
-	
+
 	if(option == 9) { // close file
 		if(initIndsFile.is_open()) {
 			initIndsFile.close();

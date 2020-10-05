@@ -28,12 +28,12 @@ getLocalisedEquilPop(demog, ...)
 \item{diagnostics}{in addition to recorded population vectors, returns the number of steps taken as well as the transition matrix and the value if delta at the last step (default is \code{FALSE})}
 }
 \description{
-Uses the RangeShiftR Demography module to create the corresponding matrix model and runs it until equilibrium is reached.
+Uses the \emph{RangeShiftR} Demography module to create the corresponding matrix model and runs it until equilibrium is reached.
 This corresponds to a population in a single cell without dispersal.
 Since the matrix model representation is used, some options (e.g. maximum age) of the \code{\link[RangeShiftR]{Demography}} module can not be taken into account.
 }
 \details{
-RangeShiftR requires an additional juvenile stage to be added to the common transition matrix as stage \eqn{0} (in order
+\emph{RangeShiftR} requires an additional juvenile stage to be added to the common transition matrix as stage \eqn{0} (in order
 to allow for juvenile dispersal). For the simulation with \code{RunMatrixModel()}, this stage can be kept (\code{juv.stage=TRUE})
 or removed to yield the corresponding Lefkovitch matrix (\code{juv.stage=FALSE}).\cr
 The default initial state \code{N_0} is a population at its respective density \eqn{1/b} with unpopulated juvenile stage and

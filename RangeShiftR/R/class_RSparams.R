@@ -1,7 +1,6 @@
 
 #### PARAMETER MASTER CLASS ####
 
-
 #' @include class_ControlParams.R
 #' @include class_SimulationParams.R
 #' @include class_LandParams.R

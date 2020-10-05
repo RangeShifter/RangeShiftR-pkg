@@ -47,16 +47,16 @@ As a result, the realized dispersal kernels will themselves evolve.
 \details{
 Two types of kernels are implemented: negative exponential and a mixed kernel given by two different negative exponentials.
 Here, kernels are considered as ‘distance kernels’, i.e. the statistical distribution of the probability that an individual will move a
-certain distance (Hovestadt et al. 2012; Nathan et al. 2012). These kernels are specifically used for the \code{\link[RangeShiftR]{Transfer}} phase, meaning that they do
+certain distance \insertCite{hovestadt2012evolution,nathan2012dispersal}{RangeShiftR}. These kernels are specifically used for the \code{\link[RangeShiftR]{Transfer}} phase, meaning that they do
 not incorporate information on the \code{\link[RangeShiftR]{Emigration}} or \code{\link[RangeShiftR]{Settlement}} probabilities, which are modelled independently. Therefore, dispersal kernels are
 applied only to dispersing individuals and not normally to the entire population. However, the program allows a particular setting where
 emigration and transfer are not explicitly separated but are both modelled through the kernel (see the parameter \code{UseFullKern} in
 \code{\link[RangeShiftR]{Emigration}} and the Details there).
 
 There are many possible statistical distributions that have been fitted to dispersal data, which in many cases perform better
-than the negative exponential (Nathan et al. 2012). However, the negative exponential is still commonly used, has been found useful for
+than the negative exponential \insertCite{nathan2012dispersal}{RangeShiftR}. However, the negative exponential is still commonly used, has been found useful for
 describing dispersal patterns of certain organisms and the combination of two different negative exponentials has been demonstrated to be a
-valuable method for discerning between common short-distance and rare long-distance dispersal (Hovestadt et al. 2011).
+valuable method for discerning between common short-distance and rare long-distance dispersal \insertCite{hovestadt2011all}{RangeShiftR}.
 
 \emph{Negative exponential} \cr
 If the individual disperses, the distance and the movement direction are determined in continuous space.
@@ -65,9 +65,9 @@ distribution between \eqn{0} and \eqn{2π} radians.
 
 \ifelse{html}{\out{&emsp;&emsp; p(d;&delta;) = &delta;<sup>-1</sup> e<sup>- d / &delta;</sup>}}{\deqn{ p(d;δ) = 1/δ exp(-d/δ) } }
 
-If the arrival point lies beyond the boundary of the landscape, distance and direction are re-drawn.
+If the arrival point lies beyond the boundary of the landscape, distance and direction are re-drawn.\cr
 The individual is displaced from a random point (using continuous coordinates) inside the natal cell to the arrival cell where the model
-switches back to discrete space. If the arrival point is inside the natal cell, individual starting position, distance and direction are
+switches back to discrete space \insertCite{bocedi2012projecting}{RangeShiftR}. If the arrival point is inside the natal cell, individual starting position, distance and direction are
 re-sampled until the individual leaves the natal cell. In the case of patch-based models, the individual is assumed to disperse from a
 random point in the patch and this position, the dispersal distance and direction are drawn until the individual leaves the patch. In order
 to separate emigration and transfer explicitly, and to avoid potential infinite re-sampling, the program requires the mean of the kernel
@@ -81,7 +81,7 @@ not they emigrate.
 \emph{Mixed kernel} \cr
 The distance an individual moves is sampled from a mixed kernel given by the combination of two negative exponentials
 with different means \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{δ_1}} and \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{δ_2}},
-occurring with probability \ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}} and \eqn{1-}\ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}} respectively (Hovestadt et al. 2011).
+occurring with probability \ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}} and \eqn{1-}\ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}} respectively \insertCite{hovestadt2011all}{RangeShiftR}.
 Otherwise, the conditions for the single kernel apply.
 
 \ifelse{html}{\out{&emsp;&emsp; p(d; &delta;<sub>1</sub>,&delta;<sub>2</sub>) = p<sub>I</sub> p(d;&delta;<sub>1</sub>) + (1-p<sub>I</sub>) p(d;&delta;<sub>1</sub>)}}{\deqn{ p(d; δ_1,δ_2) = p_I p(d;δ_1) + (1-p_I) p(d;δ_2)}}
@@ -143,7 +143,7 @@ A second source of dispersal mortality can be specified via the option \code{Dis
 \ifelse{html}{\out{&emsp;&emsp; m(d) = 1 / ( 1 + e<sup>-a (d- b)</sup> ) } }{\deqn{ m(d) = 1 / ( 1 + exp[-α (d-b) ] ) } }
 
 with the inflection point \eqn{b=}\code{InflPoint} at which \eqn{m(d=b)=0.5} and the slope \eqn{a=}\code{Slope}.This option may be thought
-to represent the increased energetic, time or attritional costs that longer-distance dispersers will experience.
+to represent the increased energetic, time or attritional costs that longer-distance dispersers will experience \insertCite{bonte2012costs}{RangeShiftR}.
 
 Note that the total dispersal mortality experienced will be the sum of the mortalities due to the two sources identified above and,
 in parameterising the model, it will be important to recognize this such that dispersal mortality is not double-accounted.
@@ -161,5 +161,8 @@ disp_2 <- DispersalKernel(Distances = dists_2, SexDep = TRUE, DoubleKernel = TRU
 plotProbs(disp_2, xmax = 10000, combinekernels = TRUE)
 }
 \references{
-Hovestadt et al. 2012, Nathan et al. 2012, Hovestadt et al. 2011
+\insertAllCited{}
+}
+\author{
+Anne-Kathleen Malchow
 }

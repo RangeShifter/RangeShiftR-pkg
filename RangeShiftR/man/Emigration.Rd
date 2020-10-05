@@ -41,7 +41,7 @@ is always followed by dispersal).
 Populations with non-overlapping generations have only a single opportunity to emigrate, whereas in a stage-structured population the realised overall emigration
 rate can be larger than \eqn{d}, if a stage with \eqn{d>0} lasts for more than one year so that an individual has multiple opportunities to emigrate (each with probability \eqn{d}).
 
-The emigration probability \eqn{d} can be density-dependent (set \code{DensDep=TRUE}), in which case it is given by the following function, introduced by Kun and Scheuring (2006):
+The emigration probability \eqn{d} can be density-dependent (set \code{DensDep=TRUE}), in which case it is given by the following function, introduced by \insertCite{kun2006evolution;textual}{RangeShiftR}:
 
 \ifelse{html}{\out{&emsp;&emsp; d(i,t) = D<sub>0</sub> / ( 1 + e<sup>-&alpha;sub>E</sub> (N(i,t) / K(i,t) - &beta;sub>E</sub>) </sup> ) } }{\deqn{ d(i,t) = D_0 / ( 1 + exp[-α_E (N(i,t)/K(i,t) - β_E) ] ) } }
 
@@ -49,17 +49,18 @@ In the case of stage-structured models this equation is modified to:
 
 \ifelse{html}{\out{&emsp;&emsp; d(i,t) = D<sub>0</sub> / ( 1 + e<sup>-&alpha;sub>E</sub> (b(i,t) * N(i,t) - &beta;sub>E</sub>) </sup> ) } }{\deqn{ d(i,t) = D_0 / ( 1 + exp[-α_E (b(i,t) N(i,t) - β_E) ] ) } }.
 
-In the first case, \eqn{K(i,t)} is the carrying capacity of the cell/patch \eqn{i} at time \eqn{t} given by \code{HabQuality}.
-In the latter case, \eqn{b(i,t)} represents the strength of density dependence and is given by the inverse of the habitat quality \code{HabQuality}.\cr
+In the first case, \eqn{K(i,t)} is the carrying capacity of the cell/patch \eqn{i} at time \eqn{t} given by \code{K_or_DensDep}.
+In the latter case, \eqn{b(i,t)} represents the strength of density dependence and is given by the inverse of \code{K_or_DensDep}.\cr
 Further, \ifelse{html}{\out{D<sub>0</sub>}}{\eqn{D_0}} is the maximum emigration probability,
 \eqn{N(i,t)} is the number of individuals in the cell/patch \eqn{i} at time \eqn{t},
 \ifelse{html}{\out{&beta;<sub>E</sub>}}{\eqn{β_S}} is the inflection point of the function and
 \ifelse{html}{\out{&alpha;<sub>E</sub>}}{\eqn{α_S}} is the slope at the inflection point.\cr
 
-Various functions have been proposed for density dependent emigration. This one was chosen here because it is a flexible function that
+Various functions have been proposed for density dependent emigration \insertCite{hovestadt2010information,poethke2011ability}{RangeShiftR}.
+This one was chosen here because it is a flexible function that
 allows for modelling a range of different reaction norms, as well as their emergence through evolution. In the case of density-dependent
-emigration, we assume individuals to have full knowledge of the population density and habitat quality in their natal patch. Information
-acquisition is not explicitly modelled.
+emigration, we assume individuals to have full knowledge of the population density and carrying capacity (or 1/b, respectively) in their natal patch.
+Information acquisition is not explicitly modelled.
 
 The emigration probability can be allowed to vary between individuals (set \code{IndVar=TRUE}) and to evolve. In the this case, individuals exhibit either one trait
 determining the density-independent \eqn{d} (when \code{DensDep=FALSE}), or the three traits \ifelse{html}{\out{D<sub>0</sub>}}{\eqn{D_0}}, \eqn{α} and
@@ -67,7 +68,8 @@ determining the density-independent \eqn{d} (when \code{DensDep=FALSE}), or the 
 For each tiations must be set (instead of only one constant value).
 Also, if \code{IndVar=TRUE} is set for a stage-structured population, it is required to specify the stage which emigrates via \code{EmigStage}.
 
-It is possible to model sex-specific emigration strategies (set \code{SexDep=TRUE}) in which case the number of loci is doubled; one set coding for the trait
+It is possible to model sex-specific emigration strategies (set \code{SexDep=TRUE}) \insertCite{greenwood1980mating,lawson2007advances}{RangeShiftR}.
+In this case the number of loci is doubled; one set coding for the trait
 in females and the other for the trait in males. As well as being sex-biased, emigration parameters can be stage-biased (set \code{StageDep=TRUE}) when modelling
 stage-structured populations. However, the current version does not accommodate inter-individual variation in emigration strategies when they are stage-dependent.
 
@@ -118,5 +120,8 @@ emig_2 <- Emigration(DensDep = TRUE, IndVar = TRUE, SexDep = TRUE, EmigProb = em
 plotProbs(emig_2)
 }
 \references{
-Kun and Scheuring (2006)
+\insertAllCited{}
+}
+\author{
+Anne-Kathleen Malchow
 }

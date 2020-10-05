@@ -21,10 +21,10 @@ expects a vector of length three specifying (Mean, SD, MutationScale) of \code{R
 
 \item{StepMort}{Per-step mortality probability. Can be either \emph{constant}, in which case a single numeric is expected (the default, with
 value \eqn{0.0}) or \emph{habitat-specific}, in which case a numeric vector is expected with a length of, respectively, \code{Nhabitats} for an
-\code{\link[RangeShiftR]{ImportedLandscape}} with habitat codes (i.e. \code{PercentCover=FALSE})) or length \eqn{2} for an
+\code{\link[RangeShiftR]{ImportedLandscape}} with habitat codes (i.e. \code{HabPercent=FALSE})) or length \eqn{2} for an
 \code{\link[RangeShiftR]{ArtificialLandscape}} (mortality probabilities for matrix and habitat cells).\cr
 All values must be within the half-open interval \eqn{[0,1)}.\cr
-For an imported habitat percentage landscape (\code{PercentCover=TRUE}), only constant per-step mortality is allowed.}
+For an imported habitat quality landscape (\code{HabPercent=TRUE}), only constant per-step mortality is allowed.}
 }
 \value{
 a parameter object of class "CorrRW"
@@ -35,7 +35,8 @@ A simple correlated random walk without any bias; implemented in continuous spac
 }
 \details{
 Individuals take steps of a constant \code{StepLength}; the direction is sampled from a wrapped Cauchy distribution having a
-correlation parameter \eqn{Rho} in the range \eqn{0} to \eqn{1}. As for \code{\link[RangeShiftR]{SMS}}, all individuals take each step
+correlation parameter \eqn{Rho} in the range \eqn{0} to \eqn{1} \insertCite{barton2009evolution,zollner1999search}{RangeShiftR}.
+As for \code{\link[RangeShiftR]{SMS}}, all individuals take each step
 simultaneously. In the case of patch-based models,
 \eqn{Rho} is automatically set to \eqn{0.99} until the individual steps outside its natal patch, after which the value of
 \eqn{Rho} set by the user is restored. The \code{StepLength} and \eqn{Rho} can vary between individuals and can evolve (set \code{IndVar=TRUE}).
@@ -59,11 +60,14 @@ to find suitable habitat before they use up their maximum number of movement ste
 In this first case, dispersal mortality clearly depends upon the proportion of suitable habitat in the landscape and will increase as the
 availability of habitat declines.\cr
 A second source of dispersal mortality can be specified by the user in form of a per-step probability of mortality (\code{StepMort}.
-This can be useful for representing mortality risks that increase with distance or time spent travelling.
+This can be useful for representing mortality risks that increase with distance or time spent travelling \insertCite{bonte2012costs}{RangeShiftR}.
 
 Note that the total dispersal mortality experienced will be the sum of the mortalities due to the two sources identified above and, in parameterising the model,
 it will be important to recognize this such that dispersal mortality is not double-accounted.
 }
 \references{
-Zollner & Lima 1999; Bartoń et al. 2009
+\insertAllCited{}
+}
+\author{
+Anne-Kathleen Malchow
 }

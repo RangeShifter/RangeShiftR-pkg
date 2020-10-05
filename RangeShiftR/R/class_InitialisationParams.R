@@ -13,7 +13,8 @@
 #' with additional options for each type, see the Details.\cr
 #' Additionally, initial density and, if applicable, initial stage and age distributions can be set.
 #'
-##' @author Anne-Kathleen Malchow
+#' @include plotProbs.R
+#' @include Rfunctions.R
 #' @usage Initialise(InitType = 0, FreeType = 1, SpType = 0, NrCells, InitIndsFile = "NULL",
 #'            InitDens = 1, IndsHaCell, PropStages = 0, InitAge = 2, minX, minY, maxX, maxY,
 #'            InitFreezeYear = 0, RestrictRows = 0, RestrictFreq = 0, FinalFreezeYear = 0)
@@ -31,8 +32,8 @@
 #' @param InitIndsFile Name of \emph{initial individuals list file}, required only if \code{InitType}\eqn{ = 2}.\cr
 #' For informaton on the required file format see the Details below.
 #' @param InitDens,IndsHaCell Number of individuals to be seeded in each cell/patch:\cr
-#' \code{InitDens} = \eqn{0}: At habitat quality \code{HabQuality},\cr
-#' \code{InitDens} = \eqn{1}: At half habitat quality (default),\cr
+#' \code{InitDens} = \eqn{0}: At \code{K_or_DensDep},\cr
+#' \code{InitDens} = \eqn{1}: At half \code{K_or_DensDep} (default),\cr
 #' \code{InitDens} = \eqn{2}: Set the number of individuals per cell/hectare to initialise in \code{IndsHaCell}.
 #' @param PropStages For \code{\link[RangeShiftR]{StageStructure}}d models only: Proportion of individuals initialised in each stage.
 #' Requires a vector of length equal to the number of stages; its entries must be \eqn{\ge 0} and sum to \eqn{1.0}. However, juveniles
@@ -50,28 +51,34 @@
 #' @param RestrictFreq Option for \emph{free initialisation} (\code{InitType}\eqn{ = 0}): Frequency in years at which range is restricted to northern front.
 #' @param FinalFreezeYear Option for \emph{free initialisation} (\code{InitType}\eqn{ = 0}): The year after which species is confined to its new, current range limits, after a
 #' period of range expansion. Will be ignored if set to \eqn{0}, otherwise must be \eqn{>} \code{InitFreezeYear}.
-#' @details \emph{Initialisation Types}\cr
-#' 1) \emph{Free Initialisation.} (\code{InitType}\eqn{ = 0}) The population is initialised according to suitable habitat in the landscape.
+#' @details ## Initialisation Types
+#' \emph{Initialisation Types}\cr
+#' \itemize{
+#'     \item \emph{Free Initialisation.} (\code{InitType}\eqn{ = 0})\cr The population is initialised according to suitable habitat in the landscape.
 #' Either all (\code{FreeType}\eqn{=1}), or a specified number (\code{NrCells}) of randomly selected (\code{FreeType}\eqn{=0}) cells/patches
-#' will be seeded. When using an artificial landscape, this is the only option available.\cr
-#' 2) \emph{From loaded species distribution map.} (\code{InitType}\eqn{ = 1}) The population is initialised according to a loaded
+#' will be seeded. When using an artificial landscape, this is the only option available.
+#'     \item \emph{From loaded species distribution map.} (\code{InitType}\eqn{ = 1})\cr The population is initialised according to a loaded
 #' species distribution map, which needs to be provided through the module \code{\link[RangeShiftR]{ImportedLandscape}}, option \code{SpDistFile}.
 #' All habitat cells/patches within either all (\code{SpType}\eqn{=0}), or a specified number (\code{NrCells}) of randomly selected
-#' (\code{SpType}\eqn{=1}) presence cells (which can have a lower resolution) specified by this distribution map will seeded.\cr
-#' 3) \emph{From initial individuals list file.} (\code{InitType}\eqn{ = 2}) The population is initialised according to a list of specific
+#' (\code{SpType}\eqn{=1}) presence cells (which can have a lower resolution) specified by this distribution map will seeded.
+#'     \item \emph{From initial individuals list file.} (\code{InitType}\eqn{ = 2})\cr The population is initialised according to a list of specific
 #' individuals (of given sex, age and stage, if appropriate) in specified cells/patches. This option allows simulation of a reintroduction
 #' scenario.\cr The list has to be loaded from a file in the path given by \code{InitIndsFile}. It must be a tab-seperated list with
 #' explicit column headers and one row for each individual to be initialized. The expected column headers depend on the model settings and
 #' must match the following order exactly: 'Year', 'Species', for cell-/patch-based: 'X', 'Y' / 'PatchID', 'Ninds', for sexual model: 'Sex',
 #' for stage-structured population: 'Age', 'Stage'.
+#' }
 #'
 #' \emph{Initialial density, stage, and age}\cr
 #' For \code{InitType}\eqn{ = {0,1}}, the number of individuals that should be seeded in each cell or patch has to be set.
-#' Has no effect for \code{InitType}\eqn{ = 2}. There are three options:
-#' 1) \emph{At} \code{HabQuality}. (\code{InitDens}\eqn{=0}) The cell/patch will be saturated at its habitat quality.
-#' 2) \emph{At half} \code{HabQuality}. (\code{InitDens}\eqn{=1}) The cell/patch will be saturated at half its habitat quality.
-#' 3) \emph{Set value} \code{IndsHaCell}. (\code{InitDens}\eqn{=2}) Set the number of individuals to be seeded in each cell or the density
+#' There are three options:
+#' \itemize{
+#'     \item \emph{At} \code{K_or_DensDep}. (\code{InitDens}\eqn{=0})\cr The cell/patch will be saturated at its respective \eqn{K} or \eqn{1/b}.
+#'     \item \emph{At half} \code{K_or_DensDep}. (\code{InitDens}\eqn{=1})\cr The cell/patch will be saturated at half its \eqn{K} or \eqn{1/b}.
+#'     \item \emph{Set value} \code{IndsHaCell}. (\code{InitDens}\eqn{=2})\cr Set the number of individuals to be seeded in each cell or the density
 #' in each patch (in units of individuals per hectare).
+#' }
+#' (These settings have no effect for \code{InitType}\eqn{ = 2}.)
 #'
 #' In the case of \code{\link[RangeShiftR]{StageStructure}}d models, the initial stage and age distributions must be specified.
 #' If \code{InitType}\eqn{ = 2}, this is done via the \code{InitIndsFile}, whereas for \code{InitType}\eqn{ = {0,1}},
@@ -80,13 +87,14 @@
 #' however the proportion of juveniles must be \eqn{0.0}.
 #'
 #' Options for initial age distributions:
-#' 1) \emph{Minimal age} of respective stage. (\code{InitAge}=0)
-#' 2) \emph{Randomise.} (\code{InitAge}=1) Individuals initialised in each stage will get an age randomly sampled between
+#' \itemize{
+#'     \item \emph{Minimal age} of respective stage. (\code{InitAge}=0)
+#'     \item \emph{Randomise.} (\code{InitAge}=1)\cr Individuals initialised in each stage will get an age randomly sampled between
 #' the minimum and the maximum age for their respective stage.
-#' 3) \emph{Quasi-equilibrium.} (\code{InitAge}=2) Initial age distribution is set approximately in accordance with the number of years
+#'     \item \emph{Quasi-equilibrium.} (\code{InitAge}=2)\cr Initial age distribution is set approximately in accordance with the number of years
 #' taken to pass through the stage and the (female) survival rate of the respective stage.
-#'
-#' (Has no effect for \code{InitType}\eqn{ = 2})
+#' }
+#' (These settings have no effect for \code{InitType}\eqn{ = 2}.)
 #'
 #' \emph{Additional options for free initialisation}\cr
 #' In the case of free initialisation, either all or a specified number of randomly selected cells/patches will be seeded.
@@ -122,8 +130,9 @@
 # only for expansion in a northerly direction (increasing \eqn{y}-axis). Thus the initial population should be established in the
 # southern part of the landscape (low value on the \eqn{y}-axis).
 #
-#' @examples init <- Initialise() # use all defaults (for stage-structured model setting PropStages is required)
+#' @examples init <- Initialise() # use all defaults (a stage-structured model requires setting PropStages)
 #' @return a parameter object of class "InitialisationParams"
+#' @author Anne-Kathleen Malchow
 #' @name Initialise
 #' @export Initialise
 Initialise <- setClass("InitialisationParams", slots = c(InitType = "integer_OR_numeric",
@@ -482,10 +491,10 @@ setMethod("show", "InitialisationParams", function(object){
     if (object@InitType != 2) {
         cat("   InitDens =", object@InitDens, ": ")
         if (object@InitDens == 0) {
-            cat("At HabQuality \n")
+            cat("At K_or_DensDep \n")
         }
         if (object@InitDens == 1) {
-            cat("At half HabQuality \n")
+            cat("At half K_or_DensDep \n")
         }
         if (object@InitDens == 2) {
             cat(object@IndsHaCell," individuals per cell/hectare \n")

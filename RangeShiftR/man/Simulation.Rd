@@ -35,7 +35,7 @@ transgresses the landscape boundary during the dispersal act is eliminated from 
 
 \item{Gradient}{Whether to apply north-south gradient:
 \eqn{0} = None (default), \cr
-\eqn{1} = decreasing habitat quality \code{HabQuality}\cr
+\eqn{1} = decreasing \code{K_or_DensDep}\cr
 \eqn{2} = decreasing growth rate \eqn{r} or, for a \code{\link[RangeShiftR]{StageStructure}}d population,
 fecundity \ifelse{html}{\out{&phi;}}{\eqn{\phi}}, \cr
 \eqn{3} = increasing local extinction probability \eqn{e}. \cr
@@ -75,7 +75,7 @@ Environmental stochasticity is always applied on a yearly basis.}
 
 \item{EnvStochType}{Required if \code{EnvStoch} \ifelse{html}{\out{&ne; 0}}{\eqn{> 0}}: Parameter to which environmental stochasticity is applied:\cr
 \eqn{0} = growth rate \eqn{r} or, for a \code{\link[RangeShiftR]{StageStructure}}d population, fecundity (\eqn{\phi}).\cr
-\eqn{1} = habitat quality \code{HabQuality} (allowed for artificial landscapes only!).}
+\eqn{1} = demographic density dependence \code{K_or_DensDep} (carrying capacity or 1/b) (allowed for artificial landscapes only!).}
 
 \item{std}{Required if \code{EnvStoch} \ifelse{html}{\out{&ne; 0}}{\eqn{> 0}}: magnitude of stochastic fluctuations. Must be \eqn{> 0.0} and \eqn{\le 1.0}.}
 
@@ -83,7 +83,7 @@ Environmental stochasticity is always applied on a yearly basis.}
 
 \item{minR, maxR}{Required if \code{EnvStochType}\eqn{=0}: minimum and maximum growth rates.}
 
-\item{minK, maxK}{Required if \code{EnvStochType}\eqn{=1}: minimum and maximum habitat qualities.}
+\item{minK, maxK}{Required if \code{EnvStochType}\eqn{=1}: minimum and maximum value of \eqn{K} or \eqn{1/b}, respectively.}
 
 \item{OutIntRange, OutIntOcc, OutIntPop, OutIntInd, OutIntTraitCell, OutIntTraitRow, OutIntConn, OutIntPaths, OutIntGenetic}{Control the various types
 of Output files, i.e. range, occupancy, populations, individuals, traits (by cell or by row), connectivity, SMS paths and genetics:\cr
@@ -117,16 +117,20 @@ Furthermore, optionally define a (\code{Shifting}) Environmental \code{Gradient}
 }
 \details{
 \emph{Environmental Gradient}\cr
+In \emph{RangeShiftR}, it is possible to superimpose an artificial gradient on top of the landscape map (real or artificial).
+Gradients are implemented for cell-based models only.\cr
 An environmental gradient can be superimposed on the habitat map to describe gradual change in abiotic factors through space. Use the option \code{Gradient}
-and choose one of three implemented parameter gradients. These are - respectively for non-structured / stage-structured population models - :
-Decreasing habitat quality \code{HabQuality}, that is interpreted as
-the \emph{carrying capacity} \eqn{K} / the \emph{strength of density dependence} \ifelse{html}{\out{b<sup>-1</sup>}}{\eqn{1/b}} (set \code{Gradient=1});
-decreasing growth rate \eqn{r} / fecundity (\eqn{\phi}) (set \code{Gradient=2});
-or increasing local extinction probability \eqn{e} (set \code{Gradient=3}).
+and choose one of three implemented parameter gradients. These are, respectively for non-structured / stage-structured population models:\cr
+\itemize{
+   \item{Decreasing values of \code{K_or_DensDep}, that mediates demographic density dependence (stronger with lower values) and is interpreted as
+         the \emph{carrying capacity} \eqn{K} / the \emph{strength of density dependence} \ifelse{html}{\out{b<sup>-1</sup>}}{\eqn{1/b}} (set \code{Gradient=1});}
+   \item{Decreasing growth rate \eqn{r} / fecundity (\eqn{\phi}) (set \code{Gradient=2});}
+   \item {Increasing local extinction probability \eqn{e} (set \code{Gradient=3}).}
+}
 The gradient is restrictively implemented along the north-south (\eqn{y})-axis and the selected parameter declines linearly with (\eqn{y})-distance from
 an optimum location (\code{Optimum}).
 
-Gradients are implemented following the method of Travis & Dytham (2004), which combines linear variability with local heterogeneity.
+Gradients are implemented following the method of \insertCite{travis2004;textual}{RangeShiftR}, which combines linear variability with local heterogeneity.
 If \eqn{Z} is one of the gradient variables listed above, \eqn{Z={K, 1/b, r, \phi, e}}, the value of \eqn{Z(x,y)} for a cell with \eqn{x} and \eqn{y}-coordinates
 is given by the following equation:
 
@@ -159,12 +163,13 @@ has to be \eqn{0} for patch-based models.
 \emph{Local Extinctions}\cr
 An additional, independent extinction probability can be added using the option \code{LocalExt}. If set,
 in each year, every population has an identical probability \code{LocalExtProb} of going extinct.
-This does not affect any demographic parameters but simply kills-off the local population.
+This does not affect any demographic parameters but simply kills off the local population.
 
 \emph{Environmental Stochasticity}\cr
 It is possible to model environmental stochasticity via the option \code{EnvStoch} acting at a global or local scale
-and can be applied to habitat quality (\code{EnvStoch=1}) or to growth rate / fecundity (\code{EnvStoch=0}).
-It is implemented using a first order autoregressive process to generate time series of the noise value \eqn{ε}:
+and can be applied to \code{K_or_DensDep}, the demographic density dependence (\code{EnvStoch=1}), or to growth rate / fecundity (\code{EnvStoch=0}).
+It is implemented using a first order autoregressive process to generate time series of the noise value \eqn{ε}
+\insertCite{ruokolainen2009}{RangeShiftR}:
 
 \deqn{ε(t+1) = κ ε(t) + \omega(t) \sqrt(1-\kappa^2)}
 
@@ -200,6 +205,7 @@ at the end of the simulation.
 - \emph{Occupancy} \cr
 reports the cell/patch probability of occupancy. This is only possible if the number of replicates is greater than \eqn{1}.
 Two files will be produced:\cr
+
      1) \code{Sim0_Occupancy.txt}:  contains a list of all the cells in the landscape (\eqn{x-} and \eqn{y-}coordinates) or
 of all the patches (PatchID). The remaining columns give the occupancy probability of the cell/patch at defined time steps.
 The occupancy probability is obtained by dividing the number of times (replicates) that the cell/patch has been occupied in
@@ -235,11 +241,13 @@ transfer method).
 - \emph{Traits} \cr
 In the case of inter-individual variability and evolution of the dispersal traits, it is possible to output the mean traits of
 the population. There are two types of traits output:\cr
+
     1) \code{Sim0_TraitsXcell.txt / Sim0_TraitsXpatch.txt} reports mean and standard deviation of the varying/evolving traits for each
 cell/patch, for each replicate and reproductive season at the set year interval.\cr
+
     2) \code{Sim0_TraitsXrow.txt} mean and standard deviation of the varying/evolving traits computed at the row (\eqn{y}) level,
 pulling together all the populations occupying cells in \eqn{y}. Values are reported for each replicate and reproductive season
-at the specified yearly interval. This is particularly useful for analyzing the structuring of traits along latitudinal gradients.
+at the specified yearly interval. This is particularly useful for analyzing the structuring of traits along latitudinal gradients.\cr
 
     It is possible to compute this output only for cell-based models. Data for these outputs are collected at the same time as for the
 range and population outputs, i.e. before reproduction at each reproductive season at the set year interval and at the end of the
@@ -261,23 +269,23 @@ dispersed individuals from the natal to the final (settlement or fatal) patch fo
 from \code{OutStartPaths}. The data are presented in list format with the columns:\cr
 Year (Year), Individual ID (IndID), consecutive step number (Step), coordinates of cell at this step (\eqn{x} and \eqn{y}),
 status of individual (Status).
-The status is an integer number that codes for the following possible states:
-   0 = natal patch,
-   1 = disperser,
-   2 = disperser awaiting settlement in possible suitable patch,
-   3 = waiting between dispersal events,
-   4 = completed settlement,
-   5 = completed settlement in a suitable neighbouring cell,
-   6 = died during transfer by failing to find a suitable patch (includes exceeding maximum number of steps or crossing absorbing boundary),
-   7 = died during transfer by constant, step-dependent, habitat-dependent or distance-dependent mortality,
-   8 = failed to survive annual (demographic) mortality,
-   9 = exceeded maximum age.
+The status is an integer number that codes for the following possible states:\cr
+   0 = natal patch,\cr
+   1 = disperser,\cr
+   2 = disperser awaiting settlement in possible suitable patch,\cr
+   3 = waiting between dispersal events,\cr
+   4 = completed settlement,\cr
+   5 = completed settlement in a suitable neighbouring cell,\cr
+   6 = died during transfer by failing to find a suitable patch (includes exceeding maximum number of steps or crossing absorbing boundary),\cr
+   7 = died during transfer by constant, step-dependent, habitat-dependent or distance-dependent mortality,\cr
+   8 = failed to survive annual (demographic) mortality,\cr
+   9 = exceeded maximum age.\cr\cr
 
 - \emph{Genetics} (\code{Sim0_Connect.txt}) \cr
 .....
 }
 \references{
-Travis & Dytham 2004
+\insertAllCited{}
 }
 \author{
 Anne-Kathleen Malchow

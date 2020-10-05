@@ -2,10 +2,10 @@
 % Please edit documentation in R/RangeShiftR.R
 \name{RangeShiftR_citation}
 \alias{RangeShiftR_citation}
-\title{\ Display citation}
+\title{Display citation}
 \usage{
 RangeShiftR_citation()
 }
 \description{
-\ Display citation
+Display citation
 }

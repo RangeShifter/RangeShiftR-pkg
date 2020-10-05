@@ -26,7 +26,7 @@ a parameter object of class "DemogParams"
 }
 \description{
 For a simple non-structured population, set its basic demographic parameters here, i.e. the maximum growth rate (\code{Rmax}) and the competition coefficient (\code{bc}).
-For a stage-structured population, define its corresponding parameters via \code{\link[RangeShiftR]{StageStructure}} and add to Demography.\cr
+For a stage-structured population, define its corresponding parameters via \code{\link[RangeShiftR]{StageStructure}} and add it to Demography.\cr
 \cr
 Choose the Reproduction model that determines if sexes are considered implicitly or explicitly and if a mating system is used. If applicable, set the corresponding parameters, i.e. the proportion of males (\code{PropMales}) and the maximum harem size (\code{Harem}).
 }
@@ -37,13 +37,13 @@ For more information on the population dynamics of a \strong{structured} populat
 Populations with non-overlapping generations, i.e. with \strong{no stage-structure} are the appropriate way to model species that have discrete generations.
 At each generation the life cycle comprises - in that order - reproduction, death of the adults and offspring dispersal.
 Two parameters determine the nature of the demographic density dependence:
-the carrying capacity \eqn{K} (given by the argument \code{HabQuality} in the landscape module) and
+the carrying capacity \eqn{K} (given by the argument \code{K_or_DensDep} in the landscape module) and
 the competition coefficient \eqn{b_c} (given by the argument \code{bc}).
 These discrete generation models can be applied to asexual species, species for which it is assumed that females play the dominant role in spatial dynamics
 and for species for which it is considered crucial to model both sexes explicitly.
 
 \emph{Asexual / only-female models:}  (\code{ReproductionType=0})\cr
-Recruitment is determined by a stochastic, individual-based formulation of Maynard-Smith and Slatkin’s (1973) population model, where the number of offspring produced by a single individual in the cell/patch \eqn{i} at time \eqn{t}, is drawn from the following distribution:\cr
+Recruitment is determined by a stochastic, individual-based formulation of the \insertCite{smith1973;textual}{RangeShiftR} population model, where the number of offspring produced by a single individual in the cell/patch \eqn{i} at time \eqn{t}, is drawn from the following distribution:\cr
 
 \ifelse{html}{\out{&emsp;&emsp;N<sub>juv</sub>(i,t) = Poisson( R(i,t) / (1+|R(i,t) - 1| &ast; (N(i,t) / K(i,t))<sup>b<sub>c</sub></sup> ) ) } }{\deqn{N_juv(i,t) = Poisson( R(i,t) / (1 + |R(i,t) - 1|*( N(i,t) / K(i,t) )^bc ) ) } }
 
@@ -64,7 +64,8 @@ offspring produced by each female. To maintain equivalence between the asexual a
 \ifelse{html}{\out{&emsp;&emsp;N<sub>juv</sub>(i,t) = Poisson( 2 R(i,t) / (1+|R(i,t) - 1| &ast; (N(i,t) / K(i,t) )<sup>b<sub>c</sub></sup> ) ) } }{\deqn{N_juv(i,t) = Poisson( 2 R(i,t) / (1 + |R(i,t) - 1|*( N(i,t) / K(i,t) )^bc ) ) } }
 
 \emph{Complex mating system:}  (\code{ReproductionType=2})\cr
-More complex and flexible mating system. Mating is explicitly modelled through a mating function (Lindström & Kokko 1998, Legendre 2004, Bessa-Gomes et al. 2010), where the number of mated females \eqn{c} is given by:
+More complex and flexible mating system. Mating is explicitly modelled through a mating function
+\insertCite{lindstrom1998,legendre2004,bessa2010}{RangeShiftR}, where the number of mated females \eqn{c} is given by:
 \deqn{c = f * min(1, 2hm/(f+hm) )}
 where \eqn{f} and \eqn{m} are the numbers of potentially reproductive females and males, respectively, and \eqn{h} is the maximum harem size \code{Harem}, i.e. the maximum number of pair bonds that a male can establish. \eqn{h=1} corresponds to monogamy, \eqn{0<h<1} to polyandry
 and \eqn{h>1} to polygyny. Each potentially reproductive female has a probability of reproducing \ifelse{html}{\out{p<sub>r</sub>}}{\eqn{p_r}} given by:
@@ -74,9 +75,12 @@ involved, the father (of all the offspring produced by a single female in a sing
 \cr
 Populations with overlapping generations, i.e. with \strong{with stage-structure} are the appropriate choice for species in which generations can overlap and individuals can be classified in different stages
 (e.g. immature vs. breeding individuals) differing in their demographic parameters. Individuals are characterized by their age and stage. Each stage has a certain fecundity (which will be used as expected value of the Poisson distribution for reproduction), survival
-and probability of developing to the next stage. The parameters are provided as classical transition matrices (Caswell 2001) through a \code{\link[RangeShiftR]{StageStructure}}
+and probability of developing to the next stage. The parameters are provided as classical transition matrices \insertCite{caswell2001}{RangeShiftR} through a \code{\link[RangeShiftR]{StageStructure}}
 parameter object. For more information on the population dynamics in this case, see the details there.
 }
 \references{
-Maynard-Smith and Slatkin (1973), Caswell (2001), Lindström & Kokko (1998), Legendre (2004), Bessa-Gomes et al. (2010)
+\insertAllCited{}
+}
+\author{
+Anne-Kathleen Malchow
 }

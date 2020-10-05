@@ -39,8 +39,8 @@ a parameter object of class "SettlementParams"
 Settlement, or immigration, is the last phase of dispersal, when the organism stops in a new cell or patch of breeding habitat. The
 available settlement conditions vary depending on the used \code{\link[RangeShiftR]{Transfer}} type. In any case, dispersing individuals
 are not allowed to settle in their natal cell or patch and can only settle in suitable habitat.\cr
-The settlement rules can be stage- or sex-specific or both (set \code{StageDep}, \code{SexDep}). If a movement process is used,
-density-dependence (\code{DensDep}) and inter-individual variability (\code{IndVar}) available.
+\emph{RangeShiftR} incorporates some basic settlement rules that can be stage- or sex-specific or both (set \code{StageDep}, \code{SexDep}).
+If a movement process is used, density-dependence (\code{DensDep}) and inter-individual variability (\code{IndVar}) available.
 }
 \details{
 The settlement phase is determined by a suite of strategies, behaviours and reaction norms that lead individuals to the decision to stop
@@ -50,8 +50,8 @@ variability and context dependencies.
 
 The type of implemented settlement rules depends on the movement model utilized for the \code{\link[RangeShiftR]{Transfer}}.
 In any case, dispersing individuals are not allowed to settle in their natal cell or patch.\cr
-The settlement rules can be stage- or sex-specific or both (set \code{StageDep}, \code{SexDep}). Inter-individual variability (\code{IndVar})
-is implemented only for movement processes and the three traits
+\emph{RangeShiftR} incorporates some basic settlement rules that can be stage- or sex-specific or both (set \code{StageDep}, \code{SexDep}).
+Inter-individual variability (\code{IndVar}) is implemented only for movement processes and the three traits
 determining density-dependent settlement (\ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}}, \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{α_S}},
 \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}}; see below), and if so, it may not be stage-dependent.\cr
 
@@ -100,8 +100,8 @@ In the case of stage-structured models the above equation is modified to:
 
 \ifelse{html}{\out{&emsp;&emsp; p<sub>S</sub>(i,t) = S<sub>0</sub> / ( 1 + e<sup>-&alpha;<sub>S</sub> (b(i,t) * N(i,t) - &beta;<sub>S</sub>) </sup> ) } }{\deqn{ p_S(i,t) = S_0 / ( 1 + exp[-α_S (b(i,t) N(i,t) - β_S) ] ) } }
 
-In the first case, \eqn{K(i,t)} is the carrying capacity of the cell/patch \eqn{i} at time \eqn{t} given by \code{HabQuality}.
-In the latter case, \eqn{b(i,t)} represents the strength of density dependence that is given by the inverse of the habitat quality \code{HabQuality}.\cr
+In the first case, \eqn{K(i,t)} is the carrying capacity of the cell/patch \eqn{i} at time \eqn{t} given by \code{K_or_DensDep}.
+In the latter case, \eqn{b(i,t)} represents the strength of density dependence that is given by the inverse of \code{K_or_DensDep}.\cr
 Further, \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}} is the maximum settlement probability,
 \eqn{N(i,t)} is the number of individuals in the cell/patch \eqn{i} at time \eqn{t},
 \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}} is the inflection point of the function and
@@ -139,6 +139,7 @@ For example, in the case of density-, stage- and sex-dependent settlement with n
  \out{&emsp;} 2 \tab \out{&emsp;} 0 \tab \out{&emsp;} 0.05 \tab \out{&emsp;} 1.0 \tab \out{&emsp;} 1.0 \cr
  \out{&emsp;} 2 \tab \out{&emsp;} 1 \tab \out{&emsp;} 0.05 \tab \out{&emsp;} 1.0 \tab \out{&emsp;} 1.0
 }
+
 To avoid having individuals moving perpetually because they cannot find suitable conditions to settle, the model requires a maximum number
 of steps (\code{MaxSteps}) or a per-step mortality (within the \code{Transfer} object), or both, to be set.
 The maximum number of steps defines the maximum time length of the transfer period.
@@ -149,7 +150,7 @@ stop where it is and the next season, if still alive, it will move again.
 
 An additional rule that can be set constitutes a minimum number of steps (\code{MinSteps}) that each individual must take before settlement can take
 place. This is useful for simulating situations where animals, in a ‘dispersal mode’, will keep moving and not consider settling even
-if suitable conditions are available.
+if suitable conditions are available \insertCite{@e.g. @barton2012risky}{RangeShiftR}.
 
 \emph{Mating requirements}\cr
 Sexual species may be required to find a mate, i.e. there has to be at least one individual of the opposite sex present for the cell/patch to be considered suitable for settlement.
@@ -158,4 +159,10 @@ Density-dependence and mating requirements can also be combined together to dete
 The application of this mating condition can be switched on or off using the parameter \code{FindMate}, which takes either a single
 logical if \code{StageDep=FALSE} and \code{SexDep=FALSE} or, otherwise, a logical vector of same length as the number rows in
 \code{Settle}, using same order.
+}
+\references{
+\insertAllCited{}
+}
+\author{
+Anne-Kathleen Malchow
 }

@@ -34,6 +34,16 @@ This option (called \code{IndVar}) can be enabled for each dispersal phase in th
 to set the associated parameters. Additionally, the \code{\link[RangeShiftR]{Genetics}} module must be defined.
 }
 \details{
+Dispersal is defined as movement leading to spatial gene flow, and it typically involves three phases:
+emigration, transfer and settlement
+ \insertCite{stenseth1992,clobert2001,clobert2009,clobert2012,bowler2005,ronce2007}{RangeShiftR}.\cr
+
+The key role of dispersal in species persistence and responses to environmental change is increasingly recognized \insertCite{travis2013dispersal}{RangeShiftR}.
+Moreover, the importance of modelling dispersal as a complex process, explicitly considering its three phases, each of which has
+´its own mechanisms and costs, has been recently highlighted \insertCite{bonte2012costs,travis2012modelling,travis2013dispersal}{RangeShiftR}.
+The implementation of the dispersal process in \emph{RangeShiftR} is based on these recent frameworks and the substantial dispersal
+theory that has been developed so far \insertCite{clobert2012}{RangeShiftR}.
+
 It is possible to model all three phases - emigration, transfer and settlement - with stage- and/or sex-specific parameters via the
 switches \code{StageDep} and \code{SexDep} in the respective functions. In the case of sex-dependence, the number of traits is doubled, with
 one set coding for the trait in females and the other for the trait in males. As well as being sex-biased, all dispersal phases can be
@@ -42,11 +52,14 @@ stage-biased, meaning that parameters can vary for different stage or age classe
 The options of inter-individual variability in the various dispersal traits is enabled by setting \code{IndVar=TRUE} for the respective transfer phase
 module and defining the genetic module to simulate heritability and evolution of traits (\code{\link[RangeShiftR]{Genetics}}).\cr
 For each such heritable dispersal trait, this requires to set the mean and standard deviation of the initial distribution of the trait values,
-(instead of a contant value as in the case of \code{IndVar=FALSE})
+(instead of a constant value as in the case of \code{IndVar=FALSE})
 as well as the \code{MutationScale} (see \code{\link[RangeShiftR]{Genetics}} documentaion).\cr
 
 Note, however, that not all combinations of sex-/stage-dependencies with inter-individual variability are implemented.\cr
 }
 \references{
-Stenseth & Lidicker 1992; Clobert et al. 2001, 2009, 2012; Bowler & Benton 2005; Ronce 2007, Hoban et al. 2011; Scheiner et al. 2012
+\insertAllCited{}
+}
+\author{
+Anne-Kathleen Malchow
 }

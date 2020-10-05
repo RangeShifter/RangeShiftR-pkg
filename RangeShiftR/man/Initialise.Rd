@@ -28,8 +28,8 @@ Initialise(InitType = 0, FreeType = 1, SpType = 0, NrCells, InitIndsFile = "NULL
 For informaton on the required file format see the Details below.}
 
 \item{InitDens, IndsHaCell}{Number of individuals to be seeded in each cell/patch:\cr
-\code{InitDens} = \eqn{0}: At habitat quality \code{HabQuality},\cr
-\code{InitDens} = \eqn{1}: At half habitat quality (default),\cr
+\code{InitDens} = \eqn{0}: At \code{K_or_DensDep},\cr
+\code{InitDens} = \eqn{1}: At half \code{K_or_DensDep} (default),\cr
 \code{InitDens} = \eqn{2}: Set the number of individuals per cell/hectare to initialise in \code{IndsHaCell}.}
 
 \item{PropStages}{For \code{\link[RangeShiftR]{StageStructure}}d models only: Proportion of individuals initialised in each stage.
@@ -68,28 +68,34 @@ with additional options for each type, see the Details.\cr
 Additionally, initial density and, if applicable, initial stage and age distributions can be set.
 }
 \details{
+## Initialisation Types
 \emph{Initialisation Types}\cr
-1) \emph{Free Initialisation.} (\code{InitType}\eqn{ = 0}) The population is initialised according to suitable habitat in the landscape.
+\itemize{
+    \item \emph{Free Initialisation.} (\code{InitType}\eqn{ = 0})\cr The population is initialised according to suitable habitat in the landscape.
 Either all (\code{FreeType}\eqn{=1}), or a specified number (\code{NrCells}) of randomly selected (\code{FreeType}\eqn{=0}) cells/patches
-will be seeded. When using an artificial landscape, this is the only option available.\cr
-2) \emph{From loaded species distribution map.} (\code{InitType}\eqn{ = 1}) The population is initialised according to a loaded
+will be seeded. When using an artificial landscape, this is the only option available.
+    \item \emph{From loaded species distribution map.} (\code{InitType}\eqn{ = 1})\cr The population is initialised according to a loaded
 species distribution map, which needs to be provided through the module \code{\link[RangeShiftR]{ImportedLandscape}}, option \code{SpDistFile}.
 All habitat cells/patches within either all (\code{SpType}\eqn{=0}), or a specified number (\code{NrCells}) of randomly selected
-(\code{SpType}\eqn{=1}) presence cells (which can have a lower resolution) specified by this distribution map will seeded.\cr
-3) \emph{From initial individuals list file.} (\code{InitType}\eqn{ = 2}) The population is initialised according to a list of specific
+(\code{SpType}\eqn{=1}) presence cells (which can have a lower resolution) specified by this distribution map will seeded.
+    \item \emph{From initial individuals list file.} (\code{InitType}\eqn{ = 2})\cr The population is initialised according to a list of specific
 individuals (of given sex, age and stage, if appropriate) in specified cells/patches. This option allows simulation of a reintroduction
 scenario.\cr The list has to be loaded from a file in the path given by \code{InitIndsFile}. It must be a tab-seperated list with
 explicit column headers and one row for each individual to be initialized. The expected column headers depend on the model settings and
 must match the following order exactly: 'Year', 'Species', for cell-/patch-based: 'X', 'Y' / 'PatchID', 'Ninds', for sexual model: 'Sex',
 for stage-structured population: 'Age', 'Stage'.
+}
 
 \emph{Initialial density, stage, and age}\cr
 For \code{InitType}\eqn{ = {0,1}}, the number of individuals that should be seeded in each cell or patch has to be set.
-Has no effect for \code{InitType}\eqn{ = 2}. There are three options:
-1) \emph{At} \code{HabQuality}. (\code{InitDens}\eqn{=0}) The cell/patch will be saturated at its habitat quality.
-2) \emph{At half} \code{HabQuality}. (\code{InitDens}\eqn{=1}) The cell/patch will be saturated at half its habitat quality.
-3) \emph{Set value} \code{IndsHaCell}. (\code{InitDens}\eqn{=2}) Set the number of individuals to be seeded in each cell or the density
+There are three options:
+\itemize{
+    \item \emph{At} \code{K_or_DensDep}. (\code{InitDens}\eqn{=0})\cr The cell/patch will be saturated at its respective \eqn{K} or \eqn{1/b}.
+    \item \emph{At half} \code{K_or_DensDep}. (\code{InitDens}\eqn{=1})\cr The cell/patch will be saturated at half its \eqn{K} or \eqn{1/b}.
+    \item \emph{Set value} \code{IndsHaCell}. (\code{InitDens}\eqn{=2})\cr Set the number of individuals to be seeded in each cell or the density
 in each patch (in units of individuals per hectare).
+}
+(These settings have no effect for \code{InitType}\eqn{ = 2}.)
 
 In the case of \code{\link[RangeShiftR]{StageStructure}}d models, the initial stage and age distributions must be specified.
 If \code{InitType}\eqn{ = 2}, this is done via the \code{InitIndsFile}, whereas for \code{InitType}\eqn{ = {0,1}},
@@ -98,13 +104,14 @@ to have as many entries as number of stages, starting from the juvenile stage (\
 however the proportion of juveniles must be \eqn{0.0}.
 
 Options for initial age distributions:
-1) \emph{Minimal age} of respective stage. (\code{InitAge}=0)
-2) \emph{Randomise.} (\code{InitAge}=1) Individuals initialised in each stage will get an age randomly sampled between
+\itemize{
+    \item \emph{Minimal age} of respective stage. (\code{InitAge}=0)
+    \item \emph{Randomise.} (\code{InitAge}=1)\cr Individuals initialised in each stage will get an age randomly sampled between
 the minimum and the maximum age for their respective stage.
-3) \emph{Quasi-equilibrium.} (\code{InitAge}=2) Initial age distribution is set approximately in accordance with the number of years
+    \item \emph{Quasi-equilibrium.} (\code{InitAge}=2)\cr Initial age distribution is set approximately in accordance with the number of years
 taken to pass through the stage and the (female) survival rate of the respective stage.
-
-(Has no effect for \code{InitType}\eqn{ = 2})
+}
+(These settings have no effect for \code{InitType}\eqn{ = 2}.)
 
 \emph{Additional options for free initialisation}\cr
 In the case of free initialisation, either all or a specified number of randomly selected cells/patches will be seeded.
@@ -131,7 +138,7 @@ This feature is provided only for expansion in a northerly direction (increasing
 established in the southern part of the landscape (low Y values). To turn it off, set \code{RestrictRows = 0}.
 }
 \examples{
-init <- Initialise() # use all defaults (for stage-structured model setting PropStages is required)
+init <- Initialise() # use all defaults (a stage-structured model requires setting PropStages)
 }
 \author{
 Anne-Kathleen Malchow
