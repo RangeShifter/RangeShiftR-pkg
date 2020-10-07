@@ -45,6 +45,7 @@ using namespace std;
 #include "Landscape.h"
 #include "Species.h"
 #include "SubCommunity.h"
+#include "RSrandom.h"
 #include "RandomCheck.h"
 #include "Model.h"
 
@@ -54,9 +55,8 @@ using namespace std;
 
 //Rcpp::List run_from_R(Rcpp::S4, Rcpp::String); // entry functions from R
 //Rcpp::List BatchMainFile(string, Rcpp::S4);	 // missing dependend functions for file reading/parsing, from BatchMode.h/.cpp
-#if RSDEBUG
 Rcpp::List BatchMainR(std::string, Rcpp::S4);
-#endif // RSDEBUG
+
 bool ReadLandParamsR(Landscape*, Rcpp::S4);
 int ReadDynLandR(Landscape*, Rcpp::S4);
 int ReadParametersR(Landscape*, Rcpp::S4);
@@ -145,7 +145,7 @@ extern string patchfilename;	// see [NOT YET CODED FOR GUI] (VCL) OR Main.cpp (b
 extern string mortfilename;	// see [NOT YET CODED FOR GUI] (VCL) OR Main.cpp (batch)
 #endif // TEMPMORT
 #if !CLUSTER || RS_RCPP
-//extern std::uint32_t RS_random_seed;			// see RSrandom.cpp
+extern std::uint32_t RS_random_seed;			// see RSrandom.cpp
 #endif // !CLUSTER || RS_RCPP
 
 //---------------------------------------------------------------------------

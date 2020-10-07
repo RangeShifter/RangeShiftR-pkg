@@ -10,6 +10,7 @@ Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster);
 RcppExport SEXP _RangeShiftR_BatchMainR(SEXP dirpathSEXP, SEXP ParMasterSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< std::string >::type dirpath(dirpathSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4 >::type ParMaster(ParMasterSEXP);
     rcpp_result_gen = Rcpp::wrap(BatchMainR(dirpath, ParMaster));

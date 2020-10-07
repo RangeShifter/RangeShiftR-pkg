@@ -276,7 +276,9 @@ Rcpp::List BatchMainFile(string dirpath, Rcpp::S4 ParMaster)
 //------ R interface --------------------------------------------------------
 //---------------------------------------------------------------------------
 
-//[[Rcpp::export(name = "run_from_R", rng=false)]]
+//, rng=false]
+
+//[[Rcpp::export(name = "run_from_R")]]
 Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
 {
 	// int i,t0,t1,Nruns;
@@ -577,14 +579,14 @@ Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
 
 	if(seed == 0) { // don't set seed from R
 #if RSDEBUG
-		seed = 666;
+		pRandom = new RSrandom(666);  // fixed debug seed
 #else
-		seed = -1;  // random seed
+		pRandom = new RSrandom(-1);  // random seed
 #endif
 	}
-	pRandom = new RSrandom(seed);
+	else pRandom = new RSrandom(seed);
 
-	Rcpp::RNGScope rngScope;
+	//Rcpp::RNGScope rngScope;
 
 #if RANDOMCHECK
 	randomCheck();
@@ -592,10 +594,10 @@ Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
 	Rcpp::List list_outPop;
 	if(errors == 0) {
 		Rcpp::Rcout << endl << "Run Simulation(s)";
-		if(seed < 0) {
-			Rcpp::Rcout << " with random seed";
+		if(seed > 0) {
+			Rcpp::Rcout << " with seed " << seed;
 		}else{
-			Rcpp::Rcout << " with seed " << RS_random_seed;
+			Rcpp::Rcout << " with random seed";
 		}
 		Rcpp::Rcout << " ..." << endl;
 
