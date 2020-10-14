@@ -276,7 +276,6 @@ Rcpp::List BatchMainFile(string dirpath, Rcpp::S4 ParMaster)
 //------ R interface --------------------------------------------------------
 //---------------------------------------------------------------------------
 
-//, rng=false]
 
 //[[Rcpp::export(name = "run_from_R")]]
 Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
@@ -977,7 +976,7 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 
 #if RS_CONTAIN
 		// check economic / environmental damage map filename  /* *** not implemented in R-version
-		/* 
+		/*
 		ftype = "DamageFile";
 		bLandFile >> intext;
 		if (intext != "NULL") {
@@ -1015,7 +1014,7 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 
 #if SPATIALMORT
 			// check mortality map filenames  /* *** not implemented in R-version
-			/* 
+			/*
 			bool filenull[2];
 			for (int mm = 0; mm < 2; mm++) {
 				int fnum = mm+1;
@@ -2050,14 +2049,13 @@ int ReadEmigrationR(Rcpp::S4 ParMaster)
 	// simulation = Rcpp::as<int>(EmigParamsR.slot("Simulation")); // REMOVED in R-interface // Must match simulation
 	// numbers in ParamParams
 	emig.densDep = Rcpp::as<bool>(EmigParamsR.slot("DensDep"));
-	pSpecies->setFullKernel(Rcpp::as<bool>(EmigParamsR.slot(
-	        "UseFullKern"))); // Emigration rate derived from kernel. Only for kernel-based transfer and DensDep = 0
+	pSpecies->setFullKernel(Rcpp::as<bool>(EmigParamsR.slot("UseFullKern"))); // Emigration rate derived from kernel. Only for kernel-based transfer and DensDep = 0
 	emig.stgDep = Rcpp::as<bool>(EmigParamsR.slot("StageDep")); // Stage-dependent emigration. Must be 0 if IndVar is 1
 	emig.sexDep = Rcpp::as<bool>(EmigParamsR.slot("SexDep"));   // Sex-dependent emigration.
 	emig.indVar =
 	    Rcpp::as<bool>(EmigParamsR.slot("IndVar")); // Inter-individual variability. Must be 0 if StageDep is 1
 	if(stagestruct && emig.indVar){
-		emigstage = Rcpp::as<bool>(EmigParamsR.slot("EmigStage")); // Stage which emigrates. Required for stage-strucutred population having IndVar = 1
+		emigstage = Rcpp::as<int>(EmigParamsR.slot("EmigStage")); // Stage which emigrates. Required for stage-strucutred population having IndVar = 1
 		if(emigstage >= 0 && emigstage < sstruct.nStages)
 			emig.emigStage = emigstage;
 		else

@@ -3284,11 +3284,15 @@ if (ngroups > 0) {
 	}
 	groups.clear();
 	groups = survivors;
+#if RS_RCPP
+	shuffle(groups.begin(), groups.end(), pRandom->getRNG() );
+#else
 #if !RSDEBUG
 	// do not randomise individuals in RSDEBUG mode, as the function uses rand()
 	// and therefore the randomisation will differ between identical runs of RS
 	random_shuffle (groups.begin(), groups.end());
-#endif
+#endif // !RSDEBUG
+#endif // RS_RCPP
 }
 }
 #endif
@@ -3314,11 +3318,16 @@ if (ninds > 0) {
 	}
 	inds.clear();
 	inds = survivors;
+#if RS_RCPP
+	shuffle(inds.begin(), inds.end(), pRandom->getRNG() );
+#else
 #if !RSDEBUG
 	// do not randomise individuals in RSDEBUG mode, as the function uses rand()
 	// and therefore the randomisation will differ between identical runs of RS
 	random_shuffle (inds.begin(), inds.end());
-#endif
+#endif // !RSDEBUG
+#endif // RS_RCPP
+
 }
 }
 

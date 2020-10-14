@@ -301,15 +301,13 @@ return  gamma;
 
 #else // if RS_RCPP 
 
-	/*
 	#if RSDEBUG
 	#include "Parameters.h"
 	extern paramSim *paramsSim;
 	//ofstream RSRANDOMLOG;
 	#endif
-	*/
 
-	std::uint32_t RS_random_seed;
+	std::uint32_t RS_random_seed = 0;
 
 	// C'tor
 	// if parameter seed is negative, a random seed will be generated, else it is used as seed
@@ -358,6 +356,11 @@ return  gamma;
 		delete gen;
 		if (pRandom01 != 0) delete pRandom01;
 		if (pNormal != 0) delete pNormal;
+	}
+
+	mt19937 RSrandom::getRNG(void) {
+		// return random number generator
+		return *gen;
 	}
 
 	double RSrandom::Random(void) {
