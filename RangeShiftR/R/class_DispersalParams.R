@@ -11,17 +11,22 @@
 #' Emigration - the first phase of dispersal - is modelled as the probability that an individual leaves its natal patch during the present year (or season).
 #' It is constant by default, but can be set to be density-dependent (\code{DensDep}) and/or to vary for each individual (\code{IndVar}). In case of a stage-structured/sexual
 #' population model, the emigration probabilities can also vary with stage/sex (\code{StageDep/SexDep}). If inter-individual variability is
-#' enabled, the emigration traits can also be allowed to evolve by setting the mutation size(s) \code{MutationScales}.
+#' enabled, the emigration traits can also be allowed to evolve (also set \code{TraitScaleFactor}).
 #'
-#' @usage Emigration(DensDep = FALSE, IndVar = FALSE, StageDep = FALSE, SexDep = FALSE,
-#'            EmigProb = 0.0, MutationScales, EmigStage, UseFullKern = FALSE)
+#' @usage Emigration(EmigProb = 0.0,
+#'            SexDep = FALSE, StageDep = FALSE,
+#'            DensDep = FALSE,
+#'            IndVar = FALSE,
+#'            TraitScaleFactor,
+#'            EmigStage,
+#'            UseFullKern = FALSE)
+#' @param EmigProb Matrix containing all parameters (#columns) to determine emigration probabilities for each stage/sex (#rows). Its structure depends on the other parameters, see the Details.
+#' If the emigration probability is constant (i.e. \code{DensDep, IndVar, StageDep, SexDep = FALSE}), \code{EmigProb} can take a single numeric. Defaults to \eqn{0.0}.
+#' @param SexDep Sex-dependent emigration probability? (default: \code{FALSE})
+#' @param StageDep Stage-dependent emigration probability? (default: \code{FALSE}) Must be \code{FALSE} if \code{IndVar=TRUE}.
 #' @param DensDep Density-dependent emigration probability? (default: \code{FALSE})
 #' @param IndVar Individual variability in emigration traits? (default: \code{FALSE}) Must be \code{FALSE} if \code{StageDep=TRUE}.
-#' @param StageDep Stage-dependent emigration probability? (default: \code{FALSE}) Must be \code{FALSE} if \code{IndVar=TRUE}.
-#' @param SexDep Sex-dependent emigration probability? (default: \code{FALSE})
-#' @param EmigProb Matrix containing all parameters (#columns) to determine emigration probabilities for each stage/sex (#rows). Its structure depends on the above four parameters, see the Details.
-#' If the emigration probability is constant (i.e. all four above parameters are set to \code{FALSE}), \code{EmigProb} can take a single numeric. Defaults to \eqn{0.0}.
-#' @param MutationScales Required if \code{IndVar=TRUE}: The scaling factor(s) for the mutation of emigration traits. A numeric of length \eqn{1} (if \code{DensDep=FALSE}) or \eqn{3} (if \code{DensDep=TRUE}).
+#' @param TraitScaleFactor Required if \code{IndVar=TRUE}: The scaling factor(s) for emigration traits. A numeric of length \eqn{1} (if \code{DensDep=FALSE}) or \eqn{3} (if \code{DensDep=TRUE}).
 #' @param EmigStage Required for stage-structured populations with \code{IndVar=TRUE}: Stage which emigrates. (\code{StageDep} must be \code{FALSE})
 #' @param UseFullKern Applicable only if transfer phase is modelled by a \code{\link[RangeShiftR]{DispersalKernel}} and \code{DensDep=FALSE}: Shall the emigration probability be derived from dispersal kernel?
 #' @details Emigration is modelled as the probability \eqn{d} that an individual leaves its natal patch during the present year or season (every reproductive event
@@ -35,7 +40,7 @@
 #'
 #' In the case of stage-structured models this equation is modified to:
 #'
-#' \ifelse{html}{\out{&emsp;&emsp; d(i,t) = D<sub>0</sub> / ( 1 + e<sup>-&alpha;sub>E</sub> (b(i,t) * N(i,t) - &beta;sub>E</sub>) </sup> ) } }{\deqn{ d(i,t) = D_0 / ( 1 + exp[-α_E (b(i,t) N(i,t) - β_E) ] ) } }.
+#' \ifelse{html}{\out{&emsp;&emsp; d(i,t) = D<sub>0</sub> / ( 1 + e<sup>-&alpha;sub>E</sub> (b(i,t) * N(i,t) - &beta;sub>E</sub>) </sup> ) } }{\deqn{ d(i,t) = D_0 / ( 1 + exp[-α_E (b(i,t) N(i,t) - β_E) ] ) } }
 #'
 #' In the first case, \eqn{K(i,t)} is the carrying capacity of the cell/patch \eqn{i} at time \eqn{t} given by \code{K_or_DensDep}.
 #' In the latter case, \eqn{b(i,t)} represents the strength of density dependence and is given by the inverse of \code{K_or_DensDep}.\cr
@@ -52,17 +57,18 @@
 #'
 #' The emigration probability can be allowed to vary between individuals (set \code{IndVar=TRUE}) and to evolve. In the this case, individuals exhibit either one trait
 #' determining the density-independent \eqn{d} (when \code{DensDep=FALSE}), or the three traits \ifelse{html}{\out{D<sub>0</sub>}}{\eqn{D_0}}, \eqn{α} and
-#' \eqn{β} determining the density-dependent emigration probability (when \code{DensDep=TRUE}).
-#' For each tiations must be set (instead of only one constant value).
+#' \eqn{β} determining the density-dependent emigration probability (when \code{DensDep=TRUE}).\cr
+#' For each trait the initial distribution in the population (as mean and standard variation) must be set in \code{EmigProb} (instead of only one constant value),
+#' as well as their scaling factors in \code{TraitScaleFactor} (see \code{\link[RangeShiftR]{Genetics}}).
 #' Also, if \code{IndVar=TRUE} is set for a stage-structured population, it is required to specify the stage which emigrates via \code{EmigStage}.
 #'
 #' It is possible to model sex-specific emigration strategies (set \code{SexDep=TRUE}) \insertCite{greenwood1980mating,lawson2007advances}{RangeShiftR}.
-#' In this case the number of loci is doubled; one set coding for the trait
-#' in females and the other for the trait in males. As well as being sex-biased, emigration parameters can be stage-biased (set \code{StageDep=TRUE}) when modelling
-#' stage-structured populations. However, the current version does not accommodate inter-individual variation in emigration strategies when they are stage-dependent.
+#' In this case the number of traits is doubled; one set coding for the trait(s) in females and the other for the trait(s) in males.
+#' As well as being sex-biased, emigration parameters can be stage-biased (set \code{StageDep=TRUE}) when modelling stage-structured populations.
+#' However, the current version does not accommodate inter-individual variation in emigration strategies when they are stage-dependent.
 #'
 #' The parameters that determine the emigration probabilities have to be provided via \code{EmigProb}, which generally takes a matrix, or - if only a single constant probability is
-#' used - a single numeric. The format of the matrix is defined as follows: The number of columns depend on the options \code{DensDep} and \code{IndVar}. If \code{DensDep=FALSE}, the
+#' used (i.e. \code{DensDep, IndVar, StageDep, SexDep = FALSE}) - a single numeric. The format of the matrix is defined as follows: The number of columns depend on the options \code{DensDep} and \code{IndVar}. If \code{DensDep=FALSE}, the
 #' density-independent probability \eqn{d} must be specified. If \code{DensDep=TRUE}, the functional parameters \ifelse{html}{\out{D<sub>0</sub>}}{\eqn{D_0}}, \eqn{α} and \eqn{β} (cp. equation above) must be specified.
 #' Additionally, if \code{IndVar=FALSE}, these parameters are fixed, but if \code{IndVar=TRUE} each of them is replaced by two parameters: their respective mean and
 #' standard deviation. They are used to normally distribute the traits values among the individuals of the initial population.
@@ -102,7 +108,7 @@
 #'
 #' # inter-individual variation
 #' emigmat_2 <- matrix(c(0,.7,.1,20,7,.2,.01,1,.9,.05,40,4,.5,.05), byrow = TRUE, ncol = 7)
-#' emig_2 <- Emigration(DensDep = TRUE, IndVar = TRUE, SexDep = TRUE, EmigProb = emigmat_2, MutationScales = c(.1,7,.05))
+#' emig_2 <- Emigration(DensDep = TRUE, IndVar = TRUE, SexDep = TRUE, EmigProb = emigmat_2, TraitScaleFactor = c(.1,7,.05))
 #' plotProbs(emig_2)
 #' @references
 #'         \insertAllCited{}
@@ -115,7 +121,7 @@ Emigration <- setClass("EmigrationParams", slots = c(DensDep = "logical",
                                                      StageDep = "logical",
                                                      SexDep = "logical",
                                                      EmigProb = "matrix_OR_numeric",
-                                                     MutationScales = "numeric",
+                                                     TraitScaleFactor = "numeric",
                                                      EmigStage = "integer_OR_numeric",
                                                      UseFullKern = "logical")
                        , prototype = list(DensDep = FALSE,
@@ -123,11 +129,11 @@ Emigration <- setClass("EmigrationParams", slots = c(DensDep = "logical",
                                           StageDep = FALSE,
                                           SexDep = FALSE,
                                           EmigProb = matrix(data = 0.0, nrow = 1, ncol = 1),
-                                          #MutationScales = NA_real_,
+                                          #TraitScaleFactor = NA_real_,
                                           #EmigStage = 0L,
                                           UseFullKern = FALSE)
 )
-        # discuss MutationScales in the Details
+        # discuss TraitScaleFactor in the Details
 
 
 setValidity("EmigrationParams", function(object) {
@@ -207,30 +213,30 @@ setValidity("EmigrationParams", function(object) {
         }
     }
     if (object@IndVar) {
-        if (anyNA(object@MutationScales) || (length(object@MutationScales)==0)) {
-            msg <- c(msg, "MutationScales must be set!")
+        if (anyNA(object@TraitScaleFactor) || (length(object@TraitScaleFactor)==0)) {
+            msg <- c(msg, "TraitScaleFactor must be set!")
         }
         else{
             if (object@DensDep) {
-                if (length(object@MutationScales)!=3) {
-                    msg <- c(msg, "MutationScales must have length 3 if DensDep=TRUE!")
+                if (length(object@TraitScaleFactor)!=3) {
+                    msg <- c(msg, "TraitScaleFactor must have length 3 if DensDep=TRUE!")
                 }
                 else {
-                    if (object@MutationScales[1] <= 0.0 || object@MutationScales[1] > 1.0 ) {
-                        msg <- c(msg, "MutationScale μ(D0) must be in the half-open interval (0,1] !")
+                    if (object@TraitScaleFactor[1] <= 0.0 || object@TraitScaleFactor[1] > 1.0 ) {
+                        msg <- c(msg, "TraitScaleFactor μ(D0) must be in the half-open interval (0,1] !")
                     }
-                    if (any(object@MutationScales[2:3] <= 0.0 )) {
-                        msg <- c(msg, "MutationScales μ(α) and μ(β) must be strictly positive !")
+                    if (any(object@TraitScaleFactor[2:3] <= 0.0 )) {
+                        msg <- c(msg, "TraitScaleFactor μ(α) and μ(β) must be strictly positive !")
                     }
                 }
             }
             else {
-                if (length(object@MutationScales)!=1) {
-                    msg <- c(msg, "MutationScales must have length 1 if DensDep=FALSE!")
+                if (length(object@TraitScaleFactor)!=1) {
+                    msg <- c(msg, "TraitScaleFactor must have length 1 if DensDep=FALSE!")
                 }
                 else {
-                    if (object@MutationScales <= 0 || object@MutationScales > 1 ) {
-                        msg <- c(msg, "MutationScale μ(D0) must be in the half-open interval (0,1] !")
+                    if (object@TraitScaleFactor <= 0 || object@TraitScaleFactor > 1 ) {
+                        msg <- c(msg, "TraitScaleFactor μ(D0) must be in the half-open interval (0,1] !")
                     }
                 }
             }
@@ -262,9 +268,9 @@ setMethod("initialize", "EmigrationParams", function(.Object, ...) {
     #     warning(this_func, "Using default EmigProb = 0.0", call. = FALSE)
     # }
     if (!.Object@IndVar) {
-        .Object@MutationScales = -9L
-        if (!is.null(args$MutationScales)) {
-            warning(this_func, "MutationScales", warn_msg_ignored, "since IndVar = FALSE.", call. = FALSE)
+        .Object@TraitScaleFactor = -9L
+        if (!is.null(args$TraitScaleFactor)) {
+            warning(this_func, "TraitScaleFactor", warn_msg_ignored, "since IndVar = FALSE.", call. = FALSE)
         }
         .Object@EmigStage = -9L
         if (!is.null(args$EmigStage)) {
@@ -294,7 +300,7 @@ setMethod("show", "EmigrationParams", function(object){
     cat("   Emigration probabilities:\n")
     print(object@EmigProb)
     if (object@IndVar) {
-        cat("   MutationScales =", object@MutationScales, "\n")
+        cat("   TraitScaleFactor =", object@TraitScaleFactor, "\n")
         if (!is.na(object@EmigStage) && length(object@EmigStage)!=0) {
             cat("   EmigStage =", object@EmigStage, "\n")
         }
@@ -392,15 +398,16 @@ setMethod("plotProbs", "EmigrationParams", function(x, stage = NULL, sex = NULL,
 #'
 #' @details
 #' The choice between the two main methods to model the transfer phase, i.e. phenomenological dispersal kernels or mechanistic movement processes
-#' (SMS and CRW) depends on the information available for a given species and the level of detail that is considered important to represent in models
-#' (which will depend on the aim and the scale of the model).
+#' (SMS and CRW) depends on the information available for a given species and on the level of detail that is considered important to represent in
+#' the model (which will depend on its aim and the scale).
 #' \cr
-#' Dispersal is often a costly process for an organism \insertCite{bonte2012costs}{RangeShiftR} and, in some cases, a dispersing individual may suffer mortality. Obtaining a sensible
+#' Dispersal is often a costly process for an organism \insertCite{bonte2012costs}{RangeShiftR} and, in some cases, a dispersing individual may
+#' suffer mortality. Obtaining a sensible
 #' representation of dispersal requires that these mortality costs are described appropriately. The total dispersal mortality experienced will
 #' be the sum of two main sources of mortality: First, as the result of individuals failing to reach suitable habitat, and second, as the result
 #' of increased energetic, time or attritional costs that longer-distance dispersers will experience.
 #' For more details, refer also to the respective Details sections of the different transfer methods.
-#' In parameterising the model, it will be important to recognize this such that dispersal mortality is not double-accounted.
+#' In parameterising the model, it will be important to recognise this such that dispersal mortality is not double-accounted.
 #' @references
 #'         \insertAllCited{}
 #' @author Anne-Kathleen Malchow
@@ -420,30 +427,29 @@ setMethod("show", "TransferParams", function(object){
 #' Set up a Dispersal Kernel
 #'
 #' A method to describe \code{\link[RangeShiftR]{Transfer}}: Dispersal kernels are statistical distributions that are largely used to describe dispersal distances. The main assumption behind them
-#' is that the principal determinant of the probability of an individual dispersing to a particular site is the distance from the starting
-#' location.
-#' \cr
+#' is that the principal determinant of the probability of an individual dispersing to a particular site is the distance from the starting location.\cr
 #' As for the other dispersal phases, movement abilities and strategies are under multiple selective pressures and can evolve separately.
-#' As a result, the realized dispersal kernels will themselves evolve.
+#' As a result, the realised dispersal kernels will themselves evolve.
 #'
-#' @usage DispersalKernel(IndVar = FALSE, DoubleKernel = FALSE,
-#'                 StageDep = FALSE, SexDep = FALSE,
-#'                 Distances = 100,
-#'                 MutationScales, DistMort = FALSE,
+#' @usage DispersalKernel(Distances = 100, DoubleKernel = FALSE,
+#'                 SexDep = FALSE, StageDep = FALSE,
+#'                 IndVar = FALSE,
+#'                 TraitScaleFactor,
+#'                 DistMort = FALSE,
 #'                 MortProb = 0.0, Slope, InflPoint)
-#' @param IndVar Individual variability in dispersal kernel traits? (default: \code{FALSE}) Must be \code{FALSE} if \code{StageDep=TRUE}.
+#' @param Distances Matrix containing all dispersal kernel parameters (#columns) for each stage/sex (#rows). Its structure depends on the other parameters, see the Details.
+#' If the mean dispersal distance is constant (i.e. \code{DensDep, IndVar, StageDep, SexDep = FALSE}), \code{Distances} can take a single numeric. Defaults to \eqn{100}.
 #' @param DoubleKernel Use a mixed (i.e. double negative exponential) kernel? (default: \code{FALSE}) Set probability for using Kernel-1 in matrix \code{Distances}.
-#' @param StageDep Stage-dependent dispersal kernel? (default: \code{FALSE}) Must be \code{FALSE} if \code{IndVar=TRUE}.
 #' @param SexDep Sex-dependent dispersal kernel? (default: \code{FALSE})
-#' @param Distances Matrix containing all dispersal kernel parameters (#columns) for each stage/sex (#rows). Its structure depends on the above four parameters, see the Details.
-#' If the mean dispersal distance is constant (i.e. all four above parameters are set to \code{FALSE}), \code{Distances} can take a single numeric. Defaults to \eqn{100}.
-#' @param MutationScales Required if \code{IndVar=TRUE}: The scaling factor(s) for the mutation of dispersal kernel traits. A numeric of length \eqn{1} (if \code{DoubleKernel=FALSE}) or \eqn{3} (if \code{DoubleKernel=TRUE}).
-#' @param DistMort Distance-dependent mortality? (default: \code{FALSE})
+#' @param StageDep Stage-dependent dispersal kernel? (default: \code{FALSE}) Must be \code{FALSE} if \code{IndVar=TRUE}.
+#' @param IndVar Individual variability in dispersal kernel traits? (default: \code{FALSE}) Must be \code{FALSE}, if \code{StageDep=TRUE}.
+#' @param TraitScaleFactor Required if \code{IndVar=TRUE}: The scaling factor(s) for dispersal kernel traits. A numeric of length \eqn{1} (if \code{DoubleKernel=FALSE}) or \eqn{3} (if \code{DoubleKernel=TRUE}).
+#' @param DistMort Distance-dependent mortality probability? (default: \code{FALSE})
 #' @param MortProb Constant mortality probability. Required if \code{DistMort=FALSE}, defaults to \eqn{0.0}.
-#' @param Slope Required if \code{DistMort=TRUE}: Slope for the mortality distance dependence function.
 #' @param InflPoint Required if \code{DistMort=TRUE}: Inflection point for the mortality distance dependence function.
+#' @param Slope Required if \code{DistMort=TRUE}: Slope at inflection point for the mortality distance dependence function.
 #' @details
-#' Two types of kernels are implemented: negative exponential and a mixed kernel given by two different negative exponentials.
+#' Two types of dispersal kernels are implemented: negative exponential and a mixed kernel given by two different negative exponentials.
 #' Here, kernels are considered as ‘distance kernels’, i.e. the statistical distribution of the probability that an individual will move a
 #' certain distance \insertCite{hovestadt2012evolution,nathan2012dispersal}{RangeShiftR}. These kernels are specifically used for the \code{\link[RangeShiftR]{Transfer}} phase, meaning that they do
 #' not incorporate information on the \code{\link[RangeShiftR]{Emigration}} or \code{\link[RangeShiftR]{Settlement}} probabilities, which are modelled independently. Therefore, dispersal kernels are
@@ -485,15 +491,17 @@ setMethod("show", "TransferParams", function(object){
 #' \ifelse{html}{\out{&emsp;&emsp; p(d; &delta;<sub>1</sub>,&delta;<sub>2</sub>) = p<sub>I</sub> p(d;&delta;<sub>1</sub>) + (1-p<sub>I</sub>) p(d;&delta;<sub>1</sub>)}}{\deqn{ p(d; δ_1,δ_2) = p_I p(d;δ_1) + (1-p_I) p(d;δ_2)}}
 #'
 #' For both types of kernel, inter-individual variability of the kernel traits is possible (set \code{IndVar=TRUE}). Individuals will
-#' carry either one trait for \eqn{δ} or three trait for \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{δ_1}}, \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{δ_2}} and \ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}}, which they inherit from the parents. Dispersal
-#' kernels can also be sex-dependent (set \code{SexDep=TRUE}). In the case of inter-individual variability, individuals will carry either two trait (female \eqn{δ}
-#' and male δ) or six trait (female and male \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{δ_1}}, \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{δ_2}} and \ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}}).
-#' For each trait the initial mean and standard deviations must be set (instead of only one constant value each).\cr
+#' carry either one trait for \eqn{δ} or three traits for \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{δ_1}}, \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{δ_2}} and
+#' \ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}}, which they inherit from their parents.\cr
+#' Dispersal kernels can also be sex-dependent (set \code{SexDep=TRUE}). In the case of inter-individual variability, the number of traits is doubled to two trait (female \eqn{δ}
+#' and male δ) or six traits (female and male \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{δ_1}}, \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{δ_2}} and \ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}}).\cr
+#' For each trait the initial distribution in the population (as mean and standard variation) must be set in \code{Distances} (instead of only one constant value),
+#' as well as their scaling factors in \code{TraitScaleFactor} (see \code{\link[RangeShiftR]{Genetics}}).\cr
 #'
-#' Finally, dispersal kernels can be stage-specific (set \code{StageDep=TRUE}). For this case, inter-individual variability is not implemented.
+#' Further, dispersal kernels can be stage-specific (set \code{StageDep=TRUE}). For this case, inter-individual variability is not implemented.
 #'
 #' All dispersal kernel parameters have to be provided via \code{Distances}, which generally takes a matrix, or - if only a single constant mean distance is
-#' used - a single numeric. The format of the matrix is defined as follows: The number of columns depend on the options \code{IndVar} and \code{DoubleKernel}.
+#' used (i.e. \code{DensDep, IndVar, StageDep, SexDep = FALSE}) - a single numeric. The format of the matrix is defined as follows: The number of columns depend on the options \code{IndVar} and \code{DoubleKernel}.
 #' If \code{DoubleKernel=FALSE}, the mean dispersal distance \eqn{δ} must be specified (in meters). If \code{DoubleKernel=TRUE}, the mean dispersal distances
 #' \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{δ_1}} and \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{δ_2}} (in meters), as well as the probability \ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}} of using Kernel-1 must be specified.
 #' Additionally, if \code{IndVar=FALSE}, these parameters are fixed, but if \code{IndVar=TRUE} each of them is replaced by two parameters: their respective mean and
@@ -553,7 +561,7 @@ setMethod("show", "TransferParams", function(object){
 #'
 #' # mixed kernel with inter-individual variation
 #' dists_2 <- matrix(c(0,1000,300,2500,500,0.62,0.13,1,3400,860,8000,2800,0.72,0.12), byrow = TRUE, ncol = 7)
-#' disp_2 <- DispersalKernel(Distances = dists_2, SexDep = TRUE, DoubleKernel = TRUE, MutationScales = c(900,2800,0.14), IndVar = TRUE)
+#' disp_2 <- DispersalKernel(Distances = dists_2, SexDep = TRUE, DoubleKernel = TRUE, TraitScaleFactor = c(900,2800,0.14), IndVar = TRUE)
 #' plotProbs(disp_2, xmax = 10000, combinekernels = TRUE)
 #' @references
 #'         \insertAllCited{}
@@ -566,7 +574,7 @@ DispersalKernel <- setClass("DispersalKernel", slots = c(IndVar = "logical",
                                                          StageDep = "logical",
                                                          SexDep = "logical",
                                                          Distances = "matrix_OR_numeric",
-                                                         MutationScales = "numeric",
+                                                         TraitScaleFactor = "numeric",
                                                          DistMort = "logical",
                                                          MortProb = "numeric",
                                                          Slope = "numeric",
@@ -576,7 +584,7 @@ DispersalKernel <- setClass("DispersalKernel", slots = c(IndVar = "logical",
                                           StageDep = FALSE,
                                           SexDep = FALSE,
                                           Distances = matrix(data = 100L, nrow = 1, ncol = 1),
-                                          #MutationScales,
+                                          #TraitScaleFactor,
                                           DistMort = FALSE,
                                           MortProb = 0.0
                                           #,Slope = -9,
@@ -657,30 +665,30 @@ setValidity("DispersalKernel", function(object) {
         }
     }
     if (object@IndVar) {
-        if (anyNA(object@MutationScales) || (length(object@MutationScales)==0)) {
-            msg <- c(msg, "MutationScales must be set!")
+        if (anyNA(object@TraitScaleFactor) || (length(object@TraitScaleFactor)==0)) {
+            msg <- c(msg, "TraitScaleFactor must be set!")
         }
         else{
             if (object@DoubleKernel) {
-                if (length(object@MutationScales)!=3) {
-                    msg <- c(msg, "MutationScales must have length 3 if DoubleKernel=TRUE!")
+                if (length(object@TraitScaleFactor)!=3) {
+                    msg <- c(msg, "TraitScaleFactor must have length 3 if DoubleKernel=TRUE!")
                 }
                 else {
-                    if (object@MutationScales[3] <= 0.0 || object@MutationScales[3] > 1.0 ) {
-                        msg <- c(msg, "MutationScale μ(p) must be in the half-open interval (0,1] !")
+                    if (object@TraitScaleFactor[3] <= 0.0 || object@TraitScaleFactor[3] > 1.0 ) {
+                        msg <- c(msg, "TraitScaleFactor μ(p) must be in the half-open interval (0,1] !")
                     }
-                    if (any(object@MutationScales[1:2] <= 0.0 )) {
-                        msg <- c(msg, "MutationScales μ(δ1) and μ(δ2) must be strictly positive !")
+                    if (any(object@TraitScaleFactor[1:2] <= 0.0 )) {
+                        msg <- c(msg, "TraitScaleFactor μ(δ1) and μ(δ2) must be strictly positive !")
                     }
                 }
             }
             else {
-                if (length(object@MutationScales)!=1) {
-                    msg <- c(msg, "MutationScales must have length 1 if DoubleKernel=FALSE!")
+                if (length(object@TraitScaleFactor)!=1) {
+                    msg <- c(msg, "TraitScaleFactor must have length 1 if DoubleKernel=FALSE!")
                 }
                 else {
-                    if (object@MutationScales <= 0.0) {
-                        msg <- c(msg, "MutationScale μ(δ) must be strictly positive !")
+                    if (object@TraitScaleFactor <= 0.0) {
+                        msg <- c(msg, "TraitScaleFactor μ(δ) must be strictly positive !")
                     }
                 }
             }
@@ -723,9 +731,9 @@ setMethod("initialize", "DispersalKernel", function(.Object, ...) {
         .Object@Distances <- as.matrix(args$Distances)
     }
     if (!.Object@IndVar) {
-        .Object@MutationScales = -9L
-        if (!is.null(args$MutationScales)) {
-            warning(this_func, "MutationScales", warn_msg_ignored, "since IndVar = FALSE.", call. = FALSE)
+        .Object@TraitScaleFactor = -9L
+        if (!is.null(args$TraitScaleFactor)) {
+            warning(this_func, "TraitScaleFactor", warn_msg_ignored, "since IndVar = FALSE.", call. = FALSE)
         }
     }
     if (.Object@DistMort) {
@@ -763,7 +771,7 @@ setMethod("show", "DispersalKernel", function(object){
     cat("   Dispersal kernel traits:\n")
     print(object@Distances)
     if (object@IndVar) {
-        cat("   MutationScales =", object@MutationScales, "\n")
+        cat("   TraitScaleFactor =", object@TraitScaleFactor, "\n")
     }
     if (object@DistMort) {
         cat("   Distance-dependent mortality prob with:\n   Inflection point =", object@InflPoint, "\n   Slope =", object@Slope, "\n")
@@ -908,28 +916,30 @@ setMethod("plotProbs", "DispersalKernel", function(x, mortality = FALSE, combine
 #' cost surfaces as the least cost path (LCP) method, but it relaxes two of its main assumptions: Firstly, individuals are not assumed to be
 #' omniscient, but move according to what they can perceive of the landscape within their perceptual range (\code{PR}). Secondly, individuals
 #' do not know a priori their final destination, which is a reasonable assumption for dispersing individuals. For a complete description of the
-#' method, see the Datails below or refer to Palmer et al. (2011).
+#' method, see the Datails below or refer to \insertCite{palmer2011introducing;textual}{RangeShiftR}.
 #'
 #' @usage SMS(PR = 1, PRMethod = 1, MemSize = 1,
-#'     GoalType = 0, IndVar = FALSE,
-#'     DP = 1.0, GoalBias = 1.0, AlphaDB, BetaDB,
-#'     StraightenPath = TRUE, Costs, StepMort = 0.0)
+#'     DP = 1.0,
+#'     GoalType = 0,
+#'     GoalBias = 1.0, AlphaDB, BetaDB,
+#'     IndVar = FALSE,
+#'     Costs, StepMort = 0.0,
+#'     StraightenPath = TRUE)
 #' @param PR Perceptual range. Given in number of cells, defaults to \eqn{1}. (integer)
 #' @param PRMethod Method to evaluate the effective cost of a particular step from the landscape within the perceptual range:\cr \eqn{1 = }Arithmetic mean (default)\cr \eqn{2 = }Harmonic
 #' mean\cr \eqn{3 = }Weighted arithmetic mean
 #' @param MemSize Size of memory, given as the number of previous steps over which to calculate current direction to apply directional persistence
 #' (\code{DP}). A maximum of \eqn{14} steps is supported, default is \eqn{1}. (integer)
-#' @param GoalType Goal bias type: \eqn{0 = } None (default), \eqn{2 = } Dispersal bias.
-#' @param IndVar Individual variability in SMS traits (i.e. \code{GoalBias}, \code{AlphaDB} and \code{BetaDB})? Defaults to \code{FALSE}.
 #' @param DP Directional persistence. Corresponds to the tendency to follow a correlated random walk, must be \eqn{\ge 1.0}, defaults to \eqn{1.0}.\cr
-#' If \code{IndVar=TRUE}, expects a vector of length three specifying (Mean, SD, MutationScale) of \code{DP}.
+#' If \code{IndVar=TRUE}, expects a vector of length three specifying (Mean, SD, TraitScaleFactor) of \code{DP}.
+#' @param GoalType Goal bias type: \eqn{0 = } None (default), \eqn{2 = } Dispersal bias.
 #' @param GoalBias Only if \code{GoalType=2}: Goal bias strength. Must be must be \eqn{\ge 1.0}, defaults to \eqn{1.0}. \cr If \code{IndVar=TRUE}, expects a vector of length three
-#' specifying (Mean, SD, MutationScale) of \code{GoalBias}.
+#' specifying (Mean, SD, TraitScaleFactor) of \code{GoalBias}.
 #' @param AlphaDB Required if \code{GoalType=2}: Dispersal bias decay rate. Must be must be \eqn{> 0.0}.\cr If \code{IndVar=TRUE}, expects a vector of length three
-#' specifying (Mean, SD, MutationScale) of \code{AlphaDB}.
+#' specifying (Mean, SD, TraitScaleFactor) of \code{AlphaDB}.
 #' @param BetaDB Required if \code{GoalType=2}: Dispersal bias decay inflection point (given in number of steps). Must be must be \eqn{> 0.0}.\cr If \code{IndVar=TRUE},
-#' expects a vector of length three specifying (Mean, SD, MutationScale) of \code{BetaDB}.
-#' @param StraightenPath Straighten path after decision not to settle in a patch? Defaults to \code{TRUE}, see Details below.
+#' expects a vector of length three specifying (Mean, SD, TraitScaleFactor) of \code{BetaDB}.
+#' @param IndVar Individual variability in SMS traits (i.e. \code{DP}, \code{GoalBias}, \code{AlphaDB} and \code{BetaDB})? Defaults to \code{FALSE}.
 #' @param Costs Describes the landscapes resistance to movement. Set either: \cr
 #'  - \emph{habitat-specific} costs for each habitat type, or\cr
 #'  - \code{"file"}, to indictae to use the \emph{cost raster} map(s) specified in the landscape module and import the cost values from them.\cr
@@ -942,6 +952,7 @@ setMethod("plotProbs", "DispersalKernel", function(x, mortality = FALSE, combine
 #' value \eqn{0.0}) or \emph{habitat-specific}, in which case a numeric vector (with a length as described above for \code{Costs}) is expected.
 #' All values must be within the half-open interval \eqn{[0,1)}. \cr
 #' For an imported habitat quality landscape (\code{HabPercent=TRUE}), only constant per-step mortality is allowed.
+#' @param StraightenPath Straighten path after decision not to settle in a patch? Defaults to \code{TRUE}, see Details below.
 #' @details
 #' SMS is a stochastic individual-based model where organisms move through grid-based, heterogeneous landscapes. The model uses similar cost
 #' surfaces as the least cost path (LCP) \insertCite{adriaensen2003application,chardon2003incorporating,stevens2006gene,driezen2007evaluating}{RangeShiftR},
@@ -988,10 +999,15 @@ setMethod("plotProbs", "DispersalKernel", function(x, mortality = FALSE, combine
 #' advisable to disable the feature (\code{StraightenPath=FALSE}), although care must be taken that individuals do not become trapped in patches
 #' surrounded by very high cost matrix.
 #'
-#' When inter-individual variability is activated (set \code{IndVar=TRUE}), the movement traits \code{DP}, \code{AlphaDB} and \code{BetaDB} can evolve.
-#' For each trait the initial mean and standard deviations must be set, as well as the MutationScale (instead of only one constant value each).\cr
+#' When inter-individual variability is activated (set \code{IndVar=TRUE}), the four SMS movement traits \code{DP}, as well as - if dispersal goal bias
+#' is enabled - \code{GB}, \code{AlphaDB} and \code{BetaDB} can evolve.
+#' For each trait the population initial mean and standard deviations must be set (instead of the constant value), as well as its scaling factor
+#' (see \code{\link[RangeShiftR]{Genetics}}).\cr
 #'
 #' As currently implemented, there is no sex- or stage- dependence of SMS traits.
+#'
+#' The production of the output ‘dispersal heat maps’, which show the total number of times each cell is visited by dispersing individuals within a
+#' single replicate simulation, can be enabled with the option \code{SMSHeatMap} in \code{\link[RangeShiftR]{Simulation}}.
 #'
 #' \emph{Costs layer} \cr
 #' Critical for the outcomes of SMS are the relative costs assigned to the different habitats (as it is also the case for
@@ -1098,11 +1114,11 @@ setValidity("StochMove", function(object) {
                         msg <- c(msg, "DP (SD) must be strictly positive!")
                     }
                     if (object@DP[3] <= 0.0) {
-                        msg <- c(msg, "DP (mutation scale) must be strictly positive !")
+                        msg <- c(msg, "DP (scaling factor) must be strictly positive !")
                     }
                     if(is.null(msg)){
                         if (object@DP[3] < object@DP[2]) {
-                            msg <- c(msg, "DP mutation scale must be greater than or equal to its SD !")
+                            msg <- c(msg, "DP scaling factor must be greater than or equal to its SD !")
                         }
                     }
                 }
@@ -1135,11 +1151,11 @@ setValidity("StochMove", function(object) {
                             msg <- c(msg, "GoalBias strength (SD) must be strictly positive!")
                         }
                         if (object@GoalBias[3] <= 0.0) {
-                            msg <- c(msg, "GoalBias strength (mutation scale) must be strictly positive !")
+                            msg <- c(msg, "GoalBias strength (scaling factor) must be strictly positive !")
                         }
                         if(is.null(msg)){
                             if (object@GoalBias[3] < object@GoalBias[2]) {
-                                msg <- c(msg, "GoalBias strength mutation scale must be greater than or equal to its SD !")
+                                msg <- c(msg, "GoalBias strength scaling factor must be greater than or equal to its SD !")
                             }
                         }
                     }
@@ -1171,11 +1187,11 @@ setValidity("StochMove", function(object) {
                             msg <- c(msg, "AlphaDB (SD) must be strictly positive!")
                         }
                         if (object@AlphaDB[3] <= 0.0) {
-                            msg <- c(msg, "AlphaDB (mutation scale) must be strictly positive !")
+                            msg <- c(msg, "AlphaDB (scaling factor) must be strictly positive !")
                         }
                         if(is.null(msg)){
                             if (object@AlphaDB[3] < object@AlphaDB[2]) {
-                                msg <- c(msg, "AlphaDB mutation scale must be greater than or equal to its SD !")
+                                msg <- c(msg, "AlphaDB scaling factor must be greater than or equal to its SD !")
                             }
                         }
                     }
@@ -1207,11 +1223,11 @@ setValidity("StochMove", function(object) {
                             msg <- c(msg, "BetaDB (SD) must be strictly positive!")
                         }
                         if (object@BetaDB[3] <= 0.0) {
-                            msg <- c(msg, "BetaDB (mutation scale) must be strictly positive !")
+                            msg <- c(msg, "BetaDB (scaling factor) must be strictly positive !")
                         }
                         if(is.null(msg)){
                             if (object@BetaDB[3] < object@BetaDB[2]) {
-                                msg <- c(msg, "BetaDB mutation scale must be greater than or equal to its SD !")
+                                msg <- c(msg, "BetaDB scaling factor must be greater than or equal to its SD !")
                             }
                         }
                     }
@@ -1376,18 +1392,20 @@ setMethod("plotProbs", "StochMove", function(x, xmax = NULL, ymax = NULL){
 
 ## Transfer-class CORRRW
 
-#' Set up a Correlated Randon Walk
+#' Set up a Correlated Random Walk
 #'
 #' A method to describe \code{\link[RangeShiftR]{Transfer}}:
 #' A simple correlated random walk without any bias; implemented in continuous space on the top of the landscape grid.
 #'
-#' @usage CorrRW(IndVar = FALSE, StepLength = 1, Rho = 0.5,
-#'        StraightenPath = FALSE, StepMort = 0.0)
-#' @param IndVar Individual variability in CRW traits (i.e. \code{StepLength} and \code{Rho})? Defaults to \code{FALSE}.
+#' @usage CorrRW(StepLength = 1, Rho = 0.5,
+#'       IndVar = FALSE,
+#'       StraightenPath = FALSE,
+#'       StepMort = 0.0)
 #' @param StepLength Step length given in meters, defaults to \eqn{1}.\cr If \code{IndVar=TRUE}, expects a vector of length three
-#' specifying (Mean, SD, MutationScale) of \code{StepLength}.
+#' specifying (Mean, SD, TraitScaleFactor) of \code{StepLength}.
 #' @param Rho Correlation parameter \eqn{ρ}, defaults to \eqn{0.5}. Must be in the open interval \eqn{(0,1)}.\cr If \code{IndVar=TRUE},
-#' expects a vector of length three specifying (Mean, SD, MutationScale) of \code{Rho}.
+#' expects a vector of length three specifying (Mean, SD, TraitScaleFactor) of \code{Rho}.
+#' @param IndVar Individual variability in CorrRW traits (i.e. \code{StepLength} and \code{Rho})? Defaults to \code{FALSE}.
 #' @param StraightenPath Straighten path after decision not to settle in a patch? Defaults to \code{TRUE}, see Details below.
 #' @param StepMort Per-step mortality probability. Can be either \emph{constant}, in which case a single numeric is expected (the default, with
 #' value \eqn{0.0}) or \emph{habitat-specific}, in which case a numeric vector is expected with a length of, respectively, \code{Nhabitats} for an
@@ -1401,12 +1419,15 @@ setMethod("plotProbs", "StochMove", function(x, xmax = NULL, ymax = NULL){
 #' As for \code{\link[RangeShiftR]{SMS}}, all individuals take each step
 #' simultaneously. In the case of patch-based models,
 #' \eqn{Rho} is automatically set to \eqn{0.99} until the individual steps outside its natal patch, after which the value of
-#' \eqn{Rho} set by the user is restored. The \code{StepLength} and \eqn{Rho} can vary between individuals and can evolve (set \code{IndVar=TRUE}).
+#' \eqn{Rho} set by the user is restored. \cr
+#' The \code{StepLength} and \eqn{Rho} can be set to vary between individuals and evolve (set \code{IndVar=TRUE}).
 #' In this case, each individual exhibits two traits for these two parameters.
-#' For each trait the initial mean and standard deviations must be set, as well as the MutationScale (instead of only one constant value each).\cr
+#' For each trait the initial mean and standard deviations must be set, as well as the TraitScaleFactor (see \code{\link[RangeShiftR]{Settlement}}),
+#' instead of only one constant value each.\cr
 #' Note that the step length may not evolve below one fifth of
-#' the landscape resolution, and correlation may not evolve above \eqn{0.999}. Per-step mortality is not allowed to vary between
-#' individuals or to evolve. There is no implementation of sex- or stage-specific CRW.
+#' the landscape resolution, and correlation may not evolve above \eqn{0.999}. \cr
+#' Per-step mortality is not allowed to vary between individuals or to evolve. \cr
+#' There is no implementation of sex- or stage-specific CRW.
 #'
 #' When an individual arrives in a non-natal patch and decides not to settle there (as a result of a density-dependent or mate-finding settlement
 #' rule, see \code{\link[RangeShiftR]{Settlement}}), then there is the option that its path is straightened (\code{StraightenPath=TRUE}). This means
@@ -1462,11 +1483,11 @@ setValidity("CorrRW", function(object) {
                     msg <- c(msg, "Step Length (SD) must be strictly positive!")
                 }
                 if (object@StepLength[3] <= 0.0) {
-                    msg <- c(msg, "Step Length (mutation scale) must be strictly positive !")
+                    msg <- c(msg, "Step Length (scaling factor) must be strictly positive !")
                 }
                 if(is.null(msg)){
                     if (object@StepLength[3] < object@StepLength[2]) {
-                        msg <- c(msg, "Step Length mutation scale must be greater than or equal to its SD !")
+                        msg <- c(msg, "Step Length scaling factor must be greater than or equal to its SD !")
                     }
                 }
             }
@@ -1498,11 +1519,11 @@ setValidity("CorrRW", function(object) {
                     msg <- c(msg, "Rho (SD) must be within the open interval (1,0)!")
                 }
                 if (object@Rho[3] <= 0.0 || object@Rho[3] >= 1.0) {
-                    msg <- c(msg, "Rho (mutation scale) must be within the open interval (1,0)!")
+                    msg <- c(msg, "Rho (scaling factor) must be within the open interval (1,0)!")
                 }
                 if(is.null(msg)){
                     if (object@Rho[3] < object@Rho[2]) {
-                        msg <- c(msg, "Rho mutation scale must be greater than or equal to its SD !")
+                        msg <- c(msg, "Rho scaling factor must be greater than or equal to its SD !")
                     }
                 }
             }
@@ -1569,18 +1590,23 @@ setMethod("show", "CorrRW", function(object){
 #' available settlement conditions vary depending on the used \code{\link[RangeShiftR]{Transfer}} type. In any case, dispersing individuals
 #' are not allowed to settle in their natal cell or patch and can only settle in suitable habitat.\cr
 #' \emph{RangeShiftR} incorporates some basic settlement rules that can be stage- or sex-specific or both (set \code{StageDep}, \code{SexDep}).
-#' If a movement process is used, density-dependence (\code{DensDep}) and inter-individual variability (\code{IndVar}) available.
-#' @usage Settlement(StageDep = FALSE, SexDep = FALSE, Settle = 0, FindMate = FALSE,
-#'            DensDep = FALSE, IndVar = FALSE, MutationScales,
-#'            MinSteps = 0, MaxSteps = 0, MaxStepsYear = 0)
+#' If a movement process is used, density-dependence (\code{DensDep}) and/or inter-individual variability (\code{IndVar}) are available.
+#' @usage Settlement(StageDep = FALSE, SexDep = FALSE,
+#'           Settle = 0, FindMate = FALSE,
+#'           DensDep = FALSE,
+#'           IndVar = FALSE, TraitScaleFactor,
+#'           MinSteps = 0, MaxSteps = 0, MaxStepsYear = 0)
 #' @param StageDep Stage-dependent settlement requirements? (default: \code{FALSE})
 #' @param SexDep Sex-dependent settlement requirements? (default: \code{FALSE})
-#' @param Settle Settlement codes (for \code{DispersalKernel}) or settlement probability parameters (for \emph{Movement process}) for all stages/sexes, defaults to \eqn{0} (i.e. 'die when unsuitable' for \emph{DispersalKernel} and
+#' @param Settle Settlement codes (for \code{DispersalKernel}) or settlement probability parameters (for \emph{Movement process}) for all
+#' stages/sexes, defaults to \eqn{0} (i.e. 'die when unsuitable' for \emph{DispersalKernel} and
 #' 'always settle when suitable' for \emph{Movement process}). See the Details below.
 #' @param FindMate Mating requirements to settle? Set for all stages/sexes. Must be \code{FALSE} (default) in a female-only model.
 #' @param DensDep Movement process only: Density-dependent settlement probability? (default: \code{FALSE})
-#' @param IndVar Movement process only: Individual variability in settlement probability traits? Must be \code{FALSE} (default) if \code{DensDep=FALSE} or \code{StageDep=TRUE}.
-#' @param MutationScales Movement process only, required if \code{IndVar=TRUE}: The scaling factor(s) for the mutation of settlement traits. A numeric of length \eqn{1} (if \code{DensDep=FALSE}) or \eqn{3} (if \code{DensDep=TRUE}).
+#' @param IndVar Movement process only: Individual variability in settlement probability traits? Must be \code{FALSE} (default),
+#' if \code{DensDep=FALSE} or \code{StageDep=TRUE}.
+#' @param TraitScaleFactor Movement process only, required if \code{IndVar=TRUE}: Scaling factors for the three traits of density-dependent settlement,
+#' a numeric of length \eqn{3}.
 #' @param MinSteps Movement process only: Minimum number of steps. Defaults to \eqn{0}.
 #' @param MaxSteps Movement process only: Maximum number of steps. Must be \eqn{0} or more; set to \eqn{0} (default) for “per-step mortality only”.
 #' @param MaxStepsYear Movement process and stage-structured population only: Maximum number of steps per year, if there are more than \eqn{1} reproductive seasons (option \code{RepSeasons} in \code{\link[RangeShiftR]{StageStructure}}).
@@ -1594,9 +1620,9 @@ setMethod("show", "CorrRW", function(object){
 #' The type of implemented settlement rules depends on the movement model utilized for the \code{\link[RangeShiftR]{Transfer}}.
 #' In any case, dispersing individuals are not allowed to settle in their natal cell or patch.\cr
 #' \emph{RangeShiftR} incorporates some basic settlement rules that can be stage- or sex-specific or both (set \code{StageDep}, \code{SexDep}).
-#' Inter-individual variability (\code{IndVar}) is implemented only for movement processes and the three traits
+#' Inter-individual variability (\code{IndVar}) is implemented only for movement processes and then for the three traits
 #' determining density-dependent settlement (\ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}}, \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{α_S}},
-#' \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}}; see below), and if so, it may not be stage-dependent.\cr
+#' \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}}; see below). In this case, settlement may not be stage-dependent.\cr
 #'
 #' \emph{Settlement with dispersal kernels}\cr
 #' When using a \code{\link[RangeShiftR]{DispersalKernel}}, individuals are displaced directly from the starting location to the arrival location. The suitability
@@ -1633,7 +1659,8 @@ setMethod("show", "CorrRW", function(object){
 #' \code{\link[RangeShiftR]{CorrRW}}), at each step (made simultaneously) they each evaluate their current cell or patch for the
 #' possibility of settling. This allows for the implementation of more complex settlement rules. The simplest one is that the individual
 #' decides to stop if there is suitable habitat; this is in any case a necessary condition (set \code{DensDep=FALSE}).\cr
-# If a Settlement module with \eqn{S_0=0} (the default) is used in a model with \emph{movement process}, it gets converted to \eqn{S_0=1.0}, i.e. always settle when habitat is suitable. \cr
+#' If a Settlement module with a constant \eqn{S_0=0} (the default) is used in a model with \emph{movement process},
+#' it gets converted to \eqn{S_0=1.0}, i.e. 'always settle when habitat is suitable'. \cr
 #' \cr
 #' Furthermore, the settlement decision can be density-dependent (set \code{DensDep=TRUE}). In this case, the individual has a probability \ifelse{html}{\out{p<sub>S</sub>}}{\eqn{p_S}}
 #' of settling in the cell or patch \eqn{i}, given by:
@@ -1651,16 +1678,23 @@ setMethod("show", "CorrRW", function(object){
 #' \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}} is the inflection point of the function and
 #' \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{α_S}} is the slope at the inflection point.\cr
 #'
+#' Inter-individual variability \code{IndVar=TRUE} and thus evolution is implemented only for the three traits determining density-dependent settlement
+#' (\code{DensDep=TRUE}), and if so, it may not be stage-dependent (\code{StageDep=FALSE}).
+#' For each trait the initial distribution in the population (as mean and standard variation) must be set in \code{Settle} (instead of only one constant value),
+#' as well as their scaling factors in \code{TraitScaleFactor} (see \code{\link[RangeShiftR]{Genetics}}).
+#'
 #' The parameters that determine the settlement probabilities have to be provided via the parameter \code{Settle}, which generally takes a numeric matrix, or - if only a single constant probability is
-#' used - a single numeric. The format of the matrix is defined as follows: The number of columns depend on the options \code{DensDep} and \code{IndVar}. If \code{DensDep=FALSE}, the
+#' used (i.e. \code{DensDep, IndVar, StageDep, SexDep = FALSE}) - a single numeric.
+#' The format of the matrix is defined as follows: The number of columns depend on the options \code{DensDep} and \code{IndVar}. If \code{DensDep=FALSE}, the
 #' density-independent probability \ifelse{html}{\out{p<sub>S</sub>}}{\eqn{p_S}} must be specified. If \code{DensDep=TRUE}, the functional parameters \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}},
-#' \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{α_S}} and \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}} (cp. equation above) must be specified.
+#' \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{α_S}} and \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}} (cf. equation above) must be specified.
 #' Additionally, if \code{IndVar=FALSE}, these traits are fixed, but if \code{IndVar=TRUE} each of them is replaced by two parameters: their respective initial mean and
-#' standard deviation. They are used to normally distribute the traits values among the individuals of the initial population. Additionally, the \code{MutationScales} of
+#' standard deviation. They are used to normally distribute the traits values among the individuals of the initial population. Additionally, the \code{TraitScaleFactor} of
 #' these traits have to be set.
 #'
-#' All parameters have to be given for each stage/sex if the respective dependence is enabled. If \code{StageDep=TRUE}, state the corresponding stage in the first column.
-#' If \code{SexDep=TRUE}, state the corresponding stage in the next (i.e. first/second) column, with \eqn{0} for \emph{female} and \eqn{1} for \emph{male}. The following table lists the required columns and their correct order for different settings:
+#' All parameters have to be given for each stage/sex if the respective dependency is enabled. If \code{StageDep=TRUE}, state the corresponding stage in the first column.
+#' If \code{SexDep=TRUE}, state the corresponding stage in the next (i.e. first/second) column, with \eqn{0} for \emph{female} and \eqn{1} for \emph{male}.
+#' The following table lists the required columns and their correct order for different settings:
 #'
 #' \tabular{ccccc}{DensDep \tab IndVar \tab StageDep \tab SexDep \tab columns \cr
 #  F \tab F \tab F \tab F \tab \ifelse{html}{\out{p<sub>S</sub>}}{\eqn{p_S}} \cr
@@ -1717,7 +1751,7 @@ Settlement <- setClass("SettlementParams", slots = c(StageDep = "logical",
                                                      FindMate = "logical",
                                                      DensDep = "logical",               # For MovementProcess only!
                                                      IndVar = "logical",                # For MovementProcess only!
-                                                     MutationScales = "numeric",        # For MovementProcess only! For IndVar only. Set for stage=0 only and 1 bzw 2 sexes
+                                                     TraitScaleFactor = "numeric",        # For MovementProcess only! For IndVar only. Set for stage=0 only and 1 bzw 2 sexes
                                                      MinSteps = "integer_OR_numeric",   # For MovementProcess only!
                                                      MaxSteps = "integer_OR_numeric",   # For MovementProcess only!
                                                      MaxStepsYear = "integer_OR_numeric")   # For MovementProcess only!
@@ -1727,7 +1761,7 @@ Settlement <- setClass("SettlementParams", slots = c(StageDep = "logical",
                                           FindMate = FALSE,
                                           DensDep = FALSE,
                                           IndVar = FALSE,
-                                          #MutationScales,
+                                          #TraitScaleFactor,
                                           MinSteps = 0L,
                                           MaxSteps = 0L,
                                           MaxStepsYear = 0L)
@@ -1775,30 +1809,30 @@ setValidity("SettlementParams", function(object) {
     }
     if (is.null(msg)) {
         if (object@IndVar) {
-            if (anyNA(object@MutationScales) || length(object@MutationScales)==0) {
-                msg <- c(msg, "MutationScales must be set!")
+            if (anyNA(object@TraitScaleFactor) || length(object@TraitScaleFactor)==0) {
+                msg <- c(msg, "TraitScaleFactor must be set!")
             }
             else{
                 if (object@DensDep) {
-                    if (length(object@MutationScales)!=3) {
-                        msg <- c(msg, "MutationScales must have length 3 if DensDep=TRUE!")
+                    if (length(object@TraitScaleFactor)!=3) {
+                        msg <- c(msg, "TraitScaleFactor must have length 3 if DensDep=TRUE!")
                     }
                     else {
-                        if (object@MutationScales[1] <= 0.0 || object@MutationScales[1] > 1.0 ) {
-                            msg <- c(msg, "MutationScale μ(S_0) must be in the half-open interval (0,1] !")
+                        if (object@TraitScaleFactor[1] <= 0.0 || object@TraitScaleFactor[1] > 1.0 ) {
+                            msg <- c(msg, "TraitScaleFactor μ(S_0) must be in the half-open interval (0,1] !")
                         }
-                        if (any(object@MutationScales[2:3] <= 0.0 )) {
-                            msg <- c(msg, "MutationScales μ(α_s) and μ(β_s) must be strictly positive !")
+                        if (any(object@TraitScaleFactor[2:3] <= 0.0 )) {
+                            msg <- c(msg, "TraitScaleFactor μ(α_s) and μ(β_s) must be strictly positive !")
                         }
                     }
                 }
                 else {
-                    if (length(object@MutationScales)!=1) {
-                        msg <- c(msg, "MutationScales must have length 1 if DensDep=FALSE!")
+                    if (length(object@TraitScaleFactor)!=1) {
+                        msg <- c(msg, "TraitScaleFactor must have length 1 if DensDep=FALSE!")
                     }
                     else {
-                        if (object@MutationScales <= 0 || object@MutationScales > 1 ) {
-                            msg <- c(msg, "MutationScale μ(S_0) must be in the half-open interval (0,1] !")
+                        if (object@TraitScaleFactor <= 0 || object@TraitScaleFactor > 1 ) {
+                            msg <- c(msg, "TraitScaleFactor μ(S_0) must be in the half-open interval (0,1] !")
                         }
                     }
                 }
@@ -1864,9 +1898,9 @@ setMethod("initialize", "SettlementParams", function(.Object,...) {
         }
     }
     if (!.Object@IndVar) {
-        .Object@MutationScales = -9L
-        if (!is.null(args$MutationScales)) {
-            warning(this_func, "MutationScales", warn_msg_ignored, "since IndVar = FALSE.", call. = FALSE)
+        .Object@TraitScaleFactor = -9L
+        if (!is.null(args$TraitScaleFactor)) {
+            warning(this_func, "TraitScaleFactor", warn_msg_ignored, "since IndVar = FALSE.", call. = FALSE)
         }
     }
     .Object}
@@ -1887,7 +1921,7 @@ setMethod("show", "SettlementParams", function(object){
     cat("   Settlement conditions:\n")
     print(object@Settle)
     if (object@IndVar) {
-        cat("   MutationScales =", object@MutationScales, "\n")
+        cat("   TraitScaleFactor =", object@TraitScaleFactor, "\n")
     }
     cat("   FindMate =", object@FindMate, "\n")
     }
@@ -1969,7 +2003,7 @@ setMethod("plotProbs", "SettlementParams", function(x, stage = NULL, sex = NULL,
 #' The specific parameters of each phase are set through their respective functions. For more details, see their documentation.\cr
 #' \cr
 #' The potential evolution of several key dispersal traits is implemented through the possibility of inter-individual variability and heritability.
-#' This option (called \code{IndVar}) can be enabled for each dispersal phase in their respective modules. See the Datails below for information on how
+#' This option (called \code{IndVar}) can be enabled for each dispersal phase in their respective modules. See the Details below for information on how
 #' to set the associated parameters. Additionally, the \code{\link[RangeShiftR]{Genetics}} module must be defined.
 #'
 #' @usage Dispersal(Emigration = Emigration(),
@@ -1999,11 +2033,11 @@ setMethod("plotProbs", "SettlementParams", function(x, stage = NULL, sex = NULL,
 #' one set coding for the trait in females and the other for the trait in males. As well as being sex-biased, all dispersal phases can be
 #' stage-biased, meaning that parameters can vary for different stage or age classes.
 #'
-#' The options of inter-individual variability in the various dispersal traits is enabled by setting \code{IndVar=TRUE} for the respective transfer phase
+#' The options of inter-individual variability in the various dispersal traits can be enabled by setting \code{IndVar=TRUE} for the respective dispersal phase
 #' module and defining the genetic module to simulate heritability and evolution of traits (\code{\link[RangeShiftR]{Genetics}}).\cr
-#' For each such heritable dispersal trait, this requires to set the mean and standard deviation of the initial distribution of the trait values,
-#' (instead of a constant value as in the case of \code{IndVar=FALSE})
-#' as well as the \code{MutationScale} (see \code{\link[RangeShiftR]{Genetics}} documentaion).\cr
+#' For each such heritable dispersal trait, this requires to set the mean and standard deviation of the distribution of trait values
+#' in the initial population (instead of a constant value each, as in the case of \code{IndVar=FALSE}),
+#' as well as the \code{TraitScaleFactor} for each heritable trait (see \code{\link[RangeShiftR]{Genetics}} documentaion).\cr
 #'
 #' Note, however, that not all combinations of sex-/stage-dependencies with inter-individual variability are implemented.\cr
 #'
@@ -2020,7 +2054,7 @@ Dispersal <- setClass("DispersalParams", slots = c(Emigration = "EmigrationParam
                                          Transfer   = DispersalKernel(),
                                          Settlement = Settlement())
 )
-    ## add references to all sub-classes to heres explanation of IndVar and MutationScales
+    ## add references to all sub-classes to heres explanation of IndVar and TraitScaleFactor
 
 setValidity("DispersalParams", function(object) {
     msg <- NULL

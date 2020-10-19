@@ -2170,7 +2170,7 @@ int ReadEmigrationR(Rcpp::S4 ParMaster)
 		}
 	} // end of Nlines for loop
 
-	EmigScalesVec = Rcpp::as<Rcpp::NumericVector>(EmigParamsR.slot("MutationScales"));
+	EmigScalesVec = Rcpp::as<Rcpp::NumericVector>(EmigParamsR.slot("TraitScaleFactor"));
 
 	if(emig.indVar) {
 		if(emig.densDep) {
@@ -2368,7 +2368,7 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 
 		// Mutation scales
 		scale = pSpecies->getTrfrScales();
-		DispScalesVec = Rcpp::as<Rcpp::NumericVector>(TransParamsR.slot("MutationScales"));
+		DispScalesVec = Rcpp::as<Rcpp::NumericVector>(TransParamsR.slot("TraitScaleFactor"));
 		if(trfr.indVar) {
 			//	if (!trfr.indVar) error = 411;
 			//	if (dem.stageStruct) error = 412;
@@ -3000,9 +3000,9 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
 	trfrRules trfr = pSpecies->getTrfr();
 	settleType sett = pSpecies->getSettle();
 	settleRules srules;
-	settleSteps ssteps;
-	settleTraits settleDD;
-	settParams sparams;
+	settleSteps ssteps = pSpecies->getSteps(0,0);
+	settleTraits settleDD = pSpecies->getSettTraits(0,0);
+	settParams sparams = pSpecies->getSettParams(0,0);
 
 #if GOBYMODEL
 	float alphaSasoc, betaSasoc;
@@ -3071,7 +3071,7 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
 	if(FindMate.length() == 1) {
 		constFindMate = true;
 	}
-	Rcpp::NumericVector MutationCoeffs = Rcpp::as<Rcpp::NumericVector>(SettleParamsR.slot("MutationScales"));
+	Rcpp::NumericVector MutationCoeffs = Rcpp::as<Rcpp::NumericVector>(SettleParamsR.slot("TraitScaleFactor"));
 	Rcpp::IntegerVector MinSteps = Rcpp::as<Rcpp::IntegerVector>(SettleParamsR.slot("MinSteps"));
 	bool constMinSteps = false;
 	if(MinSteps.length() == 1) {

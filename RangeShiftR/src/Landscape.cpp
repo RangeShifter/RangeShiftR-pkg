@@ -3684,7 +3684,7 @@ if (sim.batchMode) {
 #if RS_RCPP
 		+ "Batch" + Int2Str(sim.batchNum) + "_"
 		+ "Sim" + Int2Str(sim.simulation)
-		+ "_Land" + Int2Str(landNr) + "_rep" + Int2Str(rep)
+		+ "_Land" + Int2Str(landNr) + "_Rep" + Int2Str(rep)
 #else
 		+ "Batch" + Int2Str(sim.batchNum) + "_"
 		+ "Sim" + Int2Str(sim.simulation)

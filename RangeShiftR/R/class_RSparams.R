@@ -188,8 +188,8 @@ setValidity("RSparams", function(object) {
                 msg <- c(msg, paste0("Columns ", (offset+1), " and ", (offset+2), " of emigration traits matrix (EmigProb) must contain mean(D0) and sd(D0), with values in the half-open inerval (0,1] !"))
             }
             else {
-                if(any(object@dispersal@Emigration@EmigProb[,(offset+2)] > object@dispersal@Emigration@MutationScales[1])) {
-                    msg <- c(msg, paste0("Column ", (offset+2), " of emigration traits matrix (EmigProb) must contain sd(D0), with values less than or equal to Mutation Scale μ(D0)!"))
+                if(any(object@dispersal@Emigration@EmigProb[,(offset+2)] > object@dispersal@Emigration@TraitScaleFactor[1])) {
+                    msg <- c(msg, paste0("Column ", (offset+2), " of emigration traits matrix (EmigProb) must contain sd(D0), with values less than or equal to TraitScaleFactor μ(D0)!"))
                 }
             }
             if (object@dispersal@Emigration@DensDep) {
@@ -197,11 +197,11 @@ setValidity("RSparams", function(object) {
                     msg <- c(msg, paste0("Columns ", (offset+4), " and ", (offset+6), " of emigration traits matrix (EmigProb) must contain sd(α) and sd(β), with strictly positive values!"))
                 }
                 else {
-                    if(any(object@dispersal@Emigration@EmigProb[,(offset+4)] > object@dispersal@Emigration@MutationScales[2])) {
-                        msg <- c(msg, paste0("Column ", (offset+4), " of emigration traits matrix (EmigProb) must contain sd(α), with values less than or equal to Mutation Scale μ(α)!"))
+                    if(any(object@dispersal@Emigration@EmigProb[,(offset+4)] > object@dispersal@Emigration@TraitScaleFactor[2])) {
+                        msg <- c(msg, paste0("Column ", (offset+4), " of emigration traits matrix (EmigProb) must contain sd(α), with values less than or equal to TraitScaleFactor μ(α)!"))
                     }
-                    if(any(object@dispersal@Emigration@EmigProb[,(offset+6)] > object@dispersal@Emigration@MutationScales[3])) {
-                        msg <- c(msg, paste0("Column ", (offset+6), " of emigration traits matrix (EmigProb) must contain sd(β), with values less than or equal to Mutation Scale μ(β)!"))
+                    if(any(object@dispersal@Emigration@EmigProb[,(offset+6)] > object@dispersal@Emigration@TraitScaleFactor[3])) {
+                        msg <- c(msg, paste0("Column ", (offset+6), " of emigration traits matrix (EmigProb) must contain sd(β), with values less than or equal to TraitScaleFactor μ(β)!"))
                     }
                 }
             }
@@ -332,8 +332,8 @@ setValidity("RSparams", function(object) {
                             msg <- c(msg, paste0("Column ", (offset+2), " of dispersal kernel traits (Distances) matrix must contain the std. dev. of the mean distance of Kernel 1, sd(δ1), with strictly positive values!"))
                         }
                         else {
-                            if(any(object@dispersal@Transfer@Distances[,(offset+2)] > object@dispersal@Transfer@MutationScales[1])) {
-                                msg <- c(msg, paste0("Column ", (offset+2), " of dispersal kernel traits (Distances) matrix must contain sd(δ1), with values less than or equal to Mutation Scale μ(δ1)!"))
+                            if(any(object@dispersal@Transfer@Distances[,(offset+2)] > object@dispersal@Transfer@TraitScaleFactor[1])) {
+                                msg <- c(msg, paste0("Column ", (offset+2), " of dispersal kernel traits (Distances) matrix must contain sd(δ1), with values less than or equal to TraitScaleFactor μ(δ1)!"))
                             }
                         }
                         if(any(object@dispersal@Transfer@Distances[,(offset+3)]<resol)){
@@ -343,8 +343,8 @@ setValidity("RSparams", function(object) {
                             msg <- c(msg, paste0("Column ", (offset+4), " of dispersal kernel traits (Distances) matrix must contain the std. dev. of the mean distance of Kernel 2, sd(δ2), with strictly positive values!"))
                         }
                         else {
-                            if(any(object@dispersal@Transfer@Distances[,(offset+4)] > object@dispersal@Transfer@MutationScales[2])) {
-                                msg <- c(msg, paste0("Column ", (offset+4), " of dispersal kernel traits (Distances) matrix must contain sd(δ2), with values less than or equal to Mutation Scale μ(δ2)!"))
+                            if(any(object@dispersal@Transfer@Distances[,(offset+4)] > object@dispersal@Transfer@TraitScaleFactor[2])) {
+                                msg <- c(msg, paste0("Column ", (offset+4), " of dispersal kernel traits (Distances) matrix must contain sd(δ2), with values less than or equal to TraitScaleFactor μ(δ2)!"))
                             }
                         }
                         if(any(object@dispersal@Transfer@Distances[,(offset+5)]<=0.0 || object@dispersal@Transfer@Distances[,(offset+5)]>=1.0)){
@@ -354,8 +354,8 @@ setValidity("RSparams", function(object) {
                             msg <- c(msg, paste0("Column ", (offset+6), " of dispersal kernel traits (Distances) matrix must contain the std. dev. of the probability of using Kernel 1, sd(p), with strictly positive values!"))
                         }
                         else {
-                            if(any(object@dispersal@Transfer@Distances[,(offset+6)] > object@dispersal@Transfer@MutationScales[3])) {
-                                msg <- c(msg, paste0("Column ", (offset+6), " of dispersal kernel traits (Distances) matrix must contain sd(p), with values less than or equal to Mutation Scale μ(p)!"))
+                            if(any(object@dispersal@Transfer@Distances[,(offset+6)] > object@dispersal@Transfer@TraitScaleFactor[3])) {
+                                msg <- c(msg, paste0("Column ", (offset+6), " of dispersal kernel traits (Distances) matrix must contain sd(p), with values less than or equal to TraitScaleFactor μ(p)!"))
                             }
                         }
                     }
@@ -367,8 +367,8 @@ setValidity("RSparams", function(object) {
                             msg <- c(msg, paste0("Column ", (offset+2), " of dispersal kernel traits (Distances) matrix must contain the std. dev. of the mean distance, sd(δ), with strictly positive values!"))
                         }
                         else {
-                            if(any(object@dispersal@Transfer@Distances[,(offset+2)] > object@dispersal@Transfer@MutationScales[1])) {
-                                msg <- c(msg, paste0("Column ", (offset+2), " of dispersal kernel traits (Distances) matrix must contain sd(δ), with values less than or equal to Mutation Scale μ(δ)!"))
+                            if(any(object@dispersal@Transfer@Distances[,(offset+2)] > object@dispersal@Transfer@TraitScaleFactor[1])) {
+                                msg <- c(msg, paste0("Column ", (offset+2), " of dispersal kernel traits (Distances) matrix must contain sd(δ), with values less than or equal to TraitScaleFactor μ(δ)!"))
                             }
                         }
                     }
@@ -594,19 +594,19 @@ setValidity("RSparams", function(object) {
                         msg <- c(msg, paste0("Columns ", (offset+1), " and ", (offset+2), " of settlement traits matrix (Settle) must contain mean(S0) and sd(S0), with values in the half-open inerval (0,1] !"))
                     }
                     else {
-                        if(any(object@dispersal@Settlement@Settle[,(offset+2)] > object@dispersal@Settlement@MutationScales[1])) {
-                            msg <- c(msg, paste0("Column ", (offset+2), " of settlement traits matrix (Settle) must contain sd(S0), with values less than or equal to Mutation Scale μ(S0)!"))
+                        if(any(object@dispersal@Settlement@Settle[,(offset+2)] > object@dispersal@Settlement@TraitScaleFactor[1])) {
+                            msg <- c(msg, paste0("Column ", (offset+2), " of settlement traits matrix (Settle) must contain sd(S0), with values less than or equal to TraitScaleFactor μ(S0)!"))
                         }
                     }
                     if(any(object@dispersal@Settlement@Settle[,c((offset+4),(offset+6))]<=0 )){
                         msg <- c(msg, paste0("Columns ", (offset+4), " and ", (offset+6), " of settlement traits matrix (Settle) must contain sd(α_s) and sd(β_s), with strictly positive values!"))
                     }
                     else {
-                        if(any(object@dispersal@Settlement@Settle[,(offset+4)] > object@dispersal@Settlement@MutationScales[2])) {
-                            msg <- c(msg, paste0("Column ", (offset+4), " of settlement traits matrix (Settle) must contain sd(α_s), with values less than or equal to Mutation Scale μ(α_s)!"))
+                        if(any(object@dispersal@Settlement@Settle[,(offset+4)] > object@dispersal@Settlement@TraitScaleFactor[2])) {
+                            msg <- c(msg, paste0("Column ", (offset+4), " of settlement traits matrix (Settle) must contain sd(α_s), with values less than or equal to TraitScaleFactor μ(α_s)!"))
                         }
-                        if(any(object@dispersal@Settlement@Settle[,(offset+6)] > object@dispersal@Settlement@MutationScales[3])) {
-                            msg <- c(msg, paste0("Column ", (offset+6), " of settlement traits matrix (Settle) must contain sd(β_s), with values less than or equal to Mutation Scale μ(β_s)!"))
+                        if(any(object@dispersal@Settlement@Settle[,(offset+6)] > object@dispersal@Settlement@TraitScaleFactor[3])) {
+                            msg <- c(msg, paste0("Column ", (offset+6), " of settlement traits matrix (Settle) must contain sd(β_s), with values less than or equal to TraitScaleFactor μ(β_s)!"))
                         }
                     }
                 }

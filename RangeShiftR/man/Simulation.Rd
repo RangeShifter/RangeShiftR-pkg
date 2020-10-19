@@ -18,8 +18,7 @@ Simulation(Simulation = 1, Replicates = 2, Years = 50, Absorbing = FALSE,
            OutStartPop = 0, OutStartInd = 0,
            OutStartTraitCell = 0, OutStartTraitRow = 0,
            OutStartConn = 0, OutStartPaths = 0, OutStartGenetic = 0,
-           SMSHeatMap = FALSE,
-           ReturnPopRaster = FALSE, CreatePopFile = TRUE)
+           SMSHeatMap = FALSE)
 }
 \arguments{
 \item{Simulation}{ID number of current simulation, defaults to \eqn{1}. (integer)}
@@ -85,7 +84,7 @@ Environmental stochasticity is always applied on a yearly basis.}
 
 \item{minK, maxK}{Required if \code{EnvStochType}\eqn{=1}: minimum and maximum value of \eqn{K} or \eqn{1/b}, respectively.}
 
-\item{OutIntRange, OutIntOcc, OutIntPop, OutIntInd, OutIntTraitCell, OutIntTraitRow, OutIntConn, OutIntPaths, OutIntGenetic}{Control the various types
+\item{OutIntRange, OutIntOcc, OutIntPop, OutIntInd, OutIntGenetic, OutIntTraitCell, OutIntTraitRow, OutIntConn, OutIntPaths}{Control the various types
 of Output files, i.e. range, occupancy, populations, individuals, traits (by cell or by row), connectivity, SMS paths and genetics:\cr
  \eqn{=0 }: Output disabled.\cr
  \eqn{>0 }: Output enabled; sets interval (in years) in which output is generated.\cr
@@ -95,7 +94,7 @@ Traits output is only applicable for a cell-based model with inter-individual va
 Connectivity output is only applicable for a patch-based model.
 SMS paths is only applicable for a model with SMS transfer method.}
 
-\item{OutStartPop, OutStartInd, OutStartTraitCell, OutStartTraitRow, OutStartConn, OutStartPaths, OutStartGenetic}{Starting years for output generation. Note that the first year is year \eqn{0}. Defaults to \eqn{0} for all output types. (integer)}
+\item{OutStartPop, OutStartInd, OutStartGenetic, OutStartTraitCell, OutStartTraitRow, OutStartConn, OutStartPaths}{Starting years for output generation. Note that the first year is year \eqn{0}. Defaults to \eqn{0} for all output types. (integer)}
 
 \item{OutGenType}{Required if \code{OutIntGenetic}\eqn{>0}: Genetics output will be generated for:\cr
 \eqn{0} = juveniles only (default), \eqn{1} =  all individuals, \eqn{2} = adults only.}
@@ -105,10 +104,6 @@ If \code{FALSE} (default), Genetics output will be written to several files.
 \cr If \code{TRUE} Genetics output is generated as a cross table.}
 
 \item{SMSHeatMap}{Produce SMS heat map raster as output? Defaults to \code{FALSE}.}
-
-\item{ReturnPopRaster}{Return population data to R (as data frame)? Defaults to \code{TRUE}.}
-
-\item{CreatePopFile}{Create population output file? Defaults to \code{TRUE}.}
 }
 \description{
 Set basic simulation parameters and control output types.\cr
@@ -233,10 +228,22 @@ season at the specified yearly interval and at the end of the simulation.
 contains information regarding each individual at a given time step. To avoid the production of huge files, a separate file is
 saved for each replicate. Data are recorded after settlement and before aging (in the case of overlapping generations). For each
 individual the following data are saved: \cr
-Replicate number (Rep), Year, Reproductive season within the year (RepSeason), Individual ID (IndID), the individual’s
-Status, Natal cell (Natal_X and Natal_Y) and current cell (\eqn{x} and \eqn{y}) coordinates or natal and current patch IDs
-(Natal_patch and PatchID), Sex (0 = female, 1 = male), Age in years, Stage, Emigration traits, Transfer traits (depending on
+Replicate number (Rep), Year, Reproductive season within the year (RepSeason), Species ID (always \eqn{0}),
+Individual ID (IndID), the individual’s Status (Status), Natal cell (Natal_X and Natal_Y) and current cell (\eqn{x} and
+\eqn{y}) coordinates or natal and current patch IDs (Natal_patch and PatchID), Sex (0 = female, 1 = male), Age in years
+(in case of overlapping generations), Stage (in case of stage structure), Emigration traits, Transfer traits (depending on
 transfer method).
+
+- \emph{Genetics} (\code{Sim0_Rep0_Genetics.txt}) \cr
+lists the full genome of each individual selected for output (i.e. all individuals if the population is not structured) during the reporting year
+(or present in the initial population at year \eqn{0}) for the current replicate. This file can therefore be \emph{extremely large}, and should be
+produced only for temporally short simulations, small populations or at infrequent reporting time intervals. It comprises:\cr
+    - Replicate number (Rep), Year, Species ID (always \eqn{0}), Individual ID (IndID), \cr
+and then \emph{either} one or more lines listing:
+    - Chromosome number (starting from 0), Locus on this chromosome (starting from 0), value of the only allele at the locus for a
+    haploid species (Allele0) or the values of both alleles at the locus for a diploid species (Allele0,Allele1) \cr
+\emph{or} a single line of:
+    - a set of columns having compound headings of the form \code{Chr0Loc0Allele0} derived from each chromosome, locus and allele (as above).
 
 - \emph{Traits} \cr
 In the case of inter-individual variability and evolution of the dispersal traits, it is possible to output the mean traits of
@@ -247,9 +254,10 @@ cell/patch, for each replicate and reproductive season at the set year interval.
 
     2) \code{Sim0_TraitsXrow.txt} mean and standard deviation of the varying/evolving traits computed at the row (\eqn{y}) level,
 pulling together all the populations occupying cells in \eqn{y}. Values are reported for each replicate and reproductive season
-at the specified yearly interval. This is particularly useful for analyzing the structuring of traits along latitudinal gradients.\cr
+at the specified yearly interval. This is particularly useful for analyzing the structuring of traits along latitudinal gradients.
+It is possible to compute this output only for cell-based models. \cr
 
-    It is possible to compute this output only for cell-based models. Data for these outputs are collected at the same time as for the
+    Data for these outputs are collected at the same time as for the
 range and population outputs, i.e. before reproduction at each reproductive season at the set year interval and at the end of the
 simulation. For sexual models, the standard deviation relates to the variation between all alleles in the local population (which
 is greater than the variation in phenotypic expression; if the phenotypic s.d. is required, it must be calculated from
@@ -281,8 +289,17 @@ The status is an integer number that codes for the following possible states:\cr
    8 = failed to survive annual (demographic) mortality,\cr
    9 = exceeded maximum age.\cr\cr
 
-- \emph{Genetics} (\code{Sim0_Connect.txt}) \cr
-.....
+- \emph{SMS Heat map} (\code{OutputMaps/Sim0_Land0_Rep0_Visits.txt}) \cr
+When the transfer model is \emph{SMS}, an additional optional output is a series of maps in ASCII raster format, showing how many times each
+cell has been visited by a dispersing individual across the whole time period of the simulation. These heat maps may be useful, for example,
+for identifying corridors which are heavily used during the dispersal phase. One raster map is created in the \emph{Output_Maps} folder for
+each replicate simulation, and is in the same format as the input habitat file.
+
+- \emph{Log file} (\code{Batch1_RS_log.csv}) \cr
+An additional log file will be created automatically. In it is listed the time taken (in seconds) to run the simulation.
+It may also possibly include error codes, which can occur in rare occasions when the batch input files are in themselves valid,
+but there is an inconsistency between files or an invalid habitat code or patch number occurs in an input map file.
+Error codes are listed in the \emph{Batch_error_codes.xlsx} file.
 }
 \references{
 \insertAllCited{}

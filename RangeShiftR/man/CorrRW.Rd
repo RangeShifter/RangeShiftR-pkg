@@ -3,19 +3,21 @@
 \docType{class}
 \name{CorrRW}
 \alias{CorrRW}
-\title{Set up a Correlated Randon Walk}
+\title{Set up a Correlated Random Walk}
 \usage{
-CorrRW(IndVar = FALSE, StepLength = 1, Rho = 0.5,
-       StraightenPath = FALSE, StepMort = 0.0)
+CorrRW(StepLength = 1, Rho = 0.5,
+      IndVar = FALSE,
+      StraightenPath = FALSE,
+      StepMort = 0.0)
 }
 \arguments{
-\item{IndVar}{Individual variability in CRW traits (i.e. \code{StepLength} and \code{Rho})? Defaults to \code{FALSE}.}
-
 \item{StepLength}{Step length given in meters, defaults to \eqn{1}.\cr If \code{IndVar=TRUE}, expects a vector of length three
-specifying (Mean, SD, MutationScale) of \code{StepLength}.}
+specifying (Mean, SD, TraitScaleFactor) of \code{StepLength}.}
 
 \item{Rho}{Correlation parameter \eqn{ρ}, defaults to \eqn{0.5}. Must be in the open interval \eqn{(0,1)}.\cr If \code{IndVar=TRUE},
-expects a vector of length three specifying (Mean, SD, MutationScale) of \code{Rho}.}
+expects a vector of length three specifying (Mean, SD, TraitScaleFactor) of \code{Rho}.}
+
+\item{IndVar}{Individual variability in CorrRW traits (i.e. \code{StepLength} and \code{Rho})? Defaults to \code{FALSE}.}
 
 \item{StraightenPath}{Straighten path after decision not to settle in a patch? Defaults to \code{TRUE}, see Details below.}
 
@@ -39,12 +41,15 @@ correlation parameter \eqn{Rho} in the range \eqn{0} to \eqn{1} \insertCite{bart
 As for \code{\link[RangeShiftR]{SMS}}, all individuals take each step
 simultaneously. In the case of patch-based models,
 \eqn{Rho} is automatically set to \eqn{0.99} until the individual steps outside its natal patch, after which the value of
-\eqn{Rho} set by the user is restored. The \code{StepLength} and \eqn{Rho} can vary between individuals and can evolve (set \code{IndVar=TRUE}).
+\eqn{Rho} set by the user is restored. \cr
+The \code{StepLength} and \eqn{Rho} can be set to vary between individuals and evolve (set \code{IndVar=TRUE}).
 In this case, each individual exhibits two traits for these two parameters.
-For each trait the initial mean and standard deviations must be set, as well as the MutationScale (instead of only one constant value each).\cr
+For each trait the initial mean and standard deviations must be set, as well as the TraitScaleFactor (see \code{\link[RangeShiftR]{Settlement}}),
+instead of only one constant value each.\cr
 Note that the step length may not evolve below one fifth of
-the landscape resolution, and correlation may not evolve above \eqn{0.999}. Per-step mortality is not allowed to vary between
-individuals or to evolve. There is no implementation of sex- or stage-specific CRW.
+the landscape resolution, and correlation may not evolve above \eqn{0.999}. \cr
+Per-step mortality is not allowed to vary between individuals or to evolve. \cr
+There is no implementation of sex- or stage-specific CRW.
 
 When an individual arrives in a non-natal patch and decides not to settle there (as a result of a density-dependent or mate-finding settlement
 rule, see \code{\link[RangeShiftR]{Settlement}}), then there is the option that its path is straightened (\code{StraightenPath=TRUE}). This means

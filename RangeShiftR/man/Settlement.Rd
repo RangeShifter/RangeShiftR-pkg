@@ -5,25 +5,30 @@
 \alias{Settlement}
 \title{Set Settlement Parameters}
 \usage{
-Settlement(StageDep = FALSE, SexDep = FALSE, Settle = 0, FindMate = FALSE,
-           DensDep = FALSE, IndVar = FALSE, MutationScales,
-           MinSteps = 0, MaxSteps = 0, MaxStepsYear = 0)
+Settlement(StageDep = FALSE, SexDep = FALSE,
+          Settle = 0, FindMate = FALSE,
+          DensDep = FALSE,
+          IndVar = FALSE, TraitScaleFactor,
+          MinSteps = 0, MaxSteps = 0, MaxStepsYear = 0)
 }
 \arguments{
 \item{StageDep}{Stage-dependent settlement requirements? (default: \code{FALSE})}
 
 \item{SexDep}{Sex-dependent settlement requirements? (default: \code{FALSE})}
 
-\item{Settle}{Settlement codes (for \code{DispersalKernel}) or settlement probability parameters (for \emph{Movement process}) for all stages/sexes, defaults to \eqn{0} (i.e. 'die when unsuitable' for \emph{DispersalKernel} and
+\item{Settle}{Settlement codes (for \code{DispersalKernel}) or settlement probability parameters (for \emph{Movement process}) for all
+stages/sexes, defaults to \eqn{0} (i.e. 'die when unsuitable' for \emph{DispersalKernel} and
 'always settle when suitable' for \emph{Movement process}). See the Details below.}
 
 \item{FindMate}{Mating requirements to settle? Set for all stages/sexes. Must be \code{FALSE} (default) in a female-only model.}
 
 \item{DensDep}{Movement process only: Density-dependent settlement probability? (default: \code{FALSE})}
 
-\item{IndVar}{Movement process only: Individual variability in settlement probability traits? Must be \code{FALSE} (default) if \code{DensDep=FALSE} or \code{StageDep=TRUE}.}
+\item{IndVar}{Movement process only: Individual variability in settlement probability traits? Must be \code{FALSE} (default),
+if \code{DensDep=FALSE} or \code{StageDep=TRUE}.}
 
-\item{MutationScales}{Movement process only, required if \code{IndVar=TRUE}: The scaling factor(s) for the mutation of settlement traits. A numeric of length \eqn{1} (if \code{DensDep=FALSE}) or \eqn{3} (if \code{DensDep=TRUE}).}
+\item{TraitScaleFactor}{Movement process only, required if \code{IndVar=TRUE}: Scaling factors for the three traits of density-dependent settlement,
+a numeric of length \eqn{3}.}
 
 \item{MinSteps}{Movement process only: Minimum number of steps. Defaults to \eqn{0}.}
 
@@ -40,7 +45,7 @@ Settlement, or immigration, is the last phase of dispersal, when the organism st
 available settlement conditions vary depending on the used \code{\link[RangeShiftR]{Transfer}} type. In any case, dispersing individuals
 are not allowed to settle in their natal cell or patch and can only settle in suitable habitat.\cr
 \emph{RangeShiftR} incorporates some basic settlement rules that can be stage- or sex-specific or both (set \code{StageDep}, \code{SexDep}).
-If a movement process is used, density-dependence (\code{DensDep}) and inter-individual variability (\code{IndVar}) available.
+If a movement process is used, density-dependence (\code{DensDep}) and/or inter-individual variability (\code{IndVar}) are available.
 }
 \details{
 The settlement phase is determined by a suite of strategies, behaviours and reaction norms that lead individuals to the decision to stop
@@ -51,9 +56,9 @@ variability and context dependencies.
 The type of implemented settlement rules depends on the movement model utilized for the \code{\link[RangeShiftR]{Transfer}}.
 In any case, dispersing individuals are not allowed to settle in their natal cell or patch.\cr
 \emph{RangeShiftR} incorporates some basic settlement rules that can be stage- or sex-specific or both (set \code{StageDep}, \code{SexDep}).
-Inter-individual variability (\code{IndVar}) is implemented only for movement processes and the three traits
+Inter-individual variability (\code{IndVar}) is implemented only for movement processes and then for the three traits
 determining density-dependent settlement (\ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}}, \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{α_S}},
-\ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}}; see below), and if so, it may not be stage-dependent.\cr
+\ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}}; see below). In this case, settlement may not be stage-dependent.\cr
 
 \emph{Settlement with dispersal kernels}\cr
 When using a \code{\link[RangeShiftR]{DispersalKernel}}, individuals are displaced directly from the starting location to the arrival location. The suitability
@@ -90,6 +95,8 @@ If individuals are dispersing by one of the two movement processes implemented (
 \code{\link[RangeShiftR]{CorrRW}}), at each step (made simultaneously) they each evaluate their current cell or patch for the
 possibility of settling. This allows for the implementation of more complex settlement rules. The simplest one is that the individual
 decides to stop if there is suitable habitat; this is in any case a necessary condition (set \code{DensDep=FALSE}).\cr
+If a Settlement module with a constant \eqn{S_0=0} (the default) is used in a model with \emph{movement process},
+it gets converted to \eqn{S_0=1.0}, i.e. 'always settle when habitat is suitable'. \cr
 \cr
 Furthermore, the settlement decision can be density-dependent (set \code{DensDep=TRUE}). In this case, the individual has a probability \ifelse{html}{\out{p<sub>S</sub>}}{\eqn{p_S}}
 of settling in the cell or patch \eqn{i}, given by:
@@ -107,16 +114,23 @@ Further, \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}} is the maximum settlement
 \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}} is the inflection point of the function and
 \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{α_S}} is the slope at the inflection point.\cr
 
+Inter-individual variability \code{IndVar=TRUE} and thus evolution is implemented only for the three traits determining density-dependent settlement
+(\code{DensDep=TRUE}), and if so, it may not be stage-dependent (\code{StageDep=FALSE}).
+For each trait the initial distribution in the population (as mean and standard variation) must be set in \code{Settle} (instead of only one constant value),
+as well as their scaling factors in \code{TraitScaleFactor} (see \code{\link[RangeShiftR]{Genetics}}).
+
 The parameters that determine the settlement probabilities have to be provided via the parameter \code{Settle}, which generally takes a numeric matrix, or - if only a single constant probability is
-used - a single numeric. The format of the matrix is defined as follows: The number of columns depend on the options \code{DensDep} and \code{IndVar}. If \code{DensDep=FALSE}, the
+used (i.e. \code{DensDep, IndVar, StageDep, SexDep = FALSE}) - a single numeric.
+The format of the matrix is defined as follows: The number of columns depend on the options \code{DensDep} and \code{IndVar}. If \code{DensDep=FALSE}, the
 density-independent probability \ifelse{html}{\out{p<sub>S</sub>}}{\eqn{p_S}} must be specified. If \code{DensDep=TRUE}, the functional parameters \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}},
-\ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{α_S}} and \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}} (cp. equation above) must be specified.
+\ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{α_S}} and \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}} (cf. equation above) must be specified.
 Additionally, if \code{IndVar=FALSE}, these traits are fixed, but if \code{IndVar=TRUE} each of them is replaced by two parameters: their respective initial mean and
-standard deviation. They are used to normally distribute the traits values among the individuals of the initial population. Additionally, the \code{MutationScales} of
+standard deviation. They are used to normally distribute the traits values among the individuals of the initial population. Additionally, the \code{TraitScaleFactor} of
 these traits have to be set.
 
-All parameters have to be given for each stage/sex if the respective dependence is enabled. If \code{StageDep=TRUE}, state the corresponding stage in the first column.
-If \code{SexDep=TRUE}, state the corresponding stage in the next (i.e. first/second) column, with \eqn{0} for \emph{female} and \eqn{1} for \emph{male}. The following table lists the required columns and their correct order for different settings:
+All parameters have to be given for each stage/sex if the respective dependency is enabled. If \code{StageDep=TRUE}, state the corresponding stage in the first column.
+If \code{SexDep=TRUE}, state the corresponding stage in the next (i.e. first/second) column, with \eqn{0} for \emph{female} and \eqn{1} for \emph{male}.
+The following table lists the required columns and their correct order for different settings:
 
 \tabular{ccccc}{DensDep \tab IndVar \tab StageDep \tab SexDep \tab columns \cr
  F \tab F \tab F \tab F \tab - not applicable - \cr

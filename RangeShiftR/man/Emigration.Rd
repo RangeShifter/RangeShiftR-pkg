@@ -5,22 +5,27 @@
 \alias{Emigration}
 \title{Set Emigration Parameters}
 \usage{
-Emigration(DensDep = FALSE, IndVar = FALSE, StageDep = FALSE, SexDep = FALSE,
-           EmigProb = 0.0, MutationScales, EmigStage, UseFullKern = FALSE)
+Emigration(EmigProb = 0.0,
+           SexDep = FALSE, StageDep = FALSE,
+           DensDep = FALSE,
+           IndVar = FALSE,
+           TraitScaleFactor,
+           EmigStage,
+           UseFullKern = FALSE)
 }
 \arguments{
+\item{EmigProb}{Matrix containing all parameters (#columns) to determine emigration probabilities for each stage/sex (#rows). Its structure depends on the other parameters, see the Details.
+If the emigration probability is constant (i.e. \code{DensDep, IndVar, StageDep, SexDep = FALSE}), \code{EmigProb} can take a single numeric. Defaults to \eqn{0.0}.}
+
+\item{SexDep}{Sex-dependent emigration probability? (default: \code{FALSE})}
+
+\item{StageDep}{Stage-dependent emigration probability? (default: \code{FALSE}) Must be \code{FALSE} if \code{IndVar=TRUE}.}
+
 \item{DensDep}{Density-dependent emigration probability? (default: \code{FALSE})}
 
 \item{IndVar}{Individual variability in emigration traits? (default: \code{FALSE}) Must be \code{FALSE} if \code{StageDep=TRUE}.}
 
-\item{StageDep}{Stage-dependent emigration probability? (default: \code{FALSE}) Must be \code{FALSE} if \code{IndVar=TRUE}.}
-
-\item{SexDep}{Sex-dependent emigration probability? (default: \code{FALSE})}
-
-\item{EmigProb}{Matrix containing all parameters (#columns) to determine emigration probabilities for each stage/sex (#rows). Its structure depends on the above four parameters, see the Details.
-If the emigration probability is constant (i.e. all four above parameters are set to \code{FALSE}), \code{EmigProb} can take a single numeric. Defaults to \eqn{0.0}.}
-
-\item{MutationScales}{Required if \code{IndVar=TRUE}: The scaling factor(s) for the mutation of emigration traits. A numeric of length \eqn{1} (if \code{DensDep=FALSE}) or \eqn{3} (if \code{DensDep=TRUE}).}
+\item{TraitScaleFactor}{Required if \code{IndVar=TRUE}: The scaling factor(s) for emigration traits. A numeric of length \eqn{1} (if \code{DensDep=FALSE}) or \eqn{3} (if \code{DensDep=TRUE}).}
 
 \item{EmigStage}{Required for stage-structured populations with \code{IndVar=TRUE}: Stage which emigrates. (\code{StageDep} must be \code{FALSE})}
 
@@ -33,7 +38,7 @@ a parameter object of class "EmigrationParams"
 Emigration - the first phase of dispersal - is modelled as the probability that an individual leaves its natal patch during the present year (or season).
 It is constant by default, but can be set to be density-dependent (\code{DensDep}) and/or to vary for each individual (\code{IndVar}). In case of a stage-structured/sexual
 population model, the emigration probabilities can also vary with stage/sex (\code{StageDep/SexDep}). If inter-individual variability is
-enabled, the emigration traits can also be allowed to evolve by setting the mutation size(s) \code{MutationScales}.
+enabled, the emigration traits can also be allowed to evolve (also set \code{TraitScaleFactor}).
 }
 \details{
 Emigration is modelled as the probability \eqn{d} that an individual leaves its natal patch during the present year or season (every reproductive event
@@ -47,7 +52,7 @@ The emigration probability \eqn{d} can be density-dependent (set \code{DensDep=T
 
 In the case of stage-structured models this equation is modified to:
 
-\ifelse{html}{\out{&emsp;&emsp; d(i,t) = D<sub>0</sub> / ( 1 + e<sup>-&alpha;sub>E</sub> (b(i,t) * N(i,t) - &beta;sub>E</sub>) </sup> ) } }{\deqn{ d(i,t) = D_0 / ( 1 + exp[-α_E (b(i,t) N(i,t) - β_E) ] ) } }.
+\ifelse{html}{\out{&emsp;&emsp; d(i,t) = D<sub>0</sub> / ( 1 + e<sup>-&alpha;sub>E</sub> (b(i,t) * N(i,t) - &beta;sub>E</sub>) </sup> ) } }{\deqn{ d(i,t) = D_0 / ( 1 + exp[-α_E (b(i,t) N(i,t) - β_E) ] ) } }
 
 In the first case, \eqn{K(i,t)} is the carrying capacity of the cell/patch \eqn{i} at time \eqn{t} given by \code{K_or_DensDep}.
 In the latter case, \eqn{b(i,t)} represents the strength of density dependence and is given by the inverse of \code{K_or_DensDep}.\cr
@@ -64,17 +69,18 @@ Information acquisition is not explicitly modelled.
 
 The emigration probability can be allowed to vary between individuals (set \code{IndVar=TRUE}) and to evolve. In the this case, individuals exhibit either one trait
 determining the density-independent \eqn{d} (when \code{DensDep=FALSE}), or the three traits \ifelse{html}{\out{D<sub>0</sub>}}{\eqn{D_0}}, \eqn{α} and
-\eqn{β} determining the density-dependent emigration probability (when \code{DensDep=TRUE}).
-For each tiations must be set (instead of only one constant value).
+\eqn{β} determining the density-dependent emigration probability (when \code{DensDep=TRUE}).\cr
+For each trait the initial distribution in the population (as mean and standard variation) must be set in \code{EmigProb} (instead of only one constant value),
+as well as their scaling factors in \code{TraitScaleFactor} (see \code{\link[RangeShiftR]{Genetics}}).
 Also, if \code{IndVar=TRUE} is set for a stage-structured population, it is required to specify the stage which emigrates via \code{EmigStage}.
 
 It is possible to model sex-specific emigration strategies (set \code{SexDep=TRUE}) \insertCite{greenwood1980mating,lawson2007advances}{RangeShiftR}.
-In this case the number of loci is doubled; one set coding for the trait
-in females and the other for the trait in males. As well as being sex-biased, emigration parameters can be stage-biased (set \code{StageDep=TRUE}) when modelling
-stage-structured populations. However, the current version does not accommodate inter-individual variation in emigration strategies when they are stage-dependent.
+In this case the number of traits is doubled; one set coding for the trait(s) in females and the other for the trait(s) in males.
+As well as being sex-biased, emigration parameters can be stage-biased (set \code{StageDep=TRUE}) when modelling stage-structured populations.
+However, the current version does not accommodate inter-individual variation in emigration strategies when they are stage-dependent.
 
 The parameters that determine the emigration probabilities have to be provided via \code{EmigProb}, which generally takes a matrix, or - if only a single constant probability is
-used - a single numeric. The format of the matrix is defined as follows: The number of columns depend on the options \code{DensDep} and \code{IndVar}. If \code{DensDep=FALSE}, the
+used (i.e. \code{DensDep, IndVar, StageDep, SexDep = FALSE}) - a single numeric. The format of the matrix is defined as follows: The number of columns depend on the options \code{DensDep} and \code{IndVar}. If \code{DensDep=FALSE}, the
 density-independent probability \eqn{d} must be specified. If \code{DensDep=TRUE}, the functional parameters \ifelse{html}{\out{D<sub>0</sub>}}{\eqn{D_0}}, \eqn{α} and \eqn{β} (cp. equation above) must be specified.
 Additionally, if \code{IndVar=FALSE}, these parameters are fixed, but if \code{IndVar=TRUE} each of them is replaced by two parameters: their respective mean and
 standard deviation. They are used to normally distribute the traits values among the individuals of the initial population.
@@ -116,7 +122,7 @@ plotProbs(emig_1)
 
 # inter-individual variation
 emigmat_2 <- matrix(c(0,.7,.1,20,7,.2,.01,1,.9,.05,40,4,.5,.05), byrow = TRUE, ncol = 7)
-emig_2 <- Emigration(DensDep = TRUE, IndVar = TRUE, SexDep = TRUE, EmigProb = emigmat_2, MutationScales = c(.1,7,.05))
+emig_2 <- Emigration(DensDep = TRUE, IndVar = TRUE, SexDep = TRUE, EmigProb = emigmat_2, TraitScaleFactor = c(.1,7,.05))
 plotProbs(emig_2)
 }
 \references{

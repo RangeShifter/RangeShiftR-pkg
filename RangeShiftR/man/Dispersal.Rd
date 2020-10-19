@@ -30,7 +30,7 @@ Dispersal is defined as movement leading to spatial gene flow. It typically invo
 The specific parameters of each phase are set through their respective functions. For more details, see their documentation.\cr
 \cr
 The potential evolution of several key dispersal traits is implemented through the possibility of inter-individual variability and heritability.
-This option (called \code{IndVar}) can be enabled for each dispersal phase in their respective modules. See the Datails below for information on how
+This option (called \code{IndVar}) can be enabled for each dispersal phase in their respective modules. See the Details below for information on how
 to set the associated parameters. Additionally, the \code{\link[RangeShiftR]{Genetics}} module must be defined.
 }
 \details{
@@ -49,11 +49,11 @@ switches \code{StageDep} and \code{SexDep} in the respective functions. In the c
 one set coding for the trait in females and the other for the trait in males. As well as being sex-biased, all dispersal phases can be
 stage-biased, meaning that parameters can vary for different stage or age classes.
 
-The options of inter-individual variability in the various dispersal traits is enabled by setting \code{IndVar=TRUE} for the respective transfer phase
+The options of inter-individual variability in the various dispersal traits can be enabled by setting \code{IndVar=TRUE} for the respective dispersal phase
 module and defining the genetic module to simulate heritability and evolution of traits (\code{\link[RangeShiftR]{Genetics}}).\cr
-For each such heritable dispersal trait, this requires to set the mean and standard deviation of the initial distribution of the trait values,
-(instead of a constant value as in the case of \code{IndVar=FALSE})
-as well as the \code{MutationScale} (see \code{\link[RangeShiftR]{Genetics}} documentaion).\cr
+For each such heritable dispersal trait, this requires to set the mean and standard deviation of the distribution of trait values
+in the initial population (instead of a constant value each, as in the case of \code{IndVar=FALSE}),
+as well as the \code{TraitScaleFactor} for each heritable trait (see \code{\link[RangeShiftR]{Genetics}} documentaion).\cr
 
 Note, however, that not all combinations of sex-/stage-dependencies with inter-individual variability are implemented.\cr
 }

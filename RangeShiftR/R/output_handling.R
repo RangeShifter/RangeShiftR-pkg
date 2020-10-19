@@ -818,7 +818,7 @@ setMethod("getLocalisedEquilPop", "DemogParams", function(demog, DensDep_values,
         colors <- hcl.colors(length(stages_out), palette = "Harmonic")
         if(demog@ReproductionType <2){
             barplot(res[as.character(stages_out),], names.arg = as.integer(DensDep_values), beside = F, col = colors,
-                          main = "Localised Equilibrium Populations", xlab = "1/b", ylab = "Abundance")
+                          main = "Localised Equilibrium Populations", xlab = "1/b", ylab = "Population density")
         }
         if(demog@ReproductionType==2){
             if(length(stages_out)<2) warning("getLocalisedEquilPop(): Please specify more than one stage when plotting a sex-explicit model.", call. = TRUE)
@@ -829,7 +829,7 @@ setMethod("getLocalisedEquilPop", "DemogParams", function(demog, DensDep_values,
                 res_2 <- cbind(res_2[mal,1:length(DensDep_values)],res_2[fem,1:length(DensDep_values)])
                 res_2 <- cbind(res_2[,c(sapply(1:length(DensDep_values), function(i){c(0,1)*length(DensDep_values)+i}))])
                 barplot(res_2, space=c(0.3,0.1), names.arg = c(rbind(DensDep_values,NA)), beside = F, col = rep(colors, 2),
-                        main = "Localised Equilibrium Populations", xlab = "1/b", ylab = "Abundance")
+                        main = "Localised Equilibrium Populations", xlab = "1/b", ylab = "Population density")
                 text(seq(0.5,length(DensDep_values)*2,2)*1.2, colSums(res_2[,seq(1,length(DensDep_values)*2,2)])*1.1, "m", cex=1, col="black")
                 text(seq(1.5,length(DensDep_values)*2,2)*1.2, colSums(res_2[,seq(2,length(DensDep_values)*2,2)])*1.1, "f", cex=1, col="black")
             }

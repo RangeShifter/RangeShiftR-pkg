@@ -14,15 +14,16 @@ a potential new patch, ending with settlement or mortality. This movement can be
 }
 \details{
 The choice between the two main methods to model the transfer phase, i.e. phenomenological dispersal kernels or mechanistic movement processes
-(SMS and CRW) depends on the information available for a given species and the level of detail that is considered important to represent in models
-(which will depend on the aim and the scale of the model).
+(SMS and CRW) depends on the information available for a given species and on the level of detail that is considered important to represent in
+the model (which will depend on its aim and the scale).
 \cr
-Dispersal is often a costly process for an organism \insertCite{bonte2012costs}{RangeShiftR} and, in some cases, a dispersing individual may suffer mortality. Obtaining a sensible
+Dispersal is often a costly process for an organism \insertCite{bonte2012costs}{RangeShiftR} and, in some cases, a dispersing individual may
+suffer mortality. Obtaining a sensible
 representation of dispersal requires that these mortality costs are described appropriately. The total dispersal mortality experienced will
 be the sum of two main sources of mortality: First, as the result of individuals failing to reach suitable habitat, and second, as the result
 of increased energetic, time or attritional costs that longer-distance dispersers will experience.
 For more details, refer also to the respective Details sections of the different transfer methods.
-In parameterising the model, it will be important to recognize this such that dispersal mortality is not double-accounted.
+In parameterising the model, it will be important to recognise this such that dispersal mortality is not double-accounted.
 }
 \references{
 \insertAllCited{}

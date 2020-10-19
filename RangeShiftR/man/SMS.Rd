@@ -6,9 +6,12 @@
 \title{Set up a Stochastic Movement Simulator}
 \usage{
 SMS(PR = 1, PRMethod = 1, MemSize = 1,
-    GoalType = 0, IndVar = FALSE,
-    DP = 1.0, GoalBias = 1.0, AlphaDB, BetaDB,
-    StraightenPath = TRUE, Costs, StepMort = 0.0)
+    DP = 1.0,
+    GoalType = 0,
+    GoalBias = 1.0, AlphaDB, BetaDB,
+    IndVar = FALSE,
+    Costs, StepMort = 0.0,
+    StraightenPath = TRUE)
 }
 \arguments{
 \item{PR}{Perceptual range. Given in number of cells, defaults to \eqn{1}. (integer)}
@@ -19,23 +22,21 @@ mean\cr \eqn{3 = }Weighted arithmetic mean}
 \item{MemSize}{Size of memory, given as the number of previous steps over which to calculate current direction to apply directional persistence
 (\code{DP}). A maximum of \eqn{14} steps is supported, default is \eqn{1}. (integer)}
 
+\item{DP}{Directional persistence. Corresponds to the tendency to follow a correlated random walk, must be \eqn{\ge 1.0}, defaults to \eqn{1.0}.\cr
+If \code{IndVar=TRUE}, expects a vector of length three specifying (Mean, SD, TraitScaleFactor) of \code{DP}.}
+
 \item{GoalType}{Goal bias type: \eqn{0 = } None (default), \eqn{2 = } Dispersal bias.}
 
-\item{IndVar}{Individual variability in SMS traits (i.e. \code{GoalBias}, \code{AlphaDB} and \code{BetaDB})? Defaults to \code{FALSE}.}
-
-\item{DP}{Directional persistence. Corresponds to the tendency to follow a correlated random walk, must be \eqn{\ge 1.0}, defaults to \eqn{1.0}.\cr
-If \code{IndVar=TRUE}, expects a vector of length three specifying (Mean, SD, MutationScale) of \code{DP}.}
-
 \item{GoalBias}{Only if \code{GoalType=2}: Goal bias strength. Must be must be \eqn{\ge 1.0}, defaults to \eqn{1.0}. \cr If \code{IndVar=TRUE}, expects a vector of length three
-specifying (Mean, SD, MutationScale) of \code{GoalBias}.}
+specifying (Mean, SD, TraitScaleFactor) of \code{GoalBias}.}
 
 \item{AlphaDB}{Required if \code{GoalType=2}: Dispersal bias decay rate. Must be must be \eqn{> 0.0}.\cr If \code{IndVar=TRUE}, expects a vector of length three
-specifying (Mean, SD, MutationScale) of \code{AlphaDB}.}
+specifying (Mean, SD, TraitScaleFactor) of \code{AlphaDB}.}
 
 \item{BetaDB}{Required if \code{GoalType=2}: Dispersal bias decay inflection point (given in number of steps). Must be must be \eqn{> 0.0}.\cr If \code{IndVar=TRUE},
-expects a vector of length three specifying (Mean, SD, MutationScale) of \code{BetaDB}.}
+expects a vector of length three specifying (Mean, SD, TraitScaleFactor) of \code{BetaDB}.}
 
-\item{StraightenPath}{Straighten path after decision not to settle in a patch? Defaults to \code{TRUE}, see Details below.}
+\item{IndVar}{Individual variability in SMS traits (i.e. \code{DP}, \code{GoalBias}, \code{AlphaDB} and \code{BetaDB})? Defaults to \code{FALSE}.}
 
 \item{Costs}{Describes the landscapes resistance to movement. Set either: \cr
  - \emph{habitat-specific} costs for each habitat type, or\cr
@@ -50,6 +51,8 @@ This is the only option for an imported landscape with habitat qualities / cover
 value \eqn{0.0}) or \emph{habitat-specific}, in which case a numeric vector (with a length as described above for \code{Costs}) is expected.
 All values must be within the half-open interval \eqn{[0,1)}. \cr
 For an imported habitat quality landscape (\code{HabPercent=TRUE}), only constant per-step mortality is allowed.}
+
+\item{StraightenPath}{Straighten path after decision not to settle in a patch? Defaults to \code{TRUE}, see Details below.}
 }
 \value{
 a parameter object of class "StochMove"
@@ -60,7 +63,7 @@ SMS is a stochastic individual-based movement model where organisms move through
 cost surfaces as the least cost path (LCP) method, but it relaxes two of its main assumptions: Firstly, individuals are not assumed to be
 omniscient, but move according to what they can perceive of the landscape within their perceptual range (\code{PR}). Secondly, individuals
 do not know a priori their final destination, which is a reasonable assumption for dispersing individuals. For a complete description of the
-method, see the Datails below or refer to Palmer et al. (2011).
+method, see the Datails below or refer to \insertCite{palmer2011introducing;textual}{RangeShiftR}.
 }
 \details{
 SMS is a stochastic individual-based model where organisms move through grid-based, heterogeneous landscapes. The model uses similar cost
@@ -108,10 +111,15 @@ to the path always being straightened, as an individual enters a new patch as so
 advisable to disable the feature (\code{StraightenPath=FALSE}), although care must be taken that individuals do not become trapped in patches
 surrounded by very high cost matrix.
 
-When inter-individual variability is activated (set \code{IndVar=TRUE}), the movement traits \code{DP}, \code{AlphaDB} and \code{BetaDB} can evolve.
-For each trait the initial mean and standard deviations must be set, as well as the MutationScale (instead of only one constant value each).\cr
+When inter-individual variability is activated (set \code{IndVar=TRUE}), the four SMS movement traits \code{DP}, as well as - if dispersal goal bias
+is enabled - \code{GB}, \code{AlphaDB} and \code{BetaDB} can evolve.
+For each trait the population initial mean and standard deviations must be set (instead of the constant value), as well as its scaling factor
+(see \code{\link[RangeShiftR]{Genetics}}).\cr
 
 As currently implemented, there is no sex- or stage- dependence of SMS traits.
+
+The production of the output ‘dispersal heat maps’, which show the total number of times each cell is visited by dispersing individuals within a
+single replicate simulation, can be enabled with the option \code{SMSHeatMap} in \code{\link[RangeShiftR]{Simulation}}.
 
 \emph{Costs layer} \cr
 Critical for the outcomes of SMS are the relative costs assigned to the different habitats (as it is also the case for

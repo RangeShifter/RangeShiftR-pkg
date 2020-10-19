@@ -5,47 +5,46 @@
 \alias{DispersalKernel}
 \title{Set up a Dispersal Kernel}
 \usage{
-DispersalKernel(IndVar = FALSE, DoubleKernel = FALSE,
-                StageDep = FALSE, SexDep = FALSE,
-                Distances = 100,
-                MutationScales, DistMort = FALSE,
+DispersalKernel(Distances = 100, DoubleKernel = FALSE,
+                SexDep = FALSE, StageDep = FALSE,
+                IndVar = FALSE,
+                TraitScaleFactor,
+                DistMort = FALSE,
                 MortProb = 0.0, Slope, InflPoint)
 }
 \arguments{
-\item{IndVar}{Individual variability in dispersal kernel traits? (default: \code{FALSE}) Must be \code{FALSE} if \code{StageDep=TRUE}.}
+\item{Distances}{Matrix containing all dispersal kernel parameters (#columns) for each stage/sex (#rows). Its structure depends on the other parameters, see the Details.
+If the mean dispersal distance is constant (i.e. \code{DensDep, IndVar, StageDep, SexDep = FALSE}), \code{Distances} can take a single numeric. Defaults to \eqn{100}.}
 
 \item{DoubleKernel}{Use a mixed (i.e. double negative exponential) kernel? (default: \code{FALSE}) Set probability for using Kernel-1 in matrix \code{Distances}.}
 
-\item{StageDep}{Stage-dependent dispersal kernel? (default: \code{FALSE}) Must be \code{FALSE} if \code{IndVar=TRUE}.}
-
 \item{SexDep}{Sex-dependent dispersal kernel? (default: \code{FALSE})}
 
-\item{Distances}{Matrix containing all dispersal kernel parameters (#columns) for each stage/sex (#rows). Its structure depends on the above four parameters, see the Details.
-If the mean dispersal distance is constant (i.e. all four above parameters are set to \code{FALSE}), \code{Distances} can take a single numeric. Defaults to \eqn{100}.}
+\item{StageDep}{Stage-dependent dispersal kernel? (default: \code{FALSE}) Must be \code{FALSE} if \code{IndVar=TRUE}.}
 
-\item{MutationScales}{Required if \code{IndVar=TRUE}: The scaling factor(s) for the mutation of dispersal kernel traits. A numeric of length \eqn{1} (if \code{DoubleKernel=FALSE}) or \eqn{3} (if \code{DoubleKernel=TRUE}).}
+\item{IndVar}{Individual variability in dispersal kernel traits? (default: \code{FALSE}) Must be \code{FALSE}, if \code{StageDep=TRUE}.}
 
-\item{DistMort}{Distance-dependent mortality? (default: \code{FALSE})}
+\item{TraitScaleFactor}{Required if \code{IndVar=TRUE}: The scaling factor(s) for dispersal kernel traits. A numeric of length \eqn{1} (if \code{DoubleKernel=FALSE}) or \eqn{3} (if \code{DoubleKernel=TRUE}).}
+
+\item{DistMort}{Distance-dependent mortality probability? (default: \code{FALSE})}
 
 \item{MortProb}{Constant mortality probability. Required if \code{DistMort=FALSE}, defaults to \eqn{0.0}.}
 
-\item{Slope}{Required if \code{DistMort=TRUE}: Slope for the mortality distance dependence function.}
-
 \item{InflPoint}{Required if \code{DistMort=TRUE}: Inflection point for the mortality distance dependence function.}
+
+\item{Slope}{Required if \code{DistMort=TRUE}: Slope at inflection point for the mortality distance dependence function.}
 }
 \value{
 a parameter object of class "DispersalKernel"
 }
 \description{
 A method to describe \code{\link[RangeShiftR]{Transfer}}: Dispersal kernels are statistical distributions that are largely used to describe dispersal distances. The main assumption behind them
-is that the principal determinant of the probability of an individual dispersing to a particular site is the distance from the starting
-location.
-\cr
+is that the principal determinant of the probability of an individual dispersing to a particular site is the distance from the starting location.\cr
 As for the other dispersal phases, movement abilities and strategies are under multiple selective pressures and can evolve separately.
-As a result, the realized dispersal kernels will themselves evolve.
+As a result, the realised dispersal kernels will themselves evolve.
 }
 \details{
-Two types of kernels are implemented: negative exponential and a mixed kernel given by two different negative exponentials.
+Two types of dispersal kernels are implemented: negative exponential and a mixed kernel given by two different negative exponentials.
 Here, kernels are considered as ‘distance kernels’, i.e. the statistical distribution of the probability that an individual will move a
 certain distance \insertCite{hovestadt2012evolution,nathan2012dispersal}{RangeShiftR}. These kernels are specifically used for the \code{\link[RangeShiftR]{Transfer}} phase, meaning that they do
 not incorporate information on the \code{\link[RangeShiftR]{Emigration}} or \code{\link[RangeShiftR]{Settlement}} probabilities, which are modelled independently. Therefore, dispersal kernels are
@@ -87,15 +86,17 @@ Otherwise, the conditions for the single kernel apply.
 \ifelse{html}{\out{&emsp;&emsp; p(d; &delta;<sub>1</sub>,&delta;<sub>2</sub>) = p<sub>I</sub> p(d;&delta;<sub>1</sub>) + (1-p<sub>I</sub>) p(d;&delta;<sub>1</sub>)}}{\deqn{ p(d; δ_1,δ_2) = p_I p(d;δ_1) + (1-p_I) p(d;δ_2)}}
 
 For both types of kernel, inter-individual variability of the kernel traits is possible (set \code{IndVar=TRUE}). Individuals will
-carry either one trait for \eqn{δ} or three trait for \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{δ_1}}, \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{δ_2}} and \ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}}, which they inherit from the parents. Dispersal
-kernels can also be sex-dependent (set \code{SexDep=TRUE}). In the case of inter-individual variability, individuals will carry either two trait (female \eqn{δ}
-and male δ) or six trait (female and male \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{δ_1}}, \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{δ_2}} and \ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}}).
-For each trait the initial mean and standard deviations must be set (instead of only one constant value each).\cr
+carry either one trait for \eqn{δ} or three traits for \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{δ_1}}, \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{δ_2}} and
+\ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}}, which they inherit from their parents.\cr
+Dispersal kernels can also be sex-dependent (set \code{SexDep=TRUE}). In the case of inter-individual variability, the number of traits is doubled to two trait (female \eqn{δ}
+and male δ) or six traits (female and male \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{δ_1}}, \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{δ_2}} and \ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}}).\cr
+For each trait the initial distribution in the population (as mean and standard variation) must be set in \code{Distances} (instead of only one constant value),
+as well as their scaling factors in \code{TraitScaleFactor} (see \code{\link[RangeShiftR]{Genetics}}).\cr
 
-Finally, dispersal kernels can be stage-specific (set \code{StageDep=TRUE}). For this case, inter-individual variability is not implemented.
+Further, dispersal kernels can be stage-specific (set \code{StageDep=TRUE}). For this case, inter-individual variability is not implemented.
 
 All dispersal kernel parameters have to be provided via \code{Distances}, which generally takes a matrix, or - if only a single constant mean distance is
-used - a single numeric. The format of the matrix is defined as follows: The number of columns depend on the options \code{IndVar} and \code{DoubleKernel}.
+used (i.e. \code{DensDep, IndVar, StageDep, SexDep = FALSE}) - a single numeric. The format of the matrix is defined as follows: The number of columns depend on the options \code{IndVar} and \code{DoubleKernel}.
 If \code{DoubleKernel=FALSE}, the mean dispersal distance \eqn{δ} must be specified (in meters). If \code{DoubleKernel=TRUE}, the mean dispersal distances
 \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{δ_1}} and \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{δ_2}} (in meters), as well as the probability \ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}} of using Kernel-1 must be specified.
 Additionally, if \code{IndVar=FALSE}, these parameters are fixed, but if \code{IndVar=TRUE} each of them is replaced by two parameters: their respective mean and
@@ -157,7 +158,7 @@ plotProbs(disp_1, mortality = TRUE)
 
 # mixed kernel with inter-individual variation
 dists_2 <- matrix(c(0,1000,300,2500,500,0.62,0.13,1,3400,860,8000,2800,0.72,0.12), byrow = TRUE, ncol = 7)
-disp_2 <- DispersalKernel(Distances = dists_2, SexDep = TRUE, DoubleKernel = TRUE, MutationScales = c(900,2800,0.14), IndVar = TRUE)
+disp_2 <- DispersalKernel(Distances = dists_2, SexDep = TRUE, DoubleKernel = TRUE, TraitScaleFactor = c(900,2800,0.14), IndVar = TRUE)
 plotProbs(disp_2, xmax = 10000, combinekernels = TRUE)
 }
 \references{
