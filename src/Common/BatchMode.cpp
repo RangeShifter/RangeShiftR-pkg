@@ -1399,13 +1399,17 @@ while (inint != -98765) {
 	bParamFile >> inint;
 	if (inint < 0) { BatchError(filetype,line,19,"OutIntOcc"); errors++; }
 	else {
-		if (landtype ==9 && inint == 1) {
-			BatchError(filetype,line,0," "); errors++;
-			batchlog << "OutIntOcc must be zero for a generated landscape" << endl;
+		if (landtype == 9) {
+			if (inint > 0) {
+				BatchError(filetype,line,0," "); errors++;
+				batchlog << "OutIntOcc must be zero for a generated landscape" << endl;
+			}
 		}
-		if (replicates < 2 && inint == 1) {
-			BatchError(filetype,line,0," "); errors++;
-			batchlog << "OutIntOcc may be 1 only if Replicates >= 2" << endl;
+		else {
+			if (replicates < 2 && inint > 0) {
+				BatchError(filetype,line,0," "); errors++;
+				batchlog << "OutIntOcc may be non-zero only if Replicates >= 2" << endl;
+			}
 		}
 	}
 	bParamFile >> inint;
