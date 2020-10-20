@@ -358,6 +358,11 @@ return  gamma;
 		if (pNormal != 0) delete pNormal;
 	}
 
+	mt19937 RSrandom::getRNG(void) {
+		// return random number generator
+		return *gen;
+	}
+
 	double RSrandom::Random(void) {
 		// return random number between 0 and 1
 		return pRandom01->operator()(*gen);

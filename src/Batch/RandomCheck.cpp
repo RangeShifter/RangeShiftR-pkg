@@ -24,7 +24,9 @@ void randomCheck(void)
 	name = paramsSim->getDir(1) + "RandomCheck.txt";
 	inRandom.open(name.c_str());
 	if (!inRandom.is_open()) {
+		#if !RS_RCPP
 		cout << endl << "***** Error opening input file RandomCheck.txt" << endl;
+		#endif
 		inRandom.clear();
 		return;
 	}

@@ -6,7 +6,7 @@ Implements the RSrandom class
 
 Author: Steve Palmer, University of Aberdeen
 
-Last updated: 20 August 2020 by Anne-Kathleen Malchow, Potsdam University
+Last updated: 14 October 2020 by Anne-Kathleen Malchow, Potsdam University
 
 ------------------------------------------------------------------------------*/
 
@@ -82,6 +82,7 @@ extern ofstream DEBUGLOG;
 	public:
 		RSrandom(std::int64_t);              // if int is negative, a random seed will be generated, else it is used as seed
 		~RSrandom(void);
+		mt19937 getRNG(void);
 		double Random(void);
 		int IRandom(int,int);
 		int Bernoulli(double);
