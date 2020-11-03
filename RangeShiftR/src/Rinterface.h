@@ -1,16 +1,30 @@
+/*----------------------------------------------------------------------------
+ *	
+ *	Copyright (C) 2020 Anne-Kathleen Malchow, Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Damaris Zurell
+ *	
+ *	This file is part of RangeShiftR.
+ *	
+ *	RangeShiftR is free software: you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation, either version 3 of the License, or
+ *	(at your option) any later version.
+ *	
+ *	RangeShifter is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *	GNU General Public License for more details.
+ *	
+ *	You should have received a copy of the GNU General Public License
+ *	along with RangeShiftR. If not, see <https://www.gnu.org/licenses/>.
+ *	
+ --------------------------------------------------------------------------*/
+ 
+ 
 /*------------------------------------------------------------------------------
 
 RangeShifter v2.0 Rinterface
 
 Implements the interface to the R-package RangeshiftR.
-
-Includes the following functions:
-
-For full details of RangeShifter, please see:
-Bocedi G., Palmer S.C.F., Pe'er G., Heikkinen R.K., Matsinos Y.G., Watts K.
-and Travis J.M.J. (2014). RangeShifter: a platform for modelling spatial
-eco-evolutionary dynamics and species' responses to environmental changes.
-Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Author: Anne-Kathleen Malchow, Humboldt University Berlin
         large parts modified from 'Main.cpp' and 'BatchMode.cpp' created by
