@@ -1892,9 +1892,6 @@ case 0: // raster with habitat codes - 100% habitat each cell
 				}
 #endif
 			}
-			if (costs) {
-				cfloat = badcfloat; cfile >> cfloat; c = (int)cfloat;
-			}
 #if RSDEBUG
 //DebugGUI(("Landscape::readLandscape(): x=" + Int2Str(x) + " y=" + Int2Str(y)
 //	+ " h=" + Int2Str(h) + " p=" + Int2Str(p)
@@ -2035,9 +2032,6 @@ case 0: // raster with habitat codes - 100% habitat each cell
 					return 173;
 				}
 #endif
-			}
-			if (costs) {
-				cfloat = badcfloat; cfile >> cfloat; c = (int)cfloat;
 			}
 #if RSDEBUG
 //MemoLine(("y=" + Int2Str(y) + " x=" + Int2Str(x) + " hfloat=" + Float2Str(hfloat)
