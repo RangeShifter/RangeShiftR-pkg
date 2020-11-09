@@ -5,7 +5,7 @@
 
 #define RSDEBUG 0
 
-#define CLUSTER	0
+#define LINUX_CLUSTER	0
 #define RSWIN64 1
 
 #define BATCH 0

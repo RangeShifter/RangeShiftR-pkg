@@ -149,7 +149,7 @@ DEBUGLOG << endl << "RunModel(): starting simulation=" << sim.simulation << " re
 #if RS_RCPP && !R_CMD
 		Rcpp::Rcout << endl << "starting replicate " << rep << endl;
 #else
-#if !VCL
+#if BATCH
 		cout << endl << "starting replicate " << rep << endl;
 #endif
 #endif
@@ -216,7 +216,7 @@ DEBUGLOG << "RunModel(): patch count is " << npatches << endl;
 //	<< endl;
 #endif
 #if RSWIN64
-#if CLUSTER
+#if LINUX_CLUSTER
 			pComm->addSubComm(ppp.pPatch,ppp.patchNum); // SET UP ALL SUB-COMMUNITIES
 #else
 			SubCommunity *pSubComm = pComm->addSubComm(ppp.pPatch,ppp.patchNum); // SET UP ALL SUB-COMMUNITIES

@@ -1788,7 +1788,7 @@ do {
 			}
 			else { // negative exponential kernel
 				r1 = 0.0000001 + pRandom->Random()*(1.0-0.0000001);
-				dist = (-1.0*meandist)*log(r1);  // for CLUSTER
+				dist = (-1.0*meandist)*log(r1);  // for LINUX_CLUSTER
 			}
 			*/
 
@@ -1797,7 +1797,7 @@ do {
 			case 0: // single negative exponential
 			case 1: // single negative exponential
 				r1 = 0.0000001 + pRandom->Random()*(1.0-0.0000001);
-				dist = (-1.0*meandist)*log(r1);  // for CLUSTER
+				dist = (-1.0*meandist)*log(r1);  // for LINUX_CLUSTER
 				break;
 				
 			case 2: // 2Dt
@@ -1872,7 +1872,7 @@ do {
 			
 			r1 = 0.0000001 + pRandom->Random()*(1.0-0.0000001);
 //			dist = (-1.0*meandist)*std::log(r1);
-			dist = (-1.0*meandist)*log(r1);  // for CLUSTER
+			dist = (-1.0*meandist)*log(r1);  // for LINUX_CLUSTER
 			
 #endif // RS_CONTAIN 
 
@@ -2001,7 +2001,7 @@ if (status < 7) {
 	trfrMortParams mort = pSpecies->getMortParams();
 	if (trfr.distMort) {
 //		dispmort = 1.0 / (1.0 + std::exp(-(dist - mort.mortBeta)*mort.mortAlpha));
-		dispmort = 1.0 / (1.0 + exp(-(dist - mort.mortBeta)*mort.mortAlpha));  // for CLUSTER
+		dispmort = 1.0 / (1.0 + exp(-(dist - mort.mortBeta)*mort.mortAlpha));  // for LINUX_CLUSTER
 	}
 	else {
 		dispmort = mort.fixedMort;
@@ -3215,7 +3215,7 @@ unsigned int Individual::getMatPosn(void)	{ return matPosn; }
 // functions derived from mathlib.cpp
 
 //#if RSWIN64
-#if !CLUSTER
+#if !LINUX_CLUSTER
 double rwrpcauchy (double location, double rho) {
 double result;
 

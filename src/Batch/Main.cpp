@@ -36,7 +36,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Author: Steve Palmer, University of Aberdeen
 
-Last updated: 24 July 2020 by Anne-Kathleen Malchow, Potsdam University
+Last updated: 9 November 2020 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -107,7 +107,7 @@ ofstream MUTNLOG;
 #endif
 
 //---------------------------------------------------------------------------
-#if CLUSTER || RS_RCPP
+#if LINUX_CLUSTER || RS_RCPP
 int main(int argc, char* argv[])
 #else
 int _tmain(int argc, _TCHAR* argv[])
@@ -128,7 +128,7 @@ paramsSim = new paramSim;
 
 // set up working directory and control file name
 string cname;
-#if CLUSTER || RS_RCPP
+#if LINUX_CLUSTER || RS_RCPP
 if (argc > 1) {
 	// full path name of directory passed as a parameter
 	paramsSim->setDir(argv[1]);

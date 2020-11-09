@@ -28,7 +28,7 @@ Implements the RSrandom class
 
 Author: Steve Palmer, University of Aberdeen
 
-Last updated: 14 October 2020 by Anne-Kathleen Malchow, Potsdam University
+Last updated: 9 November 2020 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -49,7 +49,7 @@ extern ofstream DEBUGLOG;
 
 #if !RS_RCPP
 
-	#if CLUSTER
+	#if LINUX_CLUSTER
 	//#include <random>
 	//#include <tr1/random>
 	#include "maths.h"
@@ -82,7 +82,7 @@ extern ofstream DEBUGLOG;
 
 	private:
 		double normal_x2; int normal_x2_valid; // variables used by Normal distribution
-	#if !CLUSTER
+	#if !LINUX_CLUSTER
 		tr1::uniform_real<> *pRandom01;
 		tr1::normal_distribution<> *pNormal;
 	#if RS_ABC

@@ -9394,9 +9394,9 @@ rsLog << "WARNING,***** RSDEBUG mode is active *****,,," << endl;
 //#if GROUPDISP || RS_ABC
 //rsLog << "RANDOM SEED,,,," << RS_random_seed << endl;
 //#endif
-#if !CLUSTER
+#if !LINUX_CLUSTER
 rsLog << "RANDOM SEED," << RS_random_seed << ",,," << endl;
-#endif // !CLUSTER
+#endif // !LINUX_CLUSTER
 
 // Open landscape batch file and read header record
 if (ReadLandFile(0)) {

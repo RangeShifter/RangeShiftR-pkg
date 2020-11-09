@@ -444,7 +444,7 @@ switch (option) {
 case 0: // working directory
 	s = dir;
 	break;
-#if CLUSTER || RS_RCPP
+#if LINUX_CLUSTER || RS_RCPP
 case 1: // Inputs folder
 	s = dir + "Inputs/";
 	break;
