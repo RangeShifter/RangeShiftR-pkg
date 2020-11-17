@@ -6,7 +6,7 @@
         <AppType>Application</AppType>
         <MainSource>RangeShifter_v2_0_64bit.cpp</MainSource>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Debug</Config>
+        <Config Condition="'$(Config)'==''">Release</Config>
         <Platform Condition="'$(Platform)'==''">Win64</Platform>
         <TargetedPlatforms>3</TargetedPlatforms>
     </PropertyGroup>
@@ -152,7 +152,7 @@
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
         <OutputExt>exe</OutputExt>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <Icon_MainIcon>RSicon2.ico</Icon_MainIcon>
+        <Icon_MainIcon>RangeShifter_v2_new.ico</Icon_MainIcon>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win64)'!=''">
@@ -162,7 +162,7 @@
         <LinkPackageStatics>rtl.lib;vcl.lib;Tee.lib;vclimg.lib;vclactnband.lib;vclx.lib</LinkPackageStatics>
         <DynamicRTL>false</DynamicRTL>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <Icon_MainIcon>RSicon2.ico</Icon_MainIcon>
+        <Icon_MainIcon>RangeShifter_v2_new.ico</Icon_MainIcon>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
         <AppEnableRuntimeThemes>true</AppEnableRuntimeThemes>
         <Defines>NDEBUG;$(Defines)</Defines>
