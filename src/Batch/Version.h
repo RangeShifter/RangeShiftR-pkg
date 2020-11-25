@@ -38,5 +38,7 @@
 #define RS_RCPP 0
 //#define R_CMD 0
 
+#define RS_EMBARCADERO 0 
+
 //---------------------------------------------------------------------------
 #endif
