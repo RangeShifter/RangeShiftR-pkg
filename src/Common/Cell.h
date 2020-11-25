@@ -55,7 +55,7 @@ using namespace std;
 
 //---------------------------------------------------------------------------
 
-struct array3x3f { float cell[3][3]; }; 						// neighbourhood cell array (SMS)
+struct array3x3f { float cell[3][3]; }; 	// neighbourhood cell array (SMS)
 struct smscosts { int cost; array3x3f *effcosts; };	// cell costs for SMS
 
 // Landscape cell

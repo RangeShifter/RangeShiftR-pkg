@@ -164,7 +164,7 @@ public:
 #else
 	void reproduction(
 		int,		// Landscape resolution
-		float,	// epsilon - global stochasticity value
+		float,	// epsilon - global stochasticity value 
 		short,	// raster type (see Landscape)
 		bool		// TRUE for a patch-based model, FALSE for a cell-based model
 	);
@@ -382,7 +382,7 @@ public:
 		int					// Landscape number (-999 to close the file)
 	);
 	traitsums outTraits( // Write records to traits file and return aggregated sums
-		traitCanvas,	// pointers to canvases for drawing variable traits
+		traitCanvas,	// pointers to canvases for drawing variable traits		
 									// in the batch version, these are replaced by integers set to zero
 		Landscape*, 	// pointer to Landscape
 		int,					// replicate
