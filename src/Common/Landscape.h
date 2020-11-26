@@ -65,15 +65,14 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 24 July 2020 by Anne-Kathleen Malchow, Potsdam University
-
+Last updated: 26 November 2020 by Greta Bocedi
 ------------------------------------------------------------------------------*/
 
 #ifndef LandscapeH
 #define LandscapeH
 
 //#include <stdlib.h>
-//#include <math.h>
+//#include <math.h>  
 #include <algorithm>
 #include <fstream>
 //#include <iostream.h>
@@ -141,8 +140,8 @@ private:
 	Species *pSpecies;		// pointer to species
 	int resol;						// species distribution cell size (m)
 	int maxX, maxY;				// dimensions
-	double minEast;				// ) real world min co-ordinates
-	double minNorth;			// ) read from raster file
+	float minEast;				// ) real world min co-ordinates
+	float minNorth;			// ) read from raster file
 
 	// list of cells in the initial distribution
 	// cells MUST be loaded in the sequence ascending x within descending y
@@ -174,7 +173,7 @@ struct landPix {
 	int pix; float gpix;
 };
 struct landOrigin {
-	double minEast; double minNorth;
+	float minEast; float minNorth;
 };
 struct rasterHdr {
 	bool ok;
@@ -193,10 +192,10 @@ struct patchData {
 	Patch *pPatch; int patchNum,nCells; int x,y;
 };
 struct landChange {
-	int chgnum,chgyear; string habfile,pchfile,costfile;
+	int chgnum{},chgyear{}; string habfile,pchfile,costfile;
 };
 struct patchChange {
-	int chgnum,x,y,oldpatch,newpatch;
+	int chgnum{}, x{}, y{}, oldpatch{}, newpatch{};
 };
 struct costChange {
 	int chgnum,x,y,oldcost,newcost;
@@ -665,8 +664,8 @@ private:
 	int maxCells;					// max. cells per patch (artificial landscapes)
 	int pix;							// image display ratio
 	float gpix;						// image display ratio for gradient map
-	double minEast;				// ) real world min co-ordinates
-	double minNorth;			// ) read from habitat raster
+	float minEast;				// ) real world min co-ordinates
+	float minNorth;			// ) read from habitat raster
 #if RS_CONTAIN
 	double alpha;					// economic / environmental damage distance decay coefficient
 #endif // RS_CONTAIN 
@@ -703,7 +702,7 @@ private:
 	int **connectMatrix;
 
 	// global environmental stochasticity (epsilon)
-	float *epsGlobal;	// pointer to time-series
+	double *epsGlobal;	// pointer to time-series	
 
 	// patch and costs change matrices (temporary - used when reading dynamic landscape)
 	// indexed by [descending y][x][period]

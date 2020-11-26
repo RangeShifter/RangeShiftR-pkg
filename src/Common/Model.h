@@ -40,7 +40,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 9 November 2020 by Steve Palmer
+Last updated: 26 November 2020 by Greta Bocedi
 
 ------------------------------------------------------------------------------*/
 
@@ -56,6 +56,12 @@ Last updated: 9 November 2020 by Steve Palmer
 #include "Community.h"
 #include "SubCommunity.h"
 #include "Species.h"
+
+#if !RS_EMBARCADERO && !LINUX_CLUSTER && !RS_RCPP
+#include <filesystem>
+using namespace std::filesystem;
+#endif
+
 #if VIRTUALECOLOGIST
 #include "VirtualEcologist.h"
 #endif

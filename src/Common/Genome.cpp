@@ -21,12 +21,16 @@
  
  
 //---------------------------------------------------------------------------
-
+#if RS_EMBARCADERO
 #pragma hdrstop
+#endif
 
 #include "Genome.h"
 //---------------------------------------------------------------------------
+
+#if RS_EMBARCADERO 
 #pragma package(smart_init)
+#endif
 
 ofstream outGenetic;
 
@@ -153,8 +157,10 @@ return phenval;
 */
 
 // Set up chromosome at simulation initialisation
-void Chromosome::initialise(const float mean,const float sd,
-	const bool diploid) {
+//void Chromosome::initialise(const float mean,const float sd,
+//	const bool diploid) {
+void Chromosome::initialise(const double mean, const double sd, 
+		const bool diploid) {
 double avalue;
 double intbase = INTBASE;
 //// adjust mean and s.d. allowing for number of alleles determining phenotype
@@ -488,8 +494,10 @@ else {
 //---------------------------------------------------------------------------
 
 // Set up new gene at initialisation for 1 chromosome per trait
-void Genome::setGene(const short chr,const short exp,
-	const float traitval,const float alleleSD)
+//void Genome::setGene(const short chr,const short exp,
+//	const float traitval,const float alleleSD)
+void Genome::setGene(const short chr, const short exp,
+		const double traitval, const double alleleSD) 
 // NB PARAMETER exp FOR EXPRESSION TYPE IS NOT CURRENTLY USED...
 {
 #if RSDEBUG
@@ -505,8 +513,10 @@ if (chr >= 0 && chr < nChromosomes) {
 }
 
 // Set up trait at initialisation for trait mapping
-void Genome::setTrait(Species *pSpecies,const int trait,
-	const float traitval,const float alleleSD)
+//void Genome::setTrait(Species *pSpecies,const int trait,
+//	const float traitval,const float alleleSD)
+void Genome::setTrait(Species* pSpecies, const int trait,
+		const double traitval, const double alleleSD)	
 {
 traitAllele allele;
 int nalleles = pSpecies->getNTraitAlleles(trait);

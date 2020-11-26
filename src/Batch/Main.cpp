@@ -36,22 +36,21 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Author: Steve Palmer, University of Aberdeen
 
-Last updated: 9 November 2020 by Steve Palmer
+Last updated: 26 November 2020 by Greta Bocedi
 
 ------------------------------------------------------------------------------*/
-
+#if RS_EMBARCADERO
 #pragma hdrstop
-#pragma argsused
+#pragma argsused 
+#endif
 
-//#include <tchar.h>
 #include <string>
 #include <stdio.h>
-//#include <iostream.h>
 #include <sstream>
 #include <iostream>
-//#include <io.h>
 #include <iomanip>
 #include <stdlib.h>
+
 using namespace std;
 
 #include "Parameters.h"
@@ -59,7 +58,20 @@ using namespace std;
 #include "Species.h"
 #include "SubCommunity.h"
 #include "BatchMode.h"
+#if RANDOMCHECK
 #include "RandomCheck.h"
+#endif
+
+#if LINUX_CLUSTER || RS_RCPP
+#include <unistd.h>
+#endif
+
+#if !LINUX_CLUSTER && !RS_RCPP
+#include <tchar.h>
+#include <io.h>
+#include <direct.h>
+#endif
+
 
 const string Int2Str(const int x)
 {
@@ -116,9 +128,9 @@ int _tmain(int argc, _TCHAR* argv[])
 
 //int i,t0,t1,Nruns;
 int i,t0,t1;
-int nSimuls, nLandscapes; // no. of simulations and landscapes in batch
+int nSimuls = 0, nLandscapes = 0; // no. of simulations and landscapes in batch
 
-t0 = time(0);
+t0 = (int)time(0);
 
 // set up parameter objects
 paramsGrad = new paramGrad;
@@ -157,6 +169,7 @@ else {
 	cname  = paramsSim->getDir(0) + "Inputs/CONTROL.txt";
 }
 #else
+#if RS_EMBARCADERO 
 if (_argc > 1) {
 	// full path name of directory passed as a parameter
 	paramsSim->setDir(_argv[1]);
@@ -183,6 +196,39 @@ else {
 	// control file name is forced to be CONTROL.txt
 	cname  = paramsSim->getDir(0) + "Inputs\\CONTROL.txt";
 }
+#else 
+if (__argc > 1) {
+	// full path name of directory passed as a parameter
+	paramsSim->setDir(__argv[1]);
+	if (__argc > 2) {
+		// control file name also passed as a parameter
+		cname = paramsSim->getDir(0) + "Inputs\\" + __argv[2];
+}
+	else {
+		// default name is CONTROL.txt
+		cname = paramsSim->getDir(0) + "Inputs\\CONTROL.txt";
+	}
+}
+else {
+	// use current directory - get name from first (automatic) parameter
+//	string nameS = __argv[0];
+//	string path = __argv[0];
+//	unsigned int loc = nameS.find("\\", 0);
+//	while (loc < 999999) {
+//		nameS = nameS.substr(loc + 1);
+//		loc = nameS.find("\\", 0);
+//	}
+//	path = path.substr(0, path.length() - nameS.length());
+	// Get the current directory. 
+	char* buffer = _getcwd(NULL, 0);
+	string dir = buffer;
+	free(buffer);
+	dir = dir + "\\"; //Current directory path
+	paramsSim->setDir(dir);
+	// control file name is forced to be CONTROL.txt
+	cname = paramsSim->getDir(0) + "Inputs\\CONTROL.txt";
+}
+#endif
 #endif
 #if RSDEBUG
 cout << endl << "Working directory: " << paramsSim->getDir(0) << endl;
@@ -375,7 +421,7 @@ delete paramsInit;
 delete paramsSim;     
 delete pSpecies;
 
-t1 = time(0);
+t1 = (int)time(0);
 cout << endl << "***** Elapsed time " << t1-t0 << " seconds" << endl << endl;
 
 cout << "*****" << endl;
@@ -397,7 +443,7 @@ Does such exist?
 */
 
 traitCanvas SetupTraitCanvas(void) {
-traitCanvas tcanv;
+traitCanvas tcanv{};
 for (int i = 0; i < NTRAITS; i++) { tcanv.pcanvas[i] = 0; }
 return tcanv;
 }

@@ -21,12 +21,15 @@
  
  
 //---------------------------------------------------------------------------
-
+#if RS_EMBARCADERO
 #pragma hdrstop
+#endif
 
 #include "Patch.h"
 //---------------------------------------------------------------------------
+#if RS_EMBARCADERO
 #pragma package(smart_init)
+#endif
 
 //---------------------------------------------------------------------------
 
@@ -141,11 +144,13 @@ if (y < yMin) yMin = y; if (y > yMax) yMax = y;
 void Patch::setCarryingCapacity(Species *pSpecies,patchLimits landlimits,
 	float epsGlobal,short nHab,short rasterType,short landIx,bool gradK) {
 envStochParams env = paramsStoch->getStoch();
-Cell *pCell;
+//Cell *pCell;
 locn loc;
 int xsum,ysum;
 short hx;
 float k,q,envval;
+
+//pCell = NULL; 
 #if SEASONAL
 int nseasons = (int)localK.size();
 int *nsuitable = new int[nseasons];
@@ -242,7 +247,7 @@ for (int i = 0; i < ncells; i++) {
 	switch (rasterType) {
 	case 0: // habitat codes
 		hx = cells[i]->getHabIndex(landIx);
-		k = pSpecies->getHabK(hx);
+		k = (float)pSpecies->getHabK(hx);
 		if (k > 0.0) {
 			nsuitable++;
 			localK += envval * k;
@@ -252,7 +257,7 @@ for (int i = 0; i < ncells; i++) {
 		k = 0.0;
 		for (int j = 0; j < nHab; j++) { // loop through cover layers
 			q = cells[i]->getHabitat(j);
-			k += q * pSpecies->getHabK(j) / 100.0;
+			k += q * (float)pSpecies->getHabK(j) / 100.0f;
 		}
 		if (k > 0.0) {
 			nsuitable++;
@@ -263,7 +268,7 @@ for (int i = 0; i < ncells; i++) {
 		q = cells[i]->getHabitat(landIx);
 		if (q > 0.0) {
 			nsuitable++;
-			localK += envval * pSpecies->getHabK(0) * q / 100.0;
+			localK += envval * (float)pSpecies->getHabK(0) * q / 100.0f;
 		}
 		break;
 	}
@@ -305,14 +310,14 @@ if (env.stoch && env.inK) { // environmental stochasticity in K
 		if (localK[s] > limit) localK[s] = limit;		
 	}
 #else
-	limit = pSpecies->getMinMax(0) * (float)nsuitable;
+	limit = (float)pSpecies->getMinMax(0) * (float)nsuitable;
 	if (localK < limit) localK = limit;
 #if RSDEBUG
 //DEBUGLOG << "Patch::setCarryingCapacity(): patchNum=" << patchNum
 //	<< " limit=" << limit << " localK=" << localK
 //	<< endl;
 #endif
-	limit = pSpecies->getMinMax(1) * (float)nsuitable;
+	limit = (float)pSpecies->getMinMax(1) * (float)nsuitable;
 	if (localK > limit) localK = limit;
 #endif // SEASONAL 
 #if RSDEBUG

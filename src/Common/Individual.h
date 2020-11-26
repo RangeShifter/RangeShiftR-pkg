@@ -37,12 +37,13 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 9 November 2020 by Steve Palmer
+Last updated: 26 November 2020 by Greta Bocedi
 
 ------------------------------------------------------------------------------*/
 
 #ifndef IndividualH
 #define IndividualH
+
 
 #include <queue>
 #include <algorithm>
@@ -55,6 +56,7 @@ using namespace std;
 #include "Patch.h"
 #include "Cell.h"
 #include "Genome.h"
+
 #if RS_CONTAIN
 #include "Control.h"
 #endif // RS_CONTAIN 
@@ -109,7 +111,7 @@ struct crwParams { // to hold data for CRW movement model
 	float stepL;		// phenotypic step length (m)
 	float rho;			// phenotypic step correlation coefficient
 };
-struct array3x3d { double cell[3][3]; };
+struct array3x3d { float cell[3][3]; };
 struct movedata { float dist; float cost; };
 struct smsdata {
 	locn prev;			// location of previous cell
@@ -375,8 +377,8 @@ Individual* getMate(void);
 		const float	// GOAL BIAS VALUE
 	);
 	array3x3d calcWeightings( // Calculate weightings for neighbouring cells
-		const double,	// base for power-law (directional persistence or goal bias value)
-		const double	// direction in which lowest (unit) weighting is to be applied
+		const float,	// base for power-law (directional persistence or goal bias value)
+		const float	// direction in which lowest (unit) weighting is to be applied
 	);
 	array3x3f getHabMatrix( // Weight neighbouring cells on basis of (habitat) costs
 		Landscape*,		// pointer to Landscape
@@ -535,12 +537,11 @@ private:
 
 //---------------------------------------------------------------------------
 
-#if !LINUX_CLUSTER
-// code from mathlib.h
-#define M2_PI 6.283185307179586
-double rcauchy(double location, double scale) ;
-double rwrpcauchy (double location, double rho = exp(double(-1)));
-#endif
+#define M_2PI 6.283185307179586
+double cauchy(double location, double scale) ;
+double wrpcauchy (double location, double rho = exp(double(-1)));
+
+
 
 extern RSrandom *pRandom;
 
