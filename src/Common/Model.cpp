@@ -21,18 +21,16 @@
  
  
 //---------------------------------------------------------------------------
-#if RS_EMBARCADERO
+
 #pragma hdrstop
-#endif
 
 #include "Model.h"
 
 ofstream outPar;
 
 //---------------------------------------------------------------------------
-#if RS_EMBARCADERO
 #pragma package(smart_init)
-#endif
+
 //---------------------------------------------------------------------------
 #if RS_ABC
 int RunModel(Landscape *pLandscape,int seqsim,ABCmaster* pABCmaster)
@@ -1726,7 +1724,6 @@ Application->ProcessMessages();
 
 }
 
-#if RS_EMBARCADERO || LINUX_CLUSTER || RS_RCPP 
 // Check whether a specified directory path exists
 bool is_directory(const char *pathname) {
 struct stat info;
@@ -1734,7 +1731,6 @@ if (stat(pathname, &info) != 0) return false; // path does not exist
 if (S_ISDIR(info.st_mode)) return true;
 return false;
 }
-#endif
 
 //---------------------------------------------------------------------------
 bool CheckDirectory(void)
@@ -1742,10 +1738,8 @@ bool CheckDirectory(void)
 bool errorfolder = false;
 
 string subfolder;
-
-
 subfolder = paramsSim->getDir(0) + "Inputs";
-const char* inputs = subfolder.c_str();
+const char *inputs = subfolder.c_str();
 if (!is_directory(inputs)) errorfolder = true;
 subfolder = paramsSim->getDir(0) + "Outputs";
 const char *outputs = subfolder.c_str();
@@ -1753,7 +1747,6 @@ if (!is_directory(outputs)) errorfolder = true;
 subfolder = paramsSim->getDir(0) + "Output_Maps";
 const char *outputmaps = subfolder.c_str();
 if (!is_directory(outputmaps)) errorfolder = true;
-
 
 return errorfolder;
 }
@@ -1784,7 +1777,7 @@ DEBUGLOG << "PreReproductionOutput(): 11112 outRange=" << sim.outRange
 
 //emigCanvas ecanv;
 //trfrCanvas tcanv;
-traitCanvas tcanv{};
+traitCanvas tcanv;
 //for (int i = 0; i < 6; i++) {
 //	ecanv.pcanvas[i] = 0; tcanv.pcanvas[i] = 0;
 //}

@@ -51,7 +51,6 @@ using namespace std;
 #include "Landscape.h"
 #include "Species.h"
 #include "Model.h"
-
 #if RS_ABC
 #include "ABC.h"
 #endif
@@ -60,20 +59,20 @@ using namespace std;
 #endif // RS_CONTAIN 
 
 struct batchfiles {
-	bool ok{};
-	int batchNum{};
-	int nSimuls{};
-	int nLandscapes{};
-	int patchmodel{}, resolution{}, landtype{}, maxNhab{}, speciesdist{}, distresolution{};
-	int reproductn{};
+	bool ok;
+	int batchNum;
+	int nSimuls;
+	int nLandscapes;
+	int patchmodel,resolution,landtype,maxNhab,speciesdist,distresolution;
+	int reproductn;
 #if SEASONAL
 	int nseasons;
 #else
-	int repseasons{};
+	int repseasons;
 #endif // SEASONAL  
-	int stagestruct{}, stages{}, transfer{};
-	int sexesDem{};		// no. of explicit sexes for demographic model
-	int sexesDisp{};	// no. of explicit sexes for dispersal model
+	int stagestruct,stages,transfer;
+	int sexesDem;		// no. of explicit sexes for demographic model
+	int sexesDisp;	// no. of explicit sexes for dispersal model
 #if SEASONAL
 //	string seasonFile;
 #endif // SEASONAL 
@@ -271,8 +270,8 @@ extern string patchfilename;	// see [NOT YET CODED FOR GUI] (VCL) OR Main.cpp (b
 #if TEMPMORT
 extern string mortfilename;	// see [NOT YET CODED FOR GUI] (VCL) OR Main.cpp (batch)
 #endif // TEMPMORT
-#if !LINUX_CLUSTER && !RS_RCPP 
-extern int RS_random_seed;			
+#if !LINUX_CLUSTER && !RS_RCPP
+extern int RS_random_seed;			// see RSrandom.cpp
 #endif // !LINUX_CLUSTER && !RS_RCPP
 #if RS_RCPP
 extern std::uint32_t RS_random_seed;

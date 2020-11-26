@@ -21,15 +21,12 @@
  
  
 //---------------------------------------------------------------------------
-#if RS_EMBARCADERO
+
 #pragma hdrstop
-#endif
 
 #include "Parameters.h"
 //---------------------------------------------------------------------------
-#if RS_EMBARCADERO
 #pragma package(smart_init)
-#endif
 
 #if PARAMDEBUG
 ofstream PARAMLOG ("ParamLog.txt");
@@ -44,7 +41,7 @@ string envstochfilename;
 // Environmental gradient parameters
 
 paramGrad::paramGrad(void) {
-gradient = false; gradType = 0; grad_inc = 0.05f;
+gradient = false; gradType = 0; grad_inc = 0.05;
 opt_y0 = opt_y = factor = extProbOpt = 0.0;
 shifting = false; shift_rate = 0.5; shift_begin = 0; shift_stop = 100;
 }

@@ -28,7 +28,7 @@ Implements the RSrandom class
 
 Author: Steve Palmer, University of Aberdeen
 
-Last updated: 24 November 2020 by Anne-Kathleen Malchow
+Last updated: 9 November 2020 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -47,12 +47,7 @@ using namespace std;
 extern ofstream DEBUGLOG;
 #endif
 
-
-//--------------- 1.) Former version of RSrandom.cpp
-
-
-#if RS_EMBARCADERO
-
+#if !RS_RCPP
 
 	#if LINUX_CLUSTER
 	//#include <random>
@@ -96,54 +91,7 @@ extern ofstream DEBUGLOG;
 	#endif
 	};
 
-//--------------------------------------------------------------------------------------------------
-//--------------------------------------------------------------------------------------------------
-
-#else // not RS_EMBARCADERO
-
-
-
-//--------------- 2.) New version of RSrandom.cpp
-
-#if !RS_RCPP
-
-
-	#include <cmath>
-	#include <random>
-	#if !LINUX_CLUSTER
-	#include <ctime>
-	#endif
-
-	class RSrandom
-	{
-
-	public:
-		RSrandom(void);
-		~RSrandom(void);
-		double Random(void);
-		int IRandom(int, int);
-		int Bernoulli(double);
-		double Normal(double, double);
-		int Poisson(double);
-		mt19937 getRNG(void); 
-
-	private:
-		mt19937* gen;
-		std::uniform_real_distribution<>* pRandom01;
-		std::normal_distribution<>* pNormal;
-	};
-
-
-//--------------------------------------------------------------------------------------------------
-//--------------------------------------------------------------------------------------------------
-
-
-
-//--------------- 3.) R package version of RSrandom.cpp
-
-
-#else // if RS_RCPP 
-
+#else // if RS_RCPP
 
 	#include <cmath>
 	#include <random>
@@ -154,7 +102,7 @@ extern ofstream DEBUGLOG;
 	class RSrandom {
 
 	public:
-		RSrandom(std::int64_t);       // if int is negative, a random seed will be generated, else it is used as seed
+		RSrandom(std::int64_t);              // if int is negative, a random seed will be generated, else it is used as seed
 		~RSrandom(void);
 		mt19937 getRNG(void);
 		double Random(void);
@@ -174,16 +122,7 @@ extern ofstream DEBUGLOG;
 		std::normal_distribution<> *pNormal;
 	};
 
-
-
 #endif // RS_RCPP
 
-#endif // RS_EMBARCADERO
-
-
 //---------------------------------------------------------------------------
-
 #endif // RSrandomH
-
-
-

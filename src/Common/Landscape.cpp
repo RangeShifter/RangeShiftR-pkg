@@ -21,15 +21,12 @@
  
  
 //---------------------------------------------------------------------------
-#if RS_EMBARCADERO
+
 #pragma hdrstop
-#endif
 
 #include "Landscape.h"
 //---------------------------------------------------------------------------
-#if RS_EMBARCADERO		
 #pragma package(smart_init)
-#endif
 
 ifstream landscape;
 
@@ -50,22 +47,17 @@ ofstream outMovePaths;
 InitDist::InitDist(Species *pSp)
 {
 pSpecies = pSp;
-resol = 0; 
-maxX = 0; 
-maxY = 0;
-minEast = 0.0;
-minNorth = 0.0;
 }
 
 InitDist::~InitDist() {
-int ncells = (int)cells.size();
+int ncells = cells.size();
 for (int i = 0; i < ncells; i++)
 	if (cells[i] != NULL) delete cells[i];
 cells.clear();
 }
 
 void InitDist::setDistribution(int nInit) {
-int rr = 0;
+int rr;
 int ncells = (int)cells.size();
 if (nInit == 0) { // set all cells to be initialised
 	for (int i = 0; i < ncells; i++) {
@@ -142,7 +134,7 @@ return loc;
 // Return the co-ordinates of a specified initial distribution cell if it has been
 // selected - otherwise return negative co-ordinates
 locn InitDist::getSelectedCell(int ix) {
-locn loc{}; loc.x = loc.y = -666;
+locn loc; loc.x = loc.y = -666;
 if (ix < (int)cells.size()) {
 	if (cells[ix]->selected()) {
 		loc = cells[ix]->getLocn();
@@ -152,7 +144,7 @@ return loc;
 }
 
 locn InitDist::getDimensions(void) {
-locn d{}; d.x = maxX; d.y = maxY; return d;
+locn d; d.x = maxX; d.y = maxY; return d;
 }
 
 void InitDist::resetDistribution(void) {
@@ -274,8 +266,7 @@ minX = minY = 0;
 maxX = maxY = 99;
 minPct = maxPct = propSuit = hurst = 0.0;
 maxCells = 100;
-gpix = 1.0;	
-pix = (int)gpix;
+pix = gpix = 1.0;
 minEast = minNorth = 0.0;
 cells = 0;
 #if RSDEBUG
@@ -336,17 +327,17 @@ if (cells != 0) {
 //	+ " cells=" + Int2Str((int)cells)).c_str());
 #endif
 
-int npatches = (int)patches.size();
+int npatches = patches.size();
 for (int i = 0; i < npatches; i++)
 	if (patches[i] != NULL) delete patches[i];
 patches.clear();
 
-int ndistns = (int)distns.size();
+int ndistns = distns.size();
 for (int i = 0; i < ndistns; i++)
 	if (distns[i] != NULL) delete distns[i];
 distns.clear();
 
-int ninitcells = (int)initcells.size();
+int ninitcells = initcells.size();
 for (int i = 0; i < ninitcells; i++)
 	if (initcells[i] != NULL) delete initcells[i];
 initcells.clear();
@@ -382,7 +373,7 @@ void Landscape::resetLand(void) {
 //DebugGUI("Landscape::resetLand(): starting...");
 #endif
 resetLandLimits();
-int npatches = (int)patches.size();
+int npatches = patches.size();
 #if RSDEBUG
 //DebugGUI(("Landscape::resetLand(): npatches=" + Int2Str(npatches)
 //	).c_str());
@@ -397,7 +388,7 @@ patches.clear();
 //DebugGUI(("Landscape::resetLand(): this=" + Int2Str((int)this)
 //	+ " cells=" + Int2Str((int)cells)).c_str());
 #endif
-if (cells != NULL) {
+if (cells != 0) {
 	for(int y = dimY-1; y >= 0; y--){
 #if RSDEBUG
 //DebugGUI(("Landscape::resetLand(): y=" + Int2Str(y) + " cells[y]=" + Int2Str((int)cells[y])).c_str());
@@ -407,9 +398,9 @@ if (cells != NULL) {
 //DebugGUI(("Landscape::resetLand(): y=" + Int2Str(y) + " x=" + Int2Str(x)
 //	+ " cells[y][x]=" + Int2Str((int)cells[y][x])).c_str());
 #endif
-			if (cells[y][x] != NULL) delete cells[y][x];
+			if (cells[y][x] != 0) delete cells[y][x];
 		}
-		if (cells[y] != NULL) {
+		if (cells[y] != 0) {
 #if RSDEBUG
 //DebugGUI(("Landscape::resetLand(): deleting cells[y]=" + Int2Str((int)cells[y])).c_str());
 #endif
@@ -466,7 +457,7 @@ if (batchMode && rasterType == 0) {
 
 landParams Landscape::getLandParams(void)
 {
-landParams ppp{};
+landParams ppp;
 ppp.generated = generated; ppp.patchModel = patchModel; ppp.spDist = spDist;
 ppp.dynamic = dynamic;
 #if RS_CONTAIN
@@ -483,7 +474,7 @@ return ppp;
 }
 
 landData Landscape::getLandData(void) {
-landData dd{};
+landData dd;
 dd.resol = resol;
 dd.dimX = dimX; dd.dimY = dimY;
 dd.minX = minX; dd.minY = minY;
@@ -504,7 +495,7 @@ if (ppp.maxCells > 0) maxCells = ppp.maxCells;
 
 genLandParams Landscape::getGenLandParams(void)
 {
-genLandParams ppp{};
+genLandParams ppp;
 ppp.fractal = fractal; ppp.continuous = continuous;
 ppp.minPct = minPct; ppp.maxPct = maxPct; ppp.propSuit = propSuit; ppp.hurst = hurst;
 ppp.maxCells = maxCells;
@@ -530,7 +521,7 @@ if (p.gpix > 0.0) gpix = p.gpix;
 }
 
 landPix Landscape::getLandPix(void) {
-landPix p{};
+landPix p;
 p.pix = pix; p.gpix = gpix;
 return p;
 }
@@ -540,7 +531,7 @@ minEast = origin.minEast; minNorth = origin.minNorth;
 }
 
 landOrigin Landscape::getOrigin(void) {
-landOrigin origin{};
+landOrigin origin;
 origin.minEast = minEast; origin.minNorth = minNorth;
 return origin;
 }
@@ -616,7 +607,7 @@ return colours[ix];
 }
 
 int Landscape::colourCount(void) {
-return (int)colours.size();
+return colours.size();
 }
 
 //---------------------------------------------------------------------------
@@ -667,7 +658,7 @@ void Landscape::generatePatches(void)
 {
 int x,y,ncells;
 //float p,prop;
-double p;
+float p;
 Patch *pPatch;
 Cell *pCell;
 
@@ -713,7 +704,7 @@ if (fractal) {
 	p = 1.0 - propSuit;
 	// fractal_landscape() requires Max_prop > 1 (but does not check it!)
 	// as in turn it calls runif(1.0,Max_prop)
-	double maxpct;
+	float maxpct;
 	if (maxPct < 1.0) maxpct = 100.0; else maxpct = maxPct;
 
 	ArtLandscape = fractal_landscape(dimY,dimX,hurst,p,maxpct,minPct);
@@ -758,7 +749,7 @@ if (fractal) {
 	}
 }
 else { // random landscape
-	int hab = 0;
+	int hab;
 	ncells = (int)((float)(dimX) * (float)(dimY) * propSuit + 0.00001); // no. of cells to initialise
 #if RSDEBUG
 //DEBUGLOG << "Landscape::generatePatches(): dimX=" << dimX	<< " dimY=" << dimY
@@ -804,7 +795,7 @@ else { // random landscape
 //				if (pCell->getQuality() <= 0.0)
 				if (pCell->getHabitat(0) <= 0.0)
 				{
-					addCellToPatch(pCell,patches[0],(float)p);
+					addCellToPatch(pCell,patches[0],p);
 				}
 			}
 			else { // discrete
@@ -893,7 +884,7 @@ case 0: // habitat codes
 						habK += pSpecies->getHabK(pCell->getHabIndex(i),j);						
 					}
 #else
-					habK += (float)pSpecies->getHabK(pCell->getHabIndex(i));
+					habK += pSpecies->getHabK(pCell->getHabIndex(i));
 #endif // SEASONAL 
 #if RSDEBUG
 //DEBUGLOG << "Landscape::allocatePatches(): x=" << x << " y=" << y
@@ -940,10 +931,10 @@ case 1: // habitat cover
 				{
 #if SEASONAL
 					for (int j = 0; j < nseasons; j++) {
-						habK += pSpecies->getHabK(i,j) * pCell->getHabitat(i) / 100.0f;						
+						habK += pSpecies->getHabK(i,j) * pCell->getHabitat(i) / 100.0;						
 					}
 #else
-					habK += (float)pSpecies->getHabK(i) * pCell->getHabitat(i) / 100.0f;
+					habK += pSpecies->getHabK(i) * pCell->getHabitat(i) / 100.0;
 #endif // SEASONAL 
 #if RSDEBUG
 //DEBUGLOG << "Landscape::allocatePatches(): x=" << x << " y=" << y
@@ -990,10 +981,10 @@ case 2: // habitat quality
 				{
 #if SEASONAL
 					for (int j = 0; j < nseasons; j++) {
-						habK += pSpecies->getHabK(0,j) * pCell->getHabitat(i) / 100.0f;						
+						habK += pSpecies->getHabK(0,j) * pCell->getHabitat(i) / 100.0;						
 					}
 #else
-					habK += (float)pSpecies->getHabK(0) * pCell->getHabitat(i) / 100.0f;
+					habK += pSpecies->getHabK(0) * pCell->getHabitat(i) / 100.0;
 #endif // SEASONAL 
 #if RSDEBUG
 //DEBUGLOG << "Landscape::allocatePatches(): x=" << x << " y=" << y
@@ -1388,10 +1379,10 @@ for (int i = 0; i < sim.years; i++) {
 #endif // RS_CONTAIN 
 
 patchData Landscape::getPatchData(int ix) {
-patchData ppp{};
+patchData ppp;
 ppp.pPatch = patches[ix]; ppp.patchNum = patches[ix]->getPatchNum();
 ppp.nCells = patches[ix]->getNCells();
-locn randloc{}; randloc.x = -666; randloc.y = -666;
+locn randloc; randloc.x = -666; randloc.y = -666;
 Cell *pCell = patches[ix]->getRandomCell();
 if (pCell != 0) {
   randloc = pCell->getLocn();
@@ -1427,7 +1418,7 @@ void Landscape::updateCarryingCapacity(Species *pSpecies,int yr,short landIx) {
 envGradParams grad = paramsGrad->getGradient();
 bool gradK = false;
 if (grad.gradient && grad.gradType == 1) gradK = true; // gradient in carrying capacity
-patchLimits landlimits{};
+patchLimits landlimits;
 landlimits.xMin = minX; landlimits.xMax = maxX;
 landlimits.yMin = minY; landlimits.yMax = maxY;
 #if RSDEBUG
@@ -1452,7 +1443,7 @@ else return 0;
 }
 
 int Landscape::patchCount(void) {
-return (int)patches.size();
+return patches.size();
 }
 
 void Landscape::listPatches(void) {
@@ -1558,8 +1549,8 @@ void Landscape::setEnvGradient(Species *pSpecies,short nseasons,bool initial)
 void Landscape::setEnvGradient(Species *pSpecies,bool initial) 
 #endif // SEASONAL 
 {
-double dist_from_opt,dev;
-double habK;
+float dist_from_opt,dev;
+float habK;
 //int hab;
 double envval;
 // gradient parameters
@@ -1596,13 +1587,13 @@ for(int y = dimY-1; y >= 0; y--){
 			for (int i = 0; i < nhab; i++) {
 				switch (rasterType) {
 				case 0:
-					habK += (double)pSpecies->getHabK(cells[y][x]->getHabIndex(i));
+					habK += pSpecies->getHabK(cells[y][x]->getHabIndex(i));
 					break;
 				case 1:
-					habK += (double)pSpecies->getHabK(i) * (double)cells[y][x]->getHabitat(i) / 100.0;
+					habK += pSpecies->getHabK(i) * cells[y][x]->getHabitat(i) / 100.0;
 					break;
 				case 2:
-					habK += (double)pSpecies->getHabK(0) * (double)cells[y][x]->getHabitat(i) / 100.0;
+					habK += pSpecies->getHabK(0) * cells[y][x]->getHabitat(i) / 100.0;
 					break;
 				}
 			}
@@ -1614,7 +1605,7 @@ for(int y = dimY-1; y >= 0; y--){
 #endif
 			if (habK > 0.0) { // suitable cell
 				if (initial) { // set local environmental deviation
-					cells[y][x]->setEnvDev((float)pRandom->Random()*(2.0f) - 1.0f);
+					cells[y][x]->setEnvDev(pRandom->Random()*(2.0) - 1.0);
 				}
 				dist_from_opt = fabs((double)grad.opt_y - (double)y);
 				dev = cells[y][x]->getEnvDev();
@@ -1628,7 +1619,7 @@ for(int y = dimY-1; y >= 0; y--){
 				if (envval > 1.0) envval = 1.0;
 			}
 			else envval = 0.0;
-			cells[y][x]->setEnvVal((float)envval);
+			cells[y][x]->setEnvVal(envval);
 		}
 	}
 }
@@ -1638,7 +1629,7 @@ for(int y = dimY-1; y >= 0; y--){
 void Landscape::setGlobalStoch(int nyears) {
 envStochParams env = paramsStoch->getStoch();
 if (epsGlobal != 0) delete[] epsGlobal;
-epsGlobal = new double[nyears];
+epsGlobal = new float[nyears];
 epsGlobal[0] = pRandom->Normal(0.0,env.std)*sqrt(1.0-(env.ac*env.ac));
 for (int i = 1; i < nyears; i++){
 	epsGlobal[i] = env.ac*epsGlobal[i-1] + pRandom->Normal(0.0,env.std)*sqrt(1.0-(env.ac*env.ac));
@@ -1672,14 +1663,14 @@ stochfile.clear();
 
 float Landscape::getGlobalStoch(int yr) {
 if (epsGlobal != 0 && yr >= 0) {
-	return (float)epsGlobal[yr];
+	return epsGlobal[yr];
 }
 else return 0.0;
 }
 
 void Landscape::updateLocalStoch(void) {
 envStochParams env = paramsStoch->getStoch();
-double randpart;
+float randpart;
 for(int y = dimY-1; y >= 0; y--){
 	for (int x = 0; x < dimX; x++) {
 		if (cells[y][x] != 0) { // not a no-data cell
@@ -1689,7 +1680,7 @@ for(int y = dimY-1; y >= 0; y--){
 //	<< " env.std= " << env.std << " env.ac= " << env.ac << " randpart= " << randpart
 //	<< endl;
 #endif
-			cells[y][x]->updateEps((float)env.ac,(float)randpart);
+			cells[y][x]->updateEps(env.ac,randpart);
 		}
 	}
 }
@@ -1764,14 +1755,11 @@ wstring header;
 string header;
 int ncols,nrows,habnodata,costnodata,pchnodata;
 #endif
-int h = 0,p = 0,c = 0, pchseq = 0;
+int h,p,c,pchseq;
 float hfloat,pfloat,cfloat;
 simParams sim = paramsSim->getSim();
 
 if (filenum < 0) return 19;
-
-costnodata = 0; 
-pchnodata = 0; 
 
 //if (patchModel && (rasterType == 0 || rasterType == 2)) {
 //	if (filenum == 0) { // first change
@@ -2117,7 +2105,7 @@ case 0: // raster with habitat codes - 100% habitat each cell
 	break;
 
 default:
-	break;
+	;
 }
 
 if (hfile.is_open()) { hfile.close(); hfile.clear(); }
@@ -2274,7 +2262,7 @@ void Landscape::recordCostChanges(int landIx) {
 DEBUGLOG << "Landscape::recordCostChanges(): landIx=" << landIx << endl;
 #endif
 if (costsChgMatrix == 0) return; // should not occur
-costChange chg{};
+costChange chg;
 
 for(int y = dimY-1; y >= 0; y--) {
 	for (int x = 0; x < dimX; x++) {
@@ -2333,7 +2321,7 @@ for(int y = dimY-1; y >= 0; y--) {
 int Landscape::numCostChanges(void) { return (int)costschanges.size(); }
 
 costChange Landscape::getCostChange(int i) {
-costChange c{}; c.chgnum = 99999999; c.x = c.y = c.oldcost = c.newcost = -1;
+costChange c; c.chgnum = 99999999; c.x = c.y = c.oldcost = c.newcost = -1;
 if (i >= 0 && i < (int)costschanges.size()) c = costschanges[i];
 return c;
 }
@@ -2376,7 +2364,7 @@ distns[0]->setDistribution(nInit);
 // Specified cell match one of the distribution cells to be initialised?
 bool Landscape::inInitialDist(Species *pSpecies,locn loc) {
 // convert landscape co-ordinates to distribution co-ordinates
-locn initloc{};
+locn initloc;
 initloc.x = loc.x * resol / spResol;
 initloc.y = loc.y * resol / spResol;
 // WILL HAVE TO GET CORRECT SPECIES WHEN THERE ARE MULTIPLE SPECIES ...
@@ -2392,7 +2380,7 @@ if (distns[0] != 0) delete distns[0];
 
 // Return no. of initial distributions
 int Landscape::distnCount(void) {
-return (int)distns.size();
+return distns.size();
 }
 
 int Landscape::distCellCount(int dist) {
@@ -2436,7 +2424,7 @@ distns[0]->resetDistribution();
 // Initialisation cell functions
 
 int Landscape::initCellCount(void) {
-return (int)initcells.size();
+return initcells.size();
 }
 
 void Landscape::addInitCell(int x,int y) {
@@ -2448,7 +2436,7 @@ return initcells[ix]->getLocn();
 }
 
 void Landscape::clearInitCells(void) {
-int ncells = (int)initcells.size();
+int ncells = initcells.size();
 for (int i = 0; i < ncells; i++) {
 	delete initcells[i];
 }
@@ -3052,7 +3040,7 @@ case 2: // habitat quality
 	break;
 
 default:
-	break;
+	;
 } // end switch(rasterType)
 
 #if RS_CONTAIN
@@ -3288,6 +3276,7 @@ wstring header;
 string header;
 #endif
 Cell *pCell;
+simView v = paramsSim->getViews();
 
 int maxcost = 0;
 
@@ -3407,7 +3396,7 @@ return maxcost;
 
 rasterdata CheckRasterFile(string fname)
 {
-rasterdata r{};
+rasterdata r;
 string header;
 int inint;
 ifstream infile;

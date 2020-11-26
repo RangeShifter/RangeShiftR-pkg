@@ -56,12 +56,6 @@ Last updated: 9 November 2020 by Steve Palmer
 #include "Community.h"
 #include "SubCommunity.h"
 #include "Species.h"
-
-#if !RS_EMBARCADERO && !LINUX_CLUSTER && !RS_RCPP
-#include <filesystem>
-using namespace std::filesystem;
-#endif
-
 #if VIRTUALECOLOGIST
 #include "VirtualEcologist.h"
 #endif
