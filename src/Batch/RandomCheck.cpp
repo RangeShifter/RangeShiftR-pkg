@@ -21,15 +21,12 @@
  
  
 //---------------------------------------------------------------------------
-#if RS_EMBARCADERO
+
 #pragma hdrstop
-#endif
 
 #include "RandomCheck.h"
 //---------------------------------------------------------------------------
-#if RS_EMBARCADERO
-#pragma package(smart_init) 
-#endif
+#pragma package(smart_init)
 
 ifstream inRandom;
 ofstream outRandom;
@@ -44,6 +41,7 @@ void randomCheck(void)
 	int samplesize,irandMin,irandMax;
 	double bernMean,normMean,normSD,poisMean;
 	string name,header;
+	simParams sim = paramsSim->getSim();
 
 	name = paramsSim->getDir(1) + "RandomCheck.txt";
 	inRandom.open(name.c_str());
