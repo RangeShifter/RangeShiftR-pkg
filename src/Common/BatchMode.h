@@ -34,7 +34,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 26 November 2020 by Greta Bocedi
+Last updated: 27 November 2020 by Anne-Kathleen Malchow, Potsdam University
 
 ------------------------------------------------------------------------------*/
 
@@ -271,14 +271,19 @@ extern string patchfilename;	// see [NOT YET CODED FOR GUI] (VCL) OR Main.cpp (b
 #if TEMPMORT
 extern string mortfilename;	// see [NOT YET CODED FOR GUI] (VCL) OR Main.cpp (batch)
 #endif // TEMPMORT
-#if !LINUX_CLUSTER && !RS_RCPP 
-extern int RS_random_seed;			
-#endif // !LINUX_CLUSTER && !RS_RCPP
-#if RS_RCPP
+#if RS_EMBARCADERO
+#if !LINUX_CLUSTER
+extern int RS_random_seed;
+#endif
+#else
+#if !RS_RCPP
+extern int RS_random_seed;
+#else
 extern std::uint32_t RS_random_seed;
 void EOFerrorR(string);
 void StreamErrorR(string);
-#endif // RS_RCPP
+#endif // !RS_RCPP
+#endif // RS_EMBARCADERO
 
 //---------------------------------------------------------------------------
 #endif

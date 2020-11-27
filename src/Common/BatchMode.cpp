@@ -2007,7 +2007,7 @@ int ParseDynamicFile(string indir,string costfile) {
 DEBUGLOG << "ParseDynamicFile(): costfile=" << costfile << endl;
 #endif
 string header,filename,fname,ftype,intext;
-int change,prevchange,year,prevyear; //GB 25/11/2020: prev year is used below without having been initialized
+int change,prevchange,year,prevyear=0;
 rasterdata landchgraster,patchchgraster,costchgraster;
 int errors = 0;
 string filetype = "DynLandFile";
@@ -6895,7 +6895,7 @@ int ReadStageStructure(int option)
 {
 string name;
 int simulation,postDestructn;
-#if RS_CONTAIN
+#if RS_CONTAIN || SEASONAL
 demogrParams dem = pSpecies->getDemogr();
 #endif
 stageParams sstruct = pSpecies->getStage();
@@ -8461,7 +8461,7 @@ settleRules srules;
 settleSteps ssteps{};
 settleTraits settleDD{};
 settParams sparams{};
-int sexSettle = 0,settType,densdep,indvar,findmate;
+int sexSettle = 0,settType = 0,densdep,indvar,findmate;
 #if GOBYMODEL
 float alphaSasoc,betaSasoc;
 #endif
@@ -8690,8 +8690,7 @@ DEBUGLOG << "ReadSettlement(): stage=" << stage << " sex=" << sex
 
 		switch (sexSettle) {
 
-		case 0: //no sex / stage dependence 
-			//GB 25/11/2020 warning: using unitialised settType
+		case 0: //no sex / stage dependence
 			if ((settType == 1 || settType == 3) && dem.stageStruct == false) error = 503;
 			if (findmate == 1 && dem.repType == 0) error = 504;
 			srules = pSpecies->getSettRules(0,0);
@@ -9408,12 +9407,13 @@ rsLog << "Event,Number,Reps,Years,Time" << endl;
 #if RSDEBUG
 rsLog << "WARNING,***** RSDEBUG mode is active *****,,," << endl;
 #endif
+#if !RS_EMBARCADERO || !LINUX_CLUSTER
 #if GROUPDISP || RS_ABC
 rsLog << "RANDOM SEED,,,," << RS_random_seed << endl;
-#endif
-#if !LINUX_CLUSTER
+#else
 rsLog << "RANDOM SEED," << RS_random_seed << ",,," << endl;
-#endif // !LINUX_CLUSTER
+#endif
+#endif
 
 // Open landscape batch file and read header record
 if (ReadLandFile(0)) {

@@ -1763,15 +1763,14 @@ wstring header;
 #else
 string header;
 int ncols,nrows,habnodata,costnodata,pchnodata;
+costnodata = 0; 
+pchnodata = 0;
 #endif
 int h = 0,p = 0,c = 0, pchseq = 0;
 float hfloat,pfloat,cfloat;
 simParams sim = paramsSim->getSim();
 
 if (filenum < 0) return 19;
-
-costnodata = 0; 
-pchnodata = 0; 
 
 //if (patchModel && (rasterType == 0 || rasterType == 2)) {
 //	if (filenum == 0) { // first change

@@ -2795,7 +2795,6 @@ return move;
 }
 
 // Weight neighbouring cells on basis of current movement direction
-//array3x3d Individual::getSimDir(const int x,const int y,const float dp)
 array3x3d Individual::getSimDir(const int x, const int y, const float dp) 
 {
 
@@ -3233,6 +3232,7 @@ unsigned int Individual::getMatPosn(void)	{ return matPosn; }
 //---------------------------------------------------------------------------
 
 //#if RSWIN64
+#if !RS_EMBARCADERO || !LINUX_CLUSTER
 
 double wrpcauchy (double location, double rho) {
 double result;
@@ -3257,6 +3257,7 @@ if (scale < 0) return location;
 return location + scale * tan(PI * pRandom->Random());
 }
 
+#endif
 //#endif
 
 //---------------------------------------------------------------------------

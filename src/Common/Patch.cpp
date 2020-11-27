@@ -124,8 +124,10 @@ if (changed) {
 	ncells = (int)cells.size();
 	for (int i = 0; i < ncells; i++) {
 		loc = getCellLocn(i);
-		if (loc.x < xMin) xMin = loc.x; if (loc.x > xMax) xMax = loc.x;
-		if (loc.y < yMin) yMin = loc.y; if (loc.y > yMax) yMax = loc.y;
+		if (loc.x < xMin) xMin = loc.x;
+		if (loc.x > xMax) xMax = loc.x;
+		if (loc.y < yMin) yMin = loc.y;
+		if (loc.y > yMax) yMax = loc.y;
 	}
 	changed = false;
 }
@@ -133,10 +135,12 @@ if (changed) {
 
 // Add a cell to the patch
 void Patch::addCell(Cell* pCell,int x,int y) {
-cells.push_back(pCell);
-nCells++;
-if (x < xMin) xMin = x; if (x > xMax) xMax = x;
-if (y < yMin) yMin = y; if (y > yMax) yMax = y;
+	cells.push_back(pCell);
+	nCells++;
+	if (x < xMin) xMin = x;
+	if (x > xMax) xMax = x;
+	if (y < yMin) yMin = y;
+	if (y > yMax) yMax = y;
 }
 
 // Calculate the total carrying capacity (no. of individuals) and

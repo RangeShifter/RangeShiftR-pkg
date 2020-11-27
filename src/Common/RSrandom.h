@@ -125,7 +125,7 @@ extern ofstream DEBUGLOG;
 		int Bernoulli(double);
 		double Normal(double, double);
 		int Poisson(double);
-		mt19937 getRNG(void); 
+		mt19937 getRNG(void);
 
 	private:
 		mt19937* gen;
@@ -176,7 +176,7 @@ extern ofstream DEBUGLOG;
 
 
 
-#endif // RS_RCPP
+#endif // !RS_RCPP
 
 #endif // RS_EMBARCADERO
 

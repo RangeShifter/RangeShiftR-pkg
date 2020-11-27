@@ -29,6 +29,7 @@ Implements the Genome class
 Author: Steve Palmer & Roslyn Henry, University of Aberdeen
 
 Last updated: 26 November 2020 by Greta Bocedi
+
 ------------------------------------------------------------------------------*/
 
 #ifndef GenomeH

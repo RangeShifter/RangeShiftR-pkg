@@ -36,7 +36,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Author: Steve Palmer, University of Aberdeen
 
-Last updated: 26 November 2020 by Greta Bocedi
+Last updated: 27 November 2020 by Anne-Kathleen Malchow, Potsdam University
 
 ------------------------------------------------------------------------------*/
 #if RS_EMBARCADERO
@@ -62,11 +62,9 @@ using namespace std;
 #include "RandomCheck.h"
 #endif
 
-#if LINUX_CLUSTER || RS_RCPP
+#if LINUX_CLUSTER || R_CMD
 #include <unistd.h>
-#endif
-
-#if !LINUX_CLUSTER && !RS_RCPP
+#else
 #include <tchar.h>
 #include <io.h>
 #include <direct.h>
