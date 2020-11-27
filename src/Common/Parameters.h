@@ -89,9 +89,11 @@ typedef unsigned int intptr;
 
 #if RS_RCPP
     #ifndef R_EXT_CONSTANTS_H_  // the R headers define PI as a macro, so that the 'else' line results in an error
+        #define M_2PI 6.283185307179586
         const double PI = 3.141592653589793238462643383279502884197169399375;
     #endif
 #else
+    #define M_2PI 6.283185307179586
     const double PI = 3.141592654;
 #endif
 

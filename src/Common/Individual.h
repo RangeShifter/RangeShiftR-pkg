@@ -539,7 +539,6 @@ private:
 
 #if !RS_EMBARCADERO || !LINUX_CLUSTER
 
-#define M_2PI 6.283185307179586
 double cauchy(double location, double scale) ;
 double wrpcauchy (double location, double rho = exp(double(-1)));
 
