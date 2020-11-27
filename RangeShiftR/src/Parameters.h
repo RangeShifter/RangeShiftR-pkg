@@ -41,14 +41,14 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 24 July 2020 by Anne-Kathleen Malchow, Potsdam University
+Last updated: 26 November 2020 by Greta Bocedi
 
 ------------------------------------------------------------------------------*/
 
 #ifndef ParametersH
 #define ParametersH
 
-//#if CLUSTER
+//#if LINUX_CLUSTER
 //#include <string.h>
 //#else
 #include <string>
@@ -175,8 +175,8 @@ struct envStochParams {
 #if BUTTERFLYDISP
 	bool fromFile;
 #endif
-	float ac; float std;
-	float locExtProb;
+	double ac; double std; 
+	double locExtProb;
 };
 
 class paramStoch {
@@ -196,9 +196,9 @@ private:
 	bool local;				// applied locally (if not, application is global)
 	bool inK;					// in carrying capacity (if not, in growth rate)
 	bool localExt;		// local extinction applied
-	float ac;					// temporal autocorrelation coefficient
-	float std;				// amplitude of fluctuations: sampled from N(0,std)
-	float locExtProb;	// local extinction probability
+	double ac;					// temporal autocorrelation coefficient		
+	double std;				// amplitude of fluctuations: sampled from N(0,std)
+	double locExtProb;	// local extinction probability
 };
 
 //---------------------------------------------------------------------------

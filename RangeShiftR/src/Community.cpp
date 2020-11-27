@@ -21,12 +21,17 @@
  
  
 //---------------------------------------------------------------------------
-
+#if RS_EMBARCADERO 
 #pragma hdrstop
+#endif
 
 #include "Community.h"
-//---------------------------------------------------------------------------
+
+#if RS_EMBARCADERO 
 #pragma package(smart_init)
+#endif
+//---------------------------------------------------------------------------
+
 
 ofstream outrange;
 ofstream outoccup,outsuit;
@@ -72,10 +77,10 @@ void Community::initialise(Species *pSpecies,int year)
 #endif
 {
 
-int nsubcomms,npatches,ndistcells,spratio,patchnum,rr;
+int nsubcomms,npatches,ndistcells,spratio,patchnum,rr = 0;
 locn distloc;
 patchData pch;
-patchLimits limits;
+patchLimits limits{};
 intptr ppatch,subcomm;
 std::vector <intptr> subcomms;
 std::vector <bool> selected;
@@ -84,7 +89,6 @@ Patch *pPatch;
 Cell *pCell;
 landParams ppLand = pLandscape->getLandParams();
 initParams init = paramsInit->getInit();
-simParams sim = paramsSim->getSim();
 
 nsubcomms = (int)subComms.size();
 
@@ -293,7 +297,7 @@ case 2:	// initial individuals in specified patches/cells
 		indIx = 0; // reset index for initial individuals
 	}
 	else { // add any initial individuals for the current year
-		initInd iind; iind.year = 0;
+		initInd iind{}; iind.year = 0;
 		int ninds = paramsInit->numInitInds();
 		while (indIx < ninds && iind.year <= year) {
 			iind = paramsInit->getInitInd(indIx);
@@ -660,7 +664,9 @@ t0 = time(0);
 #endif
 
 simParams sim = paramsSim->getSim();
+#if VCL
 simView v = paramsSim->getViews();
+#endif
 
 int nsubcomms = (int)subComms.size();
 // initiate dispersal - all emigrants leave their natal community and join matrix community
@@ -684,7 +690,7 @@ if (yr%outintGroup == 0) {
 
 // dispersal is undertaken by all individuals now in the matrix patch
 // (even if not physically in the matrix)
-int ndispersers;
+int ndispersers = 0;
 do {
 	for (int i = 0; i < nsubcomms; i++) { // all populations
 		subComms[i]->resetPossSettlers();
@@ -1144,7 +1150,7 @@ commStats Community::getStats(short season)
 commStats Community::getStats(void)
 #endif // SEASONAL 
 {
-commStats s;
+commStats s{};
 landParams ppLand = pLandscape->getLandParams();
 s.ninds = s.nnonjuvs = s.suitable = s.occupied = 0;
 #if GOBYMODEL
@@ -1349,7 +1355,7 @@ for (int i = 0; i < nsubcomms; i++) { // all sub-communities
 
 // Write records to individuals file
 void Community::outInds(int rep, int yr, int gen,int landNr) {
-landParams ppLand = pLandscape->getLandParams();
+
 if (landNr >= 0) { // open the file
 	subComms[0]->outInds(pLandscape,rep,yr,gen,landNr);
 	return;
@@ -1497,7 +1503,6 @@ if (trfr.indVar) {
 	if (trfr.moveModel) {
 		if (trfr.moveType == 1) {
 			outrange << "\tmeanDP\tstdDP\tmeanGB\tstdGB";
-			trfrSMSTraits s = pSpecies->getSMSTraits();
 				outrange << "\tmeanAlphaDB\tstdAlphaDB\tmeanBetaDB\tstdBetaDB";
 		}
 		if (trfr.moveType == 2) {
@@ -1626,10 +1631,10 @@ outrange << "\t" << s.occupied << "\t" << occsuit;
 // RANGE MINIMA AND MAXIMA NEED TO BECOME A PROPERTY OF THE SPECIES
 if (s.ninds > 0) {
 	landOrigin origin = pLandscape->getOrigin();
-	outrange << "\t" << (float)s.minX * (float)ppLand.resol + origin.minEast
-		<< "\t" << (float)(s.maxX+1) * (float)ppLand.resol + origin.minEast
-		<< "\t" << (float)s.minY * (float)ppLand.resol + origin.minNorth
-		<< "\t" << (float)(s.maxY+1) * (float)ppLand.resol + origin.minNorth;
+	outrange << "\t" << s.minX * ppLand.resol + origin.minEast
+		<< "\t" << s.maxX+1 * ppLand.resol + origin.minEast
+		<< "\t" << s.minY * ppLand.resol + origin.minNorth
+		<< "\t" << s.maxY+1 * ppLand.resol + origin.minNorth;
 }
 else
 	outrange <<"\t0\t0\t0\t0";
@@ -1684,10 +1689,12 @@ DEBUGLOG << "Community::outRange(): i=" << i << " PROCESS Range NOccupPatches"
 #endif // RS_ABC
 
 if (emig.indVar || trfr.indVar || sett.indVar) { // output trait means
-	traitsums ts;
+	traitsums ts{};
 	traitsums scts; // sub-community traits
-	traitCanvas tcanv;
+	traitCanvas tcanv{}; 
 	int ngenes,popsize;
+
+	tcanv.pcanvas[0] = NULL; 
 
 	for (int i = 0; i < NSEXES; i++) {
 		ts.ninds[i] = 0;
@@ -1706,7 +1713,7 @@ if (emig.indVar || trfr.indVar || sett.indVar) { // output trait means
 
 	int nsubcomms = (int)subComms.size();
 	for (int i = 0; i < nsubcomms; i++) { // all sub-communities (incl. matrix)
-		scts = subComms[i]->outTraits(tcanv,pLandscape,rep,yr,gen,true);
+		scts = subComms[i]->outTraits(tcanv,pLandscape,rep,yr,gen,true); 
 		for (int j = 0; j < NSEXES; j++) {
 			ts.ninds[j]     += scts.ninds[j];
 			ts.sumD0[j]     += scts.sumD0[j];     ts.ssqD0[j]     += scts.ssqD0[j];
@@ -1750,7 +1757,7 @@ if (emig.indVar || trfr.indVar || sett.indVar) { // output trait means
 				ngenes = 1;
 			}
 		}
-		double mnD0[2],mnAlpha[2],mnBeta[2],sdD0[2],sdAlpha[2],sdBeta[2];
+		double mnD0[2]{},mnAlpha[2]{},mnBeta[2]{},sdD0[2]{},sdAlpha[2]{},sdBeta[2]{};
 		for (int g = 0; g < ngenes; g++) {
 			mnD0[g] = mnAlpha[g] = mnBeta[g] = sdD0[g] = sdAlpha[g] = sdBeta[g] = 0.0;
 			// individuals may have been counted by sex if there was
@@ -1816,10 +1823,10 @@ if (emig.indVar || trfr.indVar || sett.indVar) { // output trait means
 				ngenes = 1;
 			}
 		}
-		double mnDist1[2],mnDist2[2],mnProp1[2],mnStepL[2],mnRho[2];
-		double sdDist1[2],sdDist2[2],sdProp1[2],sdStepL[2],sdRho[2];
-		double mnDP[2],mnGB[2],mnAlphaDB[2],mnBetaDB[2];
-		double sdDP[2],sdGB[2],sdAlphaDB[2],sdBetaDB[2];
+		double mnDist1[2]{},mnDist2[2]{},mnProp1[2]{},mnStepL[2]{},mnRho[2]{};
+		double sdDist1[2]{},sdDist2[2]{},sdProp1[2]{},sdStepL[2]{},sdRho[2]{};
+		double mnDP[2]{},mnGB[2]{},mnAlphaDB[2]{},mnBetaDB[2]{};
+		double sdDP[2]{},sdGB[2]{},sdAlphaDB[2]{},sdBetaDB[2]{};
 		for (int g = 0; g < ngenes; g++) {
 			mnDist1[g] = mnDist2[g] = mnProp1[g] = mnStepL[g] = mnRho[g] = 0.0;
 			sdDist1[g] = sdDist2[g] = sdProp1[g] = sdStepL[g] = sdRho[g] = 0.0;
@@ -1928,7 +1935,7 @@ if (emig.indVar || trfr.indVar || sett.indVar) { // output trait means
 			}
 		}
 		// CURRENTLY INDIVIDUAL VARIATION CANNOT BE SEX-DEPENDENT
-		double mnS0[2],mnAlpha[2],mnBeta[2],sdS0[2],sdAlpha[2],sdBeta[2];
+		double mnS0[2]{},mnAlpha[2]{},mnBeta[2]{},sdS0[2]{},sdAlpha[2]{},sdBeta[2]{};
 		for (int g = 0; g < ngenes; g++) {
 			mnS0[g] = mnAlpha[g] = mnBeta[g] = sdS0[g] = sdAlpha[g] = sdBeta[g] = 0.0;
 			// individuals may have been counted by sex if there was
@@ -2103,13 +2110,12 @@ order of y
 */
 //void Community::outTraits(emigCanvas ecanv,trfrCanvas tcanv,Species *pSpecies,
 //	int rep,int yr,int gen)
-void Community::outTraits(traitCanvas tcanv,Species *pSpecies,
+void Community::outTraits(traitCanvas tcanv,Species *pSpecies, 
 	int rep,int yr,int gen)
 {
 simParams sim = paramsSim->getSim();
 simView v = paramsSim->getViews();
 landParams land = pLandscape->getLandParams();
-landOrigin origin = pLandscape->getOrigin();
 //demogrParams dem = pSpecies->getDemogr();
 //emigRules emig = pSpecies->getEmig();
 //trfrRules trfr = pSpecies->getTrfr();
@@ -2163,7 +2169,7 @@ if (v.viewTraits
 	for (int i = 1; i < nsubcomms; i++) { // // all except matrix sub-community
 //		sctraits = subComms[i]->outTraits(ecanv,tcanv,pLandscape,rep,yr,gen);
 //		sctraits = subComms[i]->outTraits(tcanv,pLandscape,rep,yr,gen,v.viewGrad);
-		sctraits = subComms[i]->outTraits(tcanv,pLandscape,rep,yr,gen,false);
+		sctraits = subComms[i]->outTraits(tcanv,pLandscape,rep,yr,gen,false); 
 		locn loc = subComms[i]->getLocn();
 		int y = loc.y;
 		if (sim.outTraitsRows && yr >= sim.outStartTraitRow && yr%sim.outIntTraitRow == 0)
@@ -2197,7 +2203,7 @@ if (v.viewTraits
 //{
 //	if (ts != 0) delete[] ts;
 //}
-if (ts != 0) { delete[] ts; ts = 0; }
+if (ts != NULL) { delete[] ts; ts = 0; }
 }
 
 // Write records to trait rows file
@@ -2206,9 +2212,8 @@ void Community::writeTraitsRows(Species *pSpecies,int rep,int yr,int gen,int y,
 {
 //simParams sim = paramsSim->getSim();
 //simView v = paramsSim->getViews();
-landData land = pLandscape->getLandData();
-landOrigin origin = pLandscape->getOrigin();
-demogrParams dem = pSpecies->getDemogr();
+//landData land = pLandscape->getLandData();
+//landOrigin origin = pLandscape->getOrigin();
 emigRules emig = pSpecies->getEmig();
 trfrRules trfr = pSpecies->getTrfr();
 settleType sett = pSpecies->getSettle();

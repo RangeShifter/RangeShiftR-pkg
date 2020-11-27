@@ -21,12 +21,15 @@
  
  
 //---------------------------------------------------------------------------
-
+#if RS_EMBARCADERO
 #pragma hdrstop
+#endif
 
 #include "Population.h"
 //---------------------------------------------------------------------------
+#if RS_EMBARCADERO
 #pragma package(smart_init)
+#endif
 
 ofstream outPop;
 #if RS_CONTAIN
@@ -36,7 +39,14 @@ ofstream outInds;
 
 //---------------------------------------------------------------------------
 
-Population::Population(void) { return; }
+Population::Population(void) { 
+
+	nSexes = 0;
+	nStages = 0;
+	pPatch = NULL;
+	pSpecies = NULL;
+	return;
+}
 
 #if PEDIGREE
 Population::Population(Species *pSp,Pedigree *pPed,Patch *pPch,int ninds,int resol) 
@@ -50,7 +60,7 @@ Population::Population(Species *pSp,Patch *pPch,int ninds,int resol)
 //	<< " pPch=" << pPch << " ninds="<< ninds << endl;
 #endif
 
-int n,nindivs,age,minage,maxage,nAges;
+int n,nindivs,age = 0,minage,maxage,nAges = 0;
 int cumtotal = 0;
 float probmale;
 double ageprob,ageprobsum;
@@ -65,7 +75,7 @@ if (ninds > 0) {
 pSpecies = pSp;
 pPatch = pPch;
 // record the new population in the patch
-patchPopn pp;
+patchPopn pp{};
 pp.pSp = (intptr)pSpecies; pp.pPop = (intptr)this;
 pPatch->addPopn(pp);
 #if RSDEBUG
@@ -104,7 +114,7 @@ for (int stg = 0; stg < NSTAGES; stg++) {
 }
 
 // set up local copy of minimum age table
-short minAge[NSTAGES][NSEXES];
+short minAge[NSTAGES][NSEXES]{};
 for (int stg = 0; stg < nStages; stg++) {
 	for (int sex = 0; sex < nSexes; sex++) {
 		if (dem.stageStruct) {
@@ -328,7 +338,7 @@ juvs.clear();
 
 traitsums Population::getTraits(Species *pSpecies) {
 int g;
-traitsums ts;
+traitsums ts{};
 for (int i = 0; i < NSEXES; i++) {
 	ts.ninds[i] = 0;
 	ts.sumD0[i] = ts.ssqD0[i] = 0.0;
@@ -345,7 +355,6 @@ for (int i = 0; i < NSEXES; i++) {
 }
 //locus loc;
 
-demogrParams dem = pSpecies->getDemogr();
 emigRules emig = pSpecies->getEmig();
 trfrRules trfr = pSpecies->getTrfr();
 settleType sett = pSpecies->getSettle();
@@ -432,10 +441,10 @@ popStats Population::getStats(short hab)
 popStats Population::getStats(void) 
 #endif // RS_CONTAIN 
 {
-popStats p;
+popStats p{};
 int ninds;
-float fec;
-bool breeders[2]; breeders[0] = breeders[1] = false;
+double fec;
+bool breeders[2]{}; breeders[0] = breeders[1] = false;
 demogrParams dem = pSpecies->getDemogr();
 p.pSpecies = pSpecies;
 p.pPatch = pPatch;
@@ -787,7 +796,6 @@ emigRules emig = pSpecies->getEmig();
 trfrRules trfr = pSpecies->getTrfr();
 settleType sett = pSpecies->getSettle();
 genomeData gen = pSpecies->getGenomeData();
-simView v = paramsSim->getViews();
 
 #if GROUPDISP
 #if RSDEBUG
@@ -881,7 +889,7 @@ if (dem.repType == 0) nsexes = 1; else nsexes = 2;
 #endif
 
 // set up local copy of species fecundity table
-float fec[NSTAGES][NSEXES];
+double fec[NSTAGES][NSEXES]{};
 #if GOBYMODEL
 // also set up corresponding table for density-dependent effects, which cannot
 // be applied until an individual female's sociality phenotype is known
@@ -1043,7 +1051,7 @@ else { // non-structured - set fecundity for adult females only
 		fecAsocial *= fasocial / (1.0 + fabs((soc.asocRmax*dem.lambda)-1.0)
 			*pow(((float)ninds/(soc.asocK*localK)),(soc.asocBc*dem.bc)));
 #else
-		fec[1][0] /= (1.0 + fabs(dem.lambda-1.0)*pow(((float)ninds/localK),dem.bc));
+		fec[1][0] /= (1.0f + fabs(dem.lambda-1.0f)*pow(((float)ninds/localK),dem.bc));
 #endif
 //#endif
 	}
@@ -1580,7 +1588,7 @@ demogrParams dem = pSpecies->getDemogr();
 stageParams sstruct = pSpecies->getStage();
 emigRules emig = pSpecies->getEmig();
 emigTraits eparams;
-trfrRules trfr = pSpecies->getTrfr();
+
 indStats ind;
 #if RSDEBUG
 //DEBUGLOG << "Population::emigration(): this=" << this
@@ -1662,7 +1670,7 @@ int nTotal,Nasocial,Nsocial;
 // used when there is no individual variability
 // NB - IT IS DOUBTFUL THIS CONTRIBUTES ANY SUBSTANTIAL TIME SAVING
 if (dem.repType == 0) nsexes = 1; else nsexes = 2;
-double Pemig[NSTAGES][NSEXES];
+double Pemig[NSTAGES][NSEXES]{};
 
 #if PARTMIGRN
 bool breeding = pSpecies->getBreeding(season);
@@ -1988,7 +1996,7 @@ for (int i = 0; i < ninds; i++) {
 
 // If an Individual has been identified as an emigrant, remove it from the Population
 disperser Population::extractDisperser(int ix) {
-disperser d;
+disperser d{};
 indStats ind = inds[ix]->getStats();
 #if RSDEBUG
 //if (ind.status > 0) {
@@ -2055,7 +2063,7 @@ if (j >= 0 && j < groups.size()) {
 // if it is a settler, return its new location and remove it from the current population
 // otherwise, leave it in the matrix population for possible reporting before deletion
 disperser Population::extractSettler(int ix) {
-disperser d;
+disperser d{};
 Cell* pCell;
 //Patch* pPatch;
 
@@ -2465,7 +2473,7 @@ Patch *pPatch;
 Cell *pCell;
 indStats ind;
 Population *pNewPopn;
-locn newloc,nbrloc;
+locn newloc,nbrloc{};
 
 landData ppLand = pLandscape->getLandData();
 short reptype = pSpecies->getRepType();
@@ -2475,6 +2483,9 @@ settleRules sett;
 settleTraits settDD;
 settlePatch settle;
 simParams sim = paramsSim->getSim();
+
+pPatch = NULL; 
+pCell = NULL;
 
 #if SEASONAL
 //bool breeding = pSpecies->getBreeding(season);
@@ -2821,7 +2832,7 @@ Population *pNewPopn;
 int popsize = 0;
 bool matefound = false;
 
-patch = pCell->getPatch();
+patch = (int)pCell->getPatch();
 if (patch != 0) {
 	pPatch = (Patch*)pCell->getPatch();
 	if (pPatch->getPatchNum() > 0) { // not the matrix patch
@@ -2906,9 +2917,9 @@ if (ninds == 0) return;
 // set up local copies of species development and survival tables
 int nsexes;
 if (dem.repType == 0) nsexes = 1; else nsexes = 2;
-float dev[NSTAGES][NSEXES];
-float surv[NSTAGES][NSEXES];
-short minAge[NSTAGES][NSEXES];
+double dev[NSTAGES][NSEXES]{};
+double surv[NSTAGES][NSEXES]{};
+short minAge[NSTAGES][NSEXES]{};
 for (int stg = 0; stg < sstruct.nStages; stg++) {
 	for (int sex = 0; sex < nsexes; sex++) {
 		if (dem.stageStruct) {
@@ -3309,11 +3320,17 @@ if (ngroups > 0) {
 #if RS_RCPP
 	shuffle(groups.begin(), groups.end(), pRandom->getRNG() );
 #else
+
 #if !RSDEBUG
 	// do not randomise individuals in RSDEBUG mode, as the function uses rand()
 	// and therefore the randomisation will differ between identical runs of RS
-	random_shuffle (groups.begin(), groups.end());
+#if RS_EMBARCADERO
+	random_shuffle(groups.begin(), groups.end());
+#else
+	shuffle(groups.begin(), groups.end(), pRandom->getRNG() );
+#endif
 #endif // !RSDEBUG
+
 #endif // RS_RCPP
 }
 }
@@ -3343,13 +3360,18 @@ if (ninds > 0) {
 #if RS_RCPP
 	shuffle(inds.begin(), inds.end(), pRandom->getRNG() );
 #else
+
 #if !RSDEBUG
 	// do not randomise individuals in RSDEBUG mode, as the function uses rand()
 	// and therefore the randomisation will differ between identical runs of RS
-	random_shuffle (inds.begin(), inds.end());
+#if RS_EMBARCADERO
+	random_shuffle(inds.begin(), inds.end());
+#else
+	shuffle(inds.begin(), inds.end(), pRandom->getRNG() );
+#endif
 #endif // !RSDEBUG
-#endif // RS_RCPP
 
+#endif // RS_RCPP
 }
 }
 
@@ -3458,7 +3480,7 @@ Cell *pCell;
 // NEED TO REPLACE CONDITIONAL COLUMNS BASED ON ATTRIBUTES OF ONE SPECIES TO COVER
 // ATTRIBUTES OF *ALL* SPECIES AS DETECTED AT MODEL LEVEL
 demogrParams dem = pSpecies->getDemogr();
-stageParams sstruct = pSpecies->getStage();
+
 #if RS_ABC
 simParams sim = paramsSim->getSim();
 #endif
@@ -3880,7 +3902,7 @@ for (int i = 0; i < ninds; i++) {
 		}
 #endif
 		pCell = inds[i]->getLocn(1);
-		locn loc;
+		locn loc{};
 		if (pCell == 0) loc.x = loc.y = -1; // beyond boundary or in no-data cell
 		else loc = pCell->getLocn();
 		pCell = inds[i]->getLocn(0);

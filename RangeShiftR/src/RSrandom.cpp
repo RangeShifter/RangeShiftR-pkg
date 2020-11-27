@@ -19,17 +19,20 @@
  *	
  --------------------------------------------------------------------------*/
  
- 
-
-#pragma hdrstop
 
 #include "RSrandom.h"
-//---------------------------------------------------------------------------
 
 
-#if !RS_RCPP
 
+//--------------- 1.) Former version of RSrandom.cpp
+
+
+#if RS_EMBARCADERO
+
+
+#pragma hdrstop
 #pragma package(smart_init)
+
 
 #if RSDEBUG
 #include "Parameters.h"
@@ -40,7 +43,7 @@ extern paramSim *paramsSim;
 
 #if !RS_ABC
 
-#if !CLUSTER
+#if !LINUX_CLUSTER
 // set up Mersenne Twister random generator
 #if RSWIN64
 #if RSDEBUG
@@ -62,7 +65,7 @@ int RS_random_seed = time(0);
 tr1::mt19937 gen(time(0));
 #endif // RSDEBUG 
 #endif // RSWIN64 
-#endif // !CLUSTER
+#endif // !LINUX_CLUSTER
 
 #endif // !RS_ABC
 
@@ -76,7 +79,7 @@ RSrandom::RSrandom(void)
 
 #if RS_ABC
 
-#if !CLUSTER
+#if !LINUX_CLUSTER
 // set up Mersenne Twister random generator
 // NB see comments above
 // presumably 32-bit compile would fail, but ABC version is likely to always be
@@ -89,7 +92,7 @@ gen = new tr1::mt19937 (RS_random_seed);
 RS_random_seed = time(0) + 17 * seed;
 gen = new tr1::mt19937 (RS_random_seed);
 #endif // RSDEBUG
-#endif // !CLUSTER
+#endif // !LINUX_CLUSTER
 
 #else
 
@@ -128,7 +131,7 @@ cout << "***NOT*** BOOST_HAS_TR1_RANDOM" << endl;
 */
 
 normal_x2_valid = 0;
-#if !CLUSTER
+#if !LINUX_CLUSTER
 // Set up standard uniform distribution
 pRandom01 = new	tr1::uniform_real<> (0.0,1.0);
 // Set up standard normal distribution
@@ -150,14 +153,14 @@ RSrandom::~RSrandom(void) {
 #if RS_ABC
 delete gen;
 #endif
-#if !CLUSTER
+#if !LINUX_CLUSTER
 if (pRandom01 != 0) delete pRandom01;
 if (pNormal != 0) delete pNormal;
 #endif
 }
 
 double RSrandom::Random(void) {
-#if CLUSTER
+#if LINUX_CLUSTER
 return unif_rand();
 #else
 #if RS_ABC
@@ -176,7 +179,7 @@ return pRandom01->operator()(gen);
 }
 
 int RSrandom::IRandom(int min,int max) {
-//#if CLUSTER
+//#if LINUX_CLUSTER
 //return irand(min,max);
 //#else
 //tr1::uniform_int<> dist(min,max);
@@ -195,7 +198,7 @@ int RSrandom::Bernoulli(double p) {
 //DEBUGLOG << "RSrandom::Bernoulli(): p=" << p
 //	<< endl;
 #endif
-#if CLUSTER
+#if LINUX_CLUSTER
 return unif_rand() < p;
 #else
 return Random() < p;
@@ -207,7 +210,7 @@ double RSrandom::Normal(double mean,double sd) {
 //DEBUGLOG << "RSrandom::Normal(): mean=" << mean << " sd=" << sd
 //	<< endl;
 #endif
-#if CLUSTER
+#if LINUX_CLUSTER
 // normal distribution derived from Agner Fog's method
 double normal_x1;          // first random coordinate (normal_x2 is member of class)
 double w;                  // radius
@@ -249,7 +252,7 @@ return mean + sd * pNormal->operator()(gen);
 }
 
 int RSrandom::Poisson(double mean) {
-#if CLUSTER
+#if LINUX_CLUSTER
 return rpois(mean);
 #else
 #if RS_ABC
@@ -277,7 +280,7 @@ double g0,g1,beta;
 //	<< endl;
 #endif
 if (p0 > 0.0 && p1 > 0.0) { // valid beta parameters
-#if CLUSTER
+#if LINUX_CLUSTER
 	g0 = rgamma(p0,1.0);
 	g1 = rgamma(p1,1.0);
 #else
@@ -285,7 +288,7 @@ if (p0 > 0.0 && p1 > 0.0) { // valid beta parameters
 	tr1::gamma_distribution<> gamma1(p1,1.0);
 	g0 = gamma0(*gen);
 	g1 = gamma1(*gen);
-#endif // CLUSTER
+#endif // LINUX_CLUSTER
 	beta = g0 / (g0 + g1);
 #if RSDEBUG
 //DEBUGLOG << "RSrandom::Beta(): g0=" << g0 << " g1=" << g1 << " beta=" << beta
@@ -303,12 +306,12 @@ double RSrandom::Gamma(double p0,double p1) {
 double p2,gamma;
 if (p0 > 0.0 && p1 > 0.0) { // valid gamma parameters
 	p2 = 1.0 / p1;
-#if CLUSTER
+#if LINUX_CLUSTER
 	gamma = rgamma(p0,p2);
 #else
 	tr1::gamma_distribution<> gamma0(p0,p2);
 	gamma = gamma0(*gen);
-#endif // CLUSTER
+#endif // LINUX_CLUSTER
 }
 else { // return invalid value
 	gamma = -666.0;
@@ -320,6 +323,106 @@ return  gamma;
 
 //--------------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------------
+
+#else // not RS_EMBARCADERO
+
+
+
+//--------------- 2.) New version of RSrandom.cpp
+
+#if !RS_RCPP 
+
+
+#if RSDEBUG
+#include "Parameters.h"
+extern paramSim* paramsSim;
+// ofstream RSRANDOMLOG;
+#endif
+
+int RS_random_seed = 0;
+
+// C'tor
+RSrandom::RSrandom()
+{
+#if RSDEBUG
+    // fixed seed
+    RS_random_seed = 666;
+#else
+    // random seed
+#if LINUX_CLUSTER
+    std::random_device device;
+    RS_random_seed = device(); // old versions of g++ on Windows return a constant value within a given Windows
+                                   // session; in this case better use time stamp
+#else
+    RS_random_seed = std::time(NULL);
+#endif
+#endif // RSDEBUG
+
+#if BATCH && RSDEBUG
+    DEBUGLOG << "RSrandom::RSrandom(): RS_random_seed=" << RS_random_seed << endl;
+#endif // RSDEBUG
+
+    // set up Mersenne Twister RNG
+    gen = new mt19937(RS_random_seed);
+
+    // Set up standard uniform distribution
+    pRandom01 = new uniform_real_distribution<double>(0.0, 1.0);
+    // Set up standard normal distribution
+    pNormal = new normal_distribution<double>(0.0, 1.0);
+}
+
+RSrandom::~RSrandom(void)
+{
+    delete gen;
+    if(pRandom01 != 0)
+	delete pRandom01;
+    if(pNormal != 0)
+	delete pNormal;
+}
+
+mt19937 RSrandom::getRNG(void)
+{
+    return *gen;
+}
+
+double RSrandom::Random(void)
+{
+    // return random number between 0 and 1
+    return pRandom01->operator()(*gen);
+}
+
+int RSrandom::IRandom(int min, int max)
+{
+    // return random integer in the interval min <= x <= max
+    uniform_int_distribution<int> unif(min, max);
+    return unif(*gen);
+}
+
+int RSrandom::Bernoulli(double p)
+{
+    return Random() < p;
+}
+
+double RSrandom::Normal(double mean, double sd)
+{
+    return mean + sd * pNormal->operator()(*gen);
+}
+
+int RSrandom::Poisson(double mean)
+{
+    poisson_distribution<int> poiss(mean);
+    return poiss(*gen);
+}
+
+
+
+//--------------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------
+
+
+
+//--------------- 3.) R package version of RSrandom.cpp
+
 
 #else // if RS_RCPP 
 
@@ -460,6 +563,6 @@ return  gamma;
 
 #endif // RS_RCPP
 
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
+#endif // RS_EMBARCADERO
+
 //---------------------------------------------------------------------------

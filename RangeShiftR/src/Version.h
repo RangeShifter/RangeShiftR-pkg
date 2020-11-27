@@ -19,7 +19,8 @@
  *	
  --------------------------------------------------------------------------*/
  
- 
+//Last updated: 26 November 2020 by Greta Bocedi
+
 //---------------------------------------------------------------------------
 
 #ifndef VersionH
@@ -27,8 +28,8 @@
 
 #define RSDEBUG 0
 
-#define CLUSTER	0
-// #define RSWIN64 1
+#define LINUX_CLUSTER 0
+#define RSWIN64 0
 
 #define RANDOMCHECK 0
 
@@ -37,6 +38,8 @@
 
 #define RS_RCPP 1
 //#define R_CMD 0
+
+#define RS_EMBARCADERO 0
 
 //---------------------------------------------------------------------------
 #endif
