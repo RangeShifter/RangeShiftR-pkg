@@ -29,7 +29,7 @@
 #define RSDEBUG 0
 
 #define LINUX_CLUSTER 0
-#define RSWIN64 0
+//#define RSWIN64 0
 
 #define RANDOMCHECK 0
 

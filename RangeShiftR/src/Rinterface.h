@@ -60,7 +60,9 @@ using namespace std;
 #include "Species.h"
 #include "SubCommunity.h"
 #include "RSrandom.h"
+#if RANDOMCHECK
 #include "RandomCheck.h"
+#endif
 #include "Model.h"
 
 
