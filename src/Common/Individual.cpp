@@ -3231,9 +3231,6 @@ unsigned int Individual::getMatPosn(void)	{ return matPosn; }
 
 //---------------------------------------------------------------------------
 
-//#if RSWIN64
-#if !RS_EMBARCADERO || !LINUX_CLUSTER
-
 double wrpcauchy (double location, double rho) {
 double result;
 
@@ -3256,9 +3253,6 @@ if (scale < 0) return location;
 
 return location + scale * tan(PI * pRandom->Random());
 }
-
-#endif
-//#endif
 
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------

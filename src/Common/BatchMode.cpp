@@ -9407,12 +9407,10 @@ rsLog << "Event,Number,Reps,Years,Time" << endl;
 #if RSDEBUG
 rsLog << "WARNING,***** RSDEBUG mode is active *****,,," << endl;
 #endif
-#if !RS_EMBARCADERO || !LINUX_CLUSTER
 #if GROUPDISP || RS_ABC
 rsLog << "RANDOM SEED,,,," << RS_random_seed << endl;
 #else
 rsLog << "RANDOM SEED," << RS_random_seed << ",,," << endl;
-#endif
 #endif
 
 // Open landscape batch file and read header record

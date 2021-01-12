@@ -37,7 +37,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 27 November 2020 by Anne-Kathleen Malchow, Potsdam University
+Last updated: 21 December 2020 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -537,12 +537,8 @@ private:
 
 //---------------------------------------------------------------------------
 
-#if !RS_EMBARCADERO || !LINUX_CLUSTER
-
 double cauchy(double location, double scale) ;
 double wrpcauchy (double location, double rho = exp(double(-1)));
-
-#endif
 
 extern RSrandom *pRandom;
 

@@ -26,9 +26,10 @@ RangeShifter v2.0 RSrandom
 
 Implements the RSrandom class
 
-Author: Steve Palmer, University of Aberdeen
+Authors: Steve Palmer, University of Aberdeen
+				 Anne-Kathleen Malchow, Potsdam University
 
-Last updated: 24 November 2020 by Anne-Kathleen Malchow
+Last updated: 12 January 2021 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -48,10 +49,10 @@ extern ofstream DEBUGLOG;
 #endif
 
 
-//--------------- 1.) Former version of RSrandom.cpp
-
 
 #if RS_EMBARCADERO
+
+//--------------- 1.) Former version of RSrandom.cpp
 
 
 	#if LINUX_CLUSTER
@@ -103,9 +104,9 @@ extern ofstream DEBUGLOG;
 
 
 
-//--------------- 2.) New version of RSrandom.cpp
-
 #if !RS_RCPP
+
+//--------------- 2.) New version of RSrandom.cpp
 
 
 	#include <cmath>
@@ -118,7 +119,11 @@ extern ofstream DEBUGLOG;
 	{
 
 	public:
+	#if RS_ABC
+		RSrandom(int);
+	#else
 		RSrandom(void);
+	#endif
 		~RSrandom(void);
 		double Random(void);
 		int IRandom(int, int);
@@ -126,6 +131,10 @@ extern ofstream DEBUGLOG;
 		double Normal(double, double);
 		int Poisson(double);
 		mt19937 getRNG(void);
+  #if RS_ABC
+		double Beta(double,double);
+		double Gamma(double,double);
+	#endif
 
 	private:
 		mt19937* gen;
@@ -164,7 +173,7 @@ extern ofstream DEBUGLOG;
 		int Poisson(double);
 	/* ADDITIONAL DISTRIBUTIONS
 		double Beta(double,double);
-		double Gamma(double,double); // !! make sure coorect definition is used: using shape and scale (as defined here) OR using shape/alpha and rate/beta (=1/scale)
+		double Gamma(double,double); // !! make sure correct definition is used: using shape and scale (as defined here) OR using shape/alpha and rate/beta (=1/scale)
 		double Cauchy(double,double);
 	*/
 
