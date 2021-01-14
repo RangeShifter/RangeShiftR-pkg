@@ -142,7 +142,7 @@ return loc;
 // Return the co-ordinates of a specified initial distribution cell if it has been
 // selected - otherwise return negative co-ordinates
 locn InitDist::getSelectedCell(int ix) {
-locn loc{}; loc.x = loc.y = -666;
+locn loc; loc.x = loc.y = -666;
 if (ix < (int)cells.size()) {
 	if (cells[ix]->selected()) {
 		loc = cells[ix]->getLocn();
@@ -152,7 +152,7 @@ return loc;
 }
 
 locn InitDist::getDimensions(void) {
-locn d{}; d.x = maxX; d.y = maxY; return d;
+locn d; d.x = maxX; d.y = maxY; return d;
 }
 
 void InitDist::resetDistribution(void) {
@@ -466,7 +466,7 @@ if (batchMode && rasterType == 0) {
 
 landParams Landscape::getLandParams(void)
 {
-landParams ppp{};
+landParams ppp;
 ppp.generated = generated; ppp.patchModel = patchModel; ppp.spDist = spDist;
 ppp.dynamic = dynamic;
 #if RS_CONTAIN
@@ -483,7 +483,7 @@ return ppp;
 }
 
 landData Landscape::getLandData(void) {
-landData dd{};
+landData dd;
 dd.resol = resol;
 dd.dimX = dimX; dd.dimY = dimY;
 dd.minX = minX; dd.minY = minY;
@@ -504,7 +504,7 @@ if (ppp.maxCells > 0) maxCells = ppp.maxCells;
 
 genLandParams Landscape::getGenLandParams(void)
 {
-genLandParams ppp{};
+genLandParams ppp;
 ppp.fractal = fractal; ppp.continuous = continuous;
 ppp.minPct = minPct; ppp.maxPct = maxPct; ppp.propSuit = propSuit; ppp.hurst = hurst;
 ppp.maxCells = maxCells;
@@ -530,7 +530,7 @@ if (p.gpix > 0.0) gpix = p.gpix;
 }
 
 landPix Landscape::getLandPix(void) {
-landPix p{};
+landPix p;
 p.pix = pix; p.gpix = gpix;
 return p;
 }
@@ -540,7 +540,7 @@ minEast = origin.minEast; minNorth = origin.minNorth;
 }
 
 landOrigin Landscape::getOrigin(void) {
-landOrigin origin{};
+landOrigin origin;
 origin.minEast = minEast; origin.minNorth = minNorth;
 return origin;
 }
@@ -1388,10 +1388,10 @@ for (int i = 0; i < sim.years; i++) {
 #endif // RS_CONTAIN 
 
 patchData Landscape::getPatchData(int ix) {
-patchData ppp{};
+patchData ppp;
 ppp.pPatch = patches[ix]; ppp.patchNum = patches[ix]->getPatchNum();
 ppp.nCells = patches[ix]->getNCells();
-locn randloc{}; randloc.x = -666; randloc.y = -666;
+locn randloc; randloc.x = -666; randloc.y = -666;
 Cell *pCell = patches[ix]->getRandomCell();
 if (pCell != 0) {
   randloc = pCell->getLocn();
@@ -1427,7 +1427,7 @@ void Landscape::updateCarryingCapacity(Species *pSpecies,int yr,short landIx) {
 envGradParams grad = paramsGrad->getGradient();
 bool gradK = false;
 if (grad.gradient && grad.gradType == 1) gradK = true; // gradient in carrying capacity
-patchLimits landlimits{};
+patchLimits landlimits;
 landlimits.xMin = minX; landlimits.xMax = maxX;
 landlimits.yMin = minY; landlimits.yMax = maxY;
 #if RSDEBUG
@@ -2273,7 +2273,7 @@ void Landscape::recordCostChanges(int landIx) {
 DEBUGLOG << "Landscape::recordCostChanges(): landIx=" << landIx << endl;
 #endif
 if (costsChgMatrix == 0) return; // should not occur
-costChange chg{};
+costChange chg;
 
 for(int y = dimY-1; y >= 0; y--) {
 	for (int x = 0; x < dimX; x++) {
@@ -2332,7 +2332,7 @@ for(int y = dimY-1; y >= 0; y--) {
 int Landscape::numCostChanges(void) { return (int)costschanges.size(); }
 
 costChange Landscape::getCostChange(int i) {
-costChange c{}; c.chgnum = 99999999; c.x = c.y = c.oldcost = c.newcost = -1;
+costChange c; c.chgnum = 99999999; c.x = c.y = c.oldcost = c.newcost = -1;
 if (i >= 0 && i < (int)costschanges.size()) c = costschanges[i];
 return c;
 }
@@ -2375,7 +2375,7 @@ distns[0]->setDistribution(nInit);
 // Specified cell match one of the distribution cells to be initialised?
 bool Landscape::inInitialDist(Species *pSpecies,locn loc) {
 // convert landscape co-ordinates to distribution co-ordinates
-locn initloc{};
+locn initloc;
 initloc.x = loc.x * resol / spResol;
 initloc.y = loc.y * resol / spResol;
 // WILL HAVE TO GET CORRECT SPECIES WHEN THERE ARE MULTIPLE SPECIES ...
@@ -3406,7 +3406,7 @@ return maxcost;
 
 rasterdata CheckRasterFile(string fname)
 {
-rasterdata r{};
+rasterdata r;
 string header;
 int inint;
 ifstream infile;

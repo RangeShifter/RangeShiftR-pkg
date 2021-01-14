@@ -3264,7 +3264,7 @@ if (errors > 0) {
 
 // Parse data lines
 int line = 1;
-simCheck current{}, prev{};
+simCheck current, prev;
 simul = -98765;
 prev.simul = -999;
 prev.simlines = prev.reqdsimlines = 0;
@@ -3655,7 +3655,7 @@ if (errors > 0 || morthaberrors > 0 || costerrors > 0 || hrerrors > 0) {
 
 // Parse data lines
 int line = 1;
-simCheck current{}, prev{};
+simCheck current, prev;
 simul = -98765;
 prev.simul = -999;
 prev.simlines = prev.reqdsimlines = 0;
@@ -4328,7 +4328,7 @@ if (errors > 0) {
 
 // Parse data lines
 int line = 1;
-simCheck current{}, prev{};
+simCheck current, prev;
 simul = -98765;
 prev.simul = -999;
 prev.simlines = prev.reqdsimlines = 0;
@@ -4530,7 +4530,7 @@ if (errors > 0) {
 
 // Parse data lines
 int line = 1;
-simCheck current{},prev{};
+simCheck current,prev;
 simul = -98765;
 prev.simul = -999;
 prev.simlines = prev.reqdsimlines = 0;
@@ -5069,7 +5069,7 @@ if (errors > 0 || propnerrors > 0) {
 // Parse data lines
 int line = 1;
 int err;
-simCheck current{}, prev{};
+simCheck current, prev;
 bool checkfile;
 string filename,ftype2,fname;
 vector <string> indsfiles;
@@ -6072,7 +6072,7 @@ simCheck CheckStageSex(string filetype, int line, int simul, simCheck prev,
 	int stagedep, int sexdep, int stage, int sex, int indvar,
 	bool checklines, bool stgdepindvarok)
 {
-simCheck current{};
+simCheck current;
 current.errors = 0;
 int iii;
 
@@ -7660,8 +7660,8 @@ bool firstline = true;
 demogrParams dem = pSpecies->getDemogr();
 stageParams sstruct = pSpecies->getStage();
 emigRules emig = pSpecies->getEmig();
-emigTraits etraits{};
-emigParams eparams{};
+emigTraits etraits;
+emigParams eparams;
 
 // set no.of lines assuming maximum stage- and sex-dependency
 if (sstruct.nStages == 0) Nlines = sexesDisp;
@@ -7946,9 +7946,9 @@ if (trfr.moveModel) TransferType = trfr.moveType; else TransferType = 0;
 #endif // RS_CONTAIN 
 
 int sexKernels = 0;
-trfrKernTraits k{};
-trfrMovtTraits move{};
-trfrKernParams kparams{};
+trfrKernTraits k;
+trfrMovtTraits move;
+trfrKernParams kparams;
 trfrScales scale = pSpecies->getTrfrScales();
 string CostsFile;
 trfrSMSParams smsparams;
@@ -8118,7 +8118,7 @@ case 0: // negative exponential dispersal kernel
 
 		// mortality
 		if (stage == 0 && sex == 0) {
-			trfrMortParams mort{};
+			trfrMortParams mort;
 			transFile >> mort.fixedMort >> mort.mortAlpha >> mort.mortBeta;
 			pSpecies->setMortParams(mort);
 		}
@@ -8268,7 +8268,8 @@ DEBUGLOG << "ReadTransfer(): nHabMax=" << paramsLand.nHabMax << " i=" << i
 
 case 2: // CRW
 
-{trfrCRWParams mparams{};
+{
+trfrCRWParams mparams;
 
 transFile >> simulation >> iiii;
 if (iiii == 0) trfr.indVar = false; else trfr.indVar = true;
@@ -8458,9 +8459,9 @@ stageParams sstruct = pSpecies->getStage();
 trfrRules trfr = pSpecies->getTrfr();
 settleType sett = pSpecies->getSettle();
 settleRules srules;
-settleSteps ssteps{};
-settleTraits settleDD{};
-settParams sparams{};
+settleSteps ssteps;
+settleTraits settleDD;
+settParams sparams;
 int sexSettle = 0,settType = 0,densdep,indvar,findmate;
 #if GOBYMODEL
 float alphaSasoc,betaSasoc;
@@ -8820,7 +8821,7 @@ settleType sett = pSpecies->getSettle();
 int simulation,arch;
 string archfile;
 int error = 0;
-genomeData g{};
+genomeData g;
 demogrParams dem = pSpecies->getDemogr();
 
 if (option == 0) { // open file and read header line
@@ -9171,7 +9172,7 @@ if (option == 9) { // close file
 }
 
 // Read data lines;
-initInd iind{};
+initInd iind;
 int ninds;
 int totinds = 0;
 iind.year = -98765;
@@ -9701,7 +9702,7 @@ DebugGUI("RunBatch(): simulation i=" + Int2Str(i));
 			if (geneticsFile == "NULL") {
 				// use default genetics parameters
 				// (by setting illegal values except for diploid)
-				genomeData g{};
+				genomeData g;
 				g.nLoci = -1; g.probMutn = g.probCrossover = g.alleleSD = g.mutationSD = -1.0;
 				if (reproductn == 0) g.diploid = false; else g.diploid = true;
 				g.neutralMarkers = g.trait1Chromosome = false;

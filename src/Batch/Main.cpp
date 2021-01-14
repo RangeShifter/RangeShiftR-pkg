@@ -36,7 +36,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Author: Steve Palmer, University of Aberdeen
 
-Last updated: 27 November 2020 by Anne-Kathleen Malchow, Potsdam University
+Last updated: 14 January 2021 by Anne-Kathleen Malchow, Potsdam University
 
 ------------------------------------------------------------------------------*/
 #if RS_EMBARCADERO
@@ -441,7 +441,7 @@ Does such exist?
 */
 
 traitCanvas SetupTraitCanvas(void) {
-traitCanvas tcanv{};
+traitCanvas tcanv;
 for (int i = 0; i < NTRAITS; i++) { tcanv.pcanvas[i] = 0; }
 return tcanv;
 }

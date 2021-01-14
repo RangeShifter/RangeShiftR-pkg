@@ -75,7 +75,7 @@ if (ninds > 0) {
 pSpecies = pSp;
 pPatch = pPch;
 // record the new population in the patch
-patchPopn pp{};
+patchPopn pp;
 pp.pSp = (intptr)pSpecies; pp.pPop = (intptr)this;
 pPatch->addPopn(pp);
 #if RSDEBUG
@@ -114,7 +114,7 @@ for (int stg = 0; stg < NSTAGES; stg++) {
 }
 
 // set up local copy of minimum age table
-short minAge[NSTAGES][NSEXES]{};
+short minAge[NSTAGES][NSEXES];
 for (int stg = 0; stg < nStages; stg++) {
 	for (int sex = 0; sex < nSexes; sex++) {
 		if (dem.stageStruct) {
@@ -338,7 +338,7 @@ juvs.clear();
 
 traitsums Population::getTraits(Species *pSpecies) {
 int g;
-traitsums ts{};
+traitsums ts;       
 for (int i = 0; i < NSEXES; i++) {
 	ts.ninds[i] = 0;
 	ts.sumD0[i] = ts.ssqD0[i] = 0.0;
@@ -441,10 +441,10 @@ popStats Population::getStats(short hab)
 popStats Population::getStats(void) 
 #endif // RS_CONTAIN 
 {
-popStats p{};
+popStats p;
 int ninds;
 double fec;
-bool breeders[2]{}; breeders[0] = breeders[1] = false;
+bool breeders[2]; breeders[0] = breeders[1] = false;
 demogrParams dem = pSpecies->getDemogr();
 p.pSpecies = pSpecies;
 p.pPatch = pPatch;
@@ -889,7 +889,7 @@ if (dem.repType == 0) nsexes = 1; else nsexes = 2;
 #endif
 
 // set up local copy of species fecundity table
-double fec[NSTAGES][NSEXES]{};
+double fec[NSTAGES][NSEXES];
 #if GOBYMODEL
 // also set up corresponding table for density-dependent effects, which cannot
 // be applied until an individual female's sociality phenotype is known
@@ -1670,7 +1670,7 @@ int nTotal,Nasocial,Nsocial;
 // used when there is no individual variability
 // NB - IT IS DOUBTFUL THIS CONTRIBUTES ANY SUBSTANTIAL TIME SAVING
 if (dem.repType == 0) nsexes = 1; else nsexes = 2;
-double Pemig[NSTAGES][NSEXES]{};
+double Pemig[NSTAGES][NSEXES];
 
 #if PARTMIGRN
 bool breeding = pSpecies->getBreeding(season);
@@ -1996,7 +1996,7 @@ for (int i = 0; i < ninds; i++) {
 
 // If an Individual has been identified as an emigrant, remove it from the Population
 disperser Population::extractDisperser(int ix) {
-disperser d{};
+disperser d;
 indStats ind = inds[ix]->getStats();
 #if RSDEBUG
 //if (ind.status > 0) {
@@ -2063,7 +2063,7 @@ if (j >= 0 && j < groups.size()) {
 // if it is a settler, return its new location and remove it from the current population
 // otherwise, leave it in the matrix population for possible reporting before deletion
 disperser Population::extractSettler(int ix) {
-disperser d{};
+disperser d;
 Cell* pCell;
 //Patch* pPatch;
 
@@ -2473,7 +2473,7 @@ Patch *pPatch;
 Cell *pCell;
 indStats ind;
 Population *pNewPopn;
-locn newloc,nbrloc{};
+locn newloc,nbrloc;
 
 landData ppLand = pLandscape->getLandData();
 short reptype = pSpecies->getRepType();
@@ -2917,9 +2917,9 @@ if (ninds == 0) return;
 // set up local copies of species development and survival tables
 int nsexes;
 if (dem.repType == 0) nsexes = 1; else nsexes = 2;
-double dev[NSTAGES][NSEXES]{};
-double surv[NSTAGES][NSEXES]{};
-short minAge[NSTAGES][NSEXES]{};
+double dev[NSTAGES][NSEXES];
+double surv[NSTAGES][NSEXES];
+short minAge[NSTAGES][NSEXES];
 for (int stg = 0; stg < sstruct.nStages; stg++) {
 	for (int sex = 0; sex < nsexes; sex++) {
 		if (dem.stageStruct) {
@@ -3217,29 +3217,29 @@ for (int i = 0; i < ninds; i++) {
 //	<< " isDeveloping=" << ind.isDeveloping << " status=" << ind.status
 //	<< endl;
 #endif
-	if (ind.isDeveloping) { // develops to next stage
-		nInds[ind.stage][ind.sex]--;
-		inds[i]->develop();
-		nInds[ind.stage+1][ind.sex]++;
-	}
-	else {
-		if (ind.status > 5) { // doomed to die
+	if (ind.status > 5) { // doomed to die
 #if PEDIGREE
-			// NB. FOR EXPANDTREE GROUP DISPERSAL, RETAIN ANY ADULTS WHICH HAVE DIED,
-			// AS THEY MAY HAVE PRODUCED YOUNG WHICH MATURE SEVERAL YEARS
-			// AFTER THE PARENT'S DEMISE 
-//			if (ind.stage < sstruct.nStages-1 || ind.status < 8) 
-			if (inds[i]->getMatPosn() < 0 || ind.status < 8) 
-			{
-				delete inds[i];
-				inds[i] = NULL;
-				nInds[ind.stage][ind.sex]--;				
-			}
-#else
+		// NB. FOR EXPANDTREE GROUP DISPERSAL, RETAIN ANY ADULTS WHICH HAVE DIED,
+		// AS THEY MAY HAVE PRODUCED YOUNG WHICH MATURE SEVERAL YEARS
+		// AFTER THE PARENT'S DEMISE 
+//		if (ind.stage < sstruct.nStages-1 || ind.status < 8) 
+		if (inds[i]->getMatPosn() < 0 || ind.status < 8) 
+		{
 			delete inds[i];
 			inds[i] = NULL;
-			nInds[ind.stage][ind.sex]--;
+			nInds[ind.stage][ind.sex]--;				
+		}
+#else
+		delete inds[i];
+		inds[i] = NULL;
+		nInds[ind.stage][ind.sex]--;
 #endif
+	}
+	else {
+		if (ind.isDeveloping) { // develops to next stage
+			nInds[ind.stage][ind.sex]--;
+			inds[i]->develop();
+			nInds[ind.stage+1][ind.sex]++;
 		}
 	}
 }
@@ -3902,7 +3902,7 @@ for (int i = 0; i < ninds; i++) {
 		}
 #endif
 		pCell = inds[i]->getLocn(1);
-		locn loc{};
+		locn loc;
 		if (pCell == 0) loc.x = loc.y = -1; // beyond boundary or in no-data cell
 		else loc = pCell->getLocn();
 		pCell = inds[i]->getLocn(0);

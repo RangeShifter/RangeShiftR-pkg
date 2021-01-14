@@ -65,19 +65,15 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 27 November 2020 by Anne-Kathleen Malchow, Potsdam University
+Last updated: 14 January 2021 by Steve Palmer
  * 
 ------------------------------------------------------------------------------*/
 
 #ifndef LandscapeH
 #define LandscapeH
 
-//#include <stdlib.h>
-//#include <math.h>  
 #include <algorithm>
 #include <fstream>
-//#include <iostream.h>
-//#include <stdio.h>
 #include <vector>
 
 using namespace std;
@@ -193,10 +189,10 @@ struct patchData {
 	Patch *pPatch; int patchNum,nCells; int x,y;
 };
 struct landChange {
-	int chgnum{},chgyear{}; string habfile,pchfile,costfile;
+	int chgnum,chgyear; string habfile,pchfile,costfile;
 };
 struct patchChange {
-	int chgnum{}, x{}, y{}, oldpatch{}, newpatch{};
+	int chgnum, x, y, oldpatch, newpatch;
 };
 struct costChange {
 	int chgnum,x,y,oldcost,newcost;
