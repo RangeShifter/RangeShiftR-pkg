@@ -141,6 +141,8 @@ if (movt) {
 	if (moveType == 1) { // SMS
 		// set up location data for SMS
 		smsData = new smsdata;
+		smsData->dp = smsData->gb = smsData->alphaDB = 1.0;
+		smsData->betaDB = 1; 
 		smsData->prev.x = loc.x; smsData->prev.y = loc.y; // previous location
 		smsData->goal.x = loc.x; smsData->goal.y = loc.y; // goal location - initialised for dispersal bias
 #if PARTMIGRN
@@ -169,7 +171,7 @@ pGenome = 0;
 //locn currloc = pCurrCell->getLocn();
 //DEBUGLOG << "Individual::Individual(): indId=" << indId
 //	<< " x=" << currloc.x << " y=" << currloc.y
-//	<< " sex=" << sex
+////	<< " smsData=" << smsData << " dp=" << smsData->dp
 //	<< endl;
 #endif
 }
@@ -804,7 +806,7 @@ else { // return current location
 Patch* Individual::getNatalPatch(void) { return pNatalPatch; }
 
 void Individual::setYearSteps(int t) {
-if (path != 0 && t >= 0) {
+if (path != 0 && t >= 0) {                     
 	if (t >= 0) path->year = t;
 	else path->year = 666;
 }
@@ -855,7 +857,7 @@ if (path == 0) {
 #endif
 }
 if (s.settleStatus >= 0 && s.settleStatus <= 2) path->settleStatus = s.settleStatus;
-path->pSettPatch = s.pSettPatch;
+path->pSettPatch = s.pSettPatch;             
 }
 
 #if SEASONAL
@@ -1182,7 +1184,7 @@ return;
 // Get phenotypic transfer by SMS traits
 trfrSMSTraits Individual::getSMSTraits(void) {
 #if RSDEBUG
-//DEBUGLOG << "Individual::getSMSTraits(): indId=" << indId
+//DEBUGLOG << "Individual::getSMSTraits(): indId=" << indId << " smsData=" << smsData
 //	<< endl;
 #endif
 trfrSMSTraits s; s.dp = s.gb = s.alphaDB = 1.0; s.betaDB = 1;
@@ -1243,7 +1245,7 @@ if (sexdep) {
 else {
 	cparams = pSpecies->getCRWParams(0,0);
 }
-crw->stepL = c.stepLength*cparams.stepLScale + cparams.stepLgthMean;
+crw->stepL = c.stepLength*cparams.stepLScale + cparams.stepLgthMean;        
 crw->rho   = c.rho*cparams.rhoScale + cparams.rhoMean;
 #if RSDEBUG
 //DEBUGLOG << "Individual::setCRWTraits(): indId=" << indId
