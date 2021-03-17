@@ -1652,7 +1652,7 @@ string hdr0,hdr1;
 int year;
 float epsilon;
 if (epsGlobal != 0) delete[] epsGlobal;
-epsGlobal = new float[nyears];
+epsGlobal = new double[nyears];
 for (int i = 0; i < nyears; i++) { epsGlobal[i] = 0.0; }
 stochfile.open(fname.c_str());
 if (stochfile.is_open()) {
