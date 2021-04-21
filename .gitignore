@@ -37,6 +37,7 @@ build-Release/
 
 # Session Data files
 .RData
+tags
 
 # User-specific files
 .Ruserdata
