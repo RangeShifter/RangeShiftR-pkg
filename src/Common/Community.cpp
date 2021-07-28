@@ -1631,10 +1631,10 @@ outrange << "\t" << s.occupied << "\t" << occsuit;
 // RANGE MINIMA AND MAXIMA NEED TO BECOME A PROPERTY OF THE SPECIES
 if (s.ninds > 0) {
 	landOrigin origin = pLandscape->getOrigin();
-	outrange << "\t" << s.minX * ppLand.resol + origin.minEast
-		<< "\t" << s.maxX+1 * ppLand.resol + origin.minEast
-		<< "\t" << s.minY * ppLand.resol + origin.minNorth
-		<< "\t" << s.maxY+1 * ppLand.resol + origin.minNorth;
+	outrange << "\t" << (float)(s.minX * ppLand.resol) + origin.minEast
+		<< "\t" << (float)((s.maxX+1) * ppLand.resol) + origin.minEast
+		<< "\t" << (float)(s.minY * ppLand.resol) + origin.minNorth
+		<< "\t" << (float)((s.maxY+1) * ppLand.resol) + origin.minNorth;
 }
 else
 	outrange <<"\t0\t0\t0\t0";
@@ -2203,7 +2203,7 @@ if (v.viewTraits
 //{
 //	if (ts != 0) delete[] ts;
 //}
-if (ts != NULL) { delete[] ts; ts = 0; }
+if (ts != 0) { delete[] ts; ts = 0; }
 }
 
 // Write records to trait rows file

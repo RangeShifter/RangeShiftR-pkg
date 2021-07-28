@@ -395,8 +395,7 @@ if (nhab >= 0) {
 }
 }
 
-//void Species::setHabK(short hx,float k) {
-void Species::setHabK(short hx, float k) { 
+void Species::setHabK(short hx,float k) {
 if (hx >= 0 && hx < habDimK) {
 	if (k >= 0.0) habK[hx] = k;
 }
@@ -680,7 +679,7 @@ else return 0.0;
 
 #else
 
-void Species::setFec(short stg,short sex, float f) {
+void Species::setFec(short stg,short sex,float f) {
 // NB fecundity for stage 0 must always be zero
 if (stg > 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES && f >= 0)
 	fec[stg][sex] = f;
@@ -703,7 +702,7 @@ else maxfec = lambda;
 return maxfec;
 }
 
-void Species::setDev(short stg,short sex, float d) {
+void Species::setDev(short stg,short sex,float d) {
 if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES && d >= 0)
 	dev[stg][sex] = d;
 }
@@ -714,7 +713,7 @@ if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES)
 else return 0.0;
 }
 
-void Species::setSurv(short stg,short sex, float s) {
+void Species::setSurv(short stg,short sex,float s) {
 if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES && s >= 0)
 	surv[stg][sex] = s;
 }
@@ -762,7 +761,7 @@ if (mSize >= 0 && mSize < (NSTAGES * NSEXES)) {
 #if PARAMDEBUG
 //PARAMLOG << "createDDwtFec(): ddwtFecDim = " << ddwtFecDim << " ddwtFec = " << ddwtFec << endl;
 #endif
-	ddwtFec = new float*[mSize];
+	ddwtFec = new float *[mSize];
 #if PARAMDEBUG
 //PARAMLOG << "createDDwtFec(): ddwtFec = " << ddwtFec << endl;
 #endif
@@ -779,7 +778,7 @@ if (mSize >= 0 && mSize < (NSTAGES * NSEXES)) {
 #endif
 }
 
-void Species::setDDwtFec(short row,short col, float f) {
+void Species::setDDwtFec(short row,short col,float f) {
 #if PARAMDEBUG
 //PARAMLOG << "setDDwtFec(): row =  " << row << " col =  " << col << " f =  " << f << endl;
 #endif
@@ -828,7 +827,7 @@ if (mSize >= 0 && mSize < (NSTAGES * NSEXES)) {
 #if PARAMDEBUG
 //PARAMLOG << "createDDwtDev(): ddwtDevDim = " << ddwtDevDim << " ddwtDev = " << ddwtDev << endl;
 #endif
-	ddwtDev = new float*[mSize];
+	ddwtDev = new float *[mSize];
 #if PARAMDEBUG
 //PARAMLOG << "createDDwtDev(): ddwtDev = " << ddwtDev << endl;
 #endif
@@ -845,7 +844,7 @@ if (mSize >= 0 && mSize < (NSTAGES * NSEXES)) {
 #endif
 }
 
-void Species::setDDwtDev(short row,short col, float f) {
+void Species::setDDwtDev(short row,short col,float f) {
 #if PARAMDEBUG
 //PARAMLOG << "setDDwtDev(): row =  " << row << " col =  " << col << " f =  " << f << endl;
 #endif
@@ -894,7 +893,7 @@ if (mSize >= 0 && mSize < (NSTAGES * NSEXES)) {
 #if PARAMDEBUG
 PARAMLOG << "createDDwtSurv(): ddwtSurvDim = " << ddwtSurvDim << " ddwtSurv = " << ddwtSurv << endl;
 #endif
-	ddwtSurv = new float*[mSize];
+	ddwtSurv = new float *[mSize];
 #if PARAMDEBUG
 PARAMLOG << "createDDwtSurv(): ddwtSurv = " << ddwtSurv << endl;
 #endif
@@ -913,7 +912,7 @@ PARAMLOG << "createDDwtSurv(): finished " << endl << endl;
 
 void Species::setDDwtSurv(short row,short col, float f) {
 #if PARAMDEBUG
-PARAMLOG << "setDDwtSurv(): row =  " << row << " col =  " << col << " f =  " << f << endl;
+PARAMLOG << "setDDwtSurv(): row = " << row << " col = " << col << " f = " << f << endl;
 #endif
 if (row >= 0 && row < ddwtSurvDim && col >= 0 && col < ddwtSurvDim)
 	ddwtSurv[row][col] = f;
@@ -1734,11 +1733,11 @@ fullKernel = k;
 bool Species::useFullKernel(void) { return fullKernel; }
 
 void Species::setKernTraits(const short stg,const short sex,
-	const trfrKernTraits k,const float resol)
+	const trfrKernTraits k,const int resol)
 {
-if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES) {
-	if (k.meanDist1 > 0.0 && k.meanDist1 >= resol) meanDist1[stg][sex] = k.meanDist1;
-	if (k.meanDist2 >= resol) meanDist2[stg][sex] = k.meanDist2;
+if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES) {       
+	if (k.meanDist1 > 0.0 && k.meanDist1 >= (float)resol) meanDist1[stg][sex] = k.meanDist1;
+	if (k.meanDist2 >= (float)resol) meanDist2[stg][sex] = k.meanDist2;
 	if (k.probKern1 > 0.0 && k.probKern1 < 1.0) probKern1[stg][sex] = k.probKern1;
 }
 }
@@ -1859,7 +1858,7 @@ return m;
 }
 
 void Species::setKernParams(const short stg,const short sex,
-	const trfrKernParams k,const float resol)
+	const trfrKernParams k,const double resol)
 {
 //if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES)
 if (stg >= 0 && stg < 1 && sex >= 0 && sex < NSEXES) // implemented for stage 0 only
@@ -1940,7 +1939,7 @@ void Species::clearMortalities(void) {
 mortchanges.clear();
 }
 
-void Species::addMortChange(int yr, float	grad)
+void Species::addMortChange(int yr,double	grad)
 {
 mortChange m; m.chgyear = yr; m.gradient = grad;
 mortchanges.push_back(m);
@@ -2004,7 +2003,7 @@ DEBUGLOG << "Species::updateMortality(): yr=" << yr
 #endif
 }
 
-float Species::getMortality(void) { return currentMortality; }
+double Species::getMortality(void) { return currentMortality; }
 
 #endif // TEMPMORT 
 
@@ -2065,7 +2064,7 @@ if (nhab >= 0) {
 	habDimTrfr = nhab;
 	if (habCost != 0 || habStepMort != 0) deleteHabCostMort();
 	habCost = new int[nhab];
-	habStepMort = new float[nhab];
+	habStepMort = new double[nhab];
 	for (int i = 0; i < nhab; i++) {
 		habCost[i] = 1; habStepMort[i] = 0.0;
 	}
@@ -2078,7 +2077,7 @@ if (hab >= 0 && hab < habDimTrfr) {
 }
 }
 
-void Species::setHabMort(short hab, float mort) {
+void Species::setHabMort(short hab,double mort) {
 if (hab >= 0 && hab < habDimTrfr) {
 	if (mort >= 0.0 && mort < 1.0) habStepMort[hab] = mort;
 }
@@ -2090,8 +2089,8 @@ if (hab >= 0 && hab < habDimTrfr) cost = habCost[hab];
 return cost;
 }
 
-float Species::getHabMort(short hab) {
-float pmort = 0.0;
+double Species::getHabMort(short hab) {
+double pmort = 0.0;
 if (hab >= 0 && hab < habDimTrfr) pmort = habStepMort[hab];
 return pmort;
 }
@@ -2137,6 +2136,10 @@ if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES) {
 
 settleRules Species::getSettRules(short stg,short sex) {
 settleRules s;
+s.densDep = false;
+s.findMate = false;
+s.go2nbrLocn = false;
+s.wait = false;
 if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES) {
 	s.densDep = densDepSett[stg][sex]; s.wait = wait[stg][sex];
 	s.go2nbrLocn = go2nbrLocn[stg][sex]; s.findMate = findMate[stg][sex];

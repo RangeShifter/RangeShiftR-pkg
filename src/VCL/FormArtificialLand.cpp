@@ -501,7 +501,7 @@ if (dummyLandFile.is_open()) { // file exists
 }
 else { // open LandFile for output
 	outLandFile.open(LandFileName.c_str());
-	outLandFile << "LandNum\tNhabitats\tLandscapeFile\tPatchFile\tDynLandFile\tSpDistFile"
+	outLandFile << "LandNum\tNhabitats\tLandscapeFile\tPatchFile\tCostMapFile\tDynLandFile\tSpDistFile"
 		<< endl;
 }
 
@@ -746,7 +746,7 @@ for (int i = 1; i <= 10; i++) { // each propn. of suitable habitat
 							else
 								outLandFile << landnum++ << "\t" << nhabitats
 									<< "\t" << MapName << "\tNULL";
-							outLandFile << "\tNULL\tNULL" << endl;
+							outLandFile << "\tNULL\tNULL\tNULL" << endl;
 
 						} //end of replicate loop
 					}

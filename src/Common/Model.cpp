@@ -1743,9 +1743,8 @@ bool errorfolder = false;
 
 string subfolder;
 
-
 subfolder = paramsSim->getDir(0) + "Inputs";
-const char* inputs = subfolder.c_str();
+const char *inputs = subfolder.c_str();
 if (!is_directory(inputs)) errorfolder = true;
 subfolder = paramsSim->getDir(0) + "Outputs";
 const char *outputs = subfolder.c_str();
@@ -1753,7 +1752,6 @@ if (!is_directory(outputs)) errorfolder = true;
 subfolder = paramsSim->getDir(0) + "Output_Maps";
 const char *outputmaps = subfolder.c_str();
 if (!is_directory(outputmaps)) errorfolder = true;
-
 
 return errorfolder;
 }
@@ -1763,7 +1761,7 @@ return errorfolder;
 void PreReproductionOutput(Landscape *pLand,Community *pComm,int rep,int yr,int gen)
 {
 #if RSDEBUG || VCL
-	landParams ppLand = pLand->getLandParams();
+landParams ppLand = pLand->getLandParams();
 #endif
 simParams sim = paramsSim->getSim();
 simView v = paramsSim->getViews();
@@ -2644,11 +2642,14 @@ if (dem.stageStruct) {
 }
 else {
 	outPar << endl << "CARRYING CAPACITIES:" << endl;
-
+}
+int nhab = ppLand.nHab;             
+if (ppLand.generated) { 
+	if (ppGenLand.continuous) nhab = 1;
 }
 #if SEASONAL
 for (int j = 0; j < dem.nSeasons; j++) {
-	for (int i = 0; i < ppLand.nHab; i++) {
+	for (int i = 0; i < nhab; i++) {
 		k = pSpecies->getHabK(i,j) * (10000.0/(float)(ppLand.resol*ppLand.resol));
 		if (!ppLand.generated && ppLand.rasterType == 0) { // imported & habitat codes
 			outPar << "Season " << j << " Habitat " << pLandscape->getHabCode(i) << ": \t";
@@ -2662,7 +2663,7 @@ for (int j = 0; j < dem.nSeasons; j++) {
 	}
 }
 #else
-for (int i = 0; i < ppLand.nHab; i++) {
+for (int i = 0; i < nhab; i++) {
 	k = pSpecies->getHabK(i) * (10000.0/(float)(ppLand.resol*ppLand.resol));
 	if (!ppLand.generated && ppLand.rasterType == 0) { // imported & habitat codes
 		outPar << "Habitat " << pLandscape->getHabCode(i) << ": \t";

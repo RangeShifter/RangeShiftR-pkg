@@ -781,6 +781,10 @@ object frmSpecies: TfrmSpecies
       Caption = 'Dispersal'
       ImageIndex = 1
       OnExit = TSDispersalExit
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object PanelSettProcess: TPanel
         Left = 703
         Top = 3

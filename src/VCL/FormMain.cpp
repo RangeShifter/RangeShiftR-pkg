@@ -2306,7 +2306,7 @@ if (ninds > 0 && ncells > 0) {
 			 (double)(ncells * land.resol * land.resol));
 	int nFactor = 100 + (int) (density * 280.0 / maxDensity);
 
-	if (nFactor <= 256) { // red increasing, green 0
+	if (nFactor < 256) { // red increasing, green 0
 		colour.r = nFactor; colour.g = 0;
 	}
 	else {

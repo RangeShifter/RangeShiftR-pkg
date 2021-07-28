@@ -40,12 +40,10 @@ ofstream outInds;
 //---------------------------------------------------------------------------
 
 Population::Population(void) { 
-
-	nSexes = 0;
-	nStages = 0;
-	pPatch = NULL;
-	pSpecies = NULL;
-	return;
+nSexes = nStages = 0;
+pPatch = NULL;
+pSpecies = NULL;
+return;
 }
 
 #if PEDIGREE
@@ -443,7 +441,7 @@ popStats Population::getStats(void)
 {
 popStats p;
 int ninds;
-double fec;
+float fec;
 bool breeders[2]; breeders[0] = breeders[1] = false;
 demogrParams dem = pSpecies->getDemogr();
 p.pSpecies = pSpecies;
@@ -889,7 +887,7 @@ if (dem.repType == 0) nsexes = 1; else nsexes = 2;
 #endif
 
 // set up local copy of species fecundity table
-double fec[NSTAGES][NSEXES];
+float fec[NSTAGES][NSEXES];
 #if GOBYMODEL
 // also set up corresponding table for density-dependent effects, which cannot
 // be applied until an individual female's sociality phenotype is known
@@ -2469,10 +2467,10 @@ bool mateOK,densdepOK;
 intptr patch,popn;
 int patchnum;
 double localK,popsize,settprob;
-Patch *pPatch;
-Cell *pCell;
+Patch *pPatch = 0;
+Cell *pCell = 0;
 indStats ind;
-Population *pNewPopn;
+Population *pNewPopn = 0;
 locn newloc,nbrloc;
 
 landData ppLand = pLandscape->getLandData();
@@ -2483,9 +2481,6 @@ settleRules sett;
 settleTraits settDD;
 settlePatch settle;
 simParams sim = paramsSim->getSim();
-
-pPatch = NULL; 
-pCell = NULL;
 
 #if SEASONAL
 //bool breeding = pSpecies->getBreeding(season);
@@ -2917,8 +2912,8 @@ if (ninds == 0) return;
 // set up local copies of species development and survival tables
 int nsexes;
 if (dem.repType == 0) nsexes = 1; else nsexes = 2;
-double dev[NSTAGES][NSEXES];
-double surv[NSTAGES][NSEXES];
+float dev[NSTAGES][NSEXES];
+float surv[NSTAGES][NSEXES];
 short minAge[NSTAGES][NSEXES];
 for (int stg = 0; stg < sstruct.nStages; stg++) {
 	for (int sex = 0; sex < nsexes; sex++) {

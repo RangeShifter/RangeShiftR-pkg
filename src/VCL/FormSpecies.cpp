@@ -3477,9 +3477,9 @@ if (!trfr.moveModel) { // dispersal kernels
 
 	trfrKernTraits k;
 	trfrKernParams kparams;
-	float minkernelmean; // minimum value permitted for kernel means
-	if (pSpecies->useFullKernel()) minkernelmean = 1.0;
-	else minkernelmean = (float)ppLand.resol;
+	int minkernelmean; // minimum value permitted for kernel means
+	if (pSpecies->useFullKernel()) minkernelmean = 1;
+	else minkernelmean = ppLand.resol;
 
 	if (trfr.sexDep) {
 		if (trfr.stgDep) {

@@ -1514,7 +1514,8 @@ else return nSimuls;
 
 int ParseLandFile(int landtype, string indir)
 {
-string fname,header,intext,ftype,costfile;
+//string fname,header,intext,ftype,costfile;
+string fname,header,intext,ftype;
 int j,inint,line;
 float infloat;
 #if !RS_RCPP
@@ -1654,10 +1655,10 @@ if (landtype == 0 || landtype == 2) { // real landscape
 			}
 		}
 
-		// check initial distribution map filename
+		// check cost map filename
 		ftype = "CostMapFile";
-		bLandFile >> costfile;
-		if (costfile == "NULL") {
+		bLandFile >> name_costfile;
+		if (name_costfile == "NULL") {
 			if (transfer == 1) { // SMS
 				if (landtype == 2) {
 					BatchError(filetype,line,0," "); errors++;
@@ -1667,7 +1668,7 @@ if (landtype == 0 || landtype == 2) { // real landscape
 		}
 		else {
 			if (transfer == 1) { // SMS
-				fname = indir + costfile;
+				fname = indir + name_costfile;
 				costraster = CheckRasterFile(fname);
 				if (costraster.ok) {
 					if (costraster.cellsize == resolution) {
@@ -1712,7 +1713,7 @@ if (landtype == 0 || landtype == 2) { // real landscape
 			batchlog << "Checking " << ftype << " " << fname << endl;
 			bDynLandFile.open(fname.c_str());
 			if (bDynLandFile.is_open()) {
-				int something = ParseDynamicFile(indir,costfile);
+				int something = ParseDynamicFile(indir,name_costfile);
 				if (something < 0) {
 						errors++;
 				}
@@ -2122,7 +2123,7 @@ while (change != -98765) {
 		}
 	}
 
-	// check costs filename
+	// check costs change filename
 	ftype = "CostChangeFile";
 	bDynLandFile >> intext;
 	if (intext == "NULL") {
@@ -3273,6 +3274,7 @@ bEmigrationFile >> simul;
 if (simul != firstsimul) {
 	BatchError(filetype,line,111,"Simulation"); errors++;
 }
+current.simul = 0; //dummy line to prevent warning message in VisualStudio 2019
 while (simul != -98765) {
 	// read and validate columns relating to stage and sex-dependency and to IIV
 	bEmigrationFile >> densdep >> usefullkern >> stagedep >> sexdep;
@@ -3664,6 +3666,7 @@ bTransferFile >> simul;
 if (simul != firstsimul) {
 	BatchError(filetype,line,111,"Simulation"); errors++;
 }
+current.simul = 0; //dummy line to prevent warning message in VisualStudio 2019
 while (simul != -98765) {
 
 	switch (transfer) {
@@ -3965,7 +3968,7 @@ while (simul != -98765) {
 			}
 			for (i = 0; i < maxNhab; i++) {
 				bTransferFile >> costhab;
-				if (name_costfile == "NULL") {
+				if (name_costfile == "NULL") { 
 					if (costhab < 1) {
 						colheader = "CostHab" + Int2Str(i+1);
 						BatchError(filetype,line,11,colheader); errors++;
@@ -4337,6 +4340,7 @@ bSettlementFile >> simul;
 if (simul != firstsimul) {
 	BatchError(filetype,line,111,"Simulation"); errors++;
 }
+current.simul = 0; //dummy line to prevent warning message in VisualStudio 2019
 while (simul != -98765) {
 #if RS_CONTAIN
 	if (transfer == 0 || transfer == 3 || transfer == 4) 
@@ -4539,6 +4543,7 @@ bGeneticsFile >> simul;
 if (simul != firstsimul) {
 	BatchError(filetype,line,111,"Simulation"); errors++;
 }
+current.simul = 0; //dummy line to prevent warning message in VisualStudio 2019
 while (simul != -98765) {
 	// read and validate columns relating to stage and sex-dependency (NB no IIV here)
 	bGeneticsFile >> arch >> nLoci >> filename
@@ -5082,6 +5087,7 @@ bInitFile >> simul;
 if (simul != firstsimul) {
 	BatchError(filetype,line,111,"Simulation"); errors++;
 }
+current.simul = 0; //dummy line to prevent warning message in VisualStudio 2019
 while (simul != -98765) {
 	current = CheckStageSex(filetype,line,simul,prev,0,0,0,0,0,true,false);
 	if (current.newsimul) simuls++;
@@ -6478,8 +6484,7 @@ if (landtype == 9) { //artificial landscape
 #if RSDEBUG
 DEBUGLOG << "ReadLandFile(): artificial: "  << endl;
 #endif
-	ppLand.nHab = 2;
-  ppLand.rasterType = 9;
+	ppLand.rasterType = 9;
 	landfile >> ppLand.landNum >> ppGenLand.fractal >> ppGenLand.continuous
 		>> ppLand.dimX >> ppLand.dimY >> ppGenLand.minPct >> ppGenLand.maxPct
 		>> ppGenLand.propSuit >> ppGenLand.hurst;
@@ -6497,8 +6502,11 @@ DEBUGLOG << "ReadLandFile(): artificial: "  << endl;
 	// fractal landscape (including discrete), as they are passed to the fractal generator
 	// NOTE that will not have been checked for a discrete landscape
 	if (ppGenLand.fractal && !ppGenLand.continuous) { ppGenLand.minPct = 1; ppGenLand.maxPct = 100; }
+	if (ppGenLand.continuous) ppLand.nHab = 2;		
+	else ppLand.nHab = 1;
 #if RSDEBUG
 DEBUGLOG << "ReadLandFile(): ppLand.landNum=" << ppLand.landNum
+	<< " continuous=" << ppGenLand.continuous << " ppLand.nHab=" << ppLand.nHab
 	<< " ppLand.dimX=" << ppLand.dimX << " ppLand.dimY=" << ppLand.dimY
 	<< " ppLand.maxX=" << ppLand.maxX << " ppLand.maxY=" << ppLand.maxY
 	<< " propSuit=" << ppGenLand.propSuit
@@ -6739,8 +6747,8 @@ float minR,maxR,minK,maxK;
 parameters >> env.ac >> env.std >> minR >> maxR >> minK >> maxK;
 if (env.inK) {
 	float minKK,maxKK;
-	minKK = minK * ((((float)paramsLand.resol * (float)paramsLand.resol)) / 10000.0f);
-	maxKK = maxK * ((((float)paramsLand.resol * (float)paramsLand.resol)) / 10000.0f);
+	minKK = minK * (((float)paramsLand.resol * (float)paramsLand.resol) / 10000.0f);
+	maxKK = maxK * (((float)paramsLand.resol * (float)paramsLand.resol) / 10000.0f);
 	pSpecies->setMinMax(minKK,maxKK);
 }
 else pSpecies->setMinMax(minR,maxR);
@@ -6765,20 +6773,36 @@ pSpecies->setDemogr(dem);
 float k;
 
 if (landtype == 9) { // artificial landscape
-	// only one value of K is read, but the first 'habitat' is the matrix where K = 0
+	// only one value of K is read, but it must be applied as the second habitat if the
+	// landscape is discrete (the first is the matrix where K = 0) or as the first 
+	// (only) habitat if the landscape is continuous
+	genLandParams genland = pLandscape->getGenLandParams(); 
+	int nhab;
+	if (genland.continuous) nhab = 1;		
+	else nhab = 2;  
 #if SEASONAL
-	pSpecies->createHabK(2,1);
+	pSpecies->createHabK(nhab,1);
 #else
-	pSpecies->createHabK(2);
+	pSpecies->createHabK(nhab);
 #endif // SEASONAL 
 	parameters >> k;
 	k *= (((float)paramsLand.resol*(float)paramsLand.resol))/10000.0f;
 #if SEASONAL
-	pSpecies->setHabK(0,1,0);
-	pSpecies->setHabK(1,1,k);
+	if (genland.continuous) {
+		pSpecies->setHabK(0,1,k);
+	}
+	else {
+		pSpecies->setHabK(0,1,0);
+		pSpecies->setHabK(1,1,k);
+	}
 #else
-	pSpecies->setHabK(0,0);
-	pSpecies->setHabK(1,k);
+	if (genland.continuous) {
+		pSpecies->setHabK(0,k);		
+	}
+	else {
+		pSpecies->setHabK(0,0);
+		pSpecies->setHabK(1,k);
+	}
 #endif // SEASONAL 
 }
 else {
@@ -6795,7 +6819,7 @@ else {
 	pSpecies->createHabK(paramsLand.nHabMax);
 	for (int i = 0; i < paramsLand.nHabMax; i++) {
 		parameters >> k;
-		k *= (((float)paramsLand.resol*(float)paramsLand.resol))/10000.0f;
+		k *= ((float)paramsLand.resol*(float)paramsLand.resol)/10000.0f;
 		pSpecies->setHabK(i,k);
 	}
 #endif // SEASONAL 
@@ -7102,7 +7126,7 @@ int ReadTransitionMatrix(short nstages,short nsexesDem,short hab,short season)
 //#endif // RS_CONTAIN 
 int ii;
 int minAge;
-float ss, dd; 
+float ss,dd; 
 string header;
 demogrParams dem = pSpecies->getDemogr();
 //stageParams sstruct = pSpecies->getStage();
@@ -8016,13 +8040,13 @@ case 0: // negative exponential dispersal kernel
 
 		case 0: // no sex / stage dependence
 			transFile >> k.meanDist1 >> k.meanDist2 >> k.probKern1;
-			pSpecies->setKernTraits(0,0,k,(float)paramsLand.resol);
+			pSpecies->setKernTraits(0,0,k,paramsLand.resol);
 			if (trfr.indVar) {
 				transFile >> kparams.dist1Mean >> kparams.dist1SD
 					>> kparams.dist2Mean >> kparams.dist2SD
 					>> kparams.PKern1Mean >> kparams.PKern1SD;
 //				MAXDist = kparams.maxDist1;
-				pSpecies->setKernParams(0,0,kparams,(float)paramsLand.resol);
+				pSpecies->setKernParams(0,0,kparams,(double)paramsLand.resol);
 			}
 			else {
 				for (int i = 0; i < 6; i++) transFile >> tttt;
@@ -8066,7 +8090,7 @@ case 0: // negative exponential dispersal kernel
 					transFile >> k.meanDist1; k.meanDist2 = k.meanDist1; k.probKern1 = 1.0;
 					for (int i = 0; i < 8; i++) transFile >> tttt;
 				}
-			pSpecies->setKernTraits(0,sex,k,(float)paramsLand.resol);
+			pSpecies->setKernTraits(0,sex,k,paramsLand.resol);
 			}
 			break;
 
@@ -8083,7 +8107,7 @@ case 0: // negative exponential dispersal kernel
 			else {
 				transFile >> k.meanDist1; k.meanDist2 = k.meanDist1; k.probKern1 = 1.0;
 				for (int i = 0; i < 8; i++) transFile >> tttt;
-			pSpecies->setKernTraits(stage,0,k,(float)paramsLand.resol);
+			pSpecies->setKernTraits(stage,0,k,paramsLand.resol);
 			}
 			break;
 
@@ -8100,7 +8124,7 @@ case 0: // negative exponential dispersal kernel
 			else {
 				transFile >> k.meanDist1; k.meanDist2 = k.meanDist1; k.probKern1 = 1.0;
 				for (int i = 0; i < 8; i++) transFile >> tttt;
-			pSpecies->setKernTraits(stage,sex,k,(float)paramsLand.resol);
+			pSpecies->setKernTraits(stage,sex,k,paramsLand.resol);
 			}
 			break;
 		} // end of switch (sexkernels)
@@ -8268,23 +8292,23 @@ DEBUGLOG << "ReadTransfer(): nHabMax=" << paramsLand.nHabMax << " i=" << i
 
 case 2: // CRW
 
-{
-trfrCRWParams mparams;
+	{
+	trfrCRWParams mparams;
 
-transFile >> simulation >> iiii;
-if (iiii == 0) trfr.indVar = false; else trfr.indVar = true;
+	transFile >> simulation >> iiii;
+	if (iiii == 0) trfr.indVar = false; else trfr.indVar = true;
 
-transFile >> move.stepLength >> move.rho
->> mparams.stepLgthMean >> mparams.stepLgthSD >> mparams.rhoMean >> mparams.rhoSD;
-transFile >> scale.stepLScale >> scale.rhoScale;
+	transFile >> move.stepLength >> move.rho
+		>> mparams.stepLgthMean >> mparams.stepLgthSD >> mparams.rhoMean >> mparams.rhoSD;
+	transFile >> scale.stepLScale >> scale.rhoScale;
 #if TEMPMORT
-transFile >> trfr.smType >> move.stepMort >> jjjj;
+	transFile >> trfr.smType >> move.stepMort >> jjjj;
 #else
-transFile >> jjjj >> iiii >> move.stepMort;
-if (iiii == 0) trfr.habMort = false; else trfr.habMort = true;
+	transFile >> jjjj >> iiii >> move.stepMort;
+	if (iiii == 0) trfr.habMort = false; else trfr.habMort = true;
 #endif // TEMPMORT 
-if (jjjj == 0) move.straigtenPath = false; else move.straigtenPath = true;
-pSpecies->setTrfrScales(scale);
+	if (jjjj == 0) move.straigtenPath = false; else move.straigtenPath = true;
+	pSpecies->setTrfrScales(scale);
 #if RSDEBUG
 DEBUGLOG << "ReadTransfer(): simulation=" << simulation
 << " paramsLand.rasterType=" << paramsLand.rasterType
@@ -8297,33 +8321,33 @@ DEBUGLOG << "ReadTransfer(): simulation=" << simulation
 
 //Habitat-dependent per step mortality
 #if TEMPMORT
-if (trfr.smType == 1 && paramsLand.rasterType != 0) error = 434;
+	if (trfr.smType == 1 && paramsLand.rasterType != 0) error = 434;
 #else
-if (trfr.habMort && paramsLand.rasterType != 0) error = 434;
+	if (trfr.habMort && paramsLand.rasterType != 0) error = 434;
 #endif // TEMPMORT 
 
-if (!paramsLand.generated && paramsLand.rasterType == 0) { // real habitat codes landscape
+	if (!paramsLand.generated && paramsLand.rasterType == 0) { // real habitat codes landscape
 #if TEMPMORT
-	if (trfr.smType == 1)
+		if (trfr.smType == 1)
 #else
-	if (trfr.habMort)
+		if (trfr.habMort)
 #endif // TEMPMORT 
-	{ // habitat-dependent step mortality
-		for (int i = 0; i < paramsLand.nHabMax; i++) {
-			transFile >> tttt;
-			pSpecies->setHabMort(i, tttt);
+		{ // habitat-dependent step mortality
+			for (int i = 0; i < paramsLand.nHabMax; i++) {
+				transFile >> tttt;
+				pSpecies->setHabMort(i, tttt);
+			}
+		}
+		else { // constant step mortality
+			for (int i = 0; i < paramsLand.nHabMax; i++) transFile >> tttt;
 		}
 	}
-	else { // constant step mortality
-		for (int i = 0; i < paramsLand.nHabMax; i++) transFile >> tttt;
+	pSpecies->setTrfr(trfr);
+	pSpecies->setMovtTraits(move);
+	pSpecies->setCRWParams(0, 0, mparams);
 	}
-}
-pSpecies->setTrfr(trfr);
-pSpecies->setMovtTraits(move);
-pSpecies->setCRWParams(0, 0, mparams);
-}
 
-break; // end of CRW
+	break; // end of CRW
 
 
 #if RS_CONTAIN

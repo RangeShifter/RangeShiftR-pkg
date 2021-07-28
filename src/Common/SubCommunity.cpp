@@ -62,7 +62,7 @@ popns.clear();
 if (occupancy != 0) delete[] occupancy;
 }
 
-int SubCommunity::getNum(void) { return (int)subCommNum; }
+intptr SubCommunity::getNum(void) { return subCommNum; }
 
 Patch* SubCommunity::getPatch(void) { return pPatch; }
 
@@ -130,7 +130,7 @@ else {
 		case 2: // specified no. per cell or density
 			ncells = pPatch->getNCells();
 			if (ppLand.patchModel) {
-				nInds = (int)(init.indsHa * (ncells*ppLand.resol*ppLand.resol) / 10000.0);
+				nInds = (int)(init.indsHa * (float)(ncells*ppLand.resol*ppLand.resol) / 10000.0);      
 			}
 			else {
 				nInds = init.indsCell * ncells;
@@ -514,7 +514,7 @@ if (localK > 0.0) {
 			}
 		}
 		else { // global stochasticity
-			envval += (float)epsGlobal;
+			envval += epsGlobal;
 		}
 	}
 	for (int i = 0; i < npops; i++) { // all populations
@@ -1324,11 +1324,9 @@ DEBUGLOG << "SubCommunity::findPop(): this=" << this
 	<< endl;
 #endif
 
-Population *pPop;
+Population *pPop = 0;
 popStats pop;
 int npops = (int)popns.size();
-
-pPop = NULL; 
 
 for (int i = 0; i < npops; i++) { // all populations
 #if RS_CONTAIN
@@ -1341,7 +1339,6 @@ for (int i = 0; i < npops; i++) { // all populations
 		break;
 	}
 	else pPop = 0;
-
 }
 return pPop;
 }
