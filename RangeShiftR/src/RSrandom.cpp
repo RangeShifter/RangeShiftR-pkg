@@ -22,13 +22,9 @@
 
 #include "RSrandom.h"
 
-
-
-//--------------- 1.) Former version of RSrandom.cpp
-
-
 #if RS_EMBARCADERO
 
+//--------------- 1.) Former version of RSrandom.cpp
 
 #pragma hdrstop
 #pragma package(smart_init)
@@ -255,18 +251,13 @@ int RSrandom::Poisson(double mean) {
 #if LINUX_CLUSTER
 return rpois(mean);
 #else
-#if RS_ABC
 if (mean > 50.0) {
 	return this->Normal(mean,sqrt(mean));
 }
 else {
 	tr1::poisson_distribution<> poiss(mean);
-	return poiss(*gen);
+	return poiss(gen);
 }
-#else
-tr1::poisson_distribution<> poiss(mean);
-return poiss(gen);
-#endif
 #endif
 }
 
@@ -325,8 +316,6 @@ return  gamma;
 //--------------------------------------------------------------------------------------------------
 
 #else // not RS_EMBARCADERO
-
-
 
 //--------------- 2.) New version of RSrandom.cpp
 
@@ -415,16 +404,12 @@ int RSrandom::Poisson(double mean)
 }
 
 
-
 //--------------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------------
-
-
-
-//--------------- 3.) R package version of RSrandom.cpp
-
 
 #else // if RS_RCPP 
+
+//--------------- 3.) R package version of RSrandom.cpp
 
 	#if RSDEBUG
 	#include "Parameters.h"

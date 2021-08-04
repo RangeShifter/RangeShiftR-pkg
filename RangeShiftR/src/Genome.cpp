@@ -210,7 +210,7 @@ pLoci[locus].allele[posn] += aval;
 
 // Inherit from specified parent
 void Chromosome::inherit(const Chromosome *parentChr,const short posn,const short nloc,
-	const float probmutn,const float probcross,const float mutnSD,const bool diploid)
+	const double probmutn,const double probcross,const double mutnSD,const bool diploid)
 {
 
 // NOTE: At present for diploid genome, presence of crossover is determined at each
@@ -386,7 +386,7 @@ else {
 
 // Inherit from specified parent
 void Genome::inherit(const Genome *parent,const short posn,const short chr,
-	const float probmutn,const float probcross,const float mutnSD)
+	const double probmutn,const double probcross,const double mutnSD)
 {
 // adjust mutation variance for number of loci
 //double mutnSD = sqrt(mutationSD * mutationSD / (double)nLoci);
@@ -566,7 +566,7 @@ else { // insufficient traits were defined
 }
 
 // Set up trait at initialisation for trait mapping
-void Genome::setNeutralLoci(Species *pSpecies,const float alleleSD)
+void Genome::setNeutralLoci(Species *pSpecies,const double alleleSD)
 {
 traitAllele allele;
 int nneutral = pSpecies->getNNeutralLoci();
