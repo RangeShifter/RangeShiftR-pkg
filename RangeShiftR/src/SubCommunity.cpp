@@ -62,7 +62,7 @@ popns.clear();
 if (occupancy != 0) delete[] occupancy;
 }
 
-int SubCommunity::getNum(void) { return (int)subCommNum; }
+intptr SubCommunity::getNum(void) { return subCommNum; }
 
 Patch* SubCommunity::getPatch(void) { return pPatch; }
 
@@ -130,7 +130,7 @@ else {
 		case 2: // specified no. per cell or density
 			ncells = pPatch->getNCells();
 			if (ppLand.patchModel) {
-				nInds = (int)(init.indsHa * (ncells*ppLand.resol*ppLand.resol) / 10000.0);
+				nInds = (int)(init.indsHa * (float)(ncells*ppLand.resol*ppLand.resol) / 10000.0);      
 			}
 			else {
 				nInds = init.indsCell * ncells;
@@ -264,7 +264,7 @@ return popns[npopns];
 }
 
 popStats SubCommunity::getPopStats(void) {
-popStats p{},pop;               
+popStats p,pop;               
 p.pSpecies = 0; p.spNum = 0; p.nInds = p.nAdults = p.nNonJuvs = 0; p.breeding = false;
 #if GOBYMODEL
 p.nSocial = p.nAsocial = 0;
@@ -514,7 +514,7 @@ if (localK > 0.0) {
 			}
 		}
 		else { // global stochasticity
-			envval += (float)epsGlobal;
+			envval += epsGlobal;
 		}
 	}
 	for (int i = 0; i < npops; i++) { // all populations
@@ -1324,11 +1324,9 @@ DEBUGLOG << "SubCommunity::findPop(): this=" << this
 	<< endl;
 #endif
 
-Population *pPop;
+Population *pPop = 0;
 popStats pop;
 int npops = (int)popns.size();
-
-pPop = NULL; 
 
 for (int i = 0; i < npops; i++) { // all populations
 #if RS_CONTAIN
@@ -1341,7 +1339,6 @@ for (int i = 0; i < npops; i++) { // all populations
 		break;
 	}
 	else pPop = 0;
-
 }
 return pPop;
 }
@@ -1779,7 +1776,7 @@ simParams sim = paramsSim->getSim();
 bool writefile = false;
 if (sim.outTraitsCells && yr%sim.outIntTraitCell == 0 && !commlevel)
 	writefile = true;
-traitsums ts{},poptraits;
+traitsums ts,poptraits;
 for (int i = 0; i < NSEXES; i++) {
 	ts.ninds[i] = 0;
 	ts.sumD0[i] = ts.ssqD0[i] = 0.0;
@@ -1846,7 +1843,7 @@ for (int i = 0; i < npops; i++) { // all populations
 					ngenes = 1;
 				}
 			}
-			double mnD0[2]{},mnAlpha[2]{},mnBeta[2]{},sdD0[2]{},sdAlpha[2]{},sdBeta[2]{};
+			double mnD0[2],mnAlpha[2],mnBeta[2],sdD0[2],sdAlpha[2],sdBeta[2];
 			for (int g = 0; g < ngenes; g++) {
 				mnD0[g] = mnAlpha[g] = mnBeta[g] = sdD0[g] = sdAlpha[g] = sdBeta[g] = 0.0;
 				// individuals may have been counted by sex if there was
@@ -1962,10 +1959,10 @@ for (int i = 0; i < npops; i++) { // all populations
 					ngenes = 1;
 				}
 			}
-			double mnDist1[2]{}, mnDist2[2]{}, mnProp1[2]{}, mnStepL[2]{}, mnRho[2]{};
-			double sdDist1[2]{},sdDist2[2]{},sdProp1[2]{},sdStepL[2]{},sdRho[2]{};
-			double mnDP[2]{}, mnGB[2]{}, mnAlphaDB[2]{}, mnBetaDB[2]{};
-			double sdDP[2]{},sdGB[2]{},sdAlphaDB[2]{},sdBetaDB[2]{};
+			double mnDist1[2], mnDist2[2], mnProp1[2], mnStepL[2], mnRho[2];
+			double sdDist1[2],sdDist2[2],sdProp1[2],sdStepL[2],sdRho[2];
+			double mnDP[2], mnGB[2], mnAlphaDB[2], mnBetaDB[2];
+			double sdDP[2],sdGB[2],sdAlphaDB[2],sdBetaDB[2];
 			for (int g = 0; g < ngenes; g++) {
 				mnDist1[g] = mnDist2[g] = mnProp1[g] = mnStepL[g] = mnRho[g] = 0.0;
 				sdDist1[g] = sdDist2[g] = sdProp1[g] = sdStepL[g] = sdRho[g] = 0.0;
@@ -2180,7 +2177,7 @@ for (int i = 0; i < npops; i++) { // all populations
 			}
 			// CURRENTLY INDIVIDUAL VARIATION CANNOT BE SEX-DEPENDENT
 //			ngenes = 1;
-			double mnS0[2]{},mnAlpha[2]{},mnBeta[2]{},sdS0[2]{},sdAlpha[2]{},sdBeta[2]{};
+			double mnS0[2],mnAlpha[2],mnBeta[2],sdS0[2],sdAlpha[2],sdBeta[2];
 			for (int g = 0; g < ngenes; g++) {
 				mnS0[g] = mnAlpha[g] = mnBeta[g] = sdS0[g] = sdAlpha[g] = sdBeta[g] = 0.0;
 				// individuals may have been counted by sex if there was

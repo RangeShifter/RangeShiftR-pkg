@@ -37,7 +37,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 27 November 2020 by Anne-Kathleen Malchow, Potsdam University
+Last updated: 28 July 2021 by Greta Bocedi
 
 ------------------------------------------------------------------------------*/
 
@@ -111,7 +111,7 @@ struct crwParams { // to hold data for CRW movement model
 	float stepL;		// phenotypic step length (m)
 	float rho;			// phenotypic step correlation coefficient
 };
-struct array3x3d { float cell[3][3]; };
+struct array3x3d { double cell[3][3]; };
 struct movedata { float dist; float cost; };
 struct smsdata {
 	locn prev;			// location of previous cell
@@ -377,8 +377,8 @@ Individual* getMate(void);
 		const float	// GOAL BIAS VALUE
 	);
 	array3x3d calcWeightings( // Calculate weightings for neighbouring cells
-		const float,	// base for power-law (directional persistence or goal bias value)
-		const float	// direction in which lowest (unit) weighting is to be applied
+		const double,	// base for power-law (directional persistence or goal bias value)
+		const double	// direction in which lowest (unit) weighting is to be applied
 	);
 	array3x3f getHabMatrix( // Weight neighbouring cells on basis of (habitat) costs
 		Landscape*,		// pointer to Landscape
@@ -537,12 +537,8 @@ private:
 
 //---------------------------------------------------------------------------
 
-#if !RS_EMBARCADERO || !LINUX_CLUSTER
-
 double cauchy(double location, double scale) ;
 double wrpcauchy (double location, double rho = exp(double(-1)));
-
-#endif
 
 extern RSrandom *pRandom;
 

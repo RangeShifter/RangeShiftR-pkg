@@ -319,7 +319,7 @@ if (d.propLocal >= 0.0 && d.propNghbr >= 0.0 && d.propLocal+d.propNghbr <= 1.0) 
 }
 
 demogrParams Species::getDemogr(void) {
-demogrParams d{};
+demogrParams d;
 d.repType = repType;
 #if SEASONAL
 d.nSeasons = nSeasons;
@@ -395,8 +395,7 @@ if (nhab >= 0) {
 }
 }
 
-//void Species::setHabK(short hx,float k) {
-void Species::setHabK(short hx, float k) { 
+void Species::setHabK(short hx,float k) {
 if (hx >= 0 && hx < habDimK) {
 	if (k >= 0.0) habK[hx] = k;
 }
@@ -440,7 +439,7 @@ disperseOnLoss = s.disperseOnLoss;
 }
 
 stageParams Species::getStage(void) {
-stageParams s{};
+stageParams s;
 s.nStages = nStages; s.repInterval = repInterval; s.maxAge = maxAge;
 s.survival = survival; s.probRep = probRep;
 #if GOBYMODEL
@@ -680,7 +679,7 @@ else return 0.0;
 
 #else
 
-void Species::setFec(short stg,short sex, float f) {
+void Species::setFec(short stg,short sex,float f) {
 // NB fecundity for stage 0 must always be zero
 if (stg > 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES && f >= 0)
 	fec[stg][sex] = f;
@@ -703,7 +702,7 @@ else maxfec = lambda;
 return maxfec;
 }
 
-void Species::setDev(short stg,short sex, float d) {
+void Species::setDev(short stg,short sex,float d) {
 if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES && d >= 0)
 	dev[stg][sex] = d;
 }
@@ -714,7 +713,7 @@ if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES)
 else return 0.0;
 }
 
-void Species::setSurv(short stg,short sex, float s) {
+void Species::setSurv(short stg,short sex,float s) {
 if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES && s >= 0)
 	surv[stg][sex] = s;
 }
@@ -747,7 +746,7 @@ if (s > 0.0) survCoeff = s;
 }
 
 densDepParams Species::getDensDep(void) {
-densDepParams d{};
+densDepParams d;
 d.devCoeff = devCoeff; d.survCoeff = survCoeff;
 return d;
 }
@@ -762,7 +761,7 @@ if (mSize >= 0 && mSize < (NSTAGES * NSEXES)) {
 #if PARAMDEBUG
 //PARAMLOG << "createDDwtFec(): ddwtFecDim = " << ddwtFecDim << " ddwtFec = " << ddwtFec << endl;
 #endif
-	ddwtFec = new float*[mSize];
+	ddwtFec = new float *[mSize];
 #if PARAMDEBUG
 //PARAMLOG << "createDDwtFec(): ddwtFec = " << ddwtFec << endl;
 #endif
@@ -779,7 +778,7 @@ if (mSize >= 0 && mSize < (NSTAGES * NSEXES)) {
 #endif
 }
 
-void Species::setDDwtFec(short row,short col, float f) {
+void Species::setDDwtFec(short row,short col,float f) {
 #if PARAMDEBUG
 //PARAMLOG << "setDDwtFec(): row =  " << row << " col =  " << col << " f =  " << f << endl;
 #endif
@@ -828,7 +827,7 @@ if (mSize >= 0 && mSize < (NSTAGES * NSEXES)) {
 #if PARAMDEBUG
 //PARAMLOG << "createDDwtDev(): ddwtDevDim = " << ddwtDevDim << " ddwtDev = " << ddwtDev << endl;
 #endif
-	ddwtDev = new float*[mSize];
+	ddwtDev = new float *[mSize];
 #if PARAMDEBUG
 //PARAMLOG << "createDDwtDev(): ddwtDev = " << ddwtDev << endl;
 #endif
@@ -845,7 +844,7 @@ if (mSize >= 0 && mSize < (NSTAGES * NSEXES)) {
 #endif
 }
 
-void Species::setDDwtDev(short row,short col, float f) {
+void Species::setDDwtDev(short row,short col,float f) {
 #if PARAMDEBUG
 //PARAMLOG << "setDDwtDev(): row =  " << row << " col =  " << col << " f =  " << f << endl;
 #endif
@@ -894,7 +893,7 @@ if (mSize >= 0 && mSize < (NSTAGES * NSEXES)) {
 #if PARAMDEBUG
 PARAMLOG << "createDDwtSurv(): ddwtSurvDim = " << ddwtSurvDim << " ddwtSurv = " << ddwtSurv << endl;
 #endif
-	ddwtSurv = new float*[mSize];
+	ddwtSurv = new float *[mSize];
 #if PARAMDEBUG
 PARAMLOG << "createDDwtSurv(): ddwtSurv = " << ddwtSurv << endl;
 #endif
@@ -913,7 +912,7 @@ PARAMLOG << "createDDwtSurv(): finished " << endl << endl;
 
 void Species::setDDwtSurv(short row,short col, float f) {
 #if PARAMDEBUG
-PARAMLOG << "setDDwtSurv(): row =  " << row << " col =  " << col << " f =  " << f << endl;
+PARAMLOG << "setDDwtSurv(): row = " << row << " col = " << col << " f = " << f << endl;
 #endif
 if (row >= 0 && row < ddwtSurvDim && col >= 0 && col < ddwtSurvDim)
 	ddwtSurv[row][col] = f;
@@ -995,7 +994,7 @@ if (d.mutationSD > 0.0) mutationSD = d.mutationSD;
 }
 
 genomeData Species::getGenomeData(void) {
-genomeData d{};
+genomeData d;
 d.diploid = diploid;
 d.neutralMarkers = neutralMarkers;
 d.pleiotropic = pleiotropic;
@@ -1368,7 +1367,7 @@ else {
 }
 
 traitAllele Species::getTraitAllele(const short trait,const short allele) {
-traitAllele a{}; a.chromo = 0; a.locus = 0;
+traitAllele a; a.chromo = 0; a.locus = 0;
 if (traitdata != NULL) {
 	if (trait >= 0 && trait < traitdata->nTraitMaps) {
 		if (allele >= 0 && allele < traitdata->traitmaps[trait]->nAlleles) {
@@ -1533,7 +1532,7 @@ return nn;
 }
 
 traitAllele Species::getNeutralAllele(const short allele) {
-traitAllele a{}; a.chromo = 0; a.locus = 0;
+traitAllele a; a.chromo = 0; a.locus = 0;
 if (traitdata != NULL) {
 	if (allele >= 0 && allele < traitdata->neutralloci->nAlleles) {
 		a = *traitdata->neutralloci->traitalleles[allele];
@@ -1595,7 +1594,7 @@ if (e.groupmean > 1.0) groupmean = e.groupmean;
 }
 
 emigRules Species::getEmig(void) {
-emigRules e{};
+emigRules e;
 e.densDep = densDepEmig; e.stgDep = stgDepEmig; e.sexDep = sexDepEmig;
 e.indVar = indVarEmig; e.emigStage = emigStage;
 e.emigTrait[0] = emigTrait[0]; e.emigTrait[1] = emigTrait[1];
@@ -1616,7 +1615,7 @@ if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES) {
 }
 
 emigTraits Species::getEmigTraits(short stg,short sex) {
-emigTraits e{};
+emigTraits e;
 if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES) {
 	e.d0 = d0[stg][sex]; e.alpha = alphaEmig[stg][sex]; e.beta = betaEmig[stg][sex];
 }
@@ -1652,7 +1651,7 @@ if (stg >= 0 && stg < 1 && sex >= 0 && sex < NSEXES) // implemented for stage 0 
 }
 
 emigParams Species::getEmigParams(short stg,short sex) {
-emigParams e{};
+emigParams e;
 //if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES)
 if (stg >= 0 && stg < 1 && sex >= 0 && sex < NSEXES) // implemented for stage 0 only
 {
@@ -1679,7 +1678,7 @@ if (s.betaScale >= 0.0) betaScale = s.betaScale;
 }
 
 emigScales Species::getEmigScales(void) {
-emigScales s{};
+emigScales s;
 s.d0Scale = d0Scale; s.alphaScale = alphaScale; s.betaScale = betaScale;
 return s;
 }
@@ -1709,7 +1708,7 @@ moveType = t.moveType; costMap = t.costMap;
 }
 
 trfrRules Species::getTrfr(void) {
-trfrRules t{};
+trfrRules t;
 t.moveModel = moveModel; t.stgDep = stgDepTrfr; t.sexDep = sexDepTrfr;
 t.distMort = distMort; t.indVar = indVarTrfr;
 #if RS_CONTAIN
@@ -1734,17 +1733,17 @@ fullKernel = k;
 bool Species::useFullKernel(void) { return fullKernel; }
 
 void Species::setKernTraits(const short stg,const short sex,
-	const trfrKernTraits k,const float resol)
+	const trfrKernTraits k,const int resol)
 {
-if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES) {
-	if (k.meanDist1 > 0.0 && k.meanDist1 >= resol) meanDist1[stg][sex] = k.meanDist1;
-	if (k.meanDist2 >= resol) meanDist2[stg][sex] = k.meanDist2;
+if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES) {       
+	if (k.meanDist1 > 0.0 && k.meanDist1 >= (float)resol) meanDist1[stg][sex] = k.meanDist1;
+	if (k.meanDist2 >= (float)resol) meanDist2[stg][sex] = k.meanDist2;
 	if (k.probKern1 > 0.0 && k.probKern1 < 1.0) probKern1[stg][sex] = k.probKern1;
 }
 }
 
 trfrKernTraits Species::getKernTraits(short stg,short sex) {
-trfrKernTraits k{};
+trfrKernTraits k;
 if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES) {
 	k.meanDist1 = meanDist1[stg][sex];
 	k.meanDist2 = meanDist2[stg][sex];
@@ -1763,7 +1762,7 @@ mortBeta = m.mortBeta;
 }
 
 trfrMortParams Species::getMortParams(void) {
-trfrMortParams m{};
+trfrMortParams m;
 m.fixedMort = fixedMort; m.mortAlpha = mortAlpha; m.mortBeta = mortBeta;
 return m;
 }
@@ -1836,7 +1835,7 @@ straigtenPath = m.straigtenPath;
 }
 
 trfrMovtTraits Species::getMovtTraits(void) {
-trfrMovtTraits m{};
+trfrMovtTraits m;
 m.pr = pr; m.prMethod = prMethod; m.memSize = memSize; m.goalType = goalType;
 m.dp = dp; m.gb = gb; m.alphaDB = alphaDB;  m.betaDB = betaDB;
 m.stepMort = stepMort; m.stepLength = stepLength; m.rho = rho;
@@ -1844,14 +1843,14 @@ return m;
 }
 
 trfrCRWTraits Species::getCRWTraits(void) {
-trfrCRWTraits m{};
+trfrCRWTraits m;
 m.stepMort = stepMort; m.stepLength = stepLength; m.rho = rho;
 m.straigtenPath = straigtenPath;
 return m;
 }
 
 trfrSMSTraits Species::getSMSTraits(void) {
-trfrSMSTraits m{};
+trfrSMSTraits m;
 m.pr = pr; m.prMethod = prMethod; m.memSize = memSize; m.goalType = goalType;
 m.dp = dp; m.gb = gb; m.alphaDB = alphaDB;  m.betaDB = betaDB; m.stepMort = stepMort;
 m.straigtenPath = straigtenPath;
@@ -1859,7 +1858,7 @@ return m;
 }
 
 void Species::setKernParams(const short stg,const short sex,
-	const trfrKernParams k,const float resol)
+	const trfrKernParams k,const double resol)
 {
 //if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES)
 if (stg >= 0 && stg < 1 && sex >= 0 && sex < NSEXES) // implemented for stage 0 only
@@ -1877,7 +1876,7 @@ if (stg >= 0 && stg < 1 && sex >= 0 && sex < NSEXES) // implemented for stage 0 
 }
 
 trfrKernParams Species::getKernParams(short stg,short sex) {
-trfrKernParams k{};
+trfrKernParams k;
 //if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES)
 if (stg >= 0 && stg < 1 && sex >= 0 && sex < NSEXES) // implemented for stage 0 only
 {
@@ -1914,7 +1913,7 @@ if (stg >= 0 && stg < 1 && sex >= 0 && sex < 1) // implemented for stage 0 & sex
 }
 
 trfrSMSParams Species::getSMSParams(short stg,short sex) {
-trfrSMSParams s{};
+trfrSMSParams s;
 //if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES)
 if (stg >= 0 && stg < 1 && sex >= 0 && sex < 1) // implemented for stage 0 & sex 0 only
 {
@@ -1940,7 +1939,7 @@ void Species::clearMortalities(void) {
 mortchanges.clear();
 }
 
-void Species::addMortChange(int yr, float	grad)
+void Species::addMortChange(int yr,double	grad)
 {
 mortChange m; m.chgyear = yr; m.gradient = grad;
 mortchanges.push_back(m);
@@ -2004,7 +2003,7 @@ DEBUGLOG << "Species::updateMortality(): yr=" << yr
 #endif
 }
 
-float Species::getMortality(void) { return currentMortality; }
+double Species::getMortality(void) { return currentMortality; }
 
 #endif // TEMPMORT 
 
@@ -2022,7 +2021,7 @@ if (stg >= 0 && stg < 1 && sex >= 0 && sex < 1) // implemented for stage 0 & sex
 }
 
 trfrCRWParams Species::getCRWParams(short stg,short sex) {
-trfrCRWParams m{};
+trfrCRWParams m;
 //if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES)
 if (stg >= 0 && stg < 1 && sex >= 0 && sex < 1) // implemented for stage 0 & sex 0 only
 {
@@ -2050,7 +2049,7 @@ if (s.rhoScale > 0.0 && s.rhoScale < 1.0) rhoScale = s.rhoScale;
 }
 
 trfrScales Species::getTrfrScales(void) {
-trfrScales s{};
+trfrScales s;
 s.dist1Scale = dist1Scale; s.dist2Scale = dist2Scale; s.PKern1Scale = PKern1Scale;
 s.dpScale = dpScale; s.gbScale = gbScale;
 s.alphaDBScale = alphaDBScale; s.betaDBScale = betaDBScale;
@@ -2065,7 +2064,7 @@ if (nhab >= 0) {
 	habDimTrfr = nhab;
 	if (habCost != 0 || habStepMort != 0) deleteHabCostMort();
 	habCost = new int[nhab];
-	habStepMort = new float[nhab];
+	habStepMort = new double[nhab];
 	for (int i = 0; i < nhab; i++) {
 		habCost[i] = 1; habStepMort[i] = 0.0;
 	}
@@ -2078,7 +2077,7 @@ if (hab >= 0 && hab < habDimTrfr) {
 }
 }
 
-void Species::setHabMort(short hab, float mort) {
+void Species::setHabMort(short hab,double mort) {
 if (hab >= 0 && hab < habDimTrfr) {
 	if (mort >= 0.0 && mort < 1.0) habStepMort[hab] = mort;
 }
@@ -2090,8 +2089,8 @@ if (hab >= 0 && hab < habDimTrfr) cost = habCost[hab];
 return cost;
 }
 
-float Species::getHabMort(short hab) {
-float pmort = 0.0;
+double Species::getHabMort(short hab) {
+double pmort = 0.0;
 if (hab >= 0 && hab < habDimTrfr) pmort = habStepMort[hab];
 return pmort;
 }
@@ -2118,7 +2117,7 @@ if (s.betaSasoc > 0.0) betaSasoc = s.betaSasoc;
 }
 
 settleType Species::getSettle(void) {
-settleType s{};
+settleType s;
 s.stgDep = stgDepSett; s.sexDep = sexDepSett; s.indVar = indVarSett;
 s.settTrait[0] = settTrait[0]; s.settTrait[1] = settTrait[1];
 #if GOBYMODEL
@@ -2136,7 +2135,11 @@ if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES) {
 }
 
 settleRules Species::getSettRules(short stg,short sex) {
-settleRules s{};
+settleRules s;
+s.densDep = false;
+s.findMate = false;
+s.go2nbrLocn = false;
+s.wait = false;
 if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES) {
 	s.densDep = densDepSett[stg][sex]; s.wait = wait[stg][sex];
 	s.go2nbrLocn = go2nbrLocn[stg][sex]; s.findMate = findMate[stg][sex];
@@ -2158,7 +2161,7 @@ if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES) {
 }
 
 settleSteps Species::getSteps(short stg,short sex) {
-settleSteps s{};
+settleSteps s;
 s.minSteps = minSteps;
 s.maxSteps = maxSteps;
 if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES) s.maxStepsYr = maxStepsYr[stg][sex];
@@ -2174,7 +2177,7 @@ if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES) {
 }
 
 settleTraits Species::getSettTraits(short stg,short sex) {
-settleTraits dd{};
+settleTraits dd;
 if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES) {
 	dd.s0 = s0[stg][sex]; dd.alpha = alphaS[stg][sex]; dd.beta = betaS[stg][sex];
 }
@@ -2201,7 +2204,7 @@ if (stg >= 0 && stg < 1 && sex >= 0 && sex < NSEXES) // implemented for stage 0 
 }
 
 settParams Species::getSettParams(short stg,short sex) {
-settParams s{};
+settParams s;
 //if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES)
 if (stg >= 0 && stg < 1 && sex >= 0 && sex < NSEXES) // implemented for stage 0 only
 {
@@ -2225,7 +2228,7 @@ if (s.betaSScale >= 0.0) betaSScale = s.betaSScale;
 }
 
 settScales Species::getSettScales(void) {
-settScales s{};
+settScales s;
 s.s0Scale = s0Scale; s.alphaSScale = alphaSScale; s.betaSScale = betaSScale;
 return s;
 }
