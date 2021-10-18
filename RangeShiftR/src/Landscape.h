@@ -97,6 +97,12 @@ using namespace std;
 
 //---------------------------------------------------------------------------
 
+
+struct landOrigin {
+	double minEast; double minNorth;
+};
+
+
 // Initial species distribution
 
 class InitDist{
@@ -104,7 +110,13 @@ public:
 	InitDist(Species*);
 	~InitDist();
 	int readDistribution(
+#if RS_THREADSAFE
+		Rcpp::NumericMatrix,
+		landOrigin,
+		int
+#else
 		string // name of species distribution file
+#endif
 	);
 	void setDistribution(
 		int	// no. of distribution cells to be initialised (0 for all cells)
@@ -167,9 +179,6 @@ struct genLandParams {
 };
 struct landPix {
 	int pix; float gpix;
-};
-struct landOrigin {
-	double minEast; double minNorth;
 };
 struct rasterHdr {
 	bool ok;
@@ -408,6 +417,14 @@ public:
 		short	// change number
 	);
 	void deleteLandChanges(void);
+#if RS_THREADSAFE
+	int readLandChange(
+		int,		// change number
+		Rcpp::NumericMatrix,// habitat raster
+		Rcpp::NumericMatrix,// patch raster
+		Rcpp::NumericMatrix	// cost raster
+	);
+#else
 #if RS_RCPP && !R_CMD
 	int readLandChange(
 	    int,		// change file number
@@ -425,6 +442,7 @@ public:
 		bool	// change SMS costs?
 	);
 #endif
+#endif // RS_THREADSAFE
 	void createPatchChgMatrix(void);
 	void recordPatchChanges(int);
 	void deletePatchChgMatrix(void);
@@ -453,7 +471,12 @@ public:
 
 	int newDistribution(
 		Species*,	// pointer to Species
+#if RS_THREADSAFE
+		Rcpp::NumericMatrix,
+		int
+#else
 		string		// name of initial distribution file
+#endif
 	);
 	void setDistribution(
 		Species*, // pointer to Species
@@ -538,6 +561,14 @@ public:
 
 	// functions to handle input and output
 
+#if RS_THREADSAFE
+	int readLandscape(
+		int, 				// no. of seasonss
+		Rcpp::NumericMatrix,// habitat raster
+		Rcpp::NumericMatrix,// patch raster
+		Rcpp::NumericMatrix	// cost raster
+	);
+#else //RS_THREADSAFE
 #if RS_CONTAIN
 #if SEASONAL
 	int readLandscape(
@@ -596,6 +627,7 @@ public:
 	);
 #endif // SEASONAL
 #endif // RS_CONTAIN
+#endif // RS_THREADSAFE
 	void listPatches(void);
 	int readCosts(
 		string	// costs file name

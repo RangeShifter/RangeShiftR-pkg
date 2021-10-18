@@ -42,4 +42,14 @@
 #define RS_EMBARCADERO 0
 
 //---------------------------------------------------------------------------
+
+#define RS_THREADSAFE 0
+	#if RS_THREADSAFE
+	#define RS_RCPP 1
+	#define RSDEBUG 0
+	#endif // RS_THREADSAFE
+
+//---------------------------------------------------------------------------
+
+
 #endif

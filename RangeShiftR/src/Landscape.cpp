@@ -166,6 +166,48 @@ for (int i = 0; i < ncells; i++) {
 
 // Read species initial distribution file
 
+#if RS_THREADSAFE
+int InitDist::readDistribution(Rcpp::NumericMatrix distfile, landOrigin habfile_origin, int spResol) {
+
+	int d=0;
+	double dfloat=0;
+	int ncols,nrows;
+
+	ncols = distfile.ncol();
+	nrows = distfile.nrow();
+	
+	minEast = habfile_origin.minEast;
+	minNorth = habfile_origin.minNorth;
+	resol = spResol;
+	maxX = ncols-1;
+	maxY = nrows-1;
+
+	for (int y = nrows-1; y >= 0; y--) {
+		for (int x = 0; x < ncols; x++) {
+
+			dfloat = distfile(nrows-1-y,x);
+
+			if ( !R_IsNA(dfloat) ){ // check for NA
+				d = (int)dfloat;
+				if ( d == 0 || d == 1) { // only valid values
+					if (d == 1) { // species present
+						cells.push_back(new DistCell(x,y));
+					}
+				}
+				else { // error in file
+					#if RS_RCPP && !R_CMD
+					Rcpp::Rcout << "Found invalid value in species distribution raster." <<  std::endl;
+					#endif
+					return 22;
+				}
+			}
+		}
+	}
+	return 0;
+}
+
+#else // RS_THREADSAFE
+
 int InitDist::readDistribution(string distfile) {
 #if RS_RCPP
 wstring header;
@@ -255,6 +297,7 @@ dfile.close(); dfile.clear();
 return 0;
 }
 
+#endif // RS_THREADSAFE
 
 //---------------------------------------------------------------------------
 
@@ -1740,6 +1783,164 @@ while (landchanges.size() > 0) landchanges.pop_back();
 landchanges.clear();
 }
 
+
+#if RS_THREADSAFE
+int Landscape::readLandChange(int filenum, Rcpp::NumericMatrix habfile, Rcpp::NumericMatrix pchfile, Rcpp::NumericMatrix costfile){
+
+	if (filenum < 0) return 19;
+
+	int h = 0,p = 0,c = 0, pchseq = 0;
+	double hfloat = 0,pfloat = 0,cfloat = 0;
+	bool costs = false;
+	if(costfile.nrow()>0 && costfile.ncol()>0) costs = true;
+
+	simParams sim = paramsSim->getSim();
+
+	if (patchModel) pchseq = patchCount();
+
+	switch (rasterType) {
+
+	case 0: // raster with habitat codes - 100% habitat each cell
+
+		for (int y = dimY-1; y >= 0; y--) {
+			for (int x = 0; x < dimX; x++) {
+
+				// get numerics from each raster for this cell
+				hfloat = habfile(dimY-1-y,x);
+				if (patchModel) pfloat = pchfile(dimY-1-y,x);
+				if (costs) cfloat = costfile(dimY-1-y,x);
+
+				if (cells[y][x] != 0) { // not a no data cell (in initial landscape)
+					if ( R_IsNA(hfloat) ){ // invalid no data cell in change map
+						return 36;
+					}
+					else {
+						h = (int)hfloat;
+						if (h < 0 || (sim.batchMode && (h < 1 || h > nHabMax))) { // invalid habitat code
+							return 33;
+						}
+						else {
+							addHabCode(h);
+							cells[y][x]->setHabIndex(h);
+						}
+					}
+					if (patchModel) {
+						if ( R_IsNA(pfloat) ){
+							#if RS_RCPP && !R_CMD
+							Rcpp::Rcout << "Found patch NA in valid habitat cell." <<  std::endl;
+							#endif
+							return 34;
+						}
+						else {
+							p = (int)pfloat;
+							if (p < 0 ) { // invalid patch code
+								#if RS_RCPP && !R_CMD
+								Rcpp::Rcout << "Found negative patch ID in valid habitat cell." <<  std::endl;
+								#endif
+								return 34;
+							}
+							else {
+								patchChgMatrix[y][x][2] = p;
+								if (p > 0 && !existsPatch(p)) {
+									addPatchNum(p);
+									newPatch(pchseq++,p);
+								}
+							}
+						}
+					}
+					if (costs) {
+						if ( R_IsNA(cfloat) ){ // invalid cost
+							return 38;
+						}
+						else{
+							c = (int)cfloat;
+							if (c < 1) { // invalid cost
+								return 38;
+							}
+							else {
+								costsChgMatrix[y][x][2] = c;
+							}
+						}
+					}
+				}
+			}
+		}
+		break;
+
+		case 2: // habitat quality
+
+		for (int y = dimY-1; y >= 0; y--) {
+			for (int x = 0; x < dimX; x++) {
+
+				// get numerics from each raster for this cell
+				hfloat = habfile(dimY-1-y,x);
+				if (patchModel) pfloat = pchfile(dimY-1-y,x);
+				if (costs) cfloat = costfile(dimY-1-y,x);
+
+				if (cells[y][x] != 0) { // not a no data cell (in initial landscape)
+					if ( R_IsNA(hfloat) ){ // invalid no data cell in change map
+						return 36;
+					}
+					else {
+						if (hfloat < 0.0 || hfloat > 100.0) { // invalid quality score
+							return 37;
+						}
+						else {
+							cells[y][x]->setHabitat((float)hfloat);
+						}
+					}
+					if (patchModel) {
+						if ( R_IsNA(pfloat) ){
+							#if RS_RCPP && !R_CMD
+							Rcpp::Rcout << "Found patch NA in valid habitat cell." <<  std::endl;
+							#endif
+							return 34;
+						}
+						else {
+							p = (int)pfloat;
+							if (p < 0 ) { // invalid patch code
+								#if RS_RCPP && !R_CMD
+								Rcpp::Rcout << "Found negative patch ID in valid habitat cell." <<  std::endl;
+								#endif
+								return 34;
+							}
+							else {
+								patchChgMatrix[y][x][2] = p;
+								if (p > 0 && !existsPatch(p)) {
+									addPatchNum(p);
+									newPatch(pchseq++,p);
+								}
+							}
+						}
+					}
+					if (costs) {
+						if ( R_IsNA(cfloat) ){ // invalid cost
+							return 38;
+						}
+						else{
+							c = (int)cfloat;
+							if (c < 1) { // invalid cost
+								return 38;
+							}
+							else {
+								costsChgMatrix[y][x][2] = c;
+							}
+						}
+					}
+				}
+			}
+		}
+		break;
+
+	default:
+		break;
+	}
+
+	return 0;
+}
+
+#else // RS_THREADSAFE
+
 #if RS_RCPP && !R_CMD
 int Landscape::readLandChange(int filenum, bool costs, wifstream& hfile, wifstream& pfile, wifstream& cfile, int habnodata, int pchnodata, int costnodata)
 #else
@@ -2119,6 +2320,7 @@ if (cfile.is_open()) { cfile.close(); cfile.clear(); }
 return 0;
 
 }
+#endif // RS_THREADSAFE
 
 // Create & initialise patch change matrix
 void Landscape::createPatchChgMatrix(void)
@@ -2347,11 +2549,20 @@ costsChgMatrix = 0;
 
 // Species distribution functions
 
+#if RS_THREADSAFE
+int Landscape::newDistribution(Species *pSpecies, Rcpp::NumericMatrix distname, int spResol) {
+#else
 int Landscape::newDistribution(Species *pSpecies, string distname) {
+#endif
 int readcode;
 int ndistns = (int)distns.size();
 distns.push_back(new InitDist(pSpecies));
+#if RS_THREADSAFE
+landOrigin habfile_origin = this->getOrigin();
+readcode = distns[ndistns]->readDistribution(distname,habfile_origin,spResol);
+#else
 readcode = distns[ndistns]->readDistribution(distname);
+#endif
 if (readcode != 0) { // error encountered
 	// delete the distribution created above
 	delete distns[ndistns];
@@ -2452,6 +2663,277 @@ initcells.clear();
 
 // Read landscape file(s)
 // Returns error code or zero if read correctly
+
+#if RS_THREADSAFE
+int Landscape::readLandscape(int fileNum, Rcpp::NumericMatrix habfile, Rcpp::NumericMatrix pchfile, Rcpp::NumericMatrix costfile) {
+
+	if (fileNum < 0) return 19;
+
+	int h,seq,p,ncols,nrows,hc,maxcost = 0;
+	double hfloat,pfloat,cfloat;
+	Patch *pPatch;
+	Cell *pCell;
+	simParams sim = paramsSim->getSim();
+	initParams init = paramsInit->getInit();
+
+	// initialise landscape size
+	ncols = habfile.ncol();
+	nrows = habfile.nrow();
+	dimX = ncols; dimY = nrows; 
+	minX = maxY = 0; 
+	maxX = dimX-1; maxY = dimY-1;
+	if (fileNum == 0) {
+		// set initialisation limits to landscape limits
+		init.minSeedX = init.minSeedY = 0;
+		init.maxSeedX = maxX; init.maxSeedY = maxY;
+		paramsInit->setInit(init);
+		setCellArray();
+	}
+
+	seq = 0; 	// initial sequential patch landscape
+	p = 0; 		// initial patch number for cell-based landscape
+	// create patch 0 - the matrix patch (even if there is no matrix)
+	if (fileNum == 0) newPatch(seq++,p++);
+
+	switch (rasterType) {
+
+	case 0: // raster with habitat codes - 100% habitat each cell
+		if (fileNum > 0) return 19; // error condition - should not occur
+
+		for (int y = dimY-1; y >= 0; y--) {
+			for (int x = 0; x < dimX; x++) {
+
+				// read value from raster cell
+				hfloat = habfile(dimY-1-y,x);
+				// check for NA
+				if ( R_IsNA(hfloat) )
+					addNewCellToLand(x,y,-1); // add cell only to landscape
+				else {
+					h = (int)hfloat;
+					// THERE IS AN ANOMALY HERE - CURRENTLY HABITAT 0 IS OK FOR GUI VERSION BUT
+					// NOT ALLOWED FOR BATCH VERSION (HABITATS MUST BE 1...n)
+					// SHOULD WE MAKE THE TWO VERSIONS AGREE? ...
+					if (h < 0 || (sim.batchMode && (h < 1 || h > nHabMax))) {
+						// invalid habitat code
+						#if RS_RCPP && !R_CMD
+							Rcpp::Rcout << "Found invalid habitat code." <<  std::endl;
+						#endif
+						return 13;
+					}
+					else {
+						addHabCode(h);
+						if (patchModel) {
+							pfloat = pchfile(dimY-1-y,x);
+							if ( R_IsNA(pfloat) ) { // invalid patch code
+								#if RS_RCPP && !R_CMD
+								Rcpp::Rcout << "Found patch NA in valid habitat cell." <<  std::endl;
+								#endif
+								return 14;
+							}
+							p = (int)pfloat;
+							if (p < 0 ) { // invalid patch code
+								#if RS_RCPP && !R_CMD
+								Rcpp::Rcout << "Found negative patch ID in valid habitat cell." <<  std::endl;
+								#endif
+								return 14;
+							}
+							if (p == 0) { // cell is in the matrix
+								addNewCellToPatch(0,x,y,h);
+							}
+							else {
+								if (existsPatch(p)) {
+									pPatch = findPatch(p);
+									addNewCellToPatch(pPatch,x,y,h);
+	//								addNewCellToPatch(findPatch(p),x,y,h);
+								}
+								else {
+									pPatch = newPatch(seq++,p);
+									addNewCellToPatch(pPatch,x,y,h);
+								}
+							}
+						}
+						else { // cell-based model
+							// add cell to landscape (patches created later)
+							addNewCellToLand(x,y,h);
+						}
+					}
+				}
+			}
+		}
+		break;
+
+	case 1: // multiple % cover
+
+		for (int y = dimY-1; y >= 0; y--) {
+			for (int x = 0; x < dimX; x++) {
+
+				hfloat = habfile(dimY-1-y,x);
+				if (fileNum == 0) { // first habitat cover layer
+					if ( R_IsNA(hfloat) ) { // check for NA
+						addNewCellToLand(x,y,-1); // add cell only to landscape
+					}
+					else {
+						if (hfloat < 0.0 || hfloat > 100.0) { // invalid cover score
+							#if RS_RCPP && !R_CMD
+							Rcpp::Rcout << "Found invalid habitat cover score." <<  std::endl;
+							#endif
+							return 17;
+						}
+						else {
+							if (patchModel) {
+								pfloat = pchfile(dimY-1-y,x);
+								if ( R_IsNA(pfloat) ) { // invalid patch code
+									#if RS_RCPP && !R_CMD
+									Rcpp::Rcout << "Found patch NA in valid habitat cell." <<  std::endl;
+									#endif
+									return 14;
+								}
+								p = (int)pfloat;
+								if (p < 0 ) { // invalid patch code
+									#if RS_RCPP && !R_CMD
+									Rcpp::Rcout << "Found negative patch ID in valid habitat cell." <<  std::endl;
+									#endif
+									return 14;
+								}
+								if (p == 0) { // cell is in the matrix
+									addNewCellToPatch(0,x,y,(float)hfloat);
+								}
+								else {
+									if (existsPatch(p)) {
+										pPatch = findPatch(p);
+										addNewCellToPatch(pPatch,x,y,(float)hfloat);
+	//									addNewCellToPatch(findPatch(p),x,y,(float)hfloat);
+									}
+									else {
+										pPatch = newPatch(seq++,p);
+										addNewCellToPatch(pPatch,x,y,(float)hfloat);
+									}
+								}
+							}
+							else { // cell-based model
+								// add cell to landscape (patches created later)
+								addNewCellToLand(x,y,(float)hfloat);
+							}
+						}
+					}
+				}
+				else { // additional habitat cover layers
+					if ( !R_IsNA(hfloat) ) {
+						if (hfloat < 0.0 || hfloat > 100.0) { // invalid cover score
+							#if RS_RCPP && !R_CMD
+							Rcpp::Rcout << "Found invalid habitat cover score." <<  std::endl;
+							#endif
+							return 17;
+						}
+						else {
+							cells[dimY-1-y][x]->setHabitat((float)hfloat);
+						}
+					} // end of h != habnodata
+				}
+			}
+		}
+		habIndexed = true; // habitats are already numbered 1...n in correct order
+
+		break;
+
+	case 2: // habitat quality
+		if (fileNum > 0) return 19; // error condition - should not occur
+
+		for (int y = dimY-1; y >= 0; y--) {
+			for (int x = 0; x < dimX; x++) {
+
+				hfloat = habfile(dimY-1-y,x);
+				if ( R_IsNA(hfloat) ) { // check for NA
+					addNewCellToLand(x,y,-1); // add cell only to landscape
+				}
+				else {
+					if (hfloat < 0.0 || hfloat > 100.0) { // invalid quality score
+						#if RS_RCPP && !R_CMD
+						Rcpp::Rcout << "Found invalid habitat quality score." <<  std::endl;
+						#endif
+						return 17;
+					}
+					else {
+						if (patchModel) {
+							pfloat = pchfile(dimY-1-y,x);
+							if ( R_IsNA(pfloat) ) { // invalid patch code
+								#if RS_RCPP && !R_CMD
+								Rcpp::Rcout << "Found patch NA in valid habitat cell." <<  std::endl;
+								#endif
+								return 14;
+							}
+							p = (int)pfloat;
+							if (p < 0 ) { // invalid patch code
+								#if RS_RCPP && !R_CMD
+								Rcpp::Rcout << "Found negative patch ID in valid habitat cell." <<  std::endl;
+								#endif
+								return 14;
+							}
+							if (p == 0) { // cell is in the matrix
+								addNewCellToPatch(0,x,y,(float)hfloat);
+							}
+							else {
+								if (existsPatch(p)) {
+									pPatch = findPatch(p);
+									addNewCellToPatch(pPatch,x,y,(float)hfloat);
+	//								addNewCellToPatch(findPatch(p),x,y,(float)hfloat);
+								}
+								else {
+									addPatchNum(p);
+									pPatch = newPatch(seq++,p);
+									addNewCellToPatch(pPatch,x,y,(float)hfloat);
+								}
+							}
+						}
+						else { // cell-based model
+							// add cell to landscape (patches created later)
+							addNewCellToLand(x,y,(float)hfloat);
+						}
+					}
+				}
+			}
+		}
+		break;
+
+	default:
+		break;
+	} // end switch(rasterType)
+
+
+	if (sim.batchMode) {
+		int maxYcost = costfile.nrow();
+		int maxXcost = costfile.ncol();
+
+		if (maxXcost > 0 && maxYcost > 0) {
+
+			for (int y = maxYcost-1; y >= 0; y--){
+				for (int x = 0; x < maxXcost; x++){
+
+					cfloat = pchfile(maxYcost-1-y,x);
+					if ( !R_IsNA(cfloat) ) {
+						hc = (int)cfloat;
+						if ( hc < 1 ) {
+						#if RS_RCPP && !R_CMD
+							Rcpp::Rcout << "Cost map my only contain values of 1 or higher, but found " << hc << "." << endl;
+						#endif
+							return 54;
+						}
+						pCell = findCell(x,y);
+						if (pCell != 0) { // not no-data cell
+							pCell->setCost(hc);
+							if (hc > maxcost) maxcost = hc;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return 0;
+
+}
+
+#else // RS_THREADSAFE
 
 #if RS_CONTAIN
 #if SEASONAL
@@ -3068,6 +3550,7 @@ if (sim.batchMode) {
 return 0;
 
 }
+#endif // RS_THREADSAFE
 
 //---------------------------------------------------------------------------
 

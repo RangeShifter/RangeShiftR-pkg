@@ -1,25 +1,25 @@
 #---------------------------------------------------------------------------
-#	
+#
 #	Copyright (C) 2020-2021 Anne-Kathleen Malchow, Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Damaris Zurell
-#	
+#
 #	This file is part of RangeShiftR.
-#	
+#
 #	RangeShiftR is free software: you can redistribute it and/or modify
 #	it under the terms of the GNU General Public License as published by
 #	the Free Software Foundation, either version 3 of the License, or
 #	(at your option) any later version.
-#	
+#
 #	RangeShiftR is distributed in the hope that it will be useful,
 #	but WITHOUT ANY WARRANTY; without even the implied warranty of
 #	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 #	GNU General Public License for more details.
-#	
+#
 #	You should have received a copy of the GNU General Public License
 #	along with RangeShiftR. If not, see <https://www.gnu.org/licenses/>.
-#	
+#
 #----------------------------------------------------------------------------
- 
- 
+
+
 # -----
 #
 # Run a RangeShiftR simulation
@@ -55,7 +55,14 @@ RunRS <- function(RSparams, dirpath = getwd()){
     if (class(out)=="list" && is.null(out$Errors)) {
         if ( length(out)>0 ) {
             resol = RSparams@control@resolution
-            return(raster::stack(lapply(X = out, FUN = raster::raster, xmn=0, xmx=ncol(out[[1]])*resol, ymn=0, ymx=nrow(out[[1]])*resol)))
+            if(class(RSparams@land)=="ImportedLandscape") llcorner = RSparams@land@OriginCoords
+            else  llcorner = c(0,0)
+            return(raster::stack(lapply(X = out,
+                                        FUN = raster::raster,
+                                        xmn=llcorner[1],
+                                        ymn=llcorner[2],
+                                        xmx=ncol(out[[1]])*resol+llcorner[1],
+                                        ymx=nrow(out[[1]])*resol+llcorner[2])))
         }
         else return(NULL)
     }

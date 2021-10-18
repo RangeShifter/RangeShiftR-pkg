@@ -16,6 +16,7 @@ build-Release/
 *.workspace
 *.mk
 *.txt
+*.tags
 
 # Hidden source
 /RangeShiftR/src/.*
