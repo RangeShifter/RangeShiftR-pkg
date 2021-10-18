@@ -517,25 +517,25 @@ setValidity("ImportedLandscape", function(object) {
             }
             else {
                 if (object@SpDistResolution < object@Resolution) {
-                    msg <- c(msg, "Resolution of Species distribution may not be less than Landscape Resolution.")
+                    msg <- c(msg, "Resolution of species distribution may not be less than landscape resolution.")
                 }
                 else {
                     if (object@SpDistResolution %% object@Resolution) {
                         msg <- c(msg, "SpDistResolution must be an integer multiple of Resolution.")
                     }
-                }
-                else {
-                    if (length(object@SpDistFile) != 1) {
-                        msg <- c(msg, "Species distribution list can only contain exactly one map.")
-                    }
                     else {
-                        if( class(object@SpDistFile[[1]])[1] != "matrix") {
-                            msg <- c(msg, "Species distribution must be of class matrix.")
+                        if (length(object@SpDistFile) != 1) {
+                            msg <- c(msg, "Species distribution list can only contain exactly one map.")
                         }
-                        else{
-                            coarse <- object@SpDistResolution / object@Resolution
-                            if( (ncol(object@SpDistFile[[1]]) != ceiling(land_ncol/coarse)) || (nrow(object@SpDistFile[[1]]) != ceiling(land_nrow/coarse)) ){
-                                msg <- c(msg, "Extent of CostsFile must match thaat of the LandscapeFile map.")
+                        else {
+                            if( class(object@SpDistFile[[1]])[1] != "matrix") {
+                                msg <- c(msg, "Species distribution must be of class matrix.")
+                            }
+                            else{
+                                coarse <- object@SpDistResolution / object@Resolution
+                                if( (ncol(object@SpDistFile[[1]]) != ceiling(land_ncol/coarse)) || (nrow(object@SpDistFile[[1]]) != ceiling(land_nrow/coarse)) ){
+                                    msg <- c(msg, "Extent of CostsFile must match thaat of the LandscapeFile map.")
+                                }
                             }
                         }
                     }

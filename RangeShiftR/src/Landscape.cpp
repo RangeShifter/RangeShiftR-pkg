@@ -2909,12 +2909,12 @@ int Landscape::readLandscape(int fileNum, Rcpp::NumericMatrix habfile, Rcpp::Num
 			for (int y = maxYcost-1; y >= 0; y--){
 				for (int x = 0; x < maxXcost; x++){
 
-					cfloat = pchfile(maxYcost-1-y,x);
+					cfloat = costfile(maxYcost-1-y,x);
 					if ( !R_IsNA(cfloat) ) {
 						hc = (int)cfloat;
 						if ( hc < 1 ) {
 						#if RS_RCPP && !R_CMD
-							Rcpp::Rcout << "Cost map my only contain values of 1 or higher, but found " << hc << "." << endl;
+							Rcpp::Rcout << "Cost map may only contain values of 1 or higher, but found " << hc << "." << endl;
 						#endif
 							return 54;
 						}
