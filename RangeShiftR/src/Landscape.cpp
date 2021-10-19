@@ -1789,7 +1789,7 @@ int Landscape::readLandChange(int filenum, Rcpp::NumericMatrix habfile, Rcpp::Nu
 
 	if (filenum < 0) return 19;
 
-	int h = 0,p = 0,c = 0, pchseq = 0;
+	int h = 0, p = 0, c = 0, pchseq = 0;
 	double hfloat = 0,pfloat = 0,cfloat = 0;
 	bool costs = false;
 	if(costfile.nrow()>0 && costfile.ncol()>0) costs = true;

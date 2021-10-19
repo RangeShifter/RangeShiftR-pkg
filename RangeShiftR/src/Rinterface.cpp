@@ -1220,17 +1220,17 @@ int ReadDynLandR(Landscape *pLandscape, Rcpp::S4 LandParamsR)
 	Rcpp::List habitatmaps;
 	Rcpp::List patchmaps;
 	Rcpp::List costmaps;
-	Rcpp::NumericMatrix hraster( 0 );
-	Rcpp::NumericMatrix praster( 0 );
-	Rcpp::NumericMatrix craster( 0 );
+	Rcpp::NumericMatrix hraster;
+	Rcpp::NumericMatrix praster;
+	Rcpp::NumericMatrix craster;
 
 	habitatmaps = Rcpp::as<Rcpp::List>(LandParamsR.slot("LandscapeFile"));
-	if (patchmodel) {
-		patchmaps = Rcpp::as<Rcpp::List>(LandParamsR.slot("PatchFile"));
-	}
+	if (patchmodel) patchmaps = Rcpp::as<Rcpp::List>(LandParamsR.slot("PatchFile"));
+	else praster = Rcpp::NumericMatrix(0);
 	bool costs = false;
 	costmaps = Rcpp::as<Rcpp::List>(LandParamsR.slot("CostsFile"));
 	if (costmaps.size() > 0) costs = true;
+	else craster = Rcpp::NumericMatrix(0);
 
 	//------------ int ParseDynamicFile(string indir) {
 
@@ -1249,7 +1249,7 @@ int ReadDynLandR(Landscape *pLandscape, Rcpp::S4 LandParamsR)
 
 		hraster = Rcpp::as<Rcpp::NumericMatrix>(habitatmaps[i]);
 		if (patchmodel) praster = Rcpp::as<Rcpp::NumericMatrix>(patchmaps[i]);
-		if (costs) praster = Rcpp::as<Rcpp::NumericMatrix>(costmaps[i]);
+		if (costs) craster = Rcpp::as<Rcpp::NumericMatrix>(costmaps[i]);
 
 		if (errors == 0)  {
 			imported = pLandscape->readLandChange(i-1, hraster, praster, craster);
@@ -4172,18 +4172,23 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 				Rcpp::List patchmaps;
 				Rcpp::List costmaps;
 				Rcpp::List spdistmap;
-				Rcpp::NumericMatrix hraster( 0 );
-				Rcpp::NumericMatrix praster( 0 );
-				Rcpp::NumericMatrix craster( 0 );
 
 				habitatmaps = Rcpp::as<Rcpp::List>(LandParamsR.slot("LandscapeFile"));
-				hraster = Rcpp::as<Rcpp::NumericMatrix>(habitatmaps[0]);
+				Rcpp::NumericMatrix hraster = Rcpp::as<Rcpp::NumericMatrix>(habitatmaps[0]);
+
+				Rcpp::NumericMatrix praster;
 				if (patchmodel) {
 					patchmaps = Rcpp::as<Rcpp::List>(LandParamsR.slot("PatchFile"));
 					praster = Rcpp::as<Rcpp::NumericMatrix>(patchmaps[0]);
 				}
+				else{
+					praster = Rcpp::NumericMatrix(0);
+				}
+
+				Rcpp::NumericMatrix craster;
 				costmaps = Rcpp::as<Rcpp::List>(LandParamsR.slot("CostsFile"));
-				if (costmaps.size() > 0) craster = Rcpp::as<Rcpp::NumericMatrix>(costmaps[0]);
+				if (costmaps.size() > 0) Rcpp::NumericMatrix craster = Rcpp::as<Rcpp::NumericMatrix>(costmaps[0]);
+				else craster = Rcpp::NumericMatrix(0);
 
 				int landcode;
 				landcode = pLandscape->readLandscape(0, hraster, praster, craster);
