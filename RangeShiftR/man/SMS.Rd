@@ -63,7 +63,7 @@ SMS is a stochastic individual-based movement model where organisms move through
 cost surfaces as the least cost path (LCP) method, but it relaxes two of its main assumptions: Firstly, individuals are not assumed to be
 omniscient, but move according to what they can perceive of the landscape within their perceptual range (\code{PR}). Secondly, individuals
 do not know a priori their final destination, which is a reasonable assumption for dispersing individuals. For a complete description of the
-method, see the Datails below or refer to \insertCite{palmer2011introducing;textual}{RangeShiftR}.
+method, see the Details below or refer to \insertCite{palmer2011introducing;textual}{RangeShiftR}.
 }
 \details{
 SMS is a stochastic individual-based model where organisms move through grid-based, heterogeneous landscapes. The model uses similar cost

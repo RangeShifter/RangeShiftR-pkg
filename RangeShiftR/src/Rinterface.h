@@ -84,7 +84,11 @@ int ReadInitialisationR(Landscape*, Rcpp::S4);
 int ReadGeneticsR(Rcpp::S4);
 
 int ParseInitIndsFileR(wifstream&);
+#if RS_THREADSAFE
+int ReadInitIndsFileR(int,Landscape*,Rcpp::DataFrame);
+#endif
 int ReadInitIndsFileR(int,Landscape*);
+
 int ReadArchFileR(wifstream&);
 
 Rcpp::List RunBatchR(int, int, Rcpp::S4);

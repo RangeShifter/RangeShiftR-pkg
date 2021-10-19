@@ -3784,6 +3784,11 @@ int ReadInitialisationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 	case 2: { // from initial individuals file
 		// if (init.indsFile != prevInitialIndsFile) {
 		// read and store the list of individuals to be initialised
+#if RS_THREADSAFE
+		if(init.indsFile=="NULL")
+		error = ReadInitIndsFileR(0, pLandscape, Rcpp::as<Rcpp::DataFrame>(InitParamsR.slot("InitIndsList"))); // parse dataframe header and read lines, store in vector "initinds"
+		else
+#endif
 		error = ReadInitIndsFileR(0, pLandscape); //open, parse, read header and lines, store in vector "initinds"
 		// prevInitialIndsFile = init.indsFile;
 		//}
@@ -4672,14 +4677,173 @@ rasterdata ParseRasterHead(string file)
 
 //----------------------------------------------------------------------------------------------
 
-#if !RS_THREADSAFE
+#if RS_THREADSAFE
 
-int ReadInitIndsFileR(int option, Landscape* pLandscape)
+int ReadInitIndsFileR(int option, Landscape* pLandscape, Rcpp::DataFrame initindslist )
 {
+	landParams paramsLand = pLandscape->getLandParams();
+	demogrParams dem = pSpecies->getDemogr();
+	//stageParams sstruct = pSpecies->getStage();
+	initParams init = paramsInit->getInit();
+	string filetype = "InitIndsList";
+	Rcpp::CharacterVector colnames = initindslist.names();
+	int lines = initindslist.nrows();
+	int errors = 0, col_ix = 0;
+	
+	Rcpp::IntegerVector df_year;
+	Rcpp::IntegerVector df_species;
+	Rcpp::IntegerVector df_patch;
+	Rcpp::IntegerVector df_X;
+	Rcpp::IntegerVector df_Y;
+	Rcpp::IntegerVector df_Ninds;
+	Rcpp::IntegerVector df_Sex;
+	Rcpp::IntegerVector df_Age;
+	Rcpp::IntegerVector df_Stage;
 
+	if(option == 0) { // parse and read header and lines
+
+		// Check right headers format
+		if(colnames[col_ix++] == "Year") df_year = initindslist["Year"];
+		else errors++;
+		if(colnames[col_ix++] == "Species") df_species = initindslist["Species"];
+		else errors++;
+		if(patchmodel) {
+			if(colnames[col_ix++] == "PatchID") df_patch = initindslist["PatchID"];
+			else errors++;
+		} else {
+			if(colnames[col_ix++] == "X") df_X = initindslist["X"];
+			else errors++;
+			if(colnames[col_ix++] == "Y") df_Y = initindslist["Y"];
+			else errors++;
+		}
+		if(colnames[col_ix++] == "Ninds") df_Ninds = initindslist["Ninds"];
+		else errors++;
+		if(reproductn > 0) {
+			if(colnames[col_ix++] == "Sex") df_Sex = initindslist["Sex"];
+			else errors++;
+		}
+		if(stagestruct) {
+			if(colnames[col_ix++] == "Age") df_Age = initindslist["Age"];
+			else errors++;
+			if(colnames[col_ix++] == "Stage") df_Stage = initindslist["Stage"];
+			else errors++;
+		}
+		// Report any errors in headers, and if so, terminate validation
+		if(errors > 0) {
+			FormatErrorR(filetype, errors);
+			return -111;
+		}
+
+		paramsInit->resetInitInds();
+
+		// Read dataframe lines
+		initInd iind;
+		iind.year = -98765;
+		int ninds;
+		int totinds = 0;
+		int prevyear = -98765;
+
+		for(int l = 0; l < lines; l++) { // loop over dataframe rows
+
+			// Year
+			iind.year = df_year[l];
+			if(iind.year < 0) {
+				BatchErrorR(filetype, l, 19, "Year");
+				errors++;
+			} else {
+				if(iind.year < prevyear) {
+					BatchErrorR(filetype, l, 2, "Year", "previous Year");
+					errors++;
+				}
+			}
+			prevyear = iind.year;
+
+			// Species
+			iind.species = df_species[l];
+			if(iind.species != 0) {
+				BatchErrorR(filetype, l, 0, " ");
+				errors++;
+				Rcpp::Rcout << "Species must be 0" << endl;
+			}
+
+			// Patch | Coordinates
+			if(paramsLand.patchModel) {
+				iind.patchID = df_patch[l];
+				if(iind.patchID < 1) {
+					BatchErrorR(filetype, l, 11, "PatchID");
+					errors++;
+					iind.x = iind.y = 0;
+				}
+			} else {
+				iind.x = df_X[l];
+				iind.y = df_Y[l];
+				if(iind.x < 0 || iind.y < 0) {
+					BatchErrorR(filetype, l, 19, "X and Y");
+					errors++;
+					iind.patchID = 0;
+				}
+			}
+
+			// No of individuals
+			ninds = df_Ninds[l];
+			if(ninds < 1) {
+				BatchErrorR(filetype, l, 11, "Ninds");
+				errors++;
+			}
+
+			// Sex
+			if(dem.repType > 0){
+				iind.sex = df_Sex[l];
+				if(iind.sex < 0 || iind.sex > 1) {
+					BatchErrorR(filetype, l, 1, "Sex");
+					errors++;
+				}
+			}
+			else iind.sex = 0;
+
+			// Stage
+			if(dem.stageStruct) {
+				iind.age = df_Age[l];
+				iind.stage = df_Stage[l];
+				if(iind.age < 1) {
+					BatchErrorR(filetype, l, 11, "Age");
+					errors++;
+				}
+				if(iind.stage < 1) {
+					BatchErrorR(filetype, l, 11, "Stage");
+					errors++;
+				}
+				if(iind.stage >= stages) {
+					BatchErrorR(filetype, l, 4, "Stage", "no. of stages");
+					errors++;
+				}
+			} else {
+				iind.age = iind.stage = 0;
+			}
+
+			for(int i = 0; i < ninds; i++) {
+				totinds++;
+				paramsInit->addInitInd(iind);
+			}
+
+			iind.year = -98765;				// finished current line
+			if(errors){					// check for format errors
+				return errors;
+			}
+		} // end of loop over rows
+
+		Rcpp::Rcout << "Initial individuals list OK" << std::endl;
+		return 0; //totinds;
+
+	} // end of option 0
+
+	if(option == 9) { // close file
+		return 0;
+	}
+	return -1;
 }
 
-#else
+#endif // RS_THREADSAFE
 
 int ReadInitIndsFileR(int option, Landscape* pLandscape)
 {
@@ -4895,7 +5059,6 @@ int ReadInitIndsFileR(int option, Landscape* pLandscape)
 	}
 	return -1;
 }
-#endif // RS_THREADSAFE
 
 //---------------------------------------------------------------------------
 
