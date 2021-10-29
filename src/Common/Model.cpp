@@ -2201,9 +2201,9 @@ if (env.stoch) {
 	if (dem.stageStruct) {
 		if (env.inK) {
 			outPar << "MIN. 1/b\t" << pSpecies->getMinMax(0)
-				* (10000.0/(float)(ppLand.resol*ppLand.resol)) << endl;
+				* (10000.0/((float)ppLand.resol*(float)ppLand.resol)) << endl;
 			outPar << "MAX. 1/b\t" << pSpecies->getMinMax(1)
-				* (10000.0/(float)(ppLand.resol*ppLand.resol)) << endl;
+				* (10000.0/((float)ppLand.resol*(float)ppLand.resol)) << endl;
 		}
 		else {
 			outPar << "MIN. fecundity\t" << pSpecies->getMinMax(0) << endl;
@@ -2213,9 +2213,9 @@ if (env.stoch) {
 	else {
 		if (env.inK) {
 			outPar << "MIN. K\t" << pSpecies->getMinMax(0)
-				* (10000.0/(float)(ppLand.resol*ppLand.resol)) << endl;
+				* (10000.0/((float)ppLand.resol*(float)ppLand.resol)) << endl;
 			outPar << "MAX. K\t" << pSpecies->getMinMax(1)
-				* (10000.0/(float)(ppLand.resol*ppLand.resol)) << endl;
+				* (10000.0/((float)ppLand.resol*(float)ppLand.resol)) << endl;
 		}
 		else {
 			outPar << "MIN. r\t" << pSpecies->getMinMax(0) << endl;
@@ -2650,7 +2650,7 @@ if (ppLand.generated) {
 #if SEASONAL
 for (int j = 0; j < dem.nSeasons; j++) {
 	for (int i = 0; i < nhab; i++) {
-		k = pSpecies->getHabK(i,j) * (10000.0/(float)(ppLand.resol*ppLand.resol));
+		k = pSpecies->getHabK(i,j) * (10000.0/((float)ppLand.resol*(float)ppLand.resol));
 		if (!ppLand.generated && ppLand.rasterType == 0) { // imported & habitat codes
 			outPar << "Season " << j << " Habitat " << pLandscape->getHabCode(i) << ": \t";
 		}
@@ -2664,7 +2664,7 @@ for (int j = 0; j < dem.nSeasons; j++) {
 }
 #else
 for (int i = 0; i < nhab; i++) {
-	k = pSpecies->getHabK(i) * (10000.0/(float)(ppLand.resol*ppLand.resol));
+	k = pSpecies->getHabK(i) * (10000.0/((float)ppLand.resol*(float)ppLand.resol));
 	if (!ppLand.generated && ppLand.rasterType == 0) { // imported & habitat codes
 		outPar << "Habitat " << pLandscape->getHabCode(i) << ": \t";
 	}

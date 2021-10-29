@@ -490,8 +490,8 @@ if (CBEnvStoch->Checked) {
 	}
 	if (env.inK) {
 		float minK,maxK;
-		minK = minLimit * (((float)(ppLand.resol*ppLand.resol))/10000.0);
-		maxK = maxLimit * (((float)(ppLand.resol*ppLand.resol))/10000.0);
+		minK = minLimit * (((float)ppLand.resol*(float)ppLand.resol)/10000.0);
+		maxK = maxLimit * (((float)ppLand.resol*(float)ppLand.resol)/10000.0);
 		pSpecies->setMinMax(minK,maxK);
 	}
 	else {

@@ -608,13 +608,18 @@ for (int i = 1; i <= 10; i++) { // each propn. of suitable habitat
 							// calculate no. of suitable habitat cells
 							ncells = (int)((ppLand.dimX) * (ppLand.dimY) * (p + 0.000001));
 							if (fractal) {
-								// NOTE: x & y are swapped in the function ractal_landscape()
+								// NOTE: x & y are swapped in the function fractal_landscape()
 								artLand = fractal_landscape(ppLand.dimY,ppLand.dimX,H,(1.0-p),
 									ppGenLand.maxPct,ppGenLand.minPct);
 								iter = artLand.begin();
 								while (iter != artLand.end()){
 									x = iter->y_coord; y = iter->x_coord;
 									art_land[x][y] = iter->value;
+#if RSDEBUG
+//DebugGUI(("LandSeries(): x=" + Int2Str(x)
+//	+ " y=" + Int2Str(y) 
+//	+ " value=" + Float2Str(art_land[x][y])).c_str());
+#endif
 									iter++;
 								}
 								if (!ppGenLand.continuous) {
@@ -712,7 +717,7 @@ for (int i = 1; i <= 10; i++) { // each propn. of suitable habitat
 									}
 									else { // discrete
 										// habitat codes are 1 and 2 (and 3) for consistency with batch mode input
-										if (art_land[x][y] > 9999.0) { // second matric class
+										if (art_land[x][y] > 9999.0) { // second matrix class
 											Fmaps << "3";
 										}
 										else {

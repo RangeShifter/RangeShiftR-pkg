@@ -567,6 +567,13 @@ if (!DEBUGLOG.is_open()) {
 		mtError, TMsgDlgButtons() << mbOK,0);
 	return;
 }
+name = paramsSim->getDir(2) + "Sim" + Int2Str(sim.simulation) + "MutnLog.txt";
+MUTNLOG.open(name.c_str());
+if (!MUTNLOG.is_open()) {
+	MessageDlg("Unable to open MUTNLOG file",
+		mtError, TMsgDlgButtons() << mbOK,0);
+	return;
+}
 //DEBUGLOG << "Run1Click(): random integers:";
 //for (int i = 0; i < 5; i++) {
 //	int rrrr = pRandom->IRandom(1000,2000);
@@ -800,7 +807,7 @@ if (v.viewPop || sim.saveMaps) {
 		frmMain->PopLegend->Visible = true; frmMain->LabelPop->Visible = true;
 		frmMain->LabelMaxPop->Visible = true; frmMain->LabelMinPop->Visible = true;
 		if (ppLand.patchModel) frmMain->LabelMaxPop->Caption =
-			(">" + Float2Str(maxK*10000/(float)(ppLand.resol*ppLand.resol)) + " ind/ha").c_str();
+			(">" + Float2Str(maxK*10000/((float)ppLand.resol*(float)ppLand.resol)) + " ind/ha").c_str();
 		else
 			frmMain->LabelMaxPop->Caption = (">" + Int2Str(maxK+1.0) + " ind/cell").c_str();
 	}
@@ -1040,6 +1047,7 @@ stopRun = false;
 
 #if RSDEBUG
 if (DEBUGLOG.is_open()) { DEBUGLOG.close(); DEBUGLOG.clear(); }
+if (MUTNLOG.is_open()) { MUTNLOG.close(); MUTNLOG.clear(); }
 #endif
 
 }
@@ -1535,7 +1543,7 @@ if (grad.gradient && v.viewGrad) {
 	case 1:
 		caption = "Carrying capacity  ";
 		maxLabel =
-			((double)((int)(10*pSpecies->getMaxK()*10000.0)/(ppLand.resol*ppLand.resol)))/10.0;
+			((double)((int)(10.0*pSpecies->getMaxK()*10000.0)/((double)ppLand.resol*(double)ppLand.resol)))/10.0;
 		break;
 	case 2:
 		caption = "Intrinsic growth rate  ";
@@ -2291,7 +2299,7 @@ for (int i = 0; i < npops; i++) { // all populations
 	pop = popns[i]->getStats();
 	ninds += pop.nInds;
 	pSpecies = popns[i]->getSpecies();
-	density = pSpecies->getMaxK() * 10000 / (double)(land.resol*land.resol);
+	density = pSpecies->getMaxK() * 10000 / ((double)land.resol*(double)land.resol);
 	if (density > maxDensity) maxDensity = density;
 }
 int ncells = pPatch->getNCells();
@@ -2303,7 +2311,7 @@ int ncells = pPatch->getNCells();
 
 if (ninds > 0 && ncells > 0) {
 	double density = ((double)ninds * 10000.0 /
-			 (double)(ncells * land.resol * land.resol));
+			 ((double)ncells * (double)land.resol * (double)land.resol));
 	int nFactor = 100 + (int) (density * 280.0 / maxDensity);
 
 	if (nFactor < 256) { // red increasing, green 0

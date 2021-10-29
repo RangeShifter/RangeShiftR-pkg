@@ -30,6 +30,12 @@ following:
 Saupe, D. (1988). Algorithms for random fractals. In: The Science of Fractal Images
 (eds. Pietgen, H.O. & Saupe, D.). Springer, New York, pp. 71–113.
 
+and applying a diamond-square algorithm partially derived from a C++ implementation
+published on-line by Nick O'Brien 10/8/2018 at:
+
+https://medium.com/@nickobrien/
+diamond-square-algorithm-explanation-and-c-implementation-5efa891e486f
+(last accessed 17/10/2021)
 
 For full details of RangeShifter, please see:
 Bocedi G., Palmer S.C.F., Pe’er G., Heikkinen R.K., Matsinos Y.G., Watts K.
@@ -39,7 +45,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 15 July 2021 by Anne-Kathleen Malchow
+Last updated: 17 October 2021 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -76,9 +82,17 @@ vector<land>& fractal_landscape(
 );
 bool compare(const land&, const land&);
 
+double squareStep(double**,int,int,int,int,int,double);
+double diamondStep(double**,int,int,int,int,int,double);
+void diamondSquare(double**,int,int,int,double,double);
+
 extern RSrandom *pRandom;
 #if RSDEBUG
 extern void DebugGUI(string);
+extern ofstream MUTNLOG;
+#if BATCH
+extern ofstream DEBUGLOG;
+#endif
 #endif
 
 //---------------------------------------------------------------------------

@@ -2006,7 +2006,7 @@ else {
 // Read carrying capacities (inds/ha) & convert them into inds/cell assuming 100% cover
 if (ppLand.generated) {
 	k = StrToFloat(edtK->Text);
-	k *= ((float)(ppLand.resol*ppLand.resol))/10000.0;
+	k *= ((float)ppLand.resol*(float)ppLand.resol)/10000.0;
 	genLandParams gen = pLandscape->getGenLandParams();
 	if (gen.continuous) {
 		pSpecies->createHabK(1);
@@ -2022,14 +2022,14 @@ else {
 	if (ppLand.rasterType == 2) { // habitat quality
 		pSpecies->createHabK(1);
 		k = StrToFloat(edtK->Text);
-		k *= ((float)(ppLand.resol*ppLand.resol))/10000.0;
+		k *= ((float)ppLand.resol*(float)ppLand.resol)/10000.0;
 		pSpecies->setHabK(0,k);
 	}
 	else {
 		pSpecies->createHabK(ppLand.nHab);
 		for (int i = 0; i < ppLand.nHab; i++) {
 			k = (float)(SGhab->Cells[1][i+1]).ToDouble();
-			k *= ((float)(ppLand.resol*ppLand.resol))/10000.0;
+			k *= ((float)ppLand.resol*(float)ppLand.resol)/10000.0;
 			pSpecies->setHabK(i,k);
 		}
 	}

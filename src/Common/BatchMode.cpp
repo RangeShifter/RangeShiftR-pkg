@@ -6811,7 +6811,7 @@ else {
 	for (int j = 0; j < dem.nSeasons; j++) {
 		for (int i = 0; i < paramsLand.nHabMax; i++) {
 			parameters >> k;
-			k *= ((double)(paramsLand.resol*paramsLand.resol))/10000.0;
+			k *= (((float)paramsLand.resol*(float)paramsLand.resol))/10000.0f;
 				pSpecies->setHabK(i,j,k);			
 		}
 	}

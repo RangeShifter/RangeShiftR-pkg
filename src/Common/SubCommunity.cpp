@@ -130,7 +130,7 @@ else {
 		case 2: // specified no. per cell or density
 			ncells = pPatch->getNCells();
 			if (ppLand.patchModel) {
-				nInds = (int)(init.indsHa * (float)(ncells*ppLand.resol*ppLand.resol) / 10000.0);      
+				nInds = (int)(init.indsHa * ((float)ncells*(float)ppLand.resol*(float)ppLand.resol) / 10000.0);      
 			}
 			else {
 				nInds = init.indsCell * ncells;
@@ -1223,7 +1223,7 @@ void SubCommunity::cullPatch(Cull *pCull,int pop,int resol)
 { 
 int ncells = pPatch->getNCells();
 //popns[pop]->cull(pCull,cullrate);
-popns[pop]->cull(pCull,(double)(ncells * resol * resol)/10000.0);
+popns[pop]->cull(pCull,((double)ncells * (double)resol * (double)resol)/10000.0);
 cullTarget = false;
 }
 
@@ -1245,7 +1245,7 @@ damageparams d = pDamageParams->getDamageParams();
 popStats p;
 Cell *pCell;
 DamageLocn *pDamageLocn;
-double densityfactor = 10000.0 / (double)(ncells * ppLand.resol * ppLand.resol);
+double densityfactor = 10000.0 / ((double)ncells * (double)ppLand.resol * (double)ppLand.resol);
 // find damage locations within the patch
 for (int i = 0; i < ncells; i++) {
 	pCell = pPatch->getCell(i);

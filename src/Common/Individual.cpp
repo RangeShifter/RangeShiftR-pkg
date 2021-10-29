@@ -2195,7 +2195,8 @@ else { // take a step
 			}
 		}
 
-		steplen = movt.stepLength; if (steplen < 0.2*land.resol) steplen = 0.2*land.resol;
+		steplen = movt.stepLength; 
+		if (steplen < 0.2*(float)land.resol) steplen = 0.2*(float)land.resol;
 		rho = movt.rho; if (rho > 0.99) rho = 0.99;
 		if (pPatch == pNatalPatch) {
 			rho = 0.99; // to promote leaving natal patch

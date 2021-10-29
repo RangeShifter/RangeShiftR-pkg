@@ -3988,14 +3988,14 @@ for (int i = 0; i < ninds; i++) {
 			steps = inds[i]->getSteps();
 			float d = 0.0;
 			if (steps.season > 0) {
-				d = ppLand.resol * sqrt((float)((prevloc.x-loc.x)*(prevloc.x-loc.x)
+				d = (float)ppLand.resol * sqrt((float)((prevloc.x-loc.x)*(prevloc.x-loc.x)
 																					+ (prevloc.y-loc.y)*(prevloc.y-loc.y)));
 			}
 			outInds << "\t" << d;
 			outInds << "\t" << prevloc.x << "\t" << prevloc.y;
 			outInds << "\t" << loc.x << "\t" << loc.y;
 #else
-			float d = ppLand.resol * sqrt((float)((natalloc.x-loc.x)*(natalloc.x-loc.x)
+			float d = (float)ppLand.resol * sqrt((float)((natalloc.x-loc.x)*(natalloc.x-loc.x)
 																					+ (natalloc.y-loc.y)*(natalloc.y-loc.y)));
 			outInds << "\t" << d;
 #endif
