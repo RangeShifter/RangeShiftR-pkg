@@ -38,7 +38,7 @@
 #' @include plotProbs.R
 #' @include Rfunctions.R
 #' @usage Initialise(InitType = 0, FreeType = 1, SpType = 0, NrCells,
-#'            InitIndsFile = "NULL", InitIndsList = data.frame(),
+#'            InitIndsFile = "NULL", InitIndsList = list(),
 #'            InitDens = 1, IndsHaCell, PropStages = 0, InitAge = 2,
 #'            minX, minY, maxX, maxY, InitFreezeYear = 0,
 #'            RestrictRows = 0, RestrictFreq = 0, FinalFreezeYear = 0)
@@ -55,7 +55,7 @@
 #' \code{SpType} = \eqn{1}: All suitable cells within some randomly chosen presence cells; set number of cells to initialise in \code{NrCells}.
 #' @param InitIndsFile Name of \emph{initial individuals list file}, required only if \code{InitType}\eqn{ = 2}.\cr
 #' For informaton on the required file format see the Details below.
-#' @param InitIndsList The list of initial individuals given as data.frame (instead of as file name in \code{InitIndsFile}), using the same format (see Details).
+#' @param InitIndsList The list of initial individuals given as a list of data.frames - one for each replicate simulation (instead of as file name in \code{InitIndsFile}), using the same format (see Details).
 #' @param InitDens,IndsHaCell Number of individuals to be seeded in each cell/patch:\cr
 #' \code{InitDens} = \eqn{0}: At \code{K_or_DensDep},\cr
 #' \code{InitDens} = \eqn{1}: At half \code{K_or_DensDep} (default),\cr
@@ -88,7 +88,7 @@
 #' (\code{SpType}\eqn{=1}) presence cells (which can have a lower resolution) specified by this distribution map will seeded.
 #'     \item \emph{From initial individuals list file.} (\code{InitType}\eqn{ = 2})\cr The population is initialised according to a list of specific
 #' individuals (of given sex, age and stage, if appropriate) in specified cells/patches. This option allows simulation of a reintroduction
-#' scenario.\cr The list has to be loaded from a file in the path given by \code{InitIndsFile} or given as dataframe in \code{InitIndsList}.
+#' scenario.\cr The list has to be loaded from a file in the path given by \code{InitIndsFile} or given as a list of dataframes in \code{InitIndsList}.
 #' It must be a tab-separated list with
 #' explicit column headers and one row for each individual to be initialized. The expected column headers depend on the model settings and
 #' must match the following order exactly: 'Year', 'Species' (must \eqn{= 0}), for cell-/patch-based: 'X', 'Y' / 'PatchID', 'Ninds', for sexual model: 'Sex',
@@ -166,7 +166,7 @@ Initialise <- setClass("InitialisationParams", slots = c(InitType = "integer_OR_
                                                          SpType = "integer_OR_numeric",
                                                          NrCells = "integer_OR_numeric",
                                                          InitIndsFile = "character",
-                                                         InitIndsList = "data.frame",
+                                                         InitIndsList = "list", # "data.frame",
                                                          InitDens = "integer_OR_numeric",
                                                          IndsHaCell = "integer_OR_numeric",
                                                          PropStages = "numeric",
@@ -184,7 +184,7 @@ Initialise <- setClass("InitialisationParams", slots = c(InitType = "integer_OR_
                                           SpType = 0L,   #all
                                           #NrCells,
                                           InitIndsFile = "NULL",
-                                          InitIndsList = data.frame(),
+                                          InitIndsList = list(), # data.frame(),
                                           InitDens = 1L, #K/2
                                           #IndsHaCell,
                                           PropStages = 0.0,
@@ -431,7 +431,7 @@ setMethod('initialize', 'InitialisationParams', function(.Object, ...) {
     }
     else{
         .Object@InitIndsFile = "NULL"
-        .Object@InitIndsList = data.frame()
+        .Object@InitIndsList = list() # data.frame()
         if (!is.null(args$InitIndsFile)) {
             warning(this_func, "InitIndsFile", warn_msg_ignored, "since InitType != 2.", call. = FALSE)
         }
@@ -524,7 +524,7 @@ setMethod("show", "InitialisationParams", function(object){
     }
     if (object@InitType == 2) {
         if (object@InitIndsFile != "NULL") cat("Initialisation from initial individuals list\n                  from file:",object@InitIndsFile)
-        if (length(object@InitIndsList) != 0) cat("Initialisation from initial individuals list given as data.frame")
+        if (length(object@InitIndsList) != 0) cat("Initialisation from initial individuals list given as list of data.frames")
     }
     cat("\n")
 

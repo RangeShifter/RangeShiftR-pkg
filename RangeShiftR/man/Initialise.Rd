@@ -6,7 +6,7 @@
 \title{Set Initialisation Parameters}
 \usage{
 Initialise(InitType = 0, FreeType = 1, SpType = 0, NrCells,
-           InitIndsFile = "NULL", InitIndsList = data.frame(),
+           InitIndsFile = "NULL", InitIndsList = list(),
            InitDens = 1, IndsHaCell, PropStages = 0, InitAge = 2,
            minX, minY, maxX, maxY, InitFreezeYear = 0,
            RestrictRows = 0, RestrictFreq = 0, FinalFreezeYear = 0)
@@ -29,7 +29,7 @@ Initialise(InitType = 0, FreeType = 1, SpType = 0, NrCells,
 \item{InitIndsFile}{Name of \emph{initial individuals list file}, required only if \code{InitType}\eqn{ = 2}.\cr
 For informaton on the required file format see the Details below.}
 
-\item{InitIndsList}{The list of initial individuals given as data.frame (instead of as file name in \code{InitIndsFile}), using the same format (see Details).}
+\item{InitIndsList}{The list of initial individuals given as a list of data.frames - one for each replicate simulation (instead of as file name in \code{InitIndsFile}), using the same format (see Details).}
 
 \item{InitDens, IndsHaCell}{Number of individuals to be seeded in each cell/patch:\cr
 \code{InitDens} = \eqn{0}: At \code{K_or_DensDep},\cr
@@ -83,7 +83,7 @@ All habitat cells/patches within either all (\code{SpType}\eqn{=0}), or a specif
 (\code{SpType}\eqn{=1}) presence cells (which can have a lower resolution) specified by this distribution map will seeded.
     \item \emph{From initial individuals list file.} (\code{InitType}\eqn{ = 2})\cr The population is initialised according to a list of specific
 individuals (of given sex, age and stage, if appropriate) in specified cells/patches. This option allows simulation of a reintroduction
-scenario.\cr The list has to be loaded from a file in the path given by \code{InitIndsFile} or given as dataframe in \code{InitIndsList}.
+scenario.\cr The list has to be loaded from a file in the path given by \code{InitIndsFile} or given as a list of dataframes in \code{InitIndsList}.
 It must be a tab-separated list with
 explicit column headers and one row for each individual to be initialized. The expected column headers depend on the model settings and
 must match the following order exactly: 'Year', 'Species' (must \eqn{= 0}), for cell-/patch-based: 'X', 'Y' / 'PatchID', 'Ninds', for sexual model: 'Sex',

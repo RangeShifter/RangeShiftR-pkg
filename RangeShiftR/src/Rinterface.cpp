@@ -3785,9 +3785,12 @@ int ReadInitialisationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 		// if (init.indsFile != prevInitialIndsFile) {
 		// read and store the list of individuals to be initialised
 #if RS_THREADSAFE
-		if(init.indsFile=="NULL")
-		error = ReadInitIndsFileR(0, pLandscape, Rcpp::as<Rcpp::DataFrame>(InitParamsR.slot("InitIndsList"))); // parse dataframe header and read lines, store in vector "initinds"
-		else
+		if(init.indsFile=="NULL"){
+			simParams sim = paramsSim->getSim();
+			Rcpp::List InitIndsList = Rcpp::as<Rcpp::List>(InitParamsR.slot("InitIndsList"));
+			if(InitIndsList.size() != sim.reps) error = 603;
+			else error = ReadInitIndsFileR(0, pLandscape, Rcpp::as<Rcpp::DataFrame>(InitIndsList[0])); // parse dataframe header and read lines, store in vector "initinds"
+		}else
 #endif
 		error = ReadInitIndsFileR(0, pLandscape); //open, parse, read header and lines, store in vector "initinds"
 		// prevInitialIndsFile = init.indsFile;
@@ -4442,7 +4445,12 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 #endif
 
 					// run the model
+#if RS_THREADSAFE
+					list_outPop = RunModel(pLandscape, i, ParMaster);
+#else
 					list_outPop = RunModel(pLandscape, i);
+#endif
+
 #if RSDEBUG
 					// DEBUGLOG << endl << "RunBatchR(): real landscape, i = " << i
 					//	<< " simulation = " << sim.simulation << " landFile = " << landFile

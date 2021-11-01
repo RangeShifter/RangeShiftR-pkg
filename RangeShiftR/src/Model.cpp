@@ -38,11 +38,15 @@ ofstream outPar;
 int RunModel(Landscape *pLandscape,int seqsim,ABCmaster* pABCmaster)
 #else
 #if RS_RCPP && !R_CMD
+#if RS_THREADSAFE
+Rcpp::List RunModel(Landscape *pLandscape,int seqsim,Rcpp::S4 ParMaster)
+#else
 Rcpp::List RunModel(Landscape *pLandscape,int seqsim)
+#endif // RS_THREADSAFE
 #else
 int RunModel(Landscape *pLandscape,int seqsim)
-#endif
-#endif
+#endif // RS_RCPP && !R_CMD
+#endif // RS_ABC
 {
 //int Nsuit,yr,totalInds;
 int yr,totalInds;
@@ -264,6 +268,16 @@ DEBUGLOG << endl << "RunModel(): finished generating populations" << endl;
 	}
 
 	filesOK = true;
+#if RS_THREADSAFE
+	if(rep > 0){
+		int error_init = 0;
+		Rcpp::S4 InitParamsR("InitialisationParams");
+		InitParamsR = Rcpp::as<Rcpp::S4>(ParMaster.slot("init"));
+		Rcpp::List InitIndsList = Rcpp::as<Rcpp::List>(InitParamsR.slot("InitIndsList"));
+		error_init = ReadInitIndsFileR(0, pLandscape, Rcpp::as<Rcpp::DataFrame>(InitIndsList[rep]));
+		if(error_init>0) filesOK = false;
+	}
+#endif
 	if (rep == 0) {
 		// open output files
 		if (sim.outRange) { // open Range file
@@ -466,9 +480,6 @@ DEBUGLOG << "RunModel(): completed updating carrying capacity" << endl;
 #if PEDIGREE
 		pComm->initialise(pSpecies,pPed,-1);
 #else
-#if RS_THREADSAFE
-		// read new initial condition
-#endif
 		pComm->initialise(pSpecies,-1);
 #endif
 //	}
