@@ -285,7 +285,11 @@ DEBUGLOG << endl << "RunModel(): finished generating populations" << endl;
 				MemoLine("UNABLE TO OPEN OCCUPANCY FILE(S)");
 				filesOK = false;
 			}
+#if RS_RCPP
+		if (sim.outPop && sim.CreatePopFile) {
+#else
 		if (sim.outPop) {
+#endif
 			// open Population file
 			if (!pComm->outPopHeaders(pSpecies,ppLand.landNum)) {
 				MemoLine("UNABLE TO OPEN POPULATION FILE");
@@ -462,6 +466,9 @@ DEBUGLOG << "RunModel(): completed updating carrying capacity" << endl;
 #if PEDIGREE
 		pComm->initialise(pSpecies,pPed,-1);
 #else
+#if RS_THREADSAFE
+		// read new initial condition
+#endif
 		pComm->initialise(pSpecies,-1);
 #endif
 //	}
@@ -1671,7 +1678,11 @@ if (sim.outRange) {
 	if (ppLand.dmgLoaded) pLandscape->outSummDmgHeaders(-999);
 #endif // RS_CONTAIN 
 }
-if (sim.outPop) {
+#if RS_RCPP
+	if (sim.outPop && sim.CreatePopFile) {
+#else
+	if (sim.outPop) {
+#endif
 	pComm->outPopHeaders(pSpecies,-999); // close Population file
 #if RS_CONTAIN
 	if (pCull->isCullApplied()) {
@@ -1848,7 +1859,11 @@ if (sim.outPop && yr >= sim.outStartPop && yr%sim.outIntPop == 0)
 if (popOutputYear || abcYear)
 	pComm->outPop(pSpecies,rep,yr,gen,pABCmaster,abcYear,popOutputYear);
 #else
+#if RS_RCPP
+if (sim.outPop && sim.CreatePopFile && yr >= sim.outStartPop && yr%sim.outIntPop == 0)
+#else
 if (sim.outPop && yr >= sim.outStartPop && yr%sim.outIntPop == 0)
+#endif
 	pComm->outPop(rep,yr,gen);
 #endif
 
