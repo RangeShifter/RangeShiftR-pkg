@@ -97,12 +97,18 @@ public:
 		int,	 // patch id number
 		short	 // no. of seasons
 	);
+/*#elif SPATIALDEMOG
+	Patch(
+		int,	 // internal sequential number
+		int,	 // patch id number
+		short	 // no. layers
+	);*/
 #else
 	Patch(
 		int,	 // internal sequential number
 		int		 // patch id number
 	);
-#endif // SEASONAL 
+#endif // SPATIALDEMOG and SEASON
 	~Patch();
 	int getSeqNum(void);
 	int getPatchNum(void);
@@ -216,6 +222,8 @@ public:
 #endif // RS_CONTAIN
 // NOTE: THE FOLLOWING ARRAY WILL NEED TO BE MADE SPECIES-SPECIFIC...
 	short nTemp[NSEXES];						// no. of potential settlers in each sex
+
+	std::vector <float> localDemoScaling;
 
 	std::vector <Cell*> cells;
 	std::vector <patchPopn> popns;

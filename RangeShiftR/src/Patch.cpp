@@ -35,9 +35,11 @@
 
 #if SEASONAL
 Patch::Patch(int seqnum,int num,short nseasons) 
+// #elif SPATIALDEMOG
+// Patch::Patch(int seqnum,int num, short nlayer)
 #else
 Patch::Patch(int seqnum,int num) 
-#endif // SEASONAL 
+#endif // SEASONAL and SPATIALDEMOG
 {
 patchSeqNum = seqnum; patchNum = num; nCells = 0;
 xMin = yMin = 999999999; xMax = yMax = 0; x = y = 0;
@@ -55,6 +57,11 @@ localK = 0.0;
 for (int sex = 0; sex < NSEXES; sex++) {
 	nTemp[sex] = 0;
 }
+#if SPATIALDEMOG
+short nlayer=4;
+for (int i = 0; i < nlayer; i++) localDemoScaling.push_back(0.0);
+#endif
+
 changed = false;
 }
 
@@ -64,6 +71,10 @@ popns.clear();
 #if SEASONAL
 localK.clear();
 #endif // SEASONAL 
+#if SPATIALDEMOG
+localDemoScaling.clear();
+#endif // SPATIALDEMOG
+
 }
 
 int Patch::getSeqNum(void) { return patchSeqNum; }

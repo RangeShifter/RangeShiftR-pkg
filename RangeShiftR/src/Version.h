@@ -39,6 +39,8 @@
 #define RS_RCPP 1
 //#define R_CMD 0
 
+#define SPATIALDEMOG 1
+
 #define RS_EMBARCADERO 0
 
 //---------------------------------------------------------------------------

@@ -85,9 +85,12 @@ for (int i = 0; i < NSTAGES; i++) {
 			fec[s][i][j] = 0.0; dev[s][i][j] = 0.0; surv[s][i][j] = 0.0; 
 		}
 #else
-		fec[i][j] = 0.0; dev[i][j] = 0.0; surv[i][j] = 0.0; 
+		fec[i][j] = 0.0; dev[i][j] = 0.0; surv[i][j] = 0.0;
 #endif // SEASONAL 
 #endif // RS_CONTAIN 
+#if SPATIALDEMOG
+		fecLayer[i][j] =-9; devLayer[i][j] = -9; survLayer[i][j] = -9;
+#endif //SPATIALDEMOG
 		minAge[i][j] = 0;
 	}
 }

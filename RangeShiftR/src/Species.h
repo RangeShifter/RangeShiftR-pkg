@@ -484,6 +484,42 @@ public:
 	
 #endif // SEASONAL 
 
+#if SPATIALDEMOG
+	void setFecLayer( // set the layer of the spatial demographic scaling used for fecundity
+		short, // stage
+		short, // sex
+		short // layer
+	);
+
+	short getFecLayer( // get the layer of the spatial demographic scaling used for fecundity
+		short, // stage
+		short // sex
+	);
+
+	void setDevLayer( // set the layer of the spatial demographic scaling used for development
+		short, // stage
+		short, // sex
+		short // layer
+	);
+
+	short getDevLayer( // get the layer of the spatial demographic scaling used for development
+		short, // stage
+		short // sex
+	);
+
+	void setSurvLayer( // set the layer of the spatial demographic scaling used for survival
+		short, // stage
+		short, // sex
+		short // layer
+	);
+
+	short getSurvLayer( // get the layer of the spatial demographic scaling used for survival
+		short, // stage
+		short // sex
+	);
+
+#endif //SPATIALDEMOG
+
 #endif // RS_CONTAIN 
 
 	float getMaxFec(void); // Get highest fecundity of any stage
@@ -902,6 +938,11 @@ private:
 	float dev[NSTAGES][NSEXES];			// development probabilities
 	float surv[NSTAGES][NSEXES];		// survival probabilities
 #endif // SEASONAL 
+#if SPATIALDEMOG
+	int fecLayer[NSTAGES][NSEXES]; // layer for spatial varying fecundity
+	int devLayer[NSTAGES][NSEXES]; // layer for spatial varying development
+	int survLayer[NSTAGES][NSEXES]; // layer for spatial varying survival
+#endif // SPATIALDEMOG
 #endif // RS_CONTAIN 
 	short minAge[NSTAGES][NSEXES];	// minimum age to enter stage
 	// NOTE - IN THEORY, NEXT 3 VARIABLES COULD BE COMMON, BUT WE WOULD NEED TO ENSURE THAT
