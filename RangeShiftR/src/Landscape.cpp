@@ -1028,10 +1028,10 @@ case 2: // habitat quality
 }
 
 #if SEASONAL
-Patch* Landscape::newPatch(int num,short nseasons) 
+Patch* Landscape::newPatch(int num,short nseasons)
 #else
 Patch* Landscape::newPatch(int num) 
-#endif // SEASONAL 
+#endif // SEASONAL
 {
 int npatches = (int)patches.size();
 #if SEASONAL
@@ -1042,15 +1042,15 @@ DEBUGLOG << "Landscape::newPatch(): nseasons= " << nseasons << " num=" << num
 #endif
 #else
 patches.push_back(new Patch(num,num));
-#endif // SEASONAL 
+#endif // SEASONAL
 return patches[npatches];
 }
 
 #if SEASONAL
-Patch* Landscape::newPatch(int seqnum,int num,short nseasons) 
+Patch* Landscape::newPatch(int seqnum,int num,short nseasons)
 #else
 Patch* Landscape::newPatch(int seqnum,int num) 
-#endif // SEASONAL 
+#endif // SEASONAL
 {
 int npatches = (int)patches.size();
 #if SEASONAL

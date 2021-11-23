@@ -275,7 +275,7 @@ public:
 		int,  // patch sequential no.
 		int		// patch id no.
 	);
-#endif // SEASONAL 
+#endif // SEASONAL
 	void resetPatches(void);
 	void addNewCellToLand(
 		int,    // x co-ordinate
