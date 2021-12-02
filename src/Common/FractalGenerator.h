@@ -45,7 +45,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 17 October 2021 by Steve Palmer
+Last updated: 2 December 2021 by Steve Palmer
 
 ------------------------------------------------------------------------------*/
 
@@ -65,7 +65,7 @@ class land
 	int x_coord;
 	int y_coord;
 	float value;
-	int avail; // if 0 the patch is not available as habitat, if 1 it is
+//	int avail; // if 0 the patch is not available as habitat, if 1 it is
  private:
 };
 

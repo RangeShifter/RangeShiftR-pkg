@@ -35,7 +35,7 @@ vector<land> patches;
 
 //----- Landscape creation --------------------------------------------------
 
-land::land(): x_coord(0), y_coord(0), value(0.0), avail(0) {}
+land::land(): x_coord(0), y_coord(0), value(0.0) {}
 
 bool compare(const land& z, const land& zz) //compares only the values of the cells
 {
@@ -125,7 +125,6 @@ for (int x = 0; x < X; x++) // put all the cells with their values in a vector
 		patch->x_coord = x;
 		patch->y_coord = y;
 		patch->value = (float)arena[x][y];
-		patch->avail = 1;
 
 		patches.push_back(*patch);
 

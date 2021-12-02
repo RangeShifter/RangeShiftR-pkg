@@ -623,7 +623,7 @@ for (int i = 1; i <= 10; i++) { // each propn. of suitable habitat
 									iter++;
 								}
 								if (!ppGenLand.continuous) {
-									if (iter->avail == 0) art_land[x][y] = 0.0;
+									if (iter->value <= 0.0) art_land[x][y] = 0.0;
 								}
 								artLand.clear();
 							} // end of fractal

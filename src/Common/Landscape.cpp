@@ -721,7 +721,6 @@ if (fractal) {
 		x = iter->y_coord; y = iter->x_coord;
 #if RSDEBUG
 //DEBUGLOG << "Landscape::generatePatches(): x=" << x	<< " y=" << y
-//	<< " iter->avail=" << iter->avail
 //	<< " iter->value=" << iter->value << endl;
 #endif
 		pCell = findCell(x,y);
@@ -739,10 +738,7 @@ if (fractal) {
 			}
 		}
 		else { // discrete
-			if (iter->avail == 0) { // matrix
-				addCellToPatch(pCell,patches[0]);
-			}
-			else { // habitat
+			if (iter->value > 0.0) { // habitat
 #if SEASONAL
 				pPatch = newPatch(patchnum++,1);
 #else
@@ -750,6 +746,9 @@ if (fractal) {
 #endif // SEASONAL 
 				addCellToPatch(pCell,pPatch);
 				pCell->changeHabIndex(0,1);
+			}
+			else { // matrix
+				addCellToPatch(pCell,patches[0]);
 			}
 		}
 		iter++;
@@ -1646,7 +1645,7 @@ string hdr0,hdr1;
 int year;
 float epsilon;
 if (epsGlobal != 0) delete[] epsGlobal;
-epsGlobal = new double[nyears];
+epsGlobal = new float[nyears];
 for (int i = 0; i < nyears; i++) { epsGlobal[i] = 0.0; }
 stochfile.open(fname.c_str());
 if (stochfile.is_open()) {
