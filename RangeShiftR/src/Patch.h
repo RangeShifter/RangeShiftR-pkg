@@ -223,8 +223,9 @@ public:
 // NOTE: THE FOLLOWING ARRAY WILL NEED TO BE MADE SPECIES-SPECIFIC...
 	short nTemp[NSEXES];						// no. of potential settlers in each sex
 
+#if SPATIALDEMOG
 	std::vector <float> localDemoScaling;
-
+#endif
 	std::vector <Cell*> cells;
 	std::vector <patchPopn> popns;
 

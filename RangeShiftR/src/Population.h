@@ -235,11 +235,20 @@ public:
 									// 2 = parturition only (after dispersal)
 	);
 #else
+#if SPATIALDEMOG
+	void reproduction(
+		const float,	// local carrying capacity
+		const float,	// effect of environmental gradient and/or stochasticty
+		const int,		// Landscape resolution
+		const float    // local demographic scaling
+	);
+#else
 	void reproduction(
 		const float,	// local carrying capacity
 		const float,	// effect of environmental gradient and/or stochasticty
 		const int			// Landscape resolution
 	);
+#endif // SPATIALDEMOG
 #endif // BUTTERFLYDISP
 #endif // GROUPDISP
 #endif // SEASONAL

@@ -58,7 +58,7 @@ for (int sex = 0; sex < NSEXES; sex++) {
 	nTemp[sex] = 0;
 }
 #if SPATIALDEMOG
-short nlayer=4;
+short nlayer=NLAYERS;
 for (int i = 0; i < nlayer; i++) localDemoScaling.push_back(0.0);
 #endif
 

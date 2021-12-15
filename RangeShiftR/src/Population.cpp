@@ -758,7 +758,11 @@ void Population::reproduction(const std::vector <Individual*> *pfglobal,const in
 void Population::reproduction(const float localK,const float envval,const int resol,
 	const short option)
 #else
+#if SPATIALDEMOG
+void Population::reproduction(const float localK,const float envval,const int resol, const float localDemoScaling)
+#else
 void Population::reproduction(const float localK,const float envval,const int resol)
+#endif // SPATIALDEMOG
 #endif // BUTTERFLYDISP 
 #endif // GROUPDISP 
 #endif // SEASONAL 

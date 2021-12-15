@@ -731,6 +731,41 @@ else return 0.0;
 
 #endif // RS_CONTAIN 
 
+#if SPATIALDEMOG
+void Species::setFecLayer(short stg,short sex,short l) {
+if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES && l >= 0)
+	fecLayer[stg][sex] = l;
+}
+
+short Species::getFecLayer(short stg,short sex) {
+if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES)
+	return fecLayer[stg][sex];
+else return -9;
+}
+
+void Species::setDevLayer(short stg,short sex,short l) {
+if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES && l >= 0)
+	devLayer[stg][sex] = l;
+}
+
+short Species::getDevLayer(short stg,short sex) {
+if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES)
+	return devLayer[stg][sex];
+else return -9;
+}
+
+void Species::setSurvLayer(short stg,short sex,short l) {
+if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES && l >= 0)
+	survLayer[stg][sex] = l;
+}
+
+short Species::getSurvLayer(short stg,short sex) {
+if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES)
+	return survLayer[stg][sex];
+else return -9;
+}
+#endif
+
 void Species::setMinAge(short stg,short sex,int age) {
 // NB min age for stages 0 & 1 must always be zero
 if (stg > 1 && stg < NSTAGES && sex >= 0 && sex < NSEXES && age >= 0)
