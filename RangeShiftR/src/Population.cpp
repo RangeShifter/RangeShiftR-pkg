@@ -759,7 +759,7 @@ void Population::reproduction(const float localK,const float envval,const int re
 	const short option)
 #else
 #if SPATIALDEMOG
-void Population::reproduction(const float localK,const float envval,const int resol, const float localDemoScaling)
+void Population::reproduction(const float localK,const float envval,const int resol, std::vector <float> localDemoScaling)
 #else
 void Population::reproduction(const float localK,const float envval,const int resol)
 #endif // SPATIALDEMOG
@@ -934,7 +934,11 @@ for (int stg = 0; stg < sstruct.nStages; stg++) {
 #if SEASONAL
 				fec[stg][sex] = pSpecies->getFec(season,stg,sex);
 #else
+#if SPATIALDEMOG
+				fec[stg][sex] = pSpecies->getFec(stg,sex)*localDemoScaling[pSpecies->getFecLayer(stg,sex)];
+#else
 				fec[stg][sex] = pSpecies->getFec(stg,sex);
+#endif // SPATIALDEMOG
 #endif // SEASONAL 
 #endif // RS_CONTAIN 
 //			if (sex == 0 && fec[stg][sex] > dem.lambda) dem.lambda = fec[stg][sex];
@@ -2882,7 +2886,11 @@ void Population::survival0(float localK,float mort,short option0,short option1)
 #if PEDIGREE
 void Population::survival0(Pedigree *pPed,float localK,short option0,short option1)
 #else
+#if SPATIALDEMOG
+void Population::survival0(float localK,short option0,short option1, std::vector <float> localDemoScaling)
+#else
 void Population::survival0(float localK,short option0,short option1)
+#endif // SPATIALDEMOG
 #endif // PEDIGREE
 #endif // SPATIALMORT
 #endif // SEASONAL
@@ -2937,8 +2945,13 @@ for (int stg = 0; stg < sstruct.nStages; stg++) {
 				dev[stg][sex]  = pSpecies->getDev(season,stg,0);
 				surv[stg][sex] = pSpecies->getSurv(season,stg,0);
 #else
+#if SPATIALDEMOG
+				dev[stg][sex] = pSpecies->getDev(stg,sex)*localDemoScaling[pSpecies->getDevLayer(stg,sex)];
+				surv[stg][sex] = pSpecies->getSurv(stg,sex)*localDemoScaling[pSpecies->getSurvLayer(stg,sex)];
+#else
 				dev[stg][sex]  = pSpecies->getDev(stg,0);
 				surv[stg][sex] = pSpecies->getSurv(stg,0);
+#endif //SPATIALDEMOG
 #endif // SEASONAL 
 #endif // RS_CONTAIN 
 				minAge[stg][sex] = pSpecies->getMinAge(stg,0);

@@ -1,25 +1,25 @@
 /*----------------------------------------------------------------------------
- *	
- *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell 
- *	
+ *
+ *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell
+ *
  *	This file is part of RangeShifter.
- *	
+ *
  *	RangeShifter is free software: you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation, either version 3 of the License, or
  *	(at your option) any later version.
- *	
+ *
  *	RangeShifter is distributed in the hope that it will be useful,
  *	but WITHOUT ANY WARRANTY; without even the implied warranty of
  *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *	GNU General Public License for more details.
- *	
+ *
  *	You should have received a copy of the GNU General Public License
  *	along with RangeShifter. If not, see <https://www.gnu.org/licenses/>.
- *	
+ *
  --------------------------------------------------------------------------*/
- 
- 
+
+
 /*------------------------------------------------------------------------------
 
 RangeShifter v2.0 Population
@@ -34,9 +34,9 @@ The matrix Population(s) hold(s) Individuals which are currently in the process
 of transfer through the matrix.
 
 For full details of RangeShifter, please see:
-Bocedi G., Palmer S.C.F., Pe’er G., Heikkinen R.K., Matsinos Y.G., Watts K.
+Bocedi G., Palmer S.C.F., Pe?er G., Heikkinen R.K., Matsinos Y.G., Watts K.
 and Travis J.M.J. (2014). RangeShifter: a platform for modelling spatial
-eco-evolutionary dynamics and species’ responses to environmental changes.
+eco-evolutionary dynamics and species? responses to environmental changes.
 Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
@@ -72,7 +72,7 @@ using namespace std;
 #endif
 #if RS_CONTAIN
 #include "Control.h"
-#endif // RS_CONTAIN 
+#endif // RS_CONTAIN
 
 //---------------------------------------------------------------------------
 
@@ -160,7 +160,7 @@ public:
 	);
 #else
 	popStats getStats(void);
-#endif // RS_CONTAIN 
+#endif // RS_CONTAIN
 	Species* getSpecies(void);
 #if GROUPDISP
 	int getNGroups(void);
@@ -185,12 +185,12 @@ public:
 	void extirpate(void); // Remove all individuals
 #if RS_CONTAIN
 	void cull(Cull*,double); // Remove individuals according to cull rate
-	void resetCull(void); 
-#endif // RS_CONTAIN 
+	void resetCull(void);
+#endif // RS_CONTAIN
 #if RS_CONTAIN
 #if SEASONAL
 	void reproduction(
-		const int,		// habitat index 
+		const int,		// habitat index
 		const int,		// season
 		const float,	// local carrying capacity
 		const float,	// effect of environmental gradient and/or stochasticty
@@ -198,7 +198,7 @@ public:
 	);
 #else
 	void reproduction(
-		const int,		// habitat index 
+		const int,		// habitat index
 		const float,	// local carrying capacity
 		const float,	// effect of environmental gradient and/or stochasticty
 		const int			// Landscape resolution
@@ -240,7 +240,7 @@ public:
 		const float,	// local carrying capacity
 		const float,	// effect of environmental gradient and/or stochasticty
 		const int,		// Landscape resolution
-		const float    // local demographic scaling
+		std::vector <float>    // local demographic scaling
 	);
 #else
 	void reproduction(
@@ -252,7 +252,7 @@ public:
 #endif // BUTTERFLYDISP
 #endif // GROUPDISP
 #endif // SEASONAL
-#endif // RS_CONTAIN 
+#endif // RS_CONTAIN
 	// Following reproduction of ALL species, add juveniles to the population
 	void fledge(void);
 #if SEASONAL
@@ -307,7 +307,7 @@ public:
 #if PEDIGREE
 	void outGroups(Pedigree*,int,int,int,bool);
 #endif
-#endif // GROUPDISP 
+#endif // GROUPDISP
 #if SEASONAL
 	int transfer( // Executed for the Population(s) in the matrix only
 		Landscape*,	// pointer to Landscape
@@ -346,14 +346,14 @@ public:
 		short		// sex of the required mate (0 = female, 1 = male)
 	);
 #endif // RS_RCPP
-#endif // SEASONAL 
+#endif // SEASONAL
 	// Determine survival and development and record in individual's status code
 	// Changes are NOT applied to the Population at this stage
 #if RS_CONTAIN
 #if SEASONAL
 	void survival0(
 		float,	// local carrying capacity
-		short,	// habitat index 
+		short,	// habitat index
 		short,	// season
 		short,	// option0:	0 - stage 0 (juveniles) only
 						//	  			1 - all stages
@@ -365,7 +365,7 @@ public:
 #else
 	void survival0(
 		float,	// local carrying capacity
-		short,	// habitat index 
+		short,	// habitat index
 		short,	// option0:	0 - stage 0 (juveniles) only
 						//	  			1 - all stages
 						//					2 - stage 1 and above (all non-juveniles)
@@ -411,6 +411,18 @@ public:
 								//	  	 		2 - survival only (when survival is annual)
 	);
 #else
+#if SPATIALDEMOG
+	void survival0(
+			float,	// local carrying capacity
+			short,	// option0:	0 - stage 0 (juveniles) only
+							//	  			1 - all stages
+							//					2 - stage 1 and above (all non-juveniles)
+			short, 	// option1:	0 - development only (when survival is annual)
+							//	  	 		1 - development and survival
+							//	  	 		2 - survival only (when survival is annual)
+			std::vector <float> // local demographic scaling
+		);
+#else
 	void survival0(
 		float,	// local carrying capacity
 		short,	// option0:	0 - stage 0 (juveniles) only
@@ -420,10 +432,11 @@ public:
 						//	  	 		1 - development and survival
 						//	  	 		2 - survival only (when survival is annual)
 	);
+#endif // SPATIALDEMOG
 #endif // PEDIGREE
 #endif // SPATIALMORT
 #endif // SEASONAL
-#endif // RS_CONTAIN 
+#endif // RS_CONTAIN
 #if PEDIGREE
 	void survival1(				// Apply survival changes to the population
 		Pedigree*
@@ -433,7 +446,7 @@ public:
 #endif
 #if SEASONAL && PARTMIGRN
 	void extremeEvent(float);
-#endif // SEASONAL && PARTMIGRN 
+#endif // SEASONAL && PARTMIGRN
 	void ageIncrement(void);
 	bool outPopHeaders( // Open population file and write header record
 		int,	// Landscape number (-999 to close the file)
@@ -461,7 +474,7 @@ public:
 		bool,		// TRUE to write environmental data
 		bool		// TRUE if there is a gradient in carrying capacity
 	);
-#endif // RS_ABC 
+#endif // RS_ABC
 
 #if RS_CONTAIN
 
@@ -478,7 +491,7 @@ public:
 		bool				// TRUE for a patch-based model, FALSE for a cell-based model
 	);
 
-#endif // RS_CONTAIN 
+#endif // RS_CONTAIN
 
 	void outIndsHeaders( // Open individuals file and write header record
 		int,	// replicate
@@ -529,8 +542,8 @@ private:
 
 #if RS_CONTAIN
 	int nCulled;				// no. of individuals culled
-	bool selectedForCull;				
-#endif // RS_CONTAIN 
+	bool selectedForCull;
+#endif // RS_CONTAIN
 
 };
 

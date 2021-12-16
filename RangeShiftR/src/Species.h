@@ -481,9 +481,9 @@ public:
 		short,	// stage
 		short		// sex
 	);
+#endif // SEASONAL
+#endif // RS_CONTAIN
 	
-#endif // SEASONAL 
-
 #if SPATIALDEMOG
 	void setFecLayer( // set the layer of the spatial demographic scaling used for fecundity
 		short, // stage
@@ -517,10 +517,7 @@ public:
 		short, // stage
 		short // sex
 	);
-
-#endif //SPATIALDEMOG
-
-#endif // RS_CONTAIN 
+#endif // SPATIALDEMOG
 
 	float getMaxFec(void); // Get highest fecundity of any stage
 	void setMinAge( // Set minimum age
@@ -938,12 +935,12 @@ private:
 	float dev[NSTAGES][NSEXES];			// development probabilities
 	float surv[NSTAGES][NSEXES];		// survival probabilities
 #endif // SEASONAL 
+#endif // RS_CONTAIN
 #if SPATIALDEMOG
 	int fecLayer[NSTAGES][NSEXES]; // layer for spatial varying fecundity
 	int devLayer[NSTAGES][NSEXES]; // layer for spatial varying development
 	int survLayer[NSTAGES][NSEXES]; // layer for spatial varying survival
 #endif // SPATIALDEMOG
-#endif // RS_CONTAIN 
 	short minAge[NSTAGES][NSEXES];	// minimum age to enter stage
 	// NOTE - IN THEORY, NEXT 3 VARIABLES COULD BE COMMON, BUT WE WOULD NEED TO ENSURE THAT
 	// ALL MATRICES ARE DELETED IF THERE IS A CHANGE IN NO. OF STAGES OR REPRODUCTION TYPE

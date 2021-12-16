@@ -410,6 +410,9 @@ void SubCommunity::reproduction(int resol,float epsGlobal,short rasterType,bool 
 {
 if (subCommNum == 0) return; // no reproduction in the matrix
 float localK,envval;
+#if SPATIALDEMOG
+std::vector <float> localDemoScaling;
+#endif //SPATIALDEMOG
 //Species *pSpecies;
 Cell *pCell;
 envGradParams grad = paramsGrad->getGradient();
@@ -494,6 +497,9 @@ localK = pPatch->getK(season);
 #else
 localK = pPatch->getK();
 #endif // SEASONAL 
+#if SPATIALDEMOG
+localDemoScaling = pPatch->getDemoScaling();
+#endif //SPATIALDEMOG
 if (localK > 0.0) {
 	if (patchModel) {
 		envval = 1.0; // environmental gradient is currently not applied for patch-based model
@@ -534,7 +540,11 @@ if (localK > 0.0) {
 #if BUTTERFLYDISP
 		popns[i]->reproduction(localK,envval,resol,option);
 #else
+#if SPATIALDEMOG
+		popns[i]->reproduction(localK,envval,resol,localDemoScaling);
+#else
 		popns[i]->reproduction(localK,envval,resol);
+#endif // SPATIALDEMOG
 #endif // BUTTERFLYDISP 
 #endif // GROUPDISP 
 #endif // SEASONAL
@@ -1092,10 +1102,16 @@ if (sim.mortMapLoaded) {
 	}
 }
 #endif
+#if SPATIALDEMOG
+std::vector <float> localDemoScaling;
+#endif //SPATIALDEMOG
 if (part == 0) {
 #if SEASONAL
 	float localK = pPatch->getK(season);
 #else
+#if SPATIALDEMOG
+	localDemoScaling = pPatch->getDemoScaling();
+#endif //SPATIALDEMOG
 	float localK = pPatch->getK();
 #endif // SEASONAL 
 	for (int i = 0; i < npops; i++) { // all populations
@@ -1115,7 +1131,11 @@ if (part == 0) {
 #if PEDIGREE
 		popns[i]->survival0(pPed,localK,option0,option1);
 #else
+#if SPATIALDEMOG
+		popns[i]->survival0(localK,option0,option1,localDemoScaling);
+#else
 		popns[i]->survival0(localK,option0,option1);
+#endif // SPATIALDEMOG
 #endif // PEDIGREE 
 #endif // SPATIALMORT 
 #endif // SEASONAL

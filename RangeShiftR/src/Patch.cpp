@@ -35,11 +35,9 @@
 
 #if SEASONAL
 Patch::Patch(int seqnum,int num,short nseasons) 
-// #elif SPATIALDEMOG
-// Patch::Patch(int seqnum,int num, short nlayer)
 #else
 Patch::Patch(int seqnum,int num) 
-#endif // SEASONAL and SPATIALDEMOG
+#endif // SEASONAL
 {
 patchSeqNum = seqnum; patchNum = num; nCells = 0;
 xMin = yMin = 999999999; xMax = yMax = 0; x = y = 0;
@@ -428,7 +426,11 @@ return ok;
 }
 #else
 float Patch::getK(void) { return localK; }
-#endif // SEASONAL 
+#endif // SEASONAL
+
+#if SPATIALDEMOG
+std::vector <float> Patch::getDemoScaling(void) { return localDemoScaling; }
+#endif //SPATIALDEMOG
 
 // Return co-ordinates of a specified cell
 locn Patch::getCellLocn(int ix) {
