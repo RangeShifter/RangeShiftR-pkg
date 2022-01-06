@@ -715,15 +715,46 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 			ppGenLand.minPct = 1;
 			ppGenLand.maxPct = 100;
 		}
+
 	} else { // imported raster map
+
 		ppLand.landNum = Rcpp::as<int>(LandParamsR.slot("LandNum"));
 		ppLand.nHab = Rcpp::as<int>(LandParamsR.slot("Nhabitats")); // no longer necessary to read no. of habitats from landFile
+		if(landtype == 2) ppLand.nHab = 1; // habitat quality landscape has one habitat class
 
 		Rcpp::IntegerVector dynland_years;
-		Rcpp::StringVector habitatmaps, patchmaps, costmaps;
 		dynland_years = Rcpp::as<Rcpp::IntegerVector>(LandParamsR.slot("DynamicLandYears"));
 		if(dynland_years.size() == 1 && dynland_years[0] == 0 ) ppLand.dynamic = false;
 		else ppLand.dynamic = true;
+
+#if RS_THREADSAFE
+//		Rcpp::S4 habitatmaps("RasterStack");
+//		Rcpp::S4 patchmaps("RasterStack");
+//		Rcpp::S4 costmaps("RasterStack");
+//		Rcpp::S4 spdistmap("RasterStack");
+		Rcpp::List habitatmaps;
+		Rcpp::List patchmaps;
+		Rcpp::List costmaps;
+		Rcpp::List spdistmap;
+		habitatmaps = Rcpp::as<Rcpp::List>(LandParamsR.slot("LandscapeFile"));
+		patchmaps = Rcpp::as<Rcpp::List>(LandParamsR.slot("PatchFile"));
+		costmaps = Rcpp::as<Rcpp::List>(LandParamsR.slot("CostsFile"));
+		spdistmap = Rcpp::as<Rcpp::List>(LandParamsR.slot("SpDistFile"));
+//		name_landscape = Rcpp::as<string>(habitatmaps.slot("filename"));
+//		name_patch = Rcpp::as<string>(patchmaps.slot("filename"));
+//		name_costfile = Rcpp::as<string>(costmaps.slot("filename"));
+//		name_sp_dist = Rcpp::as<string>(spdistmap.slot("filename"));
+		if(!patchmodel && patchmaps.size() != 0) Rcpp::Rcout << "PatchFile must be empty in a cell-based model!" << endl;
+
+		// new slot for coordinates of lower left corner
+		Rcpp::NumericVector origin_coords;
+		origin_coords = Rcpp::as<Rcpp::NumericVector>(LandParamsR.slot("OriginCoords"));
+		landOrigin origin;
+		origin.minEast = origin_coords[0];
+		origin.minNorth = origin_coords[1];
+		pLandscape->setOrigin(origin);
+#else
+		Rcpp::StringVector habitatmaps, patchmaps, costmaps;
 		if(ppLand.dynamic) {
 			habitatmaps = Rcpp::as<Rcpp::StringVector>(LandParamsR.slot("LandscapeFile"));
 			patchmaps = Rcpp::as<Rcpp::StringVector>(LandParamsR.slot("PatchFile"));
@@ -736,9 +767,11 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 			name_patch = Rcpp::as<string>(LandParamsR.slot("PatchFile"));
 			name_costfile = Rcpp::as<string>(LandParamsR.slot("CostsFile"));
 		}
-		if(!patchmodel && name_patch != "NULL") Rcpp::Rcout << "PatchFile must be NULL in a cell-based model!" << endl;
-
 		name_sp_dist = Rcpp::as<string>(LandParamsR.slot("SpDistFile"));
+
+		if(!patchmodel && name_patch != "NULL") Rcpp::Rcout << "PatchFile must be NULL in a cell-based model!" << endl;
+#endif // RS_THREADSAFE
+
 #if RS_CONTAIN
 		name_damage = Rcpp::as<string>(LandParamsR.slot("DamageFile"));
 #endif // RS_CONTAIN
@@ -747,8 +780,85 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 		name_mort2 = Rcpp::as<string>(LandParamsR.slot("MortFile2"));
 #endif // SPATIALMORT
 
-		if(landtype == 2)
-			ppLand.nHab = 1; // habitat quality landscape has one habitat class
+#if RS_THREADSAFE
+		if(patchmaps.size() == 0) {
+			if(patchmodel) {
+				BatchErrorR("LandFile", -999, 0, " ");
+				errors++;
+				Rcpp::Rcout << "PatchFile" << msgpatch << endl;
+			}
+		}
+		if (costmaps.size() == 0) {
+			if (transfer == 1) { // SMS
+				if (landtype == 2) { // habitat quality
+					BatchErrorR("LandFile", -999, 0, " ");
+					errors++;
+					Rcpp::Rcout << "CostsFile is required for a habitat quality landscape" << endl;
+				}
+			}
+		}else{
+			if (transfer != 1) { // not SMS
+				BatchErrorR("LandFile", -999, 0, " ");
+				errors++;
+				Rcpp::Rcout << "CostsFile must be NULL if transfer model is not SMS" << endl;
+			}
+		}
+		if(ppLand.dynamic) {
+			int nlayers_hab;
+			nlayers_hab = habitatmaps.size();
+			// check valid years
+			if(dynland_years[0]!=0) {
+				errors++;
+				Rcpp::Rcout << "First year in dynamic landscape must be 0." << endl;
+			} else {
+				for(int i=1; i<dynland_years.size(); i++ ) {
+					if(dynland_years[i-1] >= dynland_years[i]) {
+						errors++;
+						Rcpp::Rcout << "Years in dynamic landscape must strictly increase." << endl;
+					}
+				}
+			}
+			if(dynland_years.size() != nlayers_hab) {
+				errors++;
+				Rcpp::Rcout << "Dynamic landscape: Years must have as many elements as habitat maps." << endl;
+			}
+			if(patchmodel) {
+				if( dynland_years.size() != patchmaps.size() || nlayers_hab != patchmaps.size() ) {
+					errors++;
+					Rcpp::Rcout << "Dynamic landscape: Patchmaps must have as many elements as Years and habitat maps." << endl;
+				}
+			}
+			if (costmaps.size() != 0) {
+				if( dynland_years.size() != costmaps.size() || nlayers_hab != costmaps.size() ) {
+					errors++;
+					Rcpp::Rcout << "Dynamic landscape: Costmaps must have as many elements as Years and habitat maps." << endl;
+				}
+			}
+			if(errors==0) {
+				// store land changes
+				landChange chg;
+				for(int i=1; i<dynland_years.size(); i++ ) {
+					chg.chgnum = i;
+					chg.chgyear = dynland_years[i];
+	//				chg.habfile = indir + habitatmaps(i);
+	//				if(patchmodel) chg.pchfile = indir + patchmaps(i);
+	//				else chg.pchfile = "NULL";
+	//				if (name_costfile == "NULL") chg.costfile = "none";
+	//				else chg.costfile = indir + costmaps(i);
+					pLandscape->addLandChange(chg);
+				}
+			}
+		} // end dynamic landscapes
+
+		if(spdistmap.size() == 0) {
+			if(speciesdist) {
+				BatchErrorR("LandFile", -999, 0, " ");
+				errors++;
+				Rcpp::Rcout << "Species Distribution map file is required as SpeciesDist is 1 in Control" << endl;
+			}
+		}
+
+#else //RS_THREADSAFE
 
 		// CHECK IMPORTED RASTER FILES
 		string indir = paramsSim->getDir(1);
@@ -895,7 +1005,7 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 				for(int i=1; i<dynland_years.size(); i++ ) {
 					if(dynland_years[i-1] >= dynland_years[i]) {
 						errors++;
-						Rcpp::Rcout << "Year in dynamic landscape must strictly increase." << endl;
+						Rcpp::Rcout << "Years in dynamic landscape must strictly increase." << endl;
 					}
 				}
 			}
@@ -932,7 +1042,7 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 					pLandscape->addLandChange(chg);
 				}
 			}
-		}
+		} // end dynamic landscapes
 
 		// check initial distribution map filename
 		ftype = "Species Distribution map";
@@ -994,7 +1104,7 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 						FormatErrorR(fname, spdistraster.errors);
 				}
 			}
-		}
+		} // end species dist map
 
 #if RS_CONTAIN
 		// check economic / environmental damage map filename  /* *** not implemented in R-version
@@ -1086,7 +1196,9 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 			}*/
 #endif // SPATIALMORT
 
-	}
+#endif // RS_THREADSAFE
+
+	} // end else (imported raster map)
 
 	pLandscape->setLandParams(ppLand, true);
 	pLandscape->setGenLandParams(ppGenLand);
@@ -1101,6 +1213,71 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 }
 
 //---------------------------------------------------------------------------
+
+#if RS_THREADSAFE
+int ReadDynLandR(Landscape *pLandscape, Rcpp::S4 LandParamsR)
+{
+	Rcpp::List habitatmaps;
+	Rcpp::List patchmaps;
+	Rcpp::List costmaps;
+	Rcpp::NumericMatrix hraster;
+	Rcpp::NumericMatrix praster;
+	Rcpp::NumericMatrix craster;
+
+	habitatmaps = Rcpp::as<Rcpp::List>(LandParamsR.slot("LandscapeFile"));
+	if (patchmodel) patchmaps = Rcpp::as<Rcpp::List>(LandParamsR.slot("PatchFile"));
+	else praster = Rcpp::NumericMatrix(0);
+	bool costs = false;
+	costmaps = Rcpp::as<Rcpp::List>(LandParamsR.slot("CostsFile"));
+	if (costmaps.size() > 0) costs = true;
+	else craster = Rcpp::NumericMatrix(0);
+
+	//------------ int ParseDynamicFile(string indir) {
+
+	int errors = 0;
+
+	if (patchmodel) {
+		pLandscape->createPatchChgMatrix();
+	}
+	if (costs) {
+		pLandscape->createCostsChgMatrix();
+	}
+
+	for(int i=1; i < habitatmaps.size(); i++ ) {
+		// Now read raster data of Habitat and, if applicable, Patch and/or Cost maps:
+		int imported = 0;
+
+		hraster = Rcpp::as<Rcpp::NumericMatrix>(habitatmaps[i]);
+		if (patchmodel) praster = Rcpp::as<Rcpp::NumericMatrix>(patchmaps[i]);
+		if (costs) craster = Rcpp::as<Rcpp::NumericMatrix>(costmaps[i]);
+
+		if (errors == 0)  {
+			imported = pLandscape->readLandChange(i-1, hraster, praster, craster);
+			if (imported != 0) {
+				return imported;
+			}
+			if (patchmodel) {
+				pLandscape->recordPatchChanges(i);
+			}
+			if (costs) {
+				pLandscape->recordCostChanges(i);
+			}
+		}
+	} // end of loop over landscape changes i
+
+	if(patchmodel) {
+		// record changes back to original landscape for multiple replicates
+		pLandscape->recordPatchChanges(0);
+		pLandscape->deletePatchChgMatrix();
+	}
+	if (costs) {
+		pLandscape->recordCostChanges(0);
+		pLandscape->deleteCostsChgMatrix();
+	}
+	return 0;
+}
+
+#else // RS_THREADSAFE
 
 int ReadDynLandR(Landscape *pLandscape, Rcpp::S4 LandParamsR)
 {
@@ -1117,7 +1294,6 @@ int ReadDynLandR(Landscape *pLandscape, Rcpp::S4 LandParamsR)
 	bool costs = false;
 	costmaps = Rcpp::as<Rcpp::StringVector>(LandParamsR.slot("CostsFile"));
 	if (costmaps(0) != "NULL") costs = true;
-
 
 	//------------ int ParseDynamicFile(string indir) {
 
@@ -1487,6 +1663,7 @@ int ReadDynLandR(Landscape *pLandscape, Rcpp::S4 LandParamsR)
 	return 0;
 }
 
+#endif // RS_THREADSAFE
 
 //---------------------------------------------------------------------------
 
@@ -3607,6 +3784,14 @@ int ReadInitialisationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 	case 2: { // from initial individuals file
 		// if (init.indsFile != prevInitialIndsFile) {
 		// read and store the list of individuals to be initialised
+#if RS_THREADSAFE
+		if(init.indsFile=="NULL"){
+			simParams sim = paramsSim->getSim();
+			Rcpp::List InitIndsList = Rcpp::as<Rcpp::List>(InitParamsR.slot("InitIndsList"));
+			if(InitIndsList.size() != sim.reps) error = 603;
+			else error = ReadInitIndsFileR(0, pLandscape, Rcpp::as<Rcpp::DataFrame>(InitIndsList[0])); // parse dataframe header and read lines, store in vector "initinds"
+		}else
+#endif
 		error = ReadInitIndsFileR(0, pLandscape); //open, parse, read header and lines, store in vector "initinds"
 		// prevInitialIndsFile = init.indsFile;
 		//}
@@ -3908,6 +4093,7 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 	// int batch_line = 0;
 
 	string name = paramsSim->getDir(2) + "Batch" + Int2Str(sim.batchNum) + "_RS_log.csv";
+#if !RS_THREADSAFE
 	if(rsLog.is_open()) {
 		rsLog.close();
 		rsLog.clear();
@@ -3926,6 +4112,7 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 #if GROUPDISP || RS_ABC || RS_RCPP
 	rsLog << "RNG SEED,,,," << RS_random_seed << endl;
 #endif
+#endif //!RS_THREADSAFE
 
 	// loop over landscpaes
 
@@ -3947,7 +4134,9 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 		land_nr = j; // TODO: ReadLandParamsR() is supposed to return land_nr; this is a temporary replacement
 
 		if(!landOK) {
+#if !RS_THREADSAFE
 			rsLog << "Error reading landscape ASCII haeders - aborting" << endl;
+#endif
 			Rcpp::Rcout << "Error reading landscape ASCII haeders - aborting" << endl;
 		} else {
 
@@ -3982,6 +4171,70 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 			pLandscape->setLandParams(paramsLand, sim.batchMode);
 
 			if(landtype != 9) { // imported landscape
+
+#if RS_THREADSAFE
+				Rcpp::S4 LandParamsR("LandParams");
+				LandParamsR = Rcpp::as<Rcpp::S4>(ParMaster.slot("land"));
+
+				Rcpp::List habitatmaps;
+				Rcpp::List patchmaps;
+				Rcpp::List costmaps;
+				Rcpp::List spdistmap;
+
+				habitatmaps = Rcpp::as<Rcpp::List>(LandParamsR.slot("LandscapeFile"));
+				Rcpp::NumericMatrix hraster = Rcpp::as<Rcpp::NumericMatrix>(habitatmaps[0]);
+
+				Rcpp::NumericMatrix praster;
+				if (patchmodel) {
+					patchmaps = Rcpp::as<Rcpp::List>(LandParamsR.slot("PatchFile"));
+					praster = Rcpp::as<Rcpp::NumericMatrix>(patchmaps[0]);
+				}
+				else{
+					praster = Rcpp::NumericMatrix(0);
+				}
+
+				Rcpp::NumericMatrix craster;
+				costmaps = Rcpp::as<Rcpp::List>(LandParamsR.slot("CostsFile"));
+				if (costmaps.size() > 0) Rcpp::NumericMatrix craster = Rcpp::as<Rcpp::NumericMatrix>(costmaps[0]);
+				else craster = Rcpp::NumericMatrix(0);
+
+				int landcode;
+				landcode = pLandscape->readLandscape(0, hraster, praster, craster);
+
+				if(landcode != 0) {
+					Rcpp::Rcout << endl << "Error reading landscape " << land_nr << " - aborting" << endl;
+					landOK = false;
+				}
+				if(paramsLand.dynamic) {
+					landcode = ReadDynLandR(pLandscape, LandParamsR);
+					if(landcode != 0) {
+						Rcpp::Rcout << endl << "Error reading landscape " << land_nr << " - aborting" << endl;
+						landOK = false;
+					}
+				}
+				if(landtype == 0) {
+					pLandscape->updateHabitatIndices();
+				}
+				// species distribution
+				if(paramsLand.spDist) { // read initial species distribution
+					// WILL NEED TO BE CHANGED FOR MULTIPLE SPECIES ...
+
+					spdistmap = Rcpp::as<Rcpp::List>(LandParamsR.slot("SpDistFile"));
+					landcode = pLandscape->newDistribution(pSpecies, Rcpp::as<Rcpp::NumericMatrix>(spdistmap[0]), distresolution);
+					if(landcode == 0) {
+					} else {
+						Rcpp::Rcout << endl
+						            << "Error reading initial distribution for landscape " << land_nr << " - aborting"
+						            << endl;
+						landOK = false;
+					}
+				}
+				paramsSim->setSim(sim);
+
+				if(landOK) t01 = time(0);
+
+#else // RS_THREADSAFE
+
 				string hname = paramsSim->getDir(1) + name_landscape;
 				int landcode;
 				string cname;
@@ -4058,6 +4311,8 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 
 				} // end of landOK condition
 
+#endif // RS_THREADSAFE
+
 			} // end of imported landscape
 		}
 		if(landOK) {
@@ -4080,7 +4335,9 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 				read_error = ReadParametersR(pLandscape, ParMaster);
 				simParams sim = paramsSim->getSim();
 				if(read_error) {
+					#if !RS_THREADSAFE
 					rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
+					#endif
 					params_ok = false;
 				}
 				if(stagestruct) {
@@ -4088,17 +4345,23 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 				}
 				read_error = ReadEmigrationR(ParMaster);
 				if(read_error) {
+					#if !RS_THREADSAFE
 					rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
+					#endif
 					params_ok = false;
 				}
 				read_error = ReadTransferR(pLandscape, ParMaster);
 				if(read_error) {
+					#if !RS_THREADSAFE
 					rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
+					#endif
 					params_ok = false;
 				}
 				read_error = ReadSettlementR(ParMaster);
 				if(read_error) {
+					#if !RS_THREADSAFE
 					rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
+					#endif
 					params_ok = false;
 				}
 				if(params_ok) {
@@ -4113,7 +4376,9 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 				if (anyIndVar || Rcpp::as<int>(GeneParamsR.slot("Architecture")) == 1) {
 					read_error = ReadGeneticsR(GeneParamsR);
 					if(read_error) {
+						#if !RS_THREADSAFE
 						rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
+						#endif
 						params_ok = false;
 					}
 				} else {
@@ -4132,7 +4397,9 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 				}
 				read_error = ReadInitialisationR(pLandscape, ParMaster);
 				if(read_error) {
+					#if !RS_THREADSAFE
 					rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
+					#endif
 					params_ok = false;
 				}
 #if VIRTUALECOLOGIST
@@ -4143,7 +4410,9 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 					paramsSim->setVirtEcol(true);
 					read_error = ReadVirtEcol(1);
 					if(read_error) {
+						#if !RS_THREADSAFE
 						rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
+						#endif
 						params_ok = false;
 					}
 				}
@@ -4171,10 +4440,17 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 					MemoLine(("Starting simulation " + Int2Str(sim.simulation) + "...").c_str());
 
 					// for batch processing, include landscape number in parameter file name
+#if !RS_THREADSAFE
 					OutParameters(pLandscape);
+#endif
 
 					// run the model
+#if RS_THREADSAFE
+					list_outPop = RunModel(pLandscape, i, ParMaster);
+#else
 					list_outPop = RunModel(pLandscape, i);
+#endif
+
 #if RSDEBUG
 					// DEBUGLOG << endl << "RunBatchR(): real landscape, i = " << i
 					//	<< " simulation = " << sim.simulation << " landFile = " << landFile
@@ -4184,8 +4460,10 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 #endif // RS_ABC
 
 					t01 = time(0);
+#if !RS_THREADSAFE
 					rsLog << msgsim << sim.simulation << "," << sim.reps << "," << sim.years << "," << t01 - t00
 					      << endl;
+#endif
 				} // end of if (params_ok)
 				else {
 					Rcpp::Rcout << endl << "Error in reading parameter file(s)... see RS log." << endl;
@@ -4218,12 +4496,14 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 
 // Write performance data to log file
 	t1 = time(0);
+#if !RS_THREADSAFE
 	rsLog << endl << "Batch,,,," << t1 - t0 << endl;
 
 	if(rsLog.is_open()) {
 		rsLog.close();
 		rsLog.clear();
 	}
+#endif
 
 	return list_outPop;
 }
@@ -4404,6 +4684,174 @@ rasterdata ParseRasterHead(string file)
 }
 
 //----------------------------------------------------------------------------------------------
+
+#if RS_THREADSAFE
+
+int ReadInitIndsFileR(int option, Landscape* pLandscape, Rcpp::DataFrame initindslist )
+{
+	landParams paramsLand = pLandscape->getLandParams();
+	demogrParams dem = pSpecies->getDemogr();
+	//stageParams sstruct = pSpecies->getStage();
+	initParams init = paramsInit->getInit();
+	string filetype = "InitIndsList";
+	Rcpp::CharacterVector colnames = initindslist.names();
+	int lines = initindslist.nrows();
+	int errors = 0, col_ix = 0;
+	
+	Rcpp::IntegerVector df_year;
+	Rcpp::IntegerVector df_species;
+	Rcpp::IntegerVector df_patch;
+	Rcpp::IntegerVector df_X;
+	Rcpp::IntegerVector df_Y;
+	Rcpp::IntegerVector df_Ninds;
+	Rcpp::IntegerVector df_Sex;
+	Rcpp::IntegerVector df_Age;
+	Rcpp::IntegerVector df_Stage;
+
+	if(option == 0) { // parse and read header and lines
+
+		// Check right headers format
+		if(colnames[col_ix++] == "Year") df_year = initindslist["Year"];
+		else errors++;
+		if(colnames[col_ix++] == "Species") df_species = initindslist["Species"];
+		else errors++;
+		if(patchmodel) {
+			if(colnames[col_ix++] == "PatchID") df_patch = initindslist["PatchID"];
+			else errors++;
+		} else {
+			if(colnames[col_ix++] == "X") df_X = initindslist["X"];
+			else errors++;
+			if(colnames[col_ix++] == "Y") df_Y = initindslist["Y"];
+			else errors++;
+		}
+		if(colnames[col_ix++] == "Ninds") df_Ninds = initindslist["Ninds"];
+		else errors++;
+		if(reproductn > 0) {
+			if(colnames[col_ix++] == "Sex") df_Sex = initindslist["Sex"];
+			else errors++;
+		}
+		if(stagestruct) {
+			if(colnames[col_ix++] == "Age") df_Age = initindslist["Age"];
+			else errors++;
+			if(colnames[col_ix++] == "Stage") df_Stage = initindslist["Stage"];
+			else errors++;
+		}
+		// Report any errors in headers, and if so, terminate validation
+		if(errors > 0) {
+			FormatErrorR(filetype, errors);
+			return -111;
+		}
+
+		paramsInit->resetInitInds();
+
+		// Read dataframe lines
+		initInd iind;
+		iind.year = -98765;
+		int ninds;
+		int totinds = 0;
+		int prevyear = -98765;
+
+		for(int l = 0; l < lines; l++) { // loop over dataframe rows
+
+			// Year
+			iind.year = df_year[l];
+			if(iind.year < 0) {
+				BatchErrorR(filetype, l, 19, "Year");
+				errors++;
+			} else {
+				if(iind.year < prevyear) {
+					BatchErrorR(filetype, l, 2, "Year", "previous Year");
+					errors++;
+				}
+			}
+			prevyear = iind.year;
+
+			// Species
+			iind.species = df_species[l];
+			if(iind.species != 0) {
+				BatchErrorR(filetype, l, 0, " ");
+				errors++;
+				Rcpp::Rcout << "Species must be 0" << endl;
+			}
+
+			// Patch | Coordinates
+			if(paramsLand.patchModel) {
+				iind.patchID = df_patch[l];
+				if(iind.patchID < 1) {
+					BatchErrorR(filetype, l, 11, "PatchID");
+					errors++;
+					iind.x = iind.y = 0;
+				}
+			} else {
+				iind.x = df_X[l];
+				iind.y = df_Y[l];
+				if(iind.x < 0 || iind.y < 0) {
+					BatchErrorR(filetype, l, 19, "X and Y");
+					errors++;
+					iind.patchID = 0;
+				}
+			}
+
+			// No of individuals
+			ninds = df_Ninds[l];
+			if(ninds < 1) {
+				BatchErrorR(filetype, l, 11, "Ninds");
+				errors++;
+			}
+
+			// Sex
+			if(dem.repType > 0){
+				iind.sex = df_Sex[l];
+				if(iind.sex < 0 || iind.sex > 1) {
+					BatchErrorR(filetype, l, 1, "Sex");
+					errors++;
+				}
+			}
+			else iind.sex = 0;
+
+			// Stage
+			if(dem.stageStruct) {
+				iind.age = df_Age[l];
+				iind.stage = df_Stage[l];
+				if(iind.age < 1) {
+					BatchErrorR(filetype, l, 11, "Age");
+					errors++;
+				}
+				if(iind.stage < 1) {
+					BatchErrorR(filetype, l, 11, "Stage");
+					errors++;
+				}
+				if(iind.stage >= stages) {
+					BatchErrorR(filetype, l, 4, "Stage", "no. of stages");
+					errors++;
+				}
+			} else {
+				iind.age = iind.stage = 0;
+			}
+
+			for(int i = 0; i < ninds; i++) {
+				totinds++;
+				paramsInit->addInitInd(iind);
+			}
+
+			iind.year = -98765;				// finished current line
+			if(errors){					// check for format errors
+				return errors;
+			}
+		} // end of loop over rows
+
+		Rcpp::Rcout << "Initial individuals list OK" << std::endl;
+		return 0; //totinds;
+
+	} // end of option 0
+
+	if(option == 9) { // close file
+		return 0;
+	}
+	return -1;
+}
+
+#endif // RS_THREADSAFE
 
 int ReadInitIndsFileR(int option, Landscape* pLandscape)
 {

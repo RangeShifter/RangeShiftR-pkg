@@ -1,25 +1,25 @@
 #---------------------------------------------------------------------------
-#	
+#
 #	Copyright (C) 2020-2021 Anne-Kathleen Malchow, Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Damaris Zurell
-#	
+#
 #	This file is part of RangeShiftR.
-#	
+#
 #	RangeShiftR is free software: you can redistribute it and/or modify
 #	it under the terms of the GNU General Public License as published by
 #	the Free Software Foundation, either version 3 of the License, or
 #	(at your option) any later version.
-#	
+#
 #	RangeShiftR is distributed in the hope that it will be useful,
 #	but WITHOUT ANY WARRANTY; without even the implied warranty of
 #	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 #	GNU General Public License for more details.
-#	
+#
 #	You should have received a copy of the GNU General Public License
 #	along with RangeShiftR. If not, see <https://www.gnu.org/licenses/>.
-#	
+#
 #----------------------------------------------------------------------------
- 
- 
+
+
 
 #### PARAMETER MASTER CLASS ####
 
@@ -87,7 +87,7 @@ setValidity("RSparams", function(object) {
         if (any(object@land@DynamicLandYears>object@simul@Years)) {
             warning("ImportedLandscape(): Dynamic landscape contains years that exceed the simulated years, so that some land changes will not apply.", call. = FALSE)
         }
-        if (object@land@CostsFile[1] !="NULL") {
+        if (length(object@land@CostsFile)>0) {
             if (class(object@dispersal@Transfer)[1] == "StochMove") {
                 if (object@dispersal@Transfer@Costs[1] != "file") {
                     warning("ImportedLandscape(): Landscape module contains SMS cost layers, but SMS module does not use them.", call. = FALSE)
@@ -431,8 +431,8 @@ setValidity("RSparams", function(object) {
                 }
                 if (class(object@dispersal@Transfer@Costs)=="character") {
                     if (object@dispersal@Transfer@Costs == "file") {
-                        if (object@land@CostsFile[1] == "NULL") {
-                            msg <- c(msg, "SMS(): No cost map filenames found in the landscape module!")
+                        if (length(object@land@CostsFile)==0) {
+                            msg <- c(msg, "SMS(): Empty cost map list found in the landscape module!")
                         }
                     }
                     else{
@@ -447,8 +447,8 @@ setValidity("RSparams", function(object) {
                     }
                     if (class(object@dispersal@Transfer@Costs)=="character") {
                         if (object@dispersal@Transfer@Costs == "file") {
-                            if (object@land@CostsFile[1] == "NULL") {
-                                msg <- c(msg, "SMS(): No cost map filenames found in the landscape module!")
+                            if (length(object@land@CostsFile)==0) {
+                                msg <- c(msg, "SMS(): Empty cost map list found in the landscape module!")
                             }
                         }
                         else{
