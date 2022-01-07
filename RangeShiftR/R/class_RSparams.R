@@ -100,6 +100,8 @@ setValidity("RSparams", function(object) {
     }
     #DEMOGRAPHY
     validObject(object@demog)
+        # TODO: FecLayer,DevLayer,SurvLayer - test:
+        #                               * that maximum value doesn't exceed number of layers in ImportedLandscape
     #DISPERSAL
     validObject(object@dispersal)
     ## Emigration: check dimensions and values of EmigProb and EmigStage:

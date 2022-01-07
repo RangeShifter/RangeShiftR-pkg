@@ -2176,6 +2176,40 @@ int ReadStageStructureR(Rcpp::S4 ParMaster)
 #endif
 	}
 
+#if SPATIALDEMOG
+	// index of input layer corresponding to each spatially varying demographic rate
+	short layercols,layerrows;
+	Rcpp::IntegerMatrix feclayerMatrix, devlayerMatrix, survlayerMatrix;
+	
+	feclayerMatrix  = Rcpp::as<Rcpp::IntegerMatrix>(StagesParamsR.slot("FecLayer"));
+	devlayerMatrix  = Rcpp::as<Rcpp::IntegerMatrix>(StagesParamsR.slot("DevLayer"));
+	survlayerMatrix = Rcpp::as<Rcpp::IntegerMatrix>(StagesParamsR.slot("SurvLayer"));
+	
+	if(dem.repType == 2) {layercols = NSEXES;} else {layercols = 1;}
+	layerrows = sstruct.nStages;
+	
+	if(layercols == feclayerMatrix.ncol() && layerrows == feclayerMatrix.nrow() ) {
+		if(layercols == devlayerMatrix.ncol() && layerrows == devlayerMatrix.nrow() ) {
+			if(layercols == survlayerMatrix.ncol() && layerrows == survlayerMatrix.nrow() ) {
+				for(i = 0; i < layerrows; i++) { // stages in rows
+					for(j = 0; j < layercols; j++) { // sexes in columns
+						pSpecies->setFecLayer(i, j, feclayerMatrix(i,j));
+						pSpecies->setDevLayer(i, j, devlayerMatrix(i,j));
+						pSpecies->setSurvLayer(i, j, survlayerMatrix(i,j));
+					}
+				}
+			} else {
+				Rcpp::Rcout << "Dimensions of SurvLayer matrix do not match; default values are used instead." << endl;
+			}
+		} else {
+			Rcpp::Rcout << "Dimensions of DevLayer matrix do not match; default values are used instead." << endl;
+		}
+	} else {
+		Rcpp::Rcout << "Dimensions of FecLayer matrix do not match; default values are used instead." << endl;
+	}
+	
+#endif // SPATIALDEMOG
+
 #if PARTMIGRN
 	bStageStructFile >> header;
 	if (header != "PropPhilRes" ) errors++;

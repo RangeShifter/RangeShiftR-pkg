@@ -38,6 +38,7 @@
 #'                RepSeasons = 1, PRep = 1.0, RepInterval = 0, SurvSched = 0,
 #'                FecDensDep = FALSE, DevDensDep = FALSE, SurvDensDep = FALSE,
 #'                FecStageWtsMatrix, DevStageWtsMatrix, SurvStageWtsMatrix,
+#'                FecLayer, DevLayer, SurvLayer,
 #'                PostDestructn = FALSE)
 #' @param Stages Number of life-stages (integer). Requires a minimum of \eqn{2}, for "juvenile" (stage 0) and "adult". Maximum is 10.
 #' @param TransMatrix Transition matrix. Defines the development probabilities from each stage into the next, as well as the respective survival probabilities and fecundities. See Details for matrix structure and notation.
@@ -52,6 +53,8 @@
 # @param FecStageWts,DevStageWts,SurvStageWts Stage-dependent density dependence in fecundity / development / survival? Defaults to \code{FALSE}.
 # @param FecStageWtsMatrix,DevStageWtsMatrix,SurvStageWtsMatrix Required if stage-dependent density dependence, i.e. if respective \code{FecStageWts}/\code{DevStageWts}/\code{SurfStageWts=TRUE}. Takes a quadratic matrix with (#stages * #sexes) rows/columns indicating the weight of the abundance of each sex/stage on the fecundity/development/survival of each other sex/stage.
 #' @param FecStageWtsMatrix,DevStageWtsMatrix,SurvStageWtsMatrix Stage-dependent weights in density dependence of fecundity / development / survival. Takes a quadratic matrix with (#sexes * #stages) rows/columns indicating the weight of the abundance of each stage/sex on the fecundity/development/survival of each other stage/sex. If not set, all stages are weighted equally.
+#' @param FecLayer,DevLayer,SurvLayer A matrix of layer indices for the three demographic rates (fecundity/development/survival) if they are spatially varying. The indices match the scaling layers given in the \code{\link[RangeShiftR]{ImportedLandscape}} module to each demographic rate.
+#' The row number corresponds to the stage; the first/second column contains the layer index for females/males. In case of a female-only or simple sexual model (\code{ReproductionType={0,1}}) only the first column is needed and a vector is accepted to represent it. In any case, values will be coerced to integer.
 #' @param PostDestructn In a dynamic landscape, determine if all individuals of a population should die (\code{FALSE}, default) or disperse (\code{TRUE}) if its patch gets destroyed.
 #' @details In stage-structured populations, generations can overlap and individuals can be classified in different stages (e.g. immature vs. breeding individuals) differing in their
 #' demographic parameters. Individuals are characterized by their age and stage. Each stage has a certain fecundity, survival probability and probability of developing to the next stage.
@@ -179,6 +182,9 @@ StageStructure <- setClass("StagesParams", slots = c(Stages = "integer_OR_numeri
                                                      SurvDensCoeff = "integer_OR_numeric",
                                                      SurvStageWts = "logical",
                                                      SurvStageWtsMatrix = "matrix",
+                                                     FecLayer = "matrix_OR_numeric",
+                                                     DevLayer = "matrix_OR_numeric",
+                                                     SurvLayer = "matrix_OR_numeric",
                                                      PostDestructn = "logical")
                            , prototype = list(#Stages = 2L,
                                               #TransMatrix = matrix(data = NA, nrow = 1, ncol = 1),
@@ -199,6 +205,7 @@ StageStructure <- setClass("StagesParams", slots = c(Stages = "integer_OR_numeri
                                               SurvDensCoeff = 1.0,
                                               SurvStageWts = FALSE,
                                               #SurvStageWtsMatrix = matrix(data = NA, nrow = 1, ncol = 1),
+                                              #FecLayer,DevLayer,SurvLayer,
                                               PostDestructn = FALSE)
 )
     # check forbidden transitions in TransMatrix (e.g. between non-successive stages or between sexes)
@@ -356,6 +363,36 @@ setValidity("StagesParams", function(object) {
             }
         }
     }
+    if (length(object@FecLayer)>0) {
+        if (any(is.na(object@FecLayer))) {
+            msg <- c(msg, "Elements of FecLayer can not be NA!")
+        }
+        else{
+            if (any(object@FecLayer<=0)) {
+                msg <- c(msg, "Elements of FecLayer must be strictly postive integers!")
+            }
+        }
+    }
+    if (length(object@DevLayer)>0) {
+        if (any(is.na(object@DevLayer))) {
+            msg <- c(msg, "Elements of DevLayer can not be NA!")
+        }
+        else{
+            if (any(object@DevLayer<0)) {
+                msg <- c(msg, "Elements of DevLayer must be postive integers!")
+            }
+        }
+    }
+    if (length(object@SurvLayer)>0) {
+        if (any(is.na(object@SurvLayer))) {
+            msg <- c(msg, "Elements of SurvLayer can not be NA!")
+        }
+        else{
+            if (any(object@SurvLayer<0)) {
+                msg <- c(msg, "Elements of SurvLayer must be postive integers!")
+            }
+        }
+    }
     if (is.na(object@PostDestructn) || length(object@PostDestructn)!=1) {
         msg <- c(msg, "PostDestructn must be set and of length 1!")
     }
@@ -399,6 +436,12 @@ setMethod("initialize", "StagesParams", function(.Object,...) {
             warning(this_func, "SurvStageWts stage weigths", warn_msg_ignored, "since SurvDensDep = FALSE.", call. = FALSE)
         }
     }
+    if (!is.null(args$FecLayer)) if(class(.Object@FecLayer)[1]!="matrix") .Object@FecLayer <- matrix(.Object@FecLayer)
+    if (!is.null(args$DevLayer)) if(class(.Object@DevLayer)[1]!="matrix") .Object@DevLayer <- matrix(.Object@DevLayer)
+    if (!is.null(args$SurvLayer)) if(class(.Object@SurvLayer)[1]!="matrix") .Object@SurvLayer <- matrix(.Object@SurvLayer)
+    if(length(.Object@FecLayer)>0) mode(.Object@FecLayer) <- "integer"
+    if(length(.Object@DevLayer)>0) mode(.Object@DevLayer) <- "integer"
+    if(length(.Object@SurvLayer)>0) mode(.Object@SurvLayer) <- "integer"
     .Object}
 )
 setMethod("show", "StagesParams", function(object){
@@ -434,6 +477,18 @@ setMethod("show", "StagesParams", function(object){
             cat("                 and stage-dependence with weights: \n")
             print(object@SurvStageWtsMatrix)
         }
+    }
+    if(length(object@FecLayer)>0) {
+        cat("   Spatially varying fecundity layer indices:\n")
+        print(object@FecLayer)
+    }
+    if(length(object@DevLayer)>0) {
+        cat("   Spatially varying development layer indices:\n")
+        print(object@DevLayer)
+    }
+    if(length(object@SurvLayer)>0) {
+        cat("   Spatially varying survival layer indices:\n")
+        print(object@SurvLayer)
     }
     cat("   PostDestructn    :", paste(object@PostDestructn) )
     if (object@PostDestructn) {
@@ -728,6 +783,21 @@ setValidity("DemogParams", function(object) {
                         }
                     }
                 }
+                if (length(object@StageStruct@FecLayer)>0) {
+                    if ( any(dim(object@StageStruct@FecLayer)!=c(stgs,2) )) {
+                        msg <- c(msg, "FecLayer must have dimensions \'Stages\' x 2 !")
+                    }
+                }
+                if (length(object@StageStruct@DevLayer)>0) {
+                    if ( any(dim(object@StageStruct@DevLayer)!=c(stgs,2) )) {
+                        msg <- c(msg, "DevLayer must have dimensions \'Stages\' x 2 !")
+                    }
+                }
+                if (length(object@StageStruct@SurvLayer)>0) {
+                    if ( any(dim(object@StageStruct@SurvLayer)!=c(stgs,2) )) {
+                        msg <- c(msg, "SurvLayer must have dimensions \'Stages\' x 2 !")
+                    }
+                }
             }
             else{ # asexual model or simple sexual model
                 if ( any(dim(object@StageStruct@TransMatrix)!=c(stgs,stgs) )) {
@@ -792,6 +862,21 @@ setValidity("DemogParams", function(object) {
                         if ( any(dim(object@StageStruct@SurvStageWtsMatrix)!=c(stgs,stgs) )) {
                             msg <- c(msg, "SurvStageWtsMatrix must have dimensions \'Stages\' x \'Stages\' !")
                         }
+                    }
+                }
+                if (length(object@StageStruct@FecLayer)>0) {
+                    if ( any(dim(object@StageStruct@FecLayer)!=c(stgs,1) )) {
+                        msg <- c(msg, "FecLayer must have dimensions \'Stages\' x 1 !")
+                    }
+                }
+                if (length(object@StageStruct@DevLayer)>0) {
+                    if ( any(dim(object@StageStruct@DevLayer)!=c(stgs,1) )) {
+                        msg <- c(msg, "DevLayer must have dimensions \'Stages\' x 1 !")
+                    }
+                }
+                if (length(object@StageStruct@SurvLayer)>0) {
+                    if ( any(dim(object@StageStruct@SurvLayer)!=c(stgs,1) )) {
+                        msg <- c(msg, "SurvLayer must have dimensions \'Stages\' x 1 !")
                     }
                 }
             }
