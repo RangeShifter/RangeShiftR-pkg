@@ -706,6 +706,11 @@ setValidity("RSparams", function(object) {
         if (object@init@InitType == 1 && !object@control@speciesdist) {
             msg <- c(msg, 'Initialise(): A species distribution map has to be loaded via the \'land\' module if InitType = 1 (initialisation from loaded species distribution map) !')
         }
+        if (object@init@InitType == 2 && object@init@InitIndsFile != "NULL") { # from initial individuals list from list of data.frames in 'InitIndsList'
+            if(length(object@init@InitIndsList)!=object@simul@Replicates) {
+                msg <- c(msg, 'Initialise(): Number of elements in InitIndsList must equal the number of Replicates!')
+            }
+        }
     }
     if (object@control@stagestruct) {
         if (is.na(object@init@InitAge) || length(object@init@InitAge) == 0){
