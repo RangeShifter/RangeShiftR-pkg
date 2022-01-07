@@ -269,13 +269,18 @@ DEBUGLOG << endl << "RunModel(): finished generating populations" << endl;
 
 	filesOK = true;
 #if RS_THREADSAFE
-	if(rep > 0){
-		int error_init = 0;
-		Rcpp::S4 InitParamsR("InitialisationParams");
-		InitParamsR = Rcpp::as<Rcpp::S4>(ParMaster.slot("init"));
-		Rcpp::List InitIndsList = Rcpp::as<Rcpp::List>(InitParamsR.slot("InitIndsList"));
-		error_init = ReadInitIndsFileR(0, pLandscape, Rcpp::as<Rcpp::DataFrame>(InitIndsList[rep]));
-		if(error_init>0) filesOK = false;
+	if(init.seedType==2 && init.indsFile=="NULL"){ // initialisation from InitInds list of dataframes
+		if(rep > 0){
+			int error_init = 0;
+			Rcpp::S4 InitParamsR("InitialisationParams");
+			InitParamsR = Rcpp::as<Rcpp::S4>(ParMaster.slot("init"));
+			Rcpp::List InitIndsList = Rcpp::as<Rcpp::List>(InitParamsR.slot("InitIndsList"));
+			error_init = ReadInitIndsFileR(0, pLandscape, Rcpp::as<Rcpp::DataFrame>(InitIndsList[rep]));
+			if(error_init>0) {
+				MemoLine("UNABLE TO GET NEXT INITIALISATION DATAFRAME");
+				filesOK = false;
+			}
+		}
 	}
 #endif
 	if (rep == 0) {

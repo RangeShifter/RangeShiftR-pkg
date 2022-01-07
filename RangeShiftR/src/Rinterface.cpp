@@ -4071,7 +4071,9 @@ int ReadArchFileR(wifstream& archFile)
 Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 {
 	int land_nr;
+#if !RS_THREADSAFE
 	int t0, t1, t00, t01;
+#endif
 	int read_error;
 	bool params_ok;
 	simParams sim = paramsSim->getSim();
@@ -4088,7 +4090,9 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 	DEBUGLOG << "RunBatchR(): landtype=" << landtype << " maxNhab=" << maxNhab << endl;
 #endif
 
+#if !RS_THREADSAFE
 	t0 = time(0);
+#endif
 
 	// int batch_line = 0;
 
@@ -4127,7 +4131,9 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 		pLandscape = new Landscape;
 		bool landOK = true;
 
+#if !RS_THREADSAFE
 		t00 = time(0);
+#endif
 
 		landOK = ReadLandParamsR(pLandscape, ParMaster);
 		//land_nr = ReadLandParamsR(pLandscape, ParMaster);
@@ -4231,7 +4237,7 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 				}
 				paramsSim->setSim(sim);
 
-				if(landOK) t01 = time(0);
+				//if(landOK) t01 = time(0);
 
 #else // RS_THREADSAFE
 
@@ -4329,11 +4335,13 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 			string msgerr = ",ERROR CODE,";
 			string msgabt = ",simulation aborted";
 			for(int i = 0; i < nSimuls; i++) { // this loop is useless at the moment since nSimuls is set to one in R entry function BatchMainR()
+#if !RS_THREADSAFE
 				t00 = time(0);
+				simParams sim = paramsSim->getSim();
+#endif
 				params_ok = true;
 				anyIndVar = false;
 				read_error = ReadParametersR(pLandscape, ParMaster);
-				simParams sim = paramsSim->getSim();
 				if(read_error) {
 					#if !RS_THREADSAFE
 					rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
@@ -4459,8 +4467,8 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 
 #endif // RS_ABC
 
-					t01 = time(0);
 #if !RS_THREADSAFE
+					t01 = time(0);
 					rsLog << msgsim << sim.simulation << "," << sim.reps << "," << sim.years << "," << t01 - t00
 					      << endl;
 #endif
@@ -4495,8 +4503,8 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 	} // end of nLandscapes loop
 
 // Write performance data to log file
-	t1 = time(0);
 #if !RS_THREADSAFE
+	t1 = time(0);
 	rsLog << endl << "Batch,,,," << t1 - t0 << endl;
 
 	if(rsLog.is_open()) {
