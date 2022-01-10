@@ -159,7 +159,13 @@ public:
 		short		// habitat index
 	);
 #else
+#if SPATIALDEMOG
+	popStats getStats(
+			std::vector <float>
+	);
+#else
 	popStats getStats(void);
+#endif // SPATIALDEMOG
 #endif // RS_CONTAIN
 	Species* getSpecies(void);
 #if GROUPDISP

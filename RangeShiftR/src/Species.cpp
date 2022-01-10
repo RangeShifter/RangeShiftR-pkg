@@ -64,6 +64,13 @@ repInterval = 0; maxAge	= 1000; survival	= 1;
 fecDens = false; fecStageDens	 = false;
 devDens	 = false; devStageDens	 = false;
 survDens	 = false; survStageDens	 = false;
+
+#if SPATIALDEMOG
+fecSpatial = false;
+survSpatial = false;
+devSpatial = false;
+#endif //SPATIALDEMOG
+
 disperseOnLoss = false;
 for (int i = 0; i < NSTAGES; i++) {
 	for (int j = 0; j < NSEXES; j++) {
@@ -85,10 +92,9 @@ for (int i = 0; i < NSTAGES; i++) {
 			fec[s][i][j] = 0.0; dev[s][i][j] = 0.0; surv[s][i][j] = 0.0; 
 		}
 #else
+		fec[i][j] = 0.0; dev[i][j] = 0.0; surv[i][j] = 0.0;
 #if SPATIALDEMOG
 		fecLayer[i][j] =-9; devLayer[i][j] = -9; survLayer[i][j] = -9;
-#else
-		fec[i][j] = 0.0; dev[i][j] = 0.0; surv[i][j] = 0.0;
 #endif // SPATIALDEMOG
 #endif // SEASONAL 
 #endif // RS_CONTAIN 

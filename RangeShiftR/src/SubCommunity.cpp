@@ -282,7 +282,11 @@ for (int i = 0; i < npops; i++) { // all populations
 #if RS_CONTAIN
 	pop = popns[i]->getStats(habIndex);
 #else
+#if SPATIALDEMOG
+	pop = popns[i]->getStats(pPatch->getDemoScaling());
+#else
 	pop = popns[i]->getStats();
+#endif // SPATIALDEMOG
 #endif // RS_CONTAIN 
 	p.pSpecies = pop.pSpecies;
 	p.spNum = pop.spNum;
@@ -662,7 +666,11 @@ for (int i = 0; i < npops; i++) { // all populations
 #if RS_CONTAIN
 	pop = popns[i]->getStats(habIndex);
 #else
+#if SPATIALDEMOG
+	pop = popns[i]->getStats(pPatch->getDemoScaling());
+#else
 	pop = popns[i]->getStats();
+#endif // SPATIALDEMOG
 #endif // RS_CONTAIN 
 #if GROUPDISP
 	bool newgroup = true;
@@ -1352,7 +1360,11 @@ for (int i = 0; i < npops; i++) { // all populations
 #if RS_CONTAIN
 	pop = popns[i]->getStats(habIndex);
 #else
+#if SPATIALDEMOG
+	pop = popns[i]->getStats(pPatch->getDemoScaling());
+#else
 	pop = popns[i]->getStats();
+#endif // SPATIALDEMOG
 #endif // RS_CONTAIN 
 	if (pop.pSpecies == pSp && pop.pPatch == pPch) { // population located
 		pPop = popns[i];
@@ -1384,7 +1396,11 @@ for (int i = 0; i < npops; i++) {
 #if RS_CONTAIN
 	pop = popns[i]->getStats(habIndex);
 #else
+#if SPATIALDEMOG
+	pop = popns[i]->getStats(pPatch->getDemoScaling());
+#else
 	pop = popns[i]->getStats();
+#endif // SPATIALDEMOG
 #endif // RS_CONTAIN 
 	if (pop.nInds > 0 && pop.breeding) {
 		occupancy[row]++;

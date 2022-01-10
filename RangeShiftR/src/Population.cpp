@@ -436,7 +436,11 @@ else return 0;
 #if RS_CONTAIN
 popStats Population::getStats(short hab) 
 #else
+#if SPATIALDEMOG
+popStats Population::getStats(std::vector <float> localDemoScaling)
+#else
 popStats Population::getStats(void) 
+#endif // SPATIALDEMOG
 #endif // RS_CONTAIN 
 {
 popStats p;
@@ -492,8 +496,24 @@ for (int stg = 1; stg < nStages; stg++) {
 					if (seasonfec > fec) fec = seasonfec;
 				}
 #else
+#if SPATIALDEMOG
+				if (dem.repType == 2) {
+					if (pSpecies->getFecSpatial() && pSpecies->getFecLayer(stg,sex)>=0){
+						fec = pSpecies->getFec(stg,sex)*localDemoScaling[pSpecies->getFecLayer(stg,sex)];
+					}
+					else fec = pSpecies->getFec(stg,sex);
+				}
+				else {
+					if (pSpecies->getFecSpatial() && pSpecies->getFecLayer(stg,0)>=0){
+						fec = pSpecies->getFec(stg,0)*localDemoScaling[pSpecies->getFecLayer(stg,0)];
+					}
+					else fec = pSpecies->getFec(stg,0);
+				}
+#else
+
 				if (dem.repType == 2) fec = pSpecies->getFec(stg,sex);
 				else fec = pSpecies->getFec(stg,0);
+#endif //SPATIALDEMOG
 #endif // SEASONAL 
 #endif // RS_CONTAIN 
 #if GROUPDISP
@@ -919,7 +939,14 @@ for (int stg = 0; stg < sstruct.nStages; stg++) {
 #if SEASONAL
 				fec[stg][sex] = pSpecies->getFec(season,stg,0);
 #else
+#if SPATIALDEMOG
+				if (pSpecies->getFecSpatial() && pSpecies->getFecLayer(stg,0)>=0){
+					fec[stg][sex] = pSpecies->getFec(stg,0)*localDemoScaling[pSpecies->getFecLayer(stg,0)];
+				}
+				else fec[stg][sex] = pSpecies->getFec(stg,0);
+#else
 				fec[stg][sex] = pSpecies->getFec(stg,0);
+#endif //SPATIALDEMOG
 #endif // SEASONAL 
 #endif // RS_CONTAIN 
 			}
@@ -935,7 +962,10 @@ for (int stg = 0; stg < sstruct.nStages; stg++) {
 				fec[stg][sex] = pSpecies->getFec(season,stg,sex);
 #else
 #if SPATIALDEMOG
-				fec[stg][sex] = pSpecies->getFec(stg,sex)*localDemoScaling[pSpecies->getFecLayer(stg,sex)];
+				if (pSpecies->getFecSpatial() && pSpecies->getFecLayer(stg,sex)>=0){
+					fec[stg][sex] = pSpecies->getFec(stg,sex)*localDemoScaling[pSpecies->getFecLayer(stg,sex)];
+				}
+				else fec[stg][sex] = pSpecies->getFec(stg,sex);
 #else
 				fec[stg][sex] = pSpecies->getFec(stg,sex);
 #endif // SPATIALDEMOG
@@ -2946,8 +2976,14 @@ for (int stg = 0; stg < sstruct.nStages; stg++) {
 				surv[stg][sex] = pSpecies->getSurv(season,stg,0);
 #else
 #if SPATIALDEMOG
-				dev[stg][sex] = pSpecies->getDev(stg,sex)*localDemoScaling[pSpecies->getDevLayer(stg,sex)];
-				surv[stg][sex] = pSpecies->getSurv(stg,sex)*localDemoScaling[pSpecies->getSurvLayer(stg,sex)];
+				if (pSpecies->getDevSpatial() && pSpecies->getDevLayer(stg,0)>=0){
+					dev[stg][sex] = pSpecies->getDev(stg,0)*localDemoScaling[pSpecies->getDevLayer(stg,0)];
+				}
+				else dev[stg][sex] = pSpecies->getDev(stg,0);
+				if (pSpecies->getSurvSpatial() && pSpecies->getSurvLayer(stg,0)>=0){
+					surv[stg][sex] = pSpecies->getSurv(stg,0)*localDemoScaling[pSpecies->getSurvLayer(stg,0)];
+				}
+				else surv[stg][sex] = pSpecies->getSurv(stg,0);
 #else
 				dev[stg][sex]  = pSpecies->getDev(stg,0);
 				surv[stg][sex] = pSpecies->getSurv(stg,0);
@@ -2970,8 +3006,19 @@ for (int stg = 0; stg < sstruct.nStages; stg++) {
 				dev[stg][sex]  = pSpecies->getDev(season,stg,sex);
 				surv[stg][sex] = pSpecies->getSurv(season,stg,sex);
 #else
+#if SPATIALDEMOG
+				if (pSpecies->getDevSpatial() && pSpecies->getDevLayer(stg,sex)>=0){
+					dev[stg][sex] = pSpecies->getDev(stg,sex)*localDemoScaling[pSpecies->getDevLayer(stg,sex)];
+				}
+				else dev[stg][sex] = pSpecies->getDev(stg,sex);
+				if (pSpecies->getSurvSpatial() && pSpecies->getSurvLayer(stg,sex)>=0){
+									surv[stg][sex] = pSpecies->getSurv(stg,sex)*localDemoScaling[pSpecies->getSurvLayer(stg,sex)];
+				}
+				else surv[stg][sex] = pSpecies->getSurv(stg,sex);
+#else
 				dev[stg][sex]  = pSpecies->getDev(stg,sex);
 				surv[stg][sex] = pSpecies->getSurv(stg,sex);
+#endif // SPATIALDEMOG
 #endif // SEASONAL 
 #endif // RS_CONTAIN 
 				minAge[stg][sex] = pSpecies->getMinAge(stg,sex);
@@ -3537,7 +3584,11 @@ if (dem.stageStruct) {
 	// whether or not the poplation includes breeders
 	p = getStats(0);
 #else
+#if SPATIALDEMOG
+	p = getStats(pPatch->getDemoScaling());
+#else
 	p = getStats();
+#endif // SPATIALDEMOG
 #endif // RS_CONTAIN 
 	outPop << "\t" << p.nNonJuvs;
 	// non-juvenile stage totals from permanent array

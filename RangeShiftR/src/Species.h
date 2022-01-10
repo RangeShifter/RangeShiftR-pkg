@@ -485,6 +485,9 @@ public:
 #endif // RS_CONTAIN
 	
 #if SPATIALDEMOG
+	bool getFecSpatial(void){return fecSpatial;};
+	bool getDevSpatial(void){return devSpatial;};
+	bool getSurvSpatial(void){return survSpatial;};
 	void setFecLayer( // set the layer of the spatial demographic scaling used for fecundity
 		short, // stage
 		short, // sex
@@ -895,6 +898,9 @@ private:
 	bool survStageDens;
 	bool disperseOnLoss;	// individuals disperse on complete loss of patch
 												// (otherwise they die)
+#if SPATIALDEMOG
+	bool fecSpatial, devSpatial, survSpatial;
+#endif //SPATIALDEMOG
 #if GROUPDISP
 	bool selfing;       // self-fertilisation possible
 	short paternity;		// 0 = fixed (one father per breeding attempt), 1 = assigned at random
