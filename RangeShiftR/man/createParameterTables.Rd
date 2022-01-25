@@ -7,7 +7,7 @@
 createParameterTables(filename, s, type)
 }
 \arguments{
-\item{filename}{Name of the R markdown file and document to be created}
+\item{filename}{Name of the R markdown file and document to be created e.g. 'Parameter_table.rmd'}
 
 \item{s}{RangeShiftR parameter object}
 

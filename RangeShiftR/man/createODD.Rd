@@ -7,7 +7,7 @@
 createODD(filename, s, type)
 }
 \arguments{
-\item{filename}{Name of the R markdown file and document to be created}
+\item{filename}{Name of the R markdown file and document to be created, e.g. 'ODD_protocol.rmd'}
 
 \item{s}{RangeShiftR parameter object}
 
