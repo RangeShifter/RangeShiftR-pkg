@@ -906,7 +906,7 @@ setGeneric("createODD", function(filename, s, type,...) standardGeneric("createO
 
 setMethod("createODD", c(filename = "character", s="RSparams", type="character"), function(filename="ODD_protocol_template.Rmd", s, type="pdf_document"){
     if(!file.exists(filename)) {
-        unlink(c("RS_flowchart.png", "RS_flowchart_2.png", "style-template.docx", "RS_ODD.json", "ecography.csl"))
+        unlink(c("RS_flowchart.png", "RS_flowchart_2.png", "style-template.docx", "RS_ODD.json", "ecography.csl", "RS_ODD.bib"))
         rmarkdown::draft(filename, template = "ODD_protocoll", package = "RangeShiftR", edit = FALSE)
     }
     if (type=="pdf_document") format <- "pdf"
@@ -916,3 +916,21 @@ setMethod("createODD", c(filename = "character", s="RSparams", type="character")
     rmarkdown::render(input = filename, output_format = type, params=list(format = format))
 })
 
+#' Creating parameter table file for a specific RangeShiftR parameter master object
+#'
+#' This function creates template file including tables of the parameter set for a specific RangeShiftR parameter master object \code{s}. It only creates a new file, if the \code{filename} doesn't exist in the folder.
+#' If the \code{filename} already exists, it only renders the document to either pdf, word or md.
+#' @usage createParameterTables(filename, s, type)
+#'
+#' @param filename Name of the R markdown file and document to be created
+#' @param s RangeShiftR parameter object
+#' @param type file type of the rendering process output. Can be either "pdf_document", "doc_document" or "md_document"
+#' @export
+setGeneric("createParameterTables", function(filename, s, type,...) standardGeneric("createParameterTables") )
+
+setMethod("createParameterTables", c(filename = "character", s="RSparams", type="character"), function(filename="ParameterTable_template.Rmd", s, type="pdf_document"){
+    if(!file.exists(filename)) {
+        rmarkdown::draft(filename, template = "parameter_table", package = "RangeShiftR", edit = FALSE)
+    }
+    rmarkdown::render(input = filename, output_format = type)
+})
