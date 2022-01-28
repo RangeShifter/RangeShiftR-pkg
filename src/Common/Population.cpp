@@ -2644,7 +2644,20 @@ for (int i = 0; i < ninds; i++) {
 						if (localK > 0.0) {
 							// make settlement decision
 							if (settletype.indVar) settDD = inds[i]->getSettTraits();
-							else settDD = pSpecies->getSettTraits(ind.stage,ind.sex);
+							else {
+								if (settletype.sexDep) {
+									if (settletype.stgDep) 
+										settDD = pSpecies->getSettTraits(ind.stage,ind.sex);										
+									else
+										settDD = pSpecies->getSettTraits(0,ind.sex);
+								}
+								else {
+									if (settletype.stgDep) 
+										settDD = pSpecies->getSettTraits(ind.stage,0);										
+									else
+										settDD = pSpecies->getSettTraits(0,0);
+								}
+							}
 #if GOBYMODEL
 							if (ind.asocial) {
 								settprob = settDD.s0 / (1.0 + exp(-(popsize/localK
@@ -2661,7 +2674,7 @@ for (int i = 0; i < ninds; i++) {
 #if RSDEBUG
 //DEBUGLOG << "Population::transfer(): 8888: i=" << i << " ind.stage=" << ind.stage
 //	<< " this=" << this << " pNewPopn=" << pNewPopn << " popsize=" << popsize
-//	<< " localK=" << localK << " alpha=" << settDD.alpha << " beta=" << settDD.beta
+//	<< " localK=" << localK << " s0=" << settDD.s0 << " alpha=" << settDD.alpha << " beta=" << settDD.beta
 //	<< " settprob=" << settprob
 //	<< endl;
 #endif
@@ -2672,6 +2685,15 @@ for (int i = 0; i < ninds; i++) {
 							else { // settlement procluded
 								settle.settleStatus = 1;
 							}
+#if RSDEBUG
+//DEBUGLOG << "Population::transfer(): 8889: i=" << i 
+//	<< " settleStatus=" << settle.settleStatus << " mateOK=" << (int)mateOK;
+//if (settle.settleStatus == 2 && mateOK) {
+//	DEBUGLOG << " SETTLES -";
+//	if (ind.sex == 1) DEBUGLOG << " MALE "; else DEBUGLOG << " FEMALE ";
+//}
+//DEBUGLOG	<< endl;
+#endif
 							settle.pSettPatch = pPatch;
 						}
 						inds[i]->setSettPatch(settle);
@@ -2897,7 +2919,7 @@ void Population::survival0(float localK,short option0,short option1)
 //#if SEASONAL
 //	<< " season=" << season 
 //#endif // SEASONAL
-//	<< " localK=" << localK << " option=" << option
+//	<< " localK=" << localK << " option0=" << option0 << " option1=" << option1
 //	<< endl;
 #endif
 
@@ -2984,6 +3006,11 @@ if (dem.stageStruct) {
 //	DEBUGLOG << "Population::survival0(): 2222 "
 //		<< " ninds=" << ninds << " localK=" << localK
 //		<< " effect of density dependence:" << endl;
+//	for (int st = 0; st < nStages; st++) {
+//		for (int sx = 0; sx < nsexes; sx++) {
+//			DEBUGLOG << "st=" << st << " sx=" << sx << " nInds=" << nInds[st][sx] << endl;			
+//		}
+//	}
 #endif
 	// apply density dependence in development and/or survival probabilities
 	for (int stg = 0; stg < nStages; stg++) {
@@ -3053,7 +3080,7 @@ if (dem.stageStruct) {
 							}
 							effect += (float)nInds[effstg][effsex] * weight;
 #if RSDEBUG
-//	DEBUGLOG << " effstg=" << effstg << " effsex=" << effsex;
+//	DEBUGLOG << " effstg=" << effstg << " effsex=" << effsex << " count=" << nInds[effstg][effsex];
 //	DEBUGLOG << " weight=" << weight << " effect=" << effect
 //		<< endl;
 #endif
