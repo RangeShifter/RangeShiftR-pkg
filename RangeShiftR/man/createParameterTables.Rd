@@ -14,6 +14,7 @@ createParameterTables(filename, s, type)
 \item{type}{file type of the rendering process output. Can be either "pdf_document", "doc_document" or "md_document"}
 }
 \description{
-This function creates template file including tables of the parameter set for a specific RangeShiftR parameter master object \code{s}. It only creates a new file, if the \code{filename} doesn't exist in the folder.
+This function creates template file including tables of the parameter set for a specific RangeShiftR parameter master object \code{s}.
+It only creates a new file, if the \code{filename} doesn't exist in the folder.
 If the \code{filename} already exists, it only renders the document to either pdf, word or md.
 }
