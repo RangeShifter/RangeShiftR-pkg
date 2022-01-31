@@ -5,6 +5,8 @@ output:
     toc: FALSE
   pdf_document:
     latex_engine: xelatex
+    keep_md: TRUE
+    keep_tex: TRUE
   md_document:
     toc: FALSE
 ---

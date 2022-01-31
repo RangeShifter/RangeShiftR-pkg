@@ -12,6 +12,7 @@ output:
     latex_engine: xelatex
     toc: TRUE
     keep_md: TRUE
+    keep_tex: TRUE
 params:
   format: "word"
 bibliography: RS_ODD.json
