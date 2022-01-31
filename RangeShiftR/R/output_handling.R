@@ -906,8 +906,8 @@ setGeneric("createODD", function(filename, s, type,...) standardGeneric("createO
 
 setMethod("createODD", c(filename = "character", s="RSparams", type="character"), function(filename="ODD_protocol_template.Rmd", s, type="pdf_document"){
     if(!file.exists(filename)) {
-        unlink(c("RS_flowchart.png", "RS_flowchart_2.png", "style-template.docx", "RS_ODD.json", "ecography.csl", "RS_ODD.bib"))
-        rmarkdown::draft(filename, template = "ODD_protocoll", package = "RangeShiftR", edit = FALSE)
+        unlink(c("RSflowchart_big.pdf", "RSflowchart_detail.pdf", "RSflowchart_big.svg", "RSflowchart_detail.svg", "style-template.docx", "RS_ODD.json", "ecography.csl", "RS_ODD.bib"))
+        rmarkdown::draft(filename, template = "odd_protocol", package = "RangeShiftR", edit = FALSE)
     }
     if (type=="pdf_document") format <- "pdf"
     if (type=="md_document") format <- "md"
