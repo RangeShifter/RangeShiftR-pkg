@@ -264,11 +264,11 @@ There are three distinct temporal scales. The highest-level one has years as uni
 
 # Process overview and scheduling
 
-![General model workflow and schedule. The core of the model highlighted in blue is expanded in the flow chart in Fig. 2](./RS_flowchart.png){width=50%, height=50%}
+![General model workflow and schedule. The core of the model highlighted in blue is expanded in the flow chart in Fig. 2](./RSflowchart_big.pdf){height=70%}
 
 \newpage
 
-![General flowchart of the core model](./RS_flowchart_2.png){width=50%, height=50%}
+![General flowchart of the core model](./RSflowchart_detail.pdf){height=70%}
 
 \newpage
 
