@@ -1,25 +1,25 @@
 /*----------------------------------------------------------------------------
- *	
+ *
  *	Copyright (C) 2020 Anne-Kathleen Malchow, Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Damaris Zurell
- *	
+ *
  *	This file is part of RangeShiftR.
- *	
+ *
  *	RangeShiftR is free software: you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation, either version 3 of the License, or
  *	(at your option) any later version.
- *	
+ *
  *	RangeShifter is distributed in the hope that it will be useful,
  *	but WITHOUT ANY WARRANTY; without even the implied warranty of
  *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *	GNU General Public License for more details.
- *	
+ *
  *	You should have received a copy of the GNU General Public License
  *	along with RangeShiftR. If not, see <https://www.gnu.org/licenses/>.
- *	
+ *
  --------------------------------------------------------------------------*/
- 
- 
+
+
 /*------------------------------------------------------------------------------
 
 RangeShifter v2.0 Main
@@ -2180,34 +2180,47 @@ int ReadStageStructureR(Rcpp::S4 ParMaster)
 	// index of input layer corresponding to each spatially varying demographic rate
 	short layercols,layerrows;
 	Rcpp::IntegerMatrix feclayerMatrix, devlayerMatrix, survlayerMatrix;
-	
+
 	feclayerMatrix  = Rcpp::as<Rcpp::IntegerMatrix>(StagesParamsR.slot("FecLayer"));
 	devlayerMatrix  = Rcpp::as<Rcpp::IntegerMatrix>(StagesParamsR.slot("DevLayer"));
 	survlayerMatrix = Rcpp::as<Rcpp::IntegerMatrix>(StagesParamsR.slot("SurvLayer"));
-	
+
 	if(dem.repType == 2) {layercols = NSEXES;} else {layercols = 1;}
 	layerrows = sstruct.nStages;
-	
+
 	if(layercols == feclayerMatrix.ncol() && layerrows == feclayerMatrix.nrow() ) {
-		if(layercols == devlayerMatrix.ncol() && layerrows == devlayerMatrix.nrow() ) {
-			if(layercols == survlayerMatrix.ncol() && layerrows == survlayerMatrix.nrow() ) {
-				for(i = 0; i < layerrows; i++) { // stages in rows
-					for(j = 0; j < layercols; j++) { // sexes in columns
-						pSpecies->setFecLayer(i, j, feclayerMatrix(i,j));
-						pSpecies->setDevLayer(i, j, devlayerMatrix(i,j));
-						pSpecies->setSurvLayer(i, j, survlayerMatrix(i,j));
-					}
-				}
-			} else {
-				Rcpp::Rcout << "Dimensions of SurvLayer matrix do not match; default values are used instead." << endl;
-			}
-		} else {
-			Rcpp::Rcout << "Dimensions of DevLayer matrix do not match; default values are used instead." << endl;
-		}
+	    for(i = 0; i < layerrows; i++) { // stages in rows
+	        for(j = 0; j < layercols; j++) { // sexes in columns
+	            pSpecies->setFecLayer(i, j, feclayerMatrix(i,j));
+	        }
+	    }
 	} else {
-		Rcpp::Rcout << "Dimensions of FecLayer matrix do not match; default values are used instead." << endl;
+	    Rcpp::Rcout << "Dimensions of FecLayer matrix do not match; default values are used instead." << endl;
 	}
-	
+
+	if(layercols == devlayerMatrix.ncol() && layerrows == devlayerMatrix.nrow() ) {
+	    for(i = 0; i < layerrows; i++) { // stages in rows
+	        for(j = 0; j < layercols; j++) { // sexes in columns
+	            pSpecies->setDevLayer(i, j, devlayerMatrix(i,j));
+	            Rcpp::Rcout <<  devlayerMatrix(i,j) << endl;
+	        }
+	    }
+	} else {
+	    Rcpp::Rcout << "Dimensions of DevLayer matrix do not match; default values are used instead." << endl;
+	}
+
+	if(layercols == survlayerMatrix.ncol() && layerrows == survlayerMatrix.nrow() ) {
+	    for(i = 0; i < layerrows; i++) { // stages in rows
+	        for(j = 0; j < layercols; j++) { // sexes in columns
+	            pSpecies->setSurvLayer(i, j, survlayerMatrix(i,j));
+	            Rcpp::Rcout <<  survlayerMatrix(i,j) << endl;
+	        }
+	    }
+
+	} else {
+		Rcpp::Rcout << "Dimensions of SurvLayer matrix do not match; default values are used instead." << endl;
+	}
+
 #endif // SPATIALDEMOG
 
 #if PARTMIGRN
@@ -4739,7 +4752,7 @@ int ReadInitIndsFileR(int option, Landscape* pLandscape, Rcpp::DataFrame initind
 	Rcpp::CharacterVector colnames = initindslist.names();
 	int lines = initindslist.nrows();
 	int errors = 0, col_ix = 0;
-	
+
 	Rcpp::IntegerVector df_year;
 	Rcpp::IntegerVector df_species;
 	Rcpp::IntegerVector df_patch;

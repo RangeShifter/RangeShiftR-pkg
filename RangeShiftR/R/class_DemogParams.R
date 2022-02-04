@@ -368,8 +368,8 @@ setValidity("StagesParams", function(object) {
             msg <- c(msg, "Elements of FecLayer can not be NA!")
         }
         else{
-            if (any(object@FecLayer<=0)) {
-                msg <- c(msg, "Elements of FecLayer must be strictly postive integers!")
+            if (any(object@FecLayer[object@FecLayer<=0]!=-9)) {
+                msg <- c(msg, "Elements of FecLayer must be strictly postive integers or -9 for missing values!")
             }
         }
     }
@@ -378,8 +378,8 @@ setValidity("StagesParams", function(object) {
             msg <- c(msg, "Elements of DevLayer can not be NA!")
         }
         else{
-            if (any(object@DevLayer<0)) {
-                msg <- c(msg, "Elements of DevLayer must be postive integers!")
+            if (any(object@DevLayer[object@DevLayer<=0]!=-9)) {
+                msg <- c(msg, "Elements of DevLayer must be postive integers or -9 for missing values!")
             }
         }
     }
@@ -388,8 +388,8 @@ setValidity("StagesParams", function(object) {
             msg <- c(msg, "Elements of SurvLayer can not be NA!")
         }
         else{
-            if (any(object@SurvLayer<0)) {
-                msg <- c(msg, "Elements of SurvLayer must be postive integers!")
+            if (any(object@SurvLayer[object@SurvLayer<=0]!=-9)) {
+                msg <- c(msg, "Elements of SurvLayer must be postive integers or -9 for missing values!")
             }
         }
     }
