@@ -1,25 +1,25 @@
 #---------------------------------------------------------------------------
-#	
+#
 #	Copyright (C) 2020-2021 Anne-Kathleen Malchow, Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Damaris Zurell
-#	
+#
 #	This file is part of RangeShiftR.
-#	
+#
 #	RangeShiftR is free software: you can redistribute it and/or modify
 #	it under the terms of the GNU General Public License as published by
 #	the Free Software Foundation, either version 3 of the License, or
 #	(at your option) any later version.
-#	
+#
 #	RangeShiftR is distributed in the hope that it will be useful,
 #	but WITHOUT ANY WARRANTY; without even the implied warranty of
 #	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 #	GNU General Public License for more details.
-#	
+#
 #	You should have received a copy of the GNU General Public License
 #	along with RangeShiftR. If not, see <https://www.gnu.org/licenses/>.
-#	
+#
 #----------------------------------------------------------------------------
- 
- 
+
+
 
 #### PARAMETER MASTER CLASS ####
 
@@ -64,7 +64,7 @@ setValidity("RSparams", function(object) {
         }
     }
     if (object@simul@EnvStochType==1) {
-        if (object@control@landtype==1 || object@control@landtype==2) {
+        if (object@control@landtype==0 || object@control@landtype==2) {
             msg <- c(msg, "Environmental stochasticity in carrying capacity (EnvStochType=1) is implemented for artificial landscapes only!")
         }
     }
@@ -83,7 +83,7 @@ setValidity("RSparams", function(object) {
     }
     #LAND
     validObject(object@land)
-    if (any(object@control@landtype==c(0,1))){
+    if (any(object@control@landtype==c(0,2))){
         if (any(object@land@DynamicLandYears>object@simul@Years)) {
             warning("ImportedLandscape(): Dynamic landscape contains years that exceed the simulated years, so that some land changes will not apply.", call. = FALSE)
         }
