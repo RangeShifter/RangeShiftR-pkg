@@ -12,7 +12,8 @@ ImportedLandscape(LandscapeFile,
                   PatchFile = list(),
                   CostsFile = list(),
                   DynamicLandYears = 0,
-                  SpDistFile = list(), SpDistResolution)
+                  SpDistFile = list(), SpDistResolution,
+                  demogScaleLayers, nrDemogScaleLayers)
 }
 \arguments{
 \item{LandscapeFile}{List of matrices of the landscape habitat raster(s); contains each cells' habitat suitability or land cover index.}
@@ -46,6 +47,12 @@ maps (in \code{PatchFile},\code{CostsFile}) are used in the simulation. More det
 \item{SpDistFile}{List of one matrix containing the species' initial distribution raster.}
 
 \item{SpDistResolution}{Required if \code{SpDistFile} is given: Cell size of the distribution map in meters. (integer) Must be an integer multiple of the landscape resolution.}
+
+\item{demogScaleLayers}{List of a list of matrices of additional landscape layers that can be used to locally scale certain demographic rates and thus allow them to vary spatially.
+Must contain a list for each element in DynamicLandYears, where all lists contain the same number (\code{nrDemogScaleLayers}) of matrices, each of which have the same dimensions as those in \code{LandscapeFile}.
+Can only be used in combination with habitat quality maps, i.e. when \code{HabPercent=TRUE}. Contain percentage values ranging from \eqn{0.0} to \eqn{100.0}.}
+
+\item{nrDemogScaleLayers}{number of additional landscape layers for spatial demographic scaling}
 }
 \value{
 A parameter object of class ImportedLandscape
@@ -90,6 +97,15 @@ A \emph{species distribution map} can be overlaid on top of the habitat map and 
 map, i.e. the coordinates of the lower-left corner must be the same. The resolution can be the same or coarser, provided that it is a multiple of the landscape resolution. For example, if the landscape cell size is
 \eqn{250m}, the species distribution can be at the resolution of \eqn{250m}, \eqn{500m}, \eqn{750m}, \eqn{1000m} etc.
 Each cell of the species distribution map must contain either \eqn{0} (species absent or not recorded) or \eqn{1} (species present).
+
+\emph{Demographic scaling layers} \cr
+A number of additional landscape layers can be provided to locally scale certain demographic rates and thus allow them to vary spatially.
+This can only be used in combination with habitat quality maps, i.e. when \code{HabPercent=TRUE}, and with a stage-structured population model.
+The additional layers contain percentage values ranging from \eqn{0.0} to \eqn{100.0}. Chosen demographic rates for a specified stage and sex can be mapped to one of these scaling layers using the
+parameters \code{FecLayer}, \code{DevLayer}, and \code{SurvLayer} in \code{\link[RangeShiftR]{StageStructure}}. If a demographic rate varies spatially, its value in the transition matrix \code{TransMatrix})
+is now interpreted as a maximum value, while the realised local value in each cell or patch is determined as this maximum value scaled by the percentage given in the respective mapped scaling layer.
+For a patch-based landscape, the scaling percentage of a patch is given by the average percentage of its constituent cells.
+Potential density-dependence mediated by the strength 1/b still takes effect also for spatially-varying demographic rates. The respective base values φ_0, σ_0 or γ_0 are then replaced by their locally scaled values.
 
 \emph{Dynamic landscapes} \cr
 An imported landscape may be dynamic, i.e. the attributes of cells (either habitat class or quality index) and its patch number (if the model is patch-based) may be changed at specified years during the course of

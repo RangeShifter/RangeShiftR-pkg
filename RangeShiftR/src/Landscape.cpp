@@ -2665,7 +2665,11 @@ initcells.clear();
 // Returns error code or zero if read correctly
 
 #if RS_THREADSAFE
+#if SPATIALDEMOG
+int Landscape::readLandscape(int fileNum, Rcpp::NumericMatrix habfile, Rcpp::NumericMatrix pchfile, Rcpp::NumericMatrix costfile, Rcpp::List scalinglayers) {
+#else
 int Landscape::readLandscape(int fileNum, Rcpp::NumericMatrix habfile, Rcpp::NumericMatrix pchfile, Rcpp::NumericMatrix costfile) {
+#endif
 
 	if (fileNum < 0) return 19;
 

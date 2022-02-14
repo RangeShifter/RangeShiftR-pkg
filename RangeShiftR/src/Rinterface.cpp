@@ -745,6 +745,14 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 //		name_costfile = Rcpp::as<string>(costmaps.slot("filename"));
 //		name_sp_dist = Rcpp::as<string>(spdistmap.slot("filename"));
 		if(!patchmodel && patchmaps.size() != 0) Rcpp::Rcout << "PatchFile must be empty in a cell-based model!" << endl;
+#if SPATIALDEMOG
+		int nrDemogScaleLayers = 0;
+		Rcpp::List demogScaleLayers;
+		if (landtype == 2) { // habitat quality
+			nrDemogScaleLayers = Rcpp::as<int>(LandParamsR.slot("nrDemogScaleLayers"));
+			if(nrDemogScaleLayers) demogScaleLayers = Rcpp::as<Rcpp::List>(LandParamsR.slot("demogScaleLayers"));
+		}
+#endif
 
 		// new slot for coordinates of lower left corner
 		Rcpp::NumericVector origin_coords;
@@ -803,6 +811,13 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 				Rcpp::Rcout << "CostsFile must be NULL if transfer model is not SMS" << endl;
 			}
 		}
+#if SPATIALDEMOG
+		if (nrDemogScaleLayers && !stagestruct) {
+			BatchErrorR("LandFile", -999, 0, " ");
+			errors++;
+			Rcpp::Rcout << "Spatially varying demographic layers are only supported for stage-structured models" << endl;
+		}
+#endif
 		if(ppLand.dynamic) {
 			int nlayers_hab;
 			nlayers_hab = habitatmaps.size();
@@ -820,20 +835,28 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 			}
 			if(dynland_years.size() != nlayers_hab) {
 				errors++;
-				Rcpp::Rcout << "Dynamic landscape: Years must have as many elements as habitat maps." << endl;
+				Rcpp::Rcout << "Dynamic landscape: DynamicLandYears must have as many elements as habitat maps." << endl;
 			}
 			if(patchmodel) {
 				if( dynland_years.size() != patchmaps.size() || nlayers_hab != patchmaps.size() ) {
 					errors++;
-					Rcpp::Rcout << "Dynamic landscape: Patchmaps must have as many elements as Years and habitat maps." << endl;
+					Rcpp::Rcout << "Dynamic landscape: Patchmaps must have as many elements as DynamicLandYears and habitat maps." << endl;
 				}
 			}
 			if (costmaps.size() != 0) {
 				if( dynland_years.size() != costmaps.size() || nlayers_hab != costmaps.size() ) {
 					errors++;
-					Rcpp::Rcout << "Dynamic landscape: Costmaps must have as many elements as Years and habitat maps." << endl;
+					Rcpp::Rcout << "Dynamic landscape: Costmaps must have as many elements as DynamicLandYears and habitat maps." << endl;
 				}
 			}
+#if SPATIALDEMOG
+			if (nrDemogScaleLayers) {
+				if( dynland_years.size() != demogScaleLayers.size() || nlayers_hab != demogScaleLayers.size() ) {
+					errors++;
+					Rcpp::Rcout << "Dynamic landscape: demogScaleLayers must have as many elements as DynamicLandYears and habitat maps." << endl;
+				}
+			}
+#endif
 			if(errors==0) {
 				// store land changes
 				landChange chg;
@@ -857,6 +880,25 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 				Rcpp::Rcout << "Species Distribution map file is required as SpeciesDist is 1 in Control" << endl;
 			}
 		}
+#if SPATIALDEMOG
+		if(nrDemogScaleLayers) {
+			// test consistent number of layers (nrDemogScaleLayers) per dynland year
+			Rcpp::List yearLayers = demogScaleLayers[0];
+			if(yearLayers.size() != nrDemogScaleLayers){
+				errors++;
+				Rcpp::Rcout << "demogScaleLayers has an incorrect amount of layers" << endl;
+			}
+			if(ppLand.dynamic) {
+				for(int i=1; i<dynland_years.size(); i++ ) {
+					yearLayers = demogScaleLayers[i];
+					if(yearLayers.size() != nrDemogScaleLayers){
+						errors++;
+						Rcpp::Rcout << "demogScaleLayers in dynamic year " << i << " has an incorrect amount of layers" << endl;
+					}
+				}
+			}
+		}
+#endif
 
 #else //RS_THREADSAFE
 
@@ -2177,48 +2219,56 @@ int ReadStageStructureR(Rcpp::S4 ParMaster)
 	}
 
 #if SPATIALDEMOG
-	// index of input layer corresponding to each spatially varying demographic rate
-	short layercols,layerrows;
-	Rcpp::IntegerMatrix feclayerMatrix, devlayerMatrix, survlayerMatrix;
+	if (landtype == 2) { // habitat quality
+		// index of input layer corresponding to each spatially varying demographic rate
+		short layercols,layerrows,layerix;
+		Rcpp::IntegerMatrix feclayerMatrix, devlayerMatrix, survlayerMatrix;
 
-	feclayerMatrix  = Rcpp::as<Rcpp::IntegerMatrix>(StagesParamsR.slot("FecLayer"));
-	devlayerMatrix  = Rcpp::as<Rcpp::IntegerMatrix>(StagesParamsR.slot("DevLayer"));
-	survlayerMatrix = Rcpp::as<Rcpp::IntegerMatrix>(StagesParamsR.slot("SurvLayer"));
+		feclayerMatrix  = Rcpp::as<Rcpp::IntegerMatrix>(StagesParamsR.slot("FecLayer"));
+		devlayerMatrix  = Rcpp::as<Rcpp::IntegerMatrix>(StagesParamsR.slot("DevLayer"));
+		survlayerMatrix = Rcpp::as<Rcpp::IntegerMatrix>(StagesParamsR.slot("SurvLayer"));
 
-	if(dem.repType == 2) {layercols = NSEXES;} else {layercols = 1;}
-	layerrows = sstruct.nStages;
+		if(dem.repType == 2) {layercols = NSEXES;} else {layercols = 1;}
+		layerrows = sstruct.nStages;
 
-	if(layercols == feclayerMatrix.ncol() && layerrows == feclayerMatrix.nrow() ) {
-	    for(i = 0; i < layerrows; i++) { // stages in rows
-	        for(j = 0; j < layercols; j++) { // sexes in columns
-	            pSpecies->setFecLayer(i, j, feclayerMatrix(i,j));
-	        }
-	    }
-	} else {
-	    Rcpp::Rcout << "Dimensions of FecLayer matrix do not match; default values are used instead." << endl;
-	}
+		if(layercols == feclayerMatrix.ncol() && layerrows == feclayerMatrix.nrow() ) {
+			for(i = 0; i < layerrows; i++) { // stages in rows
+				for(j = 0; j < layercols; j++) { // sexes in columns
+					if( !R_IsNA( feclayerMatrix(i,j) ) ){
+						layerix = feclayerMatrix(i,j);
+						pSpecies->setFecLayer(i, j, (layerix-1) ); // subtract 1 to account for different indexing in R and C
+					}
+				}
+			}
+		} else {
+			Rcpp::Rcout << "Dimensions of FecLayer matrix do not match; default values are used instead." << endl;
+		}
 
-	if(layercols == devlayerMatrix.ncol() && layerrows == devlayerMatrix.nrow() ) {
-	    for(i = 0; i < layerrows; i++) { // stages in rows
-	        for(j = 0; j < layercols; j++) { // sexes in columns
-	            pSpecies->setDevLayer(i, j, devlayerMatrix(i,j));
-	            Rcpp::Rcout <<  devlayerMatrix(i,j) << endl;
-	        }
-	    }
-	} else {
-	    Rcpp::Rcout << "Dimensions of DevLayer matrix do not match; default values are used instead." << endl;
-	}
+		if(layercols == devlayerMatrix.ncol() && layerrows == devlayerMatrix.nrow() ) {
+			for(i = 0; i < layerrows; i++) { // stages in rows
+				for(j = 0; j < layercols; j++) { // sexes in columns
+					if( !R_IsNA( devlayerMatrix(i,j) ) ){
+						layerix = devlayerMatrix(i,j);
+						pSpecies->setDevLayer(i, j, (layerix-1) ); // subtract 1 to account for different indexing in R and C
+					}
+				}
+			}
+		} else {
+			Rcpp::Rcout << "Dimensions of DevLayer matrix do not match; default values are used instead." << endl;
+		}
 
-	if(layercols == survlayerMatrix.ncol() && layerrows == survlayerMatrix.nrow() ) {
-	    for(i = 0; i < layerrows; i++) { // stages in rows
-	        for(j = 0; j < layercols; j++) { // sexes in columns
-	            pSpecies->setSurvLayer(i, j, survlayerMatrix(i,j));
-	            Rcpp::Rcout <<  survlayerMatrix(i,j) << endl;
-	        }
-	    }
-
-	} else {
-		Rcpp::Rcout << "Dimensions of SurvLayer matrix do not match; default values are used instead." << endl;
+		if(layercols == survlayerMatrix.ncol() && layerrows == survlayerMatrix.nrow() ) {
+			for(i = 0; i < layerrows; i++) { // stages in rows
+				for(j = 0; j < layercols; j++) { // sexes in columns
+					if( !R_IsNA( survlayerMatrix(i,j) ) ){
+						layerix = survlayerMatrix(i,j);
+						pSpecies->setSurvLayer(i, j, (layerix-1) ); // subtract 1 to account for different indexing in R and C
+					}
+				}
+			}
+		} else {
+			Rcpp::Rcout << "Dimensions of SurvLayer matrix do not match; default values are used instead." << endl;
+		}
 	}
 
 #endif // SPATIALDEMOG
@@ -4250,9 +4300,27 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 				costmaps = Rcpp::as<Rcpp::List>(LandParamsR.slot("CostsFile"));
 				if (costmaps.size() > 0) Rcpp::NumericMatrix craster = Rcpp::as<Rcpp::NumericMatrix>(costmaps[0]);
 				else craster = Rcpp::NumericMatrix(0);
-
+#if SPATIALDEMOG
+				int nrDemogScaleLayers = 0;
+				Rcpp::List demogScaleLayers;                      // list of lists of layers for each dynamic land year
+				Rcpp::List scalinglayers = Rcpp::List::create();  // list of demog scaling layers for a given year (initialise as empty list)
+				
+				if(landtype == 2 && stagestruct) {
+					nrDemogScaleLayers = Rcpp::as<int>(LandParamsR.slot("nrDemogScaleLayers"));
+					if(nrDemogScaleLayers) {
+						demogScaleLayers = Rcpp::as<Rcpp::List>(LandParamsR.slot("demogScaleLayers"));
+						scalinglayers = demogScaleLayers[0];   // get layers of year 0
+					}
+					//else scalinglayers // no scaling layers -> create empty list
+				}
+#endif
+				
 				int landcode;
+#if SPATIALDEMOG
+				landcode = pLandscape->readLandscape(0, hraster, praster, craster, scalinglayers);
+#else
 				landcode = pLandscape->readLandscape(0, hraster, praster, craster);
+#endif
 
 				if(landcode != 0) {
 					Rcpp::Rcout << endl << "Error reading landscape " << land_nr << " - aborting" << endl;

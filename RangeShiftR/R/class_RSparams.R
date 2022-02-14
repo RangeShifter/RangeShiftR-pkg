@@ -64,7 +64,7 @@ setValidity("RSparams", function(object) {
         }
     }
     if (object@simul@EnvStochType==1) {
-        if (object@control@landtype==1 || object@control@landtype==2) {
+        if (object@control@landtype==0 || object@control@landtype==2) {
             msg <- c(msg, "Environmental stochasticity in carrying capacity (EnvStochType=1) is implemented for artificial landscapes only!")
         }
     }
@@ -83,7 +83,7 @@ setValidity("RSparams", function(object) {
     }
     #LAND
     validObject(object@land)
-    if (any(object@control@landtype==c(0,1))){
+    if (any(object@control@landtype==c(0,2))){
         if (any(object@land@DynamicLandYears>object@simul@Years)) {
             warning("ImportedLandscape(): Dynamic landscape contains years that exceed the simulated years, so that some land changes will not apply.", call. = FALSE)
         }
@@ -98,10 +98,19 @@ setValidity("RSparams", function(object) {
             }
         }
     }
+
     #DEMOGRAPHY
     validObject(object@demog)
-        # TODO: FecLayer,DevLayer,SurvLayer - test:
-        #                               * that maximum value doesn't exceed number of layers in ImportedLandscape
+    if (object@control@landtype == 2L){ # habitat quality
+        if ((length(object@demog@StageStruct@FecLayer) + length(object@demog@StageStruct@DevLayer) + length(object@demog@StageStruct@SurvLayer)) > 0 ){ # spatially varying demographic rates
+            ixs <- c(object@demog@StageStruct@FecLayer,object@demog@StageStruct@DevLayer,object@demog@StageStruct@SurvLayer)
+            ixs[is.na(ixs)] <- -9
+            if ( any( ixs > object@land@nrDemogScaleLayers )){
+                msg <- c(msg, "StageStructure(): Entries of FecLayer, DevLayer and SurvLayer must not exceed the number of layers in demogScaleLayers (of ImportedLandscape) !")
+            }
+        }
+    }
+
     #DISPERSAL
     validObject(object@dispersal)
     ## Emigration: check dimensions and values of EmigProb and EmigStage:

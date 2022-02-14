@@ -309,7 +309,8 @@ setMethod("show", "ArtificialLandscape", function(object){
 #'                   PatchFile = list(),
 #'                   CostsFile = list(),
 #'                   DynamicLandYears = 0,
-#'                   SpDistFile = list(), SpDistResolution)
+#'                   SpDistFile = list(), SpDistResolution,
+#'                   demogScaleLayers, nrDemogScaleLayers)
 #' @param LandscapeFile List of matrices of the landscape habitat raster(s); contains each cells' habitat suitability or land cover index.
 #' @param Resolution Cell size in meters, defaults to \eqn{100}. (integer)
 #' @param OriginCoords X- and Y-coordinates of the map origin given in meters as a vector of length 2.
@@ -331,6 +332,10 @@ setMethod("show", "ArtificialLandscape", function(object){
 #' maps (in \code{PatchFile},\code{CostsFile}) are used in the simulation. More details below.
 #' @param SpDistFile List of one matrix containing the species' initial distribution raster.
 #' @param SpDistResolution Required if \code{SpDistFile} is given: Cell size of the distribution map in meters. (integer) Must be an integer multiple of the landscape resolution.
+#' @param demogScaleLayers List of a list of matrices of additional landscape layers that can be used to locally scale certain demographic rates and thus allow them to vary spatially.
+#' Must contain a list for each element in DynamicLandYears, where all lists contain the same number (\code{nrDemogScaleLayers}) of matrices, each of which have the same dimensions as those in \code{LandscapeFile}.
+#' Can only be used in combination with habitat quality maps, i.e. when \code{HabPercent=TRUE}. Contain percentage values ranging from \eqn{0.0} to \eqn{100.0}.
+#' @param nrDemogScaleLayers number of additional landscape layers for spatial demographic scaling
 #' @details
 #' The \code{LandscapeFile} can be of one of two different types:\cr
 #' \itemize{
@@ -359,6 +364,15 @@ setMethod("show", "ArtificialLandscape", function(object){
 #' map, i.e. the coordinates of the lower-left corner must be the same. The resolution can be the same or coarser, provided that it is a multiple of the landscape resolution. For example, if the landscape cell size is
 #' \eqn{250m}, the species distribution can be at the resolution of \eqn{250m}, \eqn{500m}, \eqn{750m}, \eqn{1000m} etc.
 #' Each cell of the species distribution map must contain either \eqn{0} (species absent or not recorded) or \eqn{1} (species present).
+#'
+#' \emph{Demographic scaling layers} \cr
+#' A number of additional landscape layers can be provided to locally scale certain demographic rates and thus allow them to vary spatially.
+#' This can only be used in combination with habitat quality maps, i.e. when \code{HabPercent=TRUE}, and with a stage-structured population model.
+#' The additional layers contain percentage values ranging from \eqn{0.0} to \eqn{100.0}. Chosen demographic rates for a specified stage and sex can be mapped to one of these scaling layers using the
+#' parameters \code{FecLayer}, \code{DevLayer}, and \code{SurvLayer} in \code{\link[RangeShiftR]{StageStructure}}. If a demographic rate varies spatially, its value in the transition matrix \code{TransMatrix})
+#' is now interpreted as a maximum value, while the realised local value in each cell or patch is determined as this maximum value scaled by the percentage given in the respective mapped scaling layer.
+#' For a patch-based landscape, the scaling percentage of a patch is given by the average percentage of its constituent cells.
+#' Potential density-dependence mediated by the strength 1/b still takes effect also for spatially-varying demographic rates. The respective base values φ_0, σ_0 or γ_0 are then replaced by their locally scaled values.
 #'
 #' \emph{Dynamic landscapes} \cr
 #' An imported landscape may be dynamic, i.e. the attributes of cells (either habitat class or quality index) and its patch number (if the model is patch-based) may be changed at specified years during the course of
@@ -395,7 +409,9 @@ ImportedLandscape <- setClass("ImportedLandscape", slots = c(LandscapeFile = "li
                                                              CostsFile = "list",
                                                              SpDistFile = "list",         # sets the speciesdist -switch in class ControlParams when added
                                                              SpDistResolution = "integer_OR_numeric",
-                                                             DynamicLandYears = "integer_OR_numeric") #= "data.frame")
+                                                             DynamicLandYears = "integer_OR_numeric", #= "data.frame")
+                                                             nrDemogScaleLayers = "integer",
+                                                             demogScaleLayers = "list")
                               , prototype = list(#LandscapeFile,
                                                  Resolution = 100L,
                                                  OriginCoords = c(0,0),
@@ -406,7 +422,9 @@ ImportedLandscape <- setClass("ImportedLandscape", slots = c(LandscapeFile = "li
                                                  CostsFile = list(), # "NULL",
                                                  SpDistFile = list(), # "NULL",
                                                  #SpDistResolution,
-                                                 DynamicLandYears = 0L) #= data.frame())
+                                                 DynamicLandYears = 0L, # = "data.frame")
+                                                 #nrDemogScaleLayers = 0L,
+                                                 demogScaleLayers = list() )
                               , contains = "LandParams")
 
 setValidity("ImportedLandscape", function(object) {
@@ -561,7 +579,45 @@ setValidity("ImportedLandscape", function(object) {
             }
         }
     }
-   if (is.null(msg)) TRUE else msg}
+    # demographic spatial variation
+    if (object@HabPercent) {
+        if(length(object@nrDemogScaleLayers)>0){
+            if(length(object@nrDemogScaleLayers) != 1){
+                msg <- c(msg, "nrDemogScaleLayers must be of length 1.")
+            }
+            else {
+                if( object@nrDemogScaleLayers <= 0){
+                    msg <- c(msg, "nrDemogScaleLayers must be strictly positive.")
+                }
+                else {
+                    if( any( sapply(object@demogScaleLayers, length) != object@nrDemogScaleLayers )){
+                        msg <- c(msg, "nrDemogScaleLayers must give the number of maps contained in each element of demogScaleLayers.")
+                    }
+                }
+            }
+        }
+        if (length(object@demogScaleLayers) > 0){
+            if( any( sapply(object@demogScaleLayers, class) != "list")){
+                msg <- c(msg, "demogScaleLayers must be a list that contains a list of matrices for each element in DynamicLandYears.")
+            }
+            else{
+                if( length(object@demogScaleLayers) != length(object@DynamicLandYears) ){
+                    msg <- c(msg, "demogScaleLayers must be a list that contains a list of matrices for each element in DynamicLandYears.")
+                }
+                else{
+                    if( any( sapply(object@demogScaleLayers, FUN = function(yearlist){sapply(yearlist, class)[1,]} ) != "matrix")){
+                        msg <- c(msg, "All elements of the lists in demogScaleLayers must be of class matrix.")
+                    }
+                    else{
+                        if( (any( sapply(object@demogScaleLayers, sapply, ncol) != land_ncol)) || (any( sapply(object@demogScaleLayers, sapply, nrow) != land_nrow)) ){
+                            msg <- c(msg, "All elements of demogScaleLayers list must have the same ncol and nrow as the LandscapeFile list")
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if (is.null(msg)) TRUE else msg}
 )
 setMethod("initialize", "ImportedLandscape", function(.Object, ...) {
     this_func = "ImportedLandscape(): "
@@ -579,7 +635,24 @@ setMethod("initialize", "ImportedLandscape", function(.Object, ...) {
     if (length(.Object@SpDistFile)==0) {
         .Object@SpDistResolution = -9
         if (!is.null(args$SpDistResolution)) {
-            warning(this_func, "Resolution of Species distribution", warn_msg_ignored, "since no map file is given.", call. = FALSE)
+            warning(this_func, "Resolution of Species distribution", warn_msg_ignored, "since no species distribution map is given.", call. = FALSE)
+        }
+    }
+    if (.Object@HabPercent) {
+        if (is.null(args$nrDemogScaleLayers)) {
+            if (length(.Object@demogScaleLayers) > 0) {
+                .Object@nrDemogScaleLayers = length(.Object@demogScaleLayers[[1]])
+            }
+        }
+        else {
+            if (length(.Object@demogScaleLayers) == 0) {
+                warning(this_func, "nrDemogScaleLayers", warn_msg_ignored, "since no demogScaleLayers maps are given.", call. = FALSE)
+            }
+        }
+    }
+    else {
+        if (!is.null(args$demogScaleLayers) | !is.null(args$nrDemogScaleLayers)) {
+            warning(this_func, "demogScaleLayers", warn_msg_ignored, "since they can only be used in combination with habitat quality maps.", call. = FALSE)
         }
     }
     .Object}
@@ -608,6 +681,9 @@ setMethod("show", "ImportedLandscape", function(object){
     if ( length(object@SpDistFile) > 0 ) {
         cat("   Initial Species Distribution map given \n")
         cat("   Resolution      :", paste(object@SpDistResolution),"\n")
+    }
+    if ( length(object@demogScaleLayers) > 0 ) {
+        cat("   Demographic scaling given by",paste(object@nrDemogScaleLayers),"layers\n")
     }
 })
 

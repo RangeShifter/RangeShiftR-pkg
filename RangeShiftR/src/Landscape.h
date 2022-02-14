@@ -567,6 +567,9 @@ public:
 		Rcpp::NumericMatrix,// habitat raster
 		Rcpp::NumericMatrix,// patch raster
 		Rcpp::NumericMatrix	// cost raster
+#if SPATIALDEMOG
+		, Rcpp::List // demographic scaling layers
+#endif
 	);
 #else //RS_THREADSAFE
 #if RS_CONTAIN
