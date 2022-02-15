@@ -84,7 +84,7 @@ using namespace std;
 #include "FractalGenerator.h"
 #if RS_RCPP
 #include <locale>
-#if !RSWIN64
+#if !RSWIN64 && !RS_THREADSAFE
 #include <codecvt>
 #endif
 #if !R_CMD
@@ -629,9 +629,11 @@ public:
 #endif // RS_CONTAIN
 #endif // RS_THREADSAFE
 	void listPatches(void);
+#if !RS_THREADSAFE
 	int readCosts(
 		string	// costs file name
 	);
+#endif // !RS_THREADSAFE
 	// the following four functions are implemented for the GUI version only
 	// in the batch version, they are defined, but empty
 	void setLandMap(void);

@@ -3745,6 +3745,8 @@ return 0;
 
 //---------------------------------------------------------------------------
 
+#if !RS_THREADSAFE
+
 int Landscape::readCosts(string fname)
 {
 
@@ -3878,6 +3880,7 @@ costs.close(); costs.clear();
 return maxcost;
 
 }
+#endif // !RS_THREADSAFE
 
 //---------------------------------------------------------------------------
 
