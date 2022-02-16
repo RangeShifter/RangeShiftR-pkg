@@ -3219,6 +3219,7 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
 #endif // RS_CONTAIN
 		// dispersal kernel                                         // dispersal kernel
 		sett.indVar = false;
+		densdep = false;
 		if(dem.repType == 0) {
 			if(sett.sexDep)
 				error = 501; // sex-dependent settlement is not possible with asexual models
