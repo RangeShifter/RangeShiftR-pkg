@@ -56,8 +56,8 @@ for (int sex = 0; sex < NSEXES; sex++) {
 	nTemp[sex] = 0;
 }
 #if SPATIALDEMOG
-short nlayer=NLAYERS;
-for (int i = 0; i < nlayer; i++) localDemoScaling.push_back(1.0);
+//for (int i = 0; i < nDSlayer; i++) localDemoScaling.push_back(1.0);
+localDemoScaling.assign(nDSlayer,1.0);
 #endif
 
 changed = false;
@@ -429,7 +429,104 @@ float Patch::getK(void) { return localK; }
 #endif // SEASONAL
 
 #if SPATIALDEMOG
+void Patch::setDemoScaling(std::vector <float> ds) {
+	std::for_each(ds.begin(), ds.end(), [](float& perc){ if(perc < 0.0 || perc > 100.0) perc=100; });
+	localDemoScaling.assign(ds.begin(), ds.end());
+	return;
+}
+
 std::vector <float> Patch::getDemoScaling(void) { return localDemoScaling; }
+
+void Patch::setPatchDemoScaling(short landIx) { 
+
+	/*
+	bool inpatch = false;
+	int ncells = (int)cells.size();
+	locn loc;
+	double dist = 0.0;
+	for (int i = 0; i < ncells; i++) {
+		loc = cells[i]->getLocn();
+		if (loc.x == dmgX && loc.y == dmgY) { inpatch = true; i = ncells+1; break; }
+	}
+	if (!inpatch) dist = sqrt((double)((dmgX-loc.x)*(dmgX-loc.x) + (dmgY-loc.y)*(dmgY-loc.y)));
+	damageIndex += (double)damage * exp(-1.0*alpha*dist);
+	*/
+	
+	/*
+	locn loc;
+	int xsum,ysum;
+	short hx;
+	float k,q,envval;
+
+	localK = 0.0; // no. of suitable cells (unadjusted K > 0) in the patch
+	int nsuitable = 0;
+
+
+	if (xMin > landlimits.xMax || xMax < landlimits.xMin
+	||  yMin > landlimits.yMax || yMax < landlimits.yMin) {
+		localK = 0.0;
+		return;
+	}
+
+	int ncells = (int)cells.size();
+	xsum = ysum = 0;
+	for (int i = 0; i < ncells; i++) {
+		if (gradK) // gradient in carrying capacity
+			envval = cells[i]->getEnvVal(); // environmental gradient value
+		else envval = 1.0; // no gradient effect
+		if (env.stoch && env.inK) { // environmental stochasticity in K
+			if (env.local) {
+	//			pCell = getRandomCell();
+	//			if (pCell != 0) envval += pCell->getEps();
+				envval += cells[i]->getEps();
+			}
+			else { // global stochasticity
+				envval += epsGlobal;
+		}
+		}
+
+		switch (rasterType) {
+		case 0: // habitat codes
+			hx = cells[i]->getHabIndex(landIx);
+			k = pSpecies->getHabK(hx);
+			if (k > 0.0) {
+				nsuitable++;
+				localK += envval * k;
+			}
+			break;
+		case 1: // cover %
+			k = 0.0;
+			for (int j = 0; j < nHab; j++) { // loop through cover layers
+				q = cells[i]->getHabitat(j);
+				k += q * pSpecies->getHabK(j) / 100.0f;
+			}
+			if (k > 0.0) {
+				nsuitable++;
+				localK += envval * k;
+			}
+			break;
+		case 2: // habitat quality
+			q = cells[i]->getHabitat(landIx);
+			if (q > 0.0) {
+				nsuitable++;
+				localK += envval * pSpecies->getHabK(0) * q / 100.0f;
+			}
+			break;
+		}
+	}
+
+	if (env.stoch && env.inK) { // environmental stochasticity in K
+		// apply min and max limits to K over the whole patch
+		// NB limits have been stored as N/cell rather than N/ha
+		float limit;
+		limit = pSpecies->getMinMax(0) * (float)nsuitable;
+		if (localK < limit) localK = limit;
+		limit = pSpecies->getMinMax(1) * (float)nsuitable;
+		if (localK > limit) localK = limit;
+	}*/
+		
+	return;
+}
 #endif //SPATIALDEMOG
 
 // Return co-ordinates of a specified cell

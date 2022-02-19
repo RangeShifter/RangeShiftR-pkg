@@ -48,8 +48,10 @@ maps (in \code{PatchFile},\code{CostsFile}) are used in the simulation. More det
 
 \item{SpDistResolution}{Required if \code{SpDistFile} is given: Cell size of the distribution map in meters. (integer) Must be an integer multiple of the landscape resolution.}
 
-\item{demogScaleLayers}{List of a list of matrices of additional landscape layers that can be used to locally scale certain demographic rates and thus allow them to vary spatially.
-Must contain a list for each element in DynamicLandYears, where all lists contain the same number (\code{nrDemogScaleLayers}) of matrices, each of which have the same dimensions as those in \code{LandscapeFile}.
+\item{demogScaleLayers}{List of arrays that describe additional landscape layers which can be used to locally scale certain demographic rates and thus allow them to vary spatially.
+The list must contain equally sized 3D-arrays, one for each element in \code{DynamicLandYears}, which are interpreted as stacked layers.
+The arrays' first two dimensions correspond to the x- and y-dimensions of the maps in \code{LandscapeFile} and must match in resolution and offset;
+the third dimension indexes the various layers (of which there are \code{nrDemogScaleLayers}).
 Can only be used in combination with habitat quality maps, i.e. when \code{HabPercent=TRUE}. Contain percentage values ranging from \eqn{0.0} to \eqn{100.0}.}
 
 \item{nrDemogScaleLayers}{number of additional landscape layers for spatial demographic scaling}
@@ -99,7 +101,7 @@ map, i.e. the coordinates of the lower-left corner must be the same. The resolut
 Each cell of the species distribution map must contain either \eqn{0} (species absent or not recorded) or \eqn{1} (species present).
 
 \emph{Demographic scaling layers} \cr
-A number of additional landscape layers can be provided to locally scale certain demographic rates and thus allow them to vary spatially.
+A number of additional landscape layers can be provided in \code{demogScaleLayers} to locally scale certain demographic rates and thus allow them to vary spatially.
 This can only be used in combination with habitat quality maps, i.e. when \code{HabPercent=TRUE}, and with a stage-structured population model.
 The additional layers contain percentage values ranging from \eqn{0.0} to \eqn{100.0}. Chosen demographic rates for a specified stage and sex can be mapped to one of these scaling layers using the
 parameters \code{FecLayer}, \code{DevLayer}, and \code{SurvLayer} in \code{\link[RangeShiftR]{StageStructure}}. If a demographic rate varies spatially, its value in the transition matrix \code{TransMatrix})

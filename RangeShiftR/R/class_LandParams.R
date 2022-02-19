@@ -332,8 +332,10 @@ setMethod("show", "ArtificialLandscape", function(object){
 #' maps (in \code{PatchFile},\code{CostsFile}) are used in the simulation. More details below.
 #' @param SpDistFile List of one matrix containing the species' initial distribution raster.
 #' @param SpDistResolution Required if \code{SpDistFile} is given: Cell size of the distribution map in meters. (integer) Must be an integer multiple of the landscape resolution.
-#' @param demogScaleLayers List of a list of matrices of additional landscape layers that can be used to locally scale certain demographic rates and thus allow them to vary spatially.
-#' Must contain a list for each element in DynamicLandYears, where all lists contain the same number (\code{nrDemogScaleLayers}) of matrices, each of which have the same dimensions as those in \code{LandscapeFile}.
+#' @param demogScaleLayers List of arrays that describe additional landscape layers which can be used to locally scale certain demographic rates and thus allow them to vary spatially.
+#' The list must contain equally sized 3D-arrays, one for each element in \code{DynamicLandYears}, which are interpreted as stacked layers.
+#' The arrays' first two dimensions correspond to the x- and y-dimensions of the maps in \code{LandscapeFile} and must match in resolution and offset;
+#' the third dimension indexes the various layers (of which there are \code{nrDemogScaleLayers}).
 #' Can only be used in combination with habitat quality maps, i.e. when \code{HabPercent=TRUE}. Contain percentage values ranging from \eqn{0.0} to \eqn{100.0}.
 #' @param nrDemogScaleLayers number of additional landscape layers for spatial demographic scaling
 #' @details
@@ -366,7 +368,7 @@ setMethod("show", "ArtificialLandscape", function(object){
 #' Each cell of the species distribution map must contain either \eqn{0} (species absent or not recorded) or \eqn{1} (species present).
 #'
 #' \emph{Demographic scaling layers} \cr
-#' A number of additional landscape layers can be provided to locally scale certain demographic rates and thus allow them to vary spatially.
+#' A number of additional landscape layers can be provided in \code{demogScaleLayers} to locally scale certain demographic rates and thus allow them to vary spatially.
 #' This can only be used in combination with habitat quality maps, i.e. when \code{HabPercent=TRUE}, and with a stage-structured population model.
 #' The additional layers contain percentage values ranging from \eqn{0.0} to \eqn{100.0}. Chosen demographic rates for a specified stage and sex can be mapped to one of these scaling layers using the
 #' parameters \code{FecLayer}, \code{DevLayer}, and \code{SurvLayer} in \code{\link[RangeShiftR]{StageStructure}}. If a demographic rate varies spatially, its value in the transition matrix \code{TransMatrix})
@@ -423,7 +425,7 @@ ImportedLandscape <- setClass("ImportedLandscape", slots = c(LandscapeFile = "li
                                                  SpDistFile = list(), # "NULL",
                                                  #SpDistResolution,
                                                  DynamicLandYears = 0L, # = "data.frame")
-                                                 #nrDemogScaleLayers = 0L,
+                                                 nrDemogScaleLayers = 0L,
                                                  demogScaleLayers = list() )
                               , contains = "LandParams")
 
@@ -581,36 +583,53 @@ setValidity("ImportedLandscape", function(object) {
     }
     # demographic spatial variation
     if (object@HabPercent) {
-        if(length(object@nrDemogScaleLayers)>0){
-            if(length(object@nrDemogScaleLayers) != 1){
-                msg <- c(msg, "nrDemogScaleLayers must be of length 1.")
+        if(length(object@nrDemogScaleLayers) != 1){
+            msg <- c(msg, "nrDemogScaleLayers must be of length 1.")
+        }
+        else {
+            if( object@nrDemogScaleLayers < 0){
+                msg <- c(msg, "nrDemogScaleLayers must be positive.")
             }
             else {
-                if( object@nrDemogScaleLayers <= 0){
-                    msg <- c(msg, "nrDemogScaleLayers must be strictly positive.")
-                }
-                else {
-                    if( any( sapply(object@demogScaleLayers, length) != object@nrDemogScaleLayers )){
-                        msg <- c(msg, "nrDemogScaleLayers must give the number of maps contained in each element of demogScaleLayers.")
-                    }
-                }
-            }
-        }
-        if (length(object@demogScaleLayers) > 0){
-            if( any( sapply(object@demogScaleLayers, class) != "list")){
-                msg <- c(msg, "demogScaleLayers must be a list that contains a list of matrices for each element in DynamicLandYears.")
-            }
-            else{
-                if( length(object@demogScaleLayers) != length(object@DynamicLandYears) ){
-                    msg <- c(msg, "demogScaleLayers must be a list that contains a list of matrices for each element in DynamicLandYears.")
-                }
-                else{
-                    if( any( sapply(object@demogScaleLayers, FUN = function(yearlist){sapply(yearlist, class)[1,]} ) != "matrix")){
-                        msg <- c(msg, "All elements of the lists in demogScaleLayers must be of class matrix.")
+                if (length(object@demogScaleLayers) > 0){ # scaling layers are given
+                    if( any( sapply(object@demogScaleLayers, class) != "array")){
+                        msg <- c(msg, "demogScaleLayers must be a list that contains an array for each element in DynamicLandYears.")
                     }
                     else{
-                        if( (any( sapply(object@demogScaleLayers, sapply, ncol) != land_ncol)) || (any( sapply(object@demogScaleLayers, sapply, nrow) != land_nrow)) ){
-                            msg <- c(msg, "All elements of demogScaleLayers list must have the same ncol and nrow as the LandscapeFile list")
+                        if( length(object@demogScaleLayers) != length(object@DynamicLandYears) ){
+                            msg <- c(msg, "demogScaleLayers must be a list that contains an array for each element in DynamicLandYears.")
+                        }
+                        else{
+                            ds_dims <- sapply(object@demogScaleLayers, dim) # (size of dimensions per array)
+                            if( !"matrix" %in% class(ds_dims) ){
+                                msg <- c(msg, "the arrays in demogScaleLayers must have the same dimensionality.")
+                            }
+                            else{
+                                if( dim(ds_dims)[1] != 3 ){
+                                    msg <- c(msg, "demogScaleLayers must be a list that contains 3-dimensional arrays.")
+                                }
+                                else{
+                                    if( any(apply(ds_dims,1,var)!=0) ){
+                                        msg <- c(msg, "all arrays in demogScaleLayers must have the same size.")
+                                    }
+                                    else{
+                                        if( object@nrDemogScaleLayers > 0 &&  ds_dims[3,1] != object@nrDemogScaleLayers ){
+                                            msg <- c(msg, "nrDemogScaleLayers must give the number of layers contained in each element (array) of demogScaleLayers.")
+                                        }
+                                        else{
+                                            if( ds_dims[1,1] != land_ncol || ds_dims[2,1] != land_nrow ){
+                                                msg <- c(msg, "All elements of demogScaleLayers list must have the same ncol and nrow as the LandscapeFile list")
+                                            }
+                                            else{
+                                                ds_vals <- c(unlist(object@demogScaleLayers))
+                                                if( any( ds_vals < 0) || any( ds_vals > 100 ) ){
+                                                    msg <- c(msg, "All elements of the arrays in demogScaleLayers must be values between 0 and 100.")
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -641,7 +660,7 @@ setMethod("initialize", "ImportedLandscape", function(.Object, ...) {
     if (.Object@HabPercent) {
         if (is.null(args$nrDemogScaleLayers)) {
             if (length(.Object@demogScaleLayers) > 0) {
-                .Object@nrDemogScaleLayers = length(.Object@demogScaleLayers[[1]])
+                .Object@nrDemogScaleLayers = dim(Object@demogScaleLayers[[1]])[3]
             }
         }
         else {

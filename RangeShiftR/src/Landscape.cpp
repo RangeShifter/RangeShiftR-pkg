@@ -309,6 +309,9 @@ dynamic = false; habIndexed = false;
 #if RS_CONTAIN
 dmgLoaded = false;
 #endif // RS_CONTAIN 
+#if SPATIALDEMOG
+spatialdemog = false;
+#endif // SPATIALDEMOG 
 resol = spResol = landNum = 0;
 rasterType = 0;
 nHab = nHabMax = 0;
@@ -476,6 +479,9 @@ landNum = ppp.landNum;
 #if RS_CONTAIN
 dmgLoaded = ppp.dmgLoaded;
 #endif // RS_CONTAIN 
+#if SPATIALDEMOG
+spatialdemog = ppp.spatialdemog;
+#endif // SPATIALDEMOG 
 if (ppp.resol > 0) resol = ppp.resol;
 if (ppp.spResol > 0 && ppp.spResol%ppp.resol == 0) spResol = ppp.spResol;
 if ((ppp.rasterType >= 0 && ppp.rasterType <= 2) || ppp.rasterType == 9)
@@ -514,6 +520,9 @@ ppp.dynamic = dynamic;
 #if RS_CONTAIN
 ppp.dmgLoaded = dmgLoaded;
 #endif // RS_CONTAIN 
+#if SPATIALDEMOG
+ppp.spatialdemog = spatialdemog;
+#endif // SPATIALDEMOG 
 ppp.landNum = landNum;
 ppp.resol = resol; ppp.spResol = spResol;
 ppp.rasterType = rasterType;
@@ -1483,6 +1492,22 @@ for (int i = 0; i < npatches; i++) {
 
 }
 
+#if SPATIALDEMOG
+void Landscape::updateDemoScalings(short landIx) {
+	
+	patchLimits landlimits;
+	landlimits.xMin = minX; landlimits.xMax = maxX;
+	landlimits.yMin = minY; landlimits.yMax = maxY;
+
+	int npatches = (int)patches.size();
+	for (int i = 0; i < npatches; i++) {
+		if (patches[i]->getPatchNum() != 0) { // not matrix patch
+			patches[i]->setPatchDemoScaling(landIx);//(landlimits,nHab,rasterType,landIx);
+		}
+	}
+}
+#endif // SPATIALDEMOG
+
 Cell* Landscape::findCell(int x,int y) {
 if (x >= 0 && x < dimX && y >= 0 && y < dimY) return cells[y][x];
 else return 0;
@@ -1785,14 +1810,31 @@ landchanges.clear();
 
 
 #if RS_THREADSAFE
+#if SPATIALDEMOG
+int Landscape::readLandChange(int filenum, Rcpp::NumericMatrix habfile, Rcpp::NumericMatrix pchfile, Rcpp::NumericMatrix costfile, Rcpp::NumericVector scalinglayers){
+#else
 int Landscape::readLandChange(int filenum, Rcpp::NumericMatrix habfile, Rcpp::NumericMatrix pchfile, Rcpp::NumericMatrix costfile){
-
+#endif
+	
 	if (filenum < 0) return 19;
 
 	int h = 0, p = 0, c = 0, pchseq = 0;
 	double hfloat = 0,pfloat = 0,cfloat = 0;
 	bool costs = false;
 	if(costfile.nrow()>0 && costfile.ncol()>0) costs = true;
+	
+#if SPATIALDEMOG
+	arma::vec cellDemoScalings;  // vector to store local demog scalings
+	Rcpp::IntegerVector DSdim;
+	int nrDemogScaleLayers = 0;
+	if(scalinglayers.attr("dim")==R_NilValue) DSdim = Rcpp::IntegerVector::create(1,1,1);
+	else{
+		DSdim = scalinglayers.attr("dim");
+		if(DSdim.size()>2) nrDemogScaleLayers = DSdim[2]; //nr of slices on cube
+		else nrDemogScaleLayers = 1;
+	}
+	arma::cube scalingCube(scalinglayers.begin(),DSdim[0],DSdim[1],nrDemogScaleLayers,false); // turn scaling layers into a cube
+#endif
 
 	simParams sim = paramsSim->getSim();
 
@@ -1927,6 +1969,23 @@ int Landscape::readLandChange(int filenum, Rcpp::NumericMatrix habfile, Rcpp::Nu
 							}
 						}
 					}
+#if SPATIALDEMOG
+					// read demographic scalings
+					if(nrDemogScaleLayers){
+						// get tube at (y/x)
+						cellDemoScalings = scalingCube(arma::span(dimX-1-y), arma::span(x), arma::span::all);
+						if(cellDemoScalings.n_elem==nDSlayer){
+							// set vector percentage values in cell
+							cells[y][x]->addchgDemoScaling(arma::conv_to< std::vector<float> >::from(cellDemoScalings));
+						}
+						else{// invalid patch code
+							#if RS_RCPP && !R_CMD
+							Rcpp::Rcout << "Wrong number of demographic scaling layers in cell " << x << " ," << y << " at dyn land change nr " << filenum << std::endl;
+							#endif
+							return 39;
+						}
+					}
+#endif // SPATIALDEMOG
 				}
 			}
 		}
@@ -2666,7 +2725,7 @@ initcells.clear();
 
 #if RS_THREADSAFE
 #if SPATIALDEMOG
-int Landscape::readLandscape(int fileNum, Rcpp::NumericMatrix habfile, Rcpp::NumericMatrix pchfile, Rcpp::NumericMatrix costfile, Rcpp::List scalinglayers) {
+int Landscape::readLandscape(int fileNum, Rcpp::NumericMatrix habfile, Rcpp::NumericMatrix pchfile, Rcpp::NumericMatrix costfile, Rcpp::NumericVector scalinglayers) {
 #else
 int Landscape::readLandscape(int fileNum, Rcpp::NumericMatrix habfile, Rcpp::NumericMatrix pchfile, Rcpp::NumericMatrix costfile) {
 #endif
@@ -2903,7 +2962,66 @@ int Landscape::readLandscape(int fileNum, Rcpp::NumericMatrix habfile, Rcpp::Num
 		break;
 	} // end switch(rasterType)
 
+#if SPATIALDEMOG
+	int SMScosts = costfile.nrow()*costfile.ncol();
+	
+	arma::vec cellDemoScalings;  // vector to store local demog scalings
+	Rcpp::IntegerVector DSdim;
+	int nrDemogScaleLayers = 0;
+	if(scalinglayers.attr("dim")==R_NilValue) DSdim = Rcpp::IntegerVector::create(1,1,1);
+	else{
+		DSdim = scalinglayers.attr("dim");
+		if(DSdim.size()>2) nrDemogScaleLayers = DSdim[2]; //nr of slices on cube
+		else nrDemogScaleLayers = 1;
+	}
+	arma::cube scalingCube(scalinglayers.begin(),DSdim[0],DSdim[1],nrDemogScaleLayers,false); // turn scaling layers into a cube
 
+	if(SMScosts || nrDemogScaleLayers){ // are there SMS costs or demographic scaling layers to read?
+	
+		for (int y = dimY-1; y >= 0; y--) {
+			for (int x = 0; x < dimX; x++) {
+				
+				// find the cell
+				pCell = findCell(x,y);
+				if (pCell != 0) { // not no-data cell
+				
+					// read cost raster
+					if(SMScosts) {
+						cfloat = costfile(dimX-1-y,x);
+						if ( !R_IsNA(cfloat) ) {
+							hc = (int)cfloat;
+							if ( hc < 1 ) {
+							#if RS_RCPP && !R_CMD
+								Rcpp::Rcout << "Cost map may only contain values of 1 or higher, but found " << hc << "." << endl;
+							#endif
+								return 54;
+							}
+							// set cost value
+							pCell->setCost(hc);
+							if (hc > maxcost) maxcost = hc;
+						}
+					}
+					
+					// read demographic scalings
+					if(nrDemogScaleLayers){
+						// get tube at (y/x)
+						cellDemoScalings = scalingCube(arma::span(dimX-1-y), arma::span(x), arma::span::all);
+						if(cellDemoScalings.n_elem==nDSlayer){
+							// set vector percentage values in cell
+							pCell->addchgDemoScaling(arma::conv_to< std::vector<float> >::from(cellDemoScalings));
+						}
+						else{// invalid patch code
+							#if RS_RCPP && !R_CMD
+							Rcpp::Rcout << "Wrong number of demographic scaling layers in cell " << x << " ," << y << " of first layer array." << std::endl;
+							#endif
+							return 64;
+						}
+					}
+				}
+			}
+		}
+	}
+#else
 	if (sim.batchMode) {
 		int maxYcost = costfile.nrow();
 		int maxXcost = costfile.ncol();
@@ -2932,6 +3050,7 @@ int Landscape::readLandscape(int fileNum, Rcpp::NumericMatrix habfile, Rcpp::Num
 			}
 		}
 	}
+#endif //SPATIALDEMOG
 
 	return 0;
 

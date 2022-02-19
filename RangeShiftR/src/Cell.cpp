@@ -80,6 +80,9 @@ if (smsData != 0) {
 	if (smsData->effcosts != 0) delete smsData->effcosts;
 	delete smsData;       
 }
+#if SPATIALDEMOG
+demoScalings.clear();
+#endif
 #if RSDEBUG
 //DEBUGLOG << "Cell::~Cell(): deleted" << endl;
 #endif
@@ -237,6 +240,30 @@ void Cell::setDamage(DamageLocn *pDmg) { pDamage = pDmg; }
 DamageLocn* Cell::getDamage(void) { return pDamage; }
 
 #endif // RS_CONTAIN 
+
+#if SPATIALDEMOG
+
+void Cell::addchgDemoScaling(std::vector<float> ds) {
+	std::for_each(ds.begin(), ds.end(), [](float& perc){ if(perc < 0.0 || perc > 100.0) perc=100; });
+	demoScalings.push_back(ds);
+	return;
+}
+
+void Cell::setDemoScaling(std::vector<float> ds, short chgyear) {
+	std::for_each(ds.begin(), ds.end(), [](float& perc){ if(perc < 0.0 || perc > 100.0) perc=100; });
+	demoScalings[chgyear].assign(ds.begin(), ds.end());
+	return;
+}
+
+float Cell::getDemoScaling(short ix, short chgyear) {
+	if (ix < 0 || ix >= nDSlayer)
+		// nodata cell OR should not occur, but treat as such
+		return -1.0;
+	else return demoScalings[chgyear][ix];
+}
+
+#endif // SPATIALDEMOG 
+
 
 //---------------------------------------------------------------------------
 

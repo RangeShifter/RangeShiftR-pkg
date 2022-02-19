@@ -100,6 +100,11 @@ if (!ppLand.generated) {
 	pLandscape->updateCarryingCapacity(pSpecies,0,0);
 //	if (ppLand.rasterType <= 2 && ppLand.dmgLoaded) 
 //		pLandscape->updateDamageIndices();
+#if SPATIALDEMOG
+	if (ppLand.rasterType == 2 && ppLand.spatialdemog)
+		pLandscape->updateDemoScalings(0); // TODO
+#endif // SPATIALDEMOG 
+
 	patchData ppp;
 	int npatches = pLandscape->patchCount();
 	for (int i = 0; i < npatches; i++) {
@@ -368,12 +373,12 @@ DEBUGLOG << "RunModel(): UNABLE TO OPEN GENETIC SAMPLES FILE" << endl;
 		}
 #endif // VIRTUALECOLOGIST 
 #if PEDIGREE
-	if (!pComm->outGroupHeaders(0)) {
-		MemoLine("UNABLE TO OPEN GROUPS FILE");
-		filesOK = false;		
-	}
+		if (!pComm->outGroupHeaders(0)) {
+			MemoLine("UNABLE TO OPEN GROUPS FILE");
+			filesOK = false;		
+		}
 #endif
-	}
+	} // rep==0
 #if RSDEBUG
 DEBUGLOG << "RunModel(): completed opening output files" << endl;
 #endif
@@ -477,7 +482,11 @@ DEBUGLOG << "RunModel(): PROBLEM - closing output files" << endl;
 //	pLandscape->resetPrevDamage();
 	if (ppLand.rasterType <= 2 && ppLand.dmgLoaded)
 		pLandscape->updateDamageIndices();
-#endif // RS_CONTAIN 
+#endif // RS_CONTAIN
+#if SPATIALDEMOG
+	if (ppLand.rasterType == 2 && ppLand.spatialdemog)
+		pLandscape->updateDemoScalings(0); //TODO
+#endif // SPATIALDEMOG 
 #if RSDEBUG
 DEBUGLOG << "RunModel(): completed updating carrying capacity" << endl;
 #endif
@@ -741,9 +750,13 @@ DEBUGLOG << "RunModel(): yr=" << yr << " landChg.costfile=" << landChg.costfile 
 		if (updateCC) {
 			pLandscape->updateCarryingCapacity(pSpecies,yr,landIx);
 #if RS_CONTAIN
-			if (ppLand.rasterType <= 2 && ppLand.dmgLoaded)
-				pLandscape->updateDamageIndices();
+		if (ppLand.rasterType <= 2 && ppLand.dmgLoaded)
+			pLandscape->updateDamageIndices();
 #endif // RS_CONTAIN 
+#if SPATIALDEMOG
+		if (ppLand.rasterType == 2 && ppLand.spatialdemog)
+			pLandscape->updateDemoScalings((short)landIx); //TODO
+#endif // SPATIALDEMOG 
 		}
 #if RS_CONTAIN
 		pLandscape->resetDamageLocns();

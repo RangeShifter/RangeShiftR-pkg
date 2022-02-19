@@ -50,10 +50,10 @@ Author: Anne-Kathleen Malchow, Humboldt University Berlin
 #if !RSWIN64
 #include <codecvt>
 #endif
+#include <Rcpp.h>
 
 using namespace std;
 
-#include <Rcpp.h>
 #include "Version.h"
 #include "Parameters.h"
 #include "Landscape.h"

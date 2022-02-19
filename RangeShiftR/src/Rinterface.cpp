@@ -90,6 +90,9 @@ rasterdata mortraster;
 // string parameterFile;
 // string landFile;
 string name_landscape, name_patch, name_sp_dist, name_costfile;
+#if SPATIALDEMOG
+short nDSlayer=NLAYERS;
+#endif // SPATIALDEMOG
 //string name_dynland;
 //#if RS_CONTAIN
 // string name_damagefile;
@@ -750,7 +753,11 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 		Rcpp::List demogScaleLayers;
 		if (landtype == 2) { // habitat quality
 			nrDemogScaleLayers = Rcpp::as<int>(LandParamsR.slot("nrDemogScaleLayers"));
-			if(nrDemogScaleLayers) demogScaleLayers = Rcpp::as<Rcpp::List>(LandParamsR.slot("demogScaleLayers"));
+			if(nrDemogScaleLayers) {
+				ppLand.spatialdemog = true;
+				nDSlayer = nrDemogScaleLayers;
+				demogScaleLayers = Rcpp::as<Rcpp::List>(LandParamsR.slot("demogScaleLayers"));
+			}
 		}
 #endif
 
@@ -881,17 +888,20 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 			}
 		}
 #if SPATIALDEMOG
-		if(nrDemogScaleLayers) {
-			// test consistent number of layers (nrDemogScaleLayers) per dynland year
-			Rcpp::List yearLayers = demogScaleLayers[0];
-			if(yearLayers.size() != nrDemogScaleLayers){
+		if(nrDemogScaleLayers) { // test consistent number of layers (nrDemogScaleLayers) per dynland year
+			Rcpp::NumericVector yearLayers = Rcpp::as<Rcpp::NumericVector>(demogScaleLayers[0]);
+			// get dimensions of landscape
+			Rcpp::IntegerVector DimsA = yearLayers.attr("dim");
+			// test for correct size of demogr. layers array
+			if(DimsA[3] != nrDemogScaleLayers){
 				errors++;
 				Rcpp::Rcout << "demogScaleLayers has an incorrect amount of layers" << endl;
 			}
 			if(ppLand.dynamic) {
 				for(int i=1; i<dynland_years.size(); i++ ) {
-					yearLayers = demogScaleLayers[i];
-					if(yearLayers.size() != nrDemogScaleLayers){
+					yearLayers = Rcpp::as<Rcpp::NumericVector>(demogScaleLayers[i]);
+					DimsA = yearLayers.attr("dim");
+					if(DimsA[3] != nrDemogScaleLayers){
 						errors++;
 						Rcpp::Rcout << "demogScaleLayers in dynamic year " << i << " has an incorrect amount of layers" << endl;
 					}
@@ -1262,9 +1272,16 @@ int ReadDynLandR(Landscape *pLandscape, Rcpp::S4 LandParamsR)
 	Rcpp::List habitatmaps;
 	Rcpp::List patchmaps;
 	Rcpp::List costmaps;
+	
 	Rcpp::NumericMatrix hraster;
 	Rcpp::NumericMatrix praster;
 	Rcpp::NumericMatrix craster;
+	
+#if SPATIALDEMOG
+	int nrDemogScaleLayers = 0;
+	Rcpp::List demogScaleLayers;
+	Rcpp::NumericVector yearLayers = Rcpp::NumericVector::create(-1);
+#endif
 
 	habitatmaps = Rcpp::as<Rcpp::List>(LandParamsR.slot("LandscapeFile"));
 	if (patchmodel) patchmaps = Rcpp::as<Rcpp::List>(LandParamsR.slot("PatchFile"));
@@ -1273,6 +1290,12 @@ int ReadDynLandR(Landscape *pLandscape, Rcpp::S4 LandParamsR)
 	costmaps = Rcpp::as<Rcpp::List>(LandParamsR.slot("CostsFile"));
 	if (costmaps.size() > 0) costs = true;
 	else craster = Rcpp::NumericMatrix(0);
+#if SPATIALDEMOG
+	if (landtype == 2) { // habitat quality
+		nrDemogScaleLayers = Rcpp::as<int>(LandParamsR.slot("nrDemogScaleLayers"));
+		if(nrDemogScaleLayers) demogScaleLayers = Rcpp::as<Rcpp::List>(LandParamsR.slot("demogScaleLayers"));
+	}
+#endif
 
 	//------------ int ParseDynamicFile(string indir) {
 
@@ -1292,9 +1315,16 @@ int ReadDynLandR(Landscape *pLandscape, Rcpp::S4 LandParamsR)
 		hraster = Rcpp::as<Rcpp::NumericMatrix>(habitatmaps[i]);
 		if (patchmodel) praster = Rcpp::as<Rcpp::NumericMatrix>(patchmaps[i]);
 		if (costs) craster = Rcpp::as<Rcpp::NumericMatrix>(costmaps[i]);
+#if SPATIALDEMOG
+		if (nrDemogScaleLayers) yearLayers = Rcpp::as<Rcpp::NumericVector>(demogScaleLayers[i]);
+#endif
 
 		if (errors == 0)  {
+#if SPATIALDEMOG
+			imported = pLandscape->readLandChange(i-1, hraster, praster, craster, yearLayers);
+#else
 			imported = pLandscape->readLandChange(i-1, hraster, praster, craster);
+#endif
 			if (imported != 0) {
 				return imported;
 			}
@@ -4303,13 +4333,13 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 #if SPATIALDEMOG
 				int nrDemogScaleLayers = 0;
 				Rcpp::List demogScaleLayers;                      // list of lists of layers for each dynamic land year
-				Rcpp::List scalinglayers = Rcpp::List::create();  // list of demog scaling layers for a given year (initialise as empty list)
+				Rcpp::NumericVector scalinglayers = Rcpp::NumericVector::create(-1);  // array of demog scaling layers for a given year (initialise invalid value)
 				
 				if(landtype == 2 && stagestruct) {
 					nrDemogScaleLayers = Rcpp::as<int>(LandParamsR.slot("nrDemogScaleLayers"));
 					if(nrDemogScaleLayers) {
 						demogScaleLayers = Rcpp::as<Rcpp::List>(LandParamsR.slot("demogScaleLayers"));
-						scalinglayers = demogScaleLayers[0];   // get layers of year 0
+						scalinglayers = demogScaleLayers[0];   // get array of scaling layers of year 0
 					}
 					//else scalinglayers // no scaling layers -> create empty list
 				}

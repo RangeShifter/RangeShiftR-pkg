@@ -77,7 +77,7 @@ using namespace std;
 #define NHABITATS 10	// maximum number of SUITABLE habitats permitted
 #endif // RS_CONTAIN 
 #if SPATIALDEMOG
-#define NLAYERS 3*NSEXES*NSTAGES
+#define NLAYERS 3*NSEXES*NSTAGES  // maximum number of demographic scaling layers permitted
 #endif // SPATIALDEMOG
 
 #if RS_RCPP

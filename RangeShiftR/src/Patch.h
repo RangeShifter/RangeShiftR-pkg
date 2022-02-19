@@ -186,7 +186,9 @@ public:
 	float getK(void);
 #endif // SEASONAL 
 #if SPATIALDEMOG
+	void setDemoScaling(std::vector <float>);
 	std::vector <float> getDemoScaling(void);
+	void setPatchDemoScaling(short); // calculate demog. scalings of patch from its cells //TODO arguments
 #endif // SPATIALDEMOG
 #if VCL
 	// for GUI version, draw the Patch on the screen
@@ -241,5 +243,9 @@ extern RSrandom *pRandom;
 #if RSDEBUG
 extern ofstream DEBUGLOG;
 #endif
+
+#if SPATIALDEMOG
+extern short nDSlayer;
+#endif // SPATIALDEMOG
 
 #endif
