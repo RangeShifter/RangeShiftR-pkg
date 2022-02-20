@@ -893,15 +893,14 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 			// get dimensions of landscape
 			Rcpp::IntegerVector DimsA = yearLayers.attr("dim");
 			// test for correct size of demogr. layers array
-			if(DimsA[3] != nrDemogScaleLayers){
+			if(DimsA[2] != nrDemogScaleLayers){
 				errors++;
-				Rcpp::Rcout << "demogScaleLayers has an incorrect amount of layers" << endl;
 			}
 			if(ppLand.dynamic) {
 				for(int i=1; i<dynland_years.size(); i++ ) {
 					yearLayers = Rcpp::as<Rcpp::NumericVector>(demogScaleLayers[i]);
 					DimsA = yearLayers.attr("dim");
-					if(DimsA[3] != nrDemogScaleLayers){
+					if(DimsA[2] != nrDemogScaleLayers){
 						errors++;
 						Rcpp::Rcout << "demogScaleLayers in dynamic year " << i << " has an incorrect amount of layers" << endl;
 					}

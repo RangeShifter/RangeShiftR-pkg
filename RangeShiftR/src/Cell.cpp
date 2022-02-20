@@ -255,11 +255,12 @@ void Cell::setDemoScaling(std::vector<float> ds, short chgyear) {
 	return;
 }
 
-float Cell::getDemoScaling(short ix, short chgyear) {
-	if (ix < 0 || ix >= nDSlayer)
-		// nodata cell OR should not occur, but treat as such
-		return -1.0;
-	else return demoScalings[chgyear][ix];
+std::vector<float> Cell::getDemoScaling(short chgyear) {
+	if (chgyear < 0 || chgyear >= (int)demoScalings.size()) {
+		std::vector<float> ret(1, -1);
+		return ret;
+	}
+	else return demoScalings[chgyear];
 }
 
 #endif // SPATIALDEMOG 

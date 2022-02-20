@@ -437,94 +437,38 @@ void Patch::setDemoScaling(std::vector <float> ds) {
 
 std::vector <float> Patch::getDemoScaling(void) { return localDemoScaling; }
 
-void Patch::setPatchDemoScaling(short landIx) { 
+void Patch::setPatchDemoScaling(short landIx, patchLimits landlimits) { 
 
-	/*
-	bool inpatch = false;
-	int ncells = (int)cells.size();
-	locn loc;
-	double dist = 0.0;
-	for (int i = 0; i < ncells; i++) {
-		loc = cells[i]->getLocn();
-		if (loc.x == dmgX && loc.y == dmgY) { inpatch = true; i = ncells+1; break; }
-	}
-	if (!inpatch) dist = sqrt((double)((dmgX-loc.x)*(dmgX-loc.x) + (dmgY-loc.y)*(dmgY-loc.y)));
-	damageIndex += (double)damage * exp(-1.0*alpha*dist);
-	*/
-	
-	/*
-	locn loc;
-	int xsum,ysum;
-	short hx;
-	float k,q,envval;
-
-	localK = 0.0; // no. of suitable cells (unadjusted K > 0) in the patch
-	int nsuitable = 0;
-
-
+	// if patch wholly outside current landscape boundaries
 	if (xMin > landlimits.xMax || xMax < landlimits.xMin
 	||  yMin > landlimits.yMax || yMax < landlimits.yMin) {
-		localK = 0.0;
+		localDemoScaling.assign(nDSlayer,0.0); // set all local scales to zero
 		return;
 	}
-
+	
+	// loop through constituent cells of the patch
 	int ncells = (int)cells.size();
-	xsum = ysum = 0;
+	float q;
+	std::vector<float> patchDS(nDSlayer, 0.0);
+	std::vector<float> cellDS(nDSlayer, 0.0);
+	
 	for (int i = 0; i < ncells; i++) {
-		if (gradK) // gradient in carrying capacity
-			envval = cells[i]->getEnvVal(); // environmental gradient value
-		else envval = 1.0; // no gradient effect
-		if (env.stoch && env.inK) { // environmental stochasticity in K
-			if (env.local) {
-	//			pCell = getRandomCell();
-	//			if (pCell != 0) envval += pCell->getEps();
-				envval += cells[i]->getEps();
-			}
-			else { // global stochasticity
-				envval += epsGlobal;
-		}
-		}
-
-		switch (rasterType) {
-		case 0: // habitat codes
-			hx = cells[i]->getHabIndex(landIx);
-			k = pSpecies->getHabK(hx);
-			if (k > 0.0) {
-				nsuitable++;
-				localK += envval * k;
-			}
-			break;
-		case 1: // cover %
-			k = 0.0;
-			for (int j = 0; j < nHab; j++) { // loop through cover layers
-				q = cells[i]->getHabitat(j);
-				k += q * pSpecies->getHabK(j) / 100.0f;
-			}
-			if (k > 0.0) {
-				nsuitable++;
-				localK += envval * k;
-			}
-			break;
-		case 2: // habitat quality
-			q = cells[i]->getHabitat(landIx);
-			if (q > 0.0) {
-				nsuitable++;
-				localK += envval * pSpecies->getHabK(0) * q / 100.0f;
-			}
-			break;
+		cellDS = cells[i]->getDemoScaling(landIx); // is that ok?
+		
+		//add cell value to patch value 
+		for (int ly = 0; ly < nDSlayer; ly++) {
+			patchDS[ly] += cellDS[ly];
 		}
 	}
+	
+	// take mean over cells and divide by 100 to scale to range [0,1]
+	for (int ly = 0; ly < nDSlayer; ly++) {
+		patchDS[ly] = patchDS[ly] / ncells / 100.0f;
+	}
+	
+	// set values
+	setDemoScaling(patchDS);
 
-	if (env.stoch && env.inK) { // environmental stochasticity in K
-		// apply min and max limits to K over the whole patch
-		// NB limits have been stored as N/cell rather than N/ha
-		float limit;
-		limit = pSpecies->getMinMax(0) * (float)nsuitable;
-		if (localK < limit) localK = limit;
-		limit = pSpecies->getMinMax(1) * (float)nsuitable;
-		if (localK > limit) localK = limit;
-	}*/
-		
 	return;
 }
 #endif //SPATIALDEMOG

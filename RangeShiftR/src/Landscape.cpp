@@ -1499,10 +1499,13 @@ void Landscape::updateDemoScalings(short landIx) {
 	landlimits.xMin = minX; landlimits.xMax = maxX;
 	landlimits.yMin = minY; landlimits.yMax = maxY;
 
-	int npatches = (int)patches.size();
-	for (int i = 0; i < npatches; i++) {
-		if (patches[i]->getPatchNum() != 0) { // not matrix patch
-			patches[i]->setPatchDemoScaling(landIx);//(landlimits,nHab,rasterType,landIx);
+	if(spatialdemog && rasterType == 2) {// demographic scaling only implemented for habitat quality maps
+		int npatches = (int)patches.size();
+		for (int i = 0; i < npatches; i++) {
+			if (patches[i]->getPatchNum() != 0) { // not matrix patch
+				// calculate local scaling for each patch from its constituent cells
+				patches[i]->setPatchDemoScaling(landIx, landlimits);
+			}
 		}
 	}
 }

@@ -145,7 +145,7 @@ public:
 #if SPATIALDEMOG
 	void addchgDemoScaling(std::vector<float>);
 	void setDemoScaling(std::vector<float>, short);
-	float getDemoScaling(short, short);
+	std::vector<float> getDemoScaling(short);
 #endif // SPATIALDEMOG 
 
 private:

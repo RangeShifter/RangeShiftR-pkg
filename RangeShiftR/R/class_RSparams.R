@@ -102,11 +102,21 @@ setValidity("RSparams", function(object) {
     #DEMOGRAPHY
     validObject(object@demog)
     if (object@control@landtype == 2L){ # habitat quality
-        if ((length(object@demog@StageStruct@FecLayer) + length(object@demog@StageStruct@DevLayer) + length(object@demog@StageStruct@SurvLayer)) > 0 ){ # spatially varying demographic rates
-            ixs <- c(object@demog@StageStruct@FecLayer,object@demog@StageStruct@DevLayer,object@demog@StageStruct@SurvLayer)
-            ixs[is.na(ixs)] <- -9
-            if ( any( ixs > object@land@nrDemogScaleLayers )){
-                msg <- c(msg, "StageStructure(): Entries of FecLayer, DevLayer and SurvLayer must not exceed the number of layers in demogScaleLayers (of ImportedLandscape) !")
+        varydemogixs <- (length(object@demog@StageStruct@FecLayer)+length(object@demog@StageStruct@DevLayer)+length(object@demog@StageStruct@SurvLayer)>0)
+        varydemoglyr <- (length(object@land@demogScaleLayers)>0)
+        if(varydemogixs & !varydemoglyr){
+            msg <- c(msg, "RSsim(): If FecLayer, DevLayer and/or SurvLayer are used, the deographic scaling layers must be given in ImportedLandscape.")
+        }
+        if(varydemoglyr & !varydemogixs){
+            msg <- c(msg, "RSsim(): If deographic scaling layers are given, the demographic rates they correspond to must be defined with FecLayer, DevLayer and/or SurvLayer in StageStructure().")
+        }
+        if(varydemoglyr & varydemogixs){
+            if ((length(object@demog@StageStruct@FecLayer) + length(object@demog@StageStruct@DevLayer) + length(object@demog@StageStruct@SurvLayer)) > 0 ){ # spatially varying demographic rates
+                ixs <- c(object@demog@StageStruct@FecLayer,object@demog@StageStruct@DevLayer,object@demog@StageStruct@SurvLayer)
+                ixs[is.na(ixs)] <- -9
+                if ( any( ixs > object@land@nrDemogScaleLayers )){
+                    msg <- c(msg, "StageStructure(): Entries of FecLayer, DevLayer and SurvLayer must not exceed the number of layers in demogScaleLayers (of ImportedLandscape) !")
+                }
             }
         }
     }

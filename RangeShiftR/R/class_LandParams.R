@@ -660,7 +660,7 @@ setMethod("initialize", "ImportedLandscape", function(.Object, ...) {
     if (.Object@HabPercent) {
         if (is.null(args$nrDemogScaleLayers)) {
             if (length(.Object@demogScaleLayers) > 0) {
-                .Object@nrDemogScaleLayers = dim(Object@demogScaleLayers[[1]])[3]
+                .Object@nrDemogScaleLayers = dim(.Object@demogScaleLayers[[1]])[3]
             }
         }
         else {

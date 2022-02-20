@@ -188,7 +188,7 @@ public:
 #if SPATIALDEMOG
 	void setDemoScaling(std::vector <float>);
 	std::vector <float> getDemoScaling(void);
-	void setPatchDemoScaling(short); // calculate demog. scalings of patch from its cells //TODO arguments
+	void setPatchDemoScaling(short, patchLimits); // calculate demog. scalings of patch from its cells //TODO arguments
 #endif // SPATIALDEMOG
 #if VCL
 	// for GUI version, draw the Patch on the screen
