@@ -1976,7 +1976,7 @@ int Landscape::readLandChange(int filenum, Rcpp::NumericMatrix habfile, Rcpp::Nu
 					// read demographic scalings
 					if(nrDemogScaleLayers){
 						// get tube at (y/x)
-						cellDemoScalings = scalingCube(arma::span(dimX-1-y), arma::span(x), arma::span::all);
+						cellDemoScalings = scalingCube(arma::span(dimY-1-y), arma::span(x), arma::span::all);
 						if(cellDemoScalings.n_elem==nDSlayer){
 							// set vector percentage values in cell
 							cells[y][x]->addchgDemoScaling(arma::conv_to< std::vector<float> >::from(cellDemoScalings));
@@ -2990,7 +2990,7 @@ int Landscape::readLandscape(int fileNum, Rcpp::NumericMatrix habfile, Rcpp::Num
 				
 					// read cost raster
 					if(SMScosts) {
-						cfloat = costfile(dimX-1-y,x);
+						cfloat = costfile(dimY-1-y,x);
 						if ( !R_IsNA(cfloat) ) {
 							hc = (int)cfloat;
 							if ( hc < 1 ) {
@@ -3008,7 +3008,7 @@ int Landscape::readLandscape(int fileNum, Rcpp::NumericMatrix habfile, Rcpp::Num
 					// read demographic scalings
 					if(nrDemogScaleLayers){
 						// get tube at (y/x)
-						cellDemoScalings = scalingCube(arma::span(dimX-1-y), arma::span(x), arma::span::all);
+						cellDemoScalings = scalingCube(arma::span(dimY-1-y), arma::span(x), arma::span::all);
 						if(cellDemoScalings.n_elem==nDSlayer){
 							// set vector percentage values in cell
 							pCell->addchgDemoScaling(arma::conv_to< std::vector<float> >::from(cellDemoScalings));

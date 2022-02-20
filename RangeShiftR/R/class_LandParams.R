@@ -617,7 +617,7 @@ setValidity("ImportedLandscape", function(object) {
                                             msg <- c(msg, "nrDemogScaleLayers must give the number of layers contained in each element (array) of demogScaleLayers.")
                                         }
                                         else{
-                                            if( ds_dims[1,1] != land_ncol || ds_dims[2,1] != land_nrow ){
+                                            if( ds_dims[1,1] != land_nrow || ds_dims[2,1] != land_ncol ){
                                                 msg <- c(msg, "All elements of demogScaleLayers list must have the same ncol and nrow as the LandscapeFile list")
                                             }
                                             else{

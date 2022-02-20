@@ -485,7 +485,7 @@ DEBUGLOG << "RunModel(): PROBLEM - closing output files" << endl;
 #endif // RS_CONTAIN
 #if SPATIALDEMOG
 	if (ppLand.rasterType == 2 && ppLand.spatialdemog)
-		pLandscape->updateDemoScalings(0); //TODO
+		pLandscape->updateDemoScalings(0);
 #endif // SPATIALDEMOG 
 #if RSDEBUG
 DEBUGLOG << "RunModel(): completed updating carrying capacity" << endl;
@@ -750,12 +750,12 @@ DEBUGLOG << "RunModel(): yr=" << yr << " landChg.costfile=" << landChg.costfile 
 		if (updateCC) {
 			pLandscape->updateCarryingCapacity(pSpecies,yr,landIx);
 #if RS_CONTAIN
-		if (ppLand.rasterType <= 2 && ppLand.dmgLoaded)
-			pLandscape->updateDamageIndices();
+			if (ppLand.rasterType <= 2 && ppLand.dmgLoaded)
+				pLandscape->updateDamageIndices();
 #endif // RS_CONTAIN 
 #if SPATIALDEMOG
-		if (ppLand.rasterType == 2 && ppLand.spatialdemog)
-			pLandscape->updateDemoScalings((short)landIx); //TODO
+			if (ppLand.rasterType == 2 && ppLand.spatialdemog)
+				pLandscape->updateDemoScalings((short)landIx);
 #endif // SPATIALDEMOG 
 		}
 #if RS_CONTAIN
