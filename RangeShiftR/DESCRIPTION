@@ -14,7 +14,7 @@ URL: https://rangeshifter.github.io/RangeshiftR-tutorials/
 Description: RangeShiftR provides individual-based simulations of spatial eco-evolutionary dynamics. It is based on the C++ software RangeShifter, making it flexible and fast. RangeShiftR models the processes of demography, dispersal and evolution in an inter-dependent way, offering substantial complexity in the corresponding modelling choices. It is entirely open-source and aims to facilitate the application of individual-based and mechanistic modelling to eco-evolutionary questions.
 License: GPL-3
 Depends: R (>= 3.6)
-SystemRequirements: C++11
+SystemRequirements: C++20
 Imports: 
     Rcpp (>= 1.0.0),
     raster (>= 3.0.0),
@@ -22,7 +22,7 @@ Imports:
     methods,
     rmarkdown
 RdMacros: Rdpack
-LinkingTo: Rcpp
+LinkingTo: Rcpp, RcppArmadillo
 Encoding: UTF-8
 RoxygenNote: 7.1.1
 Collate: 
