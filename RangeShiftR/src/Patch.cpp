@@ -430,8 +430,11 @@ float Patch::getK(void) { return localK; }
 
 #if SPATIALDEMOG
 void Patch::setDemoScaling(std::vector <float> ds) {
-	std::for_each(ds.begin(), ds.end(), [](float& perc){ if(perc < 0.0 || perc > 100.0) perc=100; });
+
+	std::for_each(ds.begin(), ds.end(), [](float& perc){ if(perc < 0.0 || perc > 1.0) perc=1; });
+
 	localDemoScaling.assign(ds.begin(), ds.end());
+
 	return;
 }
 
@@ -451,10 +454,10 @@ void Patch::setPatchDemoScaling(short landIx, patchLimits landlimits) {
 	float q;
 	std::vector<float> patchDS(nDSlayer, 0.0);
 	std::vector<float> cellDS(nDSlayer, 0.0);
-	
+
 	for (int i = 0; i < ncells; i++) {
 		cellDS = cells[i]->getDemoScaling(landIx); // is that ok?
-		
+
 		//add cell value to patch value 
 		for (int ly = 0; ly < nDSlayer; ly++) {
 			patchDS[ly] += cellDS[ly];
