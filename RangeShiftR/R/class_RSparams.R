@@ -643,7 +643,7 @@ setValidity("RSparams", function(object) {
                     }
                     #// NB alpha and beta may take any value
                 }
-                #else {}  // no more colums required other than stage and sex if applicable
+                #else {}  // no more columns required other than stage and sex if applicable
             }
         }
         else {      # DispersalKernel
@@ -673,8 +673,13 @@ setValidity("RSparams", function(object) {
             }
         }
     }
+
     #GENETICS
     validObject(object@gene)
+    if(any(object@dispersal@Emigration@IndVar,object@dispersal@Transfer@IndVar,object@dispersal@Settlement@IndVar)) anyIndVar <- TRUE
+    else anyIndVar <- FALSE
+    # if( ...(object@gene) & !anyIndVar) # TODO: check if genetics module is set but no variable traits -> give warning in this case
+
     #INITIALISATION
     validObject(object@init)
     if (object@control@landtype == 9) { # artificial land
@@ -758,7 +763,8 @@ setMethod("show", "RSparams", function(object){
     cat("\n")
     print(object@dispersal)
     cat("\n")
-    if(any(object@dispersal@Emigration@IndVar,object@dispersal@Transfer@IndVar,object@dispersal@Settlement@IndVar)){
+    if(any(object@dispersal@Emigration@IndVar,object@dispersal@Transfer@IndVar,object@dispersal@Settlement@IndVar)
+       || object@gene@Architecture == 1 ){
         print(object@gene)
         cat("\n")
     }
