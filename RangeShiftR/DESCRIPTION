@@ -24,7 +24,7 @@ Imports:
 RdMacros: Rdpack
 LinkingTo: Rcpp, RcppArmadillo
 Encoding: UTF-8
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 Collate: 
     'Rfunctions.R'
     'plotProbs.R'
