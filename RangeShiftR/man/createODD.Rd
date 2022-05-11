@@ -7,14 +7,13 @@
 createODD(filename, s, type)
 }
 \arguments{
-\item{filename}{Name of the R markdown file and document to be created}
+\item{filename}{Name of the R markdown file and document to be created, e.g. 'ODD_protocol.rmd'}
 
 \item{s}{RangeShiftR parameter object}
 
 \item{type}{file type of the rendering process output. Can be either "pdf_document", "doc_document" or "md_document"}
 }
 \description{
-This function creates an ODD template file for a specific RangeShiftR parameter master object \code{s}.
-It only creates a new file, if the \code{filename} doesn't exist in the folder.
+This function creates an ODD template file for a specific RangeShiftR parameter master object \code{s}. It only creates a new file, if the \code{filename} doesn't exist in the folder.
 If the \code{filename} already exists, it only renders the document to either pdf, word or md.
 }
