@@ -1977,7 +1977,7 @@ int Landscape::readLandChange(int filenum, Rcpp::NumericMatrix habfile, Rcpp::Nu
 					if(nrDemogScaleLayers){
 						// get tube at (y/x)
 						cellDemoScalings = scalingCube(arma::span(dimY-1-y), arma::span(x), arma::span::all);
-						if(cellDemoScalings.n_elem==nDSlayer){
+						if(cellDemoScalings.n_elem==(unsigned)nDSlayer){
 							// set vector percentage values in cell
 							cells[y][x]->addchgDemoScaling(arma::conv_to< std::vector<float> >::from(cellDemoScalings));
 						}
@@ -3009,7 +3009,7 @@ int Landscape::readLandscape(int fileNum, Rcpp::NumericMatrix habfile, Rcpp::Num
 					if(nrDemogScaleLayers){
 						// get tube at (y/x)
 						cellDemoScalings = scalingCube(arma::span(dimY-1-y), arma::span(x), arma::span::all);
-						if(cellDemoScalings.n_elem==nDSlayer){
+						if(cellDemoScalings.n_elem==(unsigned)nDSlayer){
 							// set vector percentage values in cell
 							pCell->addchgDemoScaling(arma::conv_to< std::vector<float> >::from(cellDemoScalings));
 						}

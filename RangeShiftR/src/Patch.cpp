@@ -451,7 +451,6 @@ void Patch::setPatchDemoScaling(short landIx, patchLimits landlimits) {
 	
 	// loop through constituent cells of the patch
 	int ncells = (int)cells.size();
-	float q;
 	std::vector<float> patchDS(nDSlayer, 0.0);
 	std::vector<float> cellDS(nDSlayer, 0.0);
 
