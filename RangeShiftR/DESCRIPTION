@@ -1,7 +1,7 @@
 Package: RangeShiftR
 Type: Package
 Title: An R package for individual-based simulation of spatial eco-evolutionary dynamics and species' responses to environmental changes
-Version: 1.0.3
+Version: 1.0.4
 Authors@R: c(
 	person("Anne-Kathleen", "Malchow", email = "rangeshiftr@uni-potsdam.de", role = c("aut", "cre")),
 	person("Greta", "Bocedi", role = c("aut")),
@@ -24,7 +24,7 @@ Imports:
 RdMacros: Rdpack
 LinkingTo: Rcpp
 Encoding: UTF-8
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 Collate: 
     'Rfunctions.R'
     'plotProbs.R'
