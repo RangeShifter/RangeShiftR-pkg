@@ -1,3 +1,7 @@
+SOURCES = $(wildcard RS-core/*.cpp)
+
+OBJECTS = Rinterface.o RcppExports.o $(SOURCES:.cpp=.o)
+
 CXX_STD = CXX20
 PKG_CXXFLAGS = -O2
 # PKG_CXXFLAGS = -Wall -pedantic
