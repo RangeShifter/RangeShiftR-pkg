@@ -1,4 +1,4 @@
-SOURCES = $(wildcard RS-core/*.cpp)
+SOURCES = $(wildcard RScore/*.cpp)
 
 OBJECTS = Rinterface.o RcppExports.o $(SOURCES:.cpp=.o)
 
