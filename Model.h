@@ -77,7 +77,7 @@ using namespace std::filesystem;
 #include "Control.h"
 #endif // RS_CONTAIN
 #if RS_THREADSAFE
-#include "Rinterface.h"
+#include "../Rinterface.h"
 #endif // RS_THREADSAFE 
 
 #if RSDEBUG
