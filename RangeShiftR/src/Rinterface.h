@@ -54,16 +54,16 @@ Author: Anne-Kathleen Malchow, Humboldt University Berlin
 using namespace std;
 
 #include <Rcpp.h>
-#include "Version.h"
-#include "Parameters.h"
-#include "Landscape.h"
-#include "Species.h"
-#include "SubCommunity.h"
-#include "RSrandom.h"
+#include "RScore/Version.h"
+#include "RScore/Parameters.h"
+#include "RScore/Landscape.h"
+#include "RScore/Species.h"
+#include "RScore/SubCommunity.h"
+#include "RScore/RSrandom.h"
 #if RANDOMCHECK
-#include "RandomCheck.h"
+#include "RScore/RandomCheck.h"
 #endif
-#include "Model.h"
+#include "RScore/Model.h"
 
 
 //---------------------------------------------------------------------------
