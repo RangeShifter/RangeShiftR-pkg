@@ -353,6 +353,7 @@ for (int i = 0; i < NSEXES; i++) {
 }
 //locus loc;
 
+demogrParams dem = pSpecies->getDemogr();
 emigRules emig = pSpecies->getEmig();
 trfrRules trfr = pSpecies->getTrfr();
 settleType sett = pSpecies->getSettle();
@@ -794,6 +795,7 @@ emigRules emig = pSpecies->getEmig();
 trfrRules trfr = pSpecies->getTrfr();
 settleType sett = pSpecies->getSettle();
 genomeData gen = pSpecies->getGenomeData();
+simView v = paramsSim->getViews();
 
 #if GROUPDISP
 #if RSDEBUG
@@ -1586,7 +1588,7 @@ demogrParams dem = pSpecies->getDemogr();
 stageParams sstruct = pSpecies->getStage();
 emigRules emig = pSpecies->getEmig();
 emigTraits eparams;
-
+trfrRules trfr = pSpecies->getTrfr();
 indStats ind;
 #if RSDEBUG
 //DEBUGLOG << "Population::emigration(): this=" << this
@@ -2644,6 +2646,9 @@ for (int i = 0; i < ninds; i++) {
 						if (localK > 0.0) {
 							// make settlement decision
 							if (settletype.indVar) settDD = inds[i]->getSettTraits();
+#if RS_RCPP
+							else settDD = pSpecies->getSettTraits(ind.stage,ind.sex);
+#else
 							else {
 								if (settletype.sexDep) {
 									if (settletype.stgDep) 
@@ -2658,6 +2663,7 @@ for (int i = 0; i < ninds; i++) {
 										settDD = pSpecies->getSettTraits(0,0);
 								}
 							}
+#endif RS_RCPP
 #if GOBYMODEL
 							if (ind.asocial) {
 								settprob = settDD.s0 / (1.0 + exp(-(popsize/localK
@@ -2674,7 +2680,7 @@ for (int i = 0; i < ninds; i++) {
 #if RSDEBUG
 //DEBUGLOG << "Population::transfer(): 8888: i=" << i << " ind.stage=" << ind.stage
 //	<< " this=" << this << " pNewPopn=" << pNewPopn << " popsize=" << popsize
-//	<< " localK=" << localK << " s0=" << settDD.s0 << " alpha=" << settDD.alpha << " beta=" << settDD.beta
+//	<< " localK=" << localK << " alpha=" << settDD.alpha << " beta=" << settDD.beta
 //	<< " settprob=" << settprob
 //	<< endl;
 #endif
@@ -2749,6 +2755,7 @@ for (int i = 0; i < ninds; i++) {
 				}
 			}
 		}
+
 	inds[i]->setStatus(ind.status);
 #if SEASONAL
 //	inds[i]->setMigrnStatus(ind.migrnstatus);
@@ -2919,7 +2926,7 @@ void Population::survival0(float localK,short option0,short option1)
 //#if SEASONAL
 //	<< " season=" << season 
 //#endif // SEASONAL
-//	<< " localK=" << localK << " option0=" << option0 << " option1=" << option1
+//	<< " localK=" << localK << " option=" << option
 //	<< endl;
 #endif
 
@@ -3080,7 +3087,7 @@ if (dem.stageStruct) {
 							}
 							effect += (float)nInds[effstg][effsex] * weight;
 #if RSDEBUG
-//	DEBUGLOG << " effstg=" << effstg << " effsex=" << effsex << " count=" << nInds[effstg][effsex];
+//	DEBUGLOG << " effstg=" << effstg << " effsex=" << effsex;
 //	DEBUGLOG << " weight=" << weight << " effect=" << effect
 //		<< endl;
 #endif
@@ -3502,7 +3509,7 @@ Cell *pCell;
 // NEED TO REPLACE CONDITIONAL COLUMNS BASED ON ATTRIBUTES OF ONE SPECIES TO COVER
 // ATTRIBUTES OF *ALL* SPECIES AS DETECTED AT MODEL LEVEL
 demogrParams dem = pSpecies->getDemogr();
-
+stageParams sstruct = pSpecies->getStage();
 #if RS_ABC
 simParams sim = paramsSim->getSim();
 #endif
@@ -4015,14 +4022,14 @@ for (int i = 0; i < ninds; i++) {
 			steps = inds[i]->getSteps();
 			float d = 0.0;
 			if (steps.season > 0) {
-				d = (float)ppLand.resol * sqrt((float)((prevloc.x-loc.x)*(prevloc.x-loc.x)
+				d = ppLand.resol * sqrt((float)((prevloc.x-loc.x)*(prevloc.x-loc.x)
 																					+ (prevloc.y-loc.y)*(prevloc.y-loc.y)));
 			}
 			outInds << "\t" << d;
 			outInds << "\t" << prevloc.x << "\t" << prevloc.y;
 			outInds << "\t" << loc.x << "\t" << loc.y;
 #else
-			float d = (float)ppLand.resol * sqrt((float)((natalloc.x-loc.x)*(natalloc.x-loc.x)
+			float d = ppLand.resol * sqrt((float)((natalloc.x-loc.x)*(natalloc.x-loc.x)
 																					+ (natalloc.y-loc.y)*(natalloc.y-loc.y)));
 			outInds << "\t" << d;
 #endif

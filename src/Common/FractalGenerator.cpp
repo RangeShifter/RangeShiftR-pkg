@@ -35,7 +35,7 @@ vector<land> patches;
 
 //----- Landscape creation --------------------------------------------------
 
-land::land(): x_coord(0), y_coord(0), value(0.0) {}
+land::land(): x_coord(0), y_coord(0), value(0.0), avail(0) {}
 
 bool compare(const land& z, const land& zz) //compares only the values of the cells
 {
@@ -52,138 +52,173 @@ DEBUGLOG << "fractal_landscape(): X=" << X << " Y=" << Y
 	<< endl;
 #endif
 
-double range;	//range to draw random numbers at each iteration
-int Nno; 			// number of cells NON suitable as habitat
+int ii, jj, x, y;
+int ix, iy;
+//int x0, y0, size, kx, kx2, ky, ky2;
+int kx,kx2,ky,ky2;
+
+double range; //range to draw random numbers at each iteration
+double nx, ny;
+double i, j;
+int Nx = X;
+int Ny = Y;
+
+double ran[5]; // to store each time the 5 random numbers for the random displacement
+
+int Nno; // number of cells NON suitable as habitat
+
+// exponents used to obtain the landscape dimensions
+double pow2x = log(((double)X-1.0))/log(2.0);
+double pow2y = log(((double)Y-1.0))/log(2.0);
 
 double **arena = new double *[X];
-for(int ii = 0; ii < X; ii++) {
+for(ii = 0; ii < X; ii++) {
 	arena[ii] = new double[Y];
 }
 
 patches.clear();
 // initialise all the landscape with zeroes
-for (int jj = 0; jj < X; jj++) {
-	for (int ii = 0; ii < Y; ii++) {
+for (jj = 0; jj < X; jj++) {
+	for (ii = 0; ii < Y; ii++) {
 		arena[jj][ii]=0;
 	}
 }
 
-#if RSDEBUG
-MUTNLOG << "X,Y,Value" << endl;
-#endif
+// initialisation of the four corners
+arena[0][0]     = 1.0 + pRandom->Random() * (maxValue-1.0);
+arena[0][Y-1]   = 1.0 + pRandom->Random() * (maxValue-1.0);
+arena[X-1][0]   = 1.0 + pRandom->Random() * (maxValue-1.0);
+arena[X-1][Y-1] = 1.0 + pRandom->Random() * (maxValue-1.0);
 
-// initialise corners of largest square(s)
-int size = min(X,Y)-1;
-for (int x = 0; x < X; x+=size) {
-	for (int y = 0; y < Y; y+=size) {
-		arena[x][y] = 1.0 + pRandom->Random() * (maxValue-1.0);
-#if RSDEBUG
-MUTNLOG << x << "," << y << "," << arena[x][y] << endl;
-#endif		
-	}	
+/////////////MIDPOINT DISPLACEMENT ALGORITHM//////////////////////////////////
+kx = (Nx-1) / 2;
+kx2 = 2 * kx;
+ky = (Ny-1) / 2;
+ky2 = 2 * ky;
+
+for (ii = 0; ii < 5; ii++)  //random displacement
+{
+	ran[ii] = 1.0 + pRandom->Random() * (maxValue-1.0);
 }
 
-// run the recursive diamond-square algorithm to populate the landscape array
-diamondSquare(arena,(min(X,Y)-1),X,Y,(maxValue-1.0),Hurst);
+//The diamond step:
+arena[kx][ky] = ((arena[0][0] + arena[0][ky2] + arena[kx2][0] + arena[kx2][ky2])/4) + ran[0];
 
-#if RSDEBUG
-double meanq = 0.0;
-double minq = 10000000.0;
-double maxq = 0.0;
-int count0 = 0;
-for (int x = 0; x < X; x++) {
-	for (int y = 0; y < Y; y++) {
-		meanq += arena[x][y];
-		if (arena[x][y] < minq) minq = arena[x][y];
-		if (arena[x][y] > maxq) maxq = arena[x][y];
-		if (arena[x][y] <= 0.0) count0++;
-	}
-}	
-meanq /= (X*Y);
-int above = 0;
-int below = 0;
-for (int x = 0; x < X; x++) {
-	for (int y = 0; y < Y; y++) {
-		if (arena[x][y] < meanq) below++; 
-		if (arena[x][y] > meanq) above++; 
-	}
-}	
-DEBUGLOG << "fractal_landscape(): 3333 - count0=" << count0 
-	<< " meanq=" << meanq << " minq=" << minq << " maxq=" << maxq  
-	<< " below=" << below << " above=" << above  
-	<< endl;
-#endif
+//The square step:
+//left
+arena[0][ky] = ((arena[0][0] +arena[0][ky2] + arena[kx][ky]) / 3) + ran[1];
+//top
+arena[kx][0] = ((arena[0][0] + arena[kx][ky] + arena[kx2][0]) / 3) + ran[2];
+//right
+arena[kx2][ky] = ((arena[kx2][0] + arena[kx][ky] + arena[kx2][ky2]) / 3) + ran[3];
+//bottom
+arena[kx][ky2] = ((arena[0][ky2] + arena[kx][ky] +arena[kx2][ky2]) / 3) + ran[4];
 
-// sort the cells and set Nno cells to be matrix, i.e. with K = 0
+range = maxValue*pow(2,-Hurst);
+
+i = pow2x-1;
+j = pow2y-1;
+
+while (i > 0) {
+	nx = pow(2,i)+1;
+	kx = (int)((nx-1) / 2);
+	kx2 = 2 * kx;
+
+	ny = pow(2,j)+1;
+	ky = (int)((ny-1) / 2);
+	ky2 = 2 * ky;
+
+	ix = 0;
+	while (ix <= (Nx-nx)) {
+		iy = 0;
+		while (iy <= (Ny-ny)) {
+			for (ii = 0; ii < 5; ii++)  //random displacement
+			{
+				ran[ii] = (int)(pRandom->Random() * 2.0 * range - range);
+			}
+			//The diamond step:
+
+			arena[ix+kx][iy+ky] = ((arena[ix][iy] + arena[ix][iy+ky2] + arena[ix+ky2][iy]
+						  + arena[ix+kx2][iy+ky2])/ 4) + ran[0];
+			if (arena[ix+kx][iy+ky] < 1) 	arena[ix+kx][iy+ky] = 1;
+
+			//The square step:
+			//left
+			arena[ix][iy+ky] =((arena[ix][iy] +arena[ix][iy+ky2] + arena[ix+kx][iy+ky])/3)
+					   + ran[1];
+			if (arena[ix][iy+ky] < 1) arena[ix][iy+ky] = 1;
+			//top
+			arena[ix+kx][iy] =((arena[ix][iy] + arena[ix+kx][iy+ky] + arena[ix+kx2][iy])/3)
+					  + ran[2];
+			if (arena[ix+kx][iy] < 1) arena[ix+kx][iy] = 1;
+			//right
+			arena[ix+kx2][iy+ky] = ((arena[ix+kx2][iy] + arena[ix+kx][iy+ky] +
+								arena[ix+kx2][iy+ky2]) / 3) + ran[3];
+			if (arena[ix+kx2][iy+ky] < 1) arena[ix+kx2][iy+ky] = 1;
+			//bottom
+			arena[ix+kx][iy+ky2] = ((arena[ix][iy+ky2] + arena[ix+kx][iy+ky] +
+								arena[ix+kx2][iy+ky2]) / 3) + ran[4];
+			if (arena[ix+kx][iy+ky2] < 1) arena[ix+kx][iy+ky2] = 1;
+
+			iy += ((int)ny-1);
+		}
+		ix += ((int)nx-1);
+	}
+	if (i==j) j--;
+	i--;
+
+	range = range*pow(2,-Hurst); //reduce the random number range
+}
+
+// Now all the cells will be sorted and the Nno cells with the lower carrying
+// capacity will be set as matrix, i.e. with K = 0
 
 land *patch;
-for (int x = 0; x < X; x++) // put all the cells with their values in a vector
+for (x = 0; x < X; x++) // put all the cells with their values in a vector
 {
-	for (int y = 0; y < Y; y++)
+	for (y = 0; y < Y; y++)
 	{
 		patch = new land;
 		patch->x_coord = x;
 		patch->y_coord = y;
 		patch->value = (float)arena[x][y];
+		patch->avail = 1;
 
 		patches.push_back(*patch);
 
 		delete patch;
 	}
 }
+
+
 sort(patches.begin(),patches.end(),compare);  // sorts the vector
 
-// change by SCFP 17/10/2021
-// remove half of the unsuitable squares from the bottom end of the generated distribution
-// and half from the top end to prevent retained non-zero distribution being skewed
-//Nno = (int)(prop*(double)X*(double)Y);
-Nno = (int)(prop*(double)X*(double)Y/2.0);
+Nno = (int)(prop*X*Y);
+for (ii = 0; ii < Nno; ii++)
+{
+	patches[ii].value = 0.0;
+	patches[ii].avail = 0;
+}
 
-// variables for the rescaling
-double min = (double)patches[Nno].value;        
-//double max = (double)patches[X*Y-1].value;
-double max = (double)patches[X*Y-Nno-1].value;
+double min = (double)patches[Nno].value;        // variables for the rescaling
+double max = (double)patches[X*Y-1].value;
 
 double diff = max - min;
 double diffK = maxValue-minValue;
 double new_value;
 
-#if RSDEBUG
-DEBUGLOG << "fractal_landscape(): 4444 - Nno=" << Nno 
-	<< " min=" << min << " max=" << max << " diff=" << diff << " diffK=" << diffK   
-	<< endl;
-#endif
+vector<land>::iterator iter = patches.begin();
+while (iter != patches.end())
+{
+	if (iter->value > 0) // rescale to a range of K between Kmin and Kmax
+	{
+		new_value = maxValue - diffK * (max - (double)iter->value) / diff;
 
-int npatches = patches.size();
-for (int i = 0; i < Nno; i++) {
-	new_value = 0.0;
-#if RSDEBUG
-//DEBUGLOG << "fractal_landscape(): 5555 - i=" << i 
-//	<< " patches[i].value=" << patches[i].value 
-//	<< " new_value=" << new_value 
-//	<< endl;
-#endif
-	patches[i].value = new_value;
-}
-for (int i = Nno; i < (npatches-Nno); i++) {
-	new_value = minValue + diffK * (patches[i].value - min) / diff;
-#if RSDEBUG
-//DEBUGLOG << "fractal_landscape(): 6666 - i=" << i 
-//	<< " patches[i].value=" << patches[i].value 
-//	<< " new_value=" << new_value 
-//	<< endl;
-#endif
-	patches[i].value = new_value;	
-}
-for (int i = (npatches-Nno); i < npatches; i++) {
-	new_value = 0.0;
-#if RSDEBUG
-//DEBUGLOG << "fractal_landscape(): 7777 - i=" << i 
-//	<< " patches[i].value=" << patches[i].value 
-//	<< " new_value=" << new_value 
-//	<< endl;
-#endif
-	patches[i].value = new_value;
+		iter->value = (float)new_value;
+	}
+	else iter->value = 0;
+
+	iter++;
 }
 
 if (arena != NULL) {
@@ -192,7 +227,7 @@ if (arena != NULL) {
 //	+ " X=" + Int2Str(X) + " Y=" + Int2Str(Y)
 //	).c_str());
 #endif
-	for(int ii = 0; ii < X; ii++) {
+	for(ii = 0; ii < X; ii++) {
 #if RSDEBUG
 //DebugGUI(("fractal_landscape(): ii=" + Int2Str(ii)
 //	+ " arena[ii]=" + Int2Str((int)arena[ii])
@@ -205,137 +240,6 @@ if (arena != NULL) {
 
 return patches;
 
-}
-
-void diamondSquare(double **Array,int size,int dimX,int dimY,double range,double Hurst)
-{
-int delta = size / 2;
-#if RSDEBUG
-DEBUGLOG << "diamondSquare(): AAAA xx=" " size=" << size << " delta=" << delta 
-	<< " dimX=" << dimX << " dimY=" << dimY << " range=" << range   
-	<< endl;
-#endif
-if (delta < 1) return ;
-//square steps
-for (int y = delta; y < dimY; y+=size) {
-	for (int x = delta; x < dimX; x+=size) {
-#if RSDEBUG
-//DEBUGLOG << "diamondSquare(): BBBB x=" << x << " y=" << y 
-//	<< endl;
-#endif
-		Array[x][y] = squareStep(Array,x%dimX,y%dimY,delta,dimX,dimY,(pRandom->Random()*2.0*range - range));
-#if RSDEBUG
-MUTNLOG << x << "," << y << "," << Array[x][y] << endl;
-#endif
-	}
-}
-// diamond steps
-int col = 0;
-for (int x = 0; x < dimX; x += delta) {
-	col++;
-	if (col % 2 == 1) // odd column
-		for (int y = delta; y < dimY; y += size) {
-#if RSDEBUG
-//DEBUGLOG << "diamondSquare(): CCCC x=" << x << " y=" << y << " (x % dimX)=" << x % dimX << " (y % dimY)=" << y % dimY 
-//	<< endl;
-#endif
-			Array[x][y] = diamondStep(Array,x%dimX,y%dimY,delta,dimX,dimY,(pRandom->Random()*2.0*range - range));
-#if RSDEBUG
-MUTNLOG << x << "," << y << "," << Array[x][y] << endl;
-#endif
-		}
-	else // even column
-		for (int y = 0; y < dimY; y += size) {
-#if RSDEBUG
-//DEBUGLOG << "diamondSquare(): DDDD x=" << x << " y=" << y << " (x % dimX)=" << x % dimX << " (y % dimY)=" << y % dimY 
-//	<< endl;
-#endif
-			Array[x][y] = diamondStep(Array,x%dimX,y%dimY,delta,dimX,dimY,(pRandom->Random()*2.0*range - range));
-#if RSDEBUG
-MUTNLOG << x << "," << y << "," << Array[x][y] << endl;
-#endif
-		}
-}
-range *= pow(2,-Hurst); // reduce the random number range
-diamondSquare(Array,delta,dimX,dimY,range,Hurst);
-}
-
-double squareStep(double **Array,int x,int y,int delta,int dimX,int dimY,double r) {
-int count = 0;
-double result = 0.0;
-#if RSDEBUG
-//DEBUGLOG << "squareStep(): x=" << x << " y=" << y << " delta=" << delta
-//	<< " dimX=" << dimX << " dimY=" << dimY;
-#endif
-if (x-delta >= 0 && y-delta >= 0) {
-#if RSDEBUG
-//DEBUGLOG	<< " Array[x-delta][y-delta]=" << Array[x-delta][y-delta]; 
-#endif
-	result += Array[x-delta][y-delta]; count++;
-}
-if (x-delta >= 0 && y+delta < dimY) {
-#if RSDEBUG
-//DEBUGLOG	<< " Array[x-delta][y+delta]=" << Array[x-delta][y+delta]; 
-#endif
-	result += Array[x-delta][y+delta]; count++; 
-}
-if (x+delta < dimX && y-delta >= 0) {
-#if RSDEBUG
-//DEBUGLOG	<< " Array[x+delta][y-delta]=" << Array[x+delta][y-delta]; 
-#endif
-	result += Array[x+delta][y-delta]; count++; 
-}
-if (x+delta < dimX && y+delta < dimY) {
-#if RSDEBUG
-//DEBUGLOG	<< " Array[x+delta][y+delta]=" << Array[x+delta][y+delta]; 
-#endif
-	result += Array[x+delta][y+delta]; count++; 
-}
-if (count > 0) result /= (double)count; result += r;
-#if RSDEBUG
-//DEBUGLOG	<< " COUNT=" << count	<< " RESULT=" << result; 
-//DEBUGLOG	<< endl;
-#endif
-return result;
-}
-
-double diamondStep(double **Array,int x,int y,int delta,int dimX,int dimY,double r) {
-int count = 0;
-double result = 0.0;
-#if RSDEBUG
-//DEBUGLOG << "diamondStep(): x=" << x << " y=" << y << " delta=" << delta 
-//	<< " dimX=" << dimX << " dimY=" << dimY;
-#endif
-if (y-delta >= 0) {
-#if RSDEBUG
-//DEBUGLOG	<< " Array[x][y-delta]=" << Array[x][y-delta];
-#endif
-	result += Array[x][y-delta]; count++; 	
-}
-if (y+delta < dimY) {
-#if RSDEBUG
-//DEBUGLOG	<< " Array[x][y+delta]=" << Array[x][y+delta];
-#endif
-	result += Array[x][y+delta]; count++; 
-}
-if (x-delta >= 0) {
-#if RSDEBUG
-//DEBUGLOG	<< " Array[x-delta][y]=" << Array[x-delta][y];
-#endif
-	result += Array[x-delta][y]; count++; 
-}
-if (x+delta < dimX) {
-#if RSDEBUG
-//DEBUGLOG	<< " Array[x+delta][y]=" << Array[x+delta][y];
-#endif
-	result += Array[x+delta][y]; count++; 
-}
-if (count > 0) result /= (double)count; result += r;
-#if RSDEBUG
-//DEBUGLOG	<< " COUNT=" << count	<< " RESULT=" << result; 
-//DEBUGLOG	<< endl;
-#endif
-return result;
 }
 
 //---------------------------------------------------------------------------

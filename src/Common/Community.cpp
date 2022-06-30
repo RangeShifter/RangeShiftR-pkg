@@ -2648,8 +2648,8 @@ Rcpp::IntegerMatrix Community::addYearToPopList(int rep, int yr) {  // TODO: def
 
 	landParams ppLand = pLandscape->getLandParams();
 	Rcpp::IntegerMatrix pop_map_year(ppLand.dimY,ppLand.dimX);
-	intptr ppatch = 0;
-	Patch *pPatch = 0;
+	intptr patch = 0;
+	Patch* pPatch = 0;
 	intptr subcomm = 0;
 	SubCommunity *pSubComm = 0;
 	popStats pop;
@@ -2662,20 +2662,20 @@ Rcpp::IntegerMatrix Community::addYearToPopList(int rep, int yr) {  // TODO: def
 			if (pCell == 0) { // no-data cell
 				pop_map_year(ppLand.dimY-1-y,x) = NA_INTEGER;
 			} else {
-				ppatch = pCell->getPatch();
-				if (ppatch == 0) { // matrix cell
+				patch = pCell->getPatch();
+				if (patch == 0) { // matrix cell
 					pop_map_year(ppLand.dimY-1-y,x) = 0;
-				} else {
-					pPatch = (Patch*)ppatch;
-					if (pPatch != 0) {
-						subcomm = pPatch->getSubComm();
-						if (subcomm == 0) {
-							pop_map_year(ppLand.dimY-1-y,x) = 0;
-						} else {
-							pSubComm = (SubCommunity*)subcomm;
-							pop = pSubComm->getPopStats();
-							pop_map_year(ppLand.dimY-1-y,x) = pop.nInds; // use indices like this because matrix gets transposed upon casting it into a raster on R-level
-						}
+				}
+				else{
+					pPatch = (Patch*)patch;
+					subcomm = pPatch->getSubComm();
+					if (subcomm == 0) { // check if sub-community exists
+						pop_map_year(ppLand.dimY-1-y,x) = 0;
+					} else {
+						pSubComm = (SubCommunity*)subcomm;
+						pop = pSubComm->getPopStats();
+						//pop_map_year(ppLand.dimY-1-y,x) = pop.nInds; // use indices like this because matrix gets transposed upon casting it into a raster on R-level
+						pop_map_year(ppLand.dimY-1-y,x) = pop.nAdults;
 					}
 				}
 			}
