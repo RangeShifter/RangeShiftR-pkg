@@ -3281,12 +3281,15 @@ wstring header;
 string header;
 #endif
 Cell *pCell;
+#if !RS_RCPP
+simView v = paramsSim->getViews();
+#endif
 
 int maxcost = 0;
 
 #if RSDEBUG
 #if BATCH
-DEBUGLOG << "Landscape::readCosts(): fname=" << fname << endl;
+//DEBUGLOG << "Landscape::readCosts(): fname=" << fname << endl;
 #endif
 #endif
  // open cost file

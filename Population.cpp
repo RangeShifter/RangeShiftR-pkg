@@ -353,6 +353,7 @@ for (int i = 0; i < NSEXES; i++) {
 }
 //locus loc;
 
+demogrParams dem = pSpecies->getDemogr();
 emigRules emig = pSpecies->getEmig();
 trfrRules trfr = pSpecies->getTrfr();
 settleType sett = pSpecies->getSettle();
@@ -794,6 +795,7 @@ emigRules emig = pSpecies->getEmig();
 trfrRules trfr = pSpecies->getTrfr();
 settleType sett = pSpecies->getSettle();
 genomeData gen = pSpecies->getGenomeData();
+simView v = paramsSim->getViews();
 
 #if GROUPDISP
 #if RSDEBUG
@@ -1586,7 +1588,7 @@ demogrParams dem = pSpecies->getDemogr();
 stageParams sstruct = pSpecies->getStage();
 emigRules emig = pSpecies->getEmig();
 emigTraits eparams;
-
+trfrRules trfr = pSpecies->getTrfr();
 indStats ind;
 #if RSDEBUG
 //DEBUGLOG << "Population::emigration(): this=" << this
@@ -2727,6 +2729,7 @@ for (int i = 0; i < ninds; i++) {
 				}
 			}
 		}
+
 	inds[i]->setStatus(ind.status);
 #if SEASONAL
 //	inds[i]->setMigrnStatus(ind.migrnstatus);
@@ -3475,7 +3478,7 @@ Cell *pCell;
 // NEED TO REPLACE CONDITIONAL COLUMNS BASED ON ATTRIBUTES OF ONE SPECIES TO COVER
 // ATTRIBUTES OF *ALL* SPECIES AS DETECTED AT MODEL LEVEL
 demogrParams dem = pSpecies->getDemogr();
-
+stageParams sstruct = pSpecies->getStage();
 #if RS_ABC
 simParams sim = paramsSim->getSim();
 #endif

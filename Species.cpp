@@ -1094,8 +1094,8 @@ int movttraits = 0;
 if (indVarTrfr) {
 	if (moveModel) {
 		if (moveType == 1) { // SMS
-			movttraits = 1;
-			if (goalType == 2) movttraits += 3;
+			movttraits = 1; // in batch 2
+			if (goalType == 2) movttraits += 3; //in batch 2
 		}
 		if (moveType == 2) movttraits = 2;
 	}

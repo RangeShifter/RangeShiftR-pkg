@@ -71,8 +71,12 @@ Last updated: 28 July 2021 by Greta Bocedi
 #ifndef LandscapeH
 #define LandscapeH
 
+//#include <stdlib.h>
+//#include <math.h>
 #include <algorithm>
 #include <fstream>
+//#include <iostream.h>
+//#include <stdio.h>
 #include <vector>
 
 using namespace std;

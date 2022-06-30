@@ -262,7 +262,7 @@ else return false;
 bool DistCell::selected(void) { return initialise; }
 
 locn DistCell::getLocn(void) {
-	locn loc; loc.x = x; loc.y = y; return loc;
+locn loc; loc.x = x; loc.y = y; return loc;
 }
 
 //---------------------------------------------------------------------------
