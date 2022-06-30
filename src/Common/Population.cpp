@@ -2663,7 +2663,7 @@ for (int i = 0; i < ninds; i++) {
 										settDD = pSpecies->getSettTraits(0,0);
 								}
 							}
-#endif RS_RCPP
+#endif //RS_RCPP
 #if GOBYMODEL
 							if (ind.asocial) {
 								settprob = settDD.s0 / (1.0 + exp(-(popsize/localK
