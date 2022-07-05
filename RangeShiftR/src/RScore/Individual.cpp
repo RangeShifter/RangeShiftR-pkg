@@ -3255,7 +3255,7 @@ if (scale < 0) return location;
 return location + scale * tan(PI * pRandom->Random());
 //return location + scale * tan(M_PI * pRandom->Random());
 }
-#endif
+//#endif
 //#endif
 
 //---------------------------------------------------------------------------

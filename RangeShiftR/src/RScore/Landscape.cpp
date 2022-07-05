@@ -2379,8 +2379,10 @@ return initialise;
 
 void Landscape::deleteDistribution(Species *pSpecies) {
 // WILL NEED TO SELECT DISTRIBUTION FOR CORRECT SPECIES ...
-// ... CURRENTLY IT IS THE ONLY ONE
-if (distns[0] != 0) delete distns[0];
+// ... CURRENTLY IT IS THE ONLY ONE ...
+// ... FOR MULTIPLE SPECIES IT MAY BE BETTER TO USE A DYNAMIC ARRAY FOR 
+// SPECIES DISTRIBUTIONS INDEXED BY SPECIES NUMBER, RATHER THAN A VECTOR
+if (distns[0] != 0) delete distns[0]; distns.clear();
 }
 
 // Return no. of initial distributions
