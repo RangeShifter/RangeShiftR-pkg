@@ -1,25 +1,25 @@
 /*----------------------------------------------------------------------------
- *
- *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell
- *
+ *	
+ *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell 
+ *	
  *	This file is part of RangeShifter.
- *
+ *	
  *	RangeShifter is free software: you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation, either version 3 of the License, or
  *	(at your option) any later version.
- *
+ *	
  *	RangeShifter is distributed in the hope that it will be useful,
  *	but WITHOUT ANY WARRANTY; without even the implied warranty of
  *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *	GNU General Public License for more details.
- *
+ *	
  *	You should have received a copy of the GNU General Public License
  *	along with RangeShifter. If not, see <https://www.gnu.org/licenses/>.
- *
+ *	
  --------------------------------------------------------------------------*/
-
-
+ 
+ 
 /*------------------------------------------------------------------------------
 
 RangeShifter v2.0 Species
@@ -57,12 +57,12 @@ Last updated: 28 July 2021 by Greta Bocedi
 struct extrmevent {
 	float prob; float mort;
 };
-#endif // SEASONAL
+#endif // SEASONAL 
 
 // structures for demographic parameters
 
 struct demogrParams {
-	short repType;
+	short repType; 
 #if SEASONAL
 	short nSeasons;
 #else
@@ -70,7 +70,7 @@ struct demogrParams {
 #endif
 #if RS_CONTAIN
 	bool habDepDem;
-#endif // RS_CONTAIN
+#endif // RS_CONTAIN 
 	float propMales; float harem; float bc; float lambda;
 	bool stageStruct;
 #if BUTTERFLYDISP
@@ -160,18 +160,18 @@ struct emigScales {
 // structures for transfer parameters
 
 struct trfrRules {
-	bool moveModel; bool stgDep; bool sexDep;
+	bool moveModel; bool stgDep; bool sexDep; 
 	bool distMort; bool indVar;
 #if RS_CONTAIN
-	short kernType;
+	short kernType;		
 #else
-	bool twinKern;
-#endif // RS_CONTAIN
+	bool twinKern; 
+#endif // RS_CONTAIN 
 #if TEMPMORT
-	short smType;
+	short smType;		
 #else
-	bool habMort;
-#endif // TEMPMORT
+	bool habMort;		
+#endif // TEMPMORT 
 	short moveType; bool costMap;
 	short movtTrait[2];
 };
@@ -221,14 +221,14 @@ struct trfrScales {
 };
 #if RS_CONTAIN
 struct trfr2Dt {
-	float u0Kernel1,p0Kernel1,u0Kernel2,p0Kernel2,propKernel1;
+	float u0Kernel1,p0Kernel1,u0Kernel2,p0Kernel2,propKernel1; 
 };
 struct trfrWald {
-//	float mu,gamma;
+//	float mu,gamma; 
 	float meanU,sigma_w,hc,vt,kappa;
-	float meanDirn,sdDirn;
+	float meanDirn,sdDirn;	
 };
-#endif // RS_CONTAIN
+#endif // RS_CONTAIN 
 
 // structures for settlement parameters
 
@@ -274,17 +274,17 @@ public:
 	extrmevent getExtreme(short);					// get seasonal extreme event
 #if PARTMIGRN
 	void setPropDispMigrn(				// set probability of dispersal/migration strategy
-		short,		// migration status
+		short,		// migration status        
 		float			// probability
-	);
+	); 
 	float getPropDispMigrn(				// get probability of dispersal/migration strategy
-		short			// migration status
-	);
+		short			// migration status        
+	); 
 	void setResetMigrn(bool);			// set reset dispersal/migration strategy indicator
 	bool getResetMigrn(void);			// get reset dispersal/migration strategy indicator
-#endif // PARTMIGRN
+#endif // PARTMIGRN 
 #endif // SEASONAL
-
+	
 	// demographic parameter functions
 
 #if SEASONAL
@@ -303,7 +303,7 @@ public:
 	);
 	float getMaxK( // return highest carrying capacity over all habitats
 		short		// no. of seasons
-	);
+	); 
 #else
 	void createHabK( // Create habitat carrying capacity table
 		short	// no. of habitats
@@ -316,7 +316,7 @@ public:
 		short		// habitat index no. (NB may differ from habitat no. supplied by user)
 	);
 	float getMaxK(void); // return highest carrying capacity over all habitats
-#endif // SEASONAL
+#endif // SEASONAL 
 	void deleteHabK(void); // Delete habitat carrying capacity table
 	void setStage( // Set stage structure parameters
 		const stageParams	// structure holding stage structure parameters
@@ -333,7 +333,7 @@ public:
 		float		// survival coefficient
 	);
 	densDepParams getDensDep(void); // Get development and survival coefficients
-
+	
 #if RS_CONTAIN
 
 	void resetDem( // Reset demographic rates to zero for a specified habitat
@@ -413,8 +413,8 @@ public:
 		short,	// stage
 		short		// sex
 	);
-#endif // SEASONAL
-
+#endif // SEASONAL 
+	
 #else
 
 #if SEASONAL
@@ -451,7 +451,7 @@ public:
 		short,	// stage
 		short		// sex
 	);
-
+	
 #else
 
 	void setFec( // Set fecundity
@@ -481,46 +481,10 @@ public:
 		short,	// stage
 		short		// sex
 	);
-#endif // SEASONAL
-#endif // RS_CONTAIN
+	
+#endif // SEASONAL 
 
-#if SPATIALDEMOG
-	bool getFecSpatial(void){return fecSpatial;};
-	bool getDevSpatial(void){return devSpatial;};
-	bool getSurvSpatial(void){return survSpatial;};
-	void setFecLayer( // set the layer of the spatial demographic scaling used for fecundity
-		short, // stage
-		short, // sex
-		short // layer
-	);
-
-	short getFecLayer( // get the layer of the spatial demographic scaling used for fecundity
-		short, // stage
-		short // sex
-	);
-
-	void setDevLayer( // set the layer of the spatial demographic scaling used for development
-		short, // stage
-		short, // sex
-		short // layer
-	);
-
-	short getDevLayer( // get the layer of the spatial demographic scaling used for development
-		short, // stage
-		short // sex
-	);
-
-	void setSurvLayer( // set the layer of the spatial demographic scaling used for survival
-		short, // stage
-		short, // sex
-		short // layer
-	);
-
-	short getSurvLayer( // get the layer of the spatial demographic scaling used for survival
-		short, // stage
-		short // sex
-	);
-#endif // SPATIALDEMOG
+#endif // RS_CONTAIN 
 
 	float getMaxFec(void); // Get highest fecundity of any stage
 	void setMinAge( // Set minimum age
@@ -767,7 +731,7 @@ public:
 	);
 	void updateMortality(int);
 	double getMortality(void);
-#endif // TEMPMORT
+#endif // TEMPMORT 
 	void setCRWParams( // Set initial transfer by CRW parameter limits
 		const short,					// stage (NB implemented for stage 0 only)
 		const short,					// sex   (NB implemented for sex 0 only)
@@ -802,13 +766,13 @@ public:
 	);
 	void deleteHabCostMort(void); // Delete habitat-dependent costs and mortality matrices
 #if RS_CONTAIN
-	void setTrfr2Dt(trfr2Dt);
-	trfr2Dt getTrfr2Dt(void);
-	void setTrfrWald(trfrWald);
-	trfrWald getTrfrWald(void);
-	void setTrfrHr(float,unsigned short);
-	float getTrfrHr(unsigned short);
-#endif // RS_CONTAIN
+	void setTrfr2Dt(trfr2Dt); 
+	trfr2Dt getTrfr2Dt(void); 
+	void setTrfrWald(trfrWald); 
+	trfrWald getTrfrWald(void); 
+	void setTrfrHr(float,unsigned short); 
+	float getTrfrHr(unsigned short); 
+#endif // RS_CONTAIN 
 
 	// settlement parameter functions
 
@@ -898,9 +862,6 @@ private:
 	bool survStageDens;
 	bool disperseOnLoss;	// individuals disperse on complete loss of patch
 												// (otherwise they die)
-#if SPATIALDEMOG
-	bool fecSpatial, devSpatial, survSpatial;
-#endif //SPATIALDEMOG
 #if GROUPDISP
 	bool selfing;       // self-fertilisation possible
 	short paternity;		// 0 = fixed (one father per breeding attempt), 1 = assigned at random
@@ -913,7 +874,7 @@ private:
 	float **habK;				// seasonal habitat-specific carrying capacities (inds/cell)
 #else
 	float *habK;				// habitat-specific carrying capacities (inds/cell)
-#endif // SEASONAL
+#endif // SEASONAL 
 	float devCoeff; 		// density-dependent development coefficient
 	float survCoeff; 		// density-dependent survival coefficient
 	float **ddwtFec;    // density-dependent weights matrix for fecundity
@@ -929,8 +890,8 @@ private:
 	float fec[NHABITATS][NSTAGES][NSEXES];		// fecundities
 	float dev[NHABITATS][NSTAGES][NSEXES];		// development probabilities
 	float surv[NHABITATS][NSTAGES][NSEXES];		// survival probabilities
-#endif // SEASONAL
-	bool habDepDem;														// habitat-dependent demography
+#endif // SEASONAL 
+	bool habDepDem;														// habitat-dependent demography 
 #else
 #if SEASONAL
 	float fec[NSEASONS][NSTAGES][NSEXES];			// fecundities
@@ -940,13 +901,8 @@ private:
 	float fec[NSTAGES][NSEXES];			// fecundities
 	float dev[NSTAGES][NSEXES];			// development probabilities
 	float surv[NSTAGES][NSEXES];		// survival probabilities
-#endif // SEASONAL
-#endif // RS_CONTAIN
-#if SPATIALDEMOG
-	int fecLayer[NSTAGES][NSEXES]; // layer for spatial varying fecundity
-	int devLayer[NSTAGES][NSEXES]; // layer for spatial varying development
-	int survLayer[NSTAGES][NSEXES]; // layer for spatial varying survival
-#endif // SPATIALDEMOG
+#endif // SEASONAL 
+#endif // RS_CONTAIN 
 	short minAge[NSTAGES][NSEXES];	// minimum age to enter stage
 	// NOTE - IN THEORY, NEXT 3 VARIABLES COULD BE COMMON, BUT WE WOULD NEED TO ENSURE THAT
 	// ALL MATRICES ARE DELETED IF THERE IS A CHANGE IN NO. OF STAGES OR REPRODUCTION TYPE
@@ -1007,13 +963,13 @@ private:
 	float	betaEmig[NSTAGES][NSEXES];	 // inflection point of reaction norm (in terms of N/K)
 #if GOBYMODEL
 	float asocD;				// emigration adjustment parameter for asocial phenotype
-#endif // GOBYMODEL
+#endif // GOBYMODEL 
 #if GROUPDISP
 	float groupmean;    // mean group size (> 1)
 	bool groupdisp;     // group dispersal occurs
 	short grouptype;    // 0 = population-level grouping, 1 = sibling-level grouping
 											// NB OPTION 1 IS NOT CURRENTLY IMPLEMENTED
-#endif // GROUPDISP
+#endif // GROUPDISP 
 	// NB Initialisation parameters are made double to avoid conversion errors (reason unclear)
 	// on traits maps using FloatToStr()
 	// As evolving traits are not stage-dependent, no. of rows can be 1
@@ -1040,13 +996,13 @@ private:
 									// 2 = 2Dt, 3 = WALD (inverse Gaussian)
 #else
 	bool twinKern;
-#endif // RS_CONTAIN
+#endif // RS_CONTAIN 
 #if TEMPMORT
 	short smType;		// per-step mortality type: 0 = constant, 1 = habitat-dependent
 									// 2 = temporally variable
 #else
 	bool habMort;		// habitat-dependent mortality
-#endif // TEMPMORT
+#endif // TEMPMORT 
 	float	meanDist1[NSTAGES][NSEXES];	// mean of 1st dispersal kernel (m)
 	float	meanDist2[NSTAGES][NSEXES]; // mean of 2nd dispersal kernel (m)
 	float	probKern1[NSTAGES][NSEXES]; // probability of dispersing with the 1st kernel
@@ -1075,8 +1031,8 @@ private:
 	float p0Kernel2;		// shape parameter for 2nd kernel
 	float propKernel1;	// probability of dispersing with the 1st kernel
 	// parameters for WALD (inverse Gaussian) kernel
-//	float mu;						// scaling parameter
-//	float gamma;				// shape parameter
+//	float mu;						// scaling parameter 
+//	float gamma;				// shape parameter 
 	float meanU;				// mean horizontal wind speed (m/s)
 	float sigma_w;			// s.d. of vertical wind speed (m/s)
 	float hc;						// canopy height (m)
@@ -1085,7 +1041,7 @@ private:
 	float kappa;				// turbulence coefficient
 	float meanDirn;			// mean wind direction (degrees)
 	float sdDirn;				// s.d. of wind direction (degrees)
-#endif // RS_CONTAIN
+#endif // RS_CONTAIN 
 	short moveType; 		// 1 = SMS, 2 = CRW
 	short pr;						// SMS perceptual range (cells)
 	short prMethod;			// SMS perceptual range evaluation method:
@@ -1117,7 +1073,7 @@ private:
 	std::vector <mortChange> mortchanges;
 	int nextChange,nextYear;
 	double currentMortality,currentGradient,nextGradient;
-#endif // TEMPMORT
+#endif // TEMPMORT 
 	double stepLgthMean[1][NSEXES];	// mean of initial step length (m)
 	double stepLgthSD[1][NSEXES];		// s.d. of initial step length (m)
 	double rhoMean[1][NSEXES];			// mean of initial correlation coefficient
@@ -1171,9 +1127,9 @@ private:
 #if PARTMIGRN
 	float propDispMigrn[7];						// probabilities of dispersal/migration strategies
 	bool resetMigrn;									// reset dispersal/migration strategies every year
-#endif // PARTMIGRN
-#endif // SEASONAL
-
+#endif // PARTMIGRN 
+#endif // SEASONAL 
+	
 #if SOCIALMODEL
 	// ADDITIONAL PARAMETERS FOR PROBIS SOCIAL POLYMORPHISM MODEL
 	// see also Fogarty et al. (2011), Am. Nat., 177, 273-287

@@ -48,9 +48,6 @@ Last updated: 28 July 2021 by Greta Bocedi
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#if RS_RCPP
-#include <Rcpp.h>
-#endif // RS_RCPP 
 
 #include "Version.h"
 #include "Parameters.h"
@@ -75,10 +72,7 @@ using namespace std::filesystem;
 #endif
 #if RS_CONTAIN
 #include "Control.h"
-#endif // RS_CONTAIN
-#if RS_THREADSAFE
-#include "Rinterface.h"
-#endif // RS_THREADSAFE 
+#endif // RS_CONTAIN 
 
 #if RSDEBUG
 extern ofstream DEBUGLOG;
@@ -92,18 +86,10 @@ int RunModel(
 );
 #else
 #if RS_RCPP && !R_CMD
-#if RS_THREADSAFE
-Rcpp::List RunModel(
-	Landscape*,	// pointer to Landscape
-	int,		// sequential simulation number (always 0 for VCL version)
-	Rcpp::S4	// parameter master to read initial conditions in each replicate simulation
-);
-#else
 Rcpp::List RunModel(
 	Landscape*,	// pointer to Landscape
 	int					// sequential simulation number (always 0 for VCL version)
 );
-#endif // RS_THREADSAFE
 #else
 int RunModel(
 	Landscape*,	// pointer to Landscape

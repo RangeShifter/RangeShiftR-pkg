@@ -42,20 +42,4 @@
 #define RS_EMBARCADERO 0
 
 //---------------------------------------------------------------------------
-
-#define RS_THREADSAFE 1
-
-#define SPATIALDEMOG 1
-
-	#if SPATIALDEMOG
-		#define RS_THREADSAFE 1
-	#endif // SPATIALDEMOG
-	#if RS_THREADSAFE
-		#define RS_RCPP 1
-		#define RSDEBUG 0
-	#endif // RS_THREADSAFE
-
-//---------------------------------------------------------------------------
-
-
 #endif

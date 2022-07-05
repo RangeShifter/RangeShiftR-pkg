@@ -2644,7 +2644,7 @@ return fileOK;
 #endif
 
 #if RS_RCPP && !R_CMD
-Rcpp::IntegerMatrix Community::addYearToPopList(int rep, int yr) {  // TODO: define new simparams to control type as well as start and interval of output
+Rcpp::IntegerMatrix Community::addYearToPopList(int rep, int yr) {  // TODO: define new simparams to control start and interval of output
 
 	landParams ppLand = pLandscape->getLandParams();
 	Rcpp::IntegerMatrix pop_map_year(ppLand.dimY,ppLand.dimX);

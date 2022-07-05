@@ -71,30 +71,13 @@ Last updated: 28 July 2021 by Greta Bocedi
 #ifndef LandscapeH
 #define LandscapeH
 
-#include "Version.h"
-
+//#include <stdlib.h>
+//#include <math.h>
 #include <algorithm>
 #include <fstream>
+//#include <iostream.h>
+//#include <stdio.h>
 #include <vector>
-
-/*
-#include <locale>
-#include <codecvt>
-#include <Rcpp.h>
-#include <armadillo>
-*/
-#if RS_RCPP
-#include <locale>
-#if !RSWIN64
-#include <codecvt>
-#endif //!RSWIN64
-#if !R_CMD
-#include <Rcpp.h>
-#if SPATIALDEMOG
-#include <armadillo>
-#endif //SPATIALDEMOG
-#endif //!R_CMD
-#endif //RS_RCPP
 
 using namespace std;
 
@@ -103,18 +86,20 @@ using namespace std;
 #include "Cell.h"
 #include "Species.h"
 #include "FractalGenerator.h"
-
+#if RS_RCPP
+#include <locale>
+#if !RSWIN64
+#include <codecvt>
+#endif
+#if !R_CMD
+#include <Rcpp.h>
+#endif
+#endif
 #if RS_CONTAIN
 #include "Control.h"
 #endif // RS_CONTAIN 
 
 //---------------------------------------------------------------------------
-
-
-struct landOrigin {
-	double minEast; double minNorth;
-};
-
 
 // Initial species distribution
 
@@ -123,13 +108,7 @@ public:
 	InitDist(Species*);
 	~InitDist();
 	int readDistribution(
-#if RS_THREADSAFE
-		Rcpp::NumericMatrix,
-		landOrigin,
-		int
-#else
 		string // name of species distribution file
-#endif
 	);
 	void setDistribution(
 		int	// no. of distribution cells to be initialised (0 for all cells)
@@ -179,9 +158,6 @@ struct landParams {
 #if RS_CONTAIN
 	bool dmgLoaded;
 #endif // RS_CONTAIN 
-#if SPATIALDEMOG
-	bool spatialdemog;
-#endif // SPATIALDEMOG 
 	int landNum; int resol; int spResol; int nHab; int nHabMax;
 	int dimX,dimY,minX,minY,maxX,maxY;
 	short rasterType;
@@ -195,6 +171,9 @@ struct genLandParams {
 };
 struct landPix {
 	int pix; float gpix;
+};
+struct landOrigin {
+	double minEast; double minNorth;
 };
 struct rasterHdr {
 	bool ok;
@@ -300,7 +279,7 @@ public:
 		int,  // patch sequential no.
 		int		// patch id no.
 	);
-#endif // SEASONAL
+#endif // SEASONAL 
 	void resetPatches(void);
 	void addNewCellToLand(
 		int,    // x co-ordinate
@@ -433,17 +412,6 @@ public:
 		short	// change number
 	);
 	void deleteLandChanges(void);
-#if RS_THREADSAFE
-	int readLandChange(
-		int,		// change number
-		Rcpp::NumericMatrix,// habitat raster
-		Rcpp::NumericMatrix,// patch raster
-		Rcpp::NumericMatrix	// cost raster
-#if SPATIALDEMOG
-		,Rcpp::NumericVector// array of demographic scaling layers
-#endif
-	);
-#else
 #if RS_RCPP && !R_CMD
 	int readLandChange(
 	    int,		// change file number
@@ -461,7 +429,6 @@ public:
 		bool	// change SMS costs?
 	);
 #endif
-#endif // RS_THREADSAFE
 	void createPatchChgMatrix(void);
 	void recordPatchChanges(int);
 	void deletePatchChgMatrix(void);
@@ -476,9 +443,6 @@ public:
 	costChange getCostChange(
 		int	// cost change number
 	);
-#if SPATIALDEMOG
-	void updateDemoScalings(short);
-#endif // SPATIALDEMOG 
 
 #if SPATIALMORT
 	// functions to handle spatial mortality
@@ -493,12 +457,7 @@ public:
 
 	int newDistribution(
 		Species*,	// pointer to Species
-#if RS_THREADSAFE
-		Rcpp::NumericMatrix,
-		int
-#else
 		string		// name of initial distribution file
-#endif
 	);
 	void setDistribution(
 		Species*, // pointer to Species
@@ -583,17 +542,6 @@ public:
 
 	// functions to handle input and output
 
-#if RS_THREADSAFE
-	int readLandscape(
-		int, 				// no. of seasonss
-		Rcpp::NumericMatrix,// habitat raster
-		Rcpp::NumericMatrix,// patch raster
-		Rcpp::NumericMatrix	// cost raster
-#if SPATIALDEMOG
-		,Rcpp::NumericVector // array of demographic scaling layers
-#endif
-	);
-#else //RS_THREADSAFE
 #if RS_CONTAIN
 #if SEASONAL
 	int readLandscape(
@@ -652,7 +600,6 @@ public:
 	);
 #endif // SEASONAL
 #endif // RS_CONTAIN
-#endif // RS_THREADSAFE
 	void listPatches(void);
 	int readCosts(
 		string	// costs file name
@@ -702,9 +649,6 @@ private:
 #if RS_CONTAIN
 	bool dmgLoaded;				// economic / environmental damage values have been input
 #endif // RS_CONTAIN 
-#if SPATIALDEMOG
-	bool spatialdemog;			// are there spatially varying demographic rates?
-#endif // SPATIALDEMOG 
 	short rasterType;			// 0 = habitat codes 1 = % cover 2 = quality 9 = artificial landscape
 	int landNum;					// landscape number
 	int resol;						// cell size (m)

@@ -102,7 +102,7 @@ public:
 		int,	 // internal sequential number
 		int		 // patch id number
 	);
-#endif // SEASON
+#endif // SEASONAL 
 	~Patch();
 	int getSeqNum(void);
 	int getPatchNum(void);
@@ -185,18 +185,13 @@ public:
 #else
 	float getK(void);
 #endif // SEASONAL 
-#if SPATIALDEMOG
-	void setDemoScaling(std::vector <float>);
-	std::vector <float> getDemoScaling(void);
-	void setPatchDemoScaling(short, patchLimits); // calculate demog. scalings of patch from its cells //TODO arguments
-#endif // SPATIALDEMOG
 #if VCL
 	// for GUI version, draw the Patch on the screen
 	void drawCells(TCanvas*,float,int,rgb);
 #else
 	// dummy function for batch version
 	void drawCells(float,int,rgb);
-#endif // VCL
+#endif
 
 	private:
 	int patchSeqNum;// sequential patch number - patch 0 is reserved for the inter-patch matrix
@@ -215,16 +210,12 @@ public:
 #else
 	float localK;		// patch carrying capacity (individuals)
 #endif // SEASONAL 
-#if SPATIALDEMOG
-	std::vector <float> localDemoScaling;
-#endif // SPATIALDEMOG
 	bool changed;
 #if RS_CONTAIN
 	bool damageLocns; // are there any locations of damage within the patch
 #endif // RS_CONTAIN
 // NOTE: THE FOLLOWING ARRAY WILL NEED TO BE MADE SPECIES-SPECIFIC...
 	short nTemp[NSEXES];						// no. of potential settlers in each sex
-
 
 	std::vector <Cell*> cells;
 	std::vector <patchPopn> popns;
@@ -243,9 +234,5 @@ extern RSrandom *pRandom;
 #if RSDEBUG
 extern ofstream DEBUGLOG;
 #endif
-
-#if SPATIALDEMOG
-extern short nDSlayer;
-#endif // SPATIALDEMOG
 
 #endif

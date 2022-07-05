@@ -353,6 +353,7 @@ for (int i = 0; i < NSEXES; i++) {
 }
 //locus loc;
 
+demogrParams dem = pSpecies->getDemogr();
 emigRules emig = pSpecies->getEmig();
 trfrRules trfr = pSpecies->getTrfr();
 settleType sett = pSpecies->getSettle();
@@ -436,11 +437,7 @@ else return 0;
 #if RS_CONTAIN
 popStats Population::getStats(short hab) 
 #else
-#if SPATIALDEMOG
-popStats Population::getStats(std::vector <float> localDemoScaling)
-#else
 popStats Population::getStats(void) 
-#endif // SPATIALDEMOG
 #endif // RS_CONTAIN 
 {
 popStats p;
@@ -496,24 +493,8 @@ for (int stg = 1; stg < nStages; stg++) {
 					if (seasonfec > fec) fec = seasonfec;
 				}
 #else
-#if SPATIALDEMOG
-				if (dem.repType == 2) {
-					if (pSpecies->getFecSpatial() && pSpecies->getFecLayer(stg,sex)>=0){
-						fec = pSpecies->getFec(stg,sex)*localDemoScaling[pSpecies->getFecLayer(stg,sex)];
-					}
-					else fec = pSpecies->getFec(stg,sex);
-				}
-				else {
-					if (pSpecies->getFecSpatial() && pSpecies->getFecLayer(stg,0)>=0){
-						fec = pSpecies->getFec(stg,0)*localDemoScaling[pSpecies->getFecLayer(stg,0)];
-					}
-					else fec = pSpecies->getFec(stg,0);
-				}
-#else
-
 				if (dem.repType == 2) fec = pSpecies->getFec(stg,sex);
 				else fec = pSpecies->getFec(stg,0);
-#endif //SPATIALDEMOG
 #endif // SEASONAL 
 #endif // RS_CONTAIN 
 #if GROUPDISP
@@ -778,11 +759,7 @@ void Population::reproduction(const std::vector <Individual*> *pfglobal,const in
 void Population::reproduction(const float localK,const float envval,const int resol,
 	const short option)
 #else
-#if SPATIALDEMOG
-void Population::reproduction(const float localK,const float envval,const int resol, std::vector <float> localDemoScaling)
-#else
 void Population::reproduction(const float localK,const float envval,const int resol)
-#endif // SPATIALDEMOG
 #endif // BUTTERFLYDISP 
 #endif // GROUPDISP 
 #endif // SEASONAL 
@@ -818,6 +795,7 @@ emigRules emig = pSpecies->getEmig();
 trfrRules trfr = pSpecies->getTrfr();
 settleType sett = pSpecies->getSettle();
 genomeData gen = pSpecies->getGenomeData();
+simView v = paramsSim->getViews();
 
 #if GROUPDISP
 #if RSDEBUG
@@ -939,14 +917,7 @@ for (int stg = 0; stg < sstruct.nStages; stg++) {
 #if SEASONAL
 				fec[stg][sex] = pSpecies->getFec(season,stg,0);
 #else
-#if SPATIALDEMOG
-				if (pSpecies->getFecSpatial() && pSpecies->getFecLayer(stg,0)>=0){
-					fec[stg][sex] = pSpecies->getFec(stg,0)*localDemoScaling[pSpecies->getFecLayer(stg,0)];
-				}
-				else fec[stg][sex] = pSpecies->getFec(stg,0);
-#else
 				fec[stg][sex] = pSpecies->getFec(stg,0);
-#endif //SPATIALDEMOG
 #endif // SEASONAL 
 #endif // RS_CONTAIN 
 			}
@@ -961,14 +932,7 @@ for (int stg = 0; stg < sstruct.nStages; stg++) {
 #if SEASONAL
 				fec[stg][sex] = pSpecies->getFec(season,stg,sex);
 #else
-#if SPATIALDEMOG
-				if (pSpecies->getFecSpatial() && pSpecies->getFecLayer(stg,sex)>=0){
-					fec[stg][sex] = pSpecies->getFec(stg,sex)*localDemoScaling[pSpecies->getFecLayer(stg,sex)];
-				}
-				else fec[stg][sex] = pSpecies->getFec(stg,sex);
-#else
 				fec[stg][sex] = pSpecies->getFec(stg,sex);
-#endif // SPATIALDEMOG
 #endif // SEASONAL 
 #endif // RS_CONTAIN 
 //			if (sex == 0 && fec[stg][sex] > dem.lambda) dem.lambda = fec[stg][sex];
@@ -1624,7 +1588,7 @@ demogrParams dem = pSpecies->getDemogr();
 stageParams sstruct = pSpecies->getStage();
 emigRules emig = pSpecies->getEmig();
 emigTraits eparams;
-
+trfrRules trfr = pSpecies->getTrfr();
 indStats ind;
 #if RSDEBUG
 //DEBUGLOG << "Population::emigration(): this=" << this
@@ -2765,6 +2729,7 @@ for (int i = 0; i < ninds; i++) {
 				}
 			}
 		}
+
 	inds[i]->setStatus(ind.status);
 #if SEASONAL
 //	inds[i]->setMigrnStatus(ind.migrnstatus);
@@ -2916,11 +2881,7 @@ void Population::survival0(float localK,float mort,short option0,short option1)
 #if PEDIGREE
 void Population::survival0(Pedigree *pPed,float localK,short option0,short option1)
 #else
-#if SPATIALDEMOG
-void Population::survival0(float localK,short option0,short option1, std::vector <float> localDemoScaling)
-#else
 void Population::survival0(float localK,short option0,short option1)
-#endif // SPATIALDEMOG
 #endif // PEDIGREE
 #endif // SPATIALMORT
 #endif // SEASONAL
@@ -2975,19 +2936,8 @@ for (int stg = 0; stg < sstruct.nStages; stg++) {
 				dev[stg][sex]  = pSpecies->getDev(season,stg,0);
 				surv[stg][sex] = pSpecies->getSurv(season,stg,0);
 #else
-#if SPATIALDEMOG
-				if (pSpecies->getDevSpatial() && pSpecies->getDevLayer(stg,0)>=0){
-					dev[stg][sex] = pSpecies->getDev(stg,0)*localDemoScaling[pSpecies->getDevLayer(stg,0)];
-				}
-				else dev[stg][sex] = pSpecies->getDev(stg,0);
-				if (pSpecies->getSurvSpatial() && pSpecies->getSurvLayer(stg,0)>=0){
-					surv[stg][sex] = pSpecies->getSurv(stg,0)*localDemoScaling[pSpecies->getSurvLayer(stg,0)];
-				}
-				else surv[stg][sex] = pSpecies->getSurv(stg,0);
-#else
 				dev[stg][sex]  = pSpecies->getDev(stg,0);
 				surv[stg][sex] = pSpecies->getSurv(stg,0);
-#endif //SPATIALDEMOG
 #endif // SEASONAL 
 #endif // RS_CONTAIN 
 				minAge[stg][sex] = pSpecies->getMinAge(stg,0);
@@ -3006,19 +2956,8 @@ for (int stg = 0; stg < sstruct.nStages; stg++) {
 				dev[stg][sex]  = pSpecies->getDev(season,stg,sex);
 				surv[stg][sex] = pSpecies->getSurv(season,stg,sex);
 #else
-#if SPATIALDEMOG
-				if (pSpecies->getDevSpatial() && pSpecies->getDevLayer(stg,sex)>=0){
-					dev[stg][sex] = pSpecies->getDev(stg,sex)*localDemoScaling[pSpecies->getDevLayer(stg,sex)];
-				}
-				else dev[stg][sex] = pSpecies->getDev(stg,sex);
-				if (pSpecies->getSurvSpatial() && pSpecies->getSurvLayer(stg,sex)>=0){
-									surv[stg][sex] = pSpecies->getSurv(stg,sex)*localDemoScaling[pSpecies->getSurvLayer(stg,sex)];
-				}
-				else surv[stg][sex] = pSpecies->getSurv(stg,sex);
-#else
 				dev[stg][sex]  = pSpecies->getDev(stg,sex);
 				surv[stg][sex] = pSpecies->getSurv(stg,sex);
-#endif // SPATIALDEMOG
 #endif // SEASONAL 
 #endif // RS_CONTAIN 
 				minAge[stg][sex] = pSpecies->getMinAge(stg,sex);
@@ -3539,7 +3478,7 @@ Cell *pCell;
 // NEED TO REPLACE CONDITIONAL COLUMNS BASED ON ATTRIBUTES OF ONE SPECIES TO COVER
 // ATTRIBUTES OF *ALL* SPECIES AS DETECTED AT MODEL LEVEL
 demogrParams dem = pSpecies->getDemogr();
-
+stageParams sstruct = pSpecies->getStage();
 #if RS_ABC
 simParams sim = paramsSim->getSim();
 #endif
@@ -3584,11 +3523,7 @@ if (dem.stageStruct) {
 	// whether or not the poplation includes breeders
 	p = getStats(0);
 #else
-#if SPATIALDEMOG
-	p = getStats(pPatch->getDemoScaling());
-#else
 	p = getStats();
-#endif // SPATIALDEMOG
 #endif // RS_CONTAIN 
 	outPop << "\t" << p.nNonJuvs;
 	// non-juvenile stage totals from permanent array

@@ -45,11 +45,7 @@ Last updated: 14 January 2021 by Steve Palmer
 #ifndef CellH
 #define CellH
 
-#if SPATIALDEMOG
-#include <algorithm>
-#endif
 #include <vector>
-
 using namespace std;
 
 #include "Parameters.h"
@@ -141,12 +137,7 @@ public:
 //	unsigned int getDamage(void);
 	void setDamage(DamageLocn*);
 	DamageLocn* getDamage(void);
-#endif // RS_CONTAIN
-#if SPATIALDEMOG
-	void addchgDemoScaling(std::vector<float>);
-	void setDemoScaling(std::vector<float>, short);
-	std::vector<float> getDemoScaling(short);
-#endif // SPATIALDEMOG 
+#endif // RS_CONTAIN 
 
 private:
 	int x,y;			// cell co-ordinates
@@ -170,9 +161,6 @@ private:
 		// NB initially, habitat codes are loaded, then converted to index nos.
 		//    once landscape is fully loaded
 	vector <float> habitats;	// habitat proportions (rasterType=1) or quality (rasterType=2)
-#if SPATIALDEMOG
-	std::vector<std::vector<float>> demoScalings;	// demographic scaling layers (only if rasterType==2)
-#endif
 };
 
 //---------------------------------------------------------------------------
@@ -204,10 +192,6 @@ private:
 #if RSDEBUG
 extern void DebugGUI(string);
 #endif
-
-#if SPATIALDEMOG
-extern short nDSlayer;
-#endif // SPATIALDEMOG
 
 //---------------------------------------------------------------------------
 

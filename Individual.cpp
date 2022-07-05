@@ -1599,6 +1599,7 @@ pPatch = NULL;
 
 if (trfr.indVar) { // get individual's kernel parameters
 	kern.meanDist1 = kern.meanDist2 = kern.probKern1 = 0.0;
+//	kparams = pSpecies->getKernParams(stage,sex);
 	if (pGenome != 0) {
 		kern.meanDist1 = kerntraits->meanDist1;
 #if RS_CONTAIN
@@ -1758,6 +1759,45 @@ do {
 			yrand = (double)loc.y + pRandom->Random()*0.999;
 
 #if RS_CONTAIN
+
+			/*
+			if (trfr.kernType == 2) { // 2Dt kernel
+				
+			// sample distance from 2Dt kernel by method of REJECTION SAMPLING 
+
+			// NOTE: sampling must be in real-world co-ordinates (not cell co-ordinates)
+			// as kernel units are metres
+
+			reject = true;
+			while (reject) {
+				// sample a random distance along the x-axis
+				dist = pRandom->Random() * maxx;
+				// sample a random y-axis variate between zero and max. possible 
+				r1 = pRandom->Random() * f0;
+				// calculate value of kernel at dist;
+				f = p / (PI * u * pow((1.0 + (dist*dist/u)),(p+1.0)));
+				if (r1 <= f) reject = false;
+#if RSDEBUG
+//DEBUGLOG << "Individual::moveKernel(): indId=" << indId << " dist=" << dist << " r1=" << r1
+//	<< " f=" << f << " reject=" << reject << endl;
+#endif
+				}
+#if RSDEBUG
+//DEBUGLOG << "Individual::moveKernel(): indId=" << indId << " SAMPLED dist=" << dist 
+//	<< endl;
+#endif
+			// convert sampled distance to cell co-ordinates 
+			dist /= (double)land.resol;
+//			rndangle = pRandom->Random() * 2.0 * PI;
+//			nx = (xrand + dist * cos(rndangle)) / land.resol;
+//			ny = (yrand + dist * sin(rndangle)) / land.resol;
+
+			}
+			else { // negative exponential kernel
+				r1 = 0.0000001 + pRandom->Random()*(1.0-0.0000001);
+				dist = (-1.0*meandist)*log(r1);  // for CLUSTER
+			}
+			*/
 
 			switch (trfr.kernType) {
 				
@@ -3195,6 +3235,7 @@ double wrpcauchy (double location, double rho) {
 double result;
 
 if(rho < 0.0 || rho > 1.0) {
+//	ML_ERR_return_NAN;
 	result = location;
 }
 
@@ -3210,9 +3251,12 @@ return result;
 
 double cauchy(double location, double scale) {
 if (scale < 0) return location;
-
+//return location + scale * tan(M_PI * unif_rand());
 return location + scale * tan(PI * pRandom->Random());
+//return location + scale * tan(M_PI * pRandom->Random());
 }
+#endif
+//#endif
 
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------

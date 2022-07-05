@@ -37,7 +37,7 @@
 Patch::Patch(int seqnum,int num,short nseasons) 
 #else
 Patch::Patch(int seqnum,int num) 
-#endif // SEASONAL
+#endif // SEASONAL 
 {
 patchSeqNum = seqnum; patchNum = num; nCells = 0;
 xMin = yMin = 999999999; xMax = yMax = 0; x = y = 0;
@@ -55,11 +55,6 @@ localK = 0.0;
 for (int sex = 0; sex < NSEXES; sex++) {
 	nTemp[sex] = 0;
 }
-#if SPATIALDEMOG
-//for (int i = 0; i < nDSlayer; i++) localDemoScaling.push_back(1.0);
-localDemoScaling.assign(nDSlayer,1.0);
-#endif
-
 changed = false;
 }
 
@@ -69,10 +64,6 @@ popns.clear();
 #if SEASONAL
 localK.clear();
 #endif // SEASONAL 
-#if SPATIALDEMOG
-localDemoScaling.clear();
-#endif // SPATIALDEMOG
-
 }
 
 int Patch::getSeqNum(void) { return patchSeqNum; }
@@ -426,54 +417,7 @@ return ok;
 }
 #else
 float Patch::getK(void) { return localK; }
-#endif // SEASONAL
-
-#if SPATIALDEMOG
-void Patch::setDemoScaling(std::vector <float> ds) {
-
-	std::for_each(ds.begin(), ds.end(), [](float& perc){ if(perc < 0.0 || perc > 1.0) perc=1; });
-
-	localDemoScaling.assign(ds.begin(), ds.end());
-
-	return;
-}
-
-std::vector <float> Patch::getDemoScaling(void) { return localDemoScaling; }
-
-void Patch::setPatchDemoScaling(short landIx, patchLimits landlimits) { 
-
-	// if patch wholly outside current landscape boundaries
-	if (xMin > landlimits.xMax || xMax < landlimits.xMin
-	||  yMin > landlimits.yMax || yMax < landlimits.yMin) {
-		localDemoScaling.assign(nDSlayer,0.0); // set all local scales to zero
-		return;
-	}
-	
-	// loop through constituent cells of the patch
-	int ncells = (int)cells.size();
-	std::vector<float> patchDS(nDSlayer, 0.0);
-	std::vector<float> cellDS(nDSlayer, 0.0);
-
-	for (int i = 0; i < ncells; i++) {
-		cellDS = cells[i]->getDemoScaling(landIx); // is that ok?
-
-		//add cell value to patch value 
-		for (int ly = 0; ly < nDSlayer; ly++) {
-			patchDS[ly] += cellDS[ly];
-		}
-	}
-	
-	// take mean over cells and divide by 100 to scale to range [0,1]
-	for (int ly = 0; ly < nDSlayer; ly++) {
-		patchDS[ly] = patchDS[ly] / ncells / 100.0f;
-	}
-	
-	// set values
-	setDemoScaling(patchDS);
-
-	return;
-}
-#endif //SPATIALDEMOG
+#endif // SEASONAL 
 
 // Return co-ordinates of a specified cell
 locn Patch::getCellLocn(int ix) {

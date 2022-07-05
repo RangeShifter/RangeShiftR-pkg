@@ -38,15 +38,11 @@ ofstream outPar;
 int RunModel(Landscape *pLandscape,int seqsim,ABCmaster* pABCmaster)
 #else
 #if RS_RCPP && !R_CMD
-#if RS_THREADSAFE
-Rcpp::List RunModel(Landscape *pLandscape,int seqsim,Rcpp::S4 ParMaster)
-#else
 Rcpp::List RunModel(Landscape *pLandscape,int seqsim)
-#endif // RS_THREADSAFE
 #else
 int RunModel(Landscape *pLandscape,int seqsim)
-#endif // RS_RCPP && !R_CMD
-#endif // RS_ABC
+#endif
+#endif
 {
 //int Nsuit,yr,totalInds;
 int yr,totalInds;
@@ -100,11 +96,6 @@ if (!ppLand.generated) {
 	pLandscape->updateCarryingCapacity(pSpecies,0,0);
 //	if (ppLand.rasterType <= 2 && ppLand.dmgLoaded) 
 //		pLandscape->updateDamageIndices();
-#if SPATIALDEMOG
-	if (ppLand.rasterType == 2 && ppLand.spatialdemog)
-		pLandscape->updateDemoScalings(0); // TODO
-#endif // SPATIALDEMOG 
-
 	patchData ppp;
 	int npatches = pLandscape->patchCount();
 	for (int i = 0; i < npatches; i++) {
@@ -273,21 +264,6 @@ DEBUGLOG << endl << "RunModel(): finished generating populations" << endl;
 	}
 
 	filesOK = true;
-#if RS_THREADSAFE
-	if(init.seedType==2 && init.indsFile=="NULL"){ // initialisation from InitInds list of dataframes
-		if(rep > 0){
-			int error_init = 0;
-			Rcpp::S4 InitParamsR("InitialisationParams");
-			InitParamsR = Rcpp::as<Rcpp::S4>(ParMaster.slot("init"));
-			Rcpp::List InitIndsList = Rcpp::as<Rcpp::List>(InitParamsR.slot("InitIndsList"));
-			error_init = ReadInitIndsFileR(0, pLandscape, Rcpp::as<Rcpp::DataFrame>(InitIndsList[rep]));
-			if(error_init>0) {
-				MemoLine("UNABLE TO GET NEXT INITIALISATION DATAFRAME");
-				filesOK = false;
-			}
-		}
-	}
-#endif
 	if (rep == 0) {
 		// open output files
 		if (sim.outRange) { // open Range file
@@ -309,11 +285,7 @@ DEBUGLOG << endl << "RunModel(): finished generating populations" << endl;
 				MemoLine("UNABLE TO OPEN OCCUPANCY FILE(S)");
 				filesOK = false;
 			}
-#if RS_RCPP
-		if (sim.outPop && sim.CreatePopFile) {
-#else
 		if (sim.outPop) {
-#endif
 			// open Population file
 			if (!pComm->outPopHeaders(pSpecies,ppLand.landNum)) {
 				MemoLine("UNABLE TO OPEN POPULATION FILE");
@@ -373,12 +345,12 @@ DEBUGLOG << "RunModel(): UNABLE TO OPEN GENETIC SAMPLES FILE" << endl;
 		}
 #endif // VIRTUALECOLOGIST 
 #if PEDIGREE
-		if (!pComm->outGroupHeaders(0)) {
-			MemoLine("UNABLE TO OPEN GROUPS FILE");
-			filesOK = false;		
-		}
+	if (!pComm->outGroupHeaders(0)) {
+		MemoLine("UNABLE TO OPEN GROUPS FILE");
+		filesOK = false;		
+	}
 #endif
-	} // rep==0
+	}
 #if RSDEBUG
 DEBUGLOG << "RunModel(): completed opening output files" << endl;
 #endif
@@ -482,11 +454,7 @@ DEBUGLOG << "RunModel(): PROBLEM - closing output files" << endl;
 //	pLandscape->resetPrevDamage();
 	if (ppLand.rasterType <= 2 && ppLand.dmgLoaded)
 		pLandscape->updateDamageIndices();
-#endif // RS_CONTAIN
-#if SPATIALDEMOG
-	if (ppLand.rasterType == 2 && ppLand.spatialdemog)
-		pLandscape->updateDemoScalings(0);
-#endif // SPATIALDEMOG 
+#endif // RS_CONTAIN 
 #if RSDEBUG
 DEBUGLOG << "RunModel(): completed updating carrying capacity" << endl;
 #endif
@@ -753,10 +721,6 @@ DEBUGLOG << "RunModel(): yr=" << yr << " landChg.costfile=" << landChg.costfile 
 			if (ppLand.rasterType <= 2 && ppLand.dmgLoaded)
 				pLandscape->updateDamageIndices();
 #endif // RS_CONTAIN 
-#if SPATIALDEMOG
-			if (ppLand.rasterType == 2 && ppLand.spatialdemog)
-				pLandscape->updateDemoScalings((short)landIx);
-#endif // SPATIALDEMOG 
 		}
 #if RS_CONTAIN
 		pLandscape->resetDamageLocns();
@@ -1707,11 +1671,7 @@ if (sim.outRange) {
 	if (ppLand.dmgLoaded) pLandscape->outSummDmgHeaders(-999);
 #endif // RS_CONTAIN 
 }
-#if RS_RCPP
-	if (sim.outPop && sim.CreatePopFile) {
-#else
-	if (sim.outPop) {
-#endif
+if (sim.outPop) {
 	pComm->outPopHeaders(pSpecies,-999); // close Population file
 #if RS_CONTAIN
 	if (pCull->isCullApplied()) {
@@ -1820,7 +1780,12 @@ DEBUGLOG << "PreReproductionOutput(): 11112 outRange=" << sim.outRange
 //DEBUGLOG << "PreReproductionOutput(): 22222 " << endl;
 #endif
 
+//emigCanvas ecanv;
+//trfrCanvas tcanv;
 traitCanvas tcanv;
+//for (int i = 0; i < 6; i++) {
+//	ecanv.pcanvas[i] = 0; tcanv.pcanvas[i] = 0;
+//}
 for (int i = 0; i < NTRAITS; i++) {
 		tcanv.pcanvas[i] = 0;
 }
@@ -1828,6 +1793,9 @@ for (int i = 0; i < NTRAITS; i++) {
 // trait outputs and visualisation
 
 if (v.viewTraits) {
+//	ecanv = SetupEmigCanvas();
+//	tcanv = SetupTrfrCanvas();
+//	tcanv = SetupTraitCanvas(v.viewGrad);
 	tcanv = SetupTraitCanvas();
 }
 
@@ -1835,6 +1803,7 @@ if (v.viewTraits
 || ((sim.outTraitsCells && yr >= sim.outStartTraitCell && yr%sim.outIntTraitCell == 0) ||
 		(sim.outTraitsRows && yr >= sim.outStartTraitRow && yr%sim.outIntTraitRow == 0)))
 {
+//	pComm->outTraits(ecanv,tcanv,pSpecies,rep,yr,gen);
 	pComm->outTraits(tcanv,pSpecies,rep,yr,gen);
 }
 
@@ -1888,11 +1857,7 @@ if (sim.outPop && yr >= sim.outStartPop && yr%sim.outIntPop == 0)
 if (popOutputYear || abcYear)
 	pComm->outPop(pSpecies,rep,yr,gen,pABCmaster,abcYear,popOutputYear);
 #else
-#if RS_RCPP
-if (sim.outPop && sim.CreatePopFile && yr >= sim.outStartPop && yr%sim.outIntPop == 0)
-#else
 if (sim.outPop && yr >= sim.outStartPop && yr%sim.outIntPop == 0)
-#endif
 	pComm->outPop(rep,yr,gen);
 #endif
 
@@ -2958,6 +2923,7 @@ if (trfr.moveModel) {
 		outPar << pr << " METHOD: " << move.prMethod << endl;
 		if (!trfr.indVar) outPar << "DIRECTIONAL PERSISTENCE: " << move.dp << endl;
 		outPar << "MEMORY SIZE: " << move.memSize << endl;
+		//if (!trfr.indVar) outPar << "GOAL BIAS:   " << move.gb << endl;
 		outPar << "GOAL TYPE:   " << move.goalType << endl;
 		if (!trfr.indVar) {
 			if (move.goalType == 2) { //  dispersal bias

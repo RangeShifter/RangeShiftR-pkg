@@ -1,35 +1,34 @@
 /*----------------------------------------------------------------------------
- *
- *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell
- *
+ *	
+ *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell 
+ *	
  *	This file is part of RangeShifter.
- *
+ *	
  *	RangeShifter is free software: you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation, either version 3 of the License, or
  *	(at your option) any later version.
- *
+ *	
  *	RangeShifter is distributed in the hope that it will be useful,
  *	but WITHOUT ANY WARRANTY; without even the implied warranty of
  *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *	GNU General Public License for more details.
- *
+ *	
  *	You should have received a copy of the GNU General Public License
  *	along with RangeShifter. If not, see <https://www.gnu.org/licenses/>.
- *
+ *	
  --------------------------------------------------------------------------*/
-
-
+ 
+ 
 //---------------------------------------------------------------------------
 #if RS_EMBARCADERO
 #pragma hdrstop
 #endif
 
 #include "Cell.h"
-#include "algorithm"
 
 //---------------------------------------------------------------------------
-#if RS_EMBARCADERO
+#if RS_EMBARCADERO 
 #pragma package(smart_init)
 #endif
 
@@ -79,11 +78,8 @@ habIxx.clear();
 habitats.clear();
 if (smsData != 0) {
 	if (smsData->effcosts != 0) delete smsData->effcosts;
-	delete smsData;
+	delete smsData;       
 }
-#if SPATIALDEMOG
-demoScalings.clear();
-#endif
 #if RSDEBUG
 //DEBUGLOG << "Cell::~Cell(): deleted" << endl;
 #endif
@@ -175,7 +171,7 @@ if (period == 0 || period == 1) m = mort[period];
 return m;
 }
 
-#endif // SPATIALMORT
+#endif // SPATIALMORT 
 
 // Functions to handle costs for SMS
 
@@ -214,7 +210,7 @@ else
 return a;
 }
 
-void Cell::setEffCosts(array3x3f a) {
+void Cell::setEffCosts(array3x3f a) {     
 if (smsData->effcosts == 0) smsData->effcosts = new array3x3f;
 *smsData->effcosts = a;
 }
@@ -240,26 +236,7 @@ unsigned long int Cell::getVisits(void) { return visits; }
 void Cell::setDamage(DamageLocn *pDmg) { pDamage = pDmg; }
 DamageLocn* Cell::getDamage(void) { return pDamage; }
 
-#endif // RS_CONTAIN
-
-#if SPATIALDEMOG
-
-void Cell::addchgDemoScaling(std::vector<float> ds) {
-	std::for_each(ds.begin(), ds.end(), [](float& perc){ if(perc < 0.0 || perc > 100.0) perc=100; });
-	demoScalings.push_back(ds);
-	return;
-}
-
-std::vector<float> Cell::getDemoScaling(short chgyear) {
-	if (chgyear < 0 || chgyear >= (int)demoScalings.size()) {
-		std::vector<float> ret(1, -1);
-		return ret;
-	}
-	else return demoScalings[chgyear];
-}
-
-#endif // SPATIALDEMOG
-
+#endif // RS_CONTAIN 
 
 //---------------------------------------------------------------------------
 
@@ -285,7 +262,7 @@ else return false;
 bool DistCell::selected(void) { return initialise; }
 
 locn DistCell::getLocn(void) {
-	locn loc; loc.x = x; loc.y = y; return loc;
+locn loc; loc.x = x; loc.y = y; return loc;
 }
 
 //---------------------------------------------------------------------------

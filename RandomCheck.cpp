@@ -41,9 +41,10 @@ ofstream outIRandom;
 void randomCheck(void)
 {
 
-	int samplesize,irandMin,irandMax;
-	double bernMean,normMean,normSD,poisMean;
-	string name,header;
+int samplesize,irandMin,irandMax;
+double bernMean,normMean,normSD,poisMean;
+string name,header;
+simParams sim = paramsSim->getSim();
 
 	name = paramsSim->getDir(1) + "RandomCheck.txt";
 	inRandom.open(name.c_str());
