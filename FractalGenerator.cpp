@@ -45,6 +45,12 @@ return z.value < zz.value;
 vector<land>& fractal_landscape(int X,int Y,double Hurst,double prop,
 	double maxValue,double minValue)
 {
+#if RSDEBUG
+DEBUGLOG << "fractal_landscape(): X=" << X << " Y=" << Y 
+	<< " Hurst=" << Hurst << " prop=" << prop 
+	<< " maxValue=" << maxValue << " minValue=" << minValue  
+	<< endl;
+#endif
 
 int ii, jj, x, y;
 int ix, iy;

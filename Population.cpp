@@ -2646,7 +2646,24 @@ for (int i = 0; i < ninds; i++) {
 						if (localK > 0.0) {
 							// make settlement decision
 							if (settletype.indVar) settDD = inds[i]->getSettTraits();
+#if RS_RCPP
 							else settDD = pSpecies->getSettTraits(ind.stage,ind.sex);
+#else
+							else {
+								if (settletype.sexDep) {
+									if (settletype.stgDep) 
+										settDD = pSpecies->getSettTraits(ind.stage,ind.sex);										
+									else
+										settDD = pSpecies->getSettTraits(0,ind.sex);
+								}
+								else {
+									if (settletype.stgDep) 
+										settDD = pSpecies->getSettTraits(ind.stage,0);										
+									else
+										settDD = pSpecies->getSettTraits(0,0);
+								}
+							}
+#endif //RS_RCPP
 #if GOBYMODEL
 							if (ind.asocial) {
 								settprob = settDD.s0 / (1.0 + exp(-(popsize/localK
@@ -2674,6 +2691,15 @@ for (int i = 0; i < ninds; i++) {
 							else { // settlement procluded
 								settle.settleStatus = 1;
 							}
+#if RSDEBUG
+//DEBUGLOG << "Population::transfer(): 8889: i=" << i 
+//	<< " settleStatus=" << settle.settleStatus << " mateOK=" << (int)mateOK;
+//if (settle.settleStatus == 2 && mateOK) {
+//	DEBUGLOG << " SETTLES -";
+//	if (ind.sex == 1) DEBUGLOG << " MALE "; else DEBUGLOG << " FEMALE ";
+//}
+//DEBUGLOG	<< endl;
+#endif
 							settle.pSettPatch = pPatch;
 						}
 						inds[i]->setSettPatch(settle);
@@ -2987,6 +3013,11 @@ if (dem.stageStruct) {
 //	DEBUGLOG << "Population::survival0(): 2222 "
 //		<< " ninds=" << ninds << " localK=" << localK
 //		<< " effect of density dependence:" << endl;
+//	for (int st = 0; st < nStages; st++) {
+//		for (int sx = 0; sx < nsexes; sx++) {
+//			DEBUGLOG << "st=" << st << " sx=" << sx << " nInds=" << nInds[st][sx] << endl;			
+//		}
+//	}
 #endif
 	// apply density dependence in development and/or survival probabilities
 	for (int stg = 0; stg < nStages; stg++) {
