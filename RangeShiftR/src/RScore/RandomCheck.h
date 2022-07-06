@@ -28,7 +28,13 @@
 #include <fstream>
 using namespace std;
 
-#include "Version.h"
+//#if RS_RCPP && !R_CMD
+#include "../Version.h"
+//#endif
+
+//#if !RS_RCPP && R_CMD
+//#include "../../Batch/Version.h"
+//#endif
 #include "Parameters.h"
 #include "RSrandom.h"
 

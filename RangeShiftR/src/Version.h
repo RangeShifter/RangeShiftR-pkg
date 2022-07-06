@@ -37,7 +37,7 @@
 #define VCL 0
 
 #define RS_RCPP 1
-//#define R_CMD 0
+#define R_CMD 0
 
 #define RS_EMBARCADERO 0
 

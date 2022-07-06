@@ -49,7 +49,13 @@ Last updated: 28 July 2021 by Greta Bocedi
 #include <vector>
 #endif
 
-#include "Version.h"
+//#if RS_RCPP && !R_CMD
+#include "../Version.h"
+//#endif
+
+//#if !RS_RCPP && R_CMD
+//#include "../../Batch/Version.h"
+//#endif
 #include "Parameters.h"
 
 #if SEASONAL
