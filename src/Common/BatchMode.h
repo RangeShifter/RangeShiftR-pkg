@@ -47,10 +47,10 @@ Last updated: 26 October 2021 by Steve Palmer
 #include <algorithm>
 using namespace std;
 
-#include "Parameters.h"
-#include "Landscape.h"
-#include "Species.h"
-#include "Model.h"
+#include "../Common/RScore/Parameters.h"
+#include "../Common/RScore/Landscape.h"
+#include "../Common/RScore/Species.h"
+#include "../Common/RScore/Model.h"
 
 #if RS_ABC
 #include "ABC.h"
