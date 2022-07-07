@@ -11,7 +11,7 @@
 # -ansi --Don't use GNU ext; do use ansi standard.
 	
 CXX = g++
-CXX_STD = CXX20	
+# CXX_STD = CXX20	
 CXXFLAGS = -std=c++17	
 	
 #Link command:
