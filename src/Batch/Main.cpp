@@ -53,13 +53,13 @@ Last updated: 14 January 2021 by Anne-Kathleen Malchow, Potsdam University
 
 using namespace std;
 
-#include "Parameters.h"
-#include "Landscape.h"
-#include "Species.h"
-#include "SubCommunity.h"
-#include "BatchMode.h"
+#include "../Common/RScore/Parameters.h"
+#include "../Common/RScore/Landscape.h"
+#include "../Common/RScore/Species.h"
+#include "../Common/RScore/SubCommunity.h"
+#include "../Common/BatchMode.h"
 #if RANDOMCHECK
-#include "RandomCheck.h"
+#include "../Common/RScore/RandomCheck.h"
 #endif
 
 #if LINUX_CLUSTER || R_CMD
