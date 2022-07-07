@@ -81,4 +81,5 @@ vignettes/*.pdf
 *.utf8.md
 *.knit.md
 
-
+# compilation files
+*.o
