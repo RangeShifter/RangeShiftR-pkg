@@ -21,15 +21,9 @@
  
  
 //---------------------------------------------------------------------------
-#if RS_EMBARCADERO
-#pragma hdrstop
-#endif
 
 #include "FractalGenerator.h"
 //---------------------------------------------------------------------------
-#if RS_EMBARCADERO 
-#pragma package(smart_init)
-#endif
 
 vector<land> patches;
 
