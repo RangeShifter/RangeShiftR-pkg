@@ -52,13 +52,6 @@ using namespace std;
 #include "../Common/RScore/Species.h"
 #include "../Common/RScore/Model.h"
 
-#if RS_ABC
-#include "ABC.h"
-#endif
-#if RS_CONTAIN
-#include "Control.h"
-#endif // RS_CONTAIN 
-
 struct batchfiles {
 	bool ok;
 	int batchNum;
@@ -66,17 +59,10 @@ struct batchfiles {
 	int nLandscapes;
 	int patchmodel, resolution, landtype, maxNhab, speciesdist, distresolution;
 	int reproductn;
-#if SEASONAL
-	int nseasons;
-#else
 	int repseasons;
-#endif // SEASONAL  
 	int stagestruct, stages, transfer;
 	int sexesDem;		// no. of explicit sexes for demographic model
 	int sexesDisp;	// no. of explicit sexes for dispersal model
-#if SEASONAL
-//	string seasonFile;
-#endif // SEASONAL 
 	string parameterFile;
 	string landFile;
 	string stageStructFile;
@@ -84,16 +70,7 @@ struct batchfiles {
 	string transferFile;
 	string settleFile;
 	string geneticsFile;
-#if RS_CONTAIN
-	string manageFile;
-#endif // RS_CONTAIN 
 	string initFile;
-#if VIRTUALECOLOGIST
-	string virtEcolFile;
-#endif
-#if RS_ABC
-	string abcParamsFile,abcObsFile;
-#endif
 };
 
 struct simCheck {
@@ -102,26 +79,12 @@ struct simCheck {
 };
 
 batchfiles ParseControlFile(string,string,string);
-#if BUTTERFLYDISP
-int ParseParameterFile(string);
-#else
 int ParseParameterFile(void);
-#endif
 int ParseLandFile(int,string);
 int ParseDynamicFile(string,string);
 int ParseStageFile(string);
 int ParseTransitionFile(short,short);
 int ParseWeightsFile(string);
-#if RS_CONTAIN
-int ParseHabDemFile(short,short,string);
-int ParseManageFile(string);
-#endif // RS_CONTAIN 
-#if SEASONAL
-int ParseSeasonFile(string);
-//#if PARTMIGRN
-int ParseExtremeFile(string);
-//#endif // PARTMIGRN 
-#endif // SEASONAL
 int ParseEmigFile(void);
 int ParseTransferFile(string);
 int ParseSettleFile(void);
@@ -129,19 +92,6 @@ int ParseGeneticsFile(string);
 int ParseArchFile(void);
 int ParseInitFile(string);
 int ParseInitIndsFile(void);
-#if VIRTUALECOLOGIST
-int ParseVirtEcolFile(string);
-int ParseSampleFile(void);
-int ParsePatchFile(void);
-#endif // VIRTUALECOLOGIST
-#if RS_ABC
-int ParseABCParamsFile(void);
-int ParseABCObsFile(void);
-#endif // RS_ABC
-#if TEMPMORT
-int ParseMortFile(void);
-int ReadMortalities(string);
-#endif // TEMPMORT 
 simCheck CheckStageSex(string,int,int,simCheck,int,int,int,int,int,bool,bool);
 
 void BatchError(
@@ -198,9 +148,6 @@ int power2check(int x);
 
 void CtrlFormatError(void);
 void ArchFormatError(void);
-#if VIRTUALECOLOGIST
-void SampleFormatError(void);
-#endif // VIRTUALECOLOGIST
 void FormatError(string,int);
 void OpenError(string,string);
 void EOFerror(string);
@@ -213,15 +160,7 @@ int ReadParameters(int,Landscape*);
 int ReadLandFile(int);
 int ReadLandFile(int,Landscape*);
 int ReadDynLandFile(Landscape*);
-#if SEASONAL
-int ReadStageStructure(int,Landscape*);
-#else
 int ReadStageStructure(int);
-#endif // SEASONAL   
-#if RS_CONTAIN
-int ReadHabDemFile(const short,const short);
-int ReadManageFile(int,Landscape*);
-#endif // RS_CONTAIN 
 int ReadTransitionMatrix(
 	short,	// no. of stages
 	short,	// no. of sexes represented for demography 
@@ -236,17 +175,6 @@ int ReadGenetics(int);
 int ReadArchFile(string);
 int ReadInitialisation(int,Landscape*);
 int ReadInitIndsFile(int,Landscape*,string);
-#if SEASONAL
-int ReadSeasonFile(const short,const short);
-//#if PARTMIGRN
-int ReadExtremeFile(Landscape*,const short);
-//#endif // PARTMIGRN 
-#endif // SEASONAL
-#if VIRTUALECOLOGIST
-int ReadVirtEcol(int);
-int ReadSampleFile(string);
-int ReadPatchFile(string);
-#endif // VIRTUALECOLOGIST
 
 #if RSDEBUG
 extern ofstream DEBUGLOG;
@@ -261,29 +189,7 @@ extern paramSim *paramsSim;
 extern Species *pSpecies;
 extern string costmapname;	// see FormMove.cpp (VCL) OR Main.cpp (batch)
 extern string genfilename;	// see FormGenetics.cpp (VCL) OR Main.cpp (batch)
-#if RS_CONTAIN
-extern Cull *pCull;
-#endif // RS_CONTAIN 
-#if VIRTUALECOLOGIST
-extern string locfilename;		// see FormVirtEcol.cpp (VCL) OR Main.cpp (batch)
-extern string patchfilename;	// see [NOT YET CODED FOR GUI] (VCL) OR Main.cpp (batch)
-#endif // VIRTUALECOLOGIST 
-#if TEMPMORT
-extern string mortfilename;	// see [NOT YET CODED FOR GUI] (VCL) OR Main.cpp (batch)
-#endif // TEMPMORT
-#if RS_EMBARCADERO
-#if !LINUX_CLUSTER
 extern int RS_random_seed;
-#endif
-#else
-#if !RS_RCPP
-extern int RS_random_seed;
-#else
-extern std::uint32_t RS_random_seed;
-void EOFerrorR(string);
-void StreamErrorR(string);
-#endif // !RS_RCPP
-#endif // RS_EMBARCADERO
 
 //---------------------------------------------------------------------------
 #endif
