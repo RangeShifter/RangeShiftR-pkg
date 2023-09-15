@@ -31,17 +31,6 @@
 #define LINUX_CLUSTER 1
 #define RSWIN64 1
 
-#define RANDOMCHECK 0
-
 #define BATCH 1
-#define VCL 0
-
-#define RS_RCPP 0
-#define R_CMD 0
-
-#define RS_CONTAIN 0
-#define SEASONAL 0
-#define RS_EMBARCADERO 0
-
 //---------------------------------------------------------------------------
 #endif

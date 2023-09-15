@@ -21,16 +21,9 @@
  
  
 //---------------------------------------------------------------------------
-#if RS_EMBARCADERO
-#pragma hdrstop
-#endif
 
 #include "Genome.h"
 //---------------------------------------------------------------------------
-
-#if RS_EMBARCADERO 
-#pragma package(smart_init)
-#endif
 
 ofstream outGenetic;
 
@@ -371,16 +364,6 @@ if (genome != 0) {
 void Genome::setDiploid(bool dip) { diploid = dip; }
 bool Genome::isDiploid(void) { return diploid; }
 short Genome::getNChromosomes(void) { return nChromosomes; }
-#if VIRTUALECOLOGIST
-int Genome::getChromosomeNloci(short i) {
-if (i >= 0 && i < nChromosomes) {
-	return pChromosome[i]->nLoci();
-}
-else {
-	return 0;
-}
-}
-#endif
 
 //---------------------------------------------------------------------------
 
@@ -398,12 +381,7 @@ pChromosome[chr]->inherit(parent->pChromosome[chr],posn,parent->pChromosome[chr]
 
 }
 
-#if GROUPDISP || ROBFITT
-void Genome::outGenHeaders(const int rep,const int landNr,const bool patchmodel,
-	const bool xtab)
-#else
 void Genome::outGenHeaders(const int rep,const int landNr,const bool xtab)
-#endif
 {
 
 if (landNr == -999) { // close file
@@ -430,10 +408,6 @@ outGenetic.open(name.c_str());
 
 outGenetic << "Rep\tYear\tSpecies\tIndID";
 if (xtab) {
-#if GROUPDISP || ROBFITT
-	if (patchmodel) outGenetic << "\tPatchID";
-	else outGenetic << "\tX\tY";
-#endif
 	for (int i = 0; i < nChromosomes; i++) {
 		int nloci = pChromosome[i]->nLoci();
 		for (int j = 0; j < nloci; j++) {
@@ -451,21 +425,12 @@ else {
 
 }
 
-#if GROUPDISP || ROBFITT
-void Genome::outGenetics(const int rep,const int year,const int spnum,
-	const int indID,const int X,const int Y,const bool patchmodel,const bool xtab)
-#else
 void Genome::outGenetics(const int rep,const int year,const int spnum,
 	const int indID,const bool xtab)
-#endif
 	{
 locus l;
 if (xtab) {
 	outGenetic << rep << "\t" << year << "\t" << spnum << "\t" << indID;
-#if GROUPDISP || ROBFITT
-	if (patchmodel) outGenetic << "\t" << X;
-	else outGenetic << "\t" << X << "\t" << Y;
-#endif
 	for (int i = 0; i < nChromosomes; i++) {
 		int nloci = pChromosome[i]->nLoci();
 		for (int j = 0; j < nloci; j++) {
