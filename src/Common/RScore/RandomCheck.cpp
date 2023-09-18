@@ -43,7 +43,6 @@ simParams sim = paramsSim->getSim();
 	name = paramsSim->getDir(1) + "RandomCheck.txt";
 	inRandom.open(name.c_str());
 	if (!inRandom.is_open()) {
-		cout << endl << "***** Error opening input file RandomCheck.txt" << endl;
 		inRandom.clear();
 		return;
 	}

@@ -56,41 +56,35 @@ extern ofstream DEBUGLOG;
 
 
 
-//--------------- 2.) New version of RSrandom.cpp
-
-
 	#include <cmath>
 	#include <random>
-	#if !LINUX_CLUSTER
+	#if RSWIN64
 	#include <ctime>
 	#endif
 
-	class RSrandom
-	{
+	class RSrandom {
 
 	public:
-		RSrandom(void);
+		RSrandom(std::int64_t);       // if int is negative, a random seed will be generated, else it is used as seed
 		~RSrandom(void);
-		double Random(void);
-		int IRandom(int, int);
-		int Bernoulli(double);
-		double Normal(double, double);
-		int Poisson(double);
 		mt19937 getRNG(void);
+		double Random(void);
+		int IRandom(int,int);
+		int Bernoulli(double);
+		double Normal(double,double);
+		int Poisson(double);
+	/* ADDITIONAL DISTRIBUTIONS
+		double Beta(double,double);
+		double Gamma(double,double); // !! make sure correct definition is used: using shape and scale (as defined here) OR using shape/alpha and rate/beta (=1/scale)
+		double Cauchy(double,double);
+	*/
 
 	private:
-		mt19937* gen;
-		std::uniform_real_distribution<>* pRandom01;
-		std::normal_distribution<>* pNormal;
+		mt19937 *gen;
+		std::uniform_real_distribution<> *pRandom01;
+		std::normal_distribution<> *pNormal;
 	};
 
-
-//--------------------------------------------------------------------------------------------------
-//--------------------------------------------------------------------------------------------------
-
-
-
-//--------------- 3.) R package version of RSrandom.cpp
 
 
 //---------------------------------------------------------------------------

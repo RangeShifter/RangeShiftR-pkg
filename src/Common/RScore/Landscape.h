@@ -86,6 +86,11 @@ using namespace std;
 #include "Cell.h"
 #include "Species.h"
 #include "FractalGenerator.h"
+#include <locale>
+#if !RSWIN64
+#include <codecvt>
+#endif
+#include <Rcpp.h>
 
 //---------------------------------------------------------------------------
 
@@ -169,6 +174,7 @@ struct rasterdata {
 	bool ok;
 	int errors,ncols,nrows,cellsize;
 	double xllcorner,yllcorner;
+	bool utf;
 };
 struct patchData {
 	Patch *pPatch; int patchNum,nCells; int x,y;
@@ -323,8 +329,14 @@ public:
 	);
 	void deleteLandChanges(void);
 	int readLandChange(
-		int,	// change file number
-		bool	// change SMS costs?
+	    int,		// change file number
+		bool,		// change SMS costs?
+		wifstream&, // habitat file stream
+		wifstream&, // patch file stream
+		wifstream&, // cost file stream
+		int,		// habnodata
+		int,		// pchnodata
+		int			// costnodata
 	);
 	void createPatchChgMatrix(void);
 	void recordPatchChanges(int);
@@ -412,6 +424,7 @@ public:
 	bool outConnectHeaders( // Write connectivity file headers
 		int		// option - set to -999 to close the connectivity file
 	);
+	void outPathsHeaders(int, int);
 	void outConnect(
 		int,	// replicate no.
 		int   // year
@@ -530,6 +543,10 @@ extern void DebugGUI(string);
 #endif
 
 extern void MemoLine(string);
+
+extern rasterdata landraster,patchraster,spdistraster,costsraster;
+extern void EOFerrorR(string);
+extern void StreamErrorR(string);
 
 //---------------------------------------------------------------------------
 #endif

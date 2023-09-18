@@ -113,7 +113,8 @@ public:
 	);
 	int transfer( // Transfer through matrix - run for matrix SubCommunity only
 		Landscape*,	// pointer to Landscape
-		short				// landscape change index
+		short,			// landscape change index
+		short				// season / year
 	);
 	// Remove emigrants from patch 0 (matrix) and transfer to SubCommunity in which
 	// their destination co-ordinates fall (executed for the matrix patch only)

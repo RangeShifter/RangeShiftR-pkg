@@ -457,7 +457,7 @@ DEBUGLOG << "Community::emigration(): finished" << endl;
 #endif
 }
 
-void Community::dispersal(short landIx)
+void Community::dispersal(short landIx,short nextseason)
 {
 #if RSDEBUG
 int t0,t1,t2;
@@ -488,7 +488,7 @@ do {
 #if RSDEBUG
 //DEBUGLOG << "Community::dispersal() 1111: ndispersers=" << ndispersers << endl;
 #endif
-	ndispersers = matrix->transfer(pLandscape,landIx);
+	ndispersers = matrix->transfer(pLandscape,landIx,nextseason);
 #if RSDEBUG
 //DEBUGLOG << "Community::dispersal() 2222: ndispersers=" << ndispersers << endl;
 #endif
@@ -1653,6 +1653,47 @@ outtraitsrows << endl;
 
 return outtraitsrows.is_open();
 
+}
+
+Rcpp::IntegerMatrix Community::addYearToPopList(int rep, int yr) {  // TODO: define new simparams to control start and interval of output
+
+	landParams ppLand = pLandscape->getLandParams();
+	Rcpp::IntegerMatrix pop_map_year(ppLand.dimY,ppLand.dimX);
+	intptr patch = 0;
+	Patch* pPatch = 0;
+	intptr subcomm = 0;
+	SubCommunity *pSubComm = 0;
+	popStats pop;
+	//pop.breeding = false;
+	pop.nInds = pop.nAdults = pop.nNonJuvs = 0;
+
+	for (int y = 0; y < ppLand.dimY; y++) {
+		for (int x = 0; x < ppLand.dimX; x++) {
+			Cell *pCell = pLandscape->findCell(x,y); //if (pLandscape->cells[y][x] == 0) {
+			if (pCell == 0) { // no-data cell
+				pop_map_year(ppLand.dimY-1-y,x) = NA_INTEGER;
+			} else {
+				patch = pCell->getPatch();
+				if (patch == 0) { // matrix cell
+					pop_map_year(ppLand.dimY-1-y,x) = 0;
+				}
+				else{
+					pPatch = (Patch*)patch;
+					subcomm = pPatch->getSubComm();
+					if (subcomm == 0) { // check if sub-community exists
+						pop_map_year(ppLand.dimY-1-y,x) = 0;
+					} else {
+						pSubComm = (SubCommunity*)subcomm;
+						pop = pSubComm->getPopStats();
+						//pop_map_year(ppLand.dimY-1-y,x) = pop.nInds; // use indices like this because matrix gets transposed upon casting it into a raster on R-level
+						pop_map_year(ppLand.dimY-1-y,x) = pop.nAdults;
+					}
+				}
+			}
+		}
+	}
+	//list_outPop.push_back(pop_map_year, "rep" + std::to_string(rep) + "_year" + std::to_string(yr));
+    return pop_map_year;
 }
 
 //---------------------------------------------------------------------------

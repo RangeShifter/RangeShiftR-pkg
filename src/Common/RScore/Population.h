@@ -150,7 +150,8 @@ public:
 	);
 	int transfer( // Executed for the Population(s) in the matrix only
 		Landscape*,	// pointer to Landscape
-		short				// landscape change index
+		short,				// landscape change index
+		short				// year
 	);
 	// Determine whether there is a potential mate present in a patch which a potential
 	// settler has reached

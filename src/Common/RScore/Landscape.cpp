@@ -29,6 +29,7 @@ ifstream landscape;
 
 ofstream outConnMat;
 ofstream outvisits;
+ofstream outMovePaths;
 
 //---------------------------------------------------------------------------
 
@@ -154,19 +155,34 @@ for (int i = 0; i < ncells; i++) {
 // Read species initial distribution file
 
 int InitDist::readDistribution(string distfile) {
-string header;
+wstring header;
 int p,nodata;
 int ncols,nrows;
-ifstream dfile; // species distribution file input stream
+wifstream dfile; // species distribution file input stream
 
 // open distribution file
+#if !RS_RCPP || RSWIN64
 	dfile.open(distfile.c_str());
+#else
+	dfile.open(distfile, std::ios::binary);
+	if(spdistraster.utf) {
+		// apply BOM-sensitive UTF-16 facet
+		dfile.imbue(std::locale(dfile.getloc(), new std::codecvt_utf16<wchar_t, 0x10ffff, std::consume_header>));
+	}
+#endif
 if (!dfile.is_open()) return 21;
 
 // read landscape data from header records of distribution file
 // NB headers of all files have already been compared
 dfile >> header >> ncols >> header >> nrows >> header >> minEast >> header >> minNorth
 	>> header >> resol >> header >> nodata;
+if (!dfile.good()) {
+	// corrupt file stream
+	StreamErrorR(distfile);
+	dfile.close();
+	dfile.clear();
+	return 144;
+}
 
 maxX = ncols-1; maxY = nrows-1;
 
@@ -176,7 +192,7 @@ int badvalue = -9; if (nodata == -9) badvalue = -99;
 for (int y = nrows-1; y >= 0; y--) {
 	for (int x = 0; x < ncols; x++) {
 		p = badvalue;
-		dfile >> p;
+		if(dfile >> p) {
 #if RSDEBUG
 //DEBUGLOG << "InitDist::readDistribution():"
 //	<< " y = " << y << " x = " << x << " p = " << p << endl;
@@ -190,8 +206,18 @@ for (int y = nrows-1; y >= 0; y--) {
 				dfile.close(); dfile.clear();
 				return 22;
 			}
+		} else {
+			// corrupt file stream
+				Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
+			StreamErrorR(distfile);
+			dfile.close();
+			dfile.clear();
+			return 144;
+		}
 	}
 }
+	dfile >> p;
+	if (!dfile.eof()) EOFerrorR(distfile);
 
 dfile.close(); dfile.clear();
 return 0;
@@ -475,11 +501,11 @@ bool Landscape::habitatsIndexed(void) { return habIndexed; }
 
 void Landscape::listHabCodes(void) {
 int nhab = (int)habCodes.size();
-cout << endl;
+Rcpp::Rcout << endl;
 for (int i = 0; i < nhab; i++) {
-	cout << "Habitat code[ " << i << "] = " << habCodes[i] << endl;
+	Rcpp::Rcout << "Habitat code[ " << i << "] = " << habCodes[i] << endl;
 }
-cout << endl;
+Rcpp::Rcout << endl;
 }
 
 void Landscape::addHabCode(int hab) {
@@ -1029,15 +1055,15 @@ return (int)patches.size();
 void Landscape::listPatches(void) {
 patchLimits p;
 int npatches = (int)patches.size();
-cout << endl;
+Rcpp::Rcout << endl;
 for (int i = 0; i < npatches; i++) {
 	p = patches[i]->getLimits();
-	cout << "Patch " << patches[i]->getPatchNum()
-		<< " xMin = " << p.xMin << " xMax = " << p.xMax
-		<< " \tyMin = " << p.yMin << " yMax = " << p.yMax
-		<< endl;
+	Rcpp::Rcout << "Patch " << patches[i]->getPatchNum()
+				<< " xMin = " << p.xMin << " xMax = " << p.xMax
+				<< " \tyMin = " << p.yMin << " yMax = " << p.yMax
+				<< endl;
 }
-cout << endl;
+Rcpp::Rcout << endl;
 }
 
 // Check that total cover of any cell does not exceed 100%
@@ -1258,7 +1284,7 @@ while (landchanges.size() > 0) landchanges.pop_back();
 landchanges.clear();
 }
 
-int Landscape::readLandChange(int filenum,bool costs)
+int Landscape::readLandChange(int filenum, bool costs, wifstream& hfile, wifstream& pfile, wifstream& cfile, int habnodata, int pchnodata, int costnodata)
 {
 
 #if RSDEBUG
@@ -1266,10 +1292,7 @@ DEBUGLOG << "Landscape::readLandChange(): filenum=" << filenum << " costs=" << i
 	<< endl;
 #endif
 
-string header;
-int ncols,nrows,habnodata,costnodata,pchnodata;
-costnodata = 0; 
-pchnodata = 0;
+wstring header;
 int h = 0,p = 0,c = 0, pchseq = 0;
 float hfloat,pfloat,cfloat;
 simParams sim = paramsSim->getSim();
@@ -1284,44 +1307,6 @@ if (filenum < 0) return 19;
 //}
 if (patchModel) pchseq = patchCount();
 
-	ifstream hfile; // habitat file input stream
-	ifstream pfile; // patch file input stream
-	ifstream cfile; // costs file input stream
-
-// open habitat file and optionally also patch and costs files
-hfile.open(landchanges[filenum].habfile.c_str());
-if (!hfile.is_open()) return 30;
-if (patchModel) {
-	pfile.open(landchanges[filenum].pchfile.c_str());
-	if (!pfile.is_open()) {
-		hfile.close(); hfile.clear();
-		return 31;
-	}
-}
-if (costs) {
-	cfile.open(landchanges[filenum].costfile.c_str());
-	if (!cfile.is_open()) {
-		hfile.close(); hfile.clear();
-		if (pfile.is_open()) {
-			pfile.close(); pfile.clear();
-		}
-		return 32;
-	}
-}
-
-// read header records of habitat (and patch) file(s)
-// NB headers of all files have already been compared
-hfile >> header >> ncols >> header >> nrows >> header >> hfloat >> header >> hfloat
-	>> header >> hfloat >> header >> habnodata;
-if (patchModel) {
-	for (int i = 0; i < 5; i++) pfile >> header >> pfloat;
-	pfile >> header >> pchnodata;
-}
-if (costs) {
-	for (int i = 0; i < 5; i++) cfile >> header >> cfloat;
-	cfile >> header >> costnodata;
-}
-
 // set up bad float values to ensure that valid values are read
 float badhfloat = -9.0; if (habnodata == -9) badhfloat = -99.0;
 float badpfloat = -9.0; if (pchnodata == -9) badpfloat = -99.0;
@@ -1333,17 +1318,47 @@ case 0: // raster with habitat codes - 100% habitat each cell
 	for (int y = dimY-1; y >= 0; y--) {
 		for (int x = 0; x < dimX; x++) {
 			hfloat = badhfloat;
-			hfile >> hfloat;
+			if(hfile >> hfloat) {
 			h = (int)hfloat;
+			} else {
+				// corrupt file stream
+					Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
+				StreamErrorR("habitatchgfile");
+				hfile.close();
+				hfile.clear();
+				pfile.close();
+				pfile.clear();
+				return 171;
+			}
 			if (patchModel) {
 				pfloat = badpfloat;
-				pfile >> pfloat;
+				if(pfile >> pfloat) {
 				p = (int)pfloat;
+				} else {
+					// corrupt file stream
+						Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
+					StreamErrorR("patchchgfile");
+					hfile.close();
+					hfile.clear();
+					pfile.close();
+					pfile.clear();
+					return 172;
+				}
 			}
 			if (costs) {
 				cfloat = badcfloat;
-				cfile >> cfloat;
+				if(cfile >> cfloat) {
 				c = (int)cfloat;
+				} else {
+					// corrupt file stream
+						Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
+					StreamErrorR("costchgfile");
+					hfile.close();
+					hfile.clear();
+					pfile.close();
+					pfile.clear();
+					return 173;
+				}
 			}
 #if RSDEBUG
 //DebugGUI(("Landscape::readLandscape(): x=" + Int2Str(x) + " y=" + Int2Str(y)
@@ -1369,6 +1384,8 @@ case 0: // raster with habitat codes - 100% habitat each cell
 				}
 				if (patchModel) {
 					if (p < 0 || p == pchnodata) { // invalid patch code
+						if (p == pchnodata) Rcpp::Rcout << "Found patch NA in valid habitat cell." <<  std::endl;
+						else Rcpp::Rcout << "Found negative patch ID in valid habitat cell." <<  std::endl;
 						hfile.close(); hfile.clear();
 						pfile.close(); pfile.clear();
 						return 34;
@@ -1396,23 +1413,65 @@ case 0: // raster with habitat codes - 100% habitat each cell
 			}
 		}
 	}
+	hfile >> hfloat;
+	if (!hfile.eof()) EOFerrorR("habitatchgfile");
+	if (patchModel)
+	{
+		pfile >> pfloat;
+		if (!pfile.eof()) EOFerrorR("patchchgfile");
+	}
+	if (costs)
+	{
+		cfile >> cfloat;
+		if (!cfile.eof()) EOFerrorR("costchgfile");
+	}
 	break;
 
 	case 2: // habitat quality
 	for (int y = dimY-1; y >= 0; y--) {
 		for (int x = 0; x < dimX; x++) {
 			hfloat = badhfloat;
-			hfile >> hfloat;
+			if(hfile >> hfloat) {
 			h = (int)hfloat;
+			} else {
+				// corrupt file stream
+					Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
+				StreamErrorR("habitatchgfile");
+				hfile.close();
+				hfile.clear();
+				pfile.close();
+				pfile.clear();
+				return 172;
+			}
 			if (patchModel) {
 				pfloat = badpfloat;
-				pfile >> pfloat;
+				if(pfile >> pfloat) {
 				p = (int)pfloat;
+				} else {
+					// corrupt file stream
+						Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
+					StreamErrorR("patchchgfile");
+					hfile.close();
+					hfile.clear();
+					pfile.close();
+					pfile.clear();
+					return 175;
+				}
 			}
 			if (costs) {
 				cfloat = badcfloat;
-				cfile >> cfloat;
+				if(cfile >> cfloat) {
 				c = (int)cfloat;
+				} else {
+					// corrupt file stream
+						Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
+					StreamErrorR("costchgfile");
+					hfile.close();
+					hfile.clear();
+					pfile.close();
+					pfile.clear();
+					return 173;
+				}
 			}
 #if RSDEBUG
 //MemoLine(("y=" + Int2Str(y) + " x=" + Int2Str(x) + " hfloat=" + Float2Str(hfloat)
@@ -1436,6 +1495,8 @@ case 0: // raster with habitat codes - 100% habitat each cell
 				}
 				if (patchModel) {
 					if (p < 0 || p == pchnodata) { // invalid patch code
+						if (p == pchnodata) Rcpp::Rcout << "Found patch NA in valid habitat cell." <<  std::endl;
+						else Rcpp::Rcout << "Found negative patch ID in valid habitat cell." <<  std::endl;
 						hfile.close(); hfile.clear();
 						pfile.close(); pfile.clear();
 						return 34;
@@ -1462,6 +1523,18 @@ case 0: // raster with habitat codes - 100% habitat each cell
 				}
 			}
 		}
+	}
+	hfile >> hfloat;
+	if (!hfile.eof()) EOFerrorR("habitatchgfile");
+	if (patchModel)
+	{
+		pfile >> pfloat;
+		if (!pfile.eof()) EOFerrorR("patchchgfile");
+	}
+	if (costs)
+	{
+		cfile >> cfloat;
+		if (!cfile.eof()) EOFerrorR("costchgfile");
 	}
 	break;
 
@@ -1816,7 +1889,7 @@ int Landscape::readLandscape(int fileNum,string habfile,string pchfile,string co
 // fileNum == 0 for (first) habitat file and optional patch file
 // fileNum > 0  for subsequent habitat files under the %cover option
 
-string header;
+wstring header;
 int h,seq,p,habnodata;
 int pchnodata = 0;
 int ncols,nrows;
@@ -1826,16 +1899,32 @@ simParams sim = paramsSim->getSim();
 
 if (fileNum < 0) return 19;
 
-	ifstream hfile; // habitat file input stream
-	ifstream pfile; // patch file input stream
+	wifstream hfile; // habitat file input stream
+	wifstream pfile; // patch file input stream
 initParams init = paramsInit->getInit();
 
 // open habitat file and optionally also patch file
+#if !RS_RCPP || RSWIN64
 hfile.open(habfile.c_str());
+#else
+hfile.open(habfile, std::ios::binary);
+if(landraster.utf) {
+	// apply BOM-sensitive UTF-16 facet
+	hfile.imbue(std::locale(hfile.getloc(), new std::codecvt_utf16<wchar_t, 0x10ffff, std::consume_header>));
+}
+#endif
 if (!hfile.is_open()) return 11;
 if (fileNum == 0) { 
 	if (patchModel) {
+#if !RS_RCPP || RSWIN64
 		pfile.open(pchfile.c_str());
+#else
+		pfile.open(pchfile, std::ios::binary);
+		if(patchraster.utf) {
+			// apply BOM-sensitive UTF-16 facet
+			pfile.imbue(std::locale(pfile.getloc(), new std::codecvt_utf16<wchar_t, 0x10ffff, std::consume_header>));
+		}
+#endif
 		if (!pfile.is_open()) {
 			hfile.close(); hfile.clear();
 			return 12;
@@ -1847,6 +1936,18 @@ if (fileNum == 0) {
 // NB headers of all files have already been compared
 hfile >> header >> ncols >> header >> nrows >> header >> minEast >> header >> minNorth
 	>> header >> resol >> header >> habnodata;
+
+	if (!hfile.good()) {
+		// corrupt file stream
+		StreamErrorR(habfile);
+		hfile.close();
+		hfile.clear();
+		if (patchModel) {
+			pfile.close();
+			pfile.clear();
+		}
+		return 131;
+	}
 
 dimX = ncols; dimY = nrows; minX = maxY = 0; maxX = dimX-1; maxY = dimY-1;
 if (fileNum == 0) {
@@ -1860,6 +1961,15 @@ if (fileNum == 0) {
 	if (patchModel) {
 		for (int i = 0; i < 5; i++) pfile >> header >> pfloat;
 		pfile >> header >> pchnodata;		
+	}
+	if (!pfile.good()) {
+		// corrupt file stream
+		StreamErrorR(pchfile);
+		hfile.close();
+		hfile.clear();
+		pfile.close();
+		pfile.clear();
+		return 135;
 	}
 	setCellArray();
 }
@@ -1881,12 +1991,34 @@ case 0: // raster with habitat codes - 100% habitat each cell
 	for (int y = dimY-1; y >= 0; y--) {
 		for (int x = 0; x < dimX; x++) {
 			hfloat = badhfloat;
-			hfile >> hfloat;
+			if(hfile >> hfloat) {
 			h = (int)hfloat;
 			if (patchModel) {
 				pfloat = badpfloat;
-				pfile >> pfloat;
+				if(pfile >> pfloat) {
 					p = (int)pfloat;
+				} else {
+					// corrupt file stream
+						Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
+					StreamErrorR(pchfile);
+					hfile.close();
+					hfile.clear();
+					pfile.close();
+					pfile.clear();
+					return 132;
+				}
+			}
+			} else {
+				// corrupt file stream
+					Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
+				StreamErrorR(habfile);
+				hfile.close();
+				hfile.clear();
+				if (patchModel) {
+					pfile.close();
+					pfile.clear();
+				}
+				return 135;
 			}
 
 #if RSDEBUG
@@ -1904,6 +2036,7 @@ case 0: // raster with habitat codes - 100% habitat each cell
 
 				if (h < 0 || (sim.batchMode && (h < 1 || h > nHabMax))) {
 					// invalid habitat code
+						Rcpp::Rcout << "Found invalid habitat code." <<  std::endl;
 					hfile.close(); hfile.clear();
 					if (patchModel) {
 						pfile.close(); pfile.clear();
@@ -1914,6 +2047,8 @@ case 0: // raster with habitat codes - 100% habitat each cell
 					addHabCode(h);
 					if (patchModel) {
 						if (p < 0 || p == pchnodata) { // invalid patch code
+							if (p == pchnodata) Rcpp::Rcout << "Found patch NA in valid habitat cell." <<  std::endl;
+							else Rcpp::Rcout << "Found negative patch ID in valid habitat cell." <<  std::endl;
 							hfile.close(); hfile.clear();
 							pfile.close(); pfile.clear();
 							return 14;
@@ -1941,19 +2076,36 @@ case 0: // raster with habitat codes - 100% habitat each cell
 			}
 		}
 	}
+	hfile >> hfloat;
+	if (!hfile.eof()) EOFerrorR(habfile);
+	if (patchModel)
+	{
+		pfile >> pfloat;
+		if (!pfile.eof()) EOFerrorR(pchfile);
+	}
 	break;
 
 case 1: // multiple % cover
 	for (int y = dimY-1; y >= 0; y--) {
 		for (int x = 0; x < dimX; x++) {
 			hfloat = badhfloat;
-			hfile >> hfloat;
+			if(hfile >> hfloat) {
 			h = (int)hfloat;
 			if (fileNum == 0) { // first habitat cover layer
 				if (patchModel) {
 					pfloat = badpfloat;
-					pfile >> pfloat;
+					if(pfile >> pfloat) {
 					p = (int)pfloat;
+					} else {
+						// corrupt file stream
+							Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
+						StreamErrorR(pchfile);
+						hfile.close();
+						hfile.clear();
+						pfile.close();
+						pfile.clear();
+						return 135;
+					}
 				} //end if patchmodel
 
 #if RSDEBUG
@@ -1965,6 +2117,7 @@ case 1: // multiple % cover
 				}
 				else {
 					if (hfloat < 0.0 || hfloat > 100.0) { // invalid cover score
+						Rcpp::Rcout << "Found invalid habitat cover score." <<  std::endl;
 						hfile.close(); hfile.clear();
 						if (patchModel) {
 							pfile.close(); pfile.clear();
@@ -1974,6 +2127,8 @@ case 1: // multiple % cover
 					else {
 						if (patchModel) {
 							if (p < 0 || p == pchnodata) { // invalid patch code
+								if (p == pchnodata) Rcpp::Rcout << "Found patch NA in valid habitat cell." <<  std::endl;
+								else Rcpp::Rcout << "Found negative patch ID in valid habitat cell." <<  std::endl;
 								hfile.close(); hfile.clear();
 								pfile.close(); pfile.clear();
 								return 14;
@@ -2003,6 +2158,7 @@ case 1: // multiple % cover
 			else { // additional habitat cover layers
 				if (h != habnodata) {
 					if (hfloat < 0.0 || hfloat > 100.0) { // invalid cover score
+						Rcpp::Rcout << "Found invalid habitat cover score." <<  std::endl;
 						hfile.close(); hfile.clear();
 						if (patchModel) {
 							pfile.close(); pfile.clear();
@@ -2014,10 +2170,29 @@ case 1: // multiple % cover
 					}
 				} // end of h != habnodata
 			}
+		} else { // couldn't read from hfile
+			// corrupt file stream
+				Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
+			StreamErrorR(habfile);
+			hfile.close();
+			hfile.clear();
+			if (patchModel) {
+				pfile.close();
+				pfile.clear();
+			}
+			return 133;
+		}
 
 		}
 	}
 	habIndexed = true; // habitats are already numbered 1...n in correct order
+	hfile >> hfloat;
+	if (!hfile.eof()) EOFerrorR(habfile);
+	if (patchModel)
+	{
+		pfile >> pfloat;
+		if (!pfile.eof()) EOFerrorR(pchfile);
+	}
 	break;
 
 case 2: // habitat quality
@@ -2025,12 +2200,34 @@ case 2: // habitat quality
 	for (int y = dimY-1; y >= 0; y--) {
 		for (int x = 0; x < dimX; x++) {
 			hfloat = badhfloat;
-			hfile >> hfloat;
+			if(hfile >> hfloat) {
 			h = (int)hfloat;
+			} else {
+				// corrupt file stream
+					Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
+				StreamErrorR(habfile);
+				hfile.close();
+				hfile.clear();
+				if (patchModel) {
+					pfile.close();
+					pfile.clear();
+				}
+				return 134;
+			}
 			if (patchModel) {
 				pfloat = badpfloat;
-				pfile >> pfloat;
+				if(pfile >> pfloat) {
 				p = (int)pfloat;
+				} else {
+					// corrupt file stream
+						Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
+					StreamErrorR(pchfile);
+					hfile.close();
+					hfile.clear();
+					pfile.close();
+					pfile.clear();
+					return 135;
+				}
 			}
 #if RSDEBUG
 //MemoLine(("y=" + Int2Str(y) + " x=" + Int2Str(x) + " hfloat=" + Float2Str(hfloat)
@@ -2041,6 +2238,7 @@ case 2: // habitat quality
 			}
 			else {
 				if (hfloat < 0.0 || hfloat > 100.0) { // invalid quality score
+					Rcpp::Rcout << "Found invalid habitat quality score." <<  std::endl;
 					hfile.close(); hfile.clear();
 					if (patchModel) {
 						pfile.close(); pfile.clear();
@@ -2050,6 +2248,8 @@ case 2: // habitat quality
 				else {
 					if (patchModel) {
 						if (p < 0 || p == pchnodata) { // invalid patch code
+							if (p == pchnodata) Rcpp::Rcout << "Found patch NA in valid habitat cell." <<  std::endl;
+							else Rcpp::Rcout << "Found negative patch ID in valid habitat cell." <<  std::endl;
 							hfile.close(); hfile.clear();
 							pfile.close(); pfile.clear();
 							return 14;
@@ -2077,6 +2277,13 @@ case 2: // habitat quality
 				}
 			}
 		}
+	}
+	hfile >> hfloat;
+	if (!hfile.eof()) EOFerrorR(habfile);
+	if (patchModel)
+	{
+		pfile >> pfloat;
+		if (!pfile.eof()) EOFerrorR(pchfile);
 	}
 	break;
 
@@ -2107,25 +2314,30 @@ return 0;
 int Landscape::readCosts(string fname)
 {
 
-	ifstream costs; // cost map file input stream
+	wifstream costs; // cost map file input stream
 
 //int hc,maxYcost,maxXcost,NODATACost,hab;
 int hc,maxYcost,maxXcost,NODATACost;
 float minLongCost, minLatCost; int resolCost;
 float fcost;
-string header;
+wstring header;
 Cell *pCell;
-simView v = paramsSim->getViews();
 
 int maxcost = 0;
 
 #if RSDEBUG
-#if BATCH
 //DEBUGLOG << "Landscape::readCosts(): fname=" << fname << endl;
 #endif
-#endif
  // open cost file
+#if !RS_RCPP || RSWIN64
 	costs.open(fname.c_str());
+#else
+	costs.open(fname, std::ios::binary);
+	if(costsraster.utf) {
+		// apply BOM-sensitive UTF-16 facet
+		costs.imbue(std::locale(costs.getloc(), new std::codecvt_utf16<wchar_t, 0x10ffff, std::consume_header>));
+	}
+#endif
 //if (!costs.is_open()) {
 //	MessageDlg("COSTS IS NOT OPEN!!!!!",
 //				mtError, TMsgDlgButtons() << mbRetry,0);
@@ -2136,7 +2348,14 @@ int maxcost = 0;
 //}
 // read headers and check that they correspond to the landscape ones
 costs >> header;
-	if (header != "ncols" && header != "NCOLS") {
+	if (!costs.good()) {
+		// corrupt file stream
+		StreamErrorR(fname);
+		costs.close();
+		costs.clear();
+		return -181;
+	}
+	if (header != L"ncols" && header != L"NCOLS") {
 //	MessageDlg("The selected file is not a raster.",
 //	MessageDlg("Header problem in import_CostsLand()",
 //				mtError, TMsgDlgButtons() << mbRetry,0);
@@ -2146,20 +2365,25 @@ costs >> header;
 costs >> maxXcost >> header >> maxYcost >> header >> minLongCost;
 costs >> header >> minLatCost >> header >> resolCost >> header >> NODATACost;
 
-MemoLine("Loading costs map. Please wait...");
-
 for (int y = maxYcost - 1; y > -1; y--){
 	for (int x = 0; x < maxXcost; x++){
-		costs >> fcost;
+		if(costs >> fcost) {
 		hc = (int)fcost; // read as float and convert to int
+		} else {
+			// corrupt file stream
+				Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" <<  std::endl;
+			StreamErrorR(fname);
+			costs.close();
+			costs.clear();
+			return -181;
+		}
 		if ( hc < 1 && hc != NODATACost ) {
 #if RSDEBUG
-#if BATCH
 //		DEBUGLOG << "Landscape::readCosts(): x=" << x << " y=" << y 
 //			<< " fcost=" << fcost << " hc=" << hc
 //			<< endl;
 #endif
-#endif
+			Rcpp::Rcout << "Cost map my only contain values of 1 or higher, but found " << fcost << "." << endl;
 			// error - zero / negative cost not allowed
 //			MessageDlg("Error in the costs map file : zero or negative cost detected."
 //			 , mtError, TMsgDlgButtons() << mbOK,0);
@@ -2173,7 +2397,11 @@ for (int y = maxYcost - 1; y > -1; y--){
 		}
 	}
 }
-	MemoLine("Costs map loaded.");
+	costs >> fcost;
+	if (costs.eof()) {
+		Rcpp::Rcout << "Costs map loaded." << endl;
+	}
+	else EOFerrorR(fname);
 
 costs.close(); costs.clear();
 
@@ -2321,6 +2549,40 @@ outConnMat << "Rep\tYear\tStartPatch\tEndPatch\tNinds" << endl;
 return outConnMat.is_open();
 }
 
+// Write movement paths file headers
+void Landscape::outPathsHeaders(int rep, int option)
+{
+	if (option == -999) { // close the file
+		if (outMovePaths.is_open()) outMovePaths.close();
+		outMovePaths.clear();
+	}
+	if (option == 0) { // open the file and write header
+
+		simParams sim = paramsSim->getSim();
+		string name = paramsSim->getDir(2);
+		if (sim.batchMode) {
+			name += "Batch" + Int2Str(sim.batchNum)
+				 +  "_Sim"  + Int2Str(sim.simulation)
+				 +  "_Land" + Int2Str(landNum)
+				 +  "_Rep"  + Int2Str(rep);
+		} else {
+			name += "Sim" + Int2Str(sim.simulation)
+				 +  "_Rep"  + Int2Str(rep);
+		}
+		name += "_MovePaths.txt";
+
+		outMovePaths.open(name.c_str());
+		if( outMovePaths.is_open() ){
+			outMovePaths << "Year\tIndID\tStep\tx\ty\tStatus" << endl;
+		}else{
+			#if RSDEBUG
+			DEBUGLOG << "RunModel(): UNABLE TO OPEN MOVEMENT PATHS FILE" << endl;
+			#endif
+			outMovePaths.clear();
+		}
+	}
+}
+
 void Landscape::outConnect(int rep,int yr)
 {
 int patchnum0,patchnum1;
@@ -2390,7 +2652,7 @@ if (sim.batchMode) {
 	name = paramsSim->getDir(3)
 		+ "Batch" + Int2Str(sim.batchNum) + "_"
 		+ "Sim" + Int2Str(sim.simulation)
-		+ "_land" + Int2Str(landNr) + "_rep" + Int2Str(rep)
+		+ "_Land" + Int2Str(landNr) + "_Rep" + Int2Str(rep)
 //		+ "_yr" + Int2Str(yr)
 		+ "_Visits.txt";
 }

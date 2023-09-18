@@ -74,6 +74,7 @@ struct pathData { // to hold path data common to SMS and CRW models
 												// 0 = not set, 1 = debarred through density dependence rule
 												// 2 = OK to settle subject to finding a mate
 //	bool leftNatalPatch;	// individual has moved out of its natal patch
+	short pathoutput;
 };
 struct pathSteps { // nos. of steps for movement model
 	int year, total, out;
@@ -253,6 +254,9 @@ public:
 		const int,		 	// landscape number
 		const bool	 		// output as cross table?
 	);
+	void outMovePath( // Write records to movement paths file
+		const int		 	// year
+	);
 
 private:
 	int indId;
@@ -300,6 +304,8 @@ extern RSrandom *pRandom;
 #if RSDEBUG
 extern ofstream DEBUGLOG;
 #endif
+
+extern ofstream outMovePaths;
 
 //---------------------------------------------------------------------------
 #endif

@@ -28,7 +28,7 @@ ofstream outPar;
 
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-int RunModel(Landscape *pLandscape,int seqsim)
+Rcpp::List RunModel(Landscape *pLandscape,int seqsim)
 {
 //int Nsuit,yr,totalInds;
 int yr,totalInds;
@@ -100,14 +100,14 @@ if (!ppLand.generated) {
 	}
 }
 
+Rcpp::List list_outPop;
+
 // Loop through replicates
 for (int rep = 0; rep < sim.reps; rep++) {
 #if RSDEBUG
 DEBUGLOG << endl << "RunModel(): starting simulation=" << sim.simulation << " rep=" << rep << endl;
 #endif
-#if BATCH
-		cout << endl << "starting replicate " << rep << endl;
-#endif
+		Rcpp::Rcout << endl << "starting replicate " << rep << endl;
 
 	MemoLine(("Running replicate " + Int2Str(rep) + "...").c_str());
 
@@ -171,11 +171,7 @@ DEBUGLOG << "RunModel(): patch count is " << npatches << endl;
 //	<< endl;
 #endif
 #if RSWIN64
-#if LINUX_CLUSTER
-			pComm->addSubComm(ppp.pPatch,ppp.patchNum); // SET UP ALL SUB-COMMUNITIES
-#else
 			SubCommunity *pSubComm = pComm->addSubComm(ppp.pPatch,ppp.patchNum); // SET UP ALL SUB-COMMUNITIES
-#endif
 //			if (ppp.y >= 9995) {
 //				DEBUGLOG << "RunModel(): i=" << i << " pSubComm=" << pSubComm
 //					<< endl;
@@ -261,7 +257,7 @@ DEBUGLOG << "RunModel(): PROBLEM - closing output files" << endl;
 			pComm->outTraitsRowsHeaders(pSpecies,-999);
 		if (sim.outConnect && ppLand.patchModel)
 			pLandscape->outConnectHeaders(-999);
-		return 666;
+		return Rcpp::List::create(Rcpp::Named("Errors") = 666);
 	}
 
 	if (env.stoch && !env.local) {
@@ -297,9 +293,7 @@ DEBUGLOG << "RunModel(): completed updating carrying capacity" << endl;
 DEBUGLOG << "RunModel(): completed initialisation, rep=" << rep
 	<< " pSpecies=" << pSpecies << endl;
 #endif
-#if BATCH
-	cout << "RunModel(): completed initialisation " << endl;
-#endif
+	Rcpp::Rcout << "RunModel(): completed initialisation " << endl;
 
 	// open a new individuals file for each replicate
 	if (sim.outInds)
@@ -317,6 +311,9 @@ DEBUGLOG << "RunModel(): completed initialisation, rep=" << rep
 	if (sim.outInds)
 		pComm->outInds(rep,-1,-1,-1);
 #endif
+		// open a new movement paths file for each replicate
+		if (sim.outPaths)
+			pLandscape->outPathsHeaders(rep,0);
 
 	// years loop
 	MemoLine("...running...");
@@ -325,6 +322,7 @@ DEBUGLOG << "RunModel(): completed initialisation, rep=" << rep
 DEBUGLOG << endl << "RunModel(): starting simulation=" << sim.simulation 
 	<< " rep=" << rep << " yr=" << yr << endl;
 #endif
+		Rcpp::checkUserInterrupt();
 		bool updateCC = false;
 		if (yr < 4
 		|| (yr < 31 && yr%10 == 0)
@@ -334,7 +332,7 @@ DEBUGLOG << endl << "RunModel(): starting simulation=" << sim.simulation
 		|| (yr < 300001 && yr%100000 == 0)
 		|| (yr < 3000001 && yr%1000000 == 0)
 		) {
-			cout << "starting year " << yr << endl;
+			Rcpp::Rcout << "starting year " << yr << "..." << endl;
 		}
 		if (init.seedType == 0 && init.freeType < 2) {
 			// apply any range restrictions
@@ -498,7 +496,7 @@ DEBUGLOG << "RunModel(): yr=" << yr << " landChg.costfile=" << landChg.costfile 
 			}
 			// apply effects of landscape change to species present in changed patches
 			pComm->patchChanges();
-			pComm->dispersal(landIx);
+			pComm->dispersal(landIx,yr);
 		}
 		if (init.restrictRange) {
 			// remove any population from region removed from restricted range
@@ -544,6 +542,9 @@ DEBUGLOG << " )"	<< endl;
 			// for non-structured population, also produce range and population output now
 			if (!dem.stageStruct && (sim.outRange || sim.outPop))
 				RangePopOutput(pComm,rep,yr,gen);
+			if ( sim.ReturnPopRaster && sim.outPop && yr >= sim.outStartPop && yr%sim.outIntPop == 0) {
+				list_outPop.push_back(pComm->addYearToPopList(rep,yr), "rep" + std::to_string(rep) + "_year" + std::to_string(yr));
+			}
 
 #if RSDEBUG
 //DEBUGLOG << "RunModel(): completed RangePopOutput()"
@@ -581,7 +582,7 @@ DEBUGLOG << "RunModel(): yr=" << yr << " gen=" << gen << " completed reproductio
 #if RSDEBUG
 DEBUGLOG << "RunModel(): yr=" << yr << " gen=" << gen << " completed emigration" << endl;
 #endif
-			pComm->dispersal(landIx);
+			pComm->dispersal(landIx,yr);
 #if RSDEBUG
 DEBUGLOG << "RunModel(): yr=" << yr << " gen=" << gen << " completed dispersal" << endl;
 #endif
@@ -663,14 +664,12 @@ DEBUGLOG << "RunModel(): yr=" << yr << " completed Age_increment and final survi
 	} // end of the years loop
 
 	// Final output and popn. visualisation
-#if BATCH
 	if (sim.saveMaps && yr%sim.mapInt == 0) {
 		if (updateland) {
 			pLandscape->drawLandscape(rep,landIx,ppLand.landNum);
 		}
 		pComm->draw(rep,yr,0,ppLand.landNum);
 	}
-#endif
 		// produce final summary output
 		if (v.viewPop || v.viewTraits || sim.outOccup
 		|| 	sim.outTraitsCells || sim.outTraitsRows || sim.saveMaps)
@@ -789,6 +788,8 @@ DEBUGLOG << "RunModel(): yr=" << yr << " completed reset"
 		pLandscape->resetVisits();
 	}
 
+	if (sim.outPaths)
+		pLandscape->outPathsHeaders(rep,-999);
 #if RSDEBUG
 DEBUGLOG << endl << "RunModel(): finished rep=" << rep << endl;
 #endif
@@ -835,11 +836,10 @@ MemoLine("...finished");
 //RSlog << "Simulation," << sim.simulation << "," << sim.reps << "," << sim.years
 //	<< "," << t1-t0 << endl;
 
-	return 0;
+	return list_outPop;
 
 }
 
-#if RS_EMBARCADERO || LINUX_CLUSTER || RS_RCPP 
 // Check whether a specified directory path exists
 bool is_directory(const char *pathname) {
 struct stat info;
@@ -847,7 +847,6 @@ if (stat(pathname, &info) != 0) return false; // path does not exist
 if (S_ISDIR(info.st_mode)) return true;
 return false;
 }
-#endif
 
 //---------------------------------------------------------------------------
 bool CheckDirectory(void)
@@ -984,11 +983,6 @@ outPar.open(name.c_str());
 
 outPar << "RangeShifter 2.0 ";
 
-#if RSWIN64
-outPar << " - 64 bit implementation";
-#else
-outPar << " - 32 bit implementation";
-#endif
 outPar << endl;
 
 outPar << "================ ";
@@ -998,6 +992,7 @@ outPar << endl << endl;
 
 outPar << "BATCH MODE \t";
 if (sim.batchMode) outPar << "yes" << endl; else outPar << "no" << endl;
+outPar << "SEED \t" << RS_random_seed << endl;
 outPar << "REPLICATES \t" << sim.reps << endl;
 outPar << "YEARS \t" << sim.years << endl;
 outPar << "REPRODUCTIVE SEASONS / YEAR\t" << dem.repSeasons << endl;
@@ -1038,17 +1033,17 @@ else {
 			break;
 	}
 	outPar << "FILE NAME: ";
-	if (sim.batchMode) outPar << " (see batch file) " << landFile << endl;
-	else {
-		outPar << habmapname << endl;
-		if (ppLand.rasterType == 1) { // habitat % cover - list additional layers
-			for (int i = 0; i < ppLand.nHab-1; i++) {
-				outPar  << "           "<< hfnames[i] << endl;
-			}
-		}
-		if (ppLand.patchModel) {
-			outPar << "PATCH FILE: " << patchmapname << endl;
-		}
+	if (ppLand.dynamic) {
+		outPar << name_landscape << endl;
+	}
+	else{
+		outPar << name_landscape << endl;
+	}
+	if (ppLand.patchModel) {
+		outPar << "PATCH FILE: " << name_patch << endl;
+	}
+	if (trfr.costMap) {
+		outPar << "COSTS FILE: " << name_costfile << endl;
 	}
 	outPar << "No. HABITATS:\t" << ppLand.nHab << endl;
 }
@@ -1082,10 +1077,7 @@ if (ppLand.spDist)
 	outPar << "yes" << endl;
 	outPar << "RESOLUTION (m)\t" << ppLand.spResol << endl;
 	outPar << "FILE NAME: ";
-	if (sim.batchMode) outPar << " (see batch file) " << landFile << endl;
-	else {
-		outPar << distnmapname << endl;
-	}
+	outPar << name_sp_dist << endl;
 }
 else outPar << "no" << endl;
 
@@ -1576,7 +1568,6 @@ if (trfr.moveModel) {
 		straigtenPath = move.straigtenPath;
 		if (trfr.costMap) {
 			outPar << "SMS\tcosts from imported cost map" << endl;
-			outPar << "FILE NAME: " << costmapname << endl;
 		}
 		else {
 			outPar << "SMS\tcosts:" << endl;
@@ -2176,6 +2167,12 @@ if (sim.outConnect) {
 	if (sim.outStartConn > 0) outPar << " starting year " << sim.outStartConn;
 	outPar << endl;
 }
+	if (sim.outPaths) {
+		outPar << "SMS paths - every " << sim.outIntPaths << " year";
+		if (sim.outIntPaths > 1) outPar << "s";
+		if (sim.outStartPaths > 0) outPar << " starting year " << sim.outStartPaths;
+		outPar << endl;
+	}
 outPar << "SAVE MAPS: ";
 if (sim.saveMaps) {
 	outPar << "yes - every " << sim.mapInt << " year";

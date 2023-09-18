@@ -59,6 +59,7 @@ if (movt) {
 	path->year = 0; path->total = 0; path->out = 0;
 	path->pSettPatch = 0; path->settleStatus = 0;
 //	path->leftNatalPatch = false;
+	path->pathoutput = 1;
 	if (moveType == 1) { // SMS
 		// set up location data for SMS
 		smsData = new smsdata;
@@ -557,6 +558,7 @@ void Individual::setSettPatch(const settlePatch s) {
 if (path == 0) {
 	path = new pathData;
 	path->year = 0; path->total = 0; path->out = 0; path->settleStatus = 0;
+	path->pathoutput = 1;
 }
 if (s.settleStatus >= 0 && s.settleStatus <= 2) path->settleStatus = s.settleStatus;
 path->pSettPatch = s.pSettPatch;             
@@ -2361,6 +2363,53 @@ else { // open/close file
 	pGenome->outGenHeaders(rep,landNr,xtab);
 }
 
+}
+
+//---------------------------------------------------------------------------
+// Write records to movement paths file
+void Individual::outMovePath(const int year)
+{
+	locn loc, prev_loc;
+
+	//if (pPatch != pNatalPatch) {
+	loc = pCurrCell->getLocn();
+	// if still dispersing...
+	if(status == 1){
+		// at first step, record start cell first
+		if(path->total == 1){
+			prev_loc = pPrevCell->getLocn();
+			outMovePaths << year << "\t" << indId << "\t"
+						 << "0\t" << prev_loc.x << "\t" << prev_loc.y << "\t"
+						 << "0\t"	// status at start cell is 0
+						<< endl;
+		}
+		// then record current step
+		outMovePaths << year << "\t" << indId << "\t"
+			 << path->total << "\t" << loc.x << "\t" << loc.y << "\t"
+			 << status << "\t"
+			 << endl;
+	}
+	// if not anymore dispersing...
+	if(status > 1 && status < 10){
+		prev_loc = pPrevCell->getLocn();
+		// record only if this is the first step as non-disperser
+		if (path->pathoutput) {
+			// if this is also the first step taken at all, record the start cell first
+			if(path->total == 1){
+				outMovePaths << year << "\t" << indId << "\t"
+							 << "0\t" << prev_loc.x << "\t" << prev_loc.y << "\t"
+							 << "0\t"	// status at start cell is 0
+							<< endl;
+			}
+			outMovePaths << year << "\t" << indId << "\t"
+						 << path->total << "\t" << loc.x << "\t" << loc.y << "\t"
+						 << status << "\t"
+						 << endl;
+			// current cell will be invalid (zero), so set back to previous cell
+			//pPrevCell = pCurrCell;
+			path->pathoutput = 0;
+		}
+	}
 }
 
 //---------------------------------------------------------------------------

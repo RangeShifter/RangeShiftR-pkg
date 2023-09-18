@@ -63,16 +63,11 @@ Last updated: 26 October 2021 by Steve Palmer
 #include "SubCommunity.h"
 #include "Species.h"
 
-#if !RS_EMBARCADERO && !LINUX_CLUSTER && !RS_RCPP
-#include <filesystem>
-using namespace std::filesystem;
-#endif
-
 #if RSDEBUG
 extern ofstream DEBUGLOG;
 #endif
 
-int RunModel(
+Rcpp::List RunModel(
 	Landscape*,	// pointer to Landscape
 	int					// sequential simulation number (always 0 for VCL version)
 );
@@ -126,13 +121,13 @@ extern string genfilename;	// see FormGenetics.cpp (VCL) OR Main.cpp (batch)
 extern RSrandom *pRandom;
 
 // these functions to have different version for GUI and batch applications ...
-#if BATCH
 extern void MemoLine(string);
-#endif
 void GUIsetLandScale(
 	int,	// landscape image height (pixels)
 	int		// landscape image width  (pixels)
 );
 
+extern std::uint32_t RS_random_seed;
+extern string name_landscape, name_patch, name_costfile, name_sp_dist;
 //---------------------------------------------------------------------------
 #endif

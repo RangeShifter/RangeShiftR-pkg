@@ -436,7 +436,7 @@ for (int i = 0; i < npops; i++) { // all populations
 }
 
 // Transfer through the matrix - run for the matrix sub-community only
-int SubCommunity::transfer(Landscape *pLandscape,short landIx) 
+int SubCommunity::transfer(Landscape *pLandscape,short landIx,short nextseason) 
 {
 #if RSDEBUG
 //DEBUGLOG << "SubCommunity::transfer(): this=" << this
@@ -445,7 +445,7 @@ int SubCommunity::transfer(Landscape *pLandscape,short landIx)
 int ndispersers = 0;
 int npops = (int)popns.size();
 for (int i = 0; i < npops; i++) { // all populations
-	ndispersers += popns[i]->transfer(pLandscape,landIx);
+	ndispersers += popns[i]->transfer(pLandscape,landIx,nextseason);
 #if RSDEBUG
 //DEBUGLOG << "SubCommunity::transfer(): i = " << i
 //	<< " this = " << this

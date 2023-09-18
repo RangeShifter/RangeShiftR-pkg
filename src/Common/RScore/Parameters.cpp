@@ -238,6 +238,8 @@ paramSim::paramSim(void) {
 	outTraitsCells = outTraitsRows = outConnect = false;
 	saveMaps = false; saveTraitMaps = false;
 	saveVisits = false;
+	outStartPaths = 0; outIntPaths = 0;
+	outPaths = false; ReturnPopRaster = false; CreatePopFile = true;
 	drawLoaded = false;
 	viewLand = false; viewPatch = false; viewGrad = false; viewCosts = false;
 	viewPop = false; viewTraits = false; viewPaths = false; viewGraph = false;
@@ -281,6 +283,11 @@ if (s.outIntTraitRow >= 1) outIntTraitRow = s.outIntTraitRow;
 if (s.outIntConn >= 1) outIntConn = s.outIntConn;
 saveMaps = s.saveMaps; saveTraitMaps = s.saveTraitMaps;
 saveVisits = s.saveVisits;
+outStartPaths = s.outStartPaths;
+outIntPaths = s.outIntPaths;
+outPaths = s.outPaths;
+ReturnPopRaster = s.ReturnPopRaster;
+CreatePopFile = s.CreatePopFile;
 drawLoaded = s.drawLoaded;
 }
 
@@ -307,6 +314,11 @@ s.absorbing = absorbing;
 s.saveMaps = saveMaps; s.saveTraitMaps = saveTraitMaps;
 s.saveVisits = saveVisits;
 s.mapInt = mapInt; s.traitInt = traitInt;
+s.outStartPaths = outStartPaths;
+s.outIntPaths = outIntPaths;
+s.outPaths = outPaths;
+s.ReturnPopRaster = ReturnPopRaster;
+s.CreatePopFile = CreatePopFile;
 s.drawLoaded = drawLoaded;
 return s;
 }
@@ -342,7 +354,6 @@ switch (option) {
 case 0: // working directory
 	s = dir;
 	break;
-#if LINUX_CLUSTER || RS_RCPP
 case 1: // Inputs folder
 	s = dir + "Inputs/";
 	break;
@@ -352,22 +363,14 @@ case 2: // Outputs folder
 case 3: // Maps folder
 	s = dir + "Output_Maps/";
 	break;
-#else
-case 1: // Inputs folder
-	s = dir + "Inputs\\";
-	break;
-case 2: // Outputs folder
-	s = dir + "Outputs\\";
-	break;
-case 3: // Maps folder
-	s = dir + "Output_Maps\\";
-	break;
-#endif
 default:
 	s = "ERROR_ERROR_ERROR";
 }
 return s;
 }
+
+bool paramSim::getReturnPopRaster(void) { return ReturnPopRaster; }
+bool paramSim::getCreatePopFile(void) { return CreatePopFile; }
 
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
