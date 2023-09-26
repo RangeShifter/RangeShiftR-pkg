@@ -21,9 +21,15 @@
  
  
 //---------------------------------------------------------------------------
+#if RS_EMBARCADERO
+#pragma hdrstop
+#endif
 
 #include "RandomCheck.h"
 //---------------------------------------------------------------------------
+#if RS_EMBARCADERO
+#pragma package(smart_init) 
+#endif
 
 ifstream inRandom;
 ofstream outRandom;
