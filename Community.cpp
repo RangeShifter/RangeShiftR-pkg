@@ -457,7 +457,7 @@ DEBUGLOG << "Community::emigration(): finished" << endl;
 #endif
 }
 
-#if SEASONAL || RS_RCPP
+#if RS_RCPP // included also SEASONAL
 void Community::dispersal(short landIx,short nextseason)
 #else
 void Community::dispersal(short landIx)
@@ -492,7 +492,7 @@ do {
 #if RSDEBUG
 //DEBUGLOG << "Community::dispersal() 1111: ndispersers=" << ndispersers << endl;
 #endif
-#if SEASONAL || RS_RCPP
+#if RS_RCPP // included also SEASONAL
 	ndispersers = matrix->transfer(pLandscape,landIx,nextseason);
 #else
 	ndispersers = matrix->transfer(pLandscape,landIx);
