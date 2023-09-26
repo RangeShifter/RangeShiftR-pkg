@@ -59,7 +59,9 @@ if (movt) {
 	path->year = 0; path->total = 0; path->out = 0;
 	path->pSettPatch = 0; path->settleStatus = 0;
 //	path->leftNatalPatch = false;
+#if RS_RCPP
 	path->pathoutput = 1;
+#endif
 	if (moveType == 1) { // SMS
 		// set up location data for SMS
 		smsData = new smsdata;
@@ -558,7 +560,9 @@ void Individual::setSettPatch(const settlePatch s) {
 if (path == 0) {
 	path = new pathData;
 	path->year = 0; path->total = 0; path->out = 0; path->settleStatus = 0;
+#if RS_RCPP
 	path->pathoutput = 1;
+#endif
 }
 if (s.settleStatus >= 0 && s.settleStatus <= 2) path->settleStatus = s.settleStatus;
 path->pSettPatch = s.pSettPatch;             
@@ -2365,6 +2369,7 @@ else { // open/close file
 
 }
 
+#if RS_RCPP
 //---------------------------------------------------------------------------
 // Write records to movement paths file
 void Individual::outMovePath(const int year)
@@ -2411,6 +2416,7 @@ void Individual::outMovePath(const int year)
 		}
 	}
 }
+#endif
 
 //---------------------------------------------------------------------------
 

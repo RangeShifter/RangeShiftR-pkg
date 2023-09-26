@@ -111,11 +111,18 @@ public:
 		Individual*,	// pointer to Individual
 		Species*			// pointer to Species
 	);
+#if RS_RCPP // included also SEASONAL
 	int transfer( // Transfer through matrix - run for matrix SubCommunity only
 		Landscape*,	// pointer to Landscape
 		short,			// landscape change index
 		short				// season / year
 	);
+#else
+	int transfer( // Transfer through matrix - run for matrix SubCommunity only
+		Landscape*,	// pointer to Landscape
+		short				// landscape change index
+	);
+#endif // SEASONAL || RS_RCPP
 	// Remove emigrants from patch 0 (matrix) and transfer to SubCommunity in which
 	// their destination co-ordinates fall (executed for the matrix patch only)
 	void completeDispersal(

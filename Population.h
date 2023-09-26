@@ -148,6 +148,7 @@ public:
 	void recruit( // Add a specified individual to the population
 		Individual*	// pointer to Individual
 	);
+#if RS_RCPP
 	int transfer( // Executed for the Population(s) in the matrix only
 		Landscape*,	// pointer to Landscape
 		short,				// landscape change index
@@ -159,6 +160,18 @@ public:
 		Cell*,	// pointer to the Cell which the potential settler has reached
 		short		// sex of the required mate (0 = female, 1 = male)
 	);
+#else
+	int transfer( // Executed for the Population(s) in the matrix only
+		Landscape*,	// pointer to Landscape
+		short				// landscape change index
+	);
+	// Determine whether there is a potential mate present in a patch which a potential
+	// settler has reached
+	bool matePresent(
+		Cell*,	// pointer to the Cell which the potential settler has reached
+		short		// sex of the required mate (0 = female, 1 = male)
+	);
+#endif // RS_RCPP
 	// Determine survival and development and record in individual's status code
 	// Changes are NOT applied to the Population at this stage
 	void survival0(

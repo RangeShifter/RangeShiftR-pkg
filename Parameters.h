@@ -77,12 +77,25 @@ using namespace std;
 											// in GUI (VCL version)
 #define NSD 3.0				// no. of s.d. to use to control range for displaying traits
 
+#if RS_RCPP
 typedef intptr_t intptr;
+#else
+#if RSWIN64
+typedef unsigned long long intptr;
+#else
+typedef unsigned int intptr;
+#endif
+#endif
 
+#if RS_RCPP
     #ifndef R_EXT_CONSTANTS_H_  // the R headers define PI as a macro, so that the 'else' line results in an error
         #define M_2PI 6.283185307179586
         const double PI = 3.141592653589793238462643383279502884197169399375;
     #endif
+#else
+    #define M_2PI 6.283185307179586
+    const double PI = 3.141592654;
+#endif
 
 const double SQRT2 = std::sqrt(double(2.0)); // more efficient than calculating every time
 
@@ -96,7 +109,9 @@ struct rgb { // colour scheme for drawing maps
 };
 
 const string Int2Str(const int);
+#if RS_RCPP
 const string Int2Str(const int, unsigned int);
+#endif
 const string Float2Str(const float);
 const string Double2Str(const double);
 const rgb draw_wheel(int);
@@ -279,8 +294,10 @@ struct simParams {
 	bool saveMaps;
 	bool drawLoaded; bool saveTraitMaps;
 	bool saveVisits;
+#if RS_RCPP
 	int outStartPaths; int outIntPaths;
 	bool outPaths;	bool ReturnPopRaster; bool CreatePopFile;
+#endif
 };
 
 struct simView {
@@ -301,8 +318,10 @@ public:
 	simView getViews(void);
 	void setDir(string);
 	string getDir(int);
+#if RS_RCPP
 	bool getReturnPopRaster(void);
 	bool getCreatePopFile(void);
+#endif
 
 private:
 	int batchNum;						// batch number
@@ -344,11 +363,13 @@ private:
 	bool outConnect;				// produce output connectivity file?
 	bool saveMaps;					// save landscape/population maps?
 	bool saveVisits;        // save dispersal visits heat maps?
+#if RS_RCPP
 	int outStartPaths;
 	int outIntPaths;
 	bool outPaths;
 	bool ReturnPopRaster;
 	bool CreatePopFile;
+#endif
 	bool drawLoaded;				// draw initial distribution on landscape/population maps?
 	bool saveTraitMaps;			// save summary traits maps?
 	bool viewLand;					// view landscape map on screen?

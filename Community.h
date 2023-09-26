@@ -90,10 +90,16 @@ public:
 		int				// year
 	);
 	void emigration(void);
+#if RS_RCPP // included also SEASONAL
 	void dispersal(
 		short,	// landscape change index
 		short		// season / year
 	);
+#else
+	void dispersal(
+		short		// landscape change index
+	);
+#endif // SEASONAL || RS_RCPP
 
 	void survival(
 		short,	// part:		0 = determine survival & development,
@@ -205,7 +211,9 @@ public:
 		int,	// generation
 		int		// Landscape number
 	);
+#if RS_RCPP && !R_CMD
     Rcpp::IntegerMatrix addYearToPopList(int,int);
+#endif
 
 private:
 	Landscape *pLandscape;

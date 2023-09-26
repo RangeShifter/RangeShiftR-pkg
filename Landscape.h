@@ -86,11 +86,13 @@ using namespace std;
 #include "Cell.h"
 #include "Species.h"
 #include "FractalGenerator.h"
+#if RS_RCPP
 #include <locale>
 #if !RSWIN64
 #include <codecvt>
 #endif
 #include <Rcpp.h>
+#endif
 
 //---------------------------------------------------------------------------
 
@@ -174,7 +176,9 @@ struct rasterdata {
 	bool ok;
 	int errors,ncols,nrows,cellsize;
 	double xllcorner,yllcorner;
+#if RS_RCPP
 	bool utf;
+#endif
 };
 struct patchData {
 	Patch *pPatch; int patchNum,nCells; int x,y;
@@ -328,6 +332,7 @@ public:
 		short	// change number
 	);
 	void deleteLandChanges(void);
+#if RS_RCPP && !R_CMD
 	int readLandChange(
 	    int,		// change file number
 		bool,		// change SMS costs?
@@ -338,6 +343,12 @@ public:
 		int,		// pchnodata
 		int			// costnodata
 	);
+#else
+	int readLandChange(
+		int,	// change file number
+		bool	// change SMS costs?
+	);
+#endif
 	void createPatchChgMatrix(void);
 	void recordPatchChanges(int);
 	void deletePatchChgMatrix(void);
@@ -424,7 +435,9 @@ public:
 	bool outConnectHeaders( // Write connectivity file headers
 		int		// option - set to -999 to close the connectivity file
 	);
+#if RS_RCPP
 	void outPathsHeaders(int, int);
+#endif
 	void outConnect(
 		int,	// replicate no.
 		int   // year
@@ -544,9 +557,11 @@ extern void DebugGUI(string);
 
 extern void MemoLine(string);
 
+#if RS_RCPP
 extern rasterdata landraster,patchraster,spdistraster,costsraster;
 extern void EOFerrorR(string);
 extern void StreamErrorR(string);
+#endif
 
 //---------------------------------------------------------------------------
 #endif

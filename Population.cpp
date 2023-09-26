@@ -1082,7 +1082,11 @@ nInds[ind.stage][ind.sex]++;
 //---------------------------------------------------------------------------
 
 // Transfer is run for populations in the matrix only
-int Population::transfer(Landscape *pLandscape,short landIx,short nextseason) 
+#if RS_RCPP // included also SEASONAL
+int Population::transfer(Landscape *pLandscape,short landIx,short nextseason)
+#else
+int Population::transfer(Landscape *pLandscape,short landIx)
+#endif
 {
 int ndispersers = 0;
 int disperser;
@@ -1244,7 +1248,24 @@ for (int i = 0; i < ninds; i++) {
 						if (localK > 0.0) {
 							// make settlement decision
 							if (settletype.indVar) settDD = inds[i]->getSettTraits();
+#if RS_RCPP
 							else settDD = pSpecies->getSettTraits(ind.stage,ind.sex);
+#else
+							else {
+								if (settletype.sexDep) {
+									if (settletype.stgDep) 
+										settDD = pSpecies->getSettTraits(ind.stage,ind.sex);										
+									else
+										settDD = pSpecies->getSettTraits(0,ind.sex);
+								}
+								else {
+									if (settletype.stgDep) 
+										settDD = pSpecies->getSettTraits(ind.stage,0);										
+									else
+										settDD = pSpecies->getSettTraits(0,0);
+								}
+							}
+#endif //RS_RCPP
 							settprob = settDD.s0 /
 								(1.0 + exp(-(popsize/localK - (double)settDD.beta) * (double)settDD.alpha));
 #if RSDEBUG
@@ -1319,12 +1340,14 @@ for (int i = 0; i < ninds; i++) {
 
 	inds[i]->setStatus(ind.status);
 	}
+#if RS_RCPP
 	// write each individuals current movement step and status to paths file
 	if (trfr.moveModel && sim.outPaths) {
 		if(nextseason >= sim.outStartPaths && nextseason%sim.outIntPaths==0) {
 				inds[i]->outMovePath(nextseason);
 		}
 	}
+#endif
 
 	if (!trfr.moveModel && sett.go2nbrLocn && (ind.status == 3 || ind.status == 6))
 	{
@@ -1750,7 +1773,17 @@ if (ninds > 0) {
 	}
 	inds.clear();
 	inds = survivors;
+#if RS_RCPP
 	shuffle(inds.begin(), inds.end(), pRandom->getRNG() );
+#else
+
+#if !RSDEBUG
+	// do not randomise individuals in RSDEBUG mode, as the function uses rand()
+	// and therefore the randomisation will differ between identical runs of RS
+	shuffle(inds.begin(), inds.end(), pRandom->getRNG() );
+#endif // !RSDEBUG
+
+#endif // RS_RCPP
 }
 }
 

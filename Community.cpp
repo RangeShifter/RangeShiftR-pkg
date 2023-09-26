@@ -457,7 +457,11 @@ DEBUGLOG << "Community::emigration(): finished" << endl;
 #endif
 }
 
+#if RS_RCPP // included also SEASONAL
 void Community::dispersal(short landIx,short nextseason)
+#else
+void Community::dispersal(short landIx)
+#endif // SEASONAL || RS_RCPP
 {
 #if RSDEBUG
 int t0,t1,t2;
@@ -488,7 +492,11 @@ do {
 #if RSDEBUG
 //DEBUGLOG << "Community::dispersal() 1111: ndispersers=" << ndispersers << endl;
 #endif
+#if RS_RCPP // included also SEASONAL
 	ndispersers = matrix->transfer(pLandscape,landIx,nextseason);
+#else
+	ndispersers = matrix->transfer(pLandscape,landIx);
+#endif // SEASONAL || RS_RCPP
 #if RSDEBUG
 //DEBUGLOG << "Community::dispersal() 2222: ndispersers=" << ndispersers << endl;
 #endif
@@ -729,9 +737,15 @@ DEBUGLOG << "Community::outRangeHeaders(): simulation=" << sim.simulation
 
 if (sim.batchMode) {
 	name = paramsSim->getDir(2)
+#if RS_RCPP
 		+ "Batch" + Int2Str(sim.batchNum) + "_"
 		+ "Sim" + Int2Str(sim.simulation) + "_Land"
 		+ Int2Str(landNr)
+#else
+		+ "Batch" + Int2Str(sim.batchNum) + "_"
+		+ "Sim" + Int2Str(sim.simulation) + "_Land"
+		+ Int2Str(landNr)
+#endif
 		+ "_Range.txt";
 }
 else {
@@ -1655,6 +1669,7 @@ return outtraitsrows.is_open();
 
 }
 
+#if RS_RCPP && !R_CMD
 Rcpp::IntegerMatrix Community::addYearToPopList(int rep, int yr) {  // TODO: define new simparams to control start and interval of output
 
 	landParams ppLand = pLandscape->getLandParams();
@@ -1695,6 +1710,7 @@ Rcpp::IntegerMatrix Community::addYearToPopList(int rep, int yr) {  // TODO: def
 	//list_outPop.push_back(pop_map_year, "rep" + std::to_string(rep) + "_year" + std::to_string(yr));
     return pop_map_year;
 }
+#endif
 
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------

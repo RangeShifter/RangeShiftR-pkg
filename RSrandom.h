@@ -56,6 +56,48 @@ extern ofstream DEBUGLOG;
 
 
 
+#if !RS_RCPP
+
+//--------------- 2.) New version of RSrandom.cpp
+
+
+	#include <cmath>
+	#include <random>
+	#if !LINUX_CLUSTER
+	#include <ctime>
+	#endif
+
+	class RSrandom
+	{
+
+	public:
+		RSrandom(void);
+		~RSrandom(void);
+		double Random(void);
+		int IRandom(int, int);
+		int Bernoulli(double);
+		double Normal(double, double);
+		int Poisson(double);
+		mt19937 getRNG(void);
+
+	private:
+		mt19937* gen;
+		std::uniform_real_distribution<>* pRandom01;
+		std::normal_distribution<>* pNormal;
+	};
+
+
+//--------------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------
+
+
+
+//--------------- 3.) R package version of RSrandom.cpp
+
+
+#else // if RS_RCPP 
+
+
 	#include <cmath>
 	#include <random>
 	#if RSWIN64
@@ -85,6 +127,9 @@ extern ofstream DEBUGLOG;
 		std::normal_distribution<> *pNormal;
 	};
 
+
+
+#endif // !RS_RCPP
 
 
 //---------------------------------------------------------------------------
