@@ -90,7 +90,7 @@ public:
 		int				// year
 	);
 	void emigration(void);
-#if SEASONAL || RS_RCPP
+#if RS_RCPP // included also SEASONAL
 	void dispersal(
 		short,	// landscape change index
 		short		// season / year
