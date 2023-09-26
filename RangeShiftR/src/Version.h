@@ -27,6 +27,8 @@
 #define VersionH
 
 #define RSDEBUG 0
+#define LINUX_CLUSTER 0
+#define RS_RCPP 1
 
 
 //---------------------------------------------------------------------------
