@@ -60,6 +60,9 @@ using namespace std;
 #include "RScore/Species.h"
 #include "RScore/SubCommunity.h"
 #include "RScore/RSrandom.h"
+#if RANDOMCHECK
+#include "RScore/RandomCheck.h"
+#endif
 #include "RScore/Model.h"
 
 
@@ -100,6 +103,9 @@ void BatchErrorR(string,int,int,string,string);
 
 //void CtrlFormatError(void);
 //void ArchFormatError(void);
+#if VIRTUALECOLOGIST
+//void SampleFormatError(void);
+#endif // VIRTUALECOLOGIST
 void FormatErrorR(string,int);
 void OpenErrorR(string,string);
 void EOFerrorR(string);
@@ -147,7 +153,16 @@ extern paramSim *paramsSim;
 extern Species *pSpecies;
 extern string costmapname;	// see FormMove.cpp (VCL) OR Main.cpp (batch)
 extern string genfilename;	// see FormGenetics.cpp (VCL) OR Main.cpp (batch)
+#if VIRTUALECOLOGIST
+extern string locfilename;		// see FormVirtEcol.cpp (VCL) OR Main.cpp (batch)
+extern string patchfilename;	// see [NOT YET CODED FOR GUI] (VCL) OR Main.cpp (batch)
+#endif // VIRTUALECOLOGIST 
+#if TEMPMORT
+extern string mortfilename;	// see [NOT YET CODED FOR GUI] (VCL) OR Main.cpp (batch)
+#endif // TEMPMORT
+#if !CLUSTER || RS_RCPP
 extern std::uint32_t RS_random_seed;			// see RSrandom.cpp
+#endif // !CLUSTER || RS_RCPP
 
 //---------------------------------------------------------------------------
 #endif
