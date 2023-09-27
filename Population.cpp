@@ -1082,8 +1082,8 @@ nInds[ind.stage][ind.sex]++;
 //---------------------------------------------------------------------------
 
 // Transfer is run for populations in the matrix only
-#if SEASONAL || RS_RCPP
-int Population::transfer(Landscape *pLandscape,short landIx,short nextseason) 
+#if RS_RCPP // included also SEASONAL
+int Population::transfer(Landscape *pLandscape,short landIx,short nextseason)
 #else
 int Population::transfer(Landscape *pLandscape,short landIx)
 #endif

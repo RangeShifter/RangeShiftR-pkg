@@ -1,3 +1,3 @@
-# RangeshiftR
+# Rangeshifter core code
 
-R-package that provides interface to RangeShifter simulation software
+This repo contains the core simulation code for RangeShifter.

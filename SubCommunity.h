@@ -111,7 +111,7 @@ public:
 		Individual*,	// pointer to Individual
 		Species*			// pointer to Species
 	);
-#if SEASONAL || RS_RCPP
+#if RS_RCPP // included also SEASONAL
 	int transfer( // Transfer through matrix - run for matrix SubCommunity only
 		Landscape*,	// pointer to Landscape
 		short,			// landscape change index
