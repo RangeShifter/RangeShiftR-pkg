@@ -68,7 +68,11 @@ ofstream rsLog; // performance log for recording simulation times, etc.
 int batchnum;
 int patchmodel, resolution, landtype, maxNhab, speciesdist, distresolution;
 int reproductn;
+#if SEASONAL
+int nseasons;
+#else
 int repseasons;
+#endif // SEASONAL
 int stagestruct, stages, transfer;
 int sexesDem;  // no. of explicit sexes for demographic model
 int sexesDisp; // no. of explicit sexes for dispersal model
@@ -76,6 +80,12 @@ int firstsimul;
 int fileNtraits; // no. of traits defined in genetic architecture file
 rasterdata landraster,patchraster,spdistraster,costsraster;
 // rasterdata landraster;
+#if RS_CONTAIN
+rasterdata damageraster;
+#endif // RS_CONTAIN
+#if SPATIALMORT
+rasterdata mortraster;
+#endif // SPATIALMORT
 // ...including names of the input files
 // string parameterFile;
 // string landFile;
@@ -371,6 +381,13 @@ Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
 		errors++;
 	}
 
+#if SEASONAL
+	if (landtype != 0) {
+		BatchError(filetype,-999,0,"LandType");
+		batchlog << "LandType must be 0 for a seasonal model" << endl;
+		errors++;
+	}
+#else
 	if(landtype != 0 && landtype != 2 && landtype != 9) {
 		BatchErrorR(filetype, -999, 0, "LandType");
 		Rcpp::Rcout << "LandType must be 0, 2 or 9" << endl;
@@ -382,6 +399,7 @@ Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
 			errors++;
 		}
 	}
+#endif // SEASONAL
 
 	if(landtype == 0) { // raster with unique habitat codes
 		if(maxNhab < 2) {
@@ -427,10 +445,17 @@ Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
 		}
 	}
 
+#if GROUPDISP
+	if(reproductn < 0 || reproductn > 3) {
+		BatchErrorR(filetype, -999, 3, "Reproduction");
+		errors++;
+	}
+#else
 	if(reproductn < 0 || reproductn > 2) {
 		BatchErrorR(filetype, -999, 2, "Reproduction");
 		errors++;
 	}
+#endif
 	else {
 		switch(reproductn) {
 		case 0: {
@@ -448,18 +473,40 @@ Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
 			sexesDisp = 2;
 			break;
 		}
+#if GROUPDISP
+		case 3: {
+			sexesDem = 1;
+			sexesDisp = 1;
+			break;
+		}
+#endif
 		}
 	}
 
+#if SEASONAL
+	if (nseasons < 2) {
+		BatchError(filetype,-999,12,"NSeasons");
+		errors++;
+	}
+#else
 	if(repseasons < 1) {
 		BatchErrorR(filetype, -999, 11, "RepSeasons");
 		errors++;
 	}
+#endif
 
+#if SEASONAL
+	if (stagestruct != 1) {
+		BatchError(filetype,-999,0," ");
+		errors++;
+		batchlog << "StageStruct must be 1 for a partial migration model" << endl;
+	}
+#else
 	if(stagestruct < 0 || stagestruct > 1) {
 		BatchErrorR(filetype, -999, 1, "StageStruct");
 		errors++;
 	}
+#endif
 
 	if(stagestruct) {
 		if(stages < 2 || stages > NSTAGES) {
@@ -471,10 +518,32 @@ Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
 		stages = 2;
 	}
 
+#if RS_CONTAIN
+	if (transfer < 0 || transfer > 4) {
+		BatchError(filetype,-999,4,"Transfer");
+		errors++;
+	} else {
+		if (stagestruct || transfer < 3) b.transfer = transfer;
+		else {
+			BatchError(filetype,-999,0," ");
+			errors++;
+			batchlog << "Transfer option " << transfer
+			         << " is not allowed for a non-structured species" << endl;
+		}
+	}
+#else
 	if(transfer < 0 || transfer > 2) {
 		BatchErrorR(filetype, -999, 2, "Transfer");
 		errors++;
 	}
+#endif // RS_CONTAIN
+
+#if RS_ABC
+	if(nABCsamples < 1) {
+		BatchErrorR(filetype, -999, 10, "ABCsamplesize");
+		errors++;
+	}
+#endif
 
 	if(errors > 0) { // terminate batch error checking
 
@@ -540,6 +609,9 @@ Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
 
 	//Rcpp::RNGScope rngScope;
 
+#if RANDOMCHECK
+	randomCheck();
+#else
 	Rcpp::List list_outPop;
 	if(errors == 0) {
 		Rcpp::Rcout << endl << "Run Simulation(s)";
@@ -552,6 +624,7 @@ Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
 
 		list_outPop = RunBatchR(nSimuls, nLandscapes, ParMaster);
 	}
+#endif
 
 #if RSDEBUG
 	if(DEBUGLOG.is_open()) {
@@ -666,6 +739,13 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 		if(!patchmodel && name_patch != "NULL") Rcpp::Rcout << "PatchFile must be NULL in a cell-based model!" << endl;
 
 		name_sp_dist = Rcpp::as<string>(LandParamsR.slot("SpDistFile"));
+#if RS_CONTAIN
+		name_damage = Rcpp::as<string>(LandParamsR.slot("DamageFile"));
+#endif // RS_CONTAIN
+#if SPATIALMORT
+		name_mort1 = Rcpp::as<string>(LandParamsR.slot("MortFile1"));
+		name_mort2 = Rcpp::as<string>(LandParamsR.slot("MortFile2"));
+#endif // SPATIALMORT
 
 		if(landtype == 2)
 			ppLand.nHab = 1; // habitat quality landscape has one habitat class
@@ -915,6 +995,96 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 				}
 			}
 		}
+
+#if RS_CONTAIN
+		// check economic / environmental damage map filename  /* *** not implemented in R-version
+		/*
+		ftype = "DamageFile";
+		bLandFile >> intext;
+		if (intext != "NULL") {
+			if (true) {
+				fname = indir + intext;
+				damageraster = CheckRasterFile(fname);
+				if (damageraster.ok) {
+					if (damageraster.cellsize == resolution) {
+						if (damageraster.ncols == landraster.ncols
+						    &&  damageraster.nrows == landraster.nrows
+						    &&  damageraster.cellsize == landraster.cellsize
+						    &&  (int)damageraster.xllcorner == (int)landraster.xllcorner
+						    &&  (int)damageraster.yllcorner == (int)landraster.yllcorner) {
+							batchlog << ftype << " headers OK: " << fname << endl;
+						} else {
+							batchlog << "*** Headers of " << ftype << " " << fname
+							         << " do not match headers of LandscapeFile" << endl;
+							errors++;
+						}
+					} else {
+						batchlog << msgresol0 << ftype << " " << fname
+						         << msgresol1 << endl;
+						errors++;
+					}
+				} else {
+					errors++;
+					if (damageraster.errors == -111)
+						OpenError(ftype,fname);
+					else
+						FormatError(fname,damageraster.errors);
+				}
+			}
+		}*/
+#endif // RS_CONTAIN
+
+#if SPATIALMORT
+			// check mortality map filenames  /* *** not implemented in R-version
+			/*
+			bool filenull[2];
+			for (int mm = 0; mm < 2; mm++) {
+				int fnum = mm+1;
+				ftype = "MortFile" + Int2Str(fnum);
+				bLandFile >> intext;
+				if (intext == "NULL") {
+					filenull[mm] = true;
+				}
+				else {
+					filenull[mm] = false;
+					fname = indir + intext;
+					mortraster = CheckRasterFile(fname);
+					if (mortraster.ok) {
+						if (mortraster.cellsize == resolution) {
+							if (mortraster.ncols == landraster.ncols
+							&&  mortraster.nrows == landraster.nrows
+							&&  mortraster.cellsize == landraster.cellsize
+							&&  (int)mortraster.xllcorner == (int)landraster.xllcorner
+							&&  (int)mortraster.yllcorner == (int)landraster.yllcorner) {
+								batchlog << ftype << " headers OK: " << fname << endl;
+							}
+							else {
+								batchlog << "*** Headers of " << ftype << " " << fname
+									<< " do not match headers of LandscapeFile" << endl;
+								errors++;
+							}
+						}
+						else {
+							batchlog << "*** Resolution of " << ftype << " " << fname
+								<< " does not match Resolution in Control file" << endl;
+							errors++;
+						}
+					}
+					else {
+						errors++;
+						if (mortraster.errors == -111)
+							OpenError(ftype,fname);
+						else
+							FormatError(fname,mortraster.errors);
+					}
+				}
+			}
+			if ((filenull[0] && !filenull[1]) || (!filenull[0] && filenull[1])) {
+				batchlog << "*** There must be either two spatial mortality files,"
+					<< " or both must be NULL to omit spatial mortality" << endl;
+				errors++;
+			}*/
+#endif // SPATIALMORT
 
 	}
 
@@ -1345,6 +1515,9 @@ int ReadParametersR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 	DEBUGLOG << "ReadParametersR(): simulation = " << sim.simulation << " reps = " << sim.reps
 	         << " years = " << sim.years << endl;
 #endif
+#if SPATIALMORT
+	// parameters >> sim.mortChgYear;
+#endif
 
 	int iiii, gradType, shift_begin, shift_stop;
 	float grad_inc, opt_y, f, optEXT, shift_rate;
@@ -1391,6 +1564,18 @@ int ReadParametersR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 	// Not required for EnvStoch = 0; stochasticity in carrying capacity is allowed for an artificial landscape only
 	env.inK = Rcpp::as<bool>(ParamParamsR.slot("EnvStochType"));
 
+#if BUTTERFLYDISP
+	// parameters >> iiii;
+	// if (iiii == 1) env.fromFile = true;
+	// else env.fromFile = false;
+	// string envfile;
+	// parameters >> envfile;
+	// if (env.fromFile)
+	// {
+	//     envstochfilename = paramsSim->getDir(1) + envfile;
+	// }
+#endif
+
 	// as from v1.1, there is just one pair of min & max values,
 	// which are attributes of the species
 	// ULTIMATELY, THE PARAMETER FILE SHOULD HAVE ONLY TWO COLUMNS ...
@@ -1417,22 +1602,50 @@ int ReadParametersR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 	env.locExtProb = Rcpp::as<float>(ParamParamsR.slot("LocalExtProb"));
 	paramsStoch->setStoch(env);
 
+#if BUTTERFLYDISP
+	// parameters >> iiii;
+	// if (dem.stageStruct) dem.dispersal = 1;
+	// else dem.dispersal = iiii;
+#endif
+
 	dem.propMales = Rcpp::as<float>(DemogParamsR.slot("PropMales"));
 	dem.harem = Rcpp::as<float>(DemogParamsR.slot("Harem"));
 	dem.bc = Rcpp::as<float>(DemogParamsR.slot("bc"));
 	dem.lambda = Rcpp::as<float>(DemogParamsR.slot("Rmax"));
 
+#if !GROUPDISP
 	pSpecies->setDemogr(dem);
+#endif
 
 	float k;
 	if(landtype == 9) { // artificial landscape
 		// only one value of K is read, but the first 'habitat' is the matrix where K = 0
+#if SEASONAL
+		pSpecies->createHabK(2,1);
+#else
 		pSpecies->createHabK(2);
+#endif // SEASONAL
 		k = Rcpp::as<float>(LandParamsR.slot("K_or_DensDep"));
 		k *= ((double)(pow(paramsLand.resol, double(2)))) / 10000.0;
+#if SEASONAL
+		pSpecies->setHabK(0,1,0);
+		pSpecies->setHabK(1,1,k);
+#else
 		pSpecies->setHabK(0,0);
 		pSpecies->setHabK(1,k);
+#endif // SEASONAL
 	} else {
+#if SEASONAL
+		pSpecies->createHabK(paramsLand.nHabMax,dem.nSeasons);
+		Rcpp::NumericVector k_vec;
+		k_vec = Rcpp::as<Rcpp::NumericVector>(LandParamsR.slot("K_or_DensDep"));
+		for (int j = 0; j < dem.nSeasons; j++) {
+			for (int i = 0; i < paramsLand.nHabMax; i++) {
+				k = k_vec[i] * ((double)(pow(paramsLand.resol, double(2)))) / 10000.0;
+				pSpecies->setHabK(i,j,k);
+			}
+		}
+#else
 		pSpecies->createHabK(paramsLand.nHabMax);
 		Rcpp::NumericVector k_vec;
 		k_vec = Rcpp::as<Rcpp::NumericVector>(LandParamsR.slot("K_or_DensDep"));
@@ -1440,12 +1653,41 @@ int ReadParametersR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 			k = k_vec[i] * ((double)(pow(paramsLand.resol, double(2)))) / 10000.0;
 			pSpecies->setHabK(i,k);
 		}
+#endif // SEASONAL
 	}
 
 #if RSDEBUG
 	DEBUGLOG << "ReadParametersR(): dem.lambda = " << dem.lambda
+#if SEASONAL
+	         << " habK[0] = " << pSpecies->getHabK(0,0)
+#else
 	         << " habK[0] = " << pSpecies->getHabK(0)
+#endif // SEASONAL
 	         << " nHabMax = " << paramsLand.nHabMax << endl;
+#endif
+
+#if GROUPDISP
+// ADDITIONAL PARAMETERS FOR GROUP DISPERSAL MODEL
+//     parameters >> iiii;
+//     if (iiii == 1) dem.selfing = true;
+//     else dem.selfing = false;
+//     parameters >> dem.paternity >> dem.propLocal >> dem.propNghbr;
+//     pSpecies->setDemogr(dem);
+#if PEDIGREE
+//     parameters >> sim.relMatSize;
+#endif
+#endif
+#if SOCIALMODEL
+	// ADDITIONAL PARAMETERS FOR PROBIS SOCIAL POLYMORPHISM MODEL
+	//     socialParams soc;
+	// parameters >> soc.asocK >> soc.asocRmax >> soc.asocBc >> soc.ra >> soc.rs
+	//	>> soc.Ta >> soc.Ts >> soc.dK >> soc.alpha;
+	// parameters >> soc.asocK >> soc.asocRmax >> soc.asocBc
+	//	>> soc.Ta >> soc.Ts >> soc.Ca >> soc.Cs >> soc.dK >> soc.alpha;
+	//     parameters >> soc.socMean >> soc.socSD >> soc.socScale
+	//                >> soc.asocK >> soc.asocRmax >> soc.asocBc
+	//                >> soc.Ta >> soc.Ts >> soc.ca >> soc.cs >> soc.ba >> soc.bs >> soc.dK >> soc.alpha;
+	//     pSpecies->setSocialParams(soc);
 #endif
 
 	// Output start years
@@ -1456,6 +1698,9 @@ int ReadParametersR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 	sim.outStartTraitRow = Rcpp::as<int>(ParamParamsR.slot("OutStartTraitRow"));
 	sim.outStartConn = Rcpp::as<int>(ParamParamsR.slot("OutStartConn"));
 	sim.outStartPaths = Rcpp::as<int>(ParamParamsR.slot("OutStartPaths"));
+#if RS_CONTAIN
+	sim.OutStartDamage = Rcpp::as<int>(ParamParamsR.slot("OutStartDamage"));
+#endif
 	// Output intervals
 	sim.outIntRange = Rcpp::as<int>(ParamParamsR.slot("OutIntRange"));
 	sim.outIntOcc = Rcpp::as<int>(ParamParamsR.slot("OutIntOcc"));
@@ -1511,6 +1756,13 @@ int ReadParametersR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 	else
 		sim.outPaths = false;
 
+#if RS_CONTAIN
+	sim.OutIntDamage = Rcpp::as<int>(ParamParamsR.slot("OutIntDamage"));
+	if (sim.outIntDamage > 0)
+		sim.outDamage = true;
+	else sim.outDamage = false;
+#endif
+
 	if(sim.outOccup && sim.reps < 2)
 		error = 103;
 	if(paramsLand.patchModel) {
@@ -1561,12 +1813,72 @@ int ReadStageStructureR(Rcpp::S4 ParMaster)
 #endif
 	// int simulation;
 	// simulation = Rcpp::as<int>(StagesParamsR.slot("Simulation")); //Must match simulation numbers in ParamParams
+#if GOBYMODEL
+	/* PARSE:
+	bStageStructFile >> infloat; // no check required on initial phenotype mean
+	bStageStructFile >> initPhenSD;
+	if (initPhenSD <= 0.0) { BatchError(filetype,line,10,"InitPhenSD"); errors++; }
+	bStageStructFile >> initPhenScale;
+	if (initPhenScale <= 0.0) { BatchError(filetype,line,10,"InitPhenScale"); errors++; }
+	if (initPhenSD > initPhenScale) { BatchError(filetype,line,3,"InitPhenSD","InitPhenScale"); errors++; }
+	bStageStructFile >> fasocial;
+	if (fasocial <= 0.0) { BatchError(filetype,line,10,"Fasocial"); errors++; }
+	 * READ:
+	socialParams soc;
+	ssfile >> soc.socMean >> soc.socSD >> soc.socScale >> sstruct.asocF;
+	// pSpecies->setSocialParams(soc); */
+#endif
 	sstruct.disperseOnLoss = Rcpp::as<bool>(StagesParamsR.slot("PostDestructn"));
 	sstruct.probRep = Rcpp::as<float>(StagesParamsR.slot("PRep"));
 	sstruct.repInterval = Rcpp::as<int>(StagesParamsR.slot("RepInterval"));
 	sstruct.maxAge = Rcpp::as<int>(StagesParamsR.slot("MaxAge"));
+#if RS_CONTAIN
+	habdemfile = Rcpp::as<Rcpp::NumericMatrix>(StagesParamsR.slot("HabDemFile"));
+	trmatrix = Rcpp::as<Rcpp::NumericMatrix>(StagesParamsR.slot("TransMatrix"));
+	/*
+	 * PARSING...
+	 *
+	 * READING:
+	pSpecies->resetDem(-1); // reset demography for all habitats
+	if (habdemfile == "NULL") {
+		dem.habDepDem = false;
+	} else {
+		dem.habDepDem = true;
+		hdfile.open((Inputs+habdemfile).c_str());
+		ReadHabDemFile(sstruct.nStages,sexesDem);
+		hdfile.close();
+		hdfile.clear();
+	}
+	pSpecies->setDemogr(dem);
+	if (trmatrix != "NULL") {
+	#if SEASONAL
+	for (int i = 0; i < dem.nSeasons; i++) {
+		tmfile.open((Inputs+name).c_str());
+		ReadTransitionMatrix(sstruct.nStages,sexesDem,0,i);
+		tmfile.close(); tmfile.clear();
+	}
+	#else
+	tmfile.open((Inputs+name).c_str());
+	ReadTransitionMatrix(sstruct.nStages,sexesDem,0,0);
+	tmfile.close(); tmfile.clear();
+	#endif // SEASONAL
+	}*/
+#else
+#if SEASONAL
+	seasonmatrix = Rcpp::as<Rcpp::NumericMatrix>(StagesParamsR.slot("SeasonFile"));
+	/*
+	* PARSING...
+	*
+	* READING:
+	seasonfile.open((Inputs+seasonmatrix).c_str());
+	ReadSeasonFile(1,dem.nSeasons);
+	seasonfile.close(); seasonfile.clear();
+	}*/
+#else
 	trmatrix = Rcpp::as<Rcpp::NumericMatrix>(StagesParamsR.slot("TransMatrix"));
 	// parsing is done on R-level
+#endif // SEASONAL
+#endif // RS_CONTAIN
 	minAge = Rcpp::as<Rcpp::IntegerVector>(StagesParamsR.slot("MinAge"));
 
 	// Store Transition matrix:
@@ -1687,6 +1999,42 @@ int ReadStageStructureR(Rcpp::S4 ParMaster)
 #endif
 	}
 
+#if PARTMIGRN
+	bStageStructFile >> header;
+	if (header != "PropPhilRes" ) errors++;
+	bStageStructFile >> header;
+	if (header != "PropPhilMigFxd" ) errors++;
+	bStageStructFile >> header;
+	if (header != "PropPhilMigVar" ) errors++;
+	bStageStructFile >> header;
+	if (header != "PropDispRes" ) errors++;
+	bStageStructFile >> header;
+	if (header != "PropDispMigFxd" ) errors++;
+	bStageStructFile >> header;
+	if (header != "PropDispMigVar" ) errors++;
+	bStageStructFile >> header;
+	if (header != "ResetMigrn" ) errors++;
+	/*
+	* PARSING...
+	*
+	* ReadING...
+	*/
+#endif // PARTMIGRN
+#if SEASONAL
+	bStageStructFile >> header;
+	if (header != "ExtremeFile" ) errors++;
+	/*
+	* PARSING...
+	*
+	* READING:
+	if (name != "NULL") {
+	pLandscape->resetExtEvents();
+	extremefile.open((Inputs+name).c_str());
+	ReadExtremeFile(pLandscape,nseasons);
+	extremefile.close(); extremefile.clear();
+	}*/
+#endif // SEASONAL
+
 	pSpecies->setStage(sstruct);
 	if(sstruct.devDens || sstruct.survDens) {
 		pSpecies->setDensDep(devCoeff, survCoeff);
@@ -1709,6 +2057,9 @@ int ReadEmigrationR(Rcpp::S4 ParMaster)
 	int Nlines, emigstage, stage, sex, offset;
 	Rcpp::NumericMatrix EmigMatrix;
 	Rcpp::NumericVector EmigScalesVec;
+#if GOBYMODEL
+	// float asocD;
+#endif
 	demogrParams dem = pSpecies->getDemogr();
 	stageParams sstruct = pSpecies->getStage();
 	emigRules emig = pSpecies->getEmig();
@@ -1741,6 +2092,25 @@ int ReadEmigrationR(Rcpp::S4 ParMaster)
 		error = 301;
 	if(!dem.stageStruct && emig.stgDep)
 		error = 303;
+
+#if GROUPDISP
+	//        int groupdisp;
+	//        float groupmean;
+	//        emigFile >> groupdisp >> groupmean;
+	//        if (firstline) {
+	//            if (groupdisp == 1) emig.groupdisp = true;
+	//            else emig.groupdisp = false;
+	//            emig.groupmean = groupmean;
+	//            pSpecies->setEmig(emig);
+	//        }
+#endif
+#if GOBYMODEL
+	//        emigFile >> asocD;
+	//        if (firstline) {
+	//            emig.asocD = asocD;
+	//            pSpecies->setEmig(emig);
+	//        }
+#endif
 
 	// no.of lines according to known stage- and sex-dependency and corresponding column offset
 	if(emig.stgDep) {
@@ -1861,7 +2231,11 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 	         << " paramsLand.generated=" << paramsLand.generated
 	         << " paramsLand.rasterType=" << paramsLand.rasterType
 	         << " trfr.moveModel=" << trfr.moveModel
+#if RS_CONTAIN
+	         << " trfr.kernType=" << trfr.kernType
+#else
 	         << " trfr.twinKern=" << trfr.twinKern
+#endif
 	         << endl;
 #endif
 
@@ -1896,6 +2270,9 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 	string CostsFile;
 	trfrSMSParams smsparams;
 	trfrCRWParams mparams;
+#if TEMPMORT
+	// string MortFile;
+#endif
 	Rcpp::NumericVector ReadVec;
 
 	switch(TransferType) {
@@ -1911,7 +2288,11 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 		// simulation numbers in ParamParams
 		trfr.stgDep = Rcpp::as<bool>(TransParamsR.slot("StageDep")); // Stage-dependent transfer. Must be 0 if IndVar is 1
 		trfr.sexDep = Rcpp::as<bool>(TransParamsR.slot("SexDep")); // Sex-dependent transfer.
+#if RS_CONTAIN
+		trfr.kernType = Rcpp::as<bool>(TransParamsR.slot("KernType"));
+#else
 		trfr.twinKern = Rcpp::as<bool>(TransParamsR.slot("DoubleKernel")); // 0 = negative exponential; 1 = double negative exponential
+#endif
 		trfr.distMort = Rcpp::as<bool>(TransParamsR.slot("DistMort")); // Distance-dependent mortality
 		trfr.indVar = Rcpp::as<bool>(TransParamsR.slot("IndVar"));
 
@@ -2143,6 +2524,66 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 			pSpecies->setTrfrScales(scale);
 		}
 
+#if TEMPMORT
+		/*bTransferFile >> header;
+		if (header != "StraightenPath" ) errors++;
+		bTransferFile >> header;
+		if (header != "SMtype" ) errors++;
+		bTransferFile >> header;
+		if (header != "SMconst" ) errors++;
+		bTransferFile >> header;
+		if (header != "MortFile" ) errors++;
+		 *
+		 * PARSING:
+		ftype = "MortFile";
+		if (smtype == 2) {
+			if (intext == "NULL") {
+				BatchError(filetype,line,0," "); errors++;
+				batchlog << ftype << " is required if SMtype = 2" << endl;
+			}
+			else {
+				checkfile = true;
+				for (i = 0; i < (int)mortfiles.size(); i++) {
+					if (intext == mortfiles[i]) { // file has already been checked
+					checkfile = false;
+					}
+				}
+				if (checkfile) {
+					fname = indir + intext;
+					batchlog << "Checking " << ftype << " " << fname << endl;
+					bMortFile.open(fname.c_str());
+					if (bMortFile.is_open()) {
+						int err = ParseMortFile();
+						if (err == 0) FileHeadersOK(ftype); else errors++;
+						bMortFile.close();
+					}
+					else {
+						OpenError(ftype,fname); errors++;
+					}
+				if (bMortFile.is_open()) bMortFile.close();
+				bMortFile.clear();
+				} // end of checkfile
+				mortfiles.push_back(intext);
+			} // end of intext != NULL
+		}
+		else {
+			if (intext != "NULL") {
+				BatchError(filetype,line,0," "); errors++;
+				batchlog << ftype << " should be NULL if SMtype is not 2" << endl;
+			}
+		}
+		 *
+		 * READING:
+		 *
+		ransFile >> jjjj >> trfr.smType >> move.stepMort >> MortFile;
+		#if RSDEBUG
+		DEBUGLOG << "ReadTransfer(): MortFile=" << MortFile << endl;
+		#endif
+		if (trfr.smType == 2) {
+			mortfilename = paramsSim->getDir(1) + MortFile;
+			ReadMortalities(mortfilename);
+		} */
+#else
 		movt.straigtenPath = Rcpp::as<bool>(TransParamsR.slot("StraightenPath")); // Straighten path after decision not to settle?
 
 		// Mortality
@@ -2176,10 +2617,15 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 				}
 			}
 		}
+#endif // TEMPMORT
 
 
 #if RSDEBUG
+#if TEMPMORT
+		DEBUGLOG << "ReadTransferR(): SMtype=" << trfr.smType << " SMconst=" << movt.stepMort << endl;
+#else
 		DEBUGLOG << "ReadTransferR(): SMtype=" << trfr.habMort << " SMconst=" << movt.stepMort << endl;
+#endif
 #endif
 
 		// Costs
@@ -2265,6 +2711,9 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 			}
 		}
 
+#if TEMPMORT
+		transFile >> trfr.smType >> movt.stepMort >> jjjj;
+#endif
 		movt.straigtenPath = Rcpp::as<bool>(TransParamsR.slot("StraightenPath")); // Straighten path after decision not to settle?
 		pSpecies->setTrfrScales(scale);
 
@@ -2308,11 +2757,20 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 				}
 			}
 		}
+#if EVOLSMS
+		if(trfr.smType == 1 && paramsLand.rasterType != 0)
+			error = 434;
+#else
 		if(trfr.habMort && paramsLand.rasterType != 0)
 			error = 434; // habitat percentage landscape cant have habitat-dependent mortality
+#endif
 
 #if RSDEBUG
+#if EVOLSMS
+		DEBUGLOG << "ReadTransferR(): SMtype=" << trfr.smType << " SMconst=" << movt.stepMort << endl;
+#else
 		DEBUGLOG << "ReadTransferR(): SMtype=" << trfr.habMort << " SMconst=" << movt.stepMort << endl;
+#endif
 #endif
 
 		pSpecies->setTrfr(trfr);
@@ -2322,6 +2780,218 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 	}
 	break; // end of CRW
 
+#if RS_CONTAIN
+		/*
+		case 3: { // 2Dt dispersal kernel
+		 *
+		 * PARSING:
+		 *
+			batchlog << "Checking 2DT dispersal kernel format file" << endl;
+			bTransferFile >> header; if (header != "DistMort" ) errors++;
+			bTransferFile >> header; if (header != "U0Kernel1" ) errors++;
+			bTransferFile >> header; if (header != "P0Kernel1" ) errors++;
+			bTransferFile >> header; if (header != "U0Kernel2" ) errors++;
+			bTransferFile >> header; if (header != "P0Kernel2" ) errors++;
+			bTransferFile >> header; if (header != "PropKernel1" ) errors++;
+			bTransferFile >> header; if (header != "MortProb" ) errors++;
+			bTransferFile >> header; if (header != "Slope" ) errors++;
+			bTransferFile >> header; if (header != "InflPoint" ) errors++;
+			break;
+
+		// read and validate columns relating to stage and sex-dependency and to IIV
+		current = CheckStageSex(filetype,line,simul,prev,0,0,0,0,0,true,false);
+		if (current.newsimul) simuls++;
+		errors += current.errors;
+		prev = current;
+		// validate mortality
+		bTransferFile >> distmort;
+		if (distmort < 0 || distmort > 1) {
+			BatchError(filetype,line,1,"DistMort"); errors++;
+		}
+		// read remaining columns of the current record
+		bTransferFile >> u0Kernel1 >> p0Kernel1 >> u0Kernel2 >> p0Kernel2 >> propKernel1;
+		bTransferFile >> mortProb	>> slope >> inflPoint;
+
+		if (u0Kernel1 < 0.0) {
+			BatchError(filetype,line,19,"U0Kernel1"); errors++;
+		}
+		if (p0Kernel1 < 0.0) {
+			BatchError(filetype,line,19,"P0Kernel1"); errors++;
+		}
+		if (u0Kernel2 < 0.0) {
+			BatchError(filetype,line,19,"U0Kernel2"); errors++;
+		}
+		if (p0Kernel2 < 0.0) {
+			BatchError(filetype,line,19,"P0Kernel2"); errors++;
+		}
+		if (propKernel1 < 0.0 || propKernel1 > 1.0) {
+			BatchError(filetype,line,20,"PropKernel1"); errors++;
+		}
+
+		if (distmort) { // distance-dependent mortality
+			// WHAT CONDITIONS APPLY TO MORTALITY SLOPE AND INFLECTION POINT?
+		}
+		else { // constant mortality
+			if (mortProb < 0.0 || mortProb >= 1.0) {
+				BatchError(filetype,line,20,"MortProb"); errors++;
+			}
+		}
+		 *
+		 * READING:
+		 *
+
+		trfr2Dt t2;
+
+		transFile >> simulation >> iiii;
+		if (iiii == 0) trfr.distMort = false; else trfr.distMort = true;
+
+		transFile >> t2.u0Kernel1 >> t2.p0Kernel1 >> t2.u0Kernel2 >> t2.p0Kernel2
+		>> t2.propKernel1;
+		pSpecies->setTrfr2Dt(t2);
+
+		// mortality
+		trfrMortParams mort;
+		transFile >> mort.fixedMort >> mort.mortAlpha >> mort.mortBeta;
+		pSpecies->setMortParams(mort);
+
+		#if RSDEBUG
+		DEBUGLOG << "ReadTransfer(): simulation=" << simulation
+		<< " trfr.distMort=" << trfr.distMort
+		<< " t2.u0Kernel1=" << t2.u0Kernel1 << " t2.p0Kernel1=" << t2.p0Kernel1
+		<< " t2.u0Kernel2=" << t2.u0Kernel2 << " t2.p0Kernel2=" << t2.p0Kernel2
+		<< " t2.propKernel1=" << t2.propKernel1 << " mort.fixedMort=" << mort.fixedMort
+		<< endl;
+		#endif
+
+		pSpecies->setTrfr(trfr);
+
+		break;
+		} // end of 2Dt dispersal kernel
+
+		case 4: { // WALD dispersal kernel
+		 *
+		 * PARSING:
+		 *
+			batchlog << "Checking WALD dispersal kernel format file" << endl;
+			bTransferFile >> header; if (header != "DistMort" ) errors++;
+			bTransferFile >> header; if (header != "MeanU" ) errors++;
+			bTransferFile >> header; if (header != "SigmaW" ) errors++;
+			bTransferFile >> header; if (header != "Hc" ) errors++;
+			for (i = 1; i < stages; i++) {
+				colheader = "Hr" + Int2Str(i);
+				bTransferFile >> header; if (header != colheader ) hrerrors++;
+			}
+			bTransferFile >> header; if (header != "Vt" ) errors++;
+			bTransferFile >> header; if (header != "Kappa" ) errors++;
+			bTransferFile >> header; if (header != "DirnMean" ) errors++;
+			bTransferFile >> header; if (header != "DirnSD" ) errors++;
+			bTransferFile >> header; if (header != "MortProb" ) errors++;
+			bTransferFile >> header; if (header != "Slope" ) errors++;
+			bTransferFile >> header; if (header != "InflPoint" ) errors++;
+			break;
+		// read and validate columns relating to stage and sex-dependency and to IIV
+		current = CheckStageSex(filetype,line,simul,prev,0,0,0,0,0,true,false);
+		if (current.newsimul) simuls++;
+		errors += current.errors;
+		prev = current;
+		// validate mortality
+		bTransferFile >> distmort;
+		if (distmort < 0 || distmort > 1) {
+			BatchError(filetype,line,1,"DistMort");
+			errors++;
+		}
+		// read remaining columns of the current record
+		bTransferFile >> meanU >> sigma_w >> hc;
+		if (meanU <= 0.0) {
+			BatchError(filetype,line,10,"MeanU");
+			errors++;
+		}
+		if (sigma_w <= 0.0) {
+			BatchError(filetype,line,10,"SigmaW");
+			errors++;
+		}
+		if (hc <= 0.0) {
+			BatchError(filetype,line,10,"Hc");
+			errors++;
+		}
+		for (int i = 1; i < stages; i++) {
+			bTransferFile >> hr;
+			colheader = "Hr" + Int2Str(i);
+			if (hr <= 0.0) {
+				BatchError(filetype,line,10,colheader);
+				errors++;
+			}
+			if (hr > hc) {
+				BatchError(filetype,line,3,colheader,"Hc");
+				errors++;
+			}
+		}
+		bTransferFile >> vt	>> kappa >> dirnmean >> dirnsd;
+		if (vt <= 0.0) {
+			BatchError(filetype,line,10,"Vt");
+			errors++;
+		}
+		if (kappa <= 0.0) {
+			BatchError(filetype,line,10,"Kappa");
+			errors++;
+		}
+		if (dirnmean < 0.0 || dirnmean >= 360.0) {
+			BatchError(filetype,line,0," ");
+			errors++;
+			batchlog << "DirnMean must be >= 0.0 and < 360.0" << endl;
+		}
+		if (dirnsd <= 0.0) {
+			BatchError(filetype,line,10,"DirnSD");
+			errors++;
+		}
+		bTransferFile >> mortProb	>> slope >> inflPoint;
+		if (distmort) { // distance-dependent mortality
+			// WHAT CONDITIONS APPLY TO MORTALITY SLOPE AND INFLECTION POINT?
+		} else { // constant mortality
+			if (mortProb < 0.0 || mortProb >= 1.0) {
+				BatchError(filetype,line,20,"MortProb");
+				errors++;
+			}
+		}
+		 *
+		 * READING:
+		 *
+
+		trfrWald w;
+
+		transFile >> simulation >> iiii;
+		if (iiii == 0) trfr.distMort = false; else trfr.distMort = true;
+
+		transFile >> w.meanU >> w.sigma_w >> w.hc;
+		for (int i = 1; i < sstruct.nStages; i++) {
+		float hr;
+		transFile >> hr;
+		pSpecies->setTrfrHr(hr,i);
+		}
+		transFile >> w.vt >> w.kappa >> w.meanDirn >> w.sdDirn;
+		pSpecies->setTrfrWald(w);
+
+		// mortality
+		trfrMortParams m;
+		transFile >> m.fixedMort >> m.mortAlpha >> m.mortBeta;
+		pSpecies->setMortParams(m);
+
+		#if RSDEBUG
+		DEBUGLOG << "ReadTransfer(): simulation=" << simulation
+		<< " trfr.distMort=" << trfr.distMort
+		<< " w.meanU=" << w.meanU << " w.sigma_w=" << w.sigma_w
+		<< " w.hc=" << w.hc << " w.vt=" << w.vt
+		<< " w.meanDirn=" << w.meanDirn << " w.sdDirn=" << w.sdDirn
+		<< " m.fixedMort=" << m.fixedMort
+		<< endl;
+		#endif
+		pSpecies->setTrfr(trfr);
+
+		break;
+		} // end of WALD dispersal kernel
+
+		*/
+#endif // RS_CONTAIN
 	default:
 		error = 440;
 	} // end of switch (TransferType)
@@ -2356,12 +3026,20 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
 	settleTraits settleDD = pSpecies->getSettTraits(0,0);
 	settParams sparams = pSpecies->getSettParams(0,0);
 
+#if GOBYMODEL
+	float alphaSasoc, betaSasoc;
+#endif
+
 	// int simulation;
 	// simulation = Rcpp::as<int>(SettleParamsR.slot("Simulation")); // REMOVED in R-interface  // Must match simulation
 	// numbers in ParamParams
 	sett.stgDep = Rcpp::as<bool>(SettleParamsR.slot("StageDep")); // Stage-dependent settlement.
 	sett.sexDep = Rcpp::as<bool>(SettleParamsR.slot("SexDep"));   // Sex-dependent settlement.
+#if RS_CONTAIN
+	if (transfer == 0 || transfer == 3 || transfer == 4) {
+#else
 	if (transfer == 0) {
+#endif // RS_CONTAIN
 		// dispersal kernel                                         // dispersal kernel
 		sett.indVar = false;
 		if(dem.repType == 0) {
@@ -2486,6 +3164,14 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
 			} else {
 				ssteps.maxStepsYr = (int)MaxStepsYr(line);
 			}
+#if GOBYMODEL
+			settFile >> alphaSasoc >> betaSasoc;
+			if(firstline) {
+				sett.alphaSasoc = alphaSasoc;
+				sett.betaSasoc = betaSasoc;
+				pSpecies->setSettle(sett);
+			}
+#endif
 			if(densdep) {
 				if(sett.indVar) {
 					sparams.s0Mean = (float)SettleCondMatrix(
@@ -3210,6 +3896,9 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 	int read_error;
 	bool params_ok;
 	simParams sim = paramsSim->getSim();
+#if SEASONAL
+	demogrParams dem = pSpecies->getDemogr();
+#endif
 
 	Rcpp::List list_outPop;
 	Landscape* pLandscape = NULL; // pointer to landscape
@@ -3240,7 +3929,7 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 #if RSDEBUG
 	rsLog << "WARNING,***** RSDEBUG mode is active *****,,," << endl;
 #endif
-#if RS_RCPP
+#if GROUPDISP || RS_ABC || RS_RCPP
 	rsLog << "RNG SEED,,,," << RS_random_seed << endl;
 #endif
 
@@ -3353,6 +4042,22 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 				DEBUGLOG << "RunBatchR(): j=" << j << " spDist=" << paramsLand.spDist << endl;
 #endif
 
+#if SPATIALMORT
+				// optional spatial mortality files
+				if(name_mortfile[0] != "NULL") {
+					string mname[2];
+					mname[0] = paramsSim->getDir(1) + name_mortfile[0];
+					mname[1] = paramsSim->getDir(1) + name_mortfile[1];
+					landcode = pLandscape->readMortalityFiles(mname[0], mname[1]);
+					if(landcode != 0) {
+						Rcpp::Rcout << endl
+						            << "Error reading mortality files for landscape " << land_nr << " - aborting" << endl;
+						rsLog << "Landscape," << land_nr << ",ERROR,CODE," << landcode << endl;
+						landOK = false;
+					}
+				}
+#endif
+
 				if(landOK) {
 					t01 = time(0);
 					rsLog << "Landscape," << land_nr << ",,," << t01 - t00 << endl;
@@ -3364,6 +4069,10 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 		if(landOK) {
 
 			// Open all other batch files and read header records
+#if VIRTUALECOLOGIST
+			if(virtEcolFile != "NULL")
+				ReadVirtEcol(0);
+#endif
 
 			// nSimuls is the total number of lines (simulations) in
 			// the batch and is set in the control function
@@ -3432,9 +4141,26 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 					rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
 					params_ok = false;
 				}
+#if VIRTUALECOLOGIST
+				if(virtEcolFile == "NULL") {
+					// no virtual ecologist
+					paramsSim->setVirtEcol(false);
+				} else {
+					paramsSim->setVirtEcol(true);
+					read_error = ReadVirtEcol(1);
+					if(read_error) {
+						rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
+						params_ok = false;
+					}
+				}
+#endif
 
 				if(params_ok) {
 					simParams sim = paramsSim->getSim();
+#if RS_ABC
+
+					ABCmain(pLandscape);
+#else
 
 #if RSDEBUG
 					DEBUGLOG << endl
@@ -3461,6 +4187,8 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 					//	<< endl;
 #endif
 
+#endif // RS_ABC
+
 					t01 = time(0);
 					rsLog << msgsim << sim.simulation << "," << sim.reps << "," << sim.years << "," << t01 - t00
 					      << endl;
@@ -3468,9 +4196,17 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 				else {
 					Rcpp::Rcout << endl << "Error in reading parameter file(s)... see RS log." << endl;
 				}
+#if VCL
+				if(stopRun)
+					break;
+#endif
 			} // end of nSimuls for loop
 
 			// close input files
+#if VIRTUALECOLOGIST
+			if(virtEcolFile != "NULL")
+				ReadVirtEcol(9);
+#endif
 
 //		if (landtype != 9) {
 			if (pLandscape != NULL) {
@@ -3479,6 +4215,10 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 			}
 
 		} // end of landOK condition
+#if VCL
+		if(stopRun)
+			break;
+#endif
 
 	} // end of nLandscapes loop
 
@@ -3964,6 +4704,11 @@ void BatchErrorR(string filename, int line, int option, string fieldname)
 	case 222:
 		Rcpp::Rcout << "Simulation numbers must be sequential integers";
 		break;
+#if SEASONAL
+	case 223:
+		Rcpp::Rcout << "Season numbers must be sequential integers";
+		break;
+#endif
 	case 333:
 		Rcpp::Rcout << "No. of " << fieldname << " columns must equal max. no. of habitats (" << maxNhab
 		            << ") and be sequentially numbered starting from 1";
