@@ -54,7 +54,7 @@ Last updated: 25 June 2021 by Greta Bocedi
 #include <algorithm>
 using namespace std;
 
-#include "Version.h"
+#include "../Version.h"
 #include "Parameters.h"
 #include "Landscape.h"
 #include "Population.h"

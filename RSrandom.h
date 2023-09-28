@@ -40,7 +40,7 @@ Last updated: 12 January 2021 by Steve Palmer
 #include <fstream>
 //#include <iostream>
 
-#include "Version.h"
+#include "../Version.h"
 
 using namespace std;
 

@@ -49,7 +49,7 @@ Last updated: 28 July 2021 by Greta Bocedi
 #include <vector>
 #endif
 
-#include "Version.h"
+#include "../Version.h"
 #include "Parameters.h"
 
 #if SEASONAL
