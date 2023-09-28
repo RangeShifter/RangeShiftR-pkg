@@ -711,7 +711,7 @@ setValidity("RSparams", function(object) {
         }
     }
     if (object@control@stagestruct) {
-        if (is.na(object@init@InitAge) || length(object@init@InitAge) == 0){
+        if (anyNA(object@init@InitAge) || length(object@init@InitAge) == 0){
             msg <- c(msg, 'Initialise(): InitAge must be set!')
         }
         else {
@@ -720,7 +720,7 @@ setValidity("RSparams", function(object) {
             }
         }
         if (object@init@InitType != 2) {
-            if ( is.na(object@init@PropStages) || length(object@init@PropStages) == 0 ){
+            if ( anyNA(object@init@PropStages) || length(object@init@PropStages) == 0 ){
                 msg <- c(msg, 'Initialise(): PropStages must be set!')
             }
             else {
