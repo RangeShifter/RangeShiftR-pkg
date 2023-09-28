@@ -34,9 +34,9 @@ paramStoch - Environmental stochasticity parameters
 Also declares some structures and functions used throughout the program.
 
 For full details of RangeShifter, please see:
-Bocedi G., Palmer S.C.F., Pe’er G., Heikkinen R.K., Matsinos Y.G., Watts K.
+Bocedi G., Palmer S.C.F., Peâ€™er G., Heikkinen R.K., Matsinos Y.G., Watts K.
 and Travis J.M.J. (2014). RangeShifter: a platform for modelling spatial
-eco-evolutionary dynamics and species’ responses to environmental changes.
+eco-evolutionary dynamics and speciesâ€™ responses to environmental changes.
 Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
@@ -61,7 +61,7 @@ Last updated: 25 June 2021 by Steve Palmer
 #include <vector>
 using namespace std;
 
-#include "Version.h"
+#include "../Version.h"
 #include "RSrandom.h"
 
 #define NSTAGES 10		// maximum number of stages permitted
