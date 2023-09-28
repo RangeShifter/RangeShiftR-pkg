@@ -54,7 +54,7 @@ Author: Anne-Kathleen Malchow, Humboldt University Berlin
 using namespace std;
 
 #include <Rcpp.h>
-#include "RScore/Version.h"
+#include "Version.h"
 #include "RScore/Parameters.h"
 #include "RScore/Landscape.h"
 #include "RScore/Species.h"
