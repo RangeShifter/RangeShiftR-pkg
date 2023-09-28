@@ -71,7 +71,7 @@ Last updated: 28 July 2021 by Greta Bocedi
 #ifndef LandscapeH
 #define LandscapeH
 
-#include "Version.h"
+#include "../Version.h"
 
 #include <algorithm>
 #include <fstream>

@@ -58,7 +58,7 @@ Last updated: 25 June 2021 by Anne-Kathleen Malchow
 #include <algorithm>
 using namespace std;
 
-#include "Version.h"
+#include "../Version.h"
 #include "SubCommunity.h"
 #include "Landscape.h"
 #include "Patch.h"

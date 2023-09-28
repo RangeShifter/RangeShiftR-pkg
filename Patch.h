@@ -68,7 +68,7 @@ Last updated: 25 June 2021 by Steve Palmer
 #include <vector>
 using namespace std;
 
-#include "Version.h"
+#include "../Version.h"
 #include "Parameters.h"
 #include "Cell.h"
 #include "Species.h"

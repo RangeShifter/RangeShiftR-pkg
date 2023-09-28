@@ -739,6 +739,18 @@ else return 0.0;
 #endif // RS_CONTAIN
 
 #if SPATIALDEMOG
+void Species::setFecSpatial(bool spat) {
+	fecSpatial = spat;
+}
+
+void Species::setDevSpatial(bool spat) {
+	devSpatial = spat;
+}
+
+void Species::setSurvSpatial(bool spat) {
+	survSpatial = spat;
+}
+
 void Species::setFecLayer(short stg,short sex,short l) {
 if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES && l >= 0)
 	fecLayer[stg][sex] = l;

@@ -49,7 +49,7 @@ Last updated: 28 July 2021 by Greta Bocedi
 #include <vector>
 #endif
 
-#include "Version.h"
+#include "../Version.h"
 #include "Parameters.h"
 
 #if SEASONAL
@@ -485,8 +485,11 @@ public:
 #endif // RS_CONTAIN
 
 #if SPATIALDEMOG
+	void setFecSpatial(bool);
 	bool getFecSpatial(void){return fecSpatial;};
+	void setDevSpatial(bool);
 	bool getDevSpatial(void){return devSpatial;};
+	void setSurvSpatial(bool);
 	bool getSurvSpatial(void){return survSpatial;};
 	void setFecLayer( // set the layer of the spatial demographic scaling used for fecundity
 		short, // stage

@@ -2663,19 +2663,22 @@ Rcpp::IntegerMatrix Community::addYearToPopList(int rep, int yr) {  // TODO: def
 				pop_map_year(ppLand.dimY-1-y,x) = NA_INTEGER;
 			} else {
 				patch = pCell->getPatch();
-				if (patch == 0) { // matrix cell
-					pop_map_year(ppLand.dimY-1-y,x) = 0;
-				}
-				else{
+				if (patch != 0) {
 					pPatch = (Patch*)patch;
-					subcomm = pPatch->getSubComm();
-					if (subcomm == 0) { // check if sub-community exists
+					if (pPatch->getSeqNum() == 0) { // cell in matrix patch
 						pop_map_year(ppLand.dimY-1-y,x) = 0;
-					} else {
-						pSubComm = (SubCommunity*)subcomm;
-						pop = pSubComm->getPopStats();
-						//pop_map_year(ppLand.dimY-1-y,x) = pop.nInds; // use indices like this because matrix gets transposed upon casting it into a raster on R-level
-						pop_map_year(ppLand.dimY-1-y,x) = pop.nAdults;
+					}
+					else{
+						pPatch = (Patch*)patch;
+						subcomm = pPatch->getSubComm();
+						if (subcomm == 0) { // check if sub-community exists
+							pop_map_year(ppLand.dimY-1-y,x) = 0;
+						} else {
+							pSubComm = (SubCommunity*)subcomm;
+							pop = pSubComm->getPopStats();
+							pop_map_year(ppLand.dimY-1-y,x) = pop.nInds; // use indices like this because matrix gets transposed upon casting it into a raster on R-level
+							//pop_map_year(ppLand.dimY-1-y,x) = pop.nAdults;
+						}
 					}
 				}
 			}

@@ -52,7 +52,7 @@ Last updated: 28 July 2021 by Greta Bocedi
 #include <Rcpp.h>
 #endif // RS_RCPP 
 
-#include "Version.h"
+#include "../Version.h"
 #include "Parameters.h"
 #include "Landscape.h"
 #include "Community.h"
