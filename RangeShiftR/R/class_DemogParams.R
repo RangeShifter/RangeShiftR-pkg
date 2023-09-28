@@ -564,7 +564,7 @@ setMethod("plotProbs", "StagesParams", function(x, stage = NULL, sex = NULL, xma
             else{ lines(xvals, rep(surv[line], length(xvals)), type = "l", lty = 2, col = line) }
             if(x@DevDensDep){ lines(xvals, devs[line]*exp(-x@DevDensCoeff*xvals), type = "l", lty = 3, col = line) }
             else{ lines(xvals, rep(devs[line], length(xvals)), type = "l", lty = 3, col = line) }
-            if(SexDep) {leg.txt <- c(leg.txt, paste0("Stage ",this.stage, ifelse(this.sex," male"," female")))}
+            if(SexDep) {leg.txt <- c(leg.txt, paste0("Stage ",this.stage, ifelse(this.sex," female"," male")))}
             else {leg.txt <- c(leg.txt, paste0("Stage ",this.stage))}
             leg.col <- c(leg.col, line)
         }

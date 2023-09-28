@@ -757,6 +757,7 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 				ppLand.spatialdemog = true;
 				nDSlayer = nrDemogScaleLayers;
 				demogScaleLayers = Rcpp::as<Rcpp::List>(LandParamsR.slot("demogScaleLayers"));
+				Rcpp::Rcout << "Detected spatial demog:" << nDSlayer << " layers." << endl;
 			}
 		}
 #endif
@@ -2052,6 +2053,7 @@ int ReadStageStructureR(Rcpp::S4 ParMaster)
 	demogrParams dem = pSpecies->getDemogr();
 	stageParams sstruct = pSpecies->getStage();
 	int matrixsize, i, j, stg;
+	int errors = 0;
 	float ss, dd, devCoeff, survCoeff;
 	Rcpp::NumericMatrix trmatrix, wtsmatrix;
 	Rcpp::IntegerVector minAge;
@@ -2266,6 +2268,7 @@ int ReadStageStructureR(Rcpp::S4 ParMaster)
 					if( !R_IsNA( feclayerMatrix(i,j) ) ){
 						layerix = feclayerMatrix(i,j);
 						pSpecies->setFecLayer(i, j, (layerix-1) ); // subtract 1 to account for different indexing in R and C
+						pSpecies->setFecSpatial(true);
 					}
 				}
 			}
@@ -2279,6 +2282,7 @@ int ReadStageStructureR(Rcpp::S4 ParMaster)
 					if( !R_IsNA( devlayerMatrix(i,j) ) ){
 						layerix = devlayerMatrix(i,j);
 						pSpecies->setDevLayer(i, j, (layerix-1) ); // subtract 1 to account for different indexing in R and C
+						pSpecies->setDevSpatial(true);
 					}
 				}
 			}
@@ -2292,6 +2296,7 @@ int ReadStageStructureR(Rcpp::S4 ParMaster)
 					if( !R_IsNA( survlayerMatrix(i,j) ) ){
 						layerix = survlayerMatrix(i,j);
 						pSpecies->setSurvLayer(i, j, (layerix-1) ); // subtract 1 to account for different indexing in R and C
+						pSpecies->setSurvSpatial(true);
 					}
 				}
 			}
@@ -2343,7 +2348,7 @@ int ReadStageStructureR(Rcpp::S4 ParMaster)
 		pSpecies->setDensDep(devCoeff, survCoeff);
 	}
 
-	return 0;
+	return errors;
 }
 
 //---------------------------------------------------------------------------
@@ -4487,31 +4492,39 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 				anyIndVar = false;
 				read_error = ReadParametersR(pLandscape, ParMaster);
 				if(read_error) {
-					#if !RS_THREADSAFE
-					rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
+					#if RS_THREADSAFE
+				    Rcpp::Rcout << "Error reading simulation parameters - aborting" << endl;
+                    #else
+				    rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
 					#endif
 					params_ok = false;
 				}
 				if(stagestruct) {
-					ReadStageStructureR(ParMaster);
+					read_error = ReadStageStructureR(ParMaster);
 				}
 				read_error = ReadEmigrationR(ParMaster);
 				if(read_error) {
-					#if !RS_THREADSAFE
+					#if RS_THREADSAFE
+				    Rcpp::Rcout << "Error reading emigration parameters - aborting" << endl;
+                    #else
 					rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
 					#endif
 					params_ok = false;
 				}
 				read_error = ReadTransferR(pLandscape, ParMaster);
 				if(read_error) {
-					#if !RS_THREADSAFE
+					#if RS_THREADSAFE
+				    Rcpp::Rcout << "Error reading transfer parameters - aborting" << endl;
+                    #else
 					rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
 					#endif
 					params_ok = false;
 				}
 				read_error = ReadSettlementR(ParMaster);
 				if(read_error) {
-					#if !RS_THREADSAFE
+					#if RS_THREADSAFE
+				    Rcpp::Rcout << "Error reading settlement parameters - aborting" << endl;
+                    #else
 					rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
 					#endif
 					params_ok = false;
@@ -4528,7 +4541,9 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 				if (anyIndVar || Rcpp::as<int>(GeneParamsR.slot("Architecture")) == 1) {
 					read_error = ReadGeneticsR(GeneParamsR);
 					if(read_error) {
-						#if !RS_THREADSAFE
+						#if RS_THREADSAFE
+					    Rcpp::Rcout << "Error reading genetic parameters - aborting" << endl;
+                        #else
 						rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
 						#endif
 						params_ok = false;
@@ -4549,7 +4564,9 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 				}
 				read_error = ReadInitialisationR(pLandscape, ParMaster);
 				if(read_error) {
-					#if !RS_THREADSAFE
+					#if RS_THREADSAFE
+				    Rcpp::Rcout << "Error reading initialisation parameters - aborting" << endl;
+                    #else
 					rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
 					#endif
 					params_ok = false;
@@ -4562,7 +4579,9 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 					paramsSim->setVirtEcol(true);
 					read_error = ReadVirtEcol(1);
 					if(read_error) {
-						#if !RS_THREADSAFE
+						#if RS_THREADSAFE
+					    Rcpp::Rcout << "Error reading virtual ecologist parameters - aborting" << endl;
+                        #else
 						rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
 						#endif
 						params_ok = false;

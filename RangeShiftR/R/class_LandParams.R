@@ -627,6 +627,7 @@ setValidity("ImportedLandscape", function(object) {
                                             }
                                             else{
                                                 ds_vals <- c(unlist(object@demogScaleLayers))
+                                                ds_vals <- ds_vals[!is.na(ds_vals)]
                                                 if( any( ds_vals < 0) || any( ds_vals > 100 ) ){
                                                     msg <- c(msg, "All elements of the arrays in demogScaleLayers must be values between 0 and 100.")
                                                 }
