@@ -1,4 +1,4 @@
-# RangeShiftR <img src="man/figures/RSRlogo.png" align="right" height = 150/>
+# RangeShiftR <img src="RangeShiftR/man/figures/RSRlogo.png" align="right" height = 150/>
 
 The RangeShiftR package implements the RangeShifter simulation platform for R.
 
@@ -28,7 +28,7 @@ well as a functional C++ compiler toolchain.
 
 ```r
 # Install RangeShiftR from GitHub:
-devtools::install_github("RangeShifter/RangeShiftR-package", ref="main")
+devtools::install_github("RangeShifter/RangeShiftR-package", ref="main", subdir="RangeShiftR")
 ```
 
 ## Usage
