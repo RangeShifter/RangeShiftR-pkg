@@ -29,7 +29,7 @@
 #define RSDEBUG 0
 #define LINUX_CLUSTER 0
 #define RS_RCPP 1
-
+#define BATCH 1
 
 //---------------------------------------------------------------------------
 #endif
