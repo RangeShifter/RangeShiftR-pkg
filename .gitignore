@@ -1,9 +1,6 @@
 .gitignore
 #README.md
 
-# CMake
-CMakeLists.txt
-
 # CodeLite
 /.build-debug/
 /Debug/
@@ -14,11 +11,9 @@ compile_commands.json
 Makefile
 .build-release/
 build-Release/
-*.txt
 *.project
 *.workspace
 *.mk
-*.txt
 *.tags
 
 # Hidden source
