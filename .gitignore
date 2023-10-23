@@ -1,6 +1,9 @@
 .gitignore
 #README.md
 
+# CMake
+CMakeLists.txt
+
 # CodeLite
 /.build-debug/
 /Debug/
