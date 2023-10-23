@@ -45,9 +45,9 @@ Last updated: 28 July 2021 by Greta Bocedi
 #ifndef SpeciesH
 #define SpeciesH
 
-//#if RS_RCPP && !R_CMD
+#if RS_RCPP
 #include "../Version.h"
-//#endif
+#endif
 
 //#if !RS_RCPP && R_CMD
 //#include "../../Batch/Version.h"
