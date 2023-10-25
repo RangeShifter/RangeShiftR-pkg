@@ -342,7 +342,7 @@ setMethod("ColonisationStats", "RSparams", function(x, y = getwd(), years = nume
                                     current <- which(x@land@DynamicLandYears == max(x@land@DynamicLandYears[x@land@DynamicLandYears<=year]) )
                                     patch_curr <- try(terra::rast(paste0(dirpath, "Inputs/", x@land@PatchFile[current])))
                                     if ( class(patch_curr) == "try-error" ) warning("ColonisationStats(): Couldn't read patch raster file nr ", current , " for this simulation.", call. = FALSE)
-                                    else patch_r <- c(patch_r , patch_curr)
+                                    else patch_r <- c(patch_r, patch_curr)
                                 }
                                 # rasters for col_time output
                                 year <- max(pop_df$Year)
@@ -351,7 +351,7 @@ setMethod("ColonisationStats", "RSparams", function(x, y = getwd(), years = nume
                                 if ( class(patch_curr) == "try-error" ) warning("ColonisationStats(): Couldn't read patch raster file nr ", current , " for this simulation.", call. = FALSE)
                                 else patch_r <- c(patch_r , patch_curr)
 
-                                if(class(pop_df) == "data.frame" & length(patch_r)==(length(years)+1) ) res <- ColonisationStats(pop_df,patch_r,years)
+                                if(class(pop_df) == "data.frame" & nlyr(patch_r)==(length(years)+1) ) res <- ColonisationStats(pop_df,patch_r,years)
                             }
                         }else{
                             # for cell-based model, read only main habitat maps to use as raster template

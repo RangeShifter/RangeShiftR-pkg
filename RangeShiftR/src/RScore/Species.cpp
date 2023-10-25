@@ -375,7 +375,6 @@ if (ddwtDev != 0) {
 
 void Species::createDDwtSurv(short mSize) {
 if (mSize >= 0 && mSize < (NSTAGES * NSEXES)) {
-    Rcpp::Rcout << "program creates DDwtSurv matrix" << std::endl;
 	if (ddwtSurv != 0) deleteDDwtSurv();
 	ddwtSurvDim = mSize;
 	ddwtSurv = new float *[mSize];
