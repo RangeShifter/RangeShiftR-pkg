@@ -3648,8 +3648,10 @@ rasterdata ParseRasterHead(string file)
 		infile >> header >> r.yllcorner;
 		if (header != L"yllcorner" && header != L"YLLCORNER") r.errors++;
 
-		infile >> header >> r.cellsize;
+        double tmpcellsize;
+		infile >> header >> tmpcellsize;
 		if (header != L"cellsize" && header != L"CELLSIZE") r.errors++;
+        r.cellsize = (int) tmpcellsize;
 
 		infile >> header >> inint;
 		if (header != L"NODATA_value" && header != L"NODATA_VALUE") r.errors++;
