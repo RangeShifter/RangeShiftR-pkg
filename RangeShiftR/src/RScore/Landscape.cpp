@@ -1,25 +1,25 @@
 /*----------------------------------------------------------------------------
- *	
- *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell 
- *	
+ *
+ *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell
+ *
  *	This file is part of RangeShifter.
- *	
+ *
  *	RangeShifter is free software: you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation, either version 3 of the License, or
  *	(at your option) any later version.
- *	
+ *
  *	RangeShifter is distributed in the hope that it will be useful,
  *	but WITHOUT ANY WARRANTY; without even the implied warranty of
  *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *	GNU General Public License for more details.
- *	
+ *
  *	You should have received a copy of the GNU General Public License
  *	along with RangeShifter. If not, see <https://www.gnu.org/licenses/>.
- *	
+ *
  --------------------------------------------------------------------------*/
- 
- 
+
+
 //---------------------------------------------------------------------------
 
 #include "Landscape.h"
@@ -40,8 +40,8 @@ ofstream outMovePaths;
 InitDist::InitDist(Species *pSp)
 {
 pSpecies = pSp;
-resol = 0; 
-maxX = 0; 
+resol = 0;
+maxX = 0;
 maxY = 0;
 minEast = 0.0;
 minNorth = 0.0;
@@ -184,8 +184,10 @@ if (!dfile.is_open()) return 21;
 
 // read landscape data from header records of distribution file
 // NB headers of all files have already been compared
+double tmpresol;
 dfile >> header >> ncols >> header >> nrows >> header >> minEast >> header >> minNorth
-	>> header >> resol >> header >> nodata;
+	>> header >> tmpresol >> header >> nodata;
+resol = (int) tmpresol;
 #if RS_RCPP
 if (!dfile.good()) {
 	// corrupt file stream
@@ -261,7 +263,7 @@ minX = minY = 0;
 maxX = maxY = 99;
 minPct = maxPct = propSuit = hurst = 0.0;
 maxCells = 100;
-gpix = 1.0;	
+gpix = 1.0;
 pix = (int)gpix;
 minEast = minNorth = 0.0;
 cells = 0;
@@ -929,14 +931,14 @@ case 2: // habitat quality
 
 }
 
-Patch* Landscape::newPatch(int num) 
+Patch* Landscape::newPatch(int num)
 {
 int npatches = (int)patches.size();
 patches.push_back(new Patch(num,num));
 return patches[npatches];
 }
 
-Patch* Landscape::newPatch(int seqnum,int num) 
+Patch* Landscape::newPatch(int seqnum,int num)
 {
 int npatches = (int)patches.size();
 patches.push_back(new Patch(seqnum,num));
@@ -1179,14 +1181,14 @@ for(int y = dimY-1; y >= 0; y--){
 habIndexed = true;
 }
 
-void Landscape::setEnvGradient(Species *pSpecies,bool initial) 
+void Landscape::setEnvGradient(Species *pSpecies,bool initial)
 {
 float dist_from_opt,dev;
 float habK;
 //int hab;
 double envval;
 // gradient parameters
-envGradParams grad = paramsGrad->getGradient(); 
+envGradParams grad = paramsGrad->getGradient();
 #if RSDEBUG
 //DEBUGLOG << "Landscape::setEnvGradient(): grad.opt_y = " << grad.opt_y
 //	<< " grad.grad_inc = " << grad.grad_inc << " grad.factor " << grad.factor
@@ -1269,7 +1271,7 @@ for(int y = dimY-1; y >= 0; y--){
 //	<< " env.std= " << env.std << " env.ac= " << env.ac << " randpart= " << randpart
 //	<< endl;
 #endif
-			cells[y][x]->updateEps((float)env.ac,randpart);       
+			cells[y][x]->updateEps((float)env.ac,randpart);
 		}
 	}
 }
@@ -1343,7 +1345,7 @@ wstring header;
 #else
 string header;
 int ncols,nrows,habnodata,costnodata,pchnodata;
-costnodata = 0; 
+costnodata = 0;
 pchnodata = 0;
 #endif
 int h = 0,p = 0,c = 0, pchseq = 0;
@@ -1960,7 +1962,7 @@ return initialise;
 void Landscape::deleteDistribution(Species *pSpecies) {
 // WILL NEED TO SELECT DISTRIBUTION FOR CORRECT SPECIES ...
 // ... CURRENTLY IT IS THE ONLY ONE ...
-// ... FOR MULTIPLE SPECIES IT MAY BE BETTER TO USE A DYNAMIC ARRAY FOR 
+// ... FOR MULTIPLE SPECIES IT MAY BE BETTER TO USE A DYNAMIC ARRAY FOR
 // SPECIES DISTRIBUTIONS INDEXED BY SPECIES NUMBER, RATHER THAN A VECTOR
 if (distns[0] != 0) delete distns[0]; distns.clear();
 }
@@ -2035,7 +2037,7 @@ initcells.clear();
 // Read landscape file(s)
 // Returns error code or zero if read correctly
 
-int Landscape::readLandscape(int fileNum,string habfile,string pchfile,string costfile) 
+int Landscape::readLandscape(int fileNum,string habfile,string pchfile,string costfile)
 {
 // fileNum == 0 for (first) habitat file and optional patch file
 // fileNum > 0  for subsequent habitat files under the %cover option
@@ -2050,7 +2052,7 @@ int pchnodata = 0;
 int ncols,nrows;
 float hfloat,pfloat;
 Patch *pPatch;
-simParams sim = paramsSim->getSim();        
+simParams sim = paramsSim->getSim();
 
 if (fileNum < 0) return 19;
 
@@ -2074,7 +2076,7 @@ if(landraster.utf) {
 }
 #endif
 if (!hfile.is_open()) return 11;
-if (fileNum == 0) { 
+if (fileNum == 0) {
 	if (patchModel) {
 #if !RS_RCPP || RSWIN64
 		pfile.open(pchfile.c_str());
@@ -2094,8 +2096,10 @@ if (fileNum == 0) {
 
 // read landscape data from header records of habitat file
 // NB headers of all files have already been compared
+double tmpresol;
 hfile >> header >> ncols >> header >> nrows >> header >> minEast >> header >> minNorth
-	>> header >> resol >> header >> habnodata;
+	>> header >> tmpresol >> header >> habnodata;
+resol = (int) tmpresol;
 
 #if RS_RCPP
 	if (!hfile.good()) {
@@ -2122,7 +2126,7 @@ if (fileNum == 0) {
 if (fileNum == 0) {
 	if (patchModel) {
 		for (int i = 0; i < 5; i++) pfile >> header >> pfloat;
-		pfile >> header >> pchnodata;		
+		pfile >> header >> pchnodata;
 	}
 #if RS_RCPP
 	if (!pfile.good()) {
@@ -2243,8 +2247,8 @@ case 0: // raster with habitat codes - 100% habitat each cell
 						else {
 							if (existsPatch(p)) {
 								pPatch = findPatch(p);
-								addNewCellToPatch(pPatch,x,y,h);   
-//								addNewCellToPatch(findPatch(p),x,y,h);   
+								addNewCellToPatch(pPatch,x,y,h);
+//								addNewCellToPatch(findPatch(p),x,y,h);
 							}
 							else {
 								pPatch = newPatch(seq++,p);
@@ -2641,7 +2645,7 @@ for (int y = maxYcost - 1; y > -1; y--){
 		if ( hc < 1 && hc != NODATACost ) {
 #if RSDEBUG
 #if BATCH
-//		DEBUGLOG << "Landscape::readCosts(): x=" << x << " y=" << y 
+//		DEBUGLOG << "Landscape::readCosts(): x=" << x << " y=" << y
 //			<< " fcost=" << fcost << " hc=" << hc
 //			<< endl;
 #endif
@@ -2719,7 +2723,9 @@ DebugGUI(("CheckRasterFile(): header=" + header + " r.yllcorner=" + Float2Str(r.
 	 ).c_str());
 #endif
 	if (header != "yllcorner" && header != "YLLCORNER") r.errors++;
-	infile >> header >> r.cellsize;
+	double tmpcellsize;
+	infile >> header >> tmpcellsize;
+	r.cellsize = (int) tmpcellsize;
 #if RSDEBUG
 DebugGUI(("CheckRasterFile(): header=" + header + " r.cellsize=" + Int2Str(r.cellsize)
 	 ).c_str());
@@ -2876,8 +2882,8 @@ for (int i = 0; i < npatches; i++) {
 				emigrants[i]  += connectMatrix[i][j];
 				immigrants[j] += connectMatrix[i][j];
 				if (connectMatrix[i][j] > 0) {
-					outConnMat << rep << "\t" << yr 
-						<< "\t" << patchnum0 << "\t" << patchnum1 
+					outConnMat << rep << "\t" << yr
+						<< "\t" << patchnum0 << "\t" << patchnum1
 						<< "\t" << connectMatrix[i][j] << endl;
 				}
 			}
@@ -2888,11 +2894,11 @@ for (int i = 0; i < npatches; i++) {
 for (int i = 0; i < npatches; i++) {
 	patchnum0 = patches[i]->getPatchNum();
 	if (patchnum0 != 0) {
-		if (patches[i]->getK() > 0.0) 
+		if (patches[i]->getK() > 0.0)
 		{ // suitable patch
-			outConnMat << rep << "\t" << yr 
+			outConnMat << rep << "\t" << yr
 				<< "\t" << patchnum0 << "\t-999\t" << emigrants[i] << endl;
-			outConnMat << rep << "\t" << yr 
+			outConnMat << rep << "\t" << yr
 				<< "\t-999\t" << patchnum0 << "\t" << immigrants[i] << endl;
 		}
 	}

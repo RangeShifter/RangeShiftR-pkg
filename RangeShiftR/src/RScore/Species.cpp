@@ -1,25 +1,25 @@
 /*----------------------------------------------------------------------------
- *	
- *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell 
- *	
+ *
+ *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell
+ *
  *	This file is part of RangeShifter.
- *	
+ *
  *	RangeShifter is free software: you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation, either version 3 of the License, or
  *	(at your option) any later version.
- *	
+ *
  *	RangeShifter is distributed in the hope that it will be useful,
  *	but WITHOUT ANY WARRANTY; without even the implied warranty of
  *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *	GNU General Public License for more details.
- *	
+ *
  *	You should have received a copy of the GNU General Public License
  *	along with RangeShifter. If not, see <https://www.gnu.org/licenses/>.
- *	
+ *
  --------------------------------------------------------------------------*/
- 
- 
+
+
 //---------------------------------------------------------------------------
 
 #include "Species.h"
@@ -31,7 +31,7 @@ Species::Species(void)
 repType = 0; nStages = 2;
 stageStruct = false;
 propMales = 0.5; harem = 1.0; bc	= 1.0; lambda	= 1.5; probRep = 1.0;
-repSeasons = 1; 
+repSeasons = 1;
 repInterval = 0; maxAge	= 1000; survival	= 1;
 fecDens = false; fecStageDens	 = false;
 devDens	 = false; devStageDens	 = false;
@@ -39,7 +39,7 @@ survDens	 = false; survStageDens	 = false;
 disperseOnLoss = false;
 for (int i = 0; i < NSTAGES; i++) {
 	for (int j = 0; j < NSEXES; j++) {
-		fec[i][j] = 0.0; dev[i][j] = 0.0; surv[i][j] = 0.0; 
+		fec[i][j] = 0.0; dev[i][j] = 0.0; surv[i][j] = 0.0;
 		minAge[i][j] = 0;
 	}
 }
@@ -82,10 +82,10 @@ for (int j = 0; j < NSEXES; j++) {
 d0Scale = alphaScale = betaScale = 0.0;
 
 // initialise transfer parameters
-moveModel = false; stgDepTrfr = false; sexDepTrfr = false; distMort = false; 
+moveModel = false; stgDepTrfr = false; sexDepTrfr = false; distMort = false;
 indVarTrfr = false;
 twinKern = false;
-habMort = false; 
+habMort = false;
 costMap = false;
 moveType = 1;
 for (int i = 0; i < NSTAGES; i++) {
@@ -126,12 +126,12 @@ for (int i = 0; i < NSTAGES; i++) {
 		s0[i][j] = 1.0; alphaS[i][j] = 0.0; betaS[i][j] = 1.0;
 	}
 }
-for (int j = 0; j < NSEXES; j++) { 
+for (int j = 0; j < NSEXES; j++) {
 	alphaSMean[0][j] = 0.0; alphaSSD[0][j] = 0.0;
 	betaSMean[0][j] = 0.0; betaSSD[0][j] = 0.0;
 	s0Mean[0][j] = 0.0; s0SD[0][j] = 0.0;
 }
-alphaSScale = 0.0; betaSScale = 0.0; s0Scale = 0.0; 
+alphaSScale = 0.0; betaSScale = 0.0; s0Scale = 0.0;
 
 // initialise attributes
 spNum = 0;
@@ -375,6 +375,7 @@ if (ddwtDev != 0) {
 
 void Species::createDDwtSurv(short mSize) {
 if (mSize >= 0 && mSize < (NSTAGES * NSEXES)) {
+    Rcpp::Rcout << "program creates DDwtSurv matrix" << std::endl;
 	if (ddwtSurv != 0) deleteDDwtSurv();
 	ddwtSurvDim = mSize;
 	ddwtSurv = new float *[mSize];
@@ -407,7 +408,7 @@ if (ddwtSurv != 0) {
 
 // Functions to handle min/max R or K (under environmental stochasticity)
 //void Species::setMinMax(float min,float max) {
-void Species::setMinMax(float min, float max) { 
+void Species::setMinMax(float min, float max) {
 if (min >= 0.0 && max > min) {
 	minRK = min; maxRK = max;
 }
@@ -626,7 +627,7 @@ if (indVarTrfr) {
 	}
 	else {
 		if (sexDepTrfr) {
-			if (twinKern) 
+			if (twinKern)
 			{
 				traitnames[trait++] = "meanDistI_F";
 				traitnames[trait++] = "meanDistI_M";
@@ -642,7 +643,7 @@ if (indVarTrfr) {
 		}
 		else {
 			traitnames[trait++] = "meanDistI";
-			if (twinKern) 
+			if (twinKern)
 			{
 				traitnames[trait++] = "meanDistII";
 				traitnames[trait++] = "probKernI";
@@ -1059,7 +1060,7 @@ void Species::setTrfr(const trfrRules t) {
 #endif
 moveModel = t.moveModel; stgDepTrfr = t.stgDep; sexDepTrfr = t.sexDep;
 distMort = t.distMort; indVarTrfr = t.indVar;
-twinKern = t.twinKern; 
+twinKern = t.twinKern;
 habMort = t.habMort;
 moveType = t.moveType; costMap = t.costMap;
 //setGenome();
@@ -1069,7 +1070,7 @@ trfrRules Species::getTrfr(void) {
 trfrRules t;
 t.moveModel = moveModel; t.stgDep = stgDepTrfr; t.sexDep = sexDepTrfr;
 t.distMort = distMort; t.indVar = indVarTrfr;
-t.twinKern = twinKern; 
+t.twinKern = twinKern;
 t.habMort = habMort;
 t.moveType = moveType; t.costMap = costMap;
 t.movtTrait[0] = movtTrait[0]; t.movtTrait[1] = movtTrait[1];
@@ -1085,7 +1086,7 @@ bool Species::useFullKernel(void) { return fullKernel; }
 void Species::setKernTraits(const short stg,const short sex,
 	const trfrKernTraits k,const int resol)
 {
-if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES) {       
+if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES) {
 	if (k.meanDist1 > 0.0 && k.meanDist1 >= (float)resol) meanDist1[stg][sex] = k.meanDist1;
 	if (k.meanDist2 >= (float)resol) meanDist2[stg][sex] = k.meanDist2;
 	if (k.probKern1 > 0.0 && k.probKern1 < 1.0) probKern1[stg][sex] = k.probKern1;
@@ -1414,7 +1415,7 @@ if (stg >= 0 && stg < 1 && sex >= 0 && sex < NSEXES) // implemented for stage 0 
   if (sex == 0) {
 		if (s.s0Scale > 0.0 && s.s0Scale < 1.0) s0Scale = s.s0Scale;
 		if (s.alphaSScale > 0.0) alphaSScale = s.alphaSScale;
-		if (s.betaSScale > 0.0) betaSScale = s.betaSScale;    
+		if (s.betaSScale > 0.0) betaSScale = s.betaSScale;
   }
 }
 }

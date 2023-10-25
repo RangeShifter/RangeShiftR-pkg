@@ -1,25 +1,25 @@
 /*----------------------------------------------------------------------------
- *	
+ *
  *	Copyright (C) 2020 Anne-Kathleen Malchow, Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Damaris Zurell
- *	
+ *
  *	This file is part of RangeShiftR.
- *	
+ *
  *	RangeShiftR is free software: you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation, either version 3 of the License, or
  *	(at your option) any later version.
- *	
+ *
  *	RangeShifter is distributed in the hope that it will be useful,
  *	but WITHOUT ANY WARRANTY; without even the implied warranty of
  *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *	GNU General Public License for more details.
- *	
+ *
  *	You should have received a copy of the GNU General Public License
  *	along with RangeShiftR. If not, see <https://www.gnu.org/licenses/>.
- *	
+ *
  --------------------------------------------------------------------------*/
- 
- 
+
+
 /*------------------------------------------------------------------------------
 
 RangeShifter v2.0 Main
@@ -1117,6 +1117,7 @@ int ReadDynLandR(Landscape *pLandscape, Rcpp::S4 LandParamsR)
 
 				pfile >> header >> cellsize;
 				if (header != L"cellsize" && header != L"CELLSIZE") errors++;
+				Rcpp::Rcout << "Cellsize is " << cellsize<<endl;
 
 				pfile >> header >> pchnodata;
 				if (header != L"NODATA_value" && header != L"NODATA_VALUE") errors++;
@@ -1217,6 +1218,7 @@ int ReadDynLandR(Landscape *pLandscape, Rcpp::S4 LandParamsR)
 
 				cfile >> header >> cellsize;
 				if (header != L"cellsize" && header != L"CELLSIZE") errors++;
+				Rcpp::Rcout << "Cellsize is " << cellsize<<endl;
 
 				cfile >> header >> pchnodata;
 				if (header != L"NODATA_value" && header != L"NODATA_VALUE") errors++;
@@ -3648,11 +3650,14 @@ rasterdata ParseRasterHead(string file)
 		infile >> header >> r.yllcorner;
 		if (header != L"yllcorner" && header != L"YLLCORNER") r.errors++;
 
-		infile >> header >> r.cellsize;
+        double tmpcellsize;
+		infile >> header >> tmpcellsize;
 		if (header != L"cellsize" && header != L"CELLSIZE") r.errors++;
+        r.cellsize = (int) tmpcellsize;
 
 		infile >> header >> inint;
 		if (header != L"NODATA_value" && header != L"NODATA_VALUE") r.errors++;
+
 
 		if (r.errors > 0) r.ok = false;
 
