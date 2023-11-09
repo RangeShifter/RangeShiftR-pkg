@@ -433,12 +433,6 @@ void Population::reproduction(const float localK,const float envval,const int re
 int ninds = (int)inds.size();
 #if RSDEBUG
 //DEBUGLOG << "Population::reproduction(): this=" << this
-//#if BUTTERFLYDISP
-//	<< " option=" << option
-//#endif // BUTTERFLYDISP 
-//#if RS_CONTAIN
-//	<< " hab=" << hab
-//#endif // RS_CONTAIN 
 //	<< " ninds=" << ninds
 //	<< endl;
 #endif // RSDEBUG 
@@ -464,12 +458,8 @@ if (dem.repType == 0) nsexes = 1; else nsexes = 2;
 
 #if RSDEBUG
 //DEBUGLOG << "Population::reproduction(): this=" << this
-//#if RS_CONTAIN
-//	<< " hab=" << hab
-//#else
 //	<< " pSpecies=" << pSpecies
 //	<< " localK=" << localK << " envval=" << envval << " resol=" << resol
-//#endif // RS_CONTAIN 
 //	<< " sstruct.nStages=" << sstruct.nStages << " nsexes=" << nsexes << " ninds=" << ninds
 //	<< endl;
 #endif
