@@ -40,9 +40,9 @@ Last updated: 12 January 2021 by Steve Palmer
 #include <fstream>
 //#include <iostream>
 
-//#if RS_RCPP && !R_CMD
+#if RS_RCPP
 #include "../Version.h"
-//#endif
+#endif
 
 //#if !RS_RCPP && R_CMD
 //#include "../../Batch/Version.h"
