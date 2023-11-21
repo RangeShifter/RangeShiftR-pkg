@@ -1,8 +1,12 @@
 # The RangeShifter platform - An eco-evolutionary modelling framework
 
-## Repo structure
+## How to contribute
 
-![](C:\Users\s02tp3\github\RangeShiftR-package-dev\RangeShiftR\man\figures\RS_repos.png)
+Thank you for your interest in contributing to the RangeShifter platform. 
+In this document we will give you guidance on how to contribute to the RangeShifter project regarding issues, bug fixing and adding new features. In this guidance we distinguish between contributing to the RangeShifter core code and the R interface (RangeShiftR package).
+
+## Repo structure
+![](https://raw.githubusercontent.com/RangeShifter/RangeShiftR-package-dev/development-guidelines/RangeShiftR/man/figures/RS_repos.png?token=GHSAT0AAAAAACKSYLFW67K4UCXY6TPS4WISZK4RXHQ)
 
 RangeShifter is distributed with three user interfaces, each living in their own repo:
 
@@ -16,23 +20,31 @@ All three share the same source code for the core simulation (i.e., the actual m
 
 *The RangeShifter GUI is currently being rewritten, and is not open source yet.
 
-## How to contribute
-
-Thank you for your interest in contributing to the RangeShifter platform. 
-In this document we will give you guidance on how to contribute to the RangeShifter project regarding issues, bug fixing and adding new features. In this guidance we distinguish between contributing to the RangeShifter core code and the R interface (RangeShiftR package).
-
 ### RangeShifter core code
 
-As mentioned above, the RangeShifter core code is located and maintained in a dedicated repository RScore, which is currently only maintained by the RangeShifter development team. Any changes regarding the RangeShifter core code should be done in this repository and afterwards synced with all interfaces using the git subtree feature. 
+As mentioned above, the RangeShifter core code is located and maintained in a dedicated repository RScore, which is currently only maintained by the RangeShifter development team. Any changes regarding the RangeShifter core code should be done in this repository and afterwards synced with all interfaces using the git subtree feature (see [Git subtree usage section](https://github.com/RangeShifter/RangeShiftR-package-dev/blob/development-guidelines/CONTRIBUTING.md#git-subtree-usage)). 
 
 #### Bugs
 
-If you find a bug in the RangeShifter core files, please check if a related issue already exists in one of the interfaces' repositories. *add link to repos* If not, open a new issue using a relevant issue form. *add link to one issue templates of one interface?* 
-If you already fixed the bug, you can send a pull request to the main branch. The RangeShifter development will then revise the change and eventually integrate it into the RScore repository and sync the bugfix to all interfaces.
+To report a bug, please [open an issue](https://github.com/RangeShifter/RangeShiftR-package-dev/issues/new), using the Bug Report template. 
+Please do check if a related issue has already open on one of the other interfaces ([here](https://github.com/RangeShifter/RangeShifter_batch/issues) for the batch interface).
+To propose a bug fix (thank you!!), please create and work on your own branch or fork, from either `main` or `develop` (preferred), and open a pull request when your fix is ready to be merged into the original branch.
+
+**For RangeShifter-batch only, (for now?):** as a prerequisite for merging, please ensure that your version passes status check (that is, RangeShifter can still build and run as intended).
+This can be seen in the Actions panel for every commit and at the bottom of the pull request.
+
+Maintainers will review the pull request, possibly request changes, and eventually integrate the bug fix into RScore, and update the subtrees to bring the fix to all interfaces.
 
 #### New features
 
-Do you have an idea of a new feature in the RangeShifter platform that should be integrated and is of use for other RangeShifter users? Please contact the RangeShifter development team (rangeshiftr@uni-potsdam.de (*or other mail?*) to discuss a collaboration.
+Do you have an idea of a new feature in the RangeShifter platform that should be integrated and is of use for other RangeShifter users? 
+Please get in touch with the RangeShifter development team (rangeshiftr@uni-potsdam.de (*or other mail?*) to discuss a collaboration.
+
+Alternatively*, proceed as with the bug fix above: create your own branch or fork _from `develop`_ and work from there, and submit a pull request when your new features are ready to join the core code. 
+We recommend that you update your branch regularly to new changes on `develop` (using `git merge develop`) to reduce the risk of merge conflicts or your version getting out-of-touch in the late stages of development.
+We also recommend that you work in small commits, as this makes the code easier to debug, and makes it easier for maintainers to understand your contributions when reviewing a pull request.
+
+*Do we welcome independent contributions?
 
 ### RangeShiftR package
 
@@ -56,7 +68,9 @@ If you found a bug in the RangeShiftR package files, which isn't already reporte
 
 Any suggestions how to improve the R package? Or do you think, we missed a feature in the R package interface? Please check if someone else [already suggested the feature](https://github.com/RangeShifter/RangeShiftR-package-dev/issues) and use the [dedicated form](https://github.com/RangeShifter/RangeShiftR-package-dev/issues/new/choose) to suggest a new feature. You can also contact the RangeShiftR development team directly (rangeshiftr@uni-potsdam.de).
 
+*TODO - move the two sections below into their own document?*
 
+## Git usage
 
 ## Git subtree usage
 
