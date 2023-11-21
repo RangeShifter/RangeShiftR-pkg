@@ -56,8 +56,6 @@ If you found a bug in the RangeShiftR package files, which isn't already reporte
 
 Any suggestions how to improve the R package? Or do you think, we missed a feature in the R package interface? Please check if someone else [already suggested the feature](https://github.com/RangeShifter/RangeShiftR-package-dev/issues) and use the [dedicated form](https://github.com/RangeShifter/RangeShiftR-package-dev/issues/new/choose) to suggest a new feature. You can also contact the RangeShiftR development team directly (rangeshiftr@uni-potsdam.de).
 
-
-
 ## Git subtree usage
 
 In order to ensure that the same version of RangeShifter's core code is used by all three interfaces (RangeShiftR, RangeShifter-batch and the GUI), each interface repo keeps a copy of RScore as a git subtree. In this section we describe how to interact with RScore via these git subtrees.
@@ -107,5 +105,3 @@ git rm src/RScore -r
 git commit -m "switching subtree branch"
 git subtree add --prefix src/RScore RScore <the new branch>
 ```
-
-
