@@ -6,7 +6,7 @@ Thank you for your interest in contributing to the RangeShifter platform.
 In this document we will give you guidance on how to contribute to the RangeShifter project regarding issues, bug fixing and adding new features. In this guidance we distinguish between contributing to the RangeShifter core code and the R interface (RangeShiftR package).
 
 ## Repo structure
-![Rangeshifter repo structure](RangeShiftR/man/figures/RS_repos.png)
+![Rangeshifter repo structure](RS_repos.png)
 
 RangeShifter is distributed with three user interfaces, each living in their own repo:
 
@@ -18,17 +18,16 @@ All three share the same source code for the core simulation (i.e., the actual m
 
 *The RangeShifter GUI is currently being rewritten, and is not open source yet.
 
-
 ## Roles
 
 #### Maintainers
-- @JetteReeg
-- @TheoPannetier
+- [@JetteReeg](https://github.com/JetteReeg)
+- [@TheoPannetier](https://github.com/TheoPannetier)
 
 Maintainers are responsible for coordinating development efforts and ensuring that RangeShifter keeps building continuously.
 
 #### Developers
-Regular contributors and members of the RangeShifter development team
+Regular contributors and members of the [RangeShifter development team](https://github.com/orgs/RangeShifter/people)
 
 #### Contributors
 
