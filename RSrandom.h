@@ -38,7 +38,8 @@ Last updated: 12 January 2021 by Steve Palmer
 
 #include <stdlib.h>
 #include <fstream>
-//#include <iostream>
+#include <cassert>
+#include "Utils.h"
 
 #if RS_RCPP
 #include "../Version.h"
@@ -131,6 +132,9 @@ extern ofstream DEBUGLOG;
 
 #endif // !RS_RCPP
 
+#if RSDEBUG
+	void testRSrandom();
+#endif // RSDEBUG
 
 //---------------------------------------------------------------------------
 
