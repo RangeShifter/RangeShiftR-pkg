@@ -19,11 +19,6 @@
  *
  --------------------------------------------------------------------------*/
 
-#include <string>
-#include <iostream>
-#include <cassert>
-
-using namespace std;
 
 #if LINUX_CLUSTER || R_CMD
 #include <unistd.h>
@@ -31,12 +26,20 @@ using namespace std;
 #include <tchar.h>
 #endif
 
-void assert_error(const string& exptd_err_msg, void (*x)(void)) {
-	string err_msg{ "No error.\n" };
-	try { x(); }
-	catch (exception& e) { err_msg = e.what(); }
-	assert(err_msg == exptd_err_msg);
-}
+#include <stdlib.h>
+#include <string>
+#include <iostream>
+#include <cassert>
+#include "Individual.h"
+#include "Community.h"
+#include "RSrandom.h"
+#include "Utils.h"
+#include "Parameters.h"
+#include "Landscape.h"
+#include "Species.h"
+#include "SubCommunity.h"
+
+using namespace std;
 
 void run_unit_tests() {
 	cout << "******* Unit test output *******" << endl;
@@ -44,6 +47,36 @@ void run_unit_tests() {
 	testIndividual();
 	cout << endl << "************************" << endl;
 }
+
+// Global vars
+string habmapname, patchmapname, distnmapname;
+string costmapname, genfilename;
+string landFile;
+paramGrad* paramsGrad;
+paramStoch* paramsStoch;
+paramInit* paramsInit;
+paramSim* paramsSim;
+RSrandom* pRandom;
+ofstream DEBUGLOG;
+ofstream MUTNLOG;
+vector <string> hfnames;
+Species* pSpecies;
+Community* pComm;
+void DebugGUI(string msg) { 
+	// nothing
+}
+void MemoLine(string msg) {
+	/// nothing
+}
+traitCanvas SetupTraitCanvas(void) {
+	traitCanvas tcanv;
+	for (int i = 0; i < NTRAITS; i++) { tcanv.pcanvas[i] = 0; }
+	return tcanv;
+}
+void Landscape::setLandMap(void) { }
+void Landscape::drawLandscape(int rep, int yr, int landnum) { }
+void Community::viewOccSuit(int year, double mn, double se) { }
+void Community::draw(int rep, int yr, int gen, int landNum) { }
 
 #if LINUX_CLUSTER || RS_RCPP
 int main(int argc, char* argv[])

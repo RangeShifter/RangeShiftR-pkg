@@ -1,7 +1,17 @@
+cmake_minimum_required(VERSION 3.10)
+
+# set the project name and version
+project(RScore VERSION 2.1.0)
+
+# specify the C++ standard
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+
 # Config file for compilation with CMake
 # Only relevant for Batch mode, but this file needs to live in the RScore folder
 
-add_library(RScore Species.cpp Cell.cpp Community.cpp FractalGenerator.cpp Genome.cpp Individual.cpp Landscape.cpp Model.cpp Parameters.cpp Patch.cpp Population.cpp RandomCheck.cpp RSrandom.cpp SubCommunity.cpp Utils.cpp)
+add_executable(RScore Main.cpp Species.cpp Cell.cpp Community.cpp FractalGenerator.cpp Genome.cpp Individual.cpp Landscape.cpp Model.cpp Parameters.cpp Patch.cpp Population.cpp RandomCheck.cpp RSrandom.cpp SubCommunity.cpp Utils.cpp)
+#add_library(RScore Species.cpp Cell.cpp Community.cpp FractalGenerator.cpp Genome.cpp Individual.cpp Landscape.cpp Model.cpp Parameters.cpp Patch.cpp Population.cpp RandomCheck.cpp RSrandom.cpp SubCommunity.cpp Utils.cpp)
 
 # pass config definitions to compiler
 target_compile_definitions(RScore PRIVATE RSWIN64)
@@ -15,3 +25,5 @@ endif()
 if(NOT DEFINED release)
 	add_compile_definitions(RSDEBUG)
 endif()
+
+target_include_directories(RScore PUBLIC "${PROJECT_BINARY_DIR}")
