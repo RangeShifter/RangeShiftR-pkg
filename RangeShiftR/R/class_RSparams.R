@@ -216,14 +216,14 @@ setValidity("RSparams", function(object) {
             }
             if (object@dispersal@Emigration@DensDep) {
                 if(any(object@dispersal@Emigration@EmigProb[,c((offset+4),(offset+6))]<=0 )){
-                    msg <- c(msg, paste0("Columns ", (offset+4), " and ", (offset+6), " of emigration traits matrix (EmigProb) must contain sd(α) and sd(β), with strictly positive values!"))
+                    msg <- c(msg, paste0("Columns ", (offset+4), " and ", (offset+6), " of emigration traits matrix (EmigProb) must contain sd(alpha) and sd(beta), with strictly positive values!"))
                 }
                 else {
                     if(any(object@dispersal@Emigration@EmigProb[,(offset+4)] > object@dispersal@Emigration@TraitScaleFactor[2])) {
-                        msg <- c(msg, paste0("Column ", (offset+4), " of emigration traits matrix (EmigProb) must contain sd(α), with values less than or equal to TraitScaleFactor μ(α)!"))
+                        msg <- c(msg, paste0("Column ", (offset+4), " of emigration traits matrix (EmigProb) must contain sd(alpha), with values less than or equal to TraitScaleFactor μ(alpha)!"))
                     }
                     if(any(object@dispersal@Emigration@EmigProb[,(offset+6)] > object@dispersal@Emigration@TraitScaleFactor[3])) {
-                        msg <- c(msg, paste0("Column ", (offset+6), " of emigration traits matrix (EmigProb) must contain sd(β), with values less than or equal to TraitScaleFactor μ(β)!"))
+                        msg <- c(msg, paste0("Column ", (offset+6), " of emigration traits matrix (EmigProb) must contain sd(beta), with values less than or equal to TraitScaleFactor μ(beta)!"))
                     }
                 }
             }
@@ -621,14 +621,14 @@ setValidity("RSparams", function(object) {
                         }
                     }
                     if(any(object@dispersal@Settlement@Settle[,c((offset+4),(offset+6))]<=0 )){
-                        msg <- c(msg, paste0("Columns ", (offset+4), " and ", (offset+6), " of settlement traits matrix (Settle) must contain sd(α_s) and sd(β_s), with strictly positive values!"))
+                        msg <- c(msg, paste0("Columns ", (offset+4), " and ", (offset+6), " of settlement traits matrix (Settle) must contain sd(alpha_s) and sd(beta_s), with strictly positive values!"))
                     }
                     else {
                         if(any(object@dispersal@Settlement@Settle[,(offset+4)] > object@dispersal@Settlement@TraitScaleFactor[2])) {
-                            msg <- c(msg, paste0("Column ", (offset+4), " of settlement traits matrix (Settle) must contain sd(α_s), with values less than or equal to TraitScaleFactor μ(α_s)!"))
+                            msg <- c(msg, paste0("Column ", (offset+4), " of settlement traits matrix (Settle) must contain sd(alpha_s), with values less than or equal to TraitScaleFactor μ(alpha_s)!"))
                         }
                         if(any(object@dispersal@Settlement@Settle[,(offset+6)] > object@dispersal@Settlement@TraitScaleFactor[3])) {
-                            msg <- c(msg, paste0("Column ", (offset+6), " of settlement traits matrix (Settle) must contain sd(β_s), with values less than or equal to TraitScaleFactor μ(β_s)!"))
+                            msg <- c(msg, paste0("Column ", (offset+6), " of settlement traits matrix (Settle) must contain sd(beta_s), with values less than or equal to TraitScaleFactor μ(beta_s)!"))
                         }
                     }
                 }

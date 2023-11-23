@@ -59,10 +59,10 @@ valuable method for discerning between common short-distance and rare long-dista
 
 \emph{Negative exponential} \cr
 If the individual disperses, the distance and the movement direction are determined in continuous space.
-The distance is drawn from a negative exponential distribution with a given mean \eqn{δ}, and the direction is selected randomly from a uniform
-distribution between \eqn{0} and \eqn{2π} radians.
+The distance is drawn from a negative exponential distribution with a given mean \eqn{\delta}, and the direction is selected randomly from a uniform
+distribution between \eqn{0} and \eqn{2\pi} radians.
 
-\ifelse{html}{\out{&emsp;&emsp; p(d;&delta;) = &delta;<sup>-1</sup> e<sup>- d / &delta;</sup>}}{\deqn{ p(d;δ) = 1/δ exp(-d/δ) } }
+\ifelse{html}{\out{&emsp;&emsp; p(d;&delta;) = &delta;<sup>-1</sup> e<sup>- d / &delta;</sup>}}{\deqn{ p(d;\delta) = 1/\delta exp(-d/\delta) } }
 
 If the arrival point lies beyond the boundary of the landscape, distance and direction are re-drawn.\cr
 The individual is displaced from a random point (using continuous coordinates) inside the natal cell to the arrival cell where the model
@@ -79,17 +79,17 @@ not they emigrate.
 
 \emph{Mixed kernel} \cr
 The distance an individual moves is sampled from a mixed kernel given by the combination of two negative exponentials
-with different means \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{δ_1}} and \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{δ_2}},
+with different means \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{\delta_1}} and \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{\delta_2}},
 occurring with probability \ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}} and \eqn{1-}\ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}} respectively \insertCite{hovestadt2011all}{RangeShiftR}.
 Otherwise, the conditions for the single kernel apply.
 
-\ifelse{html}{\out{&emsp;&emsp; p(d; &delta;<sub>1</sub>,&delta;<sub>2</sub>) = p<sub>I</sub> p(d;&delta;<sub>1</sub>) + (1-p<sub>I</sub>) p(d;&delta;<sub>1</sub>)}}{\deqn{ p(d; δ_1,δ_2) = p_I p(d;δ_1) + (1-p_I) p(d;δ_2)}}
+\ifelse{html}{\out{&emsp;&emsp; p(d; &delta;<sub>1</sub>,&delta;<sub>2</sub>) = p<sub>I</sub> p(d;&delta;<sub>1</sub>) + (1-p<sub>I</sub>) p(d;&delta;<sub>1</sub>)}}{\deqn{ p(d; \delta_1,\delta_2) = p_I p(d;\delta_1) + (1-p_I) p(d;\delta_2)}}
 
 For both types of kernel, inter-individual variability of the kernel traits is possible (set \code{IndVar=TRUE}). Individuals will
-carry either one trait for \eqn{δ} or three traits for \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{δ_1}}, \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{δ_2}} and
+carry either one trait for \eqn{\delta} or three traits for \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{\delta_1}}, \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{\delta_2}} and
 \ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}}, which they inherit from their parents.\cr
-Dispersal kernels can also be sex-dependent (set \code{SexDep=TRUE}). In the case of inter-individual variability, the number of traits is doubled to two trait (female \eqn{δ}
-and male δ) or six traits (female and male \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{δ_1}}, \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{δ_2}} and \ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}}).\cr
+Dispersal kernels can also be sex-dependent (set \code{SexDep=TRUE}). In the case of inter-individual variability, the number of traits is doubled to two trait (female \eqn{\delta}
+and male \delta) or six traits (female and male \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{\delta_1}}, \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{\delta_2}} and \ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}}).\cr
 For each trait the initial distribution in the population (as mean and standard variation) must be set in \code{Distances} (instead of only one constant value),
 as well as their scaling factors in \code{TraitScaleFactor} (see \code{\link[RangeShiftR]{Genetics}}).\cr
 
@@ -97,8 +97,8 @@ Further, dispersal kernels can be stage-specific (set \code{StageDep=TRUE}). For
 
 All dispersal kernel parameters have to be provided via \code{Distances}, which generally takes a matrix, or - if only a single constant mean distance is
 used (i.e. \code{DensDep, IndVar, StageDep, SexDep = FALSE}) - a single numeric. The format of the matrix is defined as follows: The number of columns depend on the options \code{IndVar} and \code{DoubleKernel}.
-If \code{DoubleKernel=FALSE}, the mean dispersal distance \eqn{δ} must be specified (in meters). If \code{DoubleKernel=TRUE}, the mean dispersal distances
-\ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{δ_1}} and \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{δ_2}} (in meters), as well as the probability \ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}} of using Kernel-1 must be specified.
+If \code{DoubleKernel=FALSE}, the mean dispersal distance \eqn{\delta} must be specified (in meters). If \code{DoubleKernel=TRUE}, the mean dispersal distances
+\ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{\delta_1}} and \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{\delta_2}} (in meters), as well as the probability \ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}} of using Kernel-1 must be specified.
 Additionally, if \code{IndVar=FALSE}, these parameters are fixed, but if \code{IndVar=TRUE} each of them is replaced by two parameters: their respective mean and
 standard deviation. They are used to normally distribute the traits values among the individuals of the initial population.
 
@@ -107,15 +107,15 @@ If \code{SexDep=TRUE}, state the corresponding stage in the next (i.e. first/sec
 table lists the required columns and their correct order for different settings:
 
 \tabular{ccccc}{IndVar \tab DoubleKernel \tab StageDep \tab SexDep \tab columns \cr
- F \tab F \tab F \tab F \tab \eqn{δ} \cr
- F \tab F \tab T \tab F \tab stage, \eqn{δ} \cr
- F \tab F \tab F \tab T \tab sex, \eqn{δ} \cr
- F \tab F \tab T \tab T \tab stage, sex, \eqn{δ} \cr
- F \tab T \tab F \tab F \tab \ifelse{html}{\out{&delta;<sub>1</sub>, &delta;<sub>2</sub>, p<sub>I</sub>}}{\eqn{δ_1, δ_2, p_I}} \cr
- T \tab F \tab F \tab F \tab mean\eqn{(δ)}, sd\eqn{(δ)} \cr
- T \tab T \tab F \tab F \tab \ifelse{html}{\out{mean(&delta;<sub>1</sub>)}}{mean\eqn{(δ_1)}}, \ifelse{html}{\out{sd(&delta;<sub>1</sub>)}}{sd\eqn{(δ_1)}}, \ifelse{html}{\out{mean(&delta;<sub>2</sub>)}}{mean\eqn{(δ_2)}}, \ifelse{html}{\out{sd(&delta;<sub>2</sub>)}}{sd\eqn{(δ_2)}}, mean\ifelse{html}{\out{(p<sub>I</sub>)}}{\eqn{(p_I)}}, sd\ifelse{html}{\out{(p<sub>I</sub>)}}{\eqn{(p_I)}} \cr
+ F \tab F \tab F \tab F \tab \eqn{\delta} \cr
+ F \tab F \tab T \tab F \tab stage, \eqn{\delta} \cr
+ F \tab F \tab F \tab T \tab sex, \eqn{\delta} \cr
+ F \tab F \tab T \tab T \tab stage, sex, \eqn{\delta} \cr
+ F \tab T \tab F \tab F \tab \ifelse{html}{\out{&delta;<sub>1</sub>, &delta;<sub>2</sub>, p<sub>I</sub>}}{\eqn{\delta_1, \delta_2, p_I}} \cr
+ T \tab F \tab F \tab F \tab mean\eqn{(\delta)}, sd\eqn{(\delta)} \cr
+ T \tab T \tab F \tab F \tab \ifelse{html}{\out{mean(&delta;<sub>1</sub>)}}{mean\eqn{(\delta_1)}}, \ifelse{html}{\out{sd(&delta;<sub>1</sub>)}}{sd\eqn{(\delta_1)}}, \ifelse{html}{\out{mean(&delta;<sub>2</sub>)}}{mean\eqn{(\delta_2)}}, \ifelse{html}{\out{sd(&delta;<sub>2</sub>)}}{sd\eqn{(\delta_2)}}, mean\ifelse{html}{\out{(p<sub>I</sub>)}}{\eqn{(p_I)}}, sd\ifelse{html}{\out{(p<sub>I</sub>)}}{\eqn{(p_I)}} \cr
  \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \cr
- T \tab T \tab F \tab T \tab sex, \ifelse{html}{\out{mean(&delta;<sub>1</sub>)}}{mean\eqn{(δ_1)}}, \ifelse{html}{\out{sd(&delta;<sub>1</sub>)}}{sd\eqn{(δ_1)}}, \ifelse{html}{\out{mean(&delta;<sub>2</sub>)}}{mean\eqn{(δ_2)}}, \ifelse{html}{\out{sd(&delta;<sub>2</sub>)}}{sd\eqn{(δ_2)}}, mean\ifelse{html}{\out{(p<sub>I</sub>)}}{\eqn{(p_I)}}, sd\ifelse{html}{\out{(p<sub>I</sub>)}}{\eqn{(p_I)}}
+ T \tab T \tab F \tab T \tab sex, \ifelse{html}{\out{mean(&delta;<sub>1</sub>)}}{mean\eqn{(\delta_1)}}, \ifelse{html}{\out{sd(&delta;<sub>1</sub>)}}{sd\eqn{(\delta_1)}}, \ifelse{html}{\out{mean(&delta;<sub>2</sub>)}}{mean\eqn{(\delta_2)}}, \ifelse{html}{\out{sd(&delta;<sub>2</sub>)}}{sd\eqn{(\delta_2)}}, mean\ifelse{html}{\out{(p<sub>I</sub>)}}{\eqn{(p_I)}}, sd\ifelse{html}{\out{(p<sub>I</sub>)}}{\eqn{(p_I)}}
  }
 
 The column headings need not be included, only the numeric matrix is required. The rows require no particular order, but there must be exactly
@@ -141,7 +141,7 @@ proportion of suitable habitat in the landscape and will increase as the availab
 A second source of dispersal mortality can be specified via the option \code{DistMort}: The probability of mortality is either a constant
 (\eqn{m=}\code{MortProb}) or a function of distance \eqn{d} (i.e. individuals that travel further are more likely to die):
 
-\ifelse{html}{\out{&emsp;&emsp; m(d) = 1 / ( 1 + e<sup>-a (d- b)</sup> ) } }{\deqn{ m(d) = 1 / ( 1 + exp[-α (d-b) ] ) } }
+\ifelse{html}{\out{&emsp;&emsp; m(d) = 1 / ( 1 + e<sup>-a (d- b)</sup> ) } }{\deqn{ m(d) = 1 / ( 1 + exp[-\alpha (d-b) ] ) } }
 
 with the inflection point \eqn{b=}\code{InflPoint} at which \eqn{m(d=b)=0.5} and the slope \eqn{a=}\code{Slope}.This option may be thought
 to represent the increased energetic, time or attritional costs that longer-distance dispersers will experience \insertCite{bonte2012costs}{RangeShiftR}.

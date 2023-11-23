@@ -48,18 +48,18 @@ rate can be larger than \eqn{d}, if a stage with \eqn{d>0} lasts for more than o
 
 The emigration probability \eqn{d} can be density-dependent (set \code{DensDep=TRUE}), in which case it is given by the following function, introduced by \insertCite{kun2006evolution;textual}{RangeShiftR}:
 
-\ifelse{html}{\out{&emsp;&emsp; d(i,t) = D<sub>0</sub> / ( 1 + e<sup>-&alpha;sub>E</sub> (N(i,t) / K(i,t) - &beta;sub>E</sub>) </sup> ) } }{\deqn{ d(i,t) = D_0 / ( 1 + exp[-α_E (N(i,t)/K(i,t) - β_E) ] ) } }
+\ifelse{html}{\out{&emsp;&emsp; d(i,t) = D<sub>0</sub> / ( 1 + e<sup>-&alpha;sub>E</sub> (N(i,t) / K(i,t) - &beta;sub>E</sub>) </sup> ) } }{\deqn{ d(i,t) = D_0 / ( 1 + exp[-\alpha_E (N(i,t)/K(i,t) - \beta_E) ] ) } }
 
 In the case of stage-structured models this equation is modified to:
 
-\ifelse{html}{\out{&emsp;&emsp; d(i,t) = D<sub>0</sub> / ( 1 + e<sup>-&alpha;sub>E</sub> (b(i,t) * N(i,t) - &beta;sub>E</sub>) </sup> ) } }{\deqn{ d(i,t) = D_0 / ( 1 + exp[-α_E (b(i,t) N(i,t) - β_E) ] ) } }
+\ifelse{html}{\out{&emsp;&emsp; d(i,t) = D<sub>0</sub> / ( 1 + e<sup>-&alpha;sub>E</sub> (b(i,t) * N(i,t) - &beta;sub>E</sub>) </sup> ) } }{\deqn{ d(i,t) = D_0 / ( 1 + exp[-\alpha_E (b(i,t) N(i,t) - \beta_E) ] ) } }
 
 In the first case, \eqn{K(i,t)} is the carrying capacity of the cell/patch \eqn{i} at time \eqn{t} given by \code{K_or_DensDep}.
 In the latter case, \eqn{b(i,t)} represents the strength of density dependence and is given by the inverse of \code{K_or_DensDep}.\cr
 Further, \ifelse{html}{\out{D<sub>0</sub>}}{\eqn{D_0}} is the maximum emigration probability,
 \eqn{N(i,t)} is the number of individuals in the cell/patch \eqn{i} at time \eqn{t},
-\ifelse{html}{\out{&beta;<sub>E</sub>}}{\eqn{β_S}} is the inflection point of the function and
-\ifelse{html}{\out{&alpha;<sub>E</sub>}}{\eqn{α_S}} is the slope at the inflection point.\cr
+\ifelse{html}{\out{&beta;<sub>E</sub>}}{\eqn{\beta_S}} is the inflection point of the function and
+\ifelse{html}{\out{&alpha;<sub>E</sub>}}{\eqn{\alpha_S}} is the slope at the inflection point.\cr
 
 Various functions have been proposed for density dependent emigration \insertCite{hovestadt2010information,poethke2011ability}{RangeShiftR}.
 This one was chosen here because it is a flexible function that
@@ -68,8 +68,8 @@ emigration, we assume individuals to have full knowledge of the population densi
 Information acquisition is not explicitly modelled.
 
 The emigration probability can be allowed to vary between individuals (set \code{IndVar=TRUE}) and to evolve. In the this case, individuals exhibit either one trait
-determining the density-independent \eqn{d} (when \code{DensDep=FALSE}), or the three traits \ifelse{html}{\out{D<sub>0</sub>}}{\eqn{D_0}}, \eqn{α} and
-\eqn{β} determining the density-dependent emigration probability (when \code{DensDep=TRUE}).\cr
+determining the density-independent \eqn{d} (when \code{DensDep=FALSE}), or the three traits \ifelse{html}{\out{D<sub>0</sub>}}{\eqn{D_0}}, \eqn{\alpha} and
+\eqn{\beta} determining the density-dependent emigration probability (when \code{DensDep=TRUE}).\cr
 For each trait the initial distribution in the population (as mean and standard variation) must be set in \code{EmigProb} (instead of only one constant value),
 as well as their scaling factors in \code{TraitScaleFactor} (see \code{\link[RangeShiftR]{Genetics}}).
 Also, if \code{IndVar=TRUE} is set for a stage-structured population, it is required to specify the stage which emigrates via \code{EmigStage}.
@@ -81,7 +81,7 @@ However, the current version does not accommodate inter-individual variation in 
 
 The parameters that determine the emigration probabilities have to be provided via \code{EmigProb}, which generally takes a matrix, or - if only a single constant probability is
 used (i.e. \code{DensDep, IndVar, StageDep, SexDep = FALSE}) - a single numeric. The format of the matrix is defined as follows: The number of columns depend on the options \code{DensDep} and \code{IndVar}. If \code{DensDep=FALSE}, the
-density-independent probability \eqn{d} must be specified. If \code{DensDep=TRUE}, the functional parameters \ifelse{html}{\out{D<sub>0</sub>}}{\eqn{D_0}}, \eqn{α} and \eqn{β} (cp. equation above) must be specified.
+density-independent probability \eqn{d} must be specified. If \code{DensDep=TRUE}, the functional parameters \ifelse{html}{\out{D<sub>0</sub>}}{\eqn{D_0}}, \eqn{\alpha} and \eqn{\beta} (cp. equation above) must be specified.
 Additionally, if \code{IndVar=FALSE}, these parameters are fixed, but if \code{IndVar=TRUE} each of them is replaced by two parameters: their respective mean and
 standard deviation. They are used to normally distribute the traits values among the individuals of the initial population.
 
@@ -93,11 +93,11 @@ If \code{SexDep=TRUE}, state the corresponding stage in the next (i.e. first/sec
  F \tab F \tab T \tab F \tab stage, \eqn{d} \cr
  F \tab F \tab F \tab T \tab sex, \eqn{d} \cr
  F \tab F \tab T \tab T \tab stage, sex, \eqn{d} \cr
- T \tab F \tab F \tab F \tab \ifelse{html}{\out{D<sub>0</sub>}}{\eqn{D_0}}, \eqn{α}, \eqn{β} \cr
+ T \tab F \tab F \tab F \tab \ifelse{html}{\out{D<sub>0</sub>}}{\eqn{D_0}}, \eqn{\alpha}, \eqn{\beta} \cr
  F \tab T \tab F \tab F \tab mean\eqn{(d)}, sd\eqn{(d)} \cr
- T \tab T \tab F \tab F \tab \ifelse{html}{\out{mean(D<sub>0</sub>)}}{mean\eqn{(D_0)}}, \ifelse{html}{\out{sd(D<sub>0</sub>)}}{sd\eqn{(D_0)}}, mean\eqn{(α)}, sd\eqn{(α)}, mean\eqn{(β)}, sd\eqn{(β)} \cr
+ T \tab T \tab F \tab F \tab \ifelse{html}{\out{mean(D<sub>0</sub>)}}{mean\eqn{(D_0)}}, \ifelse{html}{\out{sd(D<sub>0</sub>)}}{sd\eqn{(D_0)}}, mean\eqn{(\alpha)}, sd\eqn{(\alpha)}, mean\eqn{(\beta)}, sd\eqn{(\beta)} \cr
  \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \cr
- T \tab T \tab F \tab T \tab sex, \ifelse{html}{\out{mean(D<sub>0</sub>)}}{mean\eqn{(D_0)}}, \ifelse{html}{\out{sd(D<sub>0</sub>)}}{sd\eqn{(D_0)}}, mean\eqn{(α)}, sd\eqn{(α)}, mean\eqn{(β)}, sd\eqn{(β)}
+ T \tab T \tab F \tab T \tab sex, \ifelse{html}{\out{mean(D<sub>0</sub>)}}{mean\eqn{(D_0)}}, \ifelse{html}{\out{sd(D<sub>0</sub>)}}{sd\eqn{(D_0)}}, mean\eqn{(\alpha)}, sd\eqn{(\alpha)}, mean\eqn{(\beta)}, sd\eqn{(\beta)}
  }
 
 The column headings need not be included, only the numeric matrix is required. The rows require no particular order, but there must be exactly one row for each stage/sex combination. For example, in the case of density-, stage- and sex-dependent emigration with no individual variability:

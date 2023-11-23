@@ -58,18 +58,18 @@
 #'
 #' The emigration probability \eqn{d} can be density-dependent (set \code{DensDep=TRUE}), in which case it is given by the following function, introduced by \insertCite{kun2006evolution;textual}{RangeShiftR}:
 #'
-#' \ifelse{html}{\out{&emsp;&emsp; d(i,t) = D<sub>0</sub> / ( 1 + e<sup>-&alpha;sub>E</sub> (N(i,t) / K(i,t) - &beta;sub>E</sub>) </sup> ) } }{\deqn{ d(i,t) = D_0 / ( 1 + exp[-α_E (N(i,t)/K(i,t) - β_E) ] ) } }
+#' \ifelse{html}{\out{&emsp;&emsp; d(i,t) = D<sub>0</sub> / ( 1 + e<sup>-&alpha;sub>E</sub> (N(i,t) / K(i,t) - &beta;sub>E</sub>) </sup> ) } }{\deqn{ d(i,t) = D_0 / ( 1 + exp[-\alpha_E (N(i,t)/K(i,t) - \beta_E) ] ) } }
 #'
 #' In the case of stage-structured models this equation is modified to:
 #'
-#' \ifelse{html}{\out{&emsp;&emsp; d(i,t) = D<sub>0</sub> / ( 1 + e<sup>-&alpha;sub>E</sub> (b(i,t) * N(i,t) - &beta;sub>E</sub>) </sup> ) } }{\deqn{ d(i,t) = D_0 / ( 1 + exp[-α_E (b(i,t) N(i,t) - β_E) ] ) } }
+#' \ifelse{html}{\out{&emsp;&emsp; d(i,t) = D<sub>0</sub> / ( 1 + e<sup>-&alpha;sub>E</sub> (b(i,t) * N(i,t) - &beta;sub>E</sub>) </sup> ) } }{\deqn{ d(i,t) = D_0 / ( 1 + exp[-\alpha_E (b(i,t) N(i,t) - \beta_E) ] ) } }
 #'
 #' In the first case, \eqn{K(i,t)} is the carrying capacity of the cell/patch \eqn{i} at time \eqn{t} given by \code{K_or_DensDep}.
 #' In the latter case, \eqn{b(i,t)} represents the strength of density dependence and is given by the inverse of \code{K_or_DensDep}.\cr
 #' Further, \ifelse{html}{\out{D<sub>0</sub>}}{\eqn{D_0}} is the maximum emigration probability,
 #' \eqn{N(i,t)} is the number of individuals in the cell/patch \eqn{i} at time \eqn{t},
-#' \ifelse{html}{\out{&beta;<sub>E</sub>}}{\eqn{β_S}} is the inflection point of the function and
-#' \ifelse{html}{\out{&alpha;<sub>E</sub>}}{\eqn{α_S}} is the slope at the inflection point.\cr
+#' \ifelse{html}{\out{&beta;<sub>E</sub>}}{\eqn{\beta_S}} is the inflection point of the function and
+#' \ifelse{html}{\out{&alpha;<sub>E</sub>}}{\eqn{\alpha_S}} is the slope at the inflection point.\cr
 #'
 #' Various functions have been proposed for density dependent emigration \insertCite{hovestadt2010information,poethke2011ability}{RangeShiftR}.
 #' This one was chosen here because it is a flexible function that
@@ -78,8 +78,8 @@
 #' Information acquisition is not explicitly modelled.
 #'
 #' The emigration probability can be allowed to vary between individuals (set \code{IndVar=TRUE}) and to evolve. In the this case, individuals exhibit either one trait
-#' determining the density-independent \eqn{d} (when \code{DensDep=FALSE}), or the three traits \ifelse{html}{\out{D<sub>0</sub>}}{\eqn{D_0}}, \eqn{α} and
-#' \eqn{β} determining the density-dependent emigration probability (when \code{DensDep=TRUE}).\cr
+#' determining the density-independent \eqn{d} (when \code{DensDep=FALSE}), or the three traits \ifelse{html}{\out{D<sub>0</sub>}}{\eqn{D_0}}, \eqn{\alpha} and
+#' \eqn{\beta} determining the density-dependent emigration probability (when \code{DensDep=TRUE}).\cr
 #' For each trait the initial distribution in the population (as mean and standard variation) must be set in \code{EmigProb} (instead of only one constant value),
 #' as well as their scaling factors in \code{TraitScaleFactor} (see \code{\link[RangeShiftR]{Genetics}}).
 #' Also, if \code{IndVar=TRUE} is set for a stage-structured population, it is required to specify the stage which emigrates via \code{EmigStage}.
@@ -91,7 +91,7 @@
 #'
 #' The parameters that determine the emigration probabilities have to be provided via \code{EmigProb}, which generally takes a matrix, or - if only a single constant probability is
 #' used (i.e. \code{DensDep, IndVar, StageDep, SexDep = FALSE}) - a single numeric. The format of the matrix is defined as follows: The number of columns depend on the options \code{DensDep} and \code{IndVar}. If \code{DensDep=FALSE}, the
-#' density-independent probability \eqn{d} must be specified. If \code{DensDep=TRUE}, the functional parameters \ifelse{html}{\out{D<sub>0</sub>}}{\eqn{D_0}}, \eqn{α} and \eqn{β} (cp. equation above) must be specified.
+#' density-independent probability \eqn{d} must be specified. If \code{DensDep=TRUE}, the functional parameters \ifelse{html}{\out{D<sub>0</sub>}}{\eqn{D_0}}, \eqn{\alpha} and \eqn{\beta} (cp. equation above) must be specified.
 #' Additionally, if \code{IndVar=FALSE}, these parameters are fixed, but if \code{IndVar=TRUE} each of them is replaced by two parameters: their respective mean and
 #' standard deviation. They are used to normally distribute the traits values among the individuals of the initial population.
 #'
@@ -103,11 +103,11 @@
 #'  F \tab F \tab T \tab F \tab stage, \eqn{d} \cr
 #'  F \tab F \tab F \tab T \tab sex, \eqn{d} \cr
 #'  F \tab F \tab T \tab T \tab stage, sex, \eqn{d} \cr
-#'  T \tab F \tab F \tab F \tab \ifelse{html}{\out{D<sub>0</sub>}}{\eqn{D_0}}, \eqn{α}, \eqn{β} \cr
+#'  T \tab F \tab F \tab F \tab \ifelse{html}{\out{D<sub>0</sub>}}{\eqn{D_0}}, \eqn{\alpha}, \eqn{\beta} \cr
 #'  F \tab T \tab F \tab F \tab mean\eqn{(d)}, sd\eqn{(d)} \cr
-#'  T \tab T \tab F \tab F \tab \ifelse{html}{\out{mean(D<sub>0</sub>)}}{mean\eqn{(D_0)}}, \ifelse{html}{\out{sd(D<sub>0</sub>)}}{sd\eqn{(D_0)}}, mean\eqn{(α)}, sd\eqn{(α)}, mean\eqn{(β)}, sd\eqn{(β)} \cr
+#'  T \tab T \tab F \tab F \tab \ifelse{html}{\out{mean(D<sub>0</sub>)}}{mean\eqn{(D_0)}}, \ifelse{html}{\out{sd(D<sub>0</sub>)}}{sd\eqn{(D_0)}}, mean\eqn{(\alpha)}, sd\eqn{(\alpha)}, mean\eqn{(\beta)}, sd\eqn{(\beta)} \cr
 #'  \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \cr
-#'  T \tab T \tab F \tab T \tab sex, \ifelse{html}{\out{mean(D<sub>0</sub>)}}{mean\eqn{(D_0)}}, \ifelse{html}{\out{sd(D<sub>0</sub>)}}{sd\eqn{(D_0)}}, mean\eqn{(α)}, sd\eqn{(α)}, mean\eqn{(β)}, sd\eqn{(β)}
+#'  T \tab T \tab F \tab T \tab sex, \ifelse{html}{\out{mean(D<sub>0</sub>)}}{mean\eqn{(D_0)}}, \ifelse{html}{\out{sd(D<sub>0</sub>)}}{sd\eqn{(D_0)}}, mean\eqn{(\alpha)}, sd\eqn{(\alpha)}, mean\eqn{(\beta)}, sd\eqn{(\beta)}
 #'  }
 #'
 #' The column headings need not be included, only the numeric matrix is required. The rows require no particular order, but there must be exactly one row for each stage/sex combination. For example, in the case of density-, stage- and sex-dependent emigration with no individual variability:
@@ -250,10 +250,10 @@ setValidity("EmigrationParams", function(object) {
                 }
                 else {
                     if (object@TraitScaleFactor[1] <= 0.0 || object@TraitScaleFactor[1] > 1.0 ) {
-                        msg <- c(msg, "TraitScaleFactor μ(D0) must be in the half-open interval (0,1] !")
+                        msg <- c(msg, "TraitScaleFactor mu(D0) must be in the half-open interval (0,1] !")
                     }
                     if (any(object@TraitScaleFactor[2:3] <= 0.0 )) {
-                        msg <- c(msg, "TraitScaleFactor μ(α) and μ(β) must be strictly positive !")
+                        msg <- c(msg, "TraitScaleFactor mu(\alpha) and mu(\beta) must be strictly positive !")
                     }
                 }
             }
@@ -263,7 +263,7 @@ setValidity("EmigrationParams", function(object) {
                 }
                 else {
                     if (object@TraitScaleFactor <= 0 || object@TraitScaleFactor > 1 ) {
-                        msg <- c(msg, "TraitScaleFactor μ(D0) must be in the half-open interval (0,1] !")
+                        msg <- c(msg, "TraitScaleFactor mu(D0) must be in the half-open interval (0,1] !")
                     }
                 }
             }
@@ -491,10 +491,10 @@ setMethod("show", "TransferParams", function(object){
 #'
 #' \emph{Negative exponential} \cr
 #' If the individual disperses, the distance and the movement direction are determined in continuous space.
-#' The distance is drawn from a negative exponential distribution with a given mean \eqn{δ}, and the direction is selected randomly from a uniform
-#' distribution between \eqn{0} and \eqn{2π} radians.
+#' The distance is drawn from a negative exponential distribution with a given mean \eqn{\delta}, and the direction is selected randomly from a uniform
+#' distribution between \eqn{0} and \eqn{2\pi} radians.
 #'
-#' \ifelse{html}{\out{&emsp;&emsp; p(d;&delta;) = &delta;<sup>-1</sup> e<sup>- d / &delta;</sup>}}{\deqn{ p(d;δ) = 1/δ exp(-d/δ) } }
+#' \ifelse{html}{\out{&emsp;&emsp; p(d;&delta;) = &delta;<sup>-1</sup> e<sup>- d / &delta;</sup>}}{\deqn{ p(d;\delta) = 1/\delta exp(-d/\delta) } }
 #'
 #' If the arrival point lies beyond the boundary of the landscape, distance and direction are re-drawn.\cr
 #' The individual is displaced from a random point (using continuous coordinates) inside the natal cell to the arrival cell where the model
@@ -511,17 +511,17 @@ setMethod("show", "TransferParams", function(object){
 #'
 #' \emph{Mixed kernel} \cr
 #' The distance an individual moves is sampled from a mixed kernel given by the combination of two negative exponentials
-#' with different means \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{δ_1}} and \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{δ_2}},
+#' with different means \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{\delta_1}} and \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{\delta_2}},
 #' occurring with probability \ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}} and \eqn{1-}\ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}} respectively \insertCite{hovestadt2011all}{RangeShiftR}.
 #' Otherwise, the conditions for the single kernel apply.
 #'
-#' \ifelse{html}{\out{&emsp;&emsp; p(d; &delta;<sub>1</sub>,&delta;<sub>2</sub>) = p<sub>I</sub> p(d;&delta;<sub>1</sub>) + (1-p<sub>I</sub>) p(d;&delta;<sub>1</sub>)}}{\deqn{ p(d; δ_1,δ_2) = p_I p(d;δ_1) + (1-p_I) p(d;δ_2)}}
+#' \ifelse{html}{\out{&emsp;&emsp; p(d; &delta;<sub>1</sub>,&delta;<sub>2</sub>) = p<sub>I</sub> p(d;&delta;<sub>1</sub>) + (1-p<sub>I</sub>) p(d;&delta;<sub>1</sub>)}}{\deqn{ p(d; \delta_1,\delta_2) = p_I p(d;\delta_1) + (1-p_I) p(d;\delta_2)}}
 #'
 #' For both types of kernel, inter-individual variability of the kernel traits is possible (set \code{IndVar=TRUE}). Individuals will
-#' carry either one trait for \eqn{δ} or three traits for \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{δ_1}}, \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{δ_2}} and
+#' carry either one trait for \eqn{\delta} or three traits for \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{\delta_1}}, \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{\delta_2}} and
 #' \ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}}, which they inherit from their parents.\cr
-#' Dispersal kernels can also be sex-dependent (set \code{SexDep=TRUE}). In the case of inter-individual variability, the number of traits is doubled to two trait (female \eqn{δ}
-#' and male δ) or six traits (female and male \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{δ_1}}, \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{δ_2}} and \ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}}).\cr
+#' Dispersal kernels can also be sex-dependent (set \code{SexDep=TRUE}). In the case of inter-individual variability, the number of traits is doubled to two trait (female \eqn{\delta}
+#' and male \delta) or six traits (female and male \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{\delta_1}}, \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{\delta_2}} and \ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}}).\cr
 #' For each trait the initial distribution in the population (as mean and standard variation) must be set in \code{Distances} (instead of only one constant value),
 #' as well as their scaling factors in \code{TraitScaleFactor} (see \code{\link[RangeShiftR]{Genetics}}).\cr
 #'
@@ -529,8 +529,8 @@ setMethod("show", "TransferParams", function(object){
 #'
 #' All dispersal kernel parameters have to be provided via \code{Distances}, which generally takes a matrix, or - if only a single constant mean distance is
 #' used (i.e. \code{DensDep, IndVar, StageDep, SexDep = FALSE}) - a single numeric. The format of the matrix is defined as follows: The number of columns depend on the options \code{IndVar} and \code{DoubleKernel}.
-#' If \code{DoubleKernel=FALSE}, the mean dispersal distance \eqn{δ} must be specified (in meters). If \code{DoubleKernel=TRUE}, the mean dispersal distances
-#' \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{δ_1}} and \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{δ_2}} (in meters), as well as the probability \ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}} of using Kernel-1 must be specified.
+#' If \code{DoubleKernel=FALSE}, the mean dispersal distance \eqn{\delta} must be specified (in meters). If \code{DoubleKernel=TRUE}, the mean dispersal distances
+#' \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{\delta_1}} and \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{\delta_2}} (in meters), as well as the probability \ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}} of using Kernel-1 must be specified.
 #' Additionally, if \code{IndVar=FALSE}, these parameters are fixed, but if \code{IndVar=TRUE} each of them is replaced by two parameters: their respective mean and
 #' standard deviation. They are used to normally distribute the traits values among the individuals of the initial population.
 #'
@@ -539,15 +539,15 @@ setMethod("show", "TransferParams", function(object){
 #' table lists the required columns and their correct order for different settings:
 #'
 #' \tabular{ccccc}{IndVar \tab DoubleKernel \tab StageDep \tab SexDep \tab columns \cr
-#'  F \tab F \tab F \tab F \tab \eqn{δ} \cr
-#'  F \tab F \tab T \tab F \tab stage, \eqn{δ} \cr
-#'  F \tab F \tab F \tab T \tab sex, \eqn{δ} \cr
-#'  F \tab F \tab T \tab T \tab stage, sex, \eqn{δ} \cr
-#'  F \tab T \tab F \tab F \tab \ifelse{html}{\out{&delta;<sub>1</sub>, &delta;<sub>2</sub>, p<sub>I</sub>}}{\eqn{δ_1, δ_2, p_I}} \cr
-#'  T \tab F \tab F \tab F \tab mean\eqn{(δ)}, sd\eqn{(δ)} \cr
-#'  T \tab T \tab F \tab F \tab \ifelse{html}{\out{mean(&delta;<sub>1</sub>)}}{mean\eqn{(δ_1)}}, \ifelse{html}{\out{sd(&delta;<sub>1</sub>)}}{sd\eqn{(δ_1)}}, \ifelse{html}{\out{mean(&delta;<sub>2</sub>)}}{mean\eqn{(δ_2)}}, \ifelse{html}{\out{sd(&delta;<sub>2</sub>)}}{sd\eqn{(δ_2)}}, mean\ifelse{html}{\out{(p<sub>I</sub>)}}{\eqn{(p_I)}}, sd\ifelse{html}{\out{(p<sub>I</sub>)}}{\eqn{(p_I)}} \cr
+#'  F \tab F \tab F \tab F \tab \eqn{\delta} \cr
+#'  F \tab F \tab T \tab F \tab stage, \eqn{\delta} \cr
+#'  F \tab F \tab F \tab T \tab sex, \eqn{\delta} \cr
+#'  F \tab F \tab T \tab T \tab stage, sex, \eqn{\delta} \cr
+#'  F \tab T \tab F \tab F \tab \ifelse{html}{\out{&delta;<sub>1</sub>, &delta;<sub>2</sub>, p<sub>I</sub>}}{\eqn{\delta_1, \delta_2, p_I}} \cr
+#'  T \tab F \tab F \tab F \tab mean\eqn{(\delta)}, sd\eqn{(\delta)} \cr
+#'  T \tab T \tab F \tab F \tab \ifelse{html}{\out{mean(&delta;<sub>1</sub>)}}{mean\eqn{(\delta_1)}}, \ifelse{html}{\out{sd(&delta;<sub>1</sub>)}}{sd\eqn{(\delta_1)}}, \ifelse{html}{\out{mean(&delta;<sub>2</sub>)}}{mean\eqn{(\delta_2)}}, \ifelse{html}{\out{sd(&delta;<sub>2</sub>)}}{sd\eqn{(\delta_2)}}, mean\ifelse{html}{\out{(p<sub>I</sub>)}}{\eqn{(p_I)}}, sd\ifelse{html}{\out{(p<sub>I</sub>)}}{\eqn{(p_I)}} \cr
 #'  \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \cr
-#'  T \tab T \tab F \tab T \tab sex, \ifelse{html}{\out{mean(&delta;<sub>1</sub>)}}{mean\eqn{(δ_1)}}, \ifelse{html}{\out{sd(&delta;<sub>1</sub>)}}{sd\eqn{(δ_1)}}, \ifelse{html}{\out{mean(&delta;<sub>2</sub>)}}{mean\eqn{(δ_2)}}, \ifelse{html}{\out{sd(&delta;<sub>2</sub>)}}{sd\eqn{(δ_2)}}, mean\ifelse{html}{\out{(p<sub>I</sub>)}}{\eqn{(p_I)}}, sd\ifelse{html}{\out{(p<sub>I</sub>)}}{\eqn{(p_I)}}
+#'  T \tab T \tab F \tab T \tab sex, \ifelse{html}{\out{mean(&delta;<sub>1</sub>)}}{mean\eqn{(\delta_1)}}, \ifelse{html}{\out{sd(&delta;<sub>1</sub>)}}{sd\eqn{(\delta_1)}}, \ifelse{html}{\out{mean(&delta;<sub>2</sub>)}}{mean\eqn{(\delta_2)}}, \ifelse{html}{\out{sd(&delta;<sub>2</sub>)}}{sd\eqn{(\delta_2)}}, mean\ifelse{html}{\out{(p<sub>I</sub>)}}{\eqn{(p_I)}}, sd\ifelse{html}{\out{(p<sub>I</sub>)}}{\eqn{(p_I)}}
 #'  }
 #'
 #' The column headings need not be included, only the numeric matrix is required. The rows require no particular order, but there must be exactly
@@ -573,7 +573,7 @@ setMethod("show", "TransferParams", function(object){
 #' A second source of dispersal mortality can be specified via the option \code{DistMort}: The probability of mortality is either a constant
 #' (\eqn{m=}\code{MortProb}) or a function of distance \eqn{d} (i.e. individuals that travel further are more likely to die):
 #'
-#' \ifelse{html}{\out{&emsp;&emsp; m(d) = 1 / ( 1 + e<sup>-a (d- b)</sup> ) } }{\deqn{ m(d) = 1 / ( 1 + exp[-α (d-b) ] ) } }
+#' \ifelse{html}{\out{&emsp;&emsp; m(d) = 1 / ( 1 + e<sup>-a (d- b)</sup> ) } }{\deqn{ m(d) = 1 / ( 1 + exp[-\alpha (d-b) ] ) } }
 #'
 #' with the inflection point \eqn{b=}\code{InflPoint} at which \eqn{m(d=b)=0.5} and the slope \eqn{a=}\code{Slope}.This option may be thought
 #' to represent the increased energetic, time or attritional costs that longer-distance dispersers will experience \insertCite{bonte2012costs}{RangeShiftR}.
@@ -702,10 +702,10 @@ setValidity("DispersalKernel", function(object) {
                 }
                 else {
                     if (object@TraitScaleFactor[3] <= 0.0 || object@TraitScaleFactor[3] > 1.0 ) {
-                        msg <- c(msg, "TraitScaleFactor μ(p) must be in the half-open interval (0,1] !")
+                        msg <- c(msg, "TraitScaleFactor mu(p) must be in the half-open interval (0,1] !")
                     }
                     if (any(object@TraitScaleFactor[1:2] <= 0.0 )) {
-                        msg <- c(msg, "TraitScaleFactor μ(δ1) and μ(δ2) must be strictly positive !")
+                        msg <- c(msg, "TraitScaleFactor mu(delta1) and mu(delta2) must be strictly positive !")
                     }
                 }
             }
@@ -715,7 +715,7 @@ setValidity("DispersalKernel", function(object) {
                 }
                 else {
                     if (object@TraitScaleFactor <= 0.0) {
-                        msg <- c(msg, "TraitScaleFactor μ(δ) must be strictly positive !")
+                        msg <- c(msg, "TraitScaleFactor mu(delta) must be strictly positive !")
                     }
                 }
             }
@@ -1430,7 +1430,7 @@ setMethod("plotProbs", "StochMove", function(x, xmax = NULL, ymax = NULL){
 #'       StepMort = 0.0)
 #' @param StepLength Step length given in meters, defaults to \eqn{1}.\cr If \code{IndVar=TRUE}, expects a vector of length three
 #' specifying (Mean, SD, TraitScaleFactor) of \code{StepLength}.
-#' @param Rho Correlation parameter \eqn{ρ}, defaults to \eqn{0.5}. Must be in the open interval \eqn{(0,1)}.\cr If \code{IndVar=TRUE},
+#' @param Rho Correlation parameter \eqn{\rho}, defaults to \eqn{0.5}. Must be in the open interval \eqn{(0,1)}.\cr If \code{IndVar=TRUE},
 #' expects a vector of length three specifying (Mean, SD, TraitScaleFactor) of \code{Rho}.
 #' @param IndVar Individual variability in CorrRW traits (i.e. \code{StepLength} and \code{Rho})? Defaults to \code{FALSE}.
 #' @param StraightenPath Straighten path after decision not to settle in a patch? Defaults to \code{TRUE}, see Details below.
@@ -1648,8 +1648,8 @@ setMethod("show", "CorrRW", function(object){
 #' In any case, dispersing individuals are not allowed to settle in their natal cell or patch.\cr
 #' \emph{RangeShiftR} incorporates some basic settlement rules that can be stage- or sex-specific or both (set \code{StageDep}, \code{SexDep}).
 #' Inter-individual variability (\code{IndVar}) is implemented only for movement processes and then for the three traits
-#' determining density-dependent settlement (\ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}}, \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{α_S}},
-#' \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}}; see below). In this case, settlement may not be stage-dependent.\cr
+#' determining density-dependent settlement (\ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}}, \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{\alpha_S}},
+#' \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{\beta_S}}; see below). In this case, settlement may not be stage-dependent.\cr
 #'
 #' \emph{Settlement with dispersal kernels}\cr
 #' When using a \code{\link[RangeShiftR]{DispersalKernel}}, individuals are displaced directly from the starting location to the arrival location. The suitability
@@ -1692,18 +1692,18 @@ setMethod("show", "CorrRW", function(object){
 #' Furthermore, the settlement decision can be density-dependent (set \code{DensDep=TRUE}). In this case, the individual has a probability \ifelse{html}{\out{p<sub>S</sub>}}{\eqn{p_S}}
 #' of settling in the cell or patch \eqn{i}, given by:
 #'
-#' \ifelse{html}{\out{&emsp;&emsp; p<sub>S</sub>(i,t) = S<sub>0</sub> / ( 1 + e<sup>-&alpha;<sub>S</sub> (N(i,t) / K(i,t) - &beta;<sub>S</sub>) </sup> ) } }{\deqn{ p_S(i,t) = S_0 / ( 1 + exp[-α_S (N(i,t)/K(i,t) - β_S) ] ) } }
+#' \ifelse{html}{\out{&emsp;&emsp; p<sub>S</sub>(i,t) = S<sub>0</sub> / ( 1 + e<sup>-&alpha;<sub>S</sub> (N(i,t) / K(i,t) - &beta;<sub>S</sub>) </sup> ) } }{\deqn{ p_S(i,t) = S_0 / ( 1 + exp[-\alpha_S (N(i,t)/K(i,t) - \beta_S) ] ) } }
 #'
 #' In the case of stage-structured models the above equation is modified to:
 #'
-#' \ifelse{html}{\out{&emsp;&emsp; p<sub>S</sub>(i,t) = S<sub>0</sub> / ( 1 + e<sup>-&alpha;<sub>S</sub> (b(i,t) * N(i,t) - &beta;<sub>S</sub>) </sup> ) } }{\deqn{ p_S(i,t) = S_0 / ( 1 + exp[-α_S (b(i,t) N(i,t) - β_S) ] ) } }
+#' \ifelse{html}{\out{&emsp;&emsp; p<sub>S</sub>(i,t) = S<sub>0</sub> / ( 1 + e<sup>-&alpha;<sub>S</sub> (b(i,t) * N(i,t) - &beta;<sub>S</sub>) </sup> ) } }{\deqn{ p_S(i,t) = S_0 / ( 1 + exp[-\alpha_S (b(i,t) N(i,t) - \beta_S) ] ) } }
 #'
 #' In the first case, \eqn{K(i,t)} is the carrying capacity of the cell/patch \eqn{i} at time \eqn{t} given by \code{K_or_DensDep}.
 #' In the latter case, \eqn{b(i,t)} represents the strength of density dependence that is given by the inverse of \code{K_or_DensDep}.\cr
 #' Further, \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}} is the maximum settlement probability,
 #' \eqn{N(i,t)} is the number of individuals in the cell/patch \eqn{i} at time \eqn{t},
-#' \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}} is the inflection point of the function and
-#' \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{α_S}} is the slope at the inflection point.\cr
+#' \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{\beta_S}} is the inflection point of the function and
+#' \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{\alpha_S}} is the slope at the inflection point.\cr
 #'
 #' Inter-individual variability \code{IndVar=TRUE} and thus evolution is implemented only for the three traits determining density-dependent settlement
 #' (\code{DensDep=TRUE}), and if so, it may not be stage-dependent (\code{StageDep=FALSE}).
@@ -1714,7 +1714,7 @@ setMethod("show", "CorrRW", function(object){
 #' used (i.e. \code{DensDep, IndVar, StageDep, SexDep = FALSE}) - a single numeric.
 #' The format of the matrix is defined as follows: The number of columns depend on the options \code{DensDep} and \code{IndVar}. If \code{DensDep=FALSE}, the
 #' density-independent probability \ifelse{html}{\out{p<sub>S</sub>}}{\eqn{p_S}} must be specified. If \code{DensDep=TRUE}, the functional parameters \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}},
-#' \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{α_S}} and \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}} (cf. equation above) must be specified.
+#' \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{\alpha_S}} and \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{\beta_S}} (cf. equation above) must be specified.
 #' Additionally, if \code{IndVar=FALSE}, these traits are fixed, but if \code{IndVar=TRUE} each of them is replaced by two parameters: their respective initial mean and
 #' standard deviation. They are used to normally distribute the traits values among the individuals of the initial population. Additionally, the \code{TraitScaleFactor} of
 #' these traits have to be set.
@@ -1729,11 +1729,11 @@ setMethod("show", "CorrRW", function(object){
 #'  F \tab F \tab T \tab F \tab stage \cr
 #'  F \tab F \tab F \tab T \tab sex \cr
 #'  F \tab F \tab T \tab T \tab stage, sex \cr
-#'  T \tab F \tab F \tab F \tab \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}}, \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{α_S}}, \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}} \cr
+#'  T \tab F \tab F \tab F \tab \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}}, \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{\alpha_S}}, \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{\beta_S}} \cr
 #'  \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \cr
-#'  T \tab F \tab T \tab T \tab stage, sex, \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}}, \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{α_S}}, \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}} \cr
-#'  T \tab T \tab F \tab F \tab mean\ifelse{html}{\out{(S<sub>0</sub>)}}{\eqn{(S_0)}}, sd\ifelse{html}{\out{(S<sub>0</sub>)}}{\eqn{(S_0)}}, mean\ifelse{html}{\out{(&alpha;<sub>S</sub>)}}{(\eqn{α_S})}, sd\ifelse{html}{\out{(&alpha;<sub>S</sub>)}}{(\eqn{α_S})}, mean\ifelse{html}{\out{(&beta;<sub>S</sub>)}}{(\eqn{β_S})}, sd\ifelse{html}{\out{(&beta;<sub>S</sub>)}}{(\eqn{β_S})} \cr
-#'  T \tab T \tab F \tab T \tab sex, mean\ifelse{html}{\out{(S<sub>0</sub>)}}{\eqn{(S_0)}}, sd\ifelse{html}{\out{(S<sub>0</sub>)}}{\eqn{(S_0)}}, mean\ifelse{html}{\out{(&alpha;<sub>S</sub>)}}{(\eqn{α_S})}, sd\ifelse{html}{\out{(&alpha;<sub>S</sub>)}}{(\eqn{α_S})}, mean\ifelse{html}{\out{(&beta;<sub>S</sub>)}}{(\eqn{β_S})}, sd\ifelse{html}{\out{(&beta;<sub>S</sub>)}}{(\eqn{β_S})}
+#'  T \tab F \tab T \tab T \tab stage, sex, \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}}, \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{\alpha_S}}, \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{\beta_S}} \cr
+#'  T \tab T \tab F \tab F \tab mean\ifelse{html}{\out{(S<sub>0</sub>)}}{\eqn{(S_0)}}, sd\ifelse{html}{\out{(S<sub>0</sub>)}}{\eqn{(S_0)}}, mean\ifelse{html}{\out{(&alpha;<sub>S</sub>)}}{(\eqn{\alpha_S})}, sd\ifelse{html}{\out{(&alpha;<sub>S</sub>)}}{(\eqn{\alpha_S})}, mean\ifelse{html}{\out{(&beta;<sub>S</sub>)}}{(\eqn{\beta_S})}, sd\ifelse{html}{\out{(&beta;<sub>S</sub>)}}{(\eqn{\beta_S})} \cr
+#'  T \tab T \tab F \tab T \tab sex, mean\ifelse{html}{\out{(S<sub>0</sub>)}}{\eqn{(S_0)}}, sd\ifelse{html}{\out{(S<sub>0</sub>)}}{\eqn{(S_0)}}, mean\ifelse{html}{\out{(&alpha;<sub>S</sub>)}}{(\eqn{\alpha_S})}, sd\ifelse{html}{\out{(&alpha;<sub>S</sub>)}}{(\eqn{\alpha_S})}, mean\ifelse{html}{\out{(&beta;<sub>S</sub>)}}{(\eqn{\beta_S})}, sd\ifelse{html}{\out{(&beta;<sub>S</sub>)}}{(\eqn{\beta_S})}
 #'  }
 #'
 #' The column headings need not be included, only the numeric matrix is required. The rows require no particular order, but there must be exactly one row for each stage/sex combination.
@@ -1846,10 +1846,10 @@ setValidity("SettlementParams", function(object) {
                     }
                     else {
                         if (object@TraitScaleFactor[1] <= 0.0 || object@TraitScaleFactor[1] > 1.0 ) {
-                            msg <- c(msg, "TraitScaleFactor μ(S_0) must be in the half-open interval (0,1] !")
+                            msg <- c(msg, "TraitScaleFactor mu(S_0) must be in the half-open interval (0,1] !")
                         }
                         if (any(object@TraitScaleFactor[2:3] <= 0.0 )) {
-                            msg <- c(msg, "TraitScaleFactor μ(α_s) and μ(β_s) must be strictly positive !")
+                            msg <- c(msg, "TraitScaleFactor mu(\alpha_s) and mu(\beta_s) must be strictly positive !")
                         }
                     }
                 }
@@ -1859,7 +1859,7 @@ setValidity("SettlementParams", function(object) {
                     }
                     else {
                         if (object@TraitScaleFactor <= 0 || object@TraitScaleFactor > 1 ) {
-                            msg <- c(msg, "TraitScaleFactor μ(S_0) must be in the half-open interval (0,1] !")
+                            msg <- c(msg, "TraitScaleFactor mu(S_0) must be in the half-open interval (0,1] !")
                         }
                     }
                 }

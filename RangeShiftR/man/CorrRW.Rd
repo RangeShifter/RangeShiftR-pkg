@@ -14,7 +14,7 @@ CorrRW(StepLength = 1, Rho = 0.5,
 \item{StepLength}{Step length given in meters, defaults to \eqn{1}.\cr If \code{IndVar=TRUE}, expects a vector of length three
 specifying (Mean, SD, TraitScaleFactor) of \code{StepLength}.}
 
-\item{Rho}{Correlation parameter \eqn{ρ}, defaults to \eqn{0.5}. Must be in the open interval \eqn{(0,1)}.\cr If \code{IndVar=TRUE},
+\item{Rho}{Correlation parameter \eqn{\rho}, defaults to \eqn{0.5}. Must be in the open interval \eqn{(0,1)}.\cr If \code{IndVar=TRUE},
 expects a vector of length three specifying (Mean, SD, TraitScaleFactor) of \code{Rho}.}
 
 \item{IndVar}{Individual variability in CorrRW traits (i.e. \code{StepLength} and \code{Rho})? Defaults to \code{FALSE}.}
