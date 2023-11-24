@@ -89,7 +89,7 @@ For both types of kernel, inter-individual variability of the kernel traits is p
 carry either one trait for \eqn{\delta} or three traits for \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{\delta_1}}, \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{\delta_2}} and
 \ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}}, which they inherit from their parents.\cr
 Dispersal kernels can also be sex-dependent (set \code{SexDep=TRUE}). In the case of inter-individual variability, the number of traits is doubled to two trait (female \eqn{\delta}
-and male \delta) or six traits (female and male \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{\delta_1}}, \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{\delta_2}} and \ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}}).\cr
+and male delta) or six traits (female and male \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{\delta_1}}, \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{\delta_2}} and \ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}}).\cr
 For each trait the initial distribution in the population (as mean and standard variation) must be set in \code{Distances} (instead of only one constant value),
 as well as their scaling factors in \code{TraitScaleFactor} (see \code{\link[RangeShiftR]{Genetics}}).\cr
 
