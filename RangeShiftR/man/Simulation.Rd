@@ -184,7 +184,7 @@ Seven different types of outputs can be produced, plus one more for patch-based 
 All the output files will be named with a standard name reporting the simulation ID number and
 the type of output. The file name will start with the batch number, and also indicate the number
 of the landscape to which the output refers. Additionally, for each simulation all the set parameters
-will be automatically written to a text file named \"Sim0_Parameters.txt\" in the case of simulation\eqn{#=0}.
+will be automatically written to a text file named \"Sim0_Parameters.txt\" in the case of simulation\eqn{=0}.
 
 - \emph{Species range} (\code{Sim0_Range.txt}) \cr
 contains the following general information regarding the species’ range:\cr

@@ -48,11 +48,11 @@ rate can be larger than \eqn{d}, if a stage with \eqn{d>0} lasts for more than o
 
 The emigration probability \eqn{d} can be density-dependent (set \code{DensDep=TRUE}), in which case it is given by the following function, introduced by \insertCite{kun2006evolution;textual}{RangeShiftR}:
 
-\ifelse{html}{\out{&emsp;&emsp; d(i,t) = D<sub>0</sub> / ( 1 + e<sup>-&alpha;sub>E</sub> (N(i,t) / K(i,t) - &beta;sub>E</sub>) </sup> ) } }{\deqn{ d(i,t) = D_0 / ( 1 + exp[-\alpha_E (N(i,t)/K(i,t) - \beta_E) ] ) } }
+\ifelse{html}{\out{ d(i,t) = D<sub>0</sub> / ( 1 + e<sup>-&alpha;sub>E</sub> (N(i,t) / K(i,t) - &beta;sub>E</sub>) </sup> ) } }{\deqn{ d(i,t) = D_0 / ( 1 + exp[-\alpha_E (N(i,t)/K(i,t) - \beta_E) ] ) } }
 
 In the case of stage-structured models this equation is modified to:
 
-\ifelse{html}{\out{&emsp;&emsp; d(i,t) = D<sub>0</sub> / ( 1 + e<sup>-&alpha;sub>E</sub> (b(i,t) * N(i,t) - &beta;sub>E</sub>) </sup> ) } }{\deqn{ d(i,t) = D_0 / ( 1 + exp[-\alpha_E (b(i,t) N(i,t) - \beta_E) ] ) } }
+\ifelse{html}{\out{ d(i,t) = D<sub>0</sub> / ( 1 + e<sup>-&alpha;sub>E</sub> (b(i,t) * N(i,t) - &beta;sub>E</sub>) </sup> ) } }{\deqn{ d(i,t) = D_0 / ( 1 + exp[-\alpha_E (b(i,t) N(i,t) - \beta_E) ] ) } }
 
 In the first case, \eqn{K(i,t)} is the carrying capacity of the cell/patch \eqn{i} at time \eqn{t} given by \code{K_or_DensDep}.
 In the latter case, \eqn{b(i,t)} represents the strength of density dependence and is given by the inverse of \code{K_or_DensDep}.\cr
@@ -96,17 +96,17 @@ If \code{SexDep=TRUE}, state the corresponding stage in the next (i.e. first/sec
  T \tab F \tab F \tab F \tab \ifelse{html}{\out{D<sub>0</sub>}}{\eqn{D_0}}, \eqn{\alpha}, \eqn{\beta} \cr
  F \tab T \tab F \tab F \tab mean\eqn{(d)}, sd\eqn{(d)} \cr
  T \tab T \tab F \tab F \tab \ifelse{html}{\out{mean(D<sub>0</sub>)}}{mean\eqn{(D_0)}}, \ifelse{html}{\out{sd(D<sub>0</sub>)}}{sd\eqn{(D_0)}}, mean\eqn{(\alpha)}, sd\eqn{(\alpha)}, mean\eqn{(\beta)}, sd\eqn{(\beta)} \cr
- \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \cr
+ \out{:} \tab \out{:} \tab \out{:} \tab \out{:} \tab \out{:} \cr
  T \tab T \tab F \tab T \tab sex, \ifelse{html}{\out{mean(D<sub>0</sub>)}}{mean\eqn{(D_0)}}, \ifelse{html}{\out{sd(D<sub>0</sub>)}}{sd\eqn{(D_0)}}, mean\eqn{(\alpha)}, sd\eqn{(\alpha)}, mean\eqn{(\beta)}, sd\eqn{(\beta)}
  }
 
 The column headings need not be included, only the numeric matrix is required. The rows require no particular order, but there must be exactly one row for each stage/sex combination. For example, in the case of density-, stage- and sex-dependent emigration with no individual variability:
-\tabular{ccccc}{ \out{&emsp;} 0 \tab \out{&emsp;} 0 \tab \out{&emsp;} 1.0 \tab \out{&emsp;} 20 \tab \out{&emsp;} 0.2 \cr
- \out{&emsp;} 0 \tab \out{&emsp;} 1 \tab \out{&emsp;} 1.0 \tab \out{&emsp;} 20 \tab \out{&emsp;} 0.1 \cr
- \out{&emsp;} 1 \tab \out{&emsp;} 0 \tab \out{&emsp;} 0.7 \tab \out{&emsp;} 25 \tab \out{&emsp;} 0.5 \cr
- \out{&emsp;} 1 \tab \out{&emsp;} 1 \tab \out{&emsp;} 0.8 \tab \out{&emsp;} 50 \tab \out{&emsp;} 0.5 \cr
- \out{&emsp;} 2 \tab \out{&emsp;} 0 \tab \out{&emsp;} 0.4 \tab \out{&emsp;} 10 \tab \out{&emsp;} 1.0 \cr
- \out{&emsp;} 2 \tab \out{&emsp;} 1 \tab \out{&emsp;} 0.5 \tab \out{&emsp;} 20 \tab \out{&emsp;} 1.0
+\tabular{ccccc}{ \out{} 0 \tab \out{} 0 \tab \out{} 1.0 \tab \out{} 20 \tab \out{} 0.2 \cr
+ \out{} 0 \tab \out{} 1 \tab \out{} 1.0 \tab \out{} 20 \tab \out{} 0.1 \cr
+ \out{} 1 \tab \out{} 0 \tab \out{} 0.7 \tab \out{} 25 \tab \out{} 0.5 \cr
+ \out{} 1 \tab \out{} 1 \tab \out{} 0.8 \tab \out{} 50 \tab \out{} 0.5 \cr
+ \out{} 2 \tab \out{} 0 \tab \out{} 0.4 \tab \out{} 10 \tab \out{} 1.0 \cr
+ \out{} 2 \tab \out{} 1 \tab \out{} 0.5 \tab \out{} 20 \tab \out{} 1.0
 }
 
 In the special case that \code{DensDep=FALSE} and transfer is realised by \code{\link[RangeShiftR]{DispersalKernel}}, then the option \code{UseFullKern} may be switched on. It

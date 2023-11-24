@@ -122,11 +122,11 @@
 #' \emph{Density dependence} can act on each of the three demographic phases (i.e. reproduction, survival and development) and is controlled by \code{FecDensDep,DevDensDep,SurvDensDep}.
 #' It is implemented as an exponential decay \insertCite{neubert2000}{RangeShiftR}:
 #'
-#' \ifelse{html}{\out{&emsp;&emsp; &phi;<sub>i</sub>(r,t) = &phi;<sub>0,i</sub> &ast; e<sup> - b(r) N(t) </sup>}}{\deqn{\phi_i(r,t)=\phi_(0,i) * exp(- b(r) N(t) ) }}
+#' \ifelse{html}{\out{ &phi;<sub>i</sub>(r,t) = &phi;<sub>0,i</sub> &ast; e<sup> - b(r) N(t) </sup>}}{\deqn{\phi_i(r,t)=\phi_(0,i) * exp(- b(r) N(t) ) }}
 #'
-#' \ifelse{html}{\out{&emsp;&emsp; &sigma;<sub>i</sub>(r,t) = &sigma;<sub>0,i</sub> &ast; e<sup> - C<sub>&sigma;</sub> b(r) N(t) </sup>}}{\deqn{\sigma_i(r,t)=\sigma_(0,i) * exp(- C_\sigma b(r) N(t) ) }}
+#' \ifelse{html}{\out{ &sigma;<sub>i</sub>(r,t) = &sigma;<sub>0,i</sub> &ast; e<sup> - C<sub>&sigma;</sub> b(r) N(t) </sup>}}{\deqn{\sigma_i(r,t)=\sigma_(0,i) * exp(- C_\sigma b(r) N(t) ) }}
 #'
-#' \ifelse{html}{\out{&emsp;&emsp; &gamma;<sub>i</sub>(r,t) = &gamma;<sub>0,i</sub> &ast; e<sup> - C<sub>&gamma;</sub> b(r) N(t) </sup>}}{\deqn{\gamma_i(r,t)=\gamma_(0,i) * exp(- C_\gamma b(r) N(t) ) }}
+#' \ifelse{html}{\out{ &gamma;<sub>i</sub>(r,t) = &gamma;<sub>0,i</sub> &ast; e<sup> - C<sub>&gamma;</sub> b(r) N(t) </sup>}}{\deqn{\gamma_i(r,t)=\gamma_(0,i) * exp(- C_\gamma b(r) N(t) ) }}
 #'
 #' where \eqn{b(r)} is the strength of density dependence in fecundity at site \eqn{r}, which is given by the argument \code{K_or_DensDep} in the landscape module.
 #' Furthermore, \ifelse{html}{\out{C<sub>&sigma;</sub>}}{\eqn{C_\sigma}} and \ifelse{html}{\out{C<sub>&gamma;</sub>}}{\eqn{C_\gamma}} (\code{DevDensCoeff,SurvDensCoeff})
@@ -135,11 +135,11 @@
 #' Moreover, the strength of density-dependence can be uniform for all stages or stage-dependent. Even greater complexity can be incorporated with
 #' different stages contributing differently to density-dependence \insertCite{caswell2004}{RangeShiftR}:
 #'
-#' \ifelse{html}{\out{&emsp; &phi;<sub>i</sub>(r,t) = &phi;<sub>0,i</sub> &ast; e<sup> - b(r) &Sigma;<sub>j</sub><sup>S</sup> &omega;<sub>&phi;,ij</sub> N(j,t)</sup>}}{\deqn{\phi_i(r,t)=\phi_(0,i) * exp(- b(r) \Sigma_j^S \omega_{\phi,ij} N_j(t) ) }}
+#' \ifelse{html}{\out{ &phi;<sub>i</sub>(r,t) = &phi;<sub>0,i</sub> &ast; e<sup> - b(r) &Sigma;<sub>j</sub><sup>S</sup> &omega;<sub>&phi;,ij</sub> N(j,t)</sup>}}{\deqn{\phi_i(r,t)=\phi_(0,i) * exp(- b(r) \Sigma_j^S \omega_{\phi,ij} N_j(t) ) }}
 #'
-#' \ifelse{html}{\out{&emsp; &sigma;<sub>i</sub>(r,t) = &sigma;<sub>0,i</sub> &ast; e<sup> - C<sub>&sigma;</sub> b(r) &Sigma;<sub>j</sub><sup>S</sup> &omega;<sub>&sigma;,ij</sub> N(j,t) </sup>}}{\deqn{\sigma_i(r,t)=\sigma_(0,i) * exp(- C_\sigma b(r) \Sigma_j^S \omega_{\sigma,ij} N_j(t) )}}
+#' \ifelse{html}{\out{ &sigma;<sub>i</sub>(r,t) = &sigma;<sub>0,i</sub> &ast; e<sup> - C<sub>&sigma;</sub> b(r) &Sigma;<sub>j</sub><sup>S</sup> &omega;<sub>&sigma;,ij</sub> N(j,t) </sup>}}{\deqn{\sigma_i(r,t)=\sigma_(0,i) * exp(- C_\sigma b(r) \Sigma_j^S \omega_{\sigma,ij} N_j(t) )}}
 #'
-#' \ifelse{html}{\out{&emsp; &gamma;<sub>i</sub>(r,t) = &gamma;<sub>0,i</sub> &ast; e<sup> - C<sub>&gamma;</sub> b(r) &Sigma;<sub>j</sub><sup>S</sup> &omega;<sub>&gamma;,ij</sub> N(j,t)</sup>}}{\deqn{\gamma_i(r,t)=\gamma_(0,i) * exp(- C_\gamma b(r) \Sigma_j^S \omega_{\gamma,ij} N_j(t) )}}
+#' \ifelse{html}{\out{ &gamma;<sub>i</sub>(r,t) = &gamma;<sub>0,i</sub> &ast; e<sup> - C<sub>&gamma;</sub> b(r) &Sigma;<sub>j</sub><sup>S</sup> &omega;<sub>&gamma;,ij</sub> N(j,t)</sup>}}{\deqn{\gamma_i(r,t)=\gamma_(0,i) * exp(- C_\gamma b(r) \Sigma_j^S \omega_{\gamma,ij} N_j(t) )}}
 #'
 #' where \ifelse{html}{\out{&omega;<sub>&phi;</sub>}}{\eqn{\omega_\phi}}, \ifelse{html}{\out{&omega;<sub>&sigma;</sub>}}{\eqn{\omega_\sigma}}, \ifelse{html}{\out{&omega;<sub>&gamma;</sub>}}{\eqn{\omega_\gamma}} are weight matrices given by \code{FecStageWtsMatrix, DevStageWtsMatrix, SurvStageWtsMatrix}. Their elements \ifelse{html}{\out{&omega;<sub>ij</sub>}}{\eqn{\omega_ij}}
 #' represent the contributions of the abundance of stage \eqn{j} to the density dependence in the fecundity / survival / development of stage \eqn{i}, thus they are quadratic matrices of size \code{Stages}\eqn{^2}. Note that the row sums are not required to be normalized, therefore they can be used
@@ -543,7 +543,7 @@ setClassUnion("StagesSlot", c("logical", "StagesParams"))
 #' \emph{Asexual / only-female models:}  (\code{ReproductionType=0})\cr
 #' Recruitment is determined by a stochastic, individual-based formulation of the \insertCite{smith1973;textual}{RangeShiftR} population model, where the number of offspring produced by a single individual in the cell/patch \eqn{i} at time \eqn{t}, is drawn from the following distribution:\cr
 #'
-#' \ifelse{html}{\out{&emsp;&emsp;N<sub>juv</sub>(i,t) = Poisson( R(i,t) / (1+|R(i,t) - 1| &ast; (N(i,t) / K(i,t))<sup>b<sub>c</sub></sup> ) ) } }{\deqn{N_juv(i,t) = Poisson( R(i,t) / (1 + |R(i,t) - 1|*( N(i,t) / K(i,t) )^bc ) ) } }
+#' \ifelse{html}{\out{N<sub>juv</sub>(i,t) = Poisson( R(i,t) / (1+|R(i,t) - 1| &ast; (N(i,t) / K(i,t))<sup>b<sub>c</sub></sup> ) ) } }{\deqn{N_juv(i,t) = Poisson( R(i,t) / (1 + |R(i,t) - 1|*( N(i,t) / K(i,t) )^bc ) ) } }
 #'
 #' Here, \eqn{R(i,t)} is the maximum growth rate \code{Rmax} (obtained at very low density only) and \eqn{K(i,t)} is the carrying capacity
 #' at patch \eqn{i} and time \eqn{t}.
@@ -559,7 +559,7 @@ setClassUnion("StagesSlot", c("logical", "StagesParams"))
 #' This is the simplest form of mate limitation. Each female individual is assumed to mate, as long as there is at least one male in the population. As for the asexual case, the Maynard Smith and Slatkin model is used to determine the expected number of
 #' offspring produced by each female. To maintain equivalence between the asexual and sexual versions, the expected value of the Poisson distribution is multiplied by \eqn{2} (Lindström & Kokko 1998):\cr
 #'
-#' \ifelse{html}{\out{&emsp;&emsp;N<sub>juv</sub>(i,t) = Poisson( 2 R(i,t) / (1+|R(i,t) - 1| &ast; (N(i,t) / K(i,t) )<sup>b<sub>c</sub></sup> ) ) } }{\deqn{N_juv(i,t) = Poisson( 2 R(i,t) / (1 + |R(i,t) - 1|*( N(i,t) / K(i,t) )^bc ) ) } }
+#' \ifelse{html}{\out{N<sub>juv</sub>(i,t) = Poisson( 2 R(i,t) / (1+|R(i,t) - 1| &ast; (N(i,t) / K(i,t) )<sup>b<sub>c</sub></sup> ) ) } }{\deqn{N_juv(i,t) = Poisson( 2 R(i,t) / (1 + |R(i,t) - 1|*( N(i,t) / K(i,t) )^bc ) ) } }
 #'
 #' \emph{Complex mating system:}  (\code{ReproductionType=2})\cr
 #' More complex and flexible mating system. Mating is explicitly modelled through a mating function

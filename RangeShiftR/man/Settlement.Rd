@@ -88,7 +88,7 @@ Settlement condition codes: If the individuals current step ends in unsuitable h
 \eqn{2} = randomly choose a suitable neighbouring cell or die,\cr
 \eqn{3} = randomly choose a suitable neighbouring cell or wait (stage-structured models only).\cr
 
-Simple example for sex-dependence only: Females choose a neighbouring cell or wait, males wait: \tabular{cc}{\out{&emsp;} 0 \tab \out{&emsp;} 3 \cr \out{&emsp;} 1 \tab \out{&emsp;} 0 }
+Simple example for sex-dependence only: Females choose a neighbouring cell or wait, males wait: \tabular{cc}{\out{} 0 \tab \out{} 3 \cr \out{} 1 \tab \out{} 0 }
 
 \emph{Settlement with movement processes}\cr
 If individuals are dispersing by one of the two movement processes implemented (\code{\link[RangeShiftR]{SMS}} or
@@ -101,11 +101,11 @@ it gets converted to \eqn{S_0=1.0}, i.e. 'always settle when habitat is suitable
 Furthermore, the settlement decision can be density-dependent (set \code{DensDep=TRUE}). In this case, the individual has a probability \ifelse{html}{\out{p<sub>S</sub>}}{\eqn{p_S}}
 of settling in the cell or patch \eqn{i}, given by:
 
-\ifelse{html}{\out{&emsp;&emsp; p<sub>S</sub>(i,t) = S<sub>0</sub> / ( 1 + e<sup>-&alpha;<sub>S</sub> (N(i,t) / K(i,t) - &beta;<sub>S</sub>) </sup> ) } }{\deqn{ p_S(i,t) = S_0 / ( 1 + exp[-\alpha_S (N(i,t)/K(i,t) - \beta_S) ] ) } }
+\ifelse{html}{\out{ p<sub>S</sub>(i,t) = S<sub>0</sub> / ( 1 + e<sup>-&alpha;<sub>S</sub> (N(i,t) / K(i,t) - &beta;<sub>S</sub>) </sup> ) } }{\deqn{ p_S(i,t) = S_0 / ( 1 + exp[-\alpha_S (N(i,t)/K(i,t) - \beta_S) ] ) } }
 
 In the case of stage-structured models the above equation is modified to:
 
-\ifelse{html}{\out{&emsp;&emsp; p<sub>S</sub>(i,t) = S<sub>0</sub> / ( 1 + e<sup>-&alpha;<sub>S</sub> (b(i,t) * N(i,t) - &beta;<sub>S</sub>) </sup> ) } }{\deqn{ p_S(i,t) = S_0 / ( 1 + exp[-\alpha_S (b(i,t) N(i,t) - \beta_S) ] ) } }
+\ifelse{html}{\out{ p<sub>S</sub>(i,t) = S<sub>0</sub> / ( 1 + e<sup>-&alpha;<sub>S</sub> (b(i,t) * N(i,t) - &beta;<sub>S</sub>) </sup> ) } }{\deqn{ p_S(i,t) = S_0 / ( 1 + exp[-\alpha_S (b(i,t) N(i,t) - \beta_S) ] ) } }
 
 In the first case, \eqn{K(i,t)} is the carrying capacity of the cell/patch \eqn{i} at time \eqn{t} given by \code{K_or_DensDep}.
 In the latter case, \eqn{b(i,t)} represents the strength of density dependence that is given by the inverse of \code{K_or_DensDep}.\cr
@@ -138,7 +138,7 @@ The following table lists the required columns and their correct order for diffe
  F \tab F \tab F \tab T \tab sex \cr
  F \tab F \tab T \tab T \tab stage, sex \cr
  T \tab F \tab F \tab F \tab \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}}, \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{\alpha_S}}, \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{\beta_S}} \cr
- \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \cr
+ \out{:} \tab \out{:} \tab \out{:} \tab \out{:} \tab \out{:} \cr
  T \tab F \tab T \tab T \tab stage, sex, \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}}, \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{\alpha_S}}, \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{\beta_S}} \cr
  T \tab T \tab F \tab F \tab mean\ifelse{html}{\out{(S<sub>0</sub>)}}{\eqn{(S_0)}}, sd\ifelse{html}{\out{(S<sub>0</sub>)}}{\eqn{(S_0)}}, mean\ifelse{html}{\out{(&alpha;<sub>S</sub>)}}{(\eqn{\alpha_S})}, sd\ifelse{html}{\out{(&alpha;<sub>S</sub>)}}{(\eqn{\alpha_S})}, mean\ifelse{html}{\out{(&beta;<sub>S</sub>)}}{(\eqn{\beta_S})}, sd\ifelse{html}{\out{(&beta;<sub>S</sub>)}}{(\eqn{\beta_S})} \cr
  T \tab T \tab F \tab T \tab sex, mean\ifelse{html}{\out{(S<sub>0</sub>)}}{\eqn{(S_0)}}, sd\ifelse{html}{\out{(S<sub>0</sub>)}}{\eqn{(S_0)}}, mean\ifelse{html}{\out{(&alpha;<sub>S</sub>)}}{(\eqn{\alpha_S})}, sd\ifelse{html}{\out{(&alpha;<sub>S</sub>)}}{(\eqn{\alpha_S})}, mean\ifelse{html}{\out{(&beta;<sub>S</sub>)}}{(\eqn{\beta_S})}, sd\ifelse{html}{\out{(&beta;<sub>S</sub>)}}{(\eqn{\beta_S})}
@@ -146,12 +146,12 @@ The following table lists the required columns and their correct order for diffe
 
 The column headings need not be included, only the numeric matrix is required. The rows require no particular order, but there must be exactly one row for each stage/sex combination.
 For example, in the case of density-, stage- and sex-dependent settlement with no individual variability:
-\tabular{ccccc}{ \out{&emsp;} 0 \tab \out{&emsp;} 0 \tab \out{&emsp;} 1.0 \tab \out{&emsp;} 0.2 \tab \out{&emsp;} 4.0 \cr
- \out{&emsp;} 0 \tab \out{&emsp;} 1 \tab \out{&emsp;} 1.0 \tab \out{&emsp;} 0.1 \tab \out{&emsp;} 6.0 \cr
- \out{&emsp;} 1 \tab \out{&emsp;} 0 \tab \out{&emsp;} 0.7 \tab \out{&emsp;} 0.5 \tab \out{&emsp;} 2.0 \cr
- \out{&emsp;} 1 \tab \out{&emsp;} 1 \tab \out{&emsp;} 0.5 \tab \out{&emsp;} 0.5 \tab \out{&emsp;} 2.0 \cr
- \out{&emsp;} 2 \tab \out{&emsp;} 0 \tab \out{&emsp;} 0.05 \tab \out{&emsp;} 1.0 \tab \out{&emsp;} 1.0 \cr
- \out{&emsp;} 2 \tab \out{&emsp;} 1 \tab \out{&emsp;} 0.05 \tab \out{&emsp;} 1.0 \tab \out{&emsp;} 1.0
+\tabular{ccccc}{ \out{} 0 \tab \out{} 0 \tab \out{} 1.0 \tab \out{} 0.2 \tab \out{} 4.0 \cr
+ \out{} 0 \tab \out{} 1 \tab \out{} 1.0 \tab \out{} 0.1 \tab \out{} 6.0 \cr
+ \out{} 1 \tab \out{} 0 \tab \out{} 0.7 \tab \out{} 0.5 \tab \out{} 2.0 \cr
+ \out{} 1 \tab \out{} 1 \tab \out{} 0.5 \tab \out{} 0.5 \tab \out{} 2.0 \cr
+ \out{} 2 \tab \out{} 0 \tab \out{} 0.05 \tab \out{} 1.0 \tab \out{} 1.0 \cr
+ \out{} 2 \tab \out{} 1 \tab \out{} 0.05 \tab \out{} 1.0 \tab \out{} 1.0
 }
 
 To avoid having individuals moving perpetually because they cannot find suitable conditions to settle, the model requires a maximum number

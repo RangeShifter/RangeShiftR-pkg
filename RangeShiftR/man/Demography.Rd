@@ -45,7 +45,7 @@ and for species for which it is considered crucial to model both sexes explicitl
 \emph{Asexual / only-female models:}  (\code{ReproductionType=0})\cr
 Recruitment is determined by a stochastic, individual-based formulation of the \insertCite{smith1973;textual}{RangeShiftR} population model, where the number of offspring produced by a single individual in the cell/patch \eqn{i} at time \eqn{t}, is drawn from the following distribution:\cr
 
-\ifelse{html}{\out{&emsp;&emsp;N<sub>juv</sub>(i,t) = Poisson( R(i,t) / (1+|R(i,t) - 1| &ast; (N(i,t) / K(i,t))<sup>b<sub>c</sub></sup> ) ) } }{\deqn{N_juv(i,t) = Poisson( R(i,t) / (1 + |R(i,t) - 1|*( N(i,t) / K(i,t) )^bc ) ) } }
+\ifelse{html}{\out{N<sub>juv</sub>(i,t) = Poisson( R(i,t) / (1+|R(i,t) - 1| &ast; (N(i,t) / K(i,t))<sup>b<sub>c</sub></sup> ) ) } }{\deqn{N_juv(i,t) = Poisson( R(i,t) / (1 + |R(i,t) - 1|*( N(i,t) / K(i,t) )^bc ) ) } }
 
 Here, \eqn{R(i,t)} is the maximum growth rate \code{Rmax} (obtained at very low density only) and \eqn{K(i,t)} is the carrying capacity
 at patch \eqn{i} and time \eqn{t}.
@@ -61,7 +61,7 @@ In this type of models, individuals are explicitly characterized by their sex. T
 This is the simplest form of mate limitation. Each female individual is assumed to mate, as long as there is at least one male in the population. As for the asexual case, the Maynard Smith and Slatkin model is used to determine the expected number of
 offspring produced by each female. To maintain equivalence between the asexual and sexual versions, the expected value of the Poisson distribution is multiplied by \eqn{2} (Lindström & Kokko 1998):\cr
 
-\ifelse{html}{\out{&emsp;&emsp;N<sub>juv</sub>(i,t) = Poisson( 2 R(i,t) / (1+|R(i,t) - 1| &ast; (N(i,t) / K(i,t) )<sup>b<sub>c</sub></sup> ) ) } }{\deqn{N_juv(i,t) = Poisson( 2 R(i,t) / (1 + |R(i,t) - 1|*( N(i,t) / K(i,t) )^bc ) ) } }
+\ifelse{html}{\out{N<sub>juv</sub>(i,t) = Poisson( 2 R(i,t) / (1+|R(i,t) - 1| &ast; (N(i,t) / K(i,t) )<sup>b<sub>c</sub></sup> ) ) } }{\deqn{N_juv(i,t) = Poisson( 2 R(i,t) / (1 + |R(i,t) - 1|*( N(i,t) / K(i,t) )^bc ) ) } }
 
 \emph{Complex mating system:}  (\code{ReproductionType=2})\cr
 More complex and flexible mating system. Mating is explicitly modelled through a mating function

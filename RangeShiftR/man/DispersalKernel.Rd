@@ -62,7 +62,7 @@ If the individual disperses, the distance and the movement direction are determi
 The distance is drawn from a negative exponential distribution with a given mean \eqn{\delta}, and the direction is selected randomly from a uniform
 distribution between \eqn{0} and \eqn{2\pi} radians.
 
-\ifelse{html}{\out{&emsp;&emsp; p(d;&delta;) = &delta;<sup>-1</sup> e<sup>- d / &delta;</sup>}}{\deqn{ p(d;\delta) = 1/\delta exp(-d/\delta) } }
+\ifelse{html}{\out{ p(d;&delta;) = &delta;<sup>-1</sup> e<sup>- d / &delta;</sup>}}{\deqn{ p(d;\delta) = 1/\delta exp(-d/\delta) } }
 
 If the arrival point lies beyond the boundary of the landscape, distance and direction are re-drawn.\cr
 The individual is displaced from a random point (using continuous coordinates) inside the natal cell to the arrival cell where the model
@@ -83,7 +83,7 @@ with different means \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{\delta_1}} an
 occurring with probability \ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}} and \eqn{1-}\ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}} respectively \insertCite{hovestadt2011all}{RangeShiftR}.
 Otherwise, the conditions for the single kernel apply.
 
-\ifelse{html}{\out{&emsp;&emsp; p(d; &delta;<sub>1</sub>,&delta;<sub>2</sub>) = p<sub>I</sub> p(d;&delta;<sub>1</sub>) + (1-p<sub>I</sub>) p(d;&delta;<sub>1</sub>)}}{\deqn{ p(d; \delta_1,\delta_2) = p_I p(d;\delta_1) + (1-p_I) p(d;\delta_2)}}
+\ifelse{html}{\out{ p(d; &delta;<sub>1</sub>,&delta;<sub>2</sub>) = p<sub>I</sub> p(d;&delta;<sub>1</sub>) + (1-p<sub>I</sub>) p(d;&delta;<sub>1</sub>)}}{\deqn{ p(d; \delta_1,\delta_2) = p_I p(d;\delta_1) + (1-p_I) p(d;\delta_2)}}
 
 For both types of kernel, inter-individual variability of the kernel traits is possible (set \code{IndVar=TRUE}). Individuals will
 carry either one trait for \eqn{\delta} or three traits for \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{\delta_1}}, \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{\delta_2}} and
@@ -114,18 +114,18 @@ table lists the required columns and their correct order for different settings:
  F \tab T \tab F \tab F \tab \ifelse{html}{\out{&delta;<sub>1</sub>, &delta;<sub>2</sub>, p<sub>I</sub>}}{\eqn{\delta_1, \delta_2, p_I}} \cr
  T \tab F \tab F \tab F \tab mean\eqn{(\delta)}, sd\eqn{(\delta)} \cr
  T \tab T \tab F \tab F \tab \ifelse{html}{\out{mean(&delta;<sub>1</sub>)}}{mean\eqn{(\delta_1)}}, \ifelse{html}{\out{sd(&delta;<sub>1</sub>)}}{sd\eqn{(\delta_1)}}, \ifelse{html}{\out{mean(&delta;<sub>2</sub>)}}{mean\eqn{(\delta_2)}}, \ifelse{html}{\out{sd(&delta;<sub>2</sub>)}}{sd\eqn{(\delta_2)}}, mean\ifelse{html}{\out{(p<sub>I</sub>)}}{\eqn{(p_I)}}, sd\ifelse{html}{\out{(p<sub>I</sub>)}}{\eqn{(p_I)}} \cr
- \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \cr
+ \out{:} \tab \out{:} \tab \out{:} \tab \out{:} \tab \out{:} \cr
  T \tab T \tab F \tab T \tab sex, \ifelse{html}{\out{mean(&delta;<sub>1</sub>)}}{mean\eqn{(\delta_1)}}, \ifelse{html}{\out{sd(&delta;<sub>1</sub>)}}{sd\eqn{(\delta_1)}}, \ifelse{html}{\out{mean(&delta;<sub>2</sub>)}}{mean\eqn{(\delta_2)}}, \ifelse{html}{\out{sd(&delta;<sub>2</sub>)}}{sd\eqn{(\delta_2)}}, mean\ifelse{html}{\out{(p<sub>I</sub>)}}{\eqn{(p_I)}}, sd\ifelse{html}{\out{(p<sub>I</sub>)}}{\eqn{(p_I)}}
  }
 
 The column headings need not be included, only the numeric matrix is required. The rows require no particular order, but there must be exactly
 one row for each stage/sex combination. For example, in the case of a mixed kernel with stage- and sex-dependent distances and no individual variability:
-\tabular{ccccc}{ \out{&emsp;} 0 \tab \out{&emsp;} 0 \tab \out{&emsp;} 1000 \tab \out{&emsp;} 4500 \tab \out{&emsp;} 0.92 \cr
- \out{&emsp;} 0 \tab \out{&emsp;} 1 \tab \out{&emsp;} 1400 \tab \out{&emsp;} 6000 \tab \out{&emsp;} 0.95 \cr
- \out{&emsp;} 1 \tab \out{&emsp;} 0 \tab \out{&emsp;} 700 \tab \out{&emsp;} 500 \tab \out{&emsp;} 0.50 \cr
- \out{&emsp;} 1 \tab \out{&emsp;} 1 \tab \out{&emsp;} 500 \tab \out{&emsp;} 600 \tab \out{&emsp;} 0.55 \cr
- \out{&emsp;} 2 \tab \out{&emsp;} 0 \tab \out{&emsp;} 100 \tab \out{&emsp;} 0 \tab \out{&emsp;} 1.0 \cr
- \out{&emsp;} 2 \tab \out{&emsp;} 1 \tab \out{&emsp;} 100 \tab \out{&emsp;} 0 \tab \out{&emsp;} 1.0
+\tabular{ccccc}{ \out{} 0 \tab \out{} 0 \tab \out{} 1000 \tab \out{} 4500 \tab \out{} 0.92 \cr
+ \out{} 0 \tab \out{} 1 \tab \out{} 1400 \tab \out{} 6000 \tab \out{} 0.95 \cr
+ \out{} 1 \tab \out{} 0 \tab \out{} 700 \tab \out{} 500 \tab \out{} 0.50 \cr
+ \out{} 1 \tab \out{} 1 \tab \out{} 500 \tab \out{} 600 \tab \out{} 0.55 \cr
+ \out{} 2 \tab \out{} 0 \tab \out{} 100 \tab \out{} 0 \tab \out{} 1.0 \cr
+ \out{} 2 \tab \out{} 1 \tab \out{} 100 \tab \out{} 0 \tab \out{} 1.0
 }
 
 In the case that the dispersal kernel is applied to the entire
@@ -141,7 +141,7 @@ proportion of suitable habitat in the landscape and will increase as the availab
 A second source of dispersal mortality can be specified via the option \code{DistMort}: The probability of mortality is either a constant
 (\eqn{m=}\code{MortProb}) or a function of distance \eqn{d} (i.e. individuals that travel further are more likely to die):
 
-\ifelse{html}{\out{&emsp;&emsp; m(d) = 1 / ( 1 + e<sup>-a (d- b)</sup> ) } }{\deqn{ m(d) = 1 / ( 1 + exp[-\alpha (d-b) ] ) } }
+\ifelse{html}{\out{ m(d) = 1 / ( 1 + e<sup>-a (d- b)</sup> ) } }{\deqn{ m(d) = 1 / ( 1 + exp[-\alpha (d-b) ] ) } }
 
 with the inflection point \eqn{b=}\code{InflPoint} at which \eqn{m(d=b)=0.5} and the slope \eqn{a=}\code{Slope}.This option may be thought
 to represent the increased energetic, time or attritional costs that longer-distance dispersers will experience \insertCite{bonte2012costs}{RangeShiftR}.

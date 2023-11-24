@@ -81,7 +81,7 @@ An example transition matrix for a 3-staged explicit sexual population model \in
 A common mistake in building a transition matrix is made when offspring produced at year \eqn{t} develop to the next stage in the same year \insertCite{@ @caswell2001 pg. 60-62}{RangeShiftR}. To avoid this problem without losing the offspring stage, and hence the chance for simulating post-natal dispersal,
 we require an additional explicit juvenile stage (stage 0). Juveniles have to develop to stage 1 in the same year they are born. Hence the minimum number of stages of a stage-structured model is always \eqn{2}. It is important to note that juvenile mortality can be accounted for in
 two ways. Either, as in the examples above, it is included in adult fecundity \ifelse{html}{\out{&phi;}}{\eqn{\phi}} (by appropriately reducing its value), and \ifelse{html}{\out{&sigma;<sub>0</sub> &gamma;<sub>(0-1)</sub>}}{\eqn{\sigma_0 \gamma_(0-1)}} is equal to \eqn{1.0}. This is how it is typically accounted for in matrix models. Or, alternatively,
-\phi is equal to the true maximum fecundity and \ifelse{html}{\out{&sigma;<sub>0</sub> &gamma;<sub>(0-1)</sub>}}{\eqn{\sigma_0 \gamma_(0-1)}} is less than \eqn{1.0}.
+\eqn{\phi} is equal to the true maximum fecundity and \ifelse{html}{\out{&sigma;<sub>0</sub> &gamma;<sub>(0-1)</sub>}}{\eqn{\sigma_0 \gamma_(0-1)}} is less than \eqn{1.0}.
 Only the first approach allows straightforward direct comparison with standard analytical matrix models.
 
 \emph{Minimum ages:} For every row in the transition matrix, a minimum age must be provided through a vector in argument \code{MinAge}. It specifies the age which an individual in stage \eqn{i-1} (with sex \eqn{m/f}, if applicable) must already have reached before it can develop into the next stage \eqn{(i)}. The vector must be in
@@ -114,11 +114,11 @@ If the transition matrix contains the annual survival and development rates, \co
 \emph{Density dependence} can act on each of the three demographic phases (i.e. reproduction, survival and development) and is controlled by \code{FecDensDep,DevDensDep,SurvDensDep}.
 It is implemented as an exponential decay \insertCite{neubert2000}{RangeShiftR}:
 
-\ifelse{html}{\out{&emsp;&emsp; &phi;<sub>i</sub>(r,t) = &phi;<sub>0,i</sub> &ast; e<sup> - b(r) N(t) </sup>}}{\deqn{\phi_i(r,t)=\phi_(0,i) * exp(- b(r) N(t) ) }}
+\ifelse{html}{\out{ &phi;<sub>i</sub>(r,t) = &phi;<sub>0,i</sub> &ast; e<sup> - b(r) N(t) </sup>}}{\deqn{\phi_i(r,t)=\phi_(0,i) * exp(- b(r) N(t) ) }}
 
-\ifelse{html}{\out{&emsp;&emsp; &sigma;<sub>i</sub>(r,t) = &sigma;<sub>0,i</sub> &ast; e<sup> - C<sub>&sigma;</sub> b(r) N(t) </sup>}}{\deqn{\sigma_i(r,t)=\sigma_(0,i) * exp(- C_\sigma b(r) N(t) ) }}
+\ifelse{html}{\out{ &sigma;<sub>i</sub>(r,t) = &sigma;<sub>0,i</sub> &ast; e<sup> - C<sub>&sigma;</sub> b(r) N(t) </sup>}}{\deqn{\sigma_i(r,t)=\sigma_(0,i) * exp(- C_\sigma b(r) N(t) ) }}
 
-\ifelse{html}{\out{&emsp;&emsp; &gamma;<sub>i</sub>(r,t) = &gamma;<sub>0,i</sub> &ast; e<sup> - C<sub>&gamma;</sub> b(r) N(t) </sup>}}{\deqn{\gamma_i(r,t)=\gamma_(0,i) * exp(- C_\gamma b(r) N(t) ) }}
+\ifelse{html}{\out{ &gamma;<sub>i</sub>(r,t) = &gamma;<sub>0,i</sub> &ast; e<sup> - C<sub>&gamma;</sub> b(r) N(t) </sup>}}{\deqn{\gamma_i(r,t)=\gamma_(0,i) * exp(- C_\gamma b(r) N(t) ) }}
 
 where \eqn{b(r)} is the strength of density dependence in fecundity at site \eqn{r}, which is given by the argument \code{K_or_DensDep} in the landscape module.
 Furthermore, \ifelse{html}{\out{C<sub>&sigma;</sub>}}{\eqn{C_\sigma}} and \ifelse{html}{\out{C<sub>&gamma;</sub>}}{\eqn{C_\gamma}} (\code{DevDensCoeff,SurvDensCoeff})
@@ -127,11 +127,11 @@ scale the strength of density dependence in survival and development relative to
 Moreover, the strength of density-dependence can be uniform for all stages or stage-dependent. Even greater complexity can be incorporated with
 different stages contributing differently to density-dependence \insertCite{caswell2004}{RangeShiftR}:
 
-\ifelse{html}{\out{&emsp; &phi;<sub>i</sub>(r,t) = &phi;<sub>0,i</sub> &ast; e<sup> - b(r) &Sigma;<sub>j</sub><sup>S</sup> &omega;<sub>&phi;,ij</sub> N(j,t)</sup>}}{\deqn{\phi_i(r,t)=\phi_(0,i) * exp(- b(r) \Sigma_j^S \omega_{\phi,ij} N_j(t) ) }}
+\ifelse{html}{\out{ &phi;<sub>i</sub>(r,t) = &phi;<sub>0,i</sub> &ast; e<sup> - b(r) &Sigma;<sub>j</sub><sup>S</sup> &omega;<sub>&phi;,ij</sub> N(j,t)</sup>}}{\deqn{\phi_i(r,t)=\phi_(0,i) * exp(- b(r) \Sigma_j^S \omega_{\phi,ij} N_j(t) ) }}
 
-\ifelse{html}{\out{&emsp; &sigma;<sub>i</sub>(r,t) = &sigma;<sub>0,i</sub> &ast; e<sup> - C<sub>&sigma;</sub> b(r) &Sigma;<sub>j</sub><sup>S</sup> &omega;<sub>&sigma;,ij</sub> N(j,t) </sup>}}{\deqn{\sigma_i(r,t)=\sigma_(0,i) * exp(- C_\sigma b(r) \Sigma_j^S \omega_{\sigma,ij} N_j(t) )}}
+\ifelse{html}{\out{ &sigma;<sub>i</sub>(r,t) = &sigma;<sub>0,i</sub> &ast; e<sup> - C<sub>&sigma;</sub> b(r) &Sigma;<sub>j</sub><sup>S</sup> &omega;<sub>&sigma;,ij</sub> N(j,t) </sup>}}{\deqn{\sigma_i(r,t)=\sigma_(0,i) * exp(- C_\sigma b(r) \Sigma_j^S \omega_{\sigma,ij} N_j(t) )}}
 
-\ifelse{html}{\out{&emsp; &gamma;<sub>i</sub>(r,t) = &gamma;<sub>0,i</sub> &ast; e<sup> - C<sub>&gamma;</sub> b(r) &Sigma;<sub>j</sub><sup>S</sup> &omega;<sub>&gamma;,ij</sub> N(j,t)</sup>}}{\deqn{\gamma_i(r,t)=\gamma_(0,i) * exp(- C_\gamma b(r) \Sigma_j^S \omega_{\gamma,ij} N_j(t) )}}
+\ifelse{html}{\out{ &gamma;<sub>i</sub>(r,t) = &gamma;<sub>0,i</sub> &ast; e<sup> - C<sub>&gamma;</sub> b(r) &Sigma;<sub>j</sub><sup>S</sup> &omega;<sub>&gamma;,ij</sub> N(j,t)</sup>}}{\deqn{\gamma_i(r,t)=\gamma_(0,i) * exp(- C_\gamma b(r) \Sigma_j^S \omega_{\gamma,ij} N_j(t) )}}
 
 where \ifelse{html}{\out{&omega;<sub>&phi;</sub>}}{\eqn{\omega_\phi}}, \ifelse{html}{\out{&omega;<sub>&sigma;</sub>}}{\eqn{\omega_\sigma}}, \ifelse{html}{\out{&omega;<sub>&gamma;</sub>}}{\eqn{\omega_\gamma}} are weight matrices given by \code{FecStageWtsMatrix, DevStageWtsMatrix, SurvStageWtsMatrix}. Their elements \ifelse{html}{\out{&omega;<sub>ij</sub>}}{\eqn{\omega_ij}}
 represent the contributions of the abundance of stage \eqn{j} to the density dependence in the fecundity / survival / development of stage \eqn{i}, thus they are quadratic matrices of size \code{Stages}\eqn{^2}. Note that the row sums are not required to be normalized, therefore they can be used
