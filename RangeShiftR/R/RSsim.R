@@ -130,6 +130,6 @@ RSsim <- function(batchnum = 1L,
     if (!is.null(args$gene))  s <- s + gene
     if (!is.null(args$init))  s <- s + init
     # check validity
-    if(validObject(s)) return(s)
+    if(methods::validObject(s)) return(s)
     else return(NULL)
 }

@@ -308,7 +308,7 @@
 #'         \insertAllCited{}
 #' @name Simulation
 #' @export Simulation
-Simulation <- setClass("SimulationParams", slots = c(Simulation = "integer_OR_numeric",
+Simulation <- methods::setClass("SimulationParams", slots = c(Simulation = "integer_OR_numeric",
                                                  Replicates = "integer_OR_numeric",
                                                  Years = "integer_OR_numeric",
                                                  Absorbing = "logical",
@@ -852,9 +852,9 @@ setValidity('SimulationParams', function(object){
 setMethod("initialize", "SimulationParams", function(.Object, ...) {
     this_func = "Simulation(): "
     args <- list(...)
-    .Object <- callNextMethod()
+    .Object <- methods::callNextMethod()
     if ( length(args) == 0 ) {
-        validObject(.Object)
+        methods::validObject(.Object)
     }
     if(.Object@Gradient == 0){
         .Object@GradSteep = -9L

@@ -30,7 +30,7 @@
 #' @include class_DispersalParams.R
 #' @include class_GeneticsParams.R
 #' @include class_InitialisationParams.R
-RSparams <- setClass("RSparams", slots = c(control = "ControlParams",
+RSparams <- methods::setClass("RSparams", slots = c(control = "ControlParams",
                                            simul = "SimulationParams",
                                            land = "LandParams",
                                            demog = "DemogParams",
@@ -41,9 +41,9 @@ RSparams <- setClass("RSparams", slots = c(control = "ControlParams",
 setValidity("RSparams", function(object) {
     msg <- NULL
     #CONTROL
-    validObject(object@control)
+    methods::validObject(object@control)
     #SIMULATION
-    validObject(object@simul)
+    methods::validObject(object@simul)
     if (object@control@patchmodel) {
         if (object@simul@Gradient) {
             msg <- c(msg, "Environmental gradients are not implemented for patch-based models!")
@@ -82,7 +82,7 @@ setValidity("RSparams", function(object) {
         }
     }
     #LAND
-    validObject(object@land)
+    methods::validObject(object@land)
     if (any(object@control@landtype==c(0,2))){
         if (any(object@land@DynamicLandYears>object@simul@Years)) {
             warning("ImportedLandscape(): Dynamic landscape contains years that exceed the simulated years, so that some land changes will not apply.", call. = FALSE)
@@ -99,9 +99,9 @@ setValidity("RSparams", function(object) {
         }
     }
     #DEMOGRAPHY
-    validObject(object@demog)
+    methods::validObject(object@demog)
     #DISPERSAL
-    validObject(object@dispersal)
+    methods::validObject(object@dispersal)
     ## Emigration: check dimensions and values of EmigProb and EmigStage:
     # check StageDep and SexDep
     dim_ok = TRUE
@@ -211,7 +211,7 @@ setValidity("RSparams", function(object) {
             }
             else {
                 if(any(object@dispersal@Emigration@EmigProb[,(offset+2)] > object@dispersal@Emigration@TraitScaleFactor[1])) {
-                    msg <- c(msg, paste0("Column ", (offset+2), " of emigration traits matrix (EmigProb) must contain sd(D0), with values less than or equal to TraitScaleFactor μ(D0)!"))
+                    msg <- c(msg, paste0("Column ", (offset+2), " of emigration traits matrix (EmigProb) must contain sd(D0), with values less than or equal to TraitScaleFactor mu(D0)!"))
                 }
             }
             if (object@dispersal@Emigration@DensDep) {
@@ -220,10 +220,10 @@ setValidity("RSparams", function(object) {
                 }
                 else {
                     if(any(object@dispersal@Emigration@EmigProb[,(offset+4)] > object@dispersal@Emigration@TraitScaleFactor[2])) {
-                        msg <- c(msg, paste0("Column ", (offset+4), " of emigration traits matrix (EmigProb) must contain sd(alpha), with values less than or equal to TraitScaleFactor μ(alpha)!"))
+                        msg <- c(msg, paste0("Column ", (offset+4), " of emigration traits matrix (EmigProb) must contain sd(alpha), with values less than or equal to TraitScaleFactor mu(alpha)!"))
                     }
                     if(any(object@dispersal@Emigration@EmigProb[,(offset+6)] > object@dispersal@Emigration@TraitScaleFactor[3])) {
-                        msg <- c(msg, paste0("Column ", (offset+6), " of emigration traits matrix (EmigProb) must contain sd(beta), with values less than or equal to TraitScaleFactor μ(beta)!"))
+                        msg <- c(msg, paste0("Column ", (offset+6), " of emigration traits matrix (EmigProb) must contain sd(beta), with values less than or equal to TraitScaleFactor mu(beta)!"))
                     }
                 }
             }
@@ -348,25 +348,25 @@ setValidity("RSparams", function(object) {
                 if (object@dispersal@Transfer@IndVar) {
                     if (object@dispersal@Transfer@DoubleKernel) {
                         if(any(object@dispersal@Transfer@Distances[,(offset+1)]<resol)){
-                            msg <- c(msg, paste0("Column ", (offset+1), " of dispersal kernel traits (Distances) matrix must contain the mean of the mean distance of Kernel 1, mean(δ1), with values >= ", (resol), " (=landscape resolution (unless UseFullKernel=TRUE)) !"))
+                            msg <- c(msg, paste0("Column ", (offset+1), " of dispersal kernel traits (Distances) matrix must contain the mean of the mean distance of Kernel 1, mean(delta1), with values >= ", (resol), " (=landscape resolution (unless UseFullKernel=TRUE)) !"))
                         }
                         if(any(object@dispersal@Transfer@Distances[,(offset+2)]<=0.0)){
-                            msg <- c(msg, paste0("Column ", (offset+2), " of dispersal kernel traits (Distances) matrix must contain the std. dev. of the mean distance of Kernel 1, sd(δ1), with strictly positive values!"))
+                            msg <- c(msg, paste0("Column ", (offset+2), " of dispersal kernel traits (Distances) matrix must contain the std. dev. of the mean distance of Kernel 1, sd(delta1), with strictly positive values!"))
                         }
                         else {
                             if(any(object@dispersal@Transfer@Distances[,(offset+2)] > object@dispersal@Transfer@TraitScaleFactor[1])) {
-                                msg <- c(msg, paste0("Column ", (offset+2), " of dispersal kernel traits (Distances) matrix must contain sd(δ1), with values less than or equal to TraitScaleFactor μ(δ1)!"))
+                                msg <- c(msg, paste0("Column ", (offset+2), " of dispersal kernel traits (Distances) matrix must contain sd(delta1), with values less than or equal to TraitScaleFactor mu(delta1)!"))
                             }
                         }
                         if(any(object@dispersal@Transfer@Distances[,(offset+3)]<resol)){
-                            msg <- c(msg, paste0("Column ", (offset+3), " of dispersal kernel traits (Distances) matrix must contain the mean of the mean distance of Kernel 2, mean(δ2), with values >= ", (resol), " (=landscape resolution (unless UseFullKernel=TRUE)) !"))
+                            msg <- c(msg, paste0("Column ", (offset+3), " of dispersal kernel traits (Distances) matrix must contain the mean of the mean distance of Kernel 2, mean(delta2), with values >= ", (resol), " (=landscape resolution (unless UseFullKernel=TRUE)) !"))
                         }
                         if(any(object@dispersal@Transfer@Distances[,(offset+4)]<=0.0)){
-                            msg <- c(msg, paste0("Column ", (offset+4), " of dispersal kernel traits (Distances) matrix must contain the std. dev. of the mean distance of Kernel 2, sd(δ2), with strictly positive values!"))
+                            msg <- c(msg, paste0("Column ", (offset+4), " of dispersal kernel traits (Distances) matrix must contain the std. dev. of the mean distance of Kernel 2, sd(delta2), with strictly positive values!"))
                         }
                         else {
                             if(any(object@dispersal@Transfer@Distances[,(offset+4)] > object@dispersal@Transfer@TraitScaleFactor[2])) {
-                                msg <- c(msg, paste0("Column ", (offset+4), " of dispersal kernel traits (Distances) matrix must contain sd(δ2), with values less than or equal to TraitScaleFactor μ(δ2)!"))
+                                msg <- c(msg, paste0("Column ", (offset+4), " of dispersal kernel traits (Distances) matrix must contain sd(delta2), with values less than or equal to TraitScaleFactor mu(delta2)!"))
                             }
                         }
                         if(any(object@dispersal@Transfer@Distances[,(offset+5)]<=0.0 | object@dispersal@Transfer@Distances[,(offset+5)]>=1.0)){
@@ -377,20 +377,20 @@ setValidity("RSparams", function(object) {
                         }
                         else {
                             if(any(object@dispersal@Transfer@Distances[,(offset+6)] > object@dispersal@Transfer@TraitScaleFactor[3])) {
-                                msg <- c(msg, paste0("Column ", (offset+6), " of dispersal kernel traits (Distances) matrix must contain sd(p), with values less than or equal to TraitScaleFactor μ(p)!"))
+                                msg <- c(msg, paste0("Column ", (offset+6), " of dispersal kernel traits (Distances) matrix must contain sd(p), with values less than or equal to TraitScaleFactor mu(p)!"))
                             }
                         }
                     }
                     else { # !DoubleKernel
                         if(any(object@dispersal@Transfer@Distances[,(offset+1)]<resol)){
-                            msg <- c(msg, paste0("Column ", (offset+1), " of dispersal kernel traits (Distances) matrix must contain the mean of the mean distance, mean(δ), with values >= ", (resol), " (=landscape resolution (unless UseFullKernel=TRUE)) !"))
+                            msg <- c(msg, paste0("Column ", (offset+1), " of dispersal kernel traits (Distances) matrix must contain the mean of the mean distance, mean(delta), with values >= ", (resol), " (=landscape resolution (unless UseFullKernel=TRUE)) !"))
                         }
                         if(any(object@dispersal@Transfer@Distances[,(offset+2)]<=0.0)){
-                            msg <- c(msg, paste0("Column ", (offset+2), " of dispersal kernel traits (Distances) matrix must contain the std. dev. of the mean distance, sd(δ), with strictly positive values!"))
+                            msg <- c(msg, paste0("Column ", (offset+2), " of dispersal kernel traits (Distances) matrix must contain the std. dev. of the mean distance, sd(delta), with strictly positive values!"))
                         }
                         else {
                             if(any(object@dispersal@Transfer@Distances[,(offset+2)] > object@dispersal@Transfer@TraitScaleFactor[1])) {
-                                msg <- c(msg, paste0("Column ", (offset+2), " of dispersal kernel traits (Distances) matrix must contain sd(δ), with values less than or equal to TraitScaleFactor μ(δ)!"))
+                                msg <- c(msg, paste0("Column ", (offset+2), " of dispersal kernel traits (Distances) matrix must contain sd(delta), with values less than or equal to TraitScaleFactor mu(delta)!"))
                             }
                         }
                     }
@@ -398,7 +398,7 @@ setValidity("RSparams", function(object) {
                 else { # !IndVar
                     if (object@dispersal@Transfer@DoubleKernel) {
                         if(any(object@dispersal@Transfer@Distances[,(offset+1):(offset+2)]<resol)){
-                            msg <- c(msg, paste0("Columns ", (offset+1), " and ", (offset+2), " of dispersal kernel traits (Distances) matrix must contain the two mean distance δ1 and δ2, with values >= ", (resol), " (=landscape resolution (unless UseFullKernel=TRUE)) !"))
+                            msg <- c(msg, paste0("Columns ", (offset+1), " and ", (offset+2), " of dispersal kernel traits (Distances) matrix must contain the two mean distance delta1 and delta2, with values >= ", (resol), " (=landscape resolution (unless UseFullKernel=TRUE)) !"))
                         }
                         if(any(object@dispersal@Transfer@Distances[,(offset+3)]<=0 | object@dispersal@Transfer@Distances[,(offset+3)]>=1)) {
                             msg <- c(msg, paste0("Column ", (offset+3), " of dispersal kernel traits (Distances) matrix must contain the probability p of using kernel 1, with values in the open interval (0,1) !"))
@@ -406,7 +406,7 @@ setValidity("RSparams", function(object) {
                     }
                     else{
                         if(any(object@dispersal@Transfer@Distances[,(offset+1)]<resol)){
-                            msg <- c(msg, paste0("Column ", (offset+1), " of dispersal kernel traits (Distances) matrix must contain the mean distance δ, with values >= ", (resol), " (=landscape resolution (unless UseFullKernel=TRUE)) !"))
+                            msg <- c(msg, paste0("Column ", (offset+1), " of dispersal kernel traits (Distances) matrix must contain the mean distance delta, with values >= ", (resol), " (=landscape resolution (unless UseFullKernel=TRUE)) !"))
                         }
                     }
                 }
@@ -617,7 +617,7 @@ setValidity("RSparams", function(object) {
                     }
                     else {
                         if(any(object@dispersal@Settlement@Settle[,(offset+2)] > object@dispersal@Settlement@TraitScaleFactor[1])) {
-                            msg <- c(msg, paste0("Column ", (offset+2), " of settlement traits matrix (Settle) must contain sd(S0), with values less than or equal to TraitScaleFactor μ(S0)!"))
+                            msg <- c(msg, paste0("Column ", (offset+2), " of settlement traits matrix (Settle) must contain sd(S0), with values less than or equal to TraitScaleFactor mu(S0)!"))
                         }
                     }
                     if(any(object@dispersal@Settlement@Settle[,c((offset+4),(offset+6))]<=0 )){
@@ -625,10 +625,10 @@ setValidity("RSparams", function(object) {
                     }
                     else {
                         if(any(object@dispersal@Settlement@Settle[,(offset+4)] > object@dispersal@Settlement@TraitScaleFactor[2])) {
-                            msg <- c(msg, paste0("Column ", (offset+4), " of settlement traits matrix (Settle) must contain sd(alpha_s), with values less than or equal to TraitScaleFactor μ(alpha_s)!"))
+                            msg <- c(msg, paste0("Column ", (offset+4), " of settlement traits matrix (Settle) must contain sd(alpha_s), with values less than or equal to TraitScaleFactor mu(alpha_s)!"))
                         }
                         if(any(object@dispersal@Settlement@Settle[,(offset+6)] > object@dispersal@Settlement@TraitScaleFactor[3])) {
-                            msg <- c(msg, paste0("Column ", (offset+6), " of settlement traits matrix (Settle) must contain sd(beta_s), with values less than or equal to TraitScaleFactor μ(beta_s)!"))
+                            msg <- c(msg, paste0("Column ", (offset+6), " of settlement traits matrix (Settle) must contain sd(beta_s), with values less than or equal to TraitScaleFactor mu(beta_s)!"))
                         }
                     }
                 }
@@ -675,13 +675,13 @@ setValidity("RSparams", function(object) {
     }
 
     #GENETICS
-    validObject(object@gene)
+    methods::validObject(object@gene)
     if(any(object@dispersal@Emigration@IndVar,object@dispersal@Transfer@IndVar,object@dispersal@Settlement@IndVar)) anyIndVar <- TRUE
     else anyIndVar <- FALSE
     # if( ...(object@gene) & !anyIndVar) # TODO: check if genetics module is set but no variable traits -> give warning in this case
 
     #INITIALISATION
-    validObject(object@init)
+    methods::validObject(object@init)
     if (object@control@landtype == 9) { # artificial land
         if (object@init@InitType) {
             msg <- c(msg, 'Initialise(): InitType must be set to 0 (Free initialisation) for an artificial landscape!')

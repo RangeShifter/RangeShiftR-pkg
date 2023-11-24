@@ -26,7 +26,7 @@
 # from RS 'Land' file
 # can take one of two forms: 'ArtificialLandscape' or 'ImportedLandscape'
 
-LandParams <- setClass("LandParams", slots = c(LandNum = "integer_OR_numeric")
+LandParams <- methods::setClass("LandParams", slots = c(LandNum = "integer_OR_numeric")
                                     , prototype = list(LandNum = 1L)
                         )
     # landscape number must be unique
@@ -44,7 +44,7 @@ setValidity("LandParams", function(object) {
     if (is.null(msg)) TRUE else msg}
 )
 setMethod("initialize", "LandParams", function(.Object, ...) {
-    .Object <- callNextMethod()
+    .Object <- methods::callNextMethod()
     .Object}
 )
 
@@ -100,7 +100,8 @@ setMethod("initialize", "LandParams", function(.Object, ...) {
 #' @author Anne-Kathleen Malchow
 #' @name ArtificialLandscape
 #' @export ArtificialLandscape
-ArtificialLandscape <- setClass("ArtificialLandscape", slots = c(propSuit = "numeric",
+#' @importFrom methods new
+ArtificialLandscape <- methods::setClass("ArtificialLandscape", slots = c(propSuit = "numeric",
                                                                  K_or_DensDep = "integer_OR_numeric",
                                                                  Resolution = "integer_OR_numeric",
                                                                  dimX = "integer_OR_numeric",
@@ -122,7 +123,7 @@ ArtificialLandscape <- setClass("ArtificialLandscape", slots = c(propSuit = "num
                                               #maxPct,
                            , contains = "LandParams")
 
-setValidity("ArtificialLandscape", function(object) {
+methods::setValidity("ArtificialLandscape", function(object) {
     msg <- NULL
     if (anyNA(object@propSuit) || length(object@propSuit)!=1) {
         msg <- c(msg, "Proportion of suitable habitat must be set and of length 1!")
@@ -233,12 +234,12 @@ setValidity("ArtificialLandscape", function(object) {
     }
     if (is.null(msg)) TRUE else msg}
 )
-setMethod("initialize", "ArtificialLandscape", function(.Object,...) {
+methods::setMethod("initialize", "ArtificialLandscape", function(.Object,...) {
     this_func = "ArtificialLandscape(): "
     args <- list(...)
-    .Object <- callNextMethod()
+    .Object <- methods::callNextMethod()
     if ( length(args) == 0 ) {
-        validObject(.Object)
+        methods::validObject(.Object)
     }
     if (!.Object@fractal) {
         .Object@hurst = -9L
@@ -258,7 +259,7 @@ setMethod("initialize", "ArtificialLandscape", function(.Object,...) {
     }
     .Object}
 )
-setMethod("show", "ArtificialLandscape", function(object){
+methods::setMethod("show", "ArtificialLandscape", function(object){
     cat(" Artificial landscape: ")
     #cat(" Artificial landscape #", object@LandNum, ": ")
     if(object@fractal) {
@@ -531,9 +532,9 @@ setValidity("ImportedLandscape", function(object) {
 setMethod("initialize", "ImportedLandscape", function(.Object, ...) {
     this_func = "ImportedLandscape(): "
     args <- list(...)
-    .Object <- callNextMethod()
+    .Object <- methods::callNextMethod()
     if ( length(args) == 0 ) {
-        validObject(.Object)
+        methods::validObject(.Object)
     }
     if (.Object@HabPercent) {
         .Object@Nhabitats = 1L

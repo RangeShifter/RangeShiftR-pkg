@@ -143,7 +143,7 @@
 #' @author Anne-Kathleen Malchow
 #' @name Emigration
 #' @export Emigration
-Emigration <- setClass("EmigrationParams", slots = c(DensDep = "logical",
+Emigration <- methods::setClass("EmigrationParams", slots = c(DensDep = "logical",
                                                      IndVar = "logical",
                                                      StageDep = "logical",
                                                      SexDep = "logical",
@@ -282,9 +282,9 @@ setValidity("EmigrationParams", function(object) {
 setMethod("initialize", "EmigrationParams", function(.Object, ...) {
     this_func = "Emigration(): "
     args <- list(...)
-    .Object <- callNextMethod()
+    .Object <- methods::callNextMethod()
     if ( length(args) == 0 ) {
-        validObject(.Object)
+        methods::validObject(.Object)
     }
     if (!is.null(args$EmigProb)) {
         if (class(args$EmigProb)[1] =="numeric" && length(args$EmigProb)==1) {
@@ -385,17 +385,17 @@ setMethod("plotProbs", "EmigrationParams", function(x, stage = NULL, sex = NULL,
                 res[,6] <- densdep(xvals, A0 = emig[line,ind_D0]+emig[line,ind_D0+1], alpha = emig[line,ind_D0+2]-emig[line,ind_D0+3], beta = emig[line,ind_D0+4]+emig[line,ind_D0+5])
                 res[,7] <- densdep(xvals, A0 = emig[line,ind_D0]+emig[line,ind_D0+1], alpha = emig[line,ind_D0+2]+emig[line,ind_D0+3], beta = emig[line,ind_D0+4]-emig[line,ind_D0+5])
                 res[,8] <- densdep(xvals, A0 = emig[line,ind_D0]+emig[line,ind_D0+1], alpha = emig[line,ind_D0+2]+emig[line,ind_D0+3], beta = emig[line,ind_D0+4]+emig[line,ind_D0+5])
-                polygon(c(xvals,rev(xvals)), c(apply(res, 1, min), rev(apply(res, 1, max))), border=NA, col='grey80')
+                graphics::polygon(c(xvals,rev(xvals)), c(apply(res, 1, min), rev(apply(res, 1, max))), border=NA, col='grey80')
             }
             else {#constant
-                polygon(c(0,xmax,xmax,0), c(rep(emig[line,ind_D0]-emig[line,ind_D0+1],2),rep(emig[line,ind_D0]+emig[line,ind_D0+1],2)), border=NA, col='grey80')
+                graphics::polygon(c(0,xmax,xmax,0), c(rep(emig[line,ind_D0]-emig[line,ind_D0+1],2),rep(emig[line,ind_D0]+emig[line,ind_D0+1],2)), border=NA, col='grey80')
             }
         }
         if (x@DensDep) {
-            lines(xvals, densdep(xvals, A0 = emig[line,ind_D0], alpha = emig[line,ind_D0+IV], beta = emig[line,ind_D0+2*IV]), type = "l", lty = 1, col = line)
+            graphics::lines(xvals, densdep(xvals, A0 = emig[line,ind_D0], alpha = emig[line,ind_D0+IV], beta = emig[line,ind_D0+2*IV]), type = "l", lty = 1, col = line)
         }
         else {#constant
-            lines(x=c(0,xmax), y=rep(emig[line,ind_D0],2), type = "l", lty = 1, col = line)
+            graphics::lines(x=c(0,xmax), y=rep(emig[line,ind_D0],2), type = "l", lty = 1, col = line)
         }
         if (x@StageDep) {
             if (x@SexDep) {leg.txt <- c(leg.txt, paste0("Stage ",emig[line,1], ifelse(emig[line,2]," male"," female")))} else {leg.txt <- c(leg.txt, paste0("Stage ",emig[line,1]))}
@@ -405,7 +405,7 @@ setMethod("plotProbs", "EmigrationParams", function(x, stage = NULL, sex = NULL,
         }
     }
     if (length(leg.txt)>0) {
-        legend("topleft", leg.txt, col = 1:nrow(emig), lwd = 1.5)
+        graphics::legend("topleft", leg.txt, col = 1:nrow(emig), lwd = 1.5)
     }
 })
 
@@ -439,7 +439,7 @@ setMethod("plotProbs", "EmigrationParams", function(x, stage = NULL, sex = NULL,
 #'         \insertAllCited{}
 #' @author Anne-Kathleen Malchow
 #' @name Transfer
-TransferParams <- setClass("TransferParams")
+TransferParams <- methods::setClass("TransferParams")
 setMethod("show", "TransferParams", function(object){
     if (class(object)[1] == "DispersalKernel") cat("   Dispersal Kernel\n")
     if (class(object)[1] == "StochMove") cat("   Stochastic Movement Simulator\n")
@@ -596,7 +596,7 @@ setMethod("show", "TransferParams", function(object){
 #' @author Anne-Kathleen Malchow
 #' @name DispersalKernel
 #' @export DispersalKernel
-DispersalKernel <- setClass("DispersalKernel", slots = c(IndVar = "logical",
+DispersalKernel <- methods::setClass("DispersalKernel", slots = c(IndVar = "logical",
                                                          DoubleKernel = "logical",
                                                          StageDep = "logical",
                                                          SexDep = "logical",
@@ -750,9 +750,9 @@ setValidity("DispersalKernel", function(object) {
 setMethod("initialize", "DispersalKernel", function(.Object, ...) {
     this_func = "DispersalKernel(): "
     args <- list(...)
-    .Object <- callNextMethod()
+    .Object <- methods::callNextMethod()
     if ( length(args) == 0 ) {
-        validObject(.Object)
+        methods::validObject(.Object)
     }
     if (class(args$Distances)[1]=="numeric" && length(args$Distances)==1) {
         .Object@Distances <- as.matrix(args$Distances)
@@ -782,7 +782,7 @@ setMethod("initialize", "DispersalKernel", function(.Object, ...) {
     .Object}
 )
 setMethod("show", "DispersalKernel", function(object){
-    callNextMethod()
+    methods::callNextMethod()
     if (object@IndVar) {
         cat("   IndVar =", object@IndVar, "\n")
     }
@@ -876,15 +876,15 @@ setMethod("plotProbs", "DispersalKernel", function(x, mortality = FALSE, combine
                 if (!combinekernels){
                     if (x@IndVar) {
                         res <- matrix(ncol = 3, nrow = length(xvals))
-                        res[,1] <- dexp(xvals, rate = 1/(dists[line,ind_kernel1]))
-                        res[,2] <- dexp(xvals, rate = 1/(dists[line,ind_kernel1]+dists[line,ind_kernel1+1]))
-                        res[,3] <- dexp(xvals, rate = 1/(dists[line,ind_kernel1]-dists[line,ind_kernel1+1]))
-                        polygon(c(xvals,rev(xvals)), c(apply(res, 1, min), rev(apply(res, 1, max))), border=NA, col='grey80')
+                        res[,1] <- stats::dexp(xvals, rate = 1/(dists[line,ind_kernel1]))
+                        res[,2] <- stats::dexp(xvals, rate = 1/(dists[line,ind_kernel1]+dists[line,ind_kernel1+1]))
+                        res[,3] <- stats::dexp(xvals, rate = 1/(dists[line,ind_kernel1]-dists[line,ind_kernel1+1]))
+                        graphics::polygon(c(xvals,rev(xvals)), c(apply(res, 1, min), rev(apply(res, 1, max))), border=NA, col='grey80')
                         }
-                    lines(xvals,dexp(xvals,rate = 1/dists[line,ind_kernel1]), type = "l", lty = 1, col = line)
+                    graphics::lines(xvals,stats::dexp(xvals,rate = 1/dists[line,ind_kernel1]), type = "l", lty = 1, col = line)
                 }
             }
-            else {lines(xvals, rep(0, length(xvals)), type = "l", lty = 1, col = line)}
+            else {graphics::lines(xvals, rep(0, length(xvals)), type = "l", lty = 1, col = line)}
             if (x@DoubleKernel){
                 if(dists[line,ind_kernel2]>0){
                     if (combinekernels){
@@ -892,31 +892,31 @@ setMethod("plotProbs", "DispersalKernel", function(x, mortality = FALSE, combine
                         if (x@IndVar) {
                             pI_sd <- c(pI+dists[line,ind_pI+1],pI-dists[line,ind_pI+1])
                             res <- matrix(ncol = 8, nrow = length(xvals))
-                            res[,1] <- pI_sd[1] * dexp(xvals, rate = 1/(dists[line,ind_kernel1]+dists[line,ind_kernel1+1])) + (1-pI_sd[1]) * dexp(xvals, rate = 1/(dists[line,ind_kernel2]+dists[line,ind_kernel2+1]))
-                            res[,2] <- pI_sd[2] * dexp(xvals, rate = 1/(dists[line,ind_kernel1]+dists[line,ind_kernel1+1])) + (1-pI_sd[2]) * dexp(xvals, rate = 1/(dists[line,ind_kernel2]+dists[line,ind_kernel2+1]))
-                            res[,3] <- pI_sd[1] * dexp(xvals, rate = 1/(dists[line,ind_kernel1]-dists[line,ind_kernel1+1])) + (1-pI_sd[1]) * dexp(xvals, rate = 1/(dists[line,ind_kernel2]+dists[line,ind_kernel2+1]))
-                            res[,4] <- pI_sd[2] * dexp(xvals, rate = 1/(dists[line,ind_kernel1]-dists[line,ind_kernel1+1])) + (1-pI_sd[2]) * dexp(xvals, rate = 1/(dists[line,ind_kernel2]+dists[line,ind_kernel2+1]))
-                            res[,5] <- pI_sd[1] * dexp(xvals, rate = 1/(dists[line,ind_kernel1]+dists[line,ind_kernel1+1])) + (1-pI_sd[1]) * dexp(xvals, rate = 1/(dists[line,ind_kernel2]-dists[line,ind_kernel2+1]))
-                            res[,6] <- pI_sd[2] * dexp(xvals, rate = 1/(dists[line,ind_kernel1]+dists[line,ind_kernel1+1])) + (1-pI_sd[2]) * dexp(xvals, rate = 1/(dists[line,ind_kernel2]-dists[line,ind_kernel2+1]))
-                            res[,7] <- pI_sd[1] * dexp(xvals, rate = 1/(dists[line,ind_kernel1]-dists[line,ind_kernel1+1])) + (1-pI_sd[1]) * dexp(xvals, rate = 1/(dists[line,ind_kernel2]-dists[line,ind_kernel2+1]))
-                            res[,8] <- pI_sd[2] * dexp(xvals, rate = 1/(dists[line,ind_kernel1]-dists[line,ind_kernel1+1])) + (1-pI_sd[2]) * dexp(xvals, rate = 1/(dists[line,ind_kernel2]-dists[line,ind_kernel2+1]))
-                            polygon(c(xvals,rev(xvals)), c(apply(res, 1, min), rev(apply(res, 1, max))), border=NA, col='grey80')
+                            res[,1] <- pI_sd[1] * stats::dexp(xvals, rate = 1/(dists[line,ind_kernel1]+dists[line,ind_kernel1+1])) + (1-pI_sd[1]) * stats::dexp(xvals, rate = 1/(dists[line,ind_kernel2]+dists[line,ind_kernel2+1]))
+                            res[,2] <- pI_sd[2] * stats::dexp(xvals, rate = 1/(dists[line,ind_kernel1]+dists[line,ind_kernel1+1])) + (1-pI_sd[2]) * stats::dexp(xvals, rate = 1/(dists[line,ind_kernel2]+dists[line,ind_kernel2+1]))
+                            res[,3] <- pI_sd[1] * stats::dexp(xvals, rate = 1/(dists[line,ind_kernel1]-dists[line,ind_kernel1+1])) + (1-pI_sd[1]) * stats::dexp(xvals, rate = 1/(dists[line,ind_kernel2]+dists[line,ind_kernel2+1]))
+                            res[,4] <- pI_sd[2] * stats::dexp(xvals, rate = 1/(dists[line,ind_kernel1]-dists[line,ind_kernel1+1])) + (1-pI_sd[2]) * stats::dexp(xvals, rate = 1/(dists[line,ind_kernel2]+dists[line,ind_kernel2+1]))
+                            res[,5] <- pI_sd[1] * stats::dexp(xvals, rate = 1/(dists[line,ind_kernel1]+dists[line,ind_kernel1+1])) + (1-pI_sd[1]) * stats::dexp(xvals, rate = 1/(dists[line,ind_kernel2]-dists[line,ind_kernel2+1]))
+                            res[,6] <- pI_sd[2] * stats::dexp(xvals, rate = 1/(dists[line,ind_kernel1]+dists[line,ind_kernel1+1])) + (1-pI_sd[2]) * stats::dexp(xvals, rate = 1/(dists[line,ind_kernel2]-dists[line,ind_kernel2+1]))
+                            res[,7] <- pI_sd[1] * stats::dexp(xvals, rate = 1/(dists[line,ind_kernel1]-dists[line,ind_kernel1+1])) + (1-pI_sd[1]) * stats::dexp(xvals, rate = 1/(dists[line,ind_kernel2]-dists[line,ind_kernel2+1]))
+                            res[,8] <- pI_sd[2] * stats::dexp(xvals, rate = 1/(dists[line,ind_kernel1]-dists[line,ind_kernel1+1])) + (1-pI_sd[2]) * stats::dexp(xvals, rate = 1/(dists[line,ind_kernel2]-dists[line,ind_kernel2+1]))
+                            graphics::polygon(c(xvals,rev(xvals)), c(apply(res, 1, min), rev(apply(res, 1, max))), border=NA, col='grey80')
                         }
-                        yvals <- pI * dexp(xvals, rate = 1/dists[line,ind_kernel1]) + (1-pI) * dexp(xvals, rate = 1/dists[line,ind_kernel2])
-                        lines(xvals, yvals , type = "l", lty = 1, col = line)
+                        yvals <- pI * stats::dexp(xvals, rate = 1/dists[line,ind_kernel1]) + (1-pI) * stats::dexp(xvals, rate = 1/dists[line,ind_kernel2])
+                        graphics::lines(xvals, yvals , type = "l", lty = 1, col = line)
                     }
                     else {
                         if (x@IndVar) {
-                            res[,1] <- dexp(xvals, rate = 1/(dists[line,ind_kernel2]))
-                            res[,2] <- dexp(xvals, rate = 1/(dists[line,ind_kernel2]+dists[line,ind_kernel2+1]))
-                            res[,3] <- dexp(xvals, rate = 1/(dists[line,ind_kernel2]-dists[line,ind_kernel2+1]))
-                            polygon(c(xvals,rev(xvals)), c(apply(res, 1, min), rev(apply(res, 1, max))), border=NA, col='grey80')
+                            res[,1] <- stats::dexp(xvals, rate = 1/(dists[line,ind_kernel2]))
+                            res[,2] <- stats::dexp(xvals, rate = 1/(dists[line,ind_kernel2]+dists[line,ind_kernel2+1]))
+                            res[,3] <- stats::dexp(xvals, rate = 1/(dists[line,ind_kernel2]-dists[line,ind_kernel2+1]))
+                            graphics::polygon(c(xvals,rev(xvals)), c(apply(res, 1, min), rev(apply(res, 1, max))), border=NA, col='grey80')
                         }
-                        lines(xvals,dexp(xvals,rate = 1/dists[line,ind_kernel2]), type = "l", lty = 2, col = line)
+                        graphics::lines(xvals,stats::dexp(xvals,rate = 1/dists[line,ind_kernel2]), type = "l", lty = 2, col = line)
                     }
                 }
                 else{
-                    lines(xvals, rep(0, length(xvals)), type = "l", lty = 2, col = line)
+                    graphics::lines(xvals, rep(0, length(xvals)), type = "l", lty = 2, col = line)
                 }
             }
             if (x@StageDep) {
@@ -927,7 +927,7 @@ setMethod("plotProbs", "DispersalKernel", function(x, mortality = FALSE, combine
             }
         }
         if (length(leg.txt)>0) {
-            legend("topright", leg.txt, col = 1:nrow(dists), lwd = 1.5)
+            graphics::legend("topright", leg.txt, col = 1:nrow(dists), lwd = 1.5)
         }
     }
 })
@@ -1063,7 +1063,7 @@ setMethod("plotProbs", "DispersalKernel", function(x, mortality = FALSE, combine
 #' @author Anne-Kathleen Malchow
 #' @name SMS
 #' @export SMS
-SMS <- setClass("StochMove", slots = c(PR = "integer_OR_numeric",
+SMS <- methods::setClass("StochMove", slots = c(PR = "integer_OR_numeric",
                                        PRMethod = "integer_OR_numeric", # Perceptual range method: 1 = arithmetic mean; 2 = harmonic mean; 3 = weighted arithmtic mean
                                        MemSize = "integer_OR_numeric",
                                        GoalType = "integer_OR_numeric", # 0 (none) or 2 (dispersal bias)
@@ -1311,9 +1311,9 @@ setValidity("StochMove", function(object) {
 setMethod("initialize", "StochMove", function(.Object,...) {
     this_func = "SMS(): "
     args <- list(...)
-    .Object <- callNextMethod()
+    .Object <- methods::callNextMethod()
     if ( length(args) == 0 ) {
-        validObject(.Object)
+        methods::validObject(.Object)
     }
     if (!.Object@GoalType) { # GoalType = 0
         .Object@GoalBias = 1.0
@@ -1340,7 +1340,7 @@ setMethod("initialize", "StochMove", function(.Object,...) {
     .Object}
 )
 setMethod("show", "StochMove", function(object){
-    callNextMethod()
+    methods::callNextMethod()
     cat("   PR =", object@PR, ", MemSize =", object@MemSize, "\n")
     if (object@PRMethod == 1) cat("   Method: Arithmetic mean \n")
     if (object@PRMethod == 2) cat("   Method: Harmonic mean \n")
@@ -1402,17 +1402,17 @@ setMethod("plotProbs", "StochMove", function(x, xmax = NULL, ymax = NULL){
             res[,6] <- 1+densdep(xvals, A0 = (gb[1]+gb[2]-1), alpha = -(alp[1]-alp[2]), beta = (bet[1]+bet[2]))
             res[,7] <- 1+densdep(xvals, A0 = (gb[1]+gb[2]-1), alpha = -(alp[1]+alp[2]), beta = (bet[1]-bet[2]))
             res[,8] <- 1+densdep(xvals, A0 = (gb[1]+gb[2]-1), alpha = -(alp[1]+alp[2]), beta = (bet[1]+bet[2]))
-            polygon(c(xvals,rev(xvals)), c(apply(res, 1, min), rev(apply(res, 1, max))), border=NA, col='grey80')
+            graphics::polygon(c(xvals,rev(xvals)), c(apply(res, 1, min), rev(apply(res, 1, max))), border=NA, col='grey80')
         }
         else {#constant
-            polygon(c(0,xmax,xmax,0), c(rep(gb[1]-gb[2],2),rep(gb[1]+gb[2],2)), border=NA, col='grey80')
+            graphics::polygon(c(0,xmax,xmax,0), c(rep(gb[1]-gb[2],2),rep(gb[1]+gb[2],2)), border=NA, col='grey80')
         }
     }
     # plot lines
     if (x@GoalType == 2) {
-        lines(xvals, 1+densdep(xvals, A0 = (gb[1]-1), alpha = -alp[1], beta = bet[1]), type = "b", lty = 1, col = "blue")
+        graphics::lines(xvals, 1+densdep(xvals, A0 = (gb[1]-1), alpha = -alp[1], beta = bet[1]), type = "b", lty = 1, col = "blue")
     }else { # constant
-        lines(x=c(0,xmax), y=rep(gb[1],2), type = "b", lty = 1, col = "blue")
+        graphics::lines(x=c(0,xmax), y=rep(gb[1],2), type = "b", lty = 1, col = "blue")
     }
 })
 
@@ -1480,7 +1480,7 @@ setMethod("plotProbs", "StochMove", function(x, xmax = NULL, ymax = NULL){
 #' @author Anne-Kathleen Malchow
 #' @name CorrRW
 #' @export CorrRW
-CorrRW <- setClass("CorrRW", slots = c(IndVar = "logical",
+CorrRW <- methods::setClass("CorrRW", slots = c(IndVar = "logical",
                                        StepLength = "numeric",
                                        Rho = "numeric",
                                        StraightenPath = "logical",
@@ -1585,14 +1585,14 @@ setValidity("CorrRW", function(object) {
 # setMethod("initialize", "CorrRW", function(.Object,...) {
 #     this_func = "CorrRW(): "
 #     args <- list(...)
-#     .Object <- callNextMethod()
+#     .Object <- methods::callNextMethod()
 #     if ( length(args) == 0 ) {
-#         validObject(.Object)
+#         methods::validObject(.Object)
 #     }
 #     .Object}
 # )
 setMethod("show", "CorrRW", function(object){
-    callNextMethod()
+    methods::callNextMethod()
     if (object@IndVar) {
         cat("   StepLength =", object@StepLength[1], "\u00B1" , object@StepLength[2], ", scale \u03bc =", object@StepLength[3], "\n")
         cat("   Rho =", object@Rho[1], "\u00B1" , object@Rho[2], ", scale \u03bc =", object@Rho[3], "\n")
@@ -1772,7 +1772,7 @@ setMethod("show", "CorrRW", function(object){
 #' @author Anne-Kathleen Malchow
 #' @name Settlement
 #' @export Settlement
-Settlement <- setClass("SettlementParams", slots = c(StageDep = "logical",
+Settlement <- methods::setClass("SettlementParams", slots = c(StageDep = "logical",
                                                      SexDep = "logical",
                                                      Settle = "matrix_OR_numeric",      # Settlement conditions for all sexes/stages. Settlement rule if the arrival cell/patch is unsuitable: 0 = die, 1 = wait, 2 = randomly choose a suitable cell/patch or die, 3 = randomly choose a suitable cell/patch or wait
                                                      FindMate = "logical",
@@ -1915,9 +1915,9 @@ setValidity("SettlementParams", function(object) {
 setMethod("initialize", "SettlementParams", function(.Object,...) {
     this_func = "Settlement(): "
     args <- list(...)
-    .Object <- callNextMethod()
+    .Object <- methods::callNextMethod()
     if ( length(args) == 0 ) {
-        validObject(.Object)
+        methods::validObject(.Object)
     }
     if (!is.null(args$Settle)) {
         if (class(args$Settle)[1]=="numeric" && length(args$Settle)==1) {
@@ -2000,9 +2000,9 @@ setMethod("plotProbs", "SettlementParams", function(x, stage = NULL, sex = NULL,
                 res[,6] <- densdep(xvals, A0 = sett[line,ind_D0]+sett[line,ind_D0+1], alpha = sett[line,ind_D0+2]-sett[line,ind_D0+3], beta = sett[line,ind_D0+4]+sett[line,ind_D0+5])
                 res[,7] <- densdep(xvals, A0 = sett[line,ind_D0]+sett[line,ind_D0+1], alpha = sett[line,ind_D0+2]+sett[line,ind_D0+3], beta = sett[line,ind_D0+4]-sett[line,ind_D0+5])
                 res[,8] <- densdep(xvals, A0 = sett[line,ind_D0]+sett[line,ind_D0+1], alpha = sett[line,ind_D0+2]+sett[line,ind_D0+3], beta = sett[line,ind_D0+4]+sett[line,ind_D0+5])
-                polygon(c(xvals,rev(xvals)), c(apply(res, 1, min), rev(apply(res, 1, max))), border=NA, col='grey80')
+                graphics::polygon(c(xvals,rev(xvals)), c(apply(res, 1, min), rev(apply(res, 1, max))), border=NA, col='grey80')
             }
-            lines(xvals, densdep(xvals, A0 = sett[line,ind_D0], alpha = sett[line,ind_D0+IV], beta = sett[line,ind_D0+2*IV]), type = "l", lty = 1, col = line)
+            graphics::lines(xvals, densdep(xvals, A0 = sett[line,ind_D0], alpha = sett[line,ind_D0+IV], beta = sett[line,ind_D0+2*IV]), type = "l", lty = 1, col = line)
 
             if (x@StageDep) {
                 if (x@SexDep) {leg.txt <- c(leg.txt, paste0("Stage ",sett[line,1], ifelse(sett[line,2]," male"," female")))} else {leg.txt <- c(leg.txt, paste0("Stage ",sett[line,1]))}
@@ -2012,7 +2012,7 @@ setMethod("plotProbs", "SettlementParams", function(x, stage = NULL, sex = NULL,
             }
         }
         if (length(leg.txt)>0) {
-            legend("topright", leg.txt, col = 1:nrow(sett), lwd = 1.5)
+            graphics::legend("topright", leg.txt, col = 1:nrow(sett), lwd = 1.5)
         }
     }
     else{ print("Plotting is only implemented for density-dependent settlement (in a movement process).\n") }
@@ -2074,7 +2074,7 @@ setMethod("plotProbs", "SettlementParams", function(x, stage = NULL, sex = NULL,
 #' @author Anne-Kathleen Malchow
 #' @name Dispersal
 #' @export Dispersal
-Dispersal <- setClass("DispersalParams", slots = c(Emigration = "EmigrationParams",
+Dispersal <- methods::setClass("DispersalParams", slots = c(Emigration = "EmigrationParams",
                                                    Transfer   = "TransferParams",
                                                    Settlement = "SettlementParams")
                       , prototype = list(Emigration = Emigration(),
@@ -2085,14 +2085,14 @@ Dispersal <- setClass("DispersalParams", slots = c(Emigration = "EmigrationParam
 
 setValidity("DispersalParams", function(object) {
     msg <- NULL
-    validObject(object@Emigration)
+    methods::validObject(object@Emigration)
     if (object@Emigration@UseFullKern) {
         if (!class(object@Transfer)[1] == "DispersalKernel") {
             msg <- c(msg, "Dispersal(): The emigration option \"UseFullKern\" can only be used if a dispersal kernel is used as transfer method!")
         }
     }
-    validObject(object@Transfer)
-    validObject(object@Settlement)
+    methods::validObject(object@Transfer)
+    methods::validObject(object@Settlement)
     if (class(object@Transfer)[1] == "DispersalKernel") {
         if (object@Settlement@DensDep) {
             msg <- c(msg, "Dispersal(): Settlement can only be density-dependent (DensDep = TRUE) if a movement process is used as transfer method!")
@@ -2107,9 +2107,9 @@ setValidity("DispersalParams", function(object) {
 setMethod("initialize", "DispersalParams", function(.Object,...) {
     this_func = "Dispersal(): "
     args <- list(...)
-    .Object <- callNextMethod()
+    .Object <- methods::callNextMethod()
     if ( length(args) == 0 ) {
-        validObject(.Object)
+        methods::validObject(.Object)
     }
     .Object}
 )

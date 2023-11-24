@@ -25,7 +25,7 @@
 
 # from RS 'CONTROL.txt' file
 
-ControlParams <- setClass("ControlParams", slots = c(
+ControlParams <- methods::setClass("ControlParams", slots = c(
                                    #nSimuls = "integer_OR_numeric",         # Not yet used by R version, in C++ version its read from parameterfile
                                    #nLandscapes = "integer_OR_numeric",     # Not yet used by R version, in C++ version its read from landfile
                                    batchnum = "integer_OR_numeric",         # only variable to set from RSsim(), optional

@@ -159,7 +159,7 @@
 #' @author Anne-Kathleen Malchow
 #' @name StageStructure
 #' @export StageStructure
-StageStructure <- setClass("StagesParams", slots = c(Stages = "integer_OR_numeric",
+StageStructure <- methods::setClass("StagesParams", slots = c(Stages = "integer_OR_numeric",
                                                      TransMatrix = "matrix",
                                                      MaxAge = "integer_OR_numeric",
                                                      MinAge = "integer_OR_numeric",
@@ -373,9 +373,9 @@ setMethod("initialize", "StagesParams", function(.Object,...) {
     if (!is.null(args$SurvStageWtsMatrix)) {
         .Object@SurvStageWts <- TRUE
     }
-    .Object <- callNextMethod()
+    .Object <- methods::callNextMethod()
     if ( length(args) == 0 ) {
-        validObject(.Object)
+        methods::validObject(.Object)
     }
     if (!.Object@FecDensDep) {
         if (.Object@FecStageWts) {
@@ -489,12 +489,12 @@ setMethod("plotProbs", "StagesParams", function(x, stage = NULL, sex = NULL, xma
             this.sex = 0
         }
         if (this.stage %in% stage && this.sex %in% sex) {
-            if(x@FecDensDep){ lines(xvals, fecs[line]*exp(-xvals), type = "l", lty = 1, col = line) }
-            else{ lines(xvals, rep(fecs[line], length(xvals)), type = "l", lty = 1, col = line) }
-            if(x@SurvDensDep){ lines(xvals, surv[line]*exp(-x@SurvDensCoeff*xvals), type = "l", lty = 2, col = line) }
-            else{ lines(xvals, rep(surv[line], length(xvals)), type = "l", lty = 2, col = line) }
-            if(x@DevDensDep){ lines(xvals, devs[line]*exp(-x@DevDensCoeff*xvals), type = "l", lty = 3, col = line) }
-            else{ lines(xvals, rep(devs[line], length(xvals)), type = "l", lty = 3, col = line) }
+            if(x@FecDensDep){ graphics::lines(xvals, fecs[line]*exp(-xvals), type = "l", lty = 1, col = line) }
+            else{ graphics::lines(xvals, rep(fecs[line], length(xvals)), type = "l", lty = 1, col = line) }
+            if(x@SurvDensDep){ graphics::lines(xvals, surv[line]*exp(-x@SurvDensCoeff*xvals), type = "l", lty = 2, col = line) }
+            else{ graphics::lines(xvals, rep(surv[line], length(xvals)), type = "l", lty = 2, col = line) }
+            if(x@DevDensDep){ graphics::lines(xvals, devs[line]*exp(-x@DevDensCoeff*xvals), type = "l", lty = 3, col = line) }
+            else{ graphics::lines(xvals, rep(devs[line], length(xvals)), type = "l", lty = 3, col = line) }
             if(SexDep) {leg.txt <- c(leg.txt, paste0("Stage ",this.stage, ifelse(this.sex," female"," male")))}
             else {leg.txt <- c(leg.txt, paste0("Stage ",this.stage))}
             leg.col <- c(leg.col, line)
@@ -502,7 +502,7 @@ setMethod("plotProbs", "StagesParams", function(x, stage = NULL, sex = NULL, xma
     }
     if (length(leg.txt)>0) {
         leg.txt <- c("Fecundity","Survival prob.","Developmt. prob.",leg.txt)
-        legend("topright", leg.txt, col = c(rep(1,3),leg.col), lwd = 1.5, lty = c(1:3,rep(1,length(leg.col))) )
+        graphics::legend("topright", leg.txt, col = c(rep(1,3),leg.col), lwd = 1.5, lty = c(1:3,rep(1,length(leg.col))) )
     }
 })
 
@@ -512,7 +512,7 @@ setMethod("plotProbs", "StagesParams", function(x, stage = NULL, sex = NULL, xma
 # contains basic demographic parameters (originally in RS 'Rarameters'-file) and optionally the 'StageStruct' object
 
 # define this ClassUnion so that the 'stages' slot in the parameter master class 'RSparams' can be FALSE for option 'population with non-overlapping generations'
-setClassUnion("StagesSlot", c("logical", "StagesParams"))
+methods::setClassUnion("StagesSlot", c("logical", "StagesParams"))
 
 #' Set Demographic Parameters
 #'
@@ -581,7 +581,7 @@ setClassUnion("StagesSlot", c("logical", "StagesParams"))
 #' @author Anne-Kathleen Malchow
 #' @name Demography
 #' @export Demography
-Demography <- setClass("DemogParams", slots = c(Rmax = "integer_OR_numeric",
+Demography <- methods::setClass("DemogParams", slots = c(Rmax = "integer_OR_numeric",
                                                 bc = "numeric",
                                                 StageStruct = "StagesSlot",
                                                 ReproductionType = "integer_OR_numeric",
@@ -626,7 +626,7 @@ setValidity("DemogParams", function(object) {
             }
         }
     }
-    validObject(object@StageStruct)
+    methods::validObject(object@StageStruct)
     if (class(object@StageStruct)[1]=="logical") {
         if (object@StageStruct) {                # StageStruct=TRUE
             msg <- c(msg, "StageStruct must either be FALSE or an object of class \"StagesParams\" !")
@@ -804,9 +804,9 @@ setValidity("DemogParams", function(object) {
 setMethod("initialize", "DemogParams", function(.Object,...) {
     this_func = "Demography(): "
     args <- list(...)
-    .Object <- callNextMethod()
+    .Object <- methods::callNextMethod()
     if ( length(args) == 0 ) {
-        validObject(.Object)
+        methods::validObject(.Object)
     }
     if (class(.Object@StageStruct)[1]=="StagesParams") {
         .Object@Rmax = -9L
