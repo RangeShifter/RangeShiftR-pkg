@@ -305,6 +305,7 @@ setMethod("ColonisationStats", "data.frame", function(x, y = NULL, years = numer
 
 setMethod("ColonisationStats", "RSparams", function(x, y = getwd(), years = numeric(0), maps = FALSE) {
     res <- NULL
+    dirpath <- NULL # unused but required for R check
     if(class(x@land)=="ImportedLandscape" || class(maps)=="logical") {
         if(x@simul@OutIntPop>0){
             if(!is.null(y) & class(y)=="character" ){
@@ -527,6 +528,7 @@ setMethod("SMSpathLengths", c(s="RSparams", dirpath="character"), function(s,dir
         return(NULL)
     }
 
+    Year <- NULL # unused but required for R check
     maxLength = s@dispersal@Settlement@MaxSteps
     if(maxLength<1) maxLength = as.integer(log(.015)/log(1-s@dispersal@Transfer@StepMort)) + 1
     year_blocks = s@land@DynamicLandYears
