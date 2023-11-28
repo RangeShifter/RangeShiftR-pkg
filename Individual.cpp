@@ -1832,7 +1832,7 @@ void testIndividual() {
 	Individual ind(pCell, pPatch, stg, age, repInt, probmale, uses_movt_process, moveType);
 
 	// An individual can move to a neighbouring cell
-	ind.moveto();
+	//ind.moveto();
 
 	// Gets its sex drawn from pmale
 	

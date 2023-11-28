@@ -762,7 +762,6 @@ void Species::setNeutralLoci(bool neutralMarkersOnly) {
 			neutral = true;
 			for (int t = 0; t < ntraits; t++) { // each trait
 				for (int a = 0; a < traitdata->traitmaps[t]->nAlleles; a++) {
-#if 
 					if (i == traitdata->traitmaps[t]->traitalleles[a]->chromo
 						&& j == traitdata->traitmaps[t]->traitalleles[a]->locus) {
 						neutral = false; // as locus contributes to a trait
