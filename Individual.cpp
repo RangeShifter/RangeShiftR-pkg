@@ -62,8 +62,10 @@ Individual::Individual(Cell* pCell, Patch* pPatch, short stg, short a, short rep
 			smsData = new smsdata;
 			smsData->dp = smsData->gb = smsData->alphaDB = 1.0;
 			smsData->betaDB = 1;
-			smsData->prev.x = loc.x; smsData->prev.y = loc.y; // previous location
-			smsData->goal.x = loc.x; smsData->goal.y = loc.y; // goal location - initialised for dispersal bias
+			smsData->prev.x = loc.x; 
+			smsData->prev.y = loc.y; // previous location
+			smsData->goal.x = loc.x; 
+			smsData->goal.y = loc.y; // goal location - initialised for dispersal bias
 		}
 		else smsData = 0;
 		if (moveType == 2) { // CRW
@@ -168,7 +170,6 @@ void Individual::setGenes(Species* pSpecies, int resol) {
 		}
 	}
 
-	//int trfrposn = 0;
 	if (trfr.indVar) { // set transfer genes
 		int trfrposn = gposn;
 		if (trfr.sexDep) { // must be a sexual species
@@ -854,7 +855,8 @@ void Individual::moveto(Cell* newCell) {
 	double d = sqrt(((double)currloc.x - (double)newloc.x) * ((double)currloc.x - (double)newloc.x)
 		+ ((double)currloc.y - (double)newloc.y) * ((double)currloc.y - (double)newloc.y));
 	if (d >= 1.0 && d < 1.5) { // ok
-		pCurrCell = newCell; status = 5;
+		pCurrCell = newCell; 
+		status = 5;
 	}
 }
 
@@ -1829,14 +1831,14 @@ void testIndividual() {
 	short moveType = 1;
 	Individual ind(pCell, pPatch, stg, age, repInt, probmale, uses_movt_process, moveType);
 
-	// An individual...
-	{
-		std::vector <Individual*> inds;
-		for (int i = 0; i < 2; i++)
-		{
-			inds.push_back(new Individual(pCell, pPatch, stg, age, repInt, probmale, uses_movt_process, moveType));
-		}
-	}
+	// An individual can move to a neighbouring cell
+	ind.moveto();
+
+	// Gets its sex drawn from pmale
+	
+	// Can age or develop
+
+	// 
 
 	// Reproduces
 	// depending on whether it is sexual or not
