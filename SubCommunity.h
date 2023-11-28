@@ -54,10 +54,6 @@ using namespace std;
 #include "../Version.h"
 #endif
 
-//#if !RS_RCPP && R_CMD
-//#include "../../Batch/Version.h"
-//#endif
-
 #include "Parameters.h"
 #include "Landscape.h"
 #include "Population.h"
@@ -111,7 +107,7 @@ public:
 		Individual*,	// pointer to Individual
 		Species*			// pointer to Species
 	);
-#if RS_RCPP // included also SEASONAL
+#if RS_RCPP
 	int transfer( // Transfer through matrix - run for matrix SubCommunity only
 		Landscape*,	// pointer to Landscape
 		short,			// landscape change index
@@ -122,7 +118,7 @@ public:
 		Landscape*,	// pointer to Landscape
 		short				// landscape change index
 	);
-#endif // SEASONAL || RS_RCPP
+#endif // RS_RCPP
 	// Remove emigrants from patch 0 (matrix) and transfer to SubCommunity in which
 	// their destination co-ordinates fall (executed for the matrix patch only)
 	void completeDispersal(
@@ -200,7 +196,6 @@ public:
 private:
 	intptr subCommNum;	// SubCommunity number
 		// 0 is reserved for the SubCommunity in the inter-patch matrix
-//	intptr *occupancy;	// pointer to occupancy array
 	Patch *pPatch;
 	int *occupancy;	// pointer to occupancy array
 	std::vector <Population*> popns;

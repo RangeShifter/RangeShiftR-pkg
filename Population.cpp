@@ -1163,9 +1163,6 @@ void Population::survival0(float localK, short option0, short option1)
 		for (int stg = 0; stg < nStages; stg++) {
 			for (int sex = 0; sex < nsexes; sex++) {
 				if (option1 != 2 && sstruct.devDens && stg > 0) {
-#if RSDEBUG
-					//	DEBUGLOG << "DD in DEVELOPMENT for stg=" << stg << " sex=" << sex << endl;
-#endif
 				// NB DD in development does NOT apply to juveniles,
 				// which must develop to stage 1 if they survive
 					float effect = 0.0;
