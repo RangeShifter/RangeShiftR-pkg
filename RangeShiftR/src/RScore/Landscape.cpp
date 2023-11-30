@@ -2615,8 +2615,10 @@ costs >> header;
 	costs.close(); costs.clear();
 	return -1;
 }
+double tmpresolCost;		
 costs >> maxXcost >> header >> maxYcost >> header >> minLongCost;
-costs >> header >> minLatCost >> header >> resolCost >> header >> NODATACost;
+costs >> header >> minLatCost >> header >> tmpresolCost >> header >> NODATACost;
+resolCost = (int) tmpresolCost;
 
 #if !RS_RCPP
 MemoLine("Loading costs map. Please wait...");
