@@ -1018,8 +1018,9 @@ int ReadDynLandR(Landscape *pLandscape, Rcpp::S4 LandParamsR)
 
 			hfile >> header >> yllcorner;
 			if (header != L"yllcorner" && header != L"YLLCORNER") errors++;
-
-			hfile >> header >> cellsize;
+            double tmpcellsize;
+			hfile >> header >> tmpcellsize;
+			cellsize = (int) tmpcellsize;
 			if (header != L"cellsize" && header != L"CELLSIZE") errors++;
 
 			hfile >> header >> habnodata;
@@ -1115,9 +1116,10 @@ int ReadDynLandR(Landscape *pLandscape, Rcpp::S4 LandParamsR)
 				pfile >> header >> yllcorner;
 				if (header != L"yllcorner" && header != L"YLLCORNER") errors++;
 
-				pfile >> header >> cellsize;
+				double tmpcellsize;
+				pfile >> header >> tmpcellsize;
+				cellsize = (int) tmpcellsize;
 				if (header != L"cellsize" && header != L"CELLSIZE") errors++;
-				Rcpp::Rcout << "Cellsize is " << cellsize<<endl;
 
 				pfile >> header >> pchnodata;
 				if (header != L"NODATA_value" && header != L"NODATA_VALUE") errors++;
@@ -1216,11 +1218,12 @@ int ReadDynLandR(Landscape *pLandscape, Rcpp::S4 LandParamsR)
 				cfile >> header >> yllcorner;
 				if (header != L"yllcorner" && header != L"YLLCORNER") errors++;
 
-				cfile >> header >> cellsize;
+				double tmpcellsize;
+				cfile >> header >> tmpcellsize;
+				cellsize = (int) tmpcellsize;
 				if (header != L"cellsize" && header != L"CELLSIZE") errors++;
-				Rcpp::Rcout << "Cellsize is " << cellsize<<endl;
 
-				cfile >> header >> pchnodata;
+				cfile >> header >> costnodata;
 				if (header != L"NODATA_value" && header != L"NODATA_VALUE") errors++;
 
 				if (errors > 0)  {
