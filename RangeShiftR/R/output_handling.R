@@ -43,7 +43,7 @@ setGeneric("readRange", function(s,dirpath) standardGeneric("readRange") )
 setMethod("readRange", c(s="RSparams", dirpath="character"), function(s,dirpath) {
     path <- paste0(dirpath, "Outputs/Batch", s@control@batchnum, "_Sim", s@simul@Simulation, "_Land", s@land@LandNum, "_Range.txt")
     if(file.exists(path)){
-        return(read.table(path, h = T, sep = "\t"))
+        return(utils::read.table(path, h = T, sep = "\t"))
     }else {
         warning("The 'range' output file for this simulation does not exist.", call. = FALSE)
     }
@@ -64,7 +64,7 @@ setGeneric("readPop", function(s,dirpath,...) standardGeneric("readPop") )
 setMethod("readPop", c(s="RSparams", dirpath="character"), function(s,dirpath,center=TRUE) {
     path <- paste0(dirpath, "Outputs/Batch", s@control@batchnum, "_Sim", s@simul@Simulation, "_Land", s@land@LandNum, "_Pop.txt")
     if(file.exists(path)){
-        pop_table <- read.table(path, h = T, sep = "\t")
+        pop_table <- utils::read.table(path, h = T, sep = "\t")
         if (sum(grepl('x',names(pop_table))) & center){
             pop_table$x <- (pop_table$x+0.5)*s@land@Resolution
             pop_table$y <- (pop_table$y+0.5)*s@land@Resolution
@@ -136,7 +136,7 @@ setMethod("ColonisationStats", "data.frame", function(x, y = NULL, years = numer
             digitsY <- ifelse(maxY < 1, 0, floor(log10(maxY)) + 1)
             x$PatchID <- (x$x*(10^digitsY)) + (x$y) #+ (maxY+1-x$y)
         }
-
+        NInd <- NULL # not used, necessary to pass CRAN check
         x <- subset(x, NInd>0, select = c("Rep","PatchID","Year","NInd") )
         reps <- sort(unique(x$Rep))
         n=length(reps)
@@ -285,13 +285,13 @@ setMethod("ColonisationStats", "data.frame", function(x, y = NULL, years = numer
                                 patch_outstack <- c(patch_outstack, patch_occ_prob)
                                 terra::values(patch_outstack[[j]])[value_ix] <- occ_prob[,j+2]
                             }
-                            crs(patch_outstack) <- NA
+                            terra::crs(patch_outstack) <- NA
                         #} else{
                         #    raster::values(patch_occ_prob)[value_ix] <- occ_prob[,1]
                         #    patch_outstack <- patch_occ_prob
                         #}
                         terra::values(patch_col_time)[value_ix] <- ifelse(is.na(col_time_mean[]),-9,col_time_mean[])
-                        crs(patch_col_time) <- NA
+                        terra::crs(patch_col_time) <- NA
 
                         return(list(occ_prob=occ_prob, col_time=col_time, map_occ_prob=patch_outstack, map_col_time=patch_col_time))
 
@@ -305,6 +305,7 @@ setMethod("ColonisationStats", "data.frame", function(x, y = NULL, years = numer
 
 setMethod("ColonisationStats", "RSparams", function(x, y = getwd(), years = numeric(0), maps = FALSE) {
     res <- NULL
+    dirpath <- NULL # unused but required for R check
     if(class(x@land)=="ImportedLandscape" || class(maps)=="logical") {
         if(x@simul@OutIntPop>0){
             if(!is.null(y) & class(y)=="character" ){
@@ -351,7 +352,7 @@ setMethod("ColonisationStats", "RSparams", function(x, y = getwd(), years = nume
                                 if ( class(patch_curr) == "try-error" ) warning("ColonisationStats(): Couldn't read patch raster file nr ", current , " for this simulation.", call. = FALSE)
                                 else patch_r <- c(patch_r , patch_curr)
 
-                                if(class(pop_df) == "data.frame" & nlyr(patch_r)==(length(years)+1) ) res <- ColonisationStats(pop_df,patch_r,years)
+                                if(class(pop_df) == "data.frame" & terra::nlyr(patch_r)==(length(years)+1) ) res <- ColonisationStats(pop_df,patch_r,years)
                             }
                         }else{
                             # for cell-based model, read only main habitat maps to use as raster template
@@ -398,10 +399,10 @@ setGeneric("plotAbundance", function(s,...) standardGeneric("plotAbundance") )
 
 setMethod("plotAbundance", "data.frame", function(s, sd = FALSE, replicates = TRUE, ylim=NULL, ...) {
     # Calculate means
-    rep_means <- aggregate(NInds~Year, data = s, FUN = "mean")
+    rep_means <- stats::aggregate(NInds~Year, data = s, FUN = "mean")
     # Calculate standard deviation
     if (sd) {
-        rep_sd <- aggregate(NInds~Year, data = s, FUN = "sd")
+        rep_sd <- stats::aggregate(NInds~Year, data = s, FUN = "sd")
         rep_sd[is.na(rep_sd)] <- 0
     }
     # Set y-limits
@@ -420,16 +421,16 @@ setMethod("plotAbundance", "data.frame", function(s, sd = FALSE, replicates = TR
     plot(NULL, type = "n", ylab = "Abundance", xlab = "Year", xlim=c(0, max(s$Year)), ylim=ylim, ...)
     # Plot standard deviation
     if (sd) {
-        polygon(c(rep_sd$Year,rev(rep_sd$Year)), c(rep_means$NInds+rep_sd$NInds, rev(pmax(0,rep_means$NInds-rep_sd$NInds))), border=NA, col='grey80')
+        graphics::polygon(c(rep_sd$Year,rev(rep_sd$Year)), c(rep_means$NInds+rep_sd$NInds, rev(pmax(0,rep_means$NInds-rep_sd$NInds))), border=NA, col='grey80')
     }
     # Plot replicates
     if (replicates) {
         for (i in 0:max(s$Rep)) {
-            lines(s$Year[s$Rep==i], s$NInds[s$Rep==i], type = "l", lwd = 0.5)
+            graphics::lines(s$Year[s$Rep==i], s$NInds[s$Rep==i], type = "l", lwd = 0.5)
         }
     }
     # Plot abundance
-    lines(rep_means$Year, rep_means$NInds, type = "l", lwd = 3, col = "red")
+    graphics::lines(rep_means$Year, rep_means$NInds, type = "l", lwd = 3, col = "red")
 })
 setMethod("plotAbundance", "RSparams", function(s, dirpath, ...) {
     if (class(dirpath)=="character"){
@@ -458,10 +459,10 @@ setGeneric("plotOccupancy", function(s,...) standardGeneric("plotOccupancy") )
 setMethod("plotOccupancy", "data.frame", function(s, sd = FALSE, replicates = TRUE, ylim=NULL, ...) {
     names(s)[grep('NOccup',names(s))] <- 'NOccup'
     # Calculate means
-    rep_means <- aggregate(NOccup~Year, data = s, FUN = "mean")
+    rep_means <- stats::aggregate(NOccup~Year, data = s, FUN = "mean")
     # Calculate standard deviation
     if (sd) {
-        rep_sd <- aggregate(NOccup~Year, data = s, FUN = "sd")
+        rep_sd <- stats::aggregate(NOccup~Year, data = s, FUN = "sd")
         rep_sd[is.na(rep_sd)] <- 0
     }
     # Set y-limits
@@ -480,16 +481,16 @@ setMethod("plotOccupancy", "data.frame", function(s, sd = FALSE, replicates = TR
     plot(NULL, type = "n", ylab = "Occupancy", xlab = "Year", xlim=c(0, max(s$Year)), ylim=ylim, ...)
     # Plot standard deviation
     if (sd) {
-        polygon(c(rep_sd$Year,rev(rep_sd$Year)), c(rep_means$NOccup+rep_sd$NOccup, rev(pmax(0,rep_means$NOccup-rep_sd$NOccup))), border=NA, col='grey80')
+        graphics::polygon(c(rep_sd$Year,rev(rep_sd$Year)), c(rep_means$NOccup+rep_sd$NOccup, rev(pmax(0,rep_means$NOccup-rep_sd$NOccup))), border=NA, col='grey80')
     }
     # plot replicates
     if (replicates) {
         for (i in 0:max(s$Rep)) {
-            lines(s$Year[s$Rep==i], s$NOccup[s$Rep==i], type = "l", lwd = 0.5)
+            graphics::lines(s$Year[s$Rep==i], s$NOccup[s$Rep==i], type = "l", lwd = 0.5)
         }
     }
     # Plot occupancy
-    lines(rep_means$Year, rep_means$NOccup, type = "l", lwd = 3, col = "blue")
+    graphics::lines(rep_means$Year, rep_means$NOccup, type = "l", lwd = 3, col = "blue")
 })
 setMethod("plotOccupancy", "RSparams", function(s, dirpath, ...) {
     if (class(dirpath)=="character"){
@@ -527,6 +528,7 @@ setMethod("SMSpathLengths", c(s="RSparams", dirpath="character"), function(s,dir
         return(NULL)
     }
 
+    Year <- NULL # unused but required for R check
     maxLength = s@dispersal@Settlement@MaxSteps
     if(maxLength<1) maxLength = as.integer(log(.015)/log(1-s@dispersal@Transfer@StepMort)) + 1
     year_blocks = s@land@DynamicLandYears
@@ -537,7 +539,7 @@ setMethod("SMSpathLengths", c(s="RSparams", dirpath="character"), function(s,dir
     null_tb <- rep(0,maxLength)
     names(null_tb) <- sapply(1:maxLength, FUN=paste0)
     for(i in 0:(s@simul@Replicates-1)){
-        steps <- try(read.table(paste0(dirpath,
+        steps <- try(utils::read.table(paste0(dirpath,
                                    "Outputs/Batch",s@control@batchnum,
                                    "_Sim",s@simul@Simulation,
                                    "_Land",s@land@LandNum,
@@ -551,10 +553,10 @@ setMethod("SMSpathLengths", c(s="RSparams", dirpath="character"), function(s,dir
             steps_y <- sapply(seq(nr_maps), FUN = function(y){
                 tb <- null_tb
                 lo <- year_blocks[y]
-                if (y==nr_maps) tb_n <- table(aggregate(Step~IndID, data=subset(steps, Year >= lo), FUN = max)$Step)
+                if (y==nr_maps) tb_n <- table(stats::aggregate(Step~IndID, data=subset(steps, Year >= lo), FUN = max)$Step)
                 else {
                     up <- year_blocks[y+1]
-                    tb_n <- table(aggregate(Step~IndID, data=subset(steps, Year >= lo & Year < up), FUN = max)$Step)
+                    tb_n <- table(stats::aggregate(Step~IndID, data=subset(steps, Year >= lo & Year < up), FUN = max)$Step)
                 }
                 ix <- names(tb) %in% names(tb_n)
                 tb[ix] <- tb_n[1:sum(ix)]
@@ -855,9 +857,9 @@ setMethod("getLocalisedEquilPop", "DemogParams", function(demog, DensDep_values,
         xlabs <- print(DensDep_values, digits = 2)
         # which stages to plot?
         if(is.null(stages_out)) stages_out = seq((!juv.stage),demog@StageStruct@Stages-1)
-        colors <- hcl.colors(length(stages_out), palette = "Harmonic")
+        colors <- grDevices::hcl.colors(length(stages_out), palette = "Harmonic")
         if(demog@ReproductionType <2){
-            barplot(res[as.character(stages_out),], names.arg = xlabs, beside = F, col = colors,
+            graphics::barplot(res[as.character(stages_out),], names.arg = xlabs, beside = F, col = colors,
                           main = "Localised equilibrium densities", xlab = "1/b", ylab = "Population density")
         }
         if(demog@ReproductionType==2){
@@ -868,13 +870,13 @@ setMethod("getLocalisedEquilPop", "DemogParams", function(demog, DensDep_values,
                 fem <- seq.int(2,length(stages_out)*2,2)
                 res_2 <- cbind(res_2[mal,1:length(DensDep_values)],res_2[fem,1:length(DensDep_values)])
                 res_2 <- cbind(res_2[,c(sapply(1:length(DensDep_values), function(i){c(0,1)*length(DensDep_values)+i}))])
-                barplot(res_2, space=c(0.3,0.1), names.arg = c(rbind(xlabs,NA)), beside = F, col = rep(colors, 2),
+                graphics::barplot(res_2, space=c(0.3,0.1), names.arg = c(rbind(xlabs,NA)), beside = F, col = rep(colors, 2),
                         main = "Localised equilibrium densities", xlab = "1/b", ylab = "Population density")
-                text(seq(0.5,length(DensDep_values)*2,2)*1.2, colSums(res_2[,seq(1,length(DensDep_values)*2,2)])*1.1, "m", cex=1, col="black")
-                text(seq(1.5,length(DensDep_values)*2,2)*1.2, colSums(res_2[,seq(2,length(DensDep_values)*2,2)])*1.1, "f", cex=1, col="black")
+                graphics::text(seq(0.5,length(DensDep_values)*2,2)*1.2, colSums(res_2[,seq(1,length(DensDep_values)*2,2)])*1.1, "m", cex=1, col="black")
+                graphics::text(seq(1.5,length(DensDep_values)*2,2)*1.2, colSums(res_2[,seq(2,length(DensDep_values)*2,2)])*1.1, "f", cex=1, col="black")
             }
         }
-        legend("topleft", legend = rev(sapply(stages_out, function(s){paste("Stage",s)})), col = rev(colors), pch = 16)
+        graphics::legend("topleft", legend = rev(sapply(stages_out, function(s){paste("Stage",s)})), col = rev(colors), pch = 16)
     }
     # return equilibrium population densities
     return(res)

@@ -43,7 +43,7 @@ RunRS <- function(RSparams, dirpath = getwd()){
             stop("Parameter object must be of class RSparams")
         }
         else {
-            validObject(RSparams)
+            methods::validObject(RSparams)
         }
     }
     if (is.null(dirpath)) {
