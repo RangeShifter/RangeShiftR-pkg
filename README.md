@@ -40,6 +40,9 @@ A range of tutorials with theoretical and applied examples introduce you to
 the package's functionality and syntax. They can be found here:
 https://rangeshifter.github.io/RangeshiftR-tutorials/
 
+# Maintainer
+
+- [@JetteReeg](https://github.com/JetteReeg)
 
 ## References
 
