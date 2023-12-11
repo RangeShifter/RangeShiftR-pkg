@@ -31,13 +31,13 @@
 setGeneric("+")
 
 setMethod("+", signature(e1 = "RSparams", e2 = "SimulationParams"), function(e1, e2) {
-    validObject(e2)
+    methods::validObject(e2)
     e1@simul <- e2
     return(e1)}
 )
 
 setMethod("+", signature(e1 = "RSparams", e2 = "LandParams"), function(e1, e2) {
-    validObject(e2)
+    methods::validObject(e2)
     if (class(e2)[1] == "ImportedLandscape") {
         if (any(e2@PatchFile=="NULL")) {
             e1@control@patchmodel = FALSE
@@ -76,7 +76,7 @@ setMethod("+", signature(e1 = "RSparams", e2 = "LandParams"), function(e1, e2) {
 )
 
 setMethod("+", signature(e1 = "RSparams", e2 = "DemogParams"), function(e1, e2) {
-    validObject(e2)
+    methods::validObject(e2)
     e1@control@reproductn = e2@ReproductionType
     if (class(e2@StageStruct)[1] == "StagesParams") {
         e1@control@repseasons = e2@StageStruct@RepSeasons
@@ -101,7 +101,7 @@ setMethod("+", signature(e1 = "RSparams", e2 = "DemogParams"), function(e1, e2) 
 )
 
 setMethod("+", signature(e1 = "DemogParams", e2 = "StagesParams"), function(e1, e2) {
-    validObject(e2)
+    methods::validObject(e2)
     e1@StageStruct <- e2
     e1@Rmax <- -9L
     e1@bc <- -9L
@@ -109,7 +109,7 @@ setMethod("+", signature(e1 = "DemogParams", e2 = "StagesParams"), function(e1, 
 )
 
 setMethod("+", signature(e1 = "RSparams", e2 = "DispersalParams"), function(e1, e2) {
-    validObject(e2)
+    methods::validObject(e2)
     if (class(e2@Transfer)[1] == "DispersalKernel") {
         e1@control@transfer = 0
     }
@@ -131,34 +131,34 @@ setMethod("+", signature(e1 = "RSparams", e2 = "DispersalParams"), function(e1, 
 )
 
 setMethod("+", signature(e1 = "DispersalParams", e2 = "EmigrationParams"), function(e1, e2) {
-    validObject(e2)
+    methods::validObject(e2)
     e1@Emigration <- e2
-    validObject(e1)
+    methods::validObject(e1)
     return(e1)}
 )
 
 setMethod("+", signature(e1 = "DispersalParams", e2 = "TransferParams"), function(e1, e2) {
-    validObject(e2)
+    methods::validObject(e2)
     e1@Transfer <- e2
-    validObject(e1)
+    methods::validObject(e1)
     return(e1)}
 )
 
 setMethod("+", signature(e1 = "DispersalParams", e2 = "SettlementParams"), function(e1, e2) {
-    validObject(e2)
+    methods::validObject(e2)
     e1@Settlement <- e2
-    validObject(e1)
+    methods::validObject(e1)
     return(e1)}
 )
 
 setMethod("+", signature(e1 = "RSparams", e2 = "GeneticsParams"), function(e1, e2) {
-    validObject(e2)
+    methods::validObject(e2)
     e1@gene <- e2
     return(e1)}
 )
 
 setMethod("+", signature(e1 = "RSparams", e2 = "InitialisationParams"), function(e1, e2) {
-    validObject(e2)
+    methods::validObject(e2)
     e1@init <- e2
     return(e1)}
 )

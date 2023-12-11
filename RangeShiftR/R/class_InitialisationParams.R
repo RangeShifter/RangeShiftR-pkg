@@ -157,7 +157,7 @@
 #' @author Anne-Kathleen Malchow
 #' @name Initialise
 #' @export Initialise
-Initialise <- setClass("InitialisationParams", slots = c(InitType = "integer_OR_numeric",
+Initialise <- methods::setClass("InitialisationParams", slots = c(InitType = "integer_OR_numeric",
                                                          FreeType = "integer_OR_numeric",
                                                          SpType = "integer_OR_numeric",
                                                          NrCells = "integer_OR_numeric",
@@ -415,7 +415,7 @@ setValidity('InitialisationParams', function(object){
 setMethod('initialize', 'InitialisationParams', function(.Object, ...) {
     this_func = "Initialise(): "
     args <- list(...)
-    .Object <- callNextMethod()
+    .Object <- methods::callNextMethod()
     if (.Object@InitType != 0) {
         .Object@FreeType = -9L
         if (!is.null(args$FreeType)) {

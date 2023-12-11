@@ -190,7 +190,7 @@
 #' @author Anne-Kathleen Malchow
 #' @name Genetics
 #' @export Genetics
-Genetics <- setClass("GeneticsParams", slots = c(Architecture = "integer_OR_numeric",
+Genetics <- methods::setClass("GeneticsParams", slots = c(Architecture = "integer_OR_numeric",
                                                  NLoci = "integer_OR_numeric",
                                                  ArchFile = "character",
                                                  ProbMutn = "numeric",
@@ -268,7 +268,7 @@ setValidity('GeneticsParams', function(object){
 setMethod('initialize', 'GeneticsParams', function(.Object, ...) {
     this_func = "Genetics(): "
     args <- list(...)
-    .Object <- callNextMethod()
+    .Object <- methods::callNextMethod()
     if(.Object@Architecture == 0) {
         if (!is.null(args$ArchFile)) {
             warning(this_func, "ArchFile", warn_msg_ignored, "since Architecture = 0 (one chromosome per trait).", call. = FALSE)

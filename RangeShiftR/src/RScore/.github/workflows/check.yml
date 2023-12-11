@@ -1,0 +1,26 @@
+name: check
+on: push
+
+jobs:
+  check:
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        include:
+          - os: windows-latest
+            path_to_exe: ./build/Debug/RScore.exe
+          - os: ubuntu-latest
+            path_to_exe: ./build/RScore
+          - os: macos-latest
+            path_to_exe: ./build/RScore
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: build
+        run: |
+          mkdir build && cd build
+          cmake ../ && cmake --build .
+          
+      - name: run
+        run: ${{ matrix.path_to_exe }}

@@ -92,5 +92,5 @@ RangeShiftR_license <- function ()
 #' @export
 RangeShiftR_citation <- function ()
 {
-    citation(package = "RangeShiftR", lib.loc = NULL, auto = NULL)
+    utils::citation(package = "RangeShiftR", lib.loc = NULL, auto = NULL)
 }

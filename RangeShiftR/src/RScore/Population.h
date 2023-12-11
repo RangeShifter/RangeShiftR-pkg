@@ -50,9 +50,6 @@ Last updated: 22 January 2022 by Steve Palmer
 
 #include <vector>
 #include <algorithm>
-//#include <Math.hpp>
-//#include <math.h>
-//#include <stdlib.h>
 using namespace std;
 
 #include "Parameters.h"

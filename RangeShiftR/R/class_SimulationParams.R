@@ -149,7 +149,7 @@
 #' The local heterogeneity is determined by a random number drawn from a uniform distribution between \eqn{-1} and \eqn{1} for each cell
 #' and \code{f}, the local scaling factor that determines the magnitude of this stochastic local variation relative to the extremal value.
 #'
-#' The gradient in fecundity φ applies to the fecundity of each stage. Negative local values in \eqn{z(x,y)} are set to \eqn{0}.
+#' The gradient in fecundity \eqn{\phi} applies to the fecundity of each stage. Negative local values in \eqn{z(x,y)} are set to \eqn{0}.
 #'
 #' It is also possible to simulate the shifting of the gradient by setting the option \code{Shifting}. Here the position \eqn{y} of the species’
 #' optimum is shifted northwards (increasing \eqn{y}) at a given rate \code{ShiftRate} (in units of rows per year),
@@ -166,18 +166,18 @@
 #' \emph{Environmental Stochasticity}\cr
 #' It is possible to model environmental stochasticity via the option \code{EnvStoch} acting at a global or local scale
 #' and can be applied to \code{K_or_DensDep}, the demographic density dependence (\code{EnvStoch=1}), or to growth rate / fecundity (\code{EnvStoch=0}).
-#' It is implemented using a first order autoregressive process to generate time series of the noise value \eqn{ε}
+#' It is implemented using a first order autoregressive process to generate time series of the noise value \eqn{\epsilon}
 #' \insertCite{ruokolainen2009}{RangeShiftR}:
 #'
-#' \deqn{ε(t+1) = κ ε(t) + \omega(t) \sqrt(1-\kappa^2)}
+#' \deqn{\epsilon(t+1) = \kappa \epsilon(t) + \omega(t) \sqrt(1-\kappa^2)}
 #'
-#' where κ is the autocorrelation coefficient (\code{ac}) and ω is a random normal variable drawn from \eqn{N(0,σ)}.
-#' Changing σ (\code{std}) changes the magnitude of the fluctuations. The spatial scale of the variation can either be global (a single time series
+#' where \eqn{\kappa} is the autocorrelation coefficient (\code{ac}) and \eqn{\omega} is a random normal variable drawn from \eqn{N(0,\sigma)}.
+#' Changing \eqn{\sigma} (\code{std}) changes the magnitude of the fluctuations. The spatial scale of the variation can either be global (a single time series
 #' for the entire landscape) or local (each cell fluctuates independently), and is always applied on a yearly basis.
 #' Different degrees of spatial autocorrelation are not implemented in the current version.
 #'
 #' The noise affects the species' selected parameter \eqn{Z} as follows:
-#' \deqn{Z(x,y,t) = Z(x,y,0) + Z ε(t)}
+#' \deqn{Z(x,y,t) = Z(x,y,0) + Z \epsilon(t)}
 #' where \eqn{x} and \eqn{y} are the cell coordinates and \eqn{Z} is the original parameter value in absence of stochasticity and gradients.
 #' In the presence of an environmental gradient, \eqn{Z(x,y,0)} is the gradient value at the cell location, otherwise its equal to \eqn{Z}.
 #' The resulting values \eqn{Z(x,y,t)} are limited to the maximum and minimum values \code{minR,maxR} or \code{minK,maxK}, respectively.
@@ -187,7 +187,7 @@
 #' All the output files will be named with a standard name reporting the simulation ID number and
 #' the type of output. The file name will start with the batch number, and also indicate the number
 #' of the landscape to which the output refers. Additionally, for each simulation all the set parameters
-#' will be automatically written to a text file named \"Sim0_Parameters.txt\" in the case of simulation\eqn{#=0}.
+#' will be automatically written to a text file named \"Sim0_Parameters.txt\" in the case of simulation\eqn{=0}.
 #'
 #' - \emph{Species range} (\code{Sim0_Range.txt}) \cr
 #' contains the following general information regarding the species’ range:\cr
@@ -308,7 +308,7 @@
 #'         \insertAllCited{}
 #' @name Simulation
 #' @export Simulation
-Simulation <- setClass("SimulationParams", slots = c(Simulation = "integer_OR_numeric",
+Simulation <- methods::setClass("SimulationParams", slots = c(Simulation = "integer_OR_numeric",
                                                  Replicates = "integer_OR_numeric",
                                                  Years = "integer_OR_numeric",
                                                  Absorbing = "logical",
@@ -852,9 +852,9 @@ setValidity('SimulationParams', function(object){
 setMethod("initialize", "SimulationParams", function(.Object, ...) {
     this_func = "Simulation(): "
     args <- list(...)
-    .Object <- callNextMethod()
+    .Object <- methods::callNextMethod()
     if ( length(args) == 0 ) {
-        validObject(.Object)
+        methods::validObject(.Object)
     }
     if(.Object@Gradient == 0){
         .Object@GradSteep = -9L

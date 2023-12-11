@@ -58,18 +58,18 @@
 #'
 #' The emigration probability \eqn{d} can be density-dependent (set \code{DensDep=TRUE}), in which case it is given by the following function, introduced by \insertCite{kun2006evolution;textual}{RangeShiftR}:
 #'
-#' \ifelse{html}{\out{&emsp;&emsp; d(i,t) = D<sub>0</sub> / ( 1 + e<sup>-&alpha;sub>E</sub> (N(i,t) / K(i,t) - &beta;sub>E</sub>) </sup> ) } }{\deqn{ d(i,t) = D_0 / ( 1 + exp[-α_E (N(i,t)/K(i,t) - β_E) ] ) } }
+#' \ifelse{html}{\out{ d(i,t) = D<sub>0</sub> / ( 1 + e<sup>-&alpha;sub>E</sub> (N(i,t) / K(i,t) - &beta;sub>E</sub>) </sup> ) } }{\deqn{ d(i,t) = D_0 / ( 1 + exp[-\alpha_E (N(i,t)/K(i,t) - \beta_E) ] ) } }
 #'
 #' In the case of stage-structured models this equation is modified to:
 #'
-#' \ifelse{html}{\out{&emsp;&emsp; d(i,t) = D<sub>0</sub> / ( 1 + e<sup>-&alpha;sub>E</sub> (b(i,t) * N(i,t) - &beta;sub>E</sub>) </sup> ) } }{\deqn{ d(i,t) = D_0 / ( 1 + exp[-α_E (b(i,t) N(i,t) - β_E) ] ) } }
+#' \ifelse{html}{\out{ d(i,t) = D<sub>0</sub> / ( 1 + e<sup>-&alpha;sub>E</sub> (b(i,t) * N(i,t) - &beta;sub>E</sub>) </sup> ) } }{\deqn{ d(i,t) = D_0 / ( 1 + exp[-\alpha_E (b(i,t) N(i,t) - \beta_E) ] ) } }
 #'
 #' In the first case, \eqn{K(i,t)} is the carrying capacity of the cell/patch \eqn{i} at time \eqn{t} given by \code{K_or_DensDep}.
 #' In the latter case, \eqn{b(i,t)} represents the strength of density dependence and is given by the inverse of \code{K_or_DensDep}.\cr
 #' Further, \ifelse{html}{\out{D<sub>0</sub>}}{\eqn{D_0}} is the maximum emigration probability,
 #' \eqn{N(i,t)} is the number of individuals in the cell/patch \eqn{i} at time \eqn{t},
-#' \ifelse{html}{\out{&beta;<sub>E</sub>}}{\eqn{β_S}} is the inflection point of the function and
-#' \ifelse{html}{\out{&alpha;<sub>E</sub>}}{\eqn{α_S}} is the slope at the inflection point.\cr
+#' \ifelse{html}{\out{&beta;<sub>E</sub>}}{\eqn{\beta_S}} is the inflection point of the function and
+#' \ifelse{html}{\out{&alpha;<sub>E</sub>}}{\eqn{\alpha_S}} is the slope at the inflection point.\cr
 #'
 #' Various functions have been proposed for density dependent emigration \insertCite{hovestadt2010information,poethke2011ability}{RangeShiftR}.
 #' This one was chosen here because it is a flexible function that
@@ -78,8 +78,8 @@
 #' Information acquisition is not explicitly modelled.
 #'
 #' The emigration probability can be allowed to vary between individuals (set \code{IndVar=TRUE}) and to evolve. In the this case, individuals exhibit either one trait
-#' determining the density-independent \eqn{d} (when \code{DensDep=FALSE}), or the three traits \ifelse{html}{\out{D<sub>0</sub>}}{\eqn{D_0}}, \eqn{α} and
-#' \eqn{β} determining the density-dependent emigration probability (when \code{DensDep=TRUE}).\cr
+#' determining the density-independent \eqn{d} (when \code{DensDep=FALSE}), or the three traits \ifelse{html}{\out{D<sub>0</sub>}}{\eqn{D_0}}, \eqn{\alpha} and
+#' \eqn{\beta} determining the density-dependent emigration probability (when \code{DensDep=TRUE}).\cr
 #' For each trait the initial distribution in the population (as mean and standard variation) must be set in \code{EmigProb} (instead of only one constant value),
 #' as well as their scaling factors in \code{TraitScaleFactor} (see \code{\link[RangeShiftR]{Genetics}}).
 #' Also, if \code{IndVar=TRUE} is set for a stage-structured population, it is required to specify the stage which emigrates via \code{EmigStage}.
@@ -91,7 +91,7 @@
 #'
 #' The parameters that determine the emigration probabilities have to be provided via \code{EmigProb}, which generally takes a matrix, or - if only a single constant probability is
 #' used (i.e. \code{DensDep, IndVar, StageDep, SexDep = FALSE}) - a single numeric. The format of the matrix is defined as follows: The number of columns depend on the options \code{DensDep} and \code{IndVar}. If \code{DensDep=FALSE}, the
-#' density-independent probability \eqn{d} must be specified. If \code{DensDep=TRUE}, the functional parameters \ifelse{html}{\out{D<sub>0</sub>}}{\eqn{D_0}}, \eqn{α} and \eqn{β} (cp. equation above) must be specified.
+#' density-independent probability \eqn{d} must be specified. If \code{DensDep=TRUE}, the functional parameters \ifelse{html}{\out{D<sub>0</sub>}}{\eqn{D_0}}, \eqn{\alpha} and \eqn{\beta} (cp. equation above) must be specified.
 #' Additionally, if \code{IndVar=FALSE}, these parameters are fixed, but if \code{IndVar=TRUE} each of them is replaced by two parameters: their respective mean and
 #' standard deviation. They are used to normally distribute the traits values among the individuals of the initial population.
 #'
@@ -103,20 +103,20 @@
 #'  F \tab F \tab T \tab F \tab stage, \eqn{d} \cr
 #'  F \tab F \tab F \tab T \tab sex, \eqn{d} \cr
 #'  F \tab F \tab T \tab T \tab stage, sex, \eqn{d} \cr
-#'  T \tab F \tab F \tab F \tab \ifelse{html}{\out{D<sub>0</sub>}}{\eqn{D_0}}, \eqn{α}, \eqn{β} \cr
+#'  T \tab F \tab F \tab F \tab \ifelse{html}{\out{D<sub>0</sub>}}{\eqn{D_0}}, \eqn{\alpha}, \eqn{\beta} \cr
 #'  F \tab T \tab F \tab F \tab mean\eqn{(d)}, sd\eqn{(d)} \cr
-#'  T \tab T \tab F \tab F \tab \ifelse{html}{\out{mean(D<sub>0</sub>)}}{mean\eqn{(D_0)}}, \ifelse{html}{\out{sd(D<sub>0</sub>)}}{sd\eqn{(D_0)}}, mean\eqn{(α)}, sd\eqn{(α)}, mean\eqn{(β)}, sd\eqn{(β)} \cr
-#'  \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \cr
-#'  T \tab T \tab F \tab T \tab sex, \ifelse{html}{\out{mean(D<sub>0</sub>)}}{mean\eqn{(D_0)}}, \ifelse{html}{\out{sd(D<sub>0</sub>)}}{sd\eqn{(D_0)}}, mean\eqn{(α)}, sd\eqn{(α)}, mean\eqn{(β)}, sd\eqn{(β)}
+#'  T \tab T \tab F \tab F \tab \ifelse{html}{\out{mean(D<sub>0</sub>)}}{mean\eqn{(D_0)}}, \ifelse{html}{\out{sd(D<sub>0</sub>)}}{sd\eqn{(D_0)}}, mean\eqn{(\alpha)}, sd\eqn{(\alpha)}, mean\eqn{(\beta)}, sd\eqn{(\beta)} \cr
+#'  \out{:} \tab \out{:} \tab \out{:} \tab \out{:} \tab \out{:} \cr
+#'  T \tab T \tab F \tab T \tab sex, \ifelse{html}{\out{mean(D<sub>0</sub>)}}{mean\eqn{(D_0)}}, \ifelse{html}{\out{sd(D<sub>0</sub>)}}{sd\eqn{(D_0)}}, mean\eqn{(\alpha)}, sd\eqn{(\alpha)}, mean\eqn{(\beta)}, sd\eqn{(\beta)}
 #'  }
 #'
 #' The column headings need not be included, only the numeric matrix is required. The rows require no particular order, but there must be exactly one row for each stage/sex combination. For example, in the case of density-, stage- and sex-dependent emigration with no individual variability:
-#' \tabular{ccccc}{ \out{&emsp;} 0 \tab \out{&emsp;} 0 \tab \out{&emsp;} 1.0 \tab \out{&emsp;} 20 \tab \out{&emsp;} 0.2 \cr
-#'  \out{&emsp;} 0 \tab \out{&emsp;} 1 \tab \out{&emsp;} 1.0 \tab \out{&emsp;} 20 \tab \out{&emsp;} 0.1 \cr
-#'  \out{&emsp;} 1 \tab \out{&emsp;} 0 \tab \out{&emsp;} 0.7 \tab \out{&emsp;} 25 \tab \out{&emsp;} 0.5 \cr
-#'  \out{&emsp;} 1 \tab \out{&emsp;} 1 \tab \out{&emsp;} 0.8 \tab \out{&emsp;} 50 \tab \out{&emsp;} 0.5 \cr
-#'  \out{&emsp;} 2 \tab \out{&emsp;} 0 \tab \out{&emsp;} 0.4 \tab \out{&emsp;} 10 \tab \out{&emsp;} 1.0 \cr
-#'  \out{&emsp;} 2 \tab \out{&emsp;} 1 \tab \out{&emsp;} 0.5 \tab \out{&emsp;} 20 \tab \out{&emsp;} 1.0
+#' \tabular{ccccc}{ \out{} 0 \tab \out{} 0 \tab \out{} 1.0 \tab \out{} 20 \tab \out{} 0.2 \cr
+#'  \out{} 0 \tab \out{} 1 \tab \out{} 1.0 \tab \out{} 20 \tab \out{} 0.1 \cr
+#'  \out{} 1 \tab \out{} 0 \tab \out{} 0.7 \tab \out{} 25 \tab \out{} 0.5 \cr
+#'  \out{} 1 \tab \out{} 1 \tab \out{} 0.8 \tab \out{} 50 \tab \out{} 0.5 \cr
+#'  \out{} 2 \tab \out{} 0 \tab \out{} 0.4 \tab \out{} 10 \tab \out{} 1.0 \cr
+#'  \out{} 2 \tab \out{} 1 \tab \out{} 0.5 \tab \out{} 20 \tab \out{} 1.0
 #' }
 #'
 #' In the special case that \code{DensDep=FALSE} and transfer is realised by \code{\link[RangeShiftR]{DispersalKernel}}, then the option \code{UseFullKern} may be switched on. It
@@ -143,7 +143,7 @@
 #' @author Anne-Kathleen Malchow
 #' @name Emigration
 #' @export Emigration
-Emigration <- setClass("EmigrationParams", slots = c(DensDep = "logical",
+Emigration <- methods::setClass("EmigrationParams", slots = c(DensDep = "logical",
                                                      IndVar = "logical",
                                                      StageDep = "logical",
                                                      SexDep = "logical",
@@ -250,10 +250,10 @@ setValidity("EmigrationParams", function(object) {
                 }
                 else {
                     if (object@TraitScaleFactor[1] <= 0.0 || object@TraitScaleFactor[1] > 1.0 ) {
-                        msg <- c(msg, "TraitScaleFactor μ(D0) must be in the half-open interval (0,1] !")
+                        msg <- c(msg, "TraitScaleFactor mu(D0) must be in the half-open interval (0,1] !")
                     }
                     if (any(object@TraitScaleFactor[2:3] <= 0.0 )) {
-                        msg <- c(msg, "TraitScaleFactor μ(α) and μ(β) must be strictly positive !")
+                        msg <- c(msg, "TraitScaleFactor mu(\alpha) and mu(\beta) must be strictly positive !")
                     }
                 }
             }
@@ -263,7 +263,7 @@ setValidity("EmigrationParams", function(object) {
                 }
                 else {
                     if (object@TraitScaleFactor <= 0 || object@TraitScaleFactor > 1 ) {
-                        msg <- c(msg, "TraitScaleFactor μ(D0) must be in the half-open interval (0,1] !")
+                        msg <- c(msg, "TraitScaleFactor mu(D0) must be in the half-open interval (0,1] !")
                     }
                 }
             }
@@ -282,9 +282,9 @@ setValidity("EmigrationParams", function(object) {
 setMethod("initialize", "EmigrationParams", function(.Object, ...) {
     this_func = "Emigration(): "
     args <- list(...)
-    .Object <- callNextMethod()
+    .Object <- methods::callNextMethod()
     if ( length(args) == 0 ) {
-        validObject(.Object)
+        methods::validObject(.Object)
     }
     if (!is.null(args$EmigProb)) {
         if (class(args$EmigProb)[1] =="numeric" && length(args$EmigProb)==1) {
@@ -385,17 +385,17 @@ setMethod("plotProbs", "EmigrationParams", function(x, stage = NULL, sex = NULL,
                 res[,6] <- densdep(xvals, A0 = emig[line,ind_D0]+emig[line,ind_D0+1], alpha = emig[line,ind_D0+2]-emig[line,ind_D0+3], beta = emig[line,ind_D0+4]+emig[line,ind_D0+5])
                 res[,7] <- densdep(xvals, A0 = emig[line,ind_D0]+emig[line,ind_D0+1], alpha = emig[line,ind_D0+2]+emig[line,ind_D0+3], beta = emig[line,ind_D0+4]-emig[line,ind_D0+5])
                 res[,8] <- densdep(xvals, A0 = emig[line,ind_D0]+emig[line,ind_D0+1], alpha = emig[line,ind_D0+2]+emig[line,ind_D0+3], beta = emig[line,ind_D0+4]+emig[line,ind_D0+5])
-                polygon(c(xvals,rev(xvals)), c(apply(res, 1, min), rev(apply(res, 1, max))), border=NA, col='grey80')
+                graphics::polygon(c(xvals,rev(xvals)), c(apply(res, 1, min), rev(apply(res, 1, max))), border=NA, col='grey80')
             }
             else {#constant
-                polygon(c(0,xmax,xmax,0), c(rep(emig[line,ind_D0]-emig[line,ind_D0+1],2),rep(emig[line,ind_D0]+emig[line,ind_D0+1],2)), border=NA, col='grey80')
+                graphics::polygon(c(0,xmax,xmax,0), c(rep(emig[line,ind_D0]-emig[line,ind_D0+1],2),rep(emig[line,ind_D0]+emig[line,ind_D0+1],2)), border=NA, col='grey80')
             }
         }
         if (x@DensDep) {
-            lines(xvals, densdep(xvals, A0 = emig[line,ind_D0], alpha = emig[line,ind_D0+IV], beta = emig[line,ind_D0+2*IV]), type = "l", lty = 1, col = line)
+            graphics::lines(xvals, densdep(xvals, A0 = emig[line,ind_D0], alpha = emig[line,ind_D0+IV], beta = emig[line,ind_D0+2*IV]), type = "l", lty = 1, col = line)
         }
         else {#constant
-            lines(x=c(0,xmax), y=rep(emig[line,ind_D0],2), type = "l", lty = 1, col = line)
+            graphics::lines(x=c(0,xmax), y=rep(emig[line,ind_D0],2), type = "l", lty = 1, col = line)
         }
         if (x@StageDep) {
             if (x@SexDep) {leg.txt <- c(leg.txt, paste0("Stage ",emig[line,1], ifelse(emig[line,2]," male"," female")))} else {leg.txt <- c(leg.txt, paste0("Stage ",emig[line,1]))}
@@ -405,7 +405,7 @@ setMethod("plotProbs", "EmigrationParams", function(x, stage = NULL, sex = NULL,
         }
     }
     if (length(leg.txt)>0) {
-        legend("topleft", leg.txt, col = 1:nrow(emig), lwd = 1.5)
+        graphics::legend("topleft", leg.txt, col = 1:nrow(emig), lwd = 1.5)
     }
 })
 
@@ -439,7 +439,7 @@ setMethod("plotProbs", "EmigrationParams", function(x, stage = NULL, sex = NULL,
 #'         \insertAllCited{}
 #' @author Anne-Kathleen Malchow
 #' @name Transfer
-TransferParams <- setClass("TransferParams")
+TransferParams <- methods::setClass("TransferParams")
 setMethod("show", "TransferParams", function(object){
     if (class(object)[1] == "DispersalKernel") cat("   Dispersal Kernel\n")
     if (class(object)[1] == "StochMove") cat("   Stochastic Movement Simulator\n")
@@ -491,10 +491,10 @@ setMethod("show", "TransferParams", function(object){
 #'
 #' \emph{Negative exponential} \cr
 #' If the individual disperses, the distance and the movement direction are determined in continuous space.
-#' The distance is drawn from a negative exponential distribution with a given mean \eqn{δ}, and the direction is selected randomly from a uniform
-#' distribution between \eqn{0} and \eqn{2π} radians.
+#' The distance is drawn from a negative exponential distribution with a given mean \eqn{\delta}, and the direction is selected randomly from a uniform
+#' distribution between \eqn{0} and \eqn{2\pi} radians.
 #'
-#' \ifelse{html}{\out{&emsp;&emsp; p(d;&delta;) = &delta;<sup>-1</sup> e<sup>- d / &delta;</sup>}}{\deqn{ p(d;δ) = 1/δ exp(-d/δ) } }
+#' \ifelse{html}{\out{ p(d;&delta;) = &delta;<sup>-1</sup> e<sup>- d / &delta;</sup>}}{\deqn{ p(d;\delta) = 1/\delta exp(-d/\delta) } }
 #'
 #' If the arrival point lies beyond the boundary of the landscape, distance and direction are re-drawn.\cr
 #' The individual is displaced from a random point (using continuous coordinates) inside the natal cell to the arrival cell where the model
@@ -511,17 +511,17 @@ setMethod("show", "TransferParams", function(object){
 #'
 #' \emph{Mixed kernel} \cr
 #' The distance an individual moves is sampled from a mixed kernel given by the combination of two negative exponentials
-#' with different means \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{δ_1}} and \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{δ_2}},
+#' with different means \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{\delta_1}} and \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{\delta_2}},
 #' occurring with probability \ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}} and \eqn{1-}\ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}} respectively \insertCite{hovestadt2011all}{RangeShiftR}.
 #' Otherwise, the conditions for the single kernel apply.
 #'
-#' \ifelse{html}{\out{&emsp;&emsp; p(d; &delta;<sub>1</sub>,&delta;<sub>2</sub>) = p<sub>I</sub> p(d;&delta;<sub>1</sub>) + (1-p<sub>I</sub>) p(d;&delta;<sub>1</sub>)}}{\deqn{ p(d; δ_1,δ_2) = p_I p(d;δ_1) + (1-p_I) p(d;δ_2)}}
+#' \ifelse{html}{\out{ p(d; &delta;<sub>1</sub>,&delta;<sub>2</sub>) = p<sub>I</sub> p(d;&delta;<sub>1</sub>) + (1-p<sub>I</sub>) p(d;&delta;<sub>1</sub>)}}{\deqn{ p(d; \delta_1,\delta_2) = p_I p(d;\delta_1) + (1-p_I) p(d;\delta_2)}}
 #'
 #' For both types of kernel, inter-individual variability of the kernel traits is possible (set \code{IndVar=TRUE}). Individuals will
-#' carry either one trait for \eqn{δ} or three traits for \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{δ_1}}, \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{δ_2}} and
+#' carry either one trait for \eqn{\delta} or three traits for \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{\delta_1}}, \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{\delta_2}} and
 #' \ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}}, which they inherit from their parents.\cr
-#' Dispersal kernels can also be sex-dependent (set \code{SexDep=TRUE}). In the case of inter-individual variability, the number of traits is doubled to two trait (female \eqn{δ}
-#' and male δ) or six traits (female and male \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{δ_1}}, \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{δ_2}} and \ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}}).\cr
+#' Dispersal kernels can also be sex-dependent (set \code{SexDep=TRUE}). In the case of inter-individual variability, the number of traits is doubled to two trait (female \eqn{\delta}
+#' and male delta) or six traits (female and male \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{\delta_1}}, \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{\delta_2}} and \ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}}).\cr
 #' For each trait the initial distribution in the population (as mean and standard variation) must be set in \code{Distances} (instead of only one constant value),
 #' as well as their scaling factors in \code{TraitScaleFactor} (see \code{\link[RangeShiftR]{Genetics}}).\cr
 #'
@@ -529,8 +529,8 @@ setMethod("show", "TransferParams", function(object){
 #'
 #' All dispersal kernel parameters have to be provided via \code{Distances}, which generally takes a matrix, or - if only a single constant mean distance is
 #' used (i.e. \code{DensDep, IndVar, StageDep, SexDep = FALSE}) - a single numeric. The format of the matrix is defined as follows: The number of columns depend on the options \code{IndVar} and \code{DoubleKernel}.
-#' If \code{DoubleKernel=FALSE}, the mean dispersal distance \eqn{δ} must be specified (in meters). If \code{DoubleKernel=TRUE}, the mean dispersal distances
-#' \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{δ_1}} and \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{δ_2}} (in meters), as well as the probability \ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}} of using Kernel-1 must be specified.
+#' If \code{DoubleKernel=FALSE}, the mean dispersal distance \eqn{\delta} must be specified (in meters). If \code{DoubleKernel=TRUE}, the mean dispersal distances
+#' \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{\delta_1}} and \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{\delta_2}} (in meters), as well as the probability \ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}} of using Kernel-1 must be specified.
 #' Additionally, if \code{IndVar=FALSE}, these parameters are fixed, but if \code{IndVar=TRUE} each of them is replaced by two parameters: their respective mean and
 #' standard deviation. They are used to normally distribute the traits values among the individuals of the initial population.
 #'
@@ -539,25 +539,25 @@ setMethod("show", "TransferParams", function(object){
 #' table lists the required columns and their correct order for different settings:
 #'
 #' \tabular{ccccc}{IndVar \tab DoubleKernel \tab StageDep \tab SexDep \tab columns \cr
-#'  F \tab F \tab F \tab F \tab \eqn{δ} \cr
-#'  F \tab F \tab T \tab F \tab stage, \eqn{δ} \cr
-#'  F \tab F \tab F \tab T \tab sex, \eqn{δ} \cr
-#'  F \tab F \tab T \tab T \tab stage, sex, \eqn{δ} \cr
-#'  F \tab T \tab F \tab F \tab \ifelse{html}{\out{&delta;<sub>1</sub>, &delta;<sub>2</sub>, p<sub>I</sub>}}{\eqn{δ_1, δ_2, p_I}} \cr
-#'  T \tab F \tab F \tab F \tab mean\eqn{(δ)}, sd\eqn{(δ)} \cr
-#'  T \tab T \tab F \tab F \tab \ifelse{html}{\out{mean(&delta;<sub>1</sub>)}}{mean\eqn{(δ_1)}}, \ifelse{html}{\out{sd(&delta;<sub>1</sub>)}}{sd\eqn{(δ_1)}}, \ifelse{html}{\out{mean(&delta;<sub>2</sub>)}}{mean\eqn{(δ_2)}}, \ifelse{html}{\out{sd(&delta;<sub>2</sub>)}}{sd\eqn{(δ_2)}}, mean\ifelse{html}{\out{(p<sub>I</sub>)}}{\eqn{(p_I)}}, sd\ifelse{html}{\out{(p<sub>I</sub>)}}{\eqn{(p_I)}} \cr
-#'  \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \cr
-#'  T \tab T \tab F \tab T \tab sex, \ifelse{html}{\out{mean(&delta;<sub>1</sub>)}}{mean\eqn{(δ_1)}}, \ifelse{html}{\out{sd(&delta;<sub>1</sub>)}}{sd\eqn{(δ_1)}}, \ifelse{html}{\out{mean(&delta;<sub>2</sub>)}}{mean\eqn{(δ_2)}}, \ifelse{html}{\out{sd(&delta;<sub>2</sub>)}}{sd\eqn{(δ_2)}}, mean\ifelse{html}{\out{(p<sub>I</sub>)}}{\eqn{(p_I)}}, sd\ifelse{html}{\out{(p<sub>I</sub>)}}{\eqn{(p_I)}}
+#'  F \tab F \tab F \tab F \tab \eqn{\delta} \cr
+#'  F \tab F \tab T \tab F \tab stage, \eqn{\delta} \cr
+#'  F \tab F \tab F \tab T \tab sex, \eqn{\delta} \cr
+#'  F \tab F \tab T \tab T \tab stage, sex, \eqn{\delta} \cr
+#'  F \tab T \tab F \tab F \tab \ifelse{html}{\out{&delta;<sub>1</sub>, &delta;<sub>2</sub>, p<sub>I</sub>}}{\eqn{\delta_1, \delta_2, p_I}} \cr
+#'  T \tab F \tab F \tab F \tab mean\eqn{(\delta)}, sd\eqn{(\delta)} \cr
+#'  T \tab T \tab F \tab F \tab \ifelse{html}{\out{mean(&delta;<sub>1</sub>)}}{mean\eqn{(\delta_1)}}, \ifelse{html}{\out{sd(&delta;<sub>1</sub>)}}{sd\eqn{(\delta_1)}}, \ifelse{html}{\out{mean(&delta;<sub>2</sub>)}}{mean\eqn{(\delta_2)}}, \ifelse{html}{\out{sd(&delta;<sub>2</sub>)}}{sd\eqn{(\delta_2)}}, mean\ifelse{html}{\out{(p<sub>I</sub>)}}{\eqn{(p_I)}}, sd\ifelse{html}{\out{(p<sub>I</sub>)}}{\eqn{(p_I)}} \cr
+#'  \out{:} \tab \out{:} \tab \out{:} \tab \out{:} \tab \out{:} \cr
+#'  T \tab T \tab F \tab T \tab sex, \ifelse{html}{\out{mean(&delta;<sub>1</sub>)}}{mean\eqn{(\delta_1)}}, \ifelse{html}{\out{sd(&delta;<sub>1</sub>)}}{sd\eqn{(\delta_1)}}, \ifelse{html}{\out{mean(&delta;<sub>2</sub>)}}{mean\eqn{(\delta_2)}}, \ifelse{html}{\out{sd(&delta;<sub>2</sub>)}}{sd\eqn{(\delta_2)}}, mean\ifelse{html}{\out{(p<sub>I</sub>)}}{\eqn{(p_I)}}, sd\ifelse{html}{\out{(p<sub>I</sub>)}}{\eqn{(p_I)}}
 #'  }
 #'
 #' The column headings need not be included, only the numeric matrix is required. The rows require no particular order, but there must be exactly
 #' one row for each stage/sex combination. For example, in the case of a mixed kernel with stage- and sex-dependent distances and no individual variability:
-#' \tabular{ccccc}{ \out{&emsp;} 0 \tab \out{&emsp;} 0 \tab \out{&emsp;} 1000 \tab \out{&emsp;} 4500 \tab \out{&emsp;} 0.92 \cr
-#'  \out{&emsp;} 0 \tab \out{&emsp;} 1 \tab \out{&emsp;} 1400 \tab \out{&emsp;} 6000 \tab \out{&emsp;} 0.95 \cr
-#'  \out{&emsp;} 1 \tab \out{&emsp;} 0 \tab \out{&emsp;} 700 \tab \out{&emsp;} 500 \tab \out{&emsp;} 0.50 \cr
-#'  \out{&emsp;} 1 \tab \out{&emsp;} 1 \tab \out{&emsp;} 500 \tab \out{&emsp;} 600 \tab \out{&emsp;} 0.55 \cr
-#'  \out{&emsp;} 2 \tab \out{&emsp;} 0 \tab \out{&emsp;} 100 \tab \out{&emsp;} 0 \tab \out{&emsp;} 1.0 \cr
-#'  \out{&emsp;} 2 \tab \out{&emsp;} 1 \tab \out{&emsp;} 100 \tab \out{&emsp;} 0 \tab \out{&emsp;} 1.0
+#' \tabular{ccccc}{ \out{} 0 \tab \out{} 0 \tab \out{} 1000 \tab \out{} 4500 \tab \out{} 0.92 \cr
+#'  \out{} 0 \tab \out{} 1 \tab \out{} 1400 \tab \out{} 6000 \tab \out{} 0.95 \cr
+#'  \out{} 1 \tab \out{} 0 \tab \out{} 700 \tab \out{} 500 \tab \out{} 0.50 \cr
+#'  \out{} 1 \tab \out{} 1 \tab \out{} 500 \tab \out{} 600 \tab \out{} 0.55 \cr
+#'  \out{} 2 \tab \out{} 0 \tab \out{} 100 \tab \out{} 0 \tab \out{} 1.0 \cr
+#'  \out{} 2 \tab \out{} 1 \tab \out{} 100 \tab \out{} 0 \tab \out{} 1.0
 #' }
 #'
 #' In the case that the dispersal kernel is applied to the entire
@@ -573,7 +573,7 @@ setMethod("show", "TransferParams", function(object){
 #' A second source of dispersal mortality can be specified via the option \code{DistMort}: The probability of mortality is either a constant
 #' (\eqn{m=}\code{MortProb}) or a function of distance \eqn{d} (i.e. individuals that travel further are more likely to die):
 #'
-#' \ifelse{html}{\out{&emsp;&emsp; m(d) = 1 / ( 1 + e<sup>-a (d- b)</sup> ) } }{\deqn{ m(d) = 1 / ( 1 + exp[-α (d-b) ] ) } }
+#' \ifelse{html}{\out{ m(d) = 1 / ( 1 + e<sup>-a (d- b)</sup> ) } }{\deqn{ m(d) = 1 / ( 1 + exp[-\alpha (d-b) ] ) } }
 #'
 #' with the inflection point \eqn{b=}\code{InflPoint} at which \eqn{m(d=b)=0.5} and the slope \eqn{a=}\code{Slope}.This option may be thought
 #' to represent the increased energetic, time or attritional costs that longer-distance dispersers will experience \insertCite{bonte2012costs}{RangeShiftR}.
@@ -596,7 +596,7 @@ setMethod("show", "TransferParams", function(object){
 #' @author Anne-Kathleen Malchow
 #' @name DispersalKernel
 #' @export DispersalKernel
-DispersalKernel <- setClass("DispersalKernel", slots = c(IndVar = "logical",
+DispersalKernel <- methods::setClass("DispersalKernel", slots = c(IndVar = "logical",
                                                          DoubleKernel = "logical",
                                                          StageDep = "logical",
                                                          SexDep = "logical",
@@ -702,10 +702,10 @@ setValidity("DispersalKernel", function(object) {
                 }
                 else {
                     if (object@TraitScaleFactor[3] <= 0.0 || object@TraitScaleFactor[3] > 1.0 ) {
-                        msg <- c(msg, "TraitScaleFactor μ(p) must be in the half-open interval (0,1] !")
+                        msg <- c(msg, "TraitScaleFactor mu(p) must be in the half-open interval (0,1] !")
                     }
                     if (any(object@TraitScaleFactor[1:2] <= 0.0 )) {
-                        msg <- c(msg, "TraitScaleFactor μ(δ1) and μ(δ2) must be strictly positive !")
+                        msg <- c(msg, "TraitScaleFactor mu(delta1) and mu(delta2) must be strictly positive !")
                     }
                 }
             }
@@ -715,7 +715,7 @@ setValidity("DispersalKernel", function(object) {
                 }
                 else {
                     if (object@TraitScaleFactor <= 0.0) {
-                        msg <- c(msg, "TraitScaleFactor μ(δ) must be strictly positive !")
+                        msg <- c(msg, "TraitScaleFactor mu(delta) must be strictly positive !")
                     }
                 }
             }
@@ -750,9 +750,9 @@ setValidity("DispersalKernel", function(object) {
 setMethod("initialize", "DispersalKernel", function(.Object, ...) {
     this_func = "DispersalKernel(): "
     args <- list(...)
-    .Object <- callNextMethod()
+    .Object <- methods::callNextMethod()
     if ( length(args) == 0 ) {
-        validObject(.Object)
+        methods::validObject(.Object)
     }
     if (class(args$Distances)[1]=="numeric" && length(args$Distances)==1) {
         .Object@Distances <- as.matrix(args$Distances)
@@ -782,7 +782,7 @@ setMethod("initialize", "DispersalKernel", function(.Object, ...) {
     .Object}
 )
 setMethod("show", "DispersalKernel", function(object){
-    callNextMethod()
+    methods::callNextMethod()
     if (object@IndVar) {
         cat("   IndVar =", object@IndVar, "\n")
     }
@@ -876,15 +876,15 @@ setMethod("plotProbs", "DispersalKernel", function(x, mortality = FALSE, combine
                 if (!combinekernels){
                     if (x@IndVar) {
                         res <- matrix(ncol = 3, nrow = length(xvals))
-                        res[,1] <- dexp(xvals, rate = 1/(dists[line,ind_kernel1]))
-                        res[,2] <- dexp(xvals, rate = 1/(dists[line,ind_kernel1]+dists[line,ind_kernel1+1]))
-                        res[,3] <- dexp(xvals, rate = 1/(dists[line,ind_kernel1]-dists[line,ind_kernel1+1]))
-                        polygon(c(xvals,rev(xvals)), c(apply(res, 1, min), rev(apply(res, 1, max))), border=NA, col='grey80')
+                        res[,1] <- stats::dexp(xvals, rate = 1/(dists[line,ind_kernel1]))
+                        res[,2] <- stats::dexp(xvals, rate = 1/(dists[line,ind_kernel1]+dists[line,ind_kernel1+1]))
+                        res[,3] <- stats::dexp(xvals, rate = 1/(dists[line,ind_kernel1]-dists[line,ind_kernel1+1]))
+                        graphics::polygon(c(xvals,rev(xvals)), c(apply(res, 1, min), rev(apply(res, 1, max))), border=NA, col='grey80')
                         }
-                    lines(xvals,dexp(xvals,rate = 1/dists[line,ind_kernel1]), type = "l", lty = 1, col = line)
+                    graphics::lines(xvals,stats::dexp(xvals,rate = 1/dists[line,ind_kernel1]), type = "l", lty = 1, col = line)
                 }
             }
-            else {lines(xvals, rep(0, length(xvals)), type = "l", lty = 1, col = line)}
+            else {graphics::lines(xvals, rep(0, length(xvals)), type = "l", lty = 1, col = line)}
             if (x@DoubleKernel){
                 if(dists[line,ind_kernel2]>0){
                     if (combinekernels){
@@ -892,31 +892,31 @@ setMethod("plotProbs", "DispersalKernel", function(x, mortality = FALSE, combine
                         if (x@IndVar) {
                             pI_sd <- c(pI+dists[line,ind_pI+1],pI-dists[line,ind_pI+1])
                             res <- matrix(ncol = 8, nrow = length(xvals))
-                            res[,1] <- pI_sd[1] * dexp(xvals, rate = 1/(dists[line,ind_kernel1]+dists[line,ind_kernel1+1])) + (1-pI_sd[1]) * dexp(xvals, rate = 1/(dists[line,ind_kernel2]+dists[line,ind_kernel2+1]))
-                            res[,2] <- pI_sd[2] * dexp(xvals, rate = 1/(dists[line,ind_kernel1]+dists[line,ind_kernel1+1])) + (1-pI_sd[2]) * dexp(xvals, rate = 1/(dists[line,ind_kernel2]+dists[line,ind_kernel2+1]))
-                            res[,3] <- pI_sd[1] * dexp(xvals, rate = 1/(dists[line,ind_kernel1]-dists[line,ind_kernel1+1])) + (1-pI_sd[1]) * dexp(xvals, rate = 1/(dists[line,ind_kernel2]+dists[line,ind_kernel2+1]))
-                            res[,4] <- pI_sd[2] * dexp(xvals, rate = 1/(dists[line,ind_kernel1]-dists[line,ind_kernel1+1])) + (1-pI_sd[2]) * dexp(xvals, rate = 1/(dists[line,ind_kernel2]+dists[line,ind_kernel2+1]))
-                            res[,5] <- pI_sd[1] * dexp(xvals, rate = 1/(dists[line,ind_kernel1]+dists[line,ind_kernel1+1])) + (1-pI_sd[1]) * dexp(xvals, rate = 1/(dists[line,ind_kernel2]-dists[line,ind_kernel2+1]))
-                            res[,6] <- pI_sd[2] * dexp(xvals, rate = 1/(dists[line,ind_kernel1]+dists[line,ind_kernel1+1])) + (1-pI_sd[2]) * dexp(xvals, rate = 1/(dists[line,ind_kernel2]-dists[line,ind_kernel2+1]))
-                            res[,7] <- pI_sd[1] * dexp(xvals, rate = 1/(dists[line,ind_kernel1]-dists[line,ind_kernel1+1])) + (1-pI_sd[1]) * dexp(xvals, rate = 1/(dists[line,ind_kernel2]-dists[line,ind_kernel2+1]))
-                            res[,8] <- pI_sd[2] * dexp(xvals, rate = 1/(dists[line,ind_kernel1]-dists[line,ind_kernel1+1])) + (1-pI_sd[2]) * dexp(xvals, rate = 1/(dists[line,ind_kernel2]-dists[line,ind_kernel2+1]))
-                            polygon(c(xvals,rev(xvals)), c(apply(res, 1, min), rev(apply(res, 1, max))), border=NA, col='grey80')
+                            res[,1] <- pI_sd[1] * stats::dexp(xvals, rate = 1/(dists[line,ind_kernel1]+dists[line,ind_kernel1+1])) + (1-pI_sd[1]) * stats::dexp(xvals, rate = 1/(dists[line,ind_kernel2]+dists[line,ind_kernel2+1]))
+                            res[,2] <- pI_sd[2] * stats::dexp(xvals, rate = 1/(dists[line,ind_kernel1]+dists[line,ind_kernel1+1])) + (1-pI_sd[2]) * stats::dexp(xvals, rate = 1/(dists[line,ind_kernel2]+dists[line,ind_kernel2+1]))
+                            res[,3] <- pI_sd[1] * stats::dexp(xvals, rate = 1/(dists[line,ind_kernel1]-dists[line,ind_kernel1+1])) + (1-pI_sd[1]) * stats::dexp(xvals, rate = 1/(dists[line,ind_kernel2]+dists[line,ind_kernel2+1]))
+                            res[,4] <- pI_sd[2] * stats::dexp(xvals, rate = 1/(dists[line,ind_kernel1]-dists[line,ind_kernel1+1])) + (1-pI_sd[2]) * stats::dexp(xvals, rate = 1/(dists[line,ind_kernel2]+dists[line,ind_kernel2+1]))
+                            res[,5] <- pI_sd[1] * stats::dexp(xvals, rate = 1/(dists[line,ind_kernel1]+dists[line,ind_kernel1+1])) + (1-pI_sd[1]) * stats::dexp(xvals, rate = 1/(dists[line,ind_kernel2]-dists[line,ind_kernel2+1]))
+                            res[,6] <- pI_sd[2] * stats::dexp(xvals, rate = 1/(dists[line,ind_kernel1]+dists[line,ind_kernel1+1])) + (1-pI_sd[2]) * stats::dexp(xvals, rate = 1/(dists[line,ind_kernel2]-dists[line,ind_kernel2+1]))
+                            res[,7] <- pI_sd[1] * stats::dexp(xvals, rate = 1/(dists[line,ind_kernel1]-dists[line,ind_kernel1+1])) + (1-pI_sd[1]) * stats::dexp(xvals, rate = 1/(dists[line,ind_kernel2]-dists[line,ind_kernel2+1]))
+                            res[,8] <- pI_sd[2] * stats::dexp(xvals, rate = 1/(dists[line,ind_kernel1]-dists[line,ind_kernel1+1])) + (1-pI_sd[2]) * stats::dexp(xvals, rate = 1/(dists[line,ind_kernel2]-dists[line,ind_kernel2+1]))
+                            graphics::polygon(c(xvals,rev(xvals)), c(apply(res, 1, min), rev(apply(res, 1, max))), border=NA, col='grey80')
                         }
-                        yvals <- pI * dexp(xvals, rate = 1/dists[line,ind_kernel1]) + (1-pI) * dexp(xvals, rate = 1/dists[line,ind_kernel2])
-                        lines(xvals, yvals , type = "l", lty = 1, col = line)
+                        yvals <- pI * stats::dexp(xvals, rate = 1/dists[line,ind_kernel1]) + (1-pI) * stats::dexp(xvals, rate = 1/dists[line,ind_kernel2])
+                        graphics::lines(xvals, yvals , type = "l", lty = 1, col = line)
                     }
                     else {
                         if (x@IndVar) {
-                            res[,1] <- dexp(xvals, rate = 1/(dists[line,ind_kernel2]))
-                            res[,2] <- dexp(xvals, rate = 1/(dists[line,ind_kernel2]+dists[line,ind_kernel2+1]))
-                            res[,3] <- dexp(xvals, rate = 1/(dists[line,ind_kernel2]-dists[line,ind_kernel2+1]))
-                            polygon(c(xvals,rev(xvals)), c(apply(res, 1, min), rev(apply(res, 1, max))), border=NA, col='grey80')
+                            res[,1] <- stats::dexp(xvals, rate = 1/(dists[line,ind_kernel2]))
+                            res[,2] <- stats::dexp(xvals, rate = 1/(dists[line,ind_kernel2]+dists[line,ind_kernel2+1]))
+                            res[,3] <- stats::dexp(xvals, rate = 1/(dists[line,ind_kernel2]-dists[line,ind_kernel2+1]))
+                            graphics::polygon(c(xvals,rev(xvals)), c(apply(res, 1, min), rev(apply(res, 1, max))), border=NA, col='grey80')
                         }
-                        lines(xvals,dexp(xvals,rate = 1/dists[line,ind_kernel2]), type = "l", lty = 2, col = line)
+                        graphics::lines(xvals,stats::dexp(xvals,rate = 1/dists[line,ind_kernel2]), type = "l", lty = 2, col = line)
                     }
                 }
                 else{
-                    lines(xvals, rep(0, length(xvals)), type = "l", lty = 2, col = line)
+                    graphics::lines(xvals, rep(0, length(xvals)), type = "l", lty = 2, col = line)
                 }
             }
             if (x@StageDep) {
@@ -927,7 +927,7 @@ setMethod("plotProbs", "DispersalKernel", function(x, mortality = FALSE, combine
             }
         }
         if (length(leg.txt)>0) {
-            legend("topright", leg.txt, col = 1:nrow(dists), lwd = 1.5)
+            graphics::legend("topright", leg.txt, col = 1:nrow(dists), lwd = 1.5)
         }
     }
 })
@@ -1063,7 +1063,7 @@ setMethod("plotProbs", "DispersalKernel", function(x, mortality = FALSE, combine
 #' @author Anne-Kathleen Malchow
 #' @name SMS
 #' @export SMS
-SMS <- setClass("StochMove", slots = c(PR = "integer_OR_numeric",
+SMS <- methods::setClass("StochMove", slots = c(PR = "integer_OR_numeric",
                                        PRMethod = "integer_OR_numeric", # Perceptual range method: 1 = arithmetic mean; 2 = harmonic mean; 3 = weighted arithmtic mean
                                        MemSize = "integer_OR_numeric",
                                        GoalType = "integer_OR_numeric", # 0 (none) or 2 (dispersal bias)
@@ -1311,9 +1311,9 @@ setValidity("StochMove", function(object) {
 setMethod("initialize", "StochMove", function(.Object,...) {
     this_func = "SMS(): "
     args <- list(...)
-    .Object <- callNextMethod()
+    .Object <- methods::callNextMethod()
     if ( length(args) == 0 ) {
-        validObject(.Object)
+        methods::validObject(.Object)
     }
     if (!.Object@GoalType) { # GoalType = 0
         .Object@GoalBias = 1.0
@@ -1340,7 +1340,7 @@ setMethod("initialize", "StochMove", function(.Object,...) {
     .Object}
 )
 setMethod("show", "StochMove", function(object){
-    callNextMethod()
+    methods::callNextMethod()
     cat("   PR =", object@PR, ", MemSize =", object@MemSize, "\n")
     if (object@PRMethod == 1) cat("   Method: Arithmetic mean \n")
     if (object@PRMethod == 2) cat("   Method: Harmonic mean \n")
@@ -1402,17 +1402,17 @@ setMethod("plotProbs", "StochMove", function(x, xmax = NULL, ymax = NULL){
             res[,6] <- 1+densdep(xvals, A0 = (gb[1]+gb[2]-1), alpha = -(alp[1]-alp[2]), beta = (bet[1]+bet[2]))
             res[,7] <- 1+densdep(xvals, A0 = (gb[1]+gb[2]-1), alpha = -(alp[1]+alp[2]), beta = (bet[1]-bet[2]))
             res[,8] <- 1+densdep(xvals, A0 = (gb[1]+gb[2]-1), alpha = -(alp[1]+alp[2]), beta = (bet[1]+bet[2]))
-            polygon(c(xvals,rev(xvals)), c(apply(res, 1, min), rev(apply(res, 1, max))), border=NA, col='grey80')
+            graphics::polygon(c(xvals,rev(xvals)), c(apply(res, 1, min), rev(apply(res, 1, max))), border=NA, col='grey80')
         }
         else {#constant
-            polygon(c(0,xmax,xmax,0), c(rep(gb[1]-gb[2],2),rep(gb[1]+gb[2],2)), border=NA, col='grey80')
+            graphics::polygon(c(0,xmax,xmax,0), c(rep(gb[1]-gb[2],2),rep(gb[1]+gb[2],2)), border=NA, col='grey80')
         }
     }
     # plot lines
     if (x@GoalType == 2) {
-        lines(xvals, 1+densdep(xvals, A0 = (gb[1]-1), alpha = -alp[1], beta = bet[1]), type = "b", lty = 1, col = "blue")
+        graphics::lines(xvals, 1+densdep(xvals, A0 = (gb[1]-1), alpha = -alp[1], beta = bet[1]), type = "b", lty = 1, col = "blue")
     }else { # constant
-        lines(x=c(0,xmax), y=rep(gb[1],2), type = "b", lty = 1, col = "blue")
+        graphics::lines(x=c(0,xmax), y=rep(gb[1],2), type = "b", lty = 1, col = "blue")
     }
 })
 
@@ -1430,7 +1430,7 @@ setMethod("plotProbs", "StochMove", function(x, xmax = NULL, ymax = NULL){
 #'       StepMort = 0.0)
 #' @param StepLength Step length given in meters, defaults to \eqn{1}.\cr If \code{IndVar=TRUE}, expects a vector of length three
 #' specifying (Mean, SD, TraitScaleFactor) of \code{StepLength}.
-#' @param Rho Correlation parameter \eqn{ρ}, defaults to \eqn{0.5}. Must be in the open interval \eqn{(0,1)}.\cr If \code{IndVar=TRUE},
+#' @param Rho Correlation parameter \eqn{\rho}, defaults to \eqn{0.5}. Must be in the open interval \eqn{(0,1)}.\cr If \code{IndVar=TRUE},
 #' expects a vector of length three specifying (Mean, SD, TraitScaleFactor) of \code{Rho}.
 #' @param IndVar Individual variability in CorrRW traits (i.e. \code{StepLength} and \code{Rho})? Defaults to \code{FALSE}.
 #' @param StraightenPath Straighten path after decision not to settle in a patch? Defaults to \code{TRUE}, see Details below.
@@ -1480,7 +1480,7 @@ setMethod("plotProbs", "StochMove", function(x, xmax = NULL, ymax = NULL){
 #' @author Anne-Kathleen Malchow
 #' @name CorrRW
 #' @export CorrRW
-CorrRW <- setClass("CorrRW", slots = c(IndVar = "logical",
+CorrRW <- methods::setClass("CorrRW", slots = c(IndVar = "logical",
                                        StepLength = "numeric",
                                        Rho = "numeric",
                                        StraightenPath = "logical",
@@ -1585,14 +1585,14 @@ setValidity("CorrRW", function(object) {
 # setMethod("initialize", "CorrRW", function(.Object,...) {
 #     this_func = "CorrRW(): "
 #     args <- list(...)
-#     .Object <- callNextMethod()
+#     .Object <- methods::callNextMethod()
 #     if ( length(args) == 0 ) {
-#         validObject(.Object)
+#         methods::validObject(.Object)
 #     }
 #     .Object}
 # )
 setMethod("show", "CorrRW", function(object){
-    callNextMethod()
+    methods::callNextMethod()
     if (object@IndVar) {
         cat("   StepLength =", object@StepLength[1], "\u00B1" , object@StepLength[2], ", scale \u03bc =", object@StepLength[3], "\n")
         cat("   Rho =", object@Rho[1], "\u00B1" , object@Rho[2], ", scale \u03bc =", object@Rho[3], "\n")
@@ -1648,8 +1648,8 @@ setMethod("show", "CorrRW", function(object){
 #' In any case, dispersing individuals are not allowed to settle in their natal cell or patch.\cr
 #' \emph{RangeShiftR} incorporates some basic settlement rules that can be stage- or sex-specific or both (set \code{StageDep}, \code{SexDep}).
 #' Inter-individual variability (\code{IndVar}) is implemented only for movement processes and then for the three traits
-#' determining density-dependent settlement (\ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}}, \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{α_S}},
-#' \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}}; see below). In this case, settlement may not be stage-dependent.\cr
+#' determining density-dependent settlement (\ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}}, \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{\alpha_S}},
+#' \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{\beta_S}}; see below). In this case, settlement may not be stage-dependent.\cr
 #'
 #' \emph{Settlement with dispersal kernels}\cr
 #' When using a \code{\link[RangeShiftR]{DispersalKernel}}, individuals are displaced directly from the starting location to the arrival location. The suitability
@@ -1679,7 +1679,7 @@ setMethod("show", "CorrRW", function(object){
 #' \eqn{2} = randomly choose a suitable neighbouring cell or die,\cr
 #' \eqn{3} = randomly choose a suitable neighbouring cell or wait (stage-structured models only).\cr
 #'
-#' Simple example for sex-dependence only: Females choose a neighbouring cell or wait, males wait: \tabular{cc}{\out{&emsp;} 0 \tab \out{&emsp;} 3 \cr \out{&emsp;} 1 \tab \out{&emsp;} 0 }
+#' Simple example for sex-dependence only: Females choose a neighbouring cell or wait, males wait: \tabular{cc}{\out{} 0 \tab \out{} 3 \cr \out{} 1 \tab \out{} 0 }
 #'
 #' \emph{Settlement with movement processes}\cr
 #' If individuals are dispersing by one of the two movement processes implemented (\code{\link[RangeShiftR]{SMS}} or
@@ -1692,18 +1692,18 @@ setMethod("show", "CorrRW", function(object){
 #' Furthermore, the settlement decision can be density-dependent (set \code{DensDep=TRUE}). In this case, the individual has a probability \ifelse{html}{\out{p<sub>S</sub>}}{\eqn{p_S}}
 #' of settling in the cell or patch \eqn{i}, given by:
 #'
-#' \ifelse{html}{\out{&emsp;&emsp; p<sub>S</sub>(i,t) = S<sub>0</sub> / ( 1 + e<sup>-&alpha;<sub>S</sub> (N(i,t) / K(i,t) - &beta;<sub>S</sub>) </sup> ) } }{\deqn{ p_S(i,t) = S_0 / ( 1 + exp[-α_S (N(i,t)/K(i,t) - β_S) ] ) } }
+#' \ifelse{html}{\out{ p<sub>S</sub>(i,t) = S<sub>0</sub> / ( 1 + e<sup>-&alpha;<sub>S</sub> (N(i,t) / K(i,t) - &beta;<sub>S</sub>) </sup> ) } }{\deqn{ p_S(i,t) = S_0 / ( 1 + exp[-\alpha_S (N(i,t)/K(i,t) - \beta_S) ] ) } }
 #'
 #' In the case of stage-structured models the above equation is modified to:
 #'
-#' \ifelse{html}{\out{&emsp;&emsp; p<sub>S</sub>(i,t) = S<sub>0</sub> / ( 1 + e<sup>-&alpha;<sub>S</sub> (b(i,t) * N(i,t) - &beta;<sub>S</sub>) </sup> ) } }{\deqn{ p_S(i,t) = S_0 / ( 1 + exp[-α_S (b(i,t) N(i,t) - β_S) ] ) } }
+#' \ifelse{html}{\out{ p<sub>S</sub>(i,t) = S<sub>0</sub> / ( 1 + e<sup>-&alpha;<sub>S</sub> (b(i,t) * N(i,t) - &beta;<sub>S</sub>) </sup> ) } }{\deqn{ p_S(i,t) = S_0 / ( 1 + exp[-\alpha_S (b(i,t) N(i,t) - \beta_S) ] ) } }
 #'
 #' In the first case, \eqn{K(i,t)} is the carrying capacity of the cell/patch \eqn{i} at time \eqn{t} given by \code{K_or_DensDep}.
 #' In the latter case, \eqn{b(i,t)} represents the strength of density dependence that is given by the inverse of \code{K_or_DensDep}.\cr
 #' Further, \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}} is the maximum settlement probability,
 #' \eqn{N(i,t)} is the number of individuals in the cell/patch \eqn{i} at time \eqn{t},
-#' \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}} is the inflection point of the function and
-#' \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{α_S}} is the slope at the inflection point.\cr
+#' \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{\beta_S}} is the inflection point of the function and
+#' \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{\alpha_S}} is the slope at the inflection point.\cr
 #'
 #' Inter-individual variability \code{IndVar=TRUE} and thus evolution is implemented only for the three traits determining density-dependent settlement
 #' (\code{DensDep=TRUE}), and if so, it may not be stage-dependent (\code{StageDep=FALSE}).
@@ -1714,7 +1714,7 @@ setMethod("show", "CorrRW", function(object){
 #' used (i.e. \code{DensDep, IndVar, StageDep, SexDep = FALSE}) - a single numeric.
 #' The format of the matrix is defined as follows: The number of columns depend on the options \code{DensDep} and \code{IndVar}. If \code{DensDep=FALSE}, the
 #' density-independent probability \ifelse{html}{\out{p<sub>S</sub>}}{\eqn{p_S}} must be specified. If \code{DensDep=TRUE}, the functional parameters \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}},
-#' \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{α_S}} and \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}} (cf. equation above) must be specified.
+#' \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{\alpha_S}} and \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{\beta_S}} (cf. equation above) must be specified.
 #' Additionally, if \code{IndVar=FALSE}, these traits are fixed, but if \code{IndVar=TRUE} each of them is replaced by two parameters: their respective initial mean and
 #' standard deviation. They are used to normally distribute the traits values among the individuals of the initial population. Additionally, the \code{TraitScaleFactor} of
 #' these traits have to be set.
@@ -1729,21 +1729,21 @@ setMethod("show", "CorrRW", function(object){
 #'  F \tab F \tab T \tab F \tab stage \cr
 #'  F \tab F \tab F \tab T \tab sex \cr
 #'  F \tab F \tab T \tab T \tab stage, sex \cr
-#'  T \tab F \tab F \tab F \tab \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}}, \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{α_S}}, \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}} \cr
-#'  \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \cr
-#'  T \tab F \tab T \tab T \tab stage, sex, \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}}, \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{α_S}}, \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}} \cr
-#'  T \tab T \tab F \tab F \tab mean\ifelse{html}{\out{(S<sub>0</sub>)}}{\eqn{(S_0)}}, sd\ifelse{html}{\out{(S<sub>0</sub>)}}{\eqn{(S_0)}}, mean\ifelse{html}{\out{(&alpha;<sub>S</sub>)}}{(\eqn{α_S})}, sd\ifelse{html}{\out{(&alpha;<sub>S</sub>)}}{(\eqn{α_S})}, mean\ifelse{html}{\out{(&beta;<sub>S</sub>)}}{(\eqn{β_S})}, sd\ifelse{html}{\out{(&beta;<sub>S</sub>)}}{(\eqn{β_S})} \cr
-#'  T \tab T \tab F \tab T \tab sex, mean\ifelse{html}{\out{(S<sub>0</sub>)}}{\eqn{(S_0)}}, sd\ifelse{html}{\out{(S<sub>0</sub>)}}{\eqn{(S_0)}}, mean\ifelse{html}{\out{(&alpha;<sub>S</sub>)}}{(\eqn{α_S})}, sd\ifelse{html}{\out{(&alpha;<sub>S</sub>)}}{(\eqn{α_S})}, mean\ifelse{html}{\out{(&beta;<sub>S</sub>)}}{(\eqn{β_S})}, sd\ifelse{html}{\out{(&beta;<sub>S</sub>)}}{(\eqn{β_S})}
+#'  T \tab F \tab F \tab F \tab \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}}, \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{\alpha_S}}, \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{\beta_S}} \cr
+#'  \out{:} \tab \out{:} \tab \out{:} \tab \out{:} \tab \out{:} \cr
+#'  T \tab F \tab T \tab T \tab stage, sex, \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}}, \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{\alpha_S}}, \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{\beta_S}} \cr
+#'  T \tab T \tab F \tab F \tab mean\ifelse{html}{\out{(S<sub>0</sub>)}}{\eqn{(S_0)}}, sd\ifelse{html}{\out{(S<sub>0</sub>)}}{\eqn{(S_0)}}, mean\ifelse{html}{\out{(&alpha;<sub>S</sub>)}}{(\eqn{\alpha_S})}, sd\ifelse{html}{\out{(&alpha;<sub>S</sub>)}}{(\eqn{\alpha_S})}, mean\ifelse{html}{\out{(&beta;<sub>S</sub>)}}{(\eqn{\beta_S})}, sd\ifelse{html}{\out{(&beta;<sub>S</sub>)}}{(\eqn{\beta_S})} \cr
+#'  T \tab T \tab F \tab T \tab sex, mean\ifelse{html}{\out{(S<sub>0</sub>)}}{\eqn{(S_0)}}, sd\ifelse{html}{\out{(S<sub>0</sub>)}}{\eqn{(S_0)}}, mean\ifelse{html}{\out{(&alpha;<sub>S</sub>)}}{(\eqn{\alpha_S})}, sd\ifelse{html}{\out{(&alpha;<sub>S</sub>)}}{(\eqn{\alpha_S})}, mean\ifelse{html}{\out{(&beta;<sub>S</sub>)}}{(\eqn{\beta_S})}, sd\ifelse{html}{\out{(&beta;<sub>S</sub>)}}{(\eqn{\beta_S})}
 #'  }
 #'
 #' The column headings need not be included, only the numeric matrix is required. The rows require no particular order, but there must be exactly one row for each stage/sex combination.
 #' For example, in the case of density-, stage- and sex-dependent settlement with no individual variability:
-#' \tabular{ccccc}{ \out{&emsp;} 0 \tab \out{&emsp;} 0 \tab \out{&emsp;} 1.0 \tab \out{&emsp;} 0.2 \tab \out{&emsp;} 4.0 \cr
-#'  \out{&emsp;} 0 \tab \out{&emsp;} 1 \tab \out{&emsp;} 1.0 \tab \out{&emsp;} 0.1 \tab \out{&emsp;} 6.0 \cr
-#'  \out{&emsp;} 1 \tab \out{&emsp;} 0 \tab \out{&emsp;} 0.7 \tab \out{&emsp;} 0.5 \tab \out{&emsp;} 2.0 \cr
-#'  \out{&emsp;} 1 \tab \out{&emsp;} 1 \tab \out{&emsp;} 0.5 \tab \out{&emsp;} 0.5 \tab \out{&emsp;} 2.0 \cr
-#'  \out{&emsp;} 2 \tab \out{&emsp;} 0 \tab \out{&emsp;} 0.05 \tab \out{&emsp;} 1.0 \tab \out{&emsp;} 1.0 \cr
-#'  \out{&emsp;} 2 \tab \out{&emsp;} 1 \tab \out{&emsp;} 0.05 \tab \out{&emsp;} 1.0 \tab \out{&emsp;} 1.0
+#' \tabular{ccccc}{ \out{} 0 \tab \out{} 0 \tab \out{} 1.0 \tab \out{} 0.2 \tab \out{} 4.0 \cr
+#'  \out{} 0 \tab \out{} 1 \tab \out{} 1.0 \tab \out{} 0.1 \tab \out{} 6.0 \cr
+#'  \out{} 1 \tab \out{} 0 \tab \out{} 0.7 \tab \out{} 0.5 \tab \out{} 2.0 \cr
+#'  \out{} 1 \tab \out{} 1 \tab \out{} 0.5 \tab \out{} 0.5 \tab \out{} 2.0 \cr
+#'  \out{} 2 \tab \out{} 0 \tab \out{} 0.05 \tab \out{} 1.0 \tab \out{} 1.0 \cr
+#'  \out{} 2 \tab \out{} 1 \tab \out{} 0.05 \tab \out{} 1.0 \tab \out{} 1.0
 #' }
 #'
 #' To avoid having individuals moving perpetually because they cannot find suitable conditions to settle, the model requires a maximum number
@@ -1772,7 +1772,7 @@ setMethod("show", "CorrRW", function(object){
 #' @author Anne-Kathleen Malchow
 #' @name Settlement
 #' @export Settlement
-Settlement <- setClass("SettlementParams", slots = c(StageDep = "logical",
+Settlement <- methods::setClass("SettlementParams", slots = c(StageDep = "logical",
                                                      SexDep = "logical",
                                                      Settle = "matrix_OR_numeric",      # Settlement conditions for all sexes/stages. Settlement rule if the arrival cell/patch is unsuitable: 0 = die, 1 = wait, 2 = randomly choose a suitable cell/patch or die, 3 = randomly choose a suitable cell/patch or wait
                                                      FindMate = "logical",
@@ -1846,10 +1846,10 @@ setValidity("SettlementParams", function(object) {
                     }
                     else {
                         if (object@TraitScaleFactor[1] <= 0.0 || object@TraitScaleFactor[1] > 1.0 ) {
-                            msg <- c(msg, "TraitScaleFactor μ(S_0) must be in the half-open interval (0,1] !")
+                            msg <- c(msg, "TraitScaleFactor mu(S_0) must be in the half-open interval (0,1] !")
                         }
                         if (any(object@TraitScaleFactor[2:3] <= 0.0 )) {
-                            msg <- c(msg, "TraitScaleFactor μ(α_s) and μ(β_s) must be strictly positive !")
+                            msg <- c(msg, "TraitScaleFactor mu(\alpha_s) and mu(\beta_s) must be strictly positive !")
                         }
                     }
                 }
@@ -1859,7 +1859,7 @@ setValidity("SettlementParams", function(object) {
                     }
                     else {
                         if (object@TraitScaleFactor <= 0 || object@TraitScaleFactor > 1 ) {
-                            msg <- c(msg, "TraitScaleFactor μ(S_0) must be in the half-open interval (0,1] !")
+                            msg <- c(msg, "TraitScaleFactor mu(S_0) must be in the half-open interval (0,1] !")
                         }
                     }
                 }
@@ -1915,9 +1915,9 @@ setValidity("SettlementParams", function(object) {
 setMethod("initialize", "SettlementParams", function(.Object,...) {
     this_func = "Settlement(): "
     args <- list(...)
-    .Object <- callNextMethod()
+    .Object <- methods::callNextMethod()
     if ( length(args) == 0 ) {
-        validObject(.Object)
+        methods::validObject(.Object)
     }
     if (!is.null(args$Settle)) {
         if (class(args$Settle)[1]=="numeric" && length(args$Settle)==1) {
@@ -2000,9 +2000,9 @@ setMethod("plotProbs", "SettlementParams", function(x, stage = NULL, sex = NULL,
                 res[,6] <- densdep(xvals, A0 = sett[line,ind_D0]+sett[line,ind_D0+1], alpha = sett[line,ind_D0+2]-sett[line,ind_D0+3], beta = sett[line,ind_D0+4]+sett[line,ind_D0+5])
                 res[,7] <- densdep(xvals, A0 = sett[line,ind_D0]+sett[line,ind_D0+1], alpha = sett[line,ind_D0+2]+sett[line,ind_D0+3], beta = sett[line,ind_D0+4]-sett[line,ind_D0+5])
                 res[,8] <- densdep(xvals, A0 = sett[line,ind_D0]+sett[line,ind_D0+1], alpha = sett[line,ind_D0+2]+sett[line,ind_D0+3], beta = sett[line,ind_D0+4]+sett[line,ind_D0+5])
-                polygon(c(xvals,rev(xvals)), c(apply(res, 1, min), rev(apply(res, 1, max))), border=NA, col='grey80')
+                graphics::polygon(c(xvals,rev(xvals)), c(apply(res, 1, min), rev(apply(res, 1, max))), border=NA, col='grey80')
             }
-            lines(xvals, densdep(xvals, A0 = sett[line,ind_D0], alpha = sett[line,ind_D0+IV], beta = sett[line,ind_D0+2*IV]), type = "l", lty = 1, col = line)
+            graphics::lines(xvals, densdep(xvals, A0 = sett[line,ind_D0], alpha = sett[line,ind_D0+IV], beta = sett[line,ind_D0+2*IV]), type = "l", lty = 1, col = line)
 
             if (x@StageDep) {
                 if (x@SexDep) {leg.txt <- c(leg.txt, paste0("Stage ",sett[line,1], ifelse(sett[line,2]," male"," female")))} else {leg.txt <- c(leg.txt, paste0("Stage ",sett[line,1]))}
@@ -2012,7 +2012,7 @@ setMethod("plotProbs", "SettlementParams", function(x, stage = NULL, sex = NULL,
             }
         }
         if (length(leg.txt)>0) {
-            legend("topright", leg.txt, col = 1:nrow(sett), lwd = 1.5)
+            graphics::legend("topright", leg.txt, col = 1:nrow(sett), lwd = 1.5)
         }
     }
     else{ print("Plotting is only implemented for density-dependent settlement (in a movement process).\n") }
@@ -2074,7 +2074,7 @@ setMethod("plotProbs", "SettlementParams", function(x, stage = NULL, sex = NULL,
 #' @author Anne-Kathleen Malchow
 #' @name Dispersal
 #' @export Dispersal
-Dispersal <- setClass("DispersalParams", slots = c(Emigration = "EmigrationParams",
+Dispersal <- methods::setClass("DispersalParams", slots = c(Emigration = "EmigrationParams",
                                                    Transfer   = "TransferParams",
                                                    Settlement = "SettlementParams")
                       , prototype = list(Emigration = Emigration(),
@@ -2085,14 +2085,14 @@ Dispersal <- setClass("DispersalParams", slots = c(Emigration = "EmigrationParam
 
 setValidity("DispersalParams", function(object) {
     msg <- NULL
-    validObject(object@Emigration)
+    methods::validObject(object@Emigration)
     if (object@Emigration@UseFullKern) {
         if (!class(object@Transfer)[1] == "DispersalKernel") {
             msg <- c(msg, "Dispersal(): The emigration option \"UseFullKern\" can only be used if a dispersal kernel is used as transfer method!")
         }
     }
-    validObject(object@Transfer)
-    validObject(object@Settlement)
+    methods::validObject(object@Transfer)
+    methods::validObject(object@Settlement)
     if (class(object@Transfer)[1] == "DispersalKernel") {
         if (object@Settlement@DensDep) {
             msg <- c(msg, "Dispersal(): Settlement can only be density-dependent (DensDep = TRUE) if a movement process is used as transfer method!")
@@ -2107,9 +2107,9 @@ setValidity("DispersalParams", function(object) {
 setMethod("initialize", "DispersalParams", function(.Object,...) {
     this_func = "Dispersal(): "
     args <- list(...)
-    .Object <- callNextMethod()
+    .Object <- methods::callNextMethod()
     if ( length(args) == 0 ) {
-        validObject(.Object)
+        methods::validObject(.Object)
     }
     .Object}
 )

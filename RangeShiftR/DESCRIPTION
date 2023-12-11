@@ -19,6 +19,8 @@ Imports:
     Rcpp (>= 1.0.0),
     Rdpack (>= 0.7),
     methods,
+    raster
+Suggests:
     rmarkdown,
     terra
 RdMacros: Rdpack

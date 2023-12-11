@@ -152,17 +152,10 @@ DEBUGLOG << endl << "RunModel(): generating new landscape ..." << endl;
 DEBUGLOG << "RunModel(): finished resetting landscape" << endl << endl;
 #endif
 		pLandscape->generatePatches();
-//#if VCL
 		if (v.viewLand || sim.saveMaps) {
 			pLandscape->setLandMap();
 			pLandscape->drawLandscape(rep,0,ppLand.landNum);
 		}
-//#endif
-//#if BATCH
-//		if (sim.saveMaps) {
-//			pLandscape->drawLandscape(rep,0,ppLand.landNum);
-//		}
-//#endif
 #if RSDEBUG
 DEBUGLOG << endl << "RunModel(): finished generating patches" << endl;
 #endif
@@ -313,12 +306,8 @@ DEBUGLOG << "RunModel(): completed updating carrying capacity" << endl;
 DEBUGLOG << "RunModel(): completed initialisation, rep=" << rep
 	<< " pSpecies=" << pSpecies << endl;
 #endif
-#if BATCH
-#if RS_RCPP && !R_CMD
+#if BATCH && RS_RCPP && !R_CMD
 	Rcpp::Rcout << "RunModel(): completed initialisation " << endl;
-#else
-	cout << "RunModel(): completed initialisation " << endl;
-#endif
 #endif
 
 	// open a new individuals file for each replicate
@@ -926,7 +915,7 @@ return errorfolder;
 //For outputs and population visualisations pre-reproduction
 void PreReproductionOutput(Landscape *pLand,Community *pComm,int rep,int yr,int gen)
 {
-#if RSDEBUG || VCL
+#if RSDEBUG
 landParams ppLand = pLand->getLandParams();
 #endif
 simParams sim = paramsSim->getSim();
@@ -1341,22 +1330,6 @@ if (dem.stageStruct){
 			outPar << endl;
 		}
 	}
-#if VCL
-	else {
-
-	// NOTE: TO PREVENT COMPILING FOR BATCH MODE, THIS CODE NEEDS TO BE INCLUDED IN COMPILER
-	// CONDITIONAL BLOCK  AS SHOWN
-
-//	outPar << "Row count: " << frmSpecies->transMatrix->RowCount << endl;
-//	outPar << "Col count: " << frmSpecies->transMatrix->ColCount << endl;
-		for (int i = 1; i < frmSpecies->transMatrix->RowCount; i++) {
-			for (int j = 1; j < frmSpecies->transMatrix->ColCount; j++) {
-				outPar << frmSpecies->transMatrix->Cells[j][i].ToDouble() << "\t";
-			}
-			outPar << endl;
-		}
-	}
-#endif
 	outPar << endl;
 #endif
 */
