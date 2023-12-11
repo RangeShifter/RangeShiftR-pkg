@@ -65,3 +65,8 @@ git subtree add --prefix src/RScore RScore <the new branch>
 ## Contributing to RangeShifter core code
 
 See [CONTRIBUTING](https://github.com/RangeShifter/RScore/blob/main/CONTRIBUTING.md).
+
+## Maintainers
+
+- [@JetteReeg](https://github.com/JetteReeg)
+- [@TheoPannetier](https://github.com/TheoPannetier)
