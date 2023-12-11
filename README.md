@@ -42,7 +42,7 @@ Analogous to the RangeShifter GUI, we provide [tutorials](https://rangeshifter.g
 
 If you have any further question related to the general concepts and usage of RangeShifter, please browse earlier topics in the [forum pages](https://github.com/RangeShifter/RangeshiftR-tutorials/discussions) or add a new one. Often it is also helpful to review [published studies](https://rangeshifter.github.io/site/references/) using the RangeShifter modelling platform.
 
-For technical questions related to the RangeShiftR package interface and which cannot be answered with the documentation provided above, please browse the [issues section](https://github.com/RangeShifter/RangeShiftR-package-dev/issues) of this repository and open a new issues if required. We also offer *technical support* if you follow the guidelines of how to ask for help, e.g. guidelines given by [StackOverflow](https://stackoverflow.com/help/how-to-ask):
+For technical questions related to the RangeShiftR package interface and which cannot be answered with the documentation provided above, please browse the [issues section](https://github.com/RangeShifter/RangeShiftR-package-dev/issues) of this repository and open a new issues if required. We also offer *technical support* for the RangeShiftR package via mail (rangeshiftr@uni-potsdam.de) if you follow the guidelines of how to ask for help, e.g. guidelines given by [StackOverflow](https://stackoverflow.com/help/how-to-ask):
 
 ## Contributing
 
