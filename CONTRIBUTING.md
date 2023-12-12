@@ -69,11 +69,11 @@ To report a bug, please [open an issue](https://github.com/RangeShifter/RScore/i
 Please do check if a related issue has already open also on one of the other interfaces ([R package interface](https://github.com/RangeShifter/RangeShiftR-package-dev/issues), [batch mode interface](https://github.com/RangeShifter/RangeShifter_batch_dev/issues).
 To propose a bug fix (thank you!!), please create and work on your own branch or fork, from either `main` or `develop` (preferred), and open a pull request when your fix is ready to be merged into the original branch.
 
-As a prerequisite for merging, please ensure that your version passes status check (that is, RangeShifter can still build and run as intended). This can be seen in the Actions panel for every commit and at the bottom of the pull request.*
+As a prerequisite for merging, please ensure that the R package is build correctly.* 
 
 Maintainers will review the pull request, possibly request changes, and eventually integrate the bug fix into RScore, and update the subtrees to bring the fix to all interfaces.
 
-*Still needs to be adapted for the R package interface.
+*GitHub Action still needs to be adapted for the R package interface: R CMD CHECK needs to run without warnings (also a prerequisite for CRAN).
 
 #### New features
 
