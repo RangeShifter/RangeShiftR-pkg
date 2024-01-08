@@ -34,6 +34,7 @@
 #include "RSrandom.h"
 #include "Utils.h"
 #include "Parameters.h"
+#include "Population.h"
 #include "Landscape.h"
 #include "Species.h"
 #include "SubCommunity.h"
@@ -44,6 +45,7 @@ void run_unit_tests() {
 	cout << "******* Unit test output *******" << endl;
 	testRSrandom();
 	testIndividual();
+	testPopulation();
 	cout << endl << "************************" << endl;
 }
 

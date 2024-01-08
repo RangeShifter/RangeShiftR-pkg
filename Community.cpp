@@ -454,7 +454,7 @@ void Community::emigration(void)
 void Community::dispersal(short landIx, short nextseason)
 #else
 void Community::dispersal(short landIx)
-#endif // SEASONAL || RS_RCPP
+#endif // RS_RCPP
 {
 #if RSDEBUG
 	int t0, t1, t2;

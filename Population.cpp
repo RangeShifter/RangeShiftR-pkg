@@ -57,7 +57,8 @@ Population::Population(Species* pSp, Patch* pPch, int ninds, int resol)
 	pPatch = pPch;
 	// record the new population in the patch
 	patchPopn pp;
-	pp.pSp = (intptr)pSpecies; pp.pPop = (intptr)this;
+	pp.pSp = (intptr)pSpecies; 
+	pp.pPop = (intptr)this;
 	pPatch->addPopn(pp);
 
 	demogrParams dem = pSpecies->getDemogr();
@@ -1671,3 +1672,26 @@ void Population::outGenetics(const int rep, const int year, const int landNr)
 //---------------------------------------------------------------------------
 
 
+#if RSDEBUG
+void testPopulation() 
+{
+	int resol{ 1 };
+	int nInds{ 10 };
+	Species* pSpecies;
+	Patch* pPatch;
+	Population p;
+	assert(p.getNInds() == 0);
+	// disperser disp;
+	// p.extractDisperser
+	/*
+	short nStages; // 0
+	short nSexes; // 0
+	Species *pSpecies; // NULL	// pointer to the species
+	Patch *pPatch; // NULL	// pointer to the patch
+	int nInds[NSTAGES][NSEXES]; // undef		// no. of individuals in each stage/sex
+	std::vector <Individual*> inds; // undef // all individuals in population except ...
+	std::vector <Individual*> juvs; // undef
+	*/
+	cout << "All tests for Population have run." << endl;
+}
+#endif // RSDEBUG
