@@ -459,11 +459,6 @@ public:
 		int,	// landscape index number (always 0 if landscape is not dynamic)
 		int		// landscape no.
 	);
-	void drawGradient(void); // Draw environmental gradient map
-	void drawGlobalStoch(	// Draw environmental stochasticity time-series
-		int		// no. of years
-	);
-
 	void resetVisits(void);
 	void outVisits(int,int);	// save SMS path visits map to raster text file
 
