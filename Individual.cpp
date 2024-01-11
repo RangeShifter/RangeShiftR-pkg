@@ -950,12 +950,13 @@ int Individual::moveKernel(Landscape* pLandscape, Species* pSpecies,
 					}
 				}
 				// randomise the position of the individual inside the cell
+				// so x and y are a corner of the cell?
 				xrand = (double)loc.x + pRandom->Random() * 0.999;
 				yrand = (double)loc.y + pRandom->Random() * 0.999;
 
+				// draw factor r1 0 < r1 <= 1
 				r1 = 0.0000001 + pRandom->Random() * (1.0 - 0.0000001);
-				//			dist = (-1.0*meandist)*std::log(r1);
-				dist = (-1.0 * meandist) * log(r1);  // for LINUX_CLUSTER
+				dist = (-1.0 * meandist) * log(r1);
 
 				rndangle = pRandom->Random() * 2.0 * PI;
 				nx = xrand + dist * sin(rndangle);
@@ -967,6 +968,7 @@ int Individual::moveKernel(Landscape* pLandscape, Species* pSpecies,
 #endif
 				loopsteps++;
 			} while (loopsteps < 1000 &&
+				// keep drawing if out of bounds of landscape or same cell
 				((!absorbing && (newX < land.minX || newX > land.maxX
 					|| newY < land.minY || newY > land.maxY))
 					|| (!usefullkernel && newX == loc.x && newY == loc.y))
@@ -997,7 +999,7 @@ int Individual::moveKernel(Landscape* pLandscape, Species* pSpecies,
 					}
 				}
 			}
-			else {
+			else { // exceeded 1000 attempts
 				patch = 0;
 				patchNum = -1;
 			}
@@ -1006,6 +1008,7 @@ int Individual::moveKernel(Landscape* pLandscape, Species* pSpecies,
 
 	if (loopsteps < 1000) {
 		if (pCell == 0) { // beyond absorbing boundary or in no-data cell
+			// this should never be true??
 			pCurrCell = 0;
 			status = 6;
 			dispersing = 0;
@@ -1033,7 +1036,7 @@ int Individual::moveKernel(Landscape* pLandscape, Species* pSpecies,
 			}
 		}
 	}
-	else {
+	else { // exceeded 1000 attempts
 		status = 6;
 		dispersing = 0;
 	}
@@ -1831,9 +1834,6 @@ void testIndividual() {
 	short moveType = 1;
 	Individual ind(pCell, pPatch, stg, age, repInt, probmale, uses_movt_process, moveType);
 
-	// An individual can move to a neighbouring cell
-	//ind.moveto();
-
 	// Gets its sex drawn from pmale
 	
 	// Can age or develop
@@ -1849,6 +1849,46 @@ void testIndividual() {
 	// Disperses
 	// Emigrates
 	// Transfers
+	// Kernel transfer
+	{
+		// Set up landscape
+		Landscape ls;
+		landParams ls_params;
+		ls_params.dimX = ls_params.dimY = 10;
+		ls.setLandParams(ls_params, true);
+
+		// Set up species for habitat codes
+		Species sp;
+		sp.createHabK(1);
+		sp.setHabK(0, 100.0); // one habitat with K = 100
+
+		ls.setCellArray();
+		Cell* pC1 = new Cell(51, 21, 0, 0);
+		Patch* pPch = ls.newPatch(0);
+		ls.addCellToPatch(pC1, pPch);
+		// add C1 to cell array?
+
+		// Add cells
+		ls.setCellArray();
+		ls.addNewCellToLand(51, 21, 0);
+		ls.addNewCellToLand(58, 28, 0);
+		ls.allocatePatches(&sp);
+
+		ls.getPatchData();
+		Individual ind(pCell, pPatch, 1, 0, 0, 0.0, false, 0);
+
+		// Arrival cell 
+
+		// An individual with a small dispersal distance is unlikely to reach a distant cell
+
+		// An individual with a large dispersal distance should be able to reach a distant cell
+
+		// If no cell is available beyond initial cell, individual should die
+
+		// 
+
+	}
+	// Individual::moveKernel(Landscape * pLandscape, Species * pSpecies, const short repType, const bool absorbing)
 	// Settles
 
 	// Survives
