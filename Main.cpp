@@ -44,6 +44,7 @@ using namespace std;
 void run_unit_tests() {
 	cout << "******* Unit test output *******" << endl;
 	testRSrandom();
+	testLandscape();
 	testIndividual();
 	testPopulation();
 	cout << endl << "************************" << endl;

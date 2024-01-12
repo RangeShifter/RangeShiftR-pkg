@@ -786,6 +786,15 @@ void Landscape::addNewCellToLand(int x, int y, int hab) {
 		cells[y][x] = new Cell(x, y, 0, hab);
 }
 
+void Landscape::addCellToLand(Cell* c) {
+	if (cells == 0) throw runtime_error("Landscape cells member is uninitialised.");
+	locn l;
+	if (c->getHabitat(0) < 0.0)
+		throw logic_error("Cannot add no-data cell to landscape.");
+	l = c->getLocn();
+	cells[l.y][l.x] = c;
+}
+
 void Landscape::addNewCellToPatch(Patch* pPatch, int x, int y, float q) {
 	if (q < 0.0) { // no-data cell - no Cell created
 		cells[y][x] = 0;
@@ -2634,6 +2643,12 @@ void Landscape::outVisits(int rep, int landNr) {
 }
 
 //---------------------------------------------------------------------------
+
+#if RSDEBUG
+void testLandscape() {
+	// test coordinate system
+}
+#endif // RSDEBUG
 
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
