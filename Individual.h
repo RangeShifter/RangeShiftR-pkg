@@ -196,7 +196,6 @@ public:
 	int moveKernel(
 		Landscape*,		// pointer to Landscape
 		Species*,			// pointer to Species
-		const short,	// reproduction type (see Species)
 		const bool    // absorbing boundaries?
 	);
 	// Make a single movement step according to a mechanistic movement model
@@ -251,6 +250,10 @@ public:
 	void outMovePath( // Write records to movement paths file
 		const int		 	// year
 	);
+#endif
+#if RSDEBUG
+	// Testing utilities
+	Cell* getCurrCell() const;
 #endif
 
 private:

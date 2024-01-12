@@ -2644,8 +2644,28 @@ void Landscape::outVisits(int rep, int landNr) {
 //---------------------------------------------------------------------------
 
 #if RSDEBUG
+// Debug only: shortcut setup utilities
+
+Landscape createLandscapeFromCells(vector<Cell*> cells, const landParams& lp, Species sp) {
+	// Set up landscape
+	Landscape ls;
+	ls.setLandParams(lp, true);
+	// Add cells
+	ls.setCellArray();
+	for (auto c : cells) {
+		ls.addCellToLand(c);
+	}
+	ls.allocatePatches(&sp);
+	return ls;
+}
+
 void testLandscape() {
 	// test coordinate system
+	Landscape ls;
+	landParams ls_params;
+	ls_params.dimX = ls_params.dimY = 100;
+	ls.setLandParams(ls_params, true);
+
 }
 #endif // RSDEBUG
 

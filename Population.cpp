@@ -849,7 +849,7 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 			disperser = inds[i]->moveStep(pLandscape, pSpecies, landIx, sim.absorbing);
 		}
 		else {
-			disperser = inds[i]->moveKernel(pLandscape, pSpecies, reptype, sim.absorbing);
+			disperser = inds[i]->moveKernel(pLandscape, pSpecies, sim.absorbing);
 		}
 		ndispersers += disperser;
 		if (disperser) {

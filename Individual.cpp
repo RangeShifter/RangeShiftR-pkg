@@ -864,8 +864,7 @@ void Individual::moveto(Cell* newCell) {
 // Move to a new cell by sampling a dispersal distance from a single or double
 // negative exponential kernel
 // Returns 1 if still dispersing (including having found a potential patch), otherwise 0
-int Individual::moveKernel(Landscape* pLandscape, Species* pSpecies,
-	const short repType, const bool absorbing)
+int Individual::moveKernel(Landscape* pLandscape, Species* pSpecies, const bool absorbing)
 {
 
 	intptr patch;
@@ -1815,7 +1814,9 @@ double cauchy(double location, double scale) {
 //---------------------------------------------------------------------------
 
 #if RSDEBUG
-
+Cell* Individual::getCurrCell() const {
+	return pCurrCell;
+}
 
 void testIndividual() {
 
@@ -1851,30 +1852,52 @@ void testIndividual() {
 	// Transfers
 	// Kernel transfer
 	{
-		// Landscape ls = createLandscapeFromCells(ls_params, cells, pSp);
-
-		// Set up landscape
-		Landscape ls;
+		// Simple cell-based landscape layout
+		// oo
+		// oo
 		landParams ls_params;
-		ls_params.dimX = ls_params.dimY = 100;
-		ls.setLandParams(ls_params, true);
-
+		ls_params.dimX = ls_params.dimY = 2;
+		vector <Cell*> cells{ new Cell(0, 0, 0, 0), new Cell(1, 1, 0, 0) };
 		// Set up species for habitat codes
 		Species sp;
 		sp.createHabK(1);
 		sp.setHabK(0, 100.0); // one habitat with K = 100
 
-		// Add cells
-		ls.setCellArray();
-		vector <Cell*> cells{new Cell(1, 1, 0, 0), new Cell(98, 98, 0, 0)};
-		for (auto c : cells) {
-			ls.addCellToLand(c);
-		}
-		ls.allocatePatches(&sp);
+		// Landscape ls = createLandscapeFromCells(cells, ls_params, sp);
+			Landscape ls;
+			ls.setLandParams(ls_params, true);
+			// Add cells
+			ls.setCellArray();
+			for (auto c : cells) {
+				ls.addCellToLand(c);
+			}
+			ls.allocatePatches(&sp);
 
-		Cell* c = new Cell(1, 1, 0, 0);
 		Patch* p = (Patch*)cells[0]->getPatch();
 		Individual ind(cells[0], p, 1, 0, 0, 0.0, false, 0);
+		Cell* init_cell = ind.getCurrCell();
+
+		// ind.status
+		// land.resol
+		// species.trfrKernTraits.meanDist1
+		// species.useFullKernel
+		// pathData *path; ?
+		// land.minX etc. dimX dimY
+		// patch.localK
+		// bool species.stageStruct
+		// species trfrMortParams m; m.fixedMort = fixedMort; m.mortAlpha = mortAlpha; m.mortBeta = mortBeta;
+
+		int isDispersing = ind.moveKernel(&ls, &sp, false);
+
+		// After movement, individual should be...
+		// in a different cell
+		Cell* curr_cell = ind.getCurrCell();
+		// not in a no-data cell
+		assert(curr_cell != 0);
+		assert(curr_cell != init_cell);
+		// (non-absorbing) still within landscape boundaries
+		
+
 
 		// Arrival cell 
 

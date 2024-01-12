@@ -546,6 +546,7 @@ extern RSrandom *pRandom;
 #if RSDEBUG
 extern ofstream DEBUGLOG;
 extern void DebugGUI(string);
+Landscape createLandscapeFromCells(vector<Cell*> cells, const landParams& lp, Species sp);
 void testLandscape();
 #endif
 
