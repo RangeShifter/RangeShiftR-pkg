@@ -1851,10 +1851,12 @@ void testIndividual() {
 	// Transfers
 	// Kernel transfer
 	{
+		// Landscape ls = createLandscapeFromCells(ls_params, cells, pSp);
+
 		// Set up landscape
 		Landscape ls;
 		landParams ls_params;
-		ls_params.dimX = ls_params.dimY = 10;
+		ls_params.dimX = ls_params.dimY = 100;
 		ls.setLandParams(ls_params, true);
 
 		// Set up species for habitat codes
@@ -1862,20 +1864,17 @@ void testIndividual() {
 		sp.createHabK(1);
 		sp.setHabK(0, 100.0); // one habitat with K = 100
 
-		ls.setCellArray();
-		Cell* pC1 = new Cell(51, 21, 0, 0);
-		Patch* pPch = ls.newPatch(0);
-		ls.addCellToPatch(pC1, pPch);
-		// add C1 to cell array?
-
 		// Add cells
 		ls.setCellArray();
-		ls.addNewCellToLand(51, 21, 0);
-		ls.addNewCellToLand(58, 28, 0);
+		vector <Cell*> cells{new Cell(1, 1, 0, 0), new Cell(98, 98, 0, 0)};
+		for (auto c : cells) {
+			ls.addCellToLand(c);
+		}
 		ls.allocatePatches(&sp);
 
-		ls.getPatchData();
-		Individual ind(pCell, pPatch, 1, 0, 0, 0.0, false, 0);
+		Cell* c = new Cell(1, 1, 0, 0);
+		Patch* p = (Patch*)cells[0]->getPatch();
+		Individual ind(cells[0], p, 1, 0, 0, 0.0, false, 0);
 
 		// Arrival cell 
 

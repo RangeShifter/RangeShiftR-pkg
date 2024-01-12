@@ -90,7 +90,7 @@ else habIxx[ix] = 0;
 }
 
 int Cell::getHabIndex(int ix) {
-if (ix < 0 || ix >= (int)habIxx.size())
+if (ix < 0 || ix >= habIxx.size())
 	// nodata cell OR should not occur, but treat as such
 	return -1;
 else return habIxx[ix];

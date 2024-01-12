@@ -788,10 +788,9 @@ void Landscape::addNewCellToLand(int x, int y, int hab) {
 
 void Landscape::addCellToLand(Cell* c) {
 	if (cells == 0) throw runtime_error("Landscape cells member is uninitialised.");
-	locn l;
-	if (c->getHabitat(0) < 0.0)
-		throw logic_error("Cannot add no-data cell to landscape.");
-	l = c->getLocn();
+	if (c->getHabIndex(0) < 0.0)
+		throw logic_error("Can't add no-data cell to landscape.");
+	locn l = c->getLocn();
 	cells[l.y][l.x] = c;
 }
 
