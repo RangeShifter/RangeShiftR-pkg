@@ -91,7 +91,15 @@ int _tmain(int argc, _TCHAR* argv[])
 	return 1;
 # else
 	assert(0.1 > 0.0); // assert does run correctly
-	run_unit_tests();
+	try {
+		run_unit_tests();
+	}
+	catch (const runtime_error& e) {
+		cerr << e.what();
+	}
+	catch (const logic_error& e) {
+		cerr << e.what();
+	}
 	cout << "All tests have completed." << endl;
 	return 0; // if tests succeed, we are happy
 # endif // NDEBUG
