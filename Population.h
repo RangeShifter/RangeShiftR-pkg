@@ -1,58 +1,58 @@
 /*----------------------------------------------------------------------------
- *	
- *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell 
- *	
+ *
+ *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell
+ *
  *	This file is part of RangeShifter.
- *	
+ *
  *	RangeShifter is free software: you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation, either version 3 of the License, or
  *	(at your option) any later version.
- *	
+ *
  *	RangeShifter is distributed in the hope that it will be useful,
  *	but WITHOUT ANY WARRANTY; without even the implied warranty of
  *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *	GNU General Public License for more details.
- *	
+ *
  *	You should have received a copy of the GNU General Public License
  *	along with RangeShifter. If not, see <https://www.gnu.org/licenses/>.
- *	
+ *
  --------------------------------------------------------------------------*/
- 
- 
-/*------------------------------------------------------------------------------
 
-RangeShifter v2.0 Population
 
-Implements the Population class
+ /*------------------------------------------------------------------------------
 
-There is ONE instance of a Population for each Species within each SubCommunity
-(including the matrix). The Population holds a list of all the Individuals in
-the Population.
+ RangeShifter v2.0 Population
 
-The matrix Population(s) hold(s) Individuals which are currently in the process
-of transfer through the matrix.
+ Implements the Population class
 
-For full details of RangeShifter, please see:
-Bocedi G., Palmer S.C.F., Pe’er G., Heikkinen R.K., Matsinos Y.G., Watts K.
-and Travis J.M.J. (2014). RangeShifter: a platform for modelling spatial
-eco-evolutionary dynamics and species’ responses to environmental changes.
-Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
+ There is ONE instance of a Population for each Species within each SubCommunity
+ (including the matrix). The Population holds a list of all the Individuals in
+ the Population.
 
-Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
+ The matrix Population(s) hold(s) Individuals which are currently in the process
+ of transfer through the matrix.
 
-Last updated: 22 January 2022 by Steve Palmer
+ For full details of RangeShifter, please see:
+ Bocedi G., Palmer S.C.F., Pe’er G., Heikkinen R.K., Matsinos Y.G., Watts K.
+ and Travis J.M.J. (2014). RangeShifter: a platform for modelling spatial
+ eco-evolutionary dynamics and species’ responses to environmental changes.
+ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
-------------------------------------------------------------------------------*/
+ Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
+
+ Last updated: 22 January 2022 by Steve Palmer
+
+ ------------------------------------------------------------------------------*/
 
 #ifndef PopulationH
 #define PopulationH
 
 #include <vector>
 #include <algorithm>
-//#include <Math.hpp>
-//#include <math.h>
-//#include <stdlib.h>
+ //#include <Math.hpp>
+ //#include <math.h>
+ //#include <stdlib.h>
 using namespace std;
 
 #include "Parameters.h"
@@ -65,10 +65,10 @@ using namespace std;
 //---------------------------------------------------------------------------
 
 struct popStats {
-	Species *pSpecies; Patch *pPatch; int spNum,nInds,nNonJuvs,nAdults; bool breeding;
+	Species* pSpecies; Patch* pPatch; int spNum, nInds, nNonJuvs, nAdults; bool breeding;
 };
 struct disperser {
-	Individual *pInd; Cell *pCell; bool yes;
+	Individual* pInd; Cell* pCell; bool yes;
 };
 struct traitsums { // sums of trait genes for dispersal
 	int ninds[NSEXES];				// no. of individuals
@@ -177,8 +177,8 @@ public:
 	void survival0(
 		float,	// local carrying capacity
 		short,	// option0:	0 - stage 0 (juveniles) only
-						//	  			1 - all stages
-						//					2 - stage 1 and above (all non-juveniles)
+		//	  			1 - all stages
+		//					2 - stage 1 and above (all non-juveniles)
 		short 	// option1:	0 - development only (when survival is annual)
 						//	  	 		1 - development and survival
 						//	  	 		2 - survival only (when survival is annual)
@@ -221,23 +221,23 @@ public:
 private:
 	short nStages;
 	short nSexes;
-	Species *pSpecies;	// pointer to the species
-	Patch *pPatch;			// pointer to the patch
+	Species* pSpecies;	// pointer to the species
+	Patch* pPatch;			// pointer to the patch
 	int nInds[NSTAGES][NSEXES];		// no. of individuals in each stage/sex
 
 	std::vector <Individual*> inds; // all individuals in population except ...
 	std::vector <Individual*> juvs; // ... juveniles until reproduction of ALL species
-																	// has been completed
+	// has been completed
 
 };
 
 //---------------------------------------------------------------------------
 
-extern paramGrad *paramsGrad;
-extern paramStoch *paramsStoch;
-extern paramInit *paramsInit;
-extern paramSim *paramsSim;
-extern RSrandom *pRandom;
+extern paramGrad* paramsGrad;
+extern paramStoch* paramsStoch;
+extern paramInit* paramsInit;
+extern paramSim* paramsSim;
+extern RSrandom* pRandom;
 
 #if RSDEBUG
 extern ofstream DEBUGLOG;

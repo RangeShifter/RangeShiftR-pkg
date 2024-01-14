@@ -1,43 +1,43 @@
 /*----------------------------------------------------------------------------
- *	
- *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell 
- *	
+ *
+ *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell
+ *
  *	This file is part of RangeShifter.
- *	
+ *
  *	RangeShifter is free software: you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation, either version 3 of the License, or
  *	(at your option) any later version.
- *	
+ *
  *	RangeShifter is distributed in the hope that it will be useful,
  *	but WITHOUT ANY WARRANTY; without even the implied warranty of
  *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *	GNU General Public License for more details.
- *	
+ *
  *	You should have received a copy of the GNU General Public License
  *	along with RangeShifter. If not, see <https://www.gnu.org/licenses/>.
- *	
+ *
  --------------------------------------------------------------------------*/
- 
- 
-/*------------------------------------------------------------------------------
 
-RangeShifter v2.0 Genome
 
-Implements the Genome class
+ /*------------------------------------------------------------------------------
 
-Author: Steve Palmer & Roslyn Henry, University of Aberdeen
+ RangeShifter v2.0 Genome
 
-Last updated: 28 July 2021 by Greta Bocedi
+ Implements the Genome class
 
-------------------------------------------------------------------------------*/
+ Author: Steve Palmer & Roslyn Henry, University of Aberdeen
+
+ Last updated: 28 July 2021 by Greta Bocedi
+
+ ------------------------------------------------------------------------------*/
 
 #ifndef GenomeH
 #define GenomeH
 
 #include <vector>
 #include <algorithm>
-//#include "maths.h"
+ //#include "maths.h"
 
 #include "Parameters.h"
 #include "Species.h"
@@ -65,7 +65,7 @@ public:
 		const short,	// locus
 		const bool		// diploid
 	);
-//	double probval(const bool);
+	//	double probval(const bool);
 	locus alleles(	// Return allele values at a specified locus
 		const int			// position of locus on chromosome
 	);
@@ -93,25 +93,25 @@ protected:
 
 private:
 	short nloci;
-	locus *pLoci;
+	locus* pLoci;
 
 };
 
 //---------------------------------------------------------------------------
 
-class Genome{
+class Genome {
 
 public:
-//
-//	static float delPMutation, delEffectSize, delDominance, delBackMutation ,genomeMeanRecombination;
-//	static int delMaxSize, delNMutations;
-//	static bool genomeCanRecombine, genomeCompletelyUnlinked;
-//
+	//
+	//	static float delPMutation, delEffectSize, delDominance, delBackMutation ,genomeMeanRecombination;
+	//	static int delMaxSize, delNMutations;
+	//	static bool genomeCanRecombine, genomeCompletelyUnlinked;
+	//
 
 	Genome();
-	Genome(int,int,bool);
+	Genome(int, int, bool);
 	Genome(Species*);
-	Genome(Species*,Genome*,Genome*);
+	Genome(Species*, Genome*, Genome*);
 	~Genome();
 	void setGene( // Set up new gene at initialisation for 1 chromosome per trait
 		const short,	// chromosome number
@@ -129,23 +129,23 @@ public:
 		Species*,			// pointer to Species
 		const double		// s.d. of allelic variance
 	);
-//	double copy(int,int);
+	//	double copy(int,int);
 	double express(
-	// Return the expressed value of a gene when species has one chromosome per trait
+		// Return the expressed value of a gene when species has one chromosome per trait
 		short,	// chromosome number
 		short,	// expression type (NOT CURRENTLY USED)
 		short		// individual's sex (NOT CURRENTLY USED)
 	);
-//	double express(
-//		short,	// chromosome number
-//		short		// locus on chromosome
-//	);
+	//	double express(
+	//		short,	// chromosome number
+	//		short		// locus on chromosome
+	//	);
 	double express(
-	// Return the expressed value of a trait when genetic architecture is defined
+		// Return the expressed value of a trait when genetic architecture is defined
 		Species*,	// pointer to Species
 		short			// trait number
 //		bool			// true if trait is sex-dependent
-	);
+);
 	locusOK getAlleles( // Get allele values at a specified locus
 		short,	// chromosome number
 		short		// locus position on chromosome
@@ -161,8 +161,8 @@ public:
 		const double,		// crossover probability
 		const double			// s.d. of mutation magnitude (genetic scale)
 	);
-//	void setStaticData(genomeData);
-//	genomeData getStaticData(void);
+	//	void setStaticData(genomeData);
+	//	genomeData getStaticData(void);
 	short getNChromosomes(void);
 	void outGenHeaders(
 		const int,	// replicate
@@ -181,7 +181,7 @@ public:
 private:
 	short nChromosomes;						// no. of chromosomes
 	bool diploid;
-	Chromosome **pChromosome;
+	Chromosome** pChromosome;
 
 };
 
@@ -237,8 +237,8 @@ private:
 
 //---------------------------------------------------------------------------
 
-extern paramSim *paramsSim;
-extern RSrandom *pRandom;
+extern paramSim* paramsSim;
+extern RSrandom* pRandom;
 
 #if RSDEBUG
 extern ofstream DEBUGLOG;

@@ -1,45 +1,45 @@
 /*----------------------------------------------------------------------------
- *	
- *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell 
- *	
+ *
+ *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell
+ *
  *	This file is part of RangeShifter.
- *	
+ *
  *	RangeShifter is free software: you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation, either version 3 of the License, or
  *	(at your option) any later version.
- *	
+ *
  *	RangeShifter is distributed in the hope that it will be useful,
  *	but WITHOUT ANY WARRANTY; without even the implied warranty of
  *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *	GNU General Public License for more details.
- *	
+ *
  *	You should have received a copy of the GNU General Public License
  *	along with RangeShifter. If not, see <https://www.gnu.org/licenses/>.
- *	
+ *
  --------------------------------------------------------------------------*/
- 
- 
-/*------------------------------------------------------------------------------
 
-RangeShifter v2.0 Individual
 
-Implements the Individual class
+ /*------------------------------------------------------------------------------
 
-Various optional attributes (genes for traits, movement parameters, etc.) are
-allocated dynamically and accessed by pointers if required.
+ RangeShifter v2.0 Individual
 
-For full details of RangeShifter, please see:
-Bocedi G., Palmer S.C.F., Pe’er G., Heikkinen R.K., Matsinos Y.G., Watts K.
-and Travis J.M.J. (2014). RangeShifter: a platform for modelling spatial
-eco-evolutionary dynamics and species’ responses to environmental changes.
-Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
+ Implements the Individual class
 
-Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
+ Various optional attributes (genes for traits, movement parameters, etc.) are
+ allocated dynamically and accessed by pointers if required.
 
-Last updated: 26 October 2021 by Steve Palmer
+ For full details of RangeShifter, please see:
+ Bocedi G., Palmer S.C.F., Pe’er G., Heikkinen R.K., Matsinos Y.G., Watts K.
+ and Travis J.M.J. (2014). RangeShifter: a platform for modelling spatial
+ eco-evolutionary dynamics and species’ responses to environmental changes.
+ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
-------------------------------------------------------------------------------*/
+ Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
+
+ Last updated: 26 October 2021 by Steve Palmer
+
+ ------------------------------------------------------------------------------*/
 
 #ifndef IndividualH
 #define IndividualH
@@ -71,8 +71,8 @@ struct pathData { // to hold path data common to SMS and CRW models
 	int year, total, out; // nos. of steps
 	Patch* pSettPatch;		// pointer to most recent patch tested for settlement
 	short settleStatus; 	// whether ind may settle in current patch
-												// 0 = not set, 1 = debarred through density dependence rule
-												// 2 = OK to settle subject to finding a mate
+	// 0 = not set, 1 = debarred through density dependence rule
+	// 2 = OK to settle subject to finding a mate
 //	bool leftNatalPatch;	// individual has moved out of its natal patch
 #if RS_RCPP
 	short pathoutput;
@@ -86,7 +86,7 @@ struct settlePatch {
 };
 struct crwParams { // to hold data for CRW movement model
 	float prevdrn;	// direction of previous step (UNITS)
-	float xc,yc;		// continuous cell co-ordinates
+	float xc, yc;		// continuous cell co-ordinates
 	float stepL;		// phenotypic step length (m)
 	float rho;			// phenotypic step correlation coefficient
 };
@@ -210,7 +210,7 @@ public:
 		const bool    // absorbing boundaries?
 	);
 	void drawMove(	// Visualise paths resulting from movement simulation model
-									// NULL for the batch version
+		// NULL for the batch version
 		const float,	// initial x co-ordinate
 		const float,	// initial y co-ordinate
 		const float,	// final x co-ordinate
@@ -268,42 +268,42 @@ private:
 	short sex;
 	short age;
 	short status;	// 0 = initial status in natal patch / philopatric recruit
-								// 1 = disperser
-								// 2 = disperser awaiting settlement in possible suitable patch
-								// 3 = waiting between dispersal events
-								// 4 = completed settlement
-								// 5 = completed settlement in a suitable neighbouring cell
-								// 6 = died during transfer by failing to find a suitable patch
-								//     (includes exceeding maximum number of steps or crossing
-								//			absorbing boundary)
-								// 7 = died during transfer by constant, step-dependent,
-								//     habitat-dependent or distance-dependent mortality
-								// 8 = failed to survive annual (demographic) mortality
-								// 9 = exceeded maximum age
+	// 1 = disperser
+	// 2 = disperser awaiting settlement in possible suitable patch
+	// 3 = waiting between dispersal events
+	// 4 = completed settlement
+	// 5 = completed settlement in a suitable neighbouring cell
+	// 6 = died during transfer by failing to find a suitable patch
+	//     (includes exceeding maximum number of steps or crossing
+	//			absorbing boundary)
+	// 7 = died during transfer by constant, step-dependent,
+	//     habitat-dependent or distance-dependent mortality
+	// 8 = failed to survive annual (demographic) mortality
+	// 9 = exceeded maximum age
 	short fallow; // reproductive seasons since last reproduction
 	bool isDeveloping;
-	Cell *pPrevCell;						// pointer to previous Cell
-	Cell *pCurrCell;						// pointer to current Cell
-	Patch *pNatalPatch;					// pointer to natal Patch
-	emigTraits *emigtraits;			// pointer to emigration traits
-	trfrKernTraits *kerntraits;	// pointers to transfer by kernel traits
-	pathData *path; 						// pointer to path data for movement model
-	crwParams *crw;     				// pointer to CRW traits and data
-	smsdata *smsData;						// pointer to variables required for SMS
-	settleTraits *setttraits;		// pointer to settlement traits
+	Cell* pPrevCell;						// pointer to previous Cell
+	Cell* pCurrCell;						// pointer to current Cell
+	Patch* pNatalPatch;					// pointer to natal Patch
+	emigTraits* emigtraits;			// pointer to emigration traits
+	trfrKernTraits* kerntraits;	// pointers to transfer by kernel traits
+	pathData* path; 						// pointer to path data for movement model
+	crwParams* crw;     				// pointer to CRW traits and data
+	smsdata* smsData;						// pointer to variables required for SMS
+	settleTraits* setttraits;		// pointer to settlement traits
 	std::queue <locn> memory;		// memory of last N squares visited for SMS
 
-	Genome *pGenome;
+	Genome* pGenome;
 
 };
 
 
 //---------------------------------------------------------------------------
 
-double cauchy(double location, double scale) ;
-double wrpcauchy (double location, double rho = exp(double(-1)));
+double cauchy(double location, double scale);
+double wrpcauchy(double location, double rho = exp(double(-1)));
 
-extern RSrandom *pRandom;
+extern RSrandom* pRandom;
 
 #if RSDEBUG
 extern ofstream DEBUGLOG;

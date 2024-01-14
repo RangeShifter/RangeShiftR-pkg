@@ -1,78 +1,78 @@
 /*----------------------------------------------------------------------------
- *	
- *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell 
- *	
+ *
+ *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell
+ *
  *	This file is part of RangeShifter.
- *	
+ *
  *	RangeShifter is free software: you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation, either version 3 of the License, or
  *	(at your option) any later version.
- *	
+ *
  *	RangeShifter is distributed in the hope that it will be useful,
  *	but WITHOUT ANY WARRANTY; without even the implied warranty of
  *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *	GNU General Public License for more details.
- *	
+ *
  *	You should have received a copy of the GNU General Public License
  *	along with RangeShifter. If not, see <https://www.gnu.org/licenses/>.
- *	
+ *
  --------------------------------------------------------------------------*/
- 
- 
-/*------------------------------------------------------------------------------
 
-RangeShifter v2.0 Landscape
 
-Implements the following classes:
+ /*------------------------------------------------------------------------------
 
-InitDist  - Initial species distribution
+ RangeShifter v2.0 Landscape
 
-Landscape - Landscape grid
+ Implements the following classes:
 
-The Landscape is a rectangular array of Cells which are grouped together in
-Patches. As far as the user is aware, the Landscape is either patch-based or
-cell-based (having no Patches), but internally Patches are always present (they
-each comprise only one Cell for a cell-based model). The grain of the Landscape
-may be any positive integer, and is nominally in metres.
+ InitDist  - Initial species distribution
 
-The Landscape is either input from one or more text files in ArcGIS raster export
-format, or it is generated artificially as a random or fractal binary array (in
-which case, it must be cell-based). An input 'real' Landscape may hold within each
-Cell either discrete habitat classes, or percent cover of habitat classes, or a
-continuous quality index (1 to 100%).
+ Landscape - Landscape grid
 
-The Landscape may be dynamic, in which case the user specifies a set of changes
-to be applied at certain years during each simulation. The changes may be to
-habitat only, patches only (if a patch-based model) or habitats and patches.
-Although the changes must be supplied as entire habitat / patch files (which
-must match the original Landscape in terms of cell size and extent), internally
-they are recorded as lists of dynamic habitat and patch changes.
+ The Landscape is a rectangular array of Cells which are grouped together in
+ Patches. As far as the user is aware, the Landscape is either patch-based or
+ cell-based (having no Patches), but internally Patches are always present (they
+ each comprise only one Cell for a cell-based model). The grain of the Landscape
+ may be any positive integer, and is nominally in metres.
 
-The initial species distribution is a rectangular array if distribution cells
-(DistCell) covering the same spatial extent at the Landscape. Its grain may be
-either that of the Landscape or an integer multiple of it.
+ The Landscape is either input from one or more text files in ArcGIS raster export
+ format, or it is generated artificially as a random or fractal binary array (in
+ which case, it must be cell-based). An input 'real' Landscape may hold within each
+ Cell either discrete habitat classes, or percent cover of habitat classes, or a
+ continuous quality index (1 to 100%).
 
-The Landscape can record a list (in the vector initcells) of Cells or Patches
-to be intialised, which are specified by the user in FormSeeding. This option is
-available in the GUI version only.
+ The Landscape may be dynamic, in which case the user specifies a set of changes
+ to be applied at certain years during each simulation. The changes may be to
+ habitat only, patches only (if a patch-based model) or habitats and patches.
+ Although the changes must be supplied as entire habitat / patch files (which
+ must match the original Landscape in terms of cell size and extent), internally
+ they are recorded as lists of dynamic habitat and patch changes.
 
-For full details of RangeShifter, please see:
-Bocedi G., Palmer S.C.F., Pe’er G., Heikkinen R.K., Matsinos Y.G., Watts K.
-and Travis J.M.J. (2014). RangeShifter: a platform for modelling spatial
-eco-evolutionary dynamics and species’ responses to environmental changes.
-Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
+ The initial species distribution is a rectangular array if distribution cells
+ (DistCell) covering the same spatial extent at the Landscape. Its grain may be
+ either that of the Landscape or an integer multiple of it.
 
-Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
+ The Landscape can record a list (in the vector initcells) of Cells or Patches
+ to be intialised, which are specified by the user in FormSeeding. This option is
+ available in the GUI version only.
 
-Last updated: 2 December 2021 by Steve Palmer
-------------------------------------------------------------------------------*/
+ For full details of RangeShifter, please see:
+ Bocedi G., Palmer S.C.F., Pe’er G., Heikkinen R.K., Matsinos Y.G., Watts K.
+ and Travis J.M.J. (2014). RangeShifter: a platform for modelling spatial
+ eco-evolutionary dynamics and species’ responses to environmental changes.
+ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
+
+ Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
+
+ Last updated: 2 December 2021 by Steve Palmer
+ ------------------------------------------------------------------------------*/
 
 #ifndef LandscapeH
 #define LandscapeH
 
-//#include <stdlib.h>
-//#include <math.h>
+ //#include <stdlib.h>
+ //#include <math.h>
 #include <algorithm>
 #include <fstream>
 //#include <iostream.h>
@@ -98,7 +98,7 @@ using namespace std;
 
 // Initial species distribution
 
-class InitDist{
+class InitDist {
 public:
 	InitDist(Species*);
 	~InitDist();
@@ -124,15 +124,15 @@ public:
 		int  // index no. of DistCell in cells vector
 	);
 	locn getSelectedCell( // Return the co-ordinates of a specified initial distribution
-												// cell if it has been selected
-												// otherwise return negative co-ordinates
+		// cell if it has been selected
+		// otherwise return negative co-ordinates
 		int  // index no. of DistCell in cells vector
 	);
 	locn getDimensions(void);
 	void resetDistribution(void);
 
 private:
-	Species *pSpecies;		// pointer to species
+	Species* pSpecies;		// pointer to species
 	int resol;						// species distribution cell size (m)
 	int maxX, maxY;				// dimensions
 	double minEast;				// ) real world min co-ordinates
@@ -147,19 +147,19 @@ private:
 
 //---------------------------------------------------------------------------
 
-struct landParams {       
+struct landParams {
 	bool patchModel; bool spDist; bool generated;
 	bool dynamic;
 	int landNum; int resol; int spResol; int nHab; int nHabMax;
-	int dimX,dimY,minX,minY,maxX,maxY;
+	int dimX, dimY, minX, minY, maxX, maxY;
 	short rasterType;
 };
 struct landData {
-	int resol; int dimX,dimY,minX,minY,maxX,maxY;
+	int resol; int dimX, dimY, minX, minY, maxX, maxY;
 };
 struct genLandParams {
 	bool fractal; bool continuous;
-	float minPct,maxPct; float propSuit; float hurst; int maxCells;
+	float minPct, maxPct; float propSuit; float hurst; int maxCells;
 };
 struct landPix {
 	int pix; float gpix;
@@ -169,31 +169,31 @@ struct landOrigin {
 };
 struct rasterHdr {
 	bool ok;
-	int errors,ncols,nrows,cellsize;
-	double xllcorner,yllcorner;
+	int errors, ncols, nrows, cellsize;
+	double xllcorner, yllcorner;
 };
 struct rasterdata {
 	bool ok;
-	int errors,ncols,nrows,cellsize;
-	double xllcorner,yllcorner;
+	int errors, ncols, nrows, cellsize;
+	double xllcorner, yllcorner;
 #if RS_RCPP
 	bool utf;
 #endif
 };
 struct patchData {
-	Patch *pPatch; int patchNum,nCells; int x,y;
+	Patch* pPatch; int patchNum, nCells; int x, y;
 };
 struct landChange {
-	int chgnum,chgyear; string habfile,pchfile,costfile;
+	int chgnum, chgyear; string habfile, pchfile, costfile;
 };
 struct patchChange {
 	int chgnum, x, y, oldpatch, newpatch;
 };
 struct costChange {
-	int chgnum,x,y,oldcost,newcost;
+	int chgnum, x, y, oldcost, newcost;
 };
 
-class Landscape{
+class Landscape {
 public:
 	Landscape();
 	~Landscape();
@@ -231,7 +231,7 @@ public:
 	int getHabCode(int);
 	void clearHabitats(void);
 	void addColour(rgb);
-	void changeColour(int,rgb);
+	void changeColour(int, rgb);
 	rgb getColour(int);
 	int colourCount(void);
 
@@ -334,7 +334,7 @@ public:
 	void deleteLandChanges(void);
 #if RS_RCPP && !R_CMD
 	int readLandChange(
-	    int,		// change file number
+		int,		// change file number
 		bool,		// change SMS costs?
 		wifstream&, // habitat file stream
 		wifstream&, // patch file stream
@@ -390,7 +390,7 @@ public:
 		int		// index no. of DistCell in cells vector
 	);
 	locn getSelectedDistnCell(	// Get co-ordinates of a specified cell in a specified initial distn
-															// Returns negative co-ordinates if the cell is not selected
+		// Returns negative co-ordinates if the cell is not selected
 		int,  // index no. of InitDist in distns vector
 		int   // index no. of DistCell in cells vector
 	);
@@ -447,7 +447,7 @@ public:
 
 	int readLandscape(
 		int,		// fileNum == 0 for (first) habitat file and optional patch file
-						// fileNum > 0  for subsequent habitat files under the %cover option
+		// fileNum > 0  for subsequent habitat files under the %cover option
 		string,	// habitat file name
 		string,	// patch file name
 		string	// cost file name (may be NULL)
@@ -470,7 +470,7 @@ public:
 	);
 
 	void resetVisits(void);
-	void outVisits(int,int);	// save SMS path visits map to raster text file
+	void outVisits(int, int);	// save SMS path visits map to raster text file
 
 private:
 	bool generated;				// artificially generated?
@@ -486,10 +486,10 @@ private:
 	int spResol;					// species distribution cell size (m)
 	int nHab;							// no. of habitats
 	int nHabMax;					// max. no. of habitats (used for batch input only)
-	int dimX,dimY;				// dimensions
-	int minX,minY;				// minimum available X and Y co-ordinates
-	int maxX,maxY;				// maximum available X and Y co-ordinates
-	float minPct,maxPct;  // min and max percentage of habitat in a cell
+	int dimX, dimY;				// dimensions
+	int minX, minY;				// minimum available X and Y co-ordinates
+	int maxX, maxY;				// maximum available X and Y co-ordinates
+	float minPct, maxPct;  // min and max percentage of habitat in a cell
 	float propSuit;				// proportion of suitable cells
 	float hurst;					// Hurst exponent
 	int maxCells;					// max. cells per patch (artificial landscapes)
@@ -500,7 +500,7 @@ private:
 
 	// list of cells in the landscape
 	// cells MUST be loaded in the sequence ascending x within descending y
-	Cell ***cells;
+	Cell*** cells;
 
 	// list of patches in the landscape - can be in any sequence
 	std::vector <Patch*> patches;
@@ -527,16 +527,16 @@ private:
 
 	// patch connectivity matrix
 	// indexed by [start patch seq num][end patch seq num]
-	int **connectMatrix;
+	int** connectMatrix;
 
 	// global environmental stochasticity (epsilon)
-	float *epsGlobal;	// pointer to time-series	
+	float* epsGlobal;	// pointer to time-series	
 
 	// patch and costs change matrices (temporary - used when reading dynamic landscape)
 	// indexed by [descending y][x][period]
 	// where there are three periods, 0=original 1=previous 2=current
-	int ***patchChgMatrix;
-	int ***costsChgMatrix;
+	int*** patchChgMatrix;
+	int*** costsChgMatrix;
 
 };
 
@@ -544,11 +544,11 @@ private:
 // batch routine to check raster files before any Landscape has been initiated
 rasterdata CheckRasterFile(string);
 
-extern paramGrad *paramsGrad;
-extern paramStoch *paramsStoch;
-extern paramInit *paramsInit;
-extern paramSim *paramsSim;
-extern RSrandom *pRandom;
+extern paramGrad* paramsGrad;
+extern paramStoch* paramsStoch;
+extern paramInit* paramsInit;
+extern paramSim* paramsSim;
+extern RSrandom* pRandom;
 
 #if RSDEBUG
 extern ofstream DEBUGLOG;
@@ -558,7 +558,7 @@ extern void DebugGUI(string);
 extern void MemoLine(string);
 
 #if RS_RCPP
-extern rasterdata landraster,patchraster,spdistraster,costsraster;
+extern rasterdata landraster, patchraster, spdistraster, costsraster;
 extern void EOFerrorR(string);
 extern void StreamErrorR(string);
 #endif
