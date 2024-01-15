@@ -40,7 +40,7 @@ ofstream outMovePaths;
 InitDist::InitDist(Species* pSp)
 {
 	pSpecies = pSp;
-	resol = 0;
+	resol = 1;
 	maxX = 0;
 	maxY = 0;
 	minEast = 0.0;
@@ -250,7 +250,7 @@ if (!dfile.eof()) EOFerrorR(distfile);
 Landscape::Landscape(void) {
 	patchModel = false; spDist = false; generated = false; fractal = false; continuous = false;
 	dynamic = false; habIndexed = false;
-	resol = spResol = landNum = 0;
+	resol = spResol = 1; landNum = 0;
 	rasterType = 0;
 	nHab = nHabMax = 0;
 	dimX = dimY = 100;
@@ -336,7 +336,9 @@ void Landscape::resetLand(void) {
 
 void Landscape::setLandParams(landParams ppp, bool batchMode)
 {
-	generated = ppp.generated; patchModel = ppp.patchModel; spDist = ppp.spDist;
+	generated = ppp.generated; 
+	patchModel = ppp.patchModel; 
+	spDist = ppp.spDist;
 	dynamic = ppp.dynamic;
 	landNum = ppp.landNum;
 	if (ppp.resol > 0) resol = ppp.resol;
