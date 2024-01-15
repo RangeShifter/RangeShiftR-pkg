@@ -866,7 +866,6 @@ void Individual::moveto(Cell* newCell) {
 // Returns 1 if still dispersing (including having found a potential patch), otherwise 0
 int Individual::moveKernel(Landscape* pLandscape, Species* pSpecies, const bool absorbing)
 {
-
 	intptr patch;
 	int patchNum = 0;
 	int newX = 0, newY = 0;
@@ -975,6 +974,7 @@ int Individual::moveKernel(Landscape* pLandscape, Species* pSpecies, const bool 
 			if (loopsteps < 1000) {
 				if (newX < land.minX || newX > land.maxX
 					|| newY < land.minY || newY > land.maxY) { // beyond absorbing boundary
+					// this cannot be reached if not absorbing?
 					pCell = 0;
 					patch = 0;
 					patchNum = -1;
@@ -1007,7 +1007,7 @@ int Individual::moveKernel(Landscape* pLandscape, Species* pSpecies, const bool 
 
 	if (loopsteps < 1000) {
 		if (pCell == 0) { // beyond absorbing boundary or in no-data cell
-			// this should never be true??
+			// only if absorbing=true and out of bounddaries
 			pCurrCell = 0;
 			status = 6;
 			dispersing = 0;
@@ -1020,6 +1020,7 @@ int Individual::moveKernel(Landscape* pLandscape, Species* pSpecies, const bool 
 				status = 2; // record as potential settler
 			}
 			else {
+				// unsuitable patch
 				dispersing = 0;
 				// can wait in matrix if population is stage structured ...
 				if (pSpecies->stageStructured()) {
@@ -1030,8 +1031,7 @@ int Individual::moveKernel(Landscape* pLandscape, Species* pSpecies, const bool 
 					else // ... it is not
 						status = 6; // dies (unless there is a suitable neighbouring cell)
 				}
-				else
-					status = 6; // dies (unless there is a suitable neighbouring cell)
+				else status = 6; // dies (unless there is a suitable neighbouring cell)
 			}
 		}
 	}
@@ -1846,60 +1846,122 @@ void testIndividual() {
 	// depending on the stage
 	// depending on the trait inheritance
 
-
 	// Disperses
 	// Emigrates
 	// Transfers
-	// Kernel transfer
+	// Kernel-based transfer
 	{
 		// Simple cell-based landscape layout
-		// oo
-		// oo
 		landParams ls_params;
-		ls_params.dimX = ls_params.dimY = 2;
-		vector <Cell*> cells{ new Cell(0, 0, 0, 0), new Cell(1, 1, 0, 0) };
-		// Set up species for habitat codes
+		ls_params.dimX = ls_params.dimY = 5;
+		ls_params.minX = ls_params.minY = 0;
+		ls_params.maxX = ls_params.maxY = ls_params.dimX - 1;
+		ls_params.resol = 1;
+
+		// Two suitable cells in opposite corners
+		Cell* init_cell = new Cell(0, 0, 0, 0);
+		Cell* final_cell = new Cell(ls_params.dimX - 1, ls_params.dimY - 1, 0, 0);
+		// Set up species
 		Species sp;
+		// Habitat codes
 		sp.createHabK(1);
 		sp.setHabK(0, 100.0); // one habitat with K = 100
+		// Demography
+		demogrParams d;
+		d.stageStruct = false;
+		sp.setDemogr(d);
+		// Transfer rules
+		trfrRules trfr;
+		trfr.indVar = trfr.sexDep = trfr.stgDep = false;
+		trfr.twinKern = trfr.distMort = false;
+		sp.setTrfr(trfr);
+		sp.setFullKernel(false);
+		// Transfer traits
+		trfrKernTraits kern;
+		kern.meanDist1 = static_cast<float>(ls_params.dimX); // can reach destination cell reasonably often
+		sp.setKernTraits(0, 0, kern, ls_params.resol);
+		// Transfer mortality params
+		trfrMortParams mort;
+		mort.fixedMort = 0.0;
+		sp.setMortParams(mort);
+		// Settlement
+		settleRules sett;
+		sett.wait = false;
+		sp.setSettRules(0, 0, sett);
 
 		// Landscape ls = createLandscapeFromCells(cells, ls_params, sp);
 			Landscape ls;
 			ls.setLandParams(ls_params, true);
 			// Add cells
 			ls.setCellArray();
-			for (auto c : cells) {
-				ls.addCellToLand(c);
-			}
+			ls.addCellToLand(init_cell);
+			ls.addCellToLand(final_cell);
 			ls.allocatePatches(&sp);
+			ls.updateCarryingCapacity(&sp, 0, 0);
 
-		Patch* p = (Patch*)cells[0]->getPatch();
-		Individual ind(cells[0], p, 1, 0, 0, 0.0, false, 0);
-		Cell* init_cell = ind.getCurrCell();
+		Patch* init_patch = (Patch*)init_cell->getPatch();
 
-		// ind.status
-		// land.resol
-		// species.trfrKernTraits.meanDist1
-		// species.useFullKernel
+		// Create and set up individual
+		Individual starting_ind(init_cell, init_patch, 1, 0, 0, 0.0, false, 0);
+		
+		// Set aside original individual and test on a copy
+		Individual ind = starting_ind;
 		// pathData *path; ?
-		// land.minX etc. dimX dimY
-		// patch.localK
-		// bool species.stageStruct
-		// species trfrMortParams m; m.fixedMort = fixedMort; m.mortAlpha = mortAlpha; m.mortBeta = mortBeta;
-
 		int isDispersing = ind.moveKernel(&ls, &sp, false);
 
-		// After movement, individual should be...
-		// in a different cell
+		// After moving, individual should be in the only available cell
 		Cell* curr_cell = ind.getCurrCell();
-		// not in a no-data cell
-		assert(curr_cell != 0);
 		assert(curr_cell != init_cell);
-		// (non-absorbing) still within landscape boundaries
-		
+		assert(curr_cell == final_cell);
+		assert(ind.getStatus() == 2); // potential settler
 
+		// If no cell within reasonable dispersal reach, individual does not move and dies
+		kern.meanDist1 = 1.0; 
+		sp.setKernTraits(0, 0, kern, ls_params.resol);
+		ind = starting_ind; // reset individual
+		isDispersing = ind.moveKernel(&ls, &sp, false);
+		curr_cell = ind.getCurrCell();
+		assert(ind.getStatus() == 6); // RIP in peace
+		assert(curr_cell == init_cell);
 
-		// Arrival cell 
+		/* Boundaries: dispersal distance overshoots
+		Only adjacent cells are available
+		-----
+		-ooo-
+		-oio-
+		-ooo-
+		-----
+		*/
+		ls.setCellArray(); // reset cells
+		vector <Cell*> cells;
+		// Set central cell and all adjacent
+		for (int x = ls_params.minX + 1; x < ls_params.maxX; ++x) {
+			for (int y = ls_params.minY + 1; y < ls_params.maxY; ++y) {
+				cells.push_back(new Cell(x, y, 0, 0));
+			}
+		}
+		for (auto c : cells) ls.addCellToLand(c);
+		ls.allocatePatches(&sp);
+		ls.updateCarryingCapacity(&sp, 0, 0);
+		init_cell = cells[4]; // that is, the center
+		init_patch = (Patch*)init_cell->getPatch();
+
+		kern.meanDist1 = 5; // overshoots *most* of the time...
+		sp.setKernTraits(0, 0, kern, ls_params.resol);
+		ind = Individual(init_cell, init_patch, 1, 0, 0, 0.0, false, 0); // reset individual
+
+		// Non-absorbing boundaries
+		isDispersing = ind.moveKernel(&ls, &sp, false);
+		curr_cell = ind.getCurrCell();
+		assert(curr_cell != init_cell); // ...should be able to move eventually
+		assert(ind.getStatus() == 2);
+
+		// Absorbing boundaries
+		ind = Individual(init_cell, init_patch, 1, 0, 0, 0.0, false, 0); // reset individual
+		isDispersing = ind.moveKernel(&ls, &sp, true);
+		curr_cell = ind.getCurrCell();
+		assert(ind.getStatus() == 6);
+		assert(curr_cell == 0); // out of the landscape
 
 		// An individual with a small dispersal distance is unlikely to reach a distant cell
 

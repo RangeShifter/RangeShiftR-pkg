@@ -64,6 +64,7 @@ ofstream MUTNLOG;
 vector <string> hfnames;
 Species* pSpecies;
 Community* pComm;
+
 void DebugGUI(string msg) { 
 	// nothing
 }
@@ -90,6 +91,14 @@ int _tmain(int argc, _TCHAR* argv[])
 	cout << "This code is only for running tests and not meant to run in release." << endl;
 	return 1;
 # else
+
+	// Initialise globals
+	paramsGrad = new paramGrad;
+	paramsStoch = new paramStoch;
+	paramsInit = new paramInit;
+	paramsSim = new paramSim;
+	pRandom = new RSrandom;
+
 	assert(0.1 > 0.0); // assert does run correctly
 	try {
 		run_unit_tests();
