@@ -1927,8 +1927,8 @@ void testIndividual() {
 		// Twin kernels
 		trfr.twinKern = true;
 		sp.setTrfr(trfr);
-		kern.meanDist1 = 1.0; // very unlikely to reach suitable cells
-		kern.meanDist2 = 5.0; // easily reaches suitable cells...
+		kern.meanDist1 = 1.0; // very unlikely to reach suitable cell
+		kern.meanDist2 = 5.0; // easily reaches suitable cell...
 		kern.probKern1 = 1.0; // ... but never used
 		sp.setKernTraits(0, 0, kern, ls_params.resol);
 		ind = starting_ind;
@@ -1939,12 +1939,54 @@ void testIndividual() {
 		ind = starting_ind;
 		isDispersing = ind.moveKernel(&ls, &sp, false);
 		assert(ind.getStatus() == 2);
-
+		// reset
 		trfr.twinKern = false;
 		sp.setTrfr(trfr);
+		kern.probKern1 = 1.0;
+		sp.setKernTraits(0, 0, kern, ls_params.resol);
 
 		// Sex-dependent dispersal distances
+		trfr.sexDep = true;
+		sp.setTrfr(trfr);
+		trfrKernTraits kern_f = kern;
+		kern_f.meanDist1 = 1.0; // female very unlikely to reach suitable cell
+		sp.setKernTraits(0, 0, kern_f, ls_params.resol);
+		trfrKernTraits kern_m = kern;
+		kern_m.meanDist1 = 5.0; // male easily reaches suitable cell
+		sp.setKernTraits(0, 1, kern_m, ls_params.resol);
 
+		ind = starting_ind; // female as default
+		isDispersing = ind.moveKernel(&ls, &sp, false);
+		assert(ind.getStatus() == 6);
+
+		ind = Individual(init_cell, init_patch, 1, 0, 0, 1.0, false, 0); // male
+		assert(ind.getSex() == 1);
+		isDispersing = ind.moveKernel(&ls, &sp, false);
+		assert(ind.getStatus() == 2);
+		// reset
+		trfr.sexDep = false;
+		sp.setTrfr(trfr);
+
+		// Stage-dependent
+		trfr.stgDep = true;
+		sp.setTrfr(trfr);
+		trfrKernTraits kern_juv = kern;
+		kern_juv.meanDist1 = 1.0; // juveniles very unlikely to reach suitable cell
+		sp.setKernTraits(0, 0, kern_juv, ls_params.resol);
+		trfrKernTraits kern_adult = kern;
+		kern_adult.meanDist1 = 5.0; // adults easily reach suitable cell
+		sp.setKernTraits(1, 0, kern_adult, ls_params.resol);
+
+		ind = Individual(init_cell, init_patch, 0, 0, 0, 0.0, false, 0); // juvenile
+		isDispersing = ind.moveKernel(&ls, &sp, false);
+		assert(ind.getStatus() == 6);
+
+		ind = starting_ind; // adult by default
+		isDispersing = ind.moveKernel(&ls, &sp, false);
+		assert(ind.getStatus() == 2);
+		// reset
+		trfr.stgDep = false;
+		sp.setTrfr(trfr);
 
 		/* Boundaries: dispersal distance overshoots
 		Only adjacent cells are available
