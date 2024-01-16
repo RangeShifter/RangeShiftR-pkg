@@ -1940,6 +1940,7 @@ void testIndividual() {
 				cells.push_back(new Cell(x, y, 0, 0));
 			}
 		}
+
 		for (auto c : cells) ls.addCellToLand(c);
 		ls.allocatePatches(&sp);
 		ls.updateCarryingCapacity(&sp, 0, 0);
@@ -1963,22 +1964,34 @@ void testIndividual() {
 		assert(ind.getStatus() == 6);
 		assert(curr_cell == 0); // out of the landscape
 
-		// An individual with a small dispersal distance is unlikely to reach a distant cell
+		// Dispersal-related mortality
+		// Fixed mortality
+		mort.fixedMort = 1.0; // Individual *will* die after any step
+		sp.setMortParams(mort);
+		trfr.distMort = false;
+		sp.setTrfr(trfr);
+		ind = starting_ind;
+		isDispersing = ind.moveKernel(&ls, &sp, false);
+		assert(ind.getStatus() == 7);
+		// Distance-dependent mortality
+		trfr.distMort = true;
+		sp.setTrfr(trfr);
+		mort.mortAlpha = 1000.0; // very steep threshold
+		mort.mortBeta = 0.5; // very small distance 
+		sp.setMortParams(mort);
+		kern.meanDist1 = 5; // very likely to go over threshold
+		sp.setKernTraits(0, 0, kern, ls_params.resol);
+		ind = starting_ind;
+		isDispersing = ind.moveKernel(&ls, &sp, false);
+		assert(ind.getStatus() == 7);
+		mort.mortBeta = 30; // very large distance, unlikely to draw
+		sp.setMortParams(mort);
+		ind = starting_ind;
+		isDispersing = ind.moveKernel(&ls, &sp, false);
+		assert(ind.getStatus() != 7);
 
-		// An individual with a large dispersal distance should be able to reach a distant cell
-
-		// If no cell is available beyond initial cell, individual should die
-
-		// 
 
 	}
-	// Individual::moveKernel(Landscape * pLandscape, Species * pSpecies, const short repType, const bool absorbing)
-	// Settles
-
-	// Survives
-
-	// Develops
-
 }
 #endif // RSDEBUG
 

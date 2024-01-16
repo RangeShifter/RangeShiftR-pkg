@@ -1024,7 +1024,7 @@ trfrKernTraits Species::getKernTraits(short stg, short sex) {
 }
 
 void Species::setMortParams(const trfrMortParams m) {
-	if (m.fixedMort >= 0.0 && m.fixedMort < 1.0) fixedMort = m.fixedMort;
+	if (m.fixedMort >= 0.0 && m.fixedMort <= 1.0) fixedMort = m.fixedMort;
 	mortAlpha = m.mortAlpha;
 	mortBeta = m.mortBeta;
 }
