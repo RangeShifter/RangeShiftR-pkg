@@ -1924,6 +1924,28 @@ void testIndividual() {
 		assert(ind.getStatus() == 6); // RIP in peace
 		assert(curr_cell == init_cell);
 
+		// Twin kernels
+		trfr.twinKern = true;
+		sp.setTrfr(trfr);
+		kern.meanDist1 = 1.0; // very unlikely to reach suitable cells
+		kern.meanDist2 = 5.0; // easily reaches suitable cells...
+		kern.probKern1 = 1.0; // ... but never used
+		sp.setKernTraits(0, 0, kern, ls_params.resol);
+		ind = starting_ind;
+		isDispersing = ind.moveKernel(&ls, &sp, false);
+		assert(ind.getStatus() == 6);
+		kern.probKern1 = 0.0; // always use second kernel
+		sp.setKernTraits(0, 0, kern, ls_params.resol);
+		ind = starting_ind;
+		isDispersing = ind.moveKernel(&ls, &sp, false);
+		assert(ind.getStatus() == 2);
+
+		trfr.twinKern = false;
+		sp.setTrfr(trfr);
+
+		// Sex-dependent dispersal distances
+
+
 		/* Boundaries: dispersal distance overshoots
 		Only adjacent cells are available
 		-----
@@ -1947,19 +1969,21 @@ void testIndividual() {
 		init_cell = cells[4]; // that is, the center
 		init_patch = (Patch*)init_cell->getPatch();
 
-		kern.meanDist1 = 5; // overshoots *most* of the time...
+		kern.meanDist1 = 10; // overshoots *most* of the time...
 		sp.setKernTraits(0, 0, kern, ls_params.resol);
 		ind = Individual(init_cell, init_patch, 1, 0, 0, 0.0, false, 0); // reset individual
 
 		// Non-absorbing boundaries
-		isDispersing = ind.moveKernel(&ls, &sp, false);
+		bool absorbing_boundaries{ false };
+		isDispersing = ind.moveKernel(&ls, &sp, absorbing_boundaries);
 		curr_cell = ind.getCurrCell();
 		assert(curr_cell != init_cell); // ...should be able to move eventually
 		assert(ind.getStatus() == 2);
 
 		// Absorbing boundaries
+		absorbing_boundaries = true;
 		ind = Individual(init_cell, init_patch, 1, 0, 0, 0.0, false, 0); // reset individual
-		isDispersing = ind.moveKernel(&ls, &sp, true);
+		isDispersing = ind.moveKernel(&ls, &sp, absorbing_boundaries);
 		curr_cell = ind.getCurrCell();
 		assert(ind.getStatus() == 6);
 		assert(curr_cell == 0); // out of the landscape
@@ -1990,7 +2014,11 @@ void testIndividual() {
 		isDispersing = ind.moveKernel(&ls, &sp, false);
 		assert(ind.getStatus() != 7);
 
-
+		// Reset mortality params
+		trfr.distMort = false;
+		mort.fixedMort = 0.0;
+		sp.setTrfr(trfr);
+		sp.setMortParams(mort);
 	}
 }
 #endif // RSDEBUG

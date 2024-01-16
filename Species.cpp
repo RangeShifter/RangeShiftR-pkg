@@ -1006,7 +1006,7 @@ void Species::setKernTraits(const short stg, const short sex,
 	if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES) {
 		if (k.meanDist1 > 0.0 && k.meanDist1 >= (float)resol) meanDist1[stg][sex] = k.meanDist1;
 		if (k.meanDist2 >= (float)resol) meanDist2[stg][sex] = k.meanDist2;
-		if (k.probKern1 > 0.0 && k.probKern1 < 1.0) probKern1[stg][sex] = k.probKern1;
+		if (k.probKern1 >= 0.0 && k.probKern1 <= 1.0) probKern1[stg][sex] = k.probKern1;
 	}
 }
 
