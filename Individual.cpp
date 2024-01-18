@@ -446,7 +446,8 @@ void Individual::setYearSteps(int t) {
 pathSteps Individual::getSteps(void) {
 	pathSteps s;
 	if (path == 0) {
-		s.year = 0; s.total = 0; s.out = 0;
+		throw logic_error("path variable is not initialised");
+		//s.year = 0; s.total = 0; s.out = 0;
 	}
 	else {
 		s.year = path->year; s.total = path->total; s.out = path->out;
@@ -1066,7 +1067,6 @@ int Individual::moveKernel(Landscape* pLandscape, Species* pSpecies, const bool 
 int Individual::moveStep(Landscape* pLandscape, Species* pSpecies,
 	const short landIx, const bool absorbing)
 {
-
 	if (status != 1) return 0; // not currently dispersing
 
 	intptr patch;
@@ -1849,6 +1849,7 @@ void testIndividual() {
 	// Disperses
 	// Emigrates
 	// Transfers
+	
 	// Kernel-based transfer
 	{
 		// Simple cell-based landscape layout
@@ -1858,9 +1859,16 @@ void testIndividual() {
 		ls_params.maxX = ls_params.maxY = ls_params.dimX - 1;
 		ls_params.resol = 1;
 
+		Landscape ls;
+		ls.setLandParams(ls_params, true);
+
 		// Two suitable cells in opposite corners
 		Cell* init_cell = new Cell(0, 0, 0, 0);
 		Cell* final_cell = new Cell(ls_params.dimX - 1, ls_params.dimY - 1, 0, 0);
+		ls.setCellArray();
+		ls.addCellToLand(init_cell);
+		ls.addCellToLand(final_cell);
+
 		// Set up species
 		Species sp;
 		// Habitat codes
@@ -1888,22 +1896,14 @@ void testIndividual() {
 		settleRules sett;
 		sett.wait = false;
 		sp.setSettRules(0, 0, sett);
-
-		// Landscape ls = createLandscapeFromCells(cells, ls_params, sp);
-			Landscape ls;
-			ls.setLandParams(ls_params, true);
-			// Add cells
-			ls.setCellArray();
-			ls.addCellToLand(init_cell);
-			ls.addCellToLand(final_cell);
-			ls.allocatePatches(&sp);
-			ls.updateCarryingCapacity(&sp, 0, 0);
-
+		
+		// Set up patches
+		ls.allocatePatches(&sp);
+		ls.updateCarryingCapacity(&sp, 0, 0);
 		Patch* init_patch = (Patch*)init_cell->getPatch();
 
 		// Create and set up individual
 		Individual starting_ind(init_cell, init_patch, 1, 0, 0, 0.0, false, 0);
-		
 		// Set aside original individual and test on a copy
 		Individual ind = starting_ind;
 		// pathData *path; ?
@@ -2061,6 +2061,112 @@ void testIndividual() {
 		mort.fixedMort = 0.0;
 		sp.setTrfr(trfr);
 		sp.setMortParams(mort);
+	}
+
+	// Correlated random walk (CRW)
+	{
+		// Simple cell-based landscape layout
+		landParams ls_params;
+		ls_params.dimX = ls_params.dimY = 5;
+		ls_params.minX = ls_params.minY = 0;
+		ls_params.maxX = ls_params.maxY = ls_params.dimX - 1;
+		ls_params.resol = 1;
+
+		Landscape ls;
+		ls.setLandParams(ls_params, true);
+
+		// All cells are suitable
+		vector<Cell*> cell_vec;
+		for (int x = ls_params.minX; x < ls_params.dimX; ++x) {
+			for (int y = ls_params.minY; y < ls_params.dimY; ++y) {
+				cell_vec.push_back(new Cell(x, y, 0, 0));
+			}
+		}		
+		Cell* init_cell = cell_vec[12]; // central
+		//Cell* final_cell = new Cell(ls_params.dimX - 1, ls_params.dimY - 1, 0, 0);
+		ls.setCellArray();
+		for (auto c : cell_vec) ls.addCellToLand(c);
+
+		// Set up species
+		Species sp;
+		const int hab_index = 0;
+
+		// Habitat codes
+		sp.createHabK(1);
+		sp.setHabK(hab_index, 100.0); // one habitat with K = 10
+
+		// Habitat-dependent mortality
+		sp.createHabCostMort(1);
+		sp.setHabMort(hab_index, 0.0);
+
+		// Transfer rules
+		trfrRules trfr;
+		trfr.indVar = false;
+		trfr.habMort = false;
+		trfr.moveType = 2; // CRW
+		sp.setTrfr(trfr);
+
+		// Transfer CRW traits
+		trfrMovtTraits m;
+		m.stepMort = 0.0;
+		m.stepLength = ls_params.resol;
+		m.rho = 1.0;
+		m.straigtenPath = false;
+		sp.setMovtTraits(m);
+
+		// Settlement rules
+		settleRules sett;
+		sett.wait = false;
+		sp.setSettRules(0, 0, sett);
+		settleSteps steps;
+		steps.maxSteps = 1;
+		steps.minSteps = 1;
+		steps.maxStepsYr = 1;
+		sp.setSteps(0, 0, steps);
+
+		// Set up patches
+		ls.allocatePatches(&sp);
+		ls.updateCarryingCapacity(&sp, 0, 0);
+		Patch* init_patch = (Patch*)init_cell->getPatch();
+
+		// Create and set up individual
+		Individual ind(init_cell, init_patch, 1, 0, 0, 0.0, true, 2);
+
+		// Set aside original individual and test on a copy
+		// ind.setYearSteps(); // if needed
+		// ind.getSteps();
+
+		// Set status
+		assert(ind.getStatus() == 0); // default status, not emigrating
+		int isDispersing = ind.moveStep(&ls, &sp, hab_index, false);
+		assert(ind.getStatus() == 0); // status didn't change
+		assert(ind.getCurrCell() == init_cell); // not emigrating so didn't move
+		ind.~Individual();
+
+		// Per-step mortality
+		m.stepMort = 1.0; // should die 
+		sp.setMovtTraits(m);
+		Individual new_ind(init_cell, init_patch, 1, 0, 0, 0.0, true, 2);
+		// new ind bc for some reason I don' t understand yet if reset ind we lose path data upon exiting constructor
+		// surely some pointer fun
+		new_ind.setStatus(1);
+		isDispersing = new_ind.moveStep(&ls, &sp, hab_index, false);
+		// Individual begins in natal patch so mortality is disabled
+		assert(new_ind.getStatus() != 7);
+		// Individual should be in a different patch
+		Cell* first_step_cell = new_ind.getCurrCell();
+		assert(first_step_cell != init_cell);
+		assert((Patch*)first_step_cell->getPatch() != init_patch);
+		new_ind.setStatus(1); // emigrating again
+
+		// Individual should die on second step
+		isDispersing = new_ind.moveStep(&ls, &sp, hab_index, false);
+		assert(new_ind.getCurrCell() == first_step_cell); // shouldn't have moved
+		assert(new_ind.getStatus() == 7); // died by transfer
+
+		// ind = Individual(init_cell, init_patch, 1, 0, 0, 0.0, true, 2); // reset
+
+		// Habitat-dep mortality
 	}
 }
 #endif // RSDEBUG

@@ -1044,7 +1044,7 @@ void Species::setMovtTraits(const trfrMovtTraits m) {
 	if (m.gb >= 1.0) gb = m.gb;
 	if (m.alphaDB > 0.0) alphaDB = m.alphaDB;
 	if (m.betaDB > 0) betaDB = m.betaDB;
-	if (m.stepMort >= 0.0 && m.stepMort < 1.0) stepMort = m.stepMort;
+	if (m.stepMort >= 0.0 && m.stepMort <= 1.0) stepMort = m.stepMort;
 	if (m.stepLength > 0.0) stepLength = m.stepLength;
 	if (m.rho > 0.0 && m.rho < 1.0) rho = m.rho;
 	straigtenPath = m.straigtenPath;
