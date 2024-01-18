@@ -446,8 +446,7 @@ void Individual::setYearSteps(int t) {
 pathSteps Individual::getSteps(void) {
 	pathSteps s;
 	if (path == 0) {
-		throw logic_error("path variable is not initialised");
-		//s.year = 0; s.total = 0; s.out = 0;
+		s.year = 0; s.total = 0; s.out = 0;
 	}
 	else {
 		s.year = path->year; s.total = path->total; s.out = path->out;
