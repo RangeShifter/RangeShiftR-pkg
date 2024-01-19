@@ -254,6 +254,8 @@ public:
 #if RSDEBUG
 	// Testing utilities
 	Cell* getCurrCell() const;
+	void setPath(pathData* pPath);
+	void setCRW(crwParams* pCRW);
 #endif
 
 private:

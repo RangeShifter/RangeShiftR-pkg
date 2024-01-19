@@ -1813,12 +1813,23 @@ double cauchy(double location, double scale) {
 //---------------------------------------------------------------------------
 
 #if RSDEBUG
+// Testing utilities
+
 Cell* Individual::getCurrCell() const {
 	return pCurrCell;
 }
 
+void Individual::setPath(pathData* pPath) {
+	path = pPath;
+}
+
+void Individual::setCRW(crwParams* pCRW) {
+	crw = pCRW;
+}
+
 void testIndividual() {
 
+	/*
 	Patch* pPatch = new Patch(0, 0);
 	int cell_x = 2;
 	int cell_y = 5;
@@ -1833,6 +1844,7 @@ void testIndividual() {
 	bool uses_movt_process = true;
 	short moveType = 1;
 	Individual ind(pCell, pPatch, stg, age, repInt, probmale, uses_movt_process, moveType);
+	*/
 
 	// Gets its sex drawn from pmale
 	
@@ -1902,9 +1914,9 @@ void testIndividual() {
 		Patch* init_patch = (Patch*)init_cell->getPatch();
 
 		// Create and set up individual
-		Individual starting_ind(init_cell, init_patch, 1, 0, 0, 0.0, false, 0);
+		//Individual starting_ind(init_cell, init_patch, 1, 0, 0, 0.0, false, 0);
 		// Set aside original individual and test on a copy
-		Individual ind = starting_ind;
+		Individual ind(init_cell, init_patch, 1, 0, 0, 0.0, false, 0);
 		// pathData *path; ?
 		int isDispersing = ind.moveKernel(&ls, &sp, false);
 
@@ -1917,7 +1929,7 @@ void testIndividual() {
 		// If no cell within reasonable dispersal reach, individual does not move and dies
 		kern.meanDist1 = 1.0; 
 		sp.setKernTraits(0, 0, kern, ls_params.resol);
-		ind = starting_ind; // reset individual
+		ind = Individual(init_cell, init_patch, 1, 0, 0, 0.0, false, 0); // reset individual
 		isDispersing = ind.moveKernel(&ls, &sp, false);
 		curr_cell = ind.getCurrCell();
 		assert(ind.getStatus() == 6); // RIP in peace
@@ -1930,12 +1942,12 @@ void testIndividual() {
 		kern.meanDist2 = 5.0; // easily reaches suitable cell...
 		kern.probKern1 = 1.0; // ... but never used
 		sp.setKernTraits(0, 0, kern, ls_params.resol);
-		ind = starting_ind;
+		ind = Individual(init_cell, init_patch, 1, 0, 0, 0.0, false, 0);
 		isDispersing = ind.moveKernel(&ls, &sp, false);
 		assert(ind.getStatus() == 6);
 		kern.probKern1 = 0.0; // always use second kernel
 		sp.setKernTraits(0, 0, kern, ls_params.resol);
-		ind = starting_ind;
+		ind = Individual(init_cell, init_patch, 1, 0, 0, 0.0, false, 0);
 		isDispersing = ind.moveKernel(&ls, &sp, false);
 		assert(ind.getStatus() == 2);
 		// reset
@@ -1954,7 +1966,7 @@ void testIndividual() {
 		kern_m.meanDist1 = 5.0; // male easily reaches suitable cell
 		sp.setKernTraits(0, 1, kern_m, ls_params.resol);
 
-		ind = starting_ind; // female as default
+		ind = Individual(init_cell, init_patch, 1, 0, 0, 0.0, false, 0); // female as default
 		isDispersing = ind.moveKernel(&ls, &sp, false);
 		assert(ind.getStatus() == 6);
 
@@ -1980,7 +1992,7 @@ void testIndividual() {
 		isDispersing = ind.moveKernel(&ls, &sp, false);
 		assert(ind.getStatus() == 6);
 
-		ind = starting_ind; // adult by default
+		ind = Individual(init_cell, init_patch, 1, 0, 0, 0.0, false, 0); // adult by default
 		isDispersing = ind.moveKernel(&ls, &sp, false);
 		assert(ind.getStatus() == 2);
 		// reset
@@ -2035,7 +2047,7 @@ void testIndividual() {
 		sp.setMortParams(mort);
 		trfr.distMort = false;
 		sp.setTrfr(trfr);
-		ind = starting_ind;
+		ind = Individual(init_cell, init_patch, 1, 0, 0, 0.0, false, 0);
 		isDispersing = ind.moveKernel(&ls, &sp, false);
 		assert(ind.getStatus() == 7);
 		// Distance-dependent mortality
@@ -2046,12 +2058,12 @@ void testIndividual() {
 		sp.setMortParams(mort);
 		kern.meanDist1 = 5; // very likely to go over threshold
 		sp.setKernTraits(0, 0, kern, ls_params.resol);
-		ind = starting_ind;
+		ind = Individual(init_cell, init_patch, 1, 0, 0, 0.0, false, 0);
 		isDispersing = ind.moveKernel(&ls, &sp, false);
 		assert(ind.getStatus() == 7);
 		mort.mortBeta = 30; // very large distance, unlikely to draw
 		sp.setMortParams(mort);
-		ind = starting_ind;
+		ind = Individual(init_cell, init_patch, 1, 0, 0, 0.0, false, 0);
 		isDispersing = ind.moveKernel(&ls, &sp, false);
 		assert(ind.getStatus() != 7);
 
@@ -2060,6 +2072,8 @@ void testIndividual() {
 		mort.fixedMort = 0.0;
 		sp.setTrfr(trfr);
 		sp.setMortParams(mort);
+
+		ind.~Individual();
 	}
 
 	// Correlated random walk (CRW)
@@ -2075,10 +2089,11 @@ void testIndividual() {
 		ls.setLandParams(ls_params, true);
 
 		// All cells are suitable
+		const int hab_index = 0;
 		vector<Cell*> cell_vec;
 		for (int x = ls_params.minX; x < ls_params.dimX; ++x) {
 			for (int y = ls_params.minY; y < ls_params.dimY; ++y) {
-				cell_vec.push_back(new Cell(x, y, 0, 0));
+				cell_vec.push_back(new Cell(x, y, 0, hab_index));
 			}
 		}		
 		Cell* init_cell = cell_vec[12]; // central
@@ -2088,7 +2103,6 @@ void testIndividual() {
 
 		// Set up species
 		Species sp;
-		const int hab_index = 0;
 
 		// Habitat codes
 		sp.createHabK(1);
@@ -2096,7 +2110,7 @@ void testIndividual() {
 
 		// Habitat-dependent mortality
 		sp.createHabCostMort(1);
-		sp.setHabMort(hab_index, 0.0);
+		// sp.setHabMort(hab_index, 0.0);
 
 		// Transfer rules
 		trfrRules trfr;
@@ -2140,28 +2154,37 @@ void testIndividual() {
 		int isDispersing = ind.moveStep(&ls, &sp, hab_index, false);
 		assert(ind.getStatus() == 0); // status didn't change
 		assert(ind.getCurrCell() == init_cell); // not emigrating so didn't move
-		ind.~Individual();
+		//ind.~Individual();
 
 		// Per-step mortality
 		m.stepMort = 1.0; // should die 
 		sp.setMovtTraits(m);
-		Individual new_ind(init_cell, init_patch, 1, 0, 0, 0.0, true, 2);
-		// new ind bc for some reason I don' t understand yet if reset ind we lose path data upon exiting constructor
-		// surely some pointer fun
-		new_ind.setStatus(1);
-		isDispersing = new_ind.moveStep(&ls, &sp, hab_index, false);
+		ind = Individual(init_cell, init_patch, 1, 0, 0, 0.0, true, 2);
+		// force set path bc for some reason path gets deallocated upon exiting constructor??
+		pathData* pPath = new pathData;
+		pPath->out = pPath->year = pPath->total = 0;
+		pPath->pSettPatch = 0; pPath->settleStatus = 0;
+		ind.setPath(pPath);
+		crwParams* pCRW = new crwParams;
+		pCRW->prevdrn = (float)(pRandom->Random() * 2.0 * PI);
+		pCRW->xc = ((float)pRandom->Random() * 0.999f) + (float)init_cell->getLocn().x; 
+		pCRW->yc = ((float)pRandom->Random() * 0.999f) + (float)init_cell->getLocn().y;
+		pCRW->stepL = m.stepLength; pCRW->rho = m.rho;
+		ind.setCRW(pCRW);
+		ind.setStatus(1);
+		isDispersing = ind.moveStep(&ls, &sp, hab_index, false);
 		// Individual begins in natal patch so mortality is disabled
-		assert(new_ind.getStatus() != 7);
+		assert(ind.getStatus() != 7);
 		// Individual should be in a different patch
-		Cell* first_step_cell = new_ind.getCurrCell();
+		Cell* first_step_cell = ind.getCurrCell();
 		assert(first_step_cell != init_cell);
 		assert((Patch*)first_step_cell->getPatch() != init_patch);
-		new_ind.setStatus(1); // emigrating again
+		ind.setStatus(1); // emigrating again
 
 		// Individual should die on second step
-		isDispersing = new_ind.moveStep(&ls, &sp, hab_index, false);
-		assert(new_ind.getCurrCell() == first_step_cell); // shouldn't have moved
-		assert(new_ind.getStatus() == 7); // died by transfer
+		isDispersing = ind.moveStep(&ls, &sp, hab_index, false);
+		assert(ind.getCurrCell() == first_step_cell); // shouldn't have moved
+		assert(ind.getStatus() == 7); // died by transfer
 
 		// ind = Individual(init_cell, init_patch, 1, 0, 0, 0.0, true, 2); // reset
 
