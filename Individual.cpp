@@ -2215,7 +2215,8 @@ void testIndividual() {
 		ls.allocatePatches(&sp);
 		ls.updateCarryingCapacity(&sp, 0, 0);
 		init_patch = (Patch*)init_cell->getPatch();
-		// Too short step length
+		
+		// Step length too short
 		m.stepLength = 0.1; // cannot reach final cell
 		m.rho = 0.0; // random angle
 		sp.setMovtTraits(m);
@@ -2223,7 +2224,6 @@ void testIndividual() {
 		steps.maxStepsYr = 2;
 		steps.maxSteps = 3;
 		sp.setSteps(0, 0, steps);
-
 		ind = Individual(init_cell, init_patch, 0, 0, 0, 0.0, true, 2);
 		ind.setStatus(1); // dispersing
 		ind.forceInitPath();
@@ -2242,6 +2242,42 @@ void testIndividual() {
 		assert(ind.getCurrCell() == init_cell);
 		assert(ind.getStatus() == 6);
 
+		// Step length too long
+		m.stepLength = ls_params.dimX * SQRT2 * 1.5; // overshoots
+		sp.setMovtTraits(m);
+		ind = Individual(init_cell, init_patch, 0, 0, 0, 0.0, true, 2);
+		ind.setStatus(1); // dispersing
+		ind.forceInitPath();
+		ind.forceInitCRW(m);
+		steps.minSteps = 1;
+		steps.maxStepsYr = 1;
+		steps.maxSteps = 1; // no need to test more than one step this time
+		sp.setSteps(0, 0, steps);
+		isDispersing = ind.moveStep(&ls, &sp, hab_index, false);
+		assert(ind.getCurrCell() == init_cell);
+		assert(ind.getStatus() == 6);
+
+		// Adequate step length
+		m.stepLength = (ls_params.dimX - 1) * SQRT2;
+		sp.setMovtTraits(m);
+		ind = Individual(init_cell, init_patch, 0, 0, 0, 0.0, true, 2);
+		ind.setStatus(1); // dispersing
+		ind.forceInitPath();
+		ind.forceInitCRW(m);
+		// Initial angle still random but should eventually reach the right cell
+		isDispersing = ind.moveStep(&ls, &sp, hab_index, false);
+		assert(ind.getStatus() == 2);
+		assert(ind.getCurrCell() == final_cell);
+
+		// If boundaries are absorbing however, very likely to die
+		ind = Individual(init_cell, init_patch, 0, 0, 0, 0.0, true, 2);
+		ind.setStatus(1); // dispersing
+		ind.forceInitPath();
+		ind.forceInitCRW(m);
+		bool absorbing_boundaries = true;
+		isDispersing = ind.moveStep(&ls, &sp, hab_index, absorbing_boundaries);
+		assert(ind.getStatus() == 6);
+		assert(ind.getCurrCell() == 0); // deref apparently
 
 	}
 }
