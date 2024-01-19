@@ -1162,8 +1162,8 @@ int Individual::moveStep(Landscape* pLandscape, Species* pSpecies,
 				}
 			}
 
-			steplen = movt.stepLength; if (steplen < 0.2 * land.resol) steplen = 0.2 * land.resol;
-			rho = movt.rho; if (rho > 0.99) rho = 0.99;
+			steplen = movt.stepLength; 
+			rho = movt.rho;
 			if (pPatch == pNatalPatch) {
 				rho = 0.99; // to promote leaving natal patch
 				path->out = 0;
