@@ -256,6 +256,8 @@ public:
 	Cell* getCurrCell() const;
 	void setPath(pathData* pPath);
 	void setCRW(crwParams* pCRW);
+	void forceInitPath();
+	void forceInitCRW(const trfrMovtTraits&);
 #endif
 
 private:

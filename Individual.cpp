@@ -1827,6 +1827,26 @@ void Individual::setCRW(crwParams* pCRW) {
 	crw = pCRW;
 }
 
+// Force initialisation of path as it sometimes doesn't set??
+void Individual::forceInitPath() {
+	pathData* pPath = new pathData;
+	pPath->out = pPath->year = pPath->total = 0;
+	pPath->pSettPatch = 0; pPath->settleStatus = 0;
+	setPath(pPath);
+}
+
+// Force initialisation of crw as it sometimes doesn't set??
+void Individual::forceInitCRW(const trfrMovtTraits& m) {
+	crwParams* pCRW = new crwParams;
+	pCRW->prevdrn = (float)(pRandom->Random() * 2.0 * PI);
+	pCRW->xc = ((float)pRandom->Random() * 0.999f) + (float)pCurrCell->getLocn().x;
+	pCRW->yc = ((float)pRandom->Random() * 0.999f) + (float)pCurrCell->getLocn().y;
+	pCRW->stepL = m.stepLength; pCRW->rho = m.rho;
+	setCRW(pCRW);
+}
+
+
+
 void testIndividual() {
 
 	/*
@@ -2159,18 +2179,10 @@ void testIndividual() {
 		// Per-step mortality
 		m.stepMort = 1.0; // should die 
 		sp.setMovtTraits(m);
-		ind = Individual(init_cell, init_patch, 1, 0, 0, 0.0, true, 2);
+		ind = Individual(init_cell, init_patch, 0, 0, 0, 0.0, true, 2);
 		// force set path bc for some reason path gets deallocated upon exiting constructor??
-		pathData* pPath = new pathData;
-		pPath->out = pPath->year = pPath->total = 0;
-		pPath->pSettPatch = 0; pPath->settleStatus = 0;
-		ind.setPath(pPath);
-		crwParams* pCRW = new crwParams;
-		pCRW->prevdrn = (float)(pRandom->Random() * 2.0 * PI);
-		pCRW->xc = ((float)pRandom->Random() * 0.999f) + (float)init_cell->getLocn().x; 
-		pCRW->yc = ((float)pRandom->Random() * 0.999f) + (float)init_cell->getLocn().y;
-		pCRW->stepL = m.stepLength; pCRW->rho = m.rho;
-		ind.setCRW(pCRW);
+		ind.forceInitPath();
+		ind.forceInitCRW(m);
 		ind.setStatus(1);
 		isDispersing = ind.moveStep(&ls, &sp, hab_index, false);
 		// Individual begins in natal patch so mortality is disabled
@@ -2185,10 +2197,52 @@ void testIndividual() {
 		isDispersing = ind.moveStep(&ls, &sp, hab_index, false);
 		assert(ind.getCurrCell() == first_step_cell); // shouldn't have moved
 		assert(ind.getStatus() == 7); // died by transfer
-
-		// ind = Individual(init_cell, init_patch, 1, 0, 0, 0.0, true, 2); // reset
+		m.stepMort = 0.0; // not dying
+		sp.setMovtTraits(m);
 
 		// Habitat-dep mortality
+
+
+		// Step size
+		ls = Landscape();
+		ls.setLandParams(ls_params, true);
+		// Only two suitable cells in opposite corners
+		init_cell = new Cell(0, 0, 0, 0);
+		Cell* final_cell = new Cell(ls_params.dimX - 1, ls_params.dimY - 1, 0, 0);
+		ls.setCellArray();
+		ls.addCellToLand(init_cell);
+		ls.addCellToLand(final_cell);
+		ls.allocatePatches(&sp);
+		ls.updateCarryingCapacity(&sp, 0, 0);
+		init_patch = (Patch*)init_cell->getPatch();
+		// Too short step length
+		m.stepLength = 0.1; // cannot reach final cell
+		m.rho = 0.0; // random angle
+		sp.setMovtTraits(m);
+		steps.minSteps = 1;
+		steps.maxStepsYr = 2;
+		steps.maxSteps = 3;
+		sp.setSteps(0, 0, steps);
+
+		ind = Individual(init_cell, init_patch, 0, 0, 0, 0.0, true, 2);
+		ind.setStatus(1); // dispersing
+		ind.forceInitPath();
+		ind.forceInitCRW(m);
+		// First step - individual can't reach final cell so still dispersing
+		isDispersing = ind.moveStep(&ls, &sp, hab_index, false);
+		assert(ind.getCurrCell() == init_cell);
+		assert(ind.getStatus() == 1);
+		// Second step - reaching max steps this year, wait next year
+		isDispersing = ind.moveStep(&ls, &sp, hab_index, false);
+		assert(ind.getCurrCell() == init_cell);
+		assert(ind.getStatus() == 3);
+		ind.setStatus(1); // dispersing again
+		// Third step - reaching max steps, dies
+		isDispersing = ind.moveStep(&ls, &sp, hab_index, false);
+		assert(ind.getCurrCell() == init_cell);
+		assert(ind.getStatus() == 6);
+
+
 	}
 }
 #endif // RSDEBUG
