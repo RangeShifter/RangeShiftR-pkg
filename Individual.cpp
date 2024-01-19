@@ -2165,7 +2165,6 @@ void testIndividual() {
 		// Create and set up individual
 		Individual ind(init_cell, init_patch, 1, 0, 0, 0.0, true, 2);
 
-		// Set aside original individual and test on a copy
 		// ind.setYearSteps(); // if needed
 		// ind.getSteps();
 
@@ -2201,7 +2200,7 @@ void testIndividual() {
 		sp.setMovtTraits(m);
 
 		// Habitat-dep mortality
-
+		// ...
 
 		// Step size
 		ls = Landscape();
@@ -2279,6 +2278,32 @@ void testIndividual() {
 		assert(ind.getStatus() == 6);
 		assert(ind.getCurrCell() == 0); // deref apparently
 
+		// Correlation parameter
+		// If rho = 1, should move in a straight line (after moving out of initial patch)
+		
+		// Add a central cell to get a diagonal of suitable cells
+		Cell* pMiddleCell = new Cell(2, 2, 0, hab_index);
+		ls.addCellToLand(pMiddleCell);
+		ls.allocatePatches(&sp);
+		ls.updateCarryingCapacity(&sp, 0, 0);
+		m.stepLength = 2 * SQRT2; // move by 1 cell diagonally
+		m.rho = 1;
+		sp.setMovtTraits(m);
+		steps.maxStepsYr = steps.maxSteps = 2;
+		sp.setSteps(0, 0, steps);
+		ind = Individual(init_cell, init_patch, 0, 0, 0, 0.0, true, 2);
+		ind.setStatus(1); // dispersing
+		ind.forceInitPath();
+		ind.forceInitCRW(m);
+		isDispersing = ind.moveStep(&ls, &sp, hab_index, false);
+		assert(ind.getStatus() == 2);
+		assert(ind.getCurrCell() == pMiddleCell);
+		ind.setStatus(1); // emigrate again
+		isDispersing = ind.moveStep(&ls, &sp, hab_index, false);
+		assert(ind.getStatus() == 2);
+		assert(ind.getCurrCell() == final_cell);
+		// not a good test yet, must add other suitable cells
+		// and start outside of natal patch
 	}
 }
 #endif // RSDEBUG
