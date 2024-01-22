@@ -2213,8 +2213,8 @@ void testIndividual() {
 		ls.addCellToLand(final_cell);
 		ls.allocatePatches(&sp);
 		ls.updateCarryingCapacity(&sp, 0, 0);
-		init_patch = (Patch*)init_cell->getPatch();
-		
+		// Init cell is NOT in natal patch
+		Patch* natalPatch = new Patch(0, 0);
 		// Step length too short
 		m.stepLength = 0.1; // cannot reach final cell
 		m.rho = 0.0; // random angle
@@ -2223,7 +2223,7 @@ void testIndividual() {
 		steps.maxStepsYr = 2;
 		steps.maxSteps = 3;
 		sp.setSteps(0, 0, steps);
-		ind = Individual(init_cell, init_patch, 0, 0, 0, 0.0, true, 2);
+		ind = Individual(init_cell, natalPatch, 0, 0, 0, 0.0, true, 2);
 		ind.setStatus(1); // dispersing
 		ind.forceInitPath();
 		ind.forceInitCRW(m);
@@ -2244,7 +2244,7 @@ void testIndividual() {
 		// Step length too long
 		m.stepLength = ls_params.dimX * SQRT2 * 1.5; // overshoots
 		sp.setMovtTraits(m);
-		ind = Individual(init_cell, init_patch, 0, 0, 0, 0.0, true, 2);
+		ind = Individual(init_cell, natalPatch, 0, 0, 0, 0.0, true, 2);
 		ind.setStatus(1); // dispersing
 		ind.forceInitPath();
 		ind.forceInitCRW(m);
@@ -2259,7 +2259,7 @@ void testIndividual() {
 		// Adequate step length
 		m.stepLength = (ls_params.dimX - 1) * SQRT2;
 		sp.setMovtTraits(m);
-		ind = Individual(init_cell, init_patch, 0, 0, 0, 0.0, true, 2);
+		ind = Individual(init_cell, natalPatch, 0, 0, 0, 0.0, true, 2);
 		ind.setStatus(1); // dispersing
 		ind.forceInitPath();
 		ind.forceInitCRW(m);
@@ -2269,7 +2269,7 @@ void testIndividual() {
 		assert(ind.getCurrCell() == final_cell);
 
 		// If boundaries are absorbing however, very likely to die
-		ind = Individual(init_cell, init_patch, 0, 0, 0, 0.0, true, 2);
+		ind = Individual(init_cell, natalPatch, 0, 0, 0, 0.0, true, 2);
 		ind.setStatus(1); // dispersing
 		ind.forceInitPath();
 		ind.forceInitCRW(m);
@@ -2291,7 +2291,7 @@ void testIndividual() {
 		sp.setMovtTraits(m);
 		steps.maxStepsYr = steps.maxSteps = 2;
 		sp.setSteps(0, 0, steps);
-		ind = Individual(init_cell, init_patch, 0, 0, 0, 0.0, true, 2);
+		ind = Individual(init_cell, natalPatch, 0, 0, 0, 0.0, true, 2);
 		ind.setStatus(1); // dispersing
 		ind.forceInitPath();
 		ind.forceInitCRW(m);
@@ -2304,6 +2304,8 @@ void testIndividual() {
 		assert(ind.getCurrCell() == final_cell);
 		// not a good test yet, must add other suitable cells
 		// and start outside of natal patch
+
+
 	}
 }
 #endif // RSDEBUG
