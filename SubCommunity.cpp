@@ -123,7 +123,6 @@ void SubCommunity::initialInd(Landscape* pLandscape, Species* pSpecies,
 	emigRules emig = pSpecies->getEmig();
 	trfrRules trfr = pSpecies->getTrfr();
 	settleType sett = pSpecies->getSettle();
-	genomeData gen = pSpecies->getGenomeData();
 	short stg, age, repInt;
 	Individual* pInd;
 	float probmale;
@@ -162,11 +161,11 @@ void SubCommunity::initialInd(Landscape* pLandscape, Species* pSpecies,
 	// NB THIS WILL NEED TO BE CHANGED FOR MULTIPLE SPECIES...
 	popns[0]->recruit(pInd);
 
-	if (emig.indVar || trfr.indVar || sett.indVar || gen.neutralMarkers)
+	if (pSpecies->getNTraits() > 0)
 	{
 		// individual variation - set up genetics
 		landData land = pLandscape->getLandData();
-		pInd->setGenes(pSpecies, land.resol);
+		pInd->setUpGenes(pSpecies, land.resol);
 	}
 
 }
@@ -291,7 +290,7 @@ void SubCommunity::patchChange(void) {
 	}
 }
 
-void SubCommunity::reproduction(int resol, float epsGlobal, short rasterType, bool patchModel)
+void SubCommunity::reproduction(int resol, float epsGlobal, short rasterType, bool patchModel, bool cloneFromColdStorage, Population* pColdStorage)
 {
 	if (subCommNum == 0) return; // no reproduction in the matrix
 	float localK, envval;
@@ -329,7 +328,7 @@ void SubCommunity::reproduction(int resol, float epsGlobal, short rasterType, bo
 			}
 		}
 		for (int i = 0; i < npops; i++) { // all populations
-			popns[i]->reproduction(localK, envval, resol);
+			popns[i]->reproduction(localK, envval, resol, cloneFromColdStorage, pColdStorage);
 			popns[i]->fledge();
 		}
 	}
@@ -420,6 +419,56 @@ void SubCommunity::initiateDispersal(SubCommunity* matrix) {
 	}
 
 }
+
+void SubCommunity::copyIndividualsForColdStorage(Population* pColdStorage) {
+	int npops = (int)popns.size();
+	popStats pop;
+	Individual* clone;
+	for (int i = 0; i < npops; i++) { // all populations
+		pop = popns[i]->getStats();
+		for (int j = 0; j < pop.nInds; j++) {
+#if RSDEBUG
+			//DEBUGLOG << "SubCommunity::initiateDispersal(): i = " << i
+			//	<< " j " << j
+			//	<< endl;
+#endif
+
+			clone = popns[i]->copyForColdStorage(j);
+			pColdStorage->recruit(clone);
+		}
+	}
+
+}
+
+
+int SubCommunity::addEmigrationAndSettlementTraitValues(emigTraits& avgEmTraits, settleTraits& avgSettleTraits) {
+	int npops = (int)popns.size();
+	int totalInds = 0;
+	popStats pop;
+	for (int i = 0; i < npops; i++) { // all populations
+		pop = popns[i]->getStats();
+		for (int j = 0; j < pop.nInds; j++) {
+			popns[i]->addEmigTraitsForInd(j, avgEmTraits);
+			popns[i]->addSettleTraitsForInd(j, avgSettleTraits);
+			totalInds++;
+		}
+	}
+	return totalInds;
+}
+
+void SubCommunity::addTransferDataForInd(trfrData* avgTrfrData) {
+	int npops = (int)popns.size();
+	popStats pop;
+	for (int i = 0; i < npops; i++) { // all populations
+		pop = popns[i]->getStats();
+		for (int j = 0; j < pop.nInds; j++) {
+			popns[i]->addTransferDataForInd(j, avgTrfrData);
+		}
+	}
+}
+
+
+
 
 // Add an individual into the local population of its species in the patch
 void SubCommunity::recruit(Individual* pInd, Species* pSpecies) {
@@ -745,12 +794,18 @@ void SubCommunity::outPop(Landscape* pLandscape, int rep, int yr, int gen)
 // Write records to individuals file
 void SubCommunity::outInds(Landscape* pLandscape, int rep, int yr, int gen, int landNr) {
 	landParams ppLand = pLandscape->getLandParams();
+	Population* pPop;
 	if (landNr >= 0) { // open the file
 		popns[0]->outIndsHeaders(rep, landNr, ppLand.patchModel);
 		return;
 	}
 	if (landNr == -999) { // close the file
-		popns[0]->outIndsHeaders(rep, -999, ppLand.patchModel);
+
+		// as all populations may have been deleted, set up a dummy one
+	// species is not necessary
+		pPop = new Population();
+		pPop->outIndsHeaders(rep, -999, ppLand.patchModel);
+		delete pPop;
 		return;
 	}
 	// generate output for each population within the sub-community (patch)
@@ -760,24 +815,6 @@ void SubCommunity::outInds(Landscape* pLandscape, int rep, int yr, int gen, int 
 	}
 }
 
-// Write records to individuals file
-void SubCommunity::outGenetics(int rep, int yr, int gen, int landNr)
-{
-	//landParams ppLand = pLandscape->getLandParams();
-	if (landNr >= 0) { // open the file
-		popns[0]->outGenetics(rep, yr, landNr);
-		return;
-	}
-	if (landNr == -999) { // close the file
-		popns[0]->outGenetics(rep, yr, landNr);
-		return;
-	}
-	// generate output for each population within the sub-community (patch)
-	int npops = (int)popns.size();
-	for (int i = 0; i < npops; i++) { // all populations
-		popns[i]->outGenetics(rep, yr, landNr);
-	}
-}
 
 // Population size of a specified stage
 int SubCommunity::stagePop(int stage) {
@@ -894,6 +931,15 @@ bool SubCommunity::outTraitsHeaders(Landscape* pLandscape, Species* pSpecies, in
 			outtraits << "\tmeanBetaS\tstdBetaS";
 		}
 	}
+	if (pSpecies->getNumberOfAdaptiveTraits() > 0) {
+		if (NSEXES > 1) {
+			outtraits << "\tF_meanFitness\tF_stdFitness\tM_meanFitness\tM_stdFitness";
+		}
+		else {
+			outtraits << "\tmeanFitness\tstdFitness";
+		}
+	}
+
 	outtraits << endl;
 
 	return outtraits.is_open();
@@ -923,6 +969,7 @@ traitsums SubCommunity::outTraits(traitCanvas tcanv,
 		ts.sumStepL[i] = ts.ssqStepL[i] = 0.0; ts.sumRho[i] = ts.ssqRho[i] = 0.0;
 		ts.sumS0[i] = ts.ssqS0[i] = 0.0;
 		ts.sumAlphaS[i] = ts.ssqAlphaS[i] = 0.0; ts.sumBetaS[i] = ts.ssqBetaS[i] = 0.0;
+		ts.sumFitness[i] = ts.ssqFitness[i] = 0.0;
 	}
 
 	// generate output for each population within the sub-community (patch)
@@ -1158,6 +1205,39 @@ traitsums SubCommunity::outTraits(traitCanvas tcanv,
 					}
 				}
 			}
+			if (pSpecies->getNumberOfAdaptiveTraits() > 0) {
+				ngenes = pSpecies->isDiploid() + 1;
+				double mnFitness[2], sdFitness[2];
+				for (int g = 0; g < ngenes; g++) {
+					mnFitness[g] = sdFitness[g] = 0.0;
+
+					if (ngenes == 2) popsize = poptraits.ninds[g];
+					else popsize = poptraits.ninds[0] + poptraits.ninds[1];
+					if (popsize > 0) {
+						mnFitness[g] = poptraits.sumFitness[g] / (double)popsize;
+						if (popsize > 1) {
+							sdFitness[g] = poptraits.ssqFitness[g] / (double)popsize - mnFitness[g] * mnFitness[g];
+							if (sdFitness[g] > 0.0) sdFitness[g] = sqrt(sdFitness[g]); else sdFitness[g] = 0.0;
+						}
+						else {
+							sdFitness[g] = 0.0;
+						}
+					}
+				}
+				if (writefile) {
+					if (NSEXES > 1) {
+						outtraits << "\t" << mnFitness[0] << "\t" << sdFitness[0];
+						outtraits << "\t" << mnFitness[1] << "\t" << sdFitness[1];
+					}
+					else { // sex-independent
+						outtraits << "\t" << mnFitness[0] << "\t" << sdFitness[0];
+					}
+				}
+			}
+
+			// CURRENTLY INDIVIDUAL VARIATION CANNOT BE SEX-DEPENDENT
+//			ngenes = 1;
+			double mnS0[2], mnAlpha[2], mnBeta[2], sdS0[2], sdAlpha[2], sdBeta[2];
 
 			if (writefile) outtraits << endl;
 
@@ -1178,6 +1258,7 @@ traitsums SubCommunity::outTraits(traitCanvas tcanv,
 				ts.sumS0[s] += poptraits.sumS0[s];     ts.ssqS0[s] += poptraits.ssqS0[s];
 				ts.sumAlphaS[s] += poptraits.sumAlphaS[s]; ts.ssqAlphaS[s] += poptraits.ssqAlphaS[s];
 				ts.sumBetaS[s] += poptraits.sumBetaS[s];  ts.ssqBetaS[s] += poptraits.ssqBetaS[s];
+				ts.sumFitness[s] += poptraits.sumFitness[s];  ts.ssqFitness[s] += poptraits.ssqFitness[s];
 #if RSDEBUG
 				//DEBUGLOG << "SubCommunity::outTraits(): i=" << i << " popns[i]=" << popns[i]
 				//	<< " s=" << s

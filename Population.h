@@ -41,7 +41,7 @@
 
  Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
- Last updated: 22 January 2022 by Steve Palmer
+ Last updated: 25 June 2021 by Steve Palmer
 
  ------------------------------------------------------------------------------*/
 
@@ -61,6 +61,7 @@ using namespace std;
 #include "Landscape.h"
 #include "Patch.h"
 #include "Cell.h"
+#include "NeutralStatsManager.h"
 
 //---------------------------------------------------------------------------
 
@@ -69,6 +70,9 @@ struct popStats {
 };
 struct disperser {
 	Individual* pInd; Cell* pCell; bool yes;
+};
+struct zombie {
+	Individual* pInd;
 };
 struct traitsums { // sums of trait genes for dispersal
 	int ninds[NSEXES];				// no. of individuals
@@ -102,6 +106,8 @@ struct traitsums { // sums of trait genes for dispersal
 	double ssqAlphaS[NSEXES];	// sum of squares of slope of settlement den-dep reaction norm
 	double sumBetaS[NSEXES]; 	// sum of inflection point of settlement reaction norm
 	double ssqBetaS[NSEXES]; 	// sum of squares of inflection point of settlement reaction norm
+	double sumFitness[NSEXES];
+	double ssqFitness[NSEXES];
 };
 
 class Population {
@@ -127,7 +133,10 @@ public:
 	void reproduction(
 		const float,	// local carrying capacity
 		const float,	// effect of environmental gradient and/or stochasticty
-		const int			// Landscape resolution
+		const int,			// Landscape resolution
+		bool,
+		Population*
+
 	);
 	// Following reproduction of ALL species, add juveniles to the population
 	void fledge(void);
@@ -145,9 +154,17 @@ public:
 	disperser extractSettler(
 		int   // index no. to the Individual in the inds vector
 	);
+	Individual* copyForColdStorage(int ix);
+	void addEmigTraitsForInd(int ix, emigTraits&);
+	void addSettleTraitsForInd(int, settleTraits&);
+	void addTransferDataForInd(int ix, trfrData* avgTrfrData);
 	void recruit( // Add a specified individual to the population
 		Individual*	// pointer to Individual
 	);
+	Individual* sampleInd() const;
+	void sampleIndsWithoutReplacement(string n, const set<int>& sampleStages);
+	int sampleSize() const;
+	set<Individual*> getIndividualsInStage(int stage);
 #if RS_RCPP
 	int transfer( // Executed for the Population(s) in the matrix only
 		Landscape*,	// pointer to Landscape
@@ -211,12 +228,17 @@ public:
 		int,				// generation
 		int					// Patch number
 	);
-	void outGenetics( // Write records to genetics file
-		const int,		// replicate
-		const int,		// year
-		const int	 		// landscape number
-	);
+
 	void clean(void); // Remove zero pointers to dead or dispersed individuals
+
+	void updateAlleleTable();
+	double getAlleleFrequency(int loci, int allele);
+	int getAlleleCount(int loci, int allele);
+	double getHetero(int loci, int allele);
+	int countHeterozygoteLoci();
+	vector<double> countLociHeterozyotes();
+	double computeHs();
+	void updateHeteroTable();
 
 private:
 	short nStages;
@@ -229,6 +251,9 @@ private:
 	std::vector <Individual*> juvs; // ... juveniles until reproduction of ALL species
 	// has been completed
 
+	std::set <Individual*> sampledInds;
+	vector<NeutralData> alleleTable;
+	void resetAlleleTable();
 };
 
 //---------------------------------------------------------------------------

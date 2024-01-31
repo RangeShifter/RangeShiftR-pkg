@@ -65,18 +65,14 @@
 
  Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
- Last updated: 2 December 2021 by Steve Palmer
+ Last updated: 28 July 2021 by Greta Bocedi
  ------------------------------------------------------------------------------*/
 
 #ifndef LandscapeH
 #define LandscapeH
 
- //#include <stdlib.h>
- //#include <math.h>
 #include <algorithm>
 #include <fstream>
-//#include <iostream.h>
-//#include <stdio.h>
 #include <vector>
 
 using namespace std;
@@ -239,7 +235,7 @@ public:
 
 	void setCellArray(void);
 	void addPatchNum(int);
-	void generatePatches(void); 		// create an artificial landscape
+	void generatePatches(Species*); 		// create an artificial landscape
 	void allocatePatches(Species*);	// create patches for a cell-based landscape
 	Patch* newPatch(
 		int		// patch sequential no. (id no. is set to equal sequential no.)
@@ -294,6 +290,7 @@ public:
 	Patch* findPatch(
 		int   // Patch id no.
 	);
+	set<int> samplePatches(int n, bool all);
 	int checkTotalCover(void);
 	void resetPatchPopns(void);
 	void updateCarryingCapacity(

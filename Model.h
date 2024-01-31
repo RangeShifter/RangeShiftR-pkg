@@ -40,7 +40,7 @@
 
  Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
- Last updated: 26 October 2021 by Steve Palmer
+ Last updated: 28 July 2021 by Greta Bocedi
  ------------------------------------------------------------------------------*/
 
 #ifndef ModelH
@@ -52,11 +52,6 @@
  //#if RS_RCPP && !R_CMD
 #include "../Version.h"
 //#endif
-
-//#if !RS_RCPP && R_CMD
-//#include "../../Batch/Version.h"
-//#endif
-
 #include "Parameters.h"
 #include "Landscape.h"
 #include "Community.h"

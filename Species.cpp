@@ -48,24 +48,6 @@ Species::Species(void)
 	habK = 0; habDimK = 0;
 	minRK = 1.0; maxRK = 2.0;
 
-	// initialise genome attributes
-	nChromosomes = nTraits = 0;
-	emigTrait[0] = 0; emigTrait[1] = 0;
-	movtTrait[0] = 0; movtTrait[1] = 0;
-	settTrait[0] = 0; settTrait[1] = 0;
-	//genomeCanRecombine = false;
-	diploid = true;
-	neutralMarkers = false;
-	pleiotropic = false;
-	trait1Chromosome = true;
-	probMutn = 0.0001f;
-	probCrossover = 0.0001f;
-	alleleSD = mutationSD = 0.1f;
-	nNLoci = 0;
-	nLoci = NULL;
-	traitdata = NULL;
-	traitnames = NULL;
-	nTraitNames = 0;
 
 	// initialise emigration parameters
 	densDepEmig = false; stgDepEmig = false; sexDepEmig = false; indVarEmig = false;
@@ -75,11 +57,6 @@ Species::Species(void)
 			d0[i][j] = 0.0; alphaEmig[i][j] = 0.0; betaEmig[i][j] = 1.0;
 		}
 	}
-	for (int j = 0; j < NSEXES; j++) {
-		d0Mean[0][j] = 0.0; alphaMean[0][j] = 0.0; betaMean[0][j] = 1.0;
-		d0SD[0][j] = 0.0; alphaSD[0][j] = 0.0; betaSD[0][j] = 1.0;
-	}
-	d0Scale = alphaScale = betaScale = 0.0;
 
 	// initialise transfer parameters
 	moveModel = false; stgDepTrfr = false; sexDepTrfr = false; distMort = false;
@@ -93,25 +70,12 @@ Species::Species(void)
 			meanDist1[i][j] = 100.0f; meanDist2[i][j] = 1000.0f; probKern1[i][j] = 0.99f;
 		}
 	}
-	for (int j = 0; j < NSEXES; j++) {
-		dist1Mean[0][j] = 100.0; dist1SD[0][j] = 10.0;
-		dist2Mean[0][j] = 1000.0; dist2SD[0][j] = 100.0;
-		PKern1Mean[0][j] = 0.9f; PKern1SD[0][j] = 0.01f;
-		stepLgthMean[0][j] = 10.0; stepLgthSD[0][j] = 1.0;
-		rhoMean[0][j] = 0.9f; rhoSD[0][j] = 0.01f;
-		dpMean[0][j] = 1.0; dpSD[0][j] = 0.1f;
-		gbMean[0][j] = 1.0; gbSD[0][j] = 0.1f;
-		alphaDBMean[0][j] = 1.0;  alphaDBSD[0][j] = 0.1f;
-		betaDBMean[0][j] = 10.0; betaDBSD[0][j] = 1.0;
-	}
 	pr = 1; prMethod = 1; memSize = 1; goalType = 0;
 	dp = 1.0; gb = 1.0; alphaDB = 1.0; betaDB = 100000;
 	stepMort = 0.0; stepLength = 10.0; rho = 0.9f;
 	habStepMort = 0; habCost = 0;
 	//costMapFile = "NULL";
 	fixedMort = 0.0; mortAlpha = 0.0; mortBeta = 1.0;
-	dist1Scale = dist2Scale = PKern1Scale = stepLScale = rhoScale = 0.0;
-	dpScale = 0.1f; gbScale = 0.1f; alphaDBScale = 0.1f; betaDBScale = 1.0;
 	habDimTrfr = 0;
 	straigtenPath = false;
 	fullKernel = false;
@@ -126,16 +90,10 @@ Species::Species(void)
 			s0[i][j] = 1.0; alphaS[i][j] = 0.0; betaS[i][j] = 1.0;
 		}
 	}
-	for (int j = 0; j < NSEXES; j++) {
-		alphaSMean[0][j] = 0.0; alphaSSD[0][j] = 0.0;
-		betaSMean[0][j] = 0.0; betaSSD[0][j] = 0.0;
-		s0Mean[0][j] = 0.0; s0SD[0][j] = 0.0;
-	}
-	alphaSScale = 0.0; betaSScale = 0.0; s0Scale = 0.0;
 
-	// initialise attributes
+	// initialise attribute defaults
 	spNum = 0;
-
+	resetGeneticParameters();
 }
 
 Species::~Species() {
@@ -146,9 +104,6 @@ Species::~Species() {
 	if (ddwtSurv != 0) deleteDDwtSurv();
 	// transfer parameters
 	if (habCost != 0 || habStepMort != 0) deleteHabCostMort();
-	if (nLoci != NULL) deleteLoci();
-	if (traitdata != NULL) deleteTraitData();
-	if (traitnames != NULL) deleteTraitNames();
 }
 
 short Species::getSpNum(void) { return spNum; }
@@ -159,6 +114,7 @@ short Species::getSpNum(void) { return spNum; }
 
 void Species::setDemogr(const demogrParams d) {
 	if (d.repType >= 0 && d.repType <= 2) repType = d.repType;
+	if (d.repType >= 1) isDiploid = true;
 	if (d.repSeasons >= 1) repSeasons = d.repSeasons;
 	stageStruct = d.stageStruct;
 	if (d.propMales > 0.0 && d.propMales < 1.0) propMales = d.propMales;
@@ -419,537 +375,137 @@ float Species::getMinMax(short opt) {
 
 //---------------------------------------------------------------------------
 
-// Genome functions
+// Genetic functions
 
-void Species::setGenomeData(genomeData d) {
-	diploid = d.diploid;
-	neutralMarkers = d.neutralMarkers;
-	trait1Chromosome = d.trait1Chromosome;
-	if (trait1Chromosome) {
-		if (d.nLoci > 0) nLoci[0] = d.nLoci;
-	}
-	if (d.probMutn >= 0.0 && d.probMutn <= 1.0) probMutn = d.probMutn;
-	if (d.probCrossover >= 0.0 && d.probCrossover <= 1.0) probCrossover = d.probCrossover;
-	if (d.alleleSD > 0.0) alleleSD = d.alleleSD;
-	if (d.mutationSD > 0.0) mutationSD = d.mutationSD;
+void Species::turnOffMutations(void) {
+	mutationsOn = false;
 }
 
-genomeData Species::getGenomeData(void) {
-	genomeData d;
-	d.diploid = diploid;
-	d.neutralMarkers = neutralMarkers;
-	d.pleiotropic = pleiotropic;
-	d.trait1Chromosome = trait1Chromosome;
-	if (nLoci != NULL) d.nLoci = nLoci[0];
-	else d.nLoci = 0;
-	d.probMutn = probMutn;
-	d.probCrossover = probCrossover;
-	d.alleleSD = alleleSD;
-	d.mutationSD = mutationSD;
-	return d;
+bool Species::areMutationsOn(void) {
+	return mutationsOn;
 }
 
-bool Species::isDiploid(void) { return diploid; }
-
-// Chromosome functions
-
-void Species::setNChromosomes(int c) {
-	if (nLoci != NULL) deleteLoci();
-	if (c > 0) {
-		nChromosomes = nNLoci = c;
-		nLoci = new short[c];
-		for (int i = 0; i < nNLoci; i++) nLoci[i] = 0;
-	}
-	else nChromosomes = nNLoci = 0;
-}
-
-int Species::getNChromosomes(void) { return nChromosomes; }
-
-void Species::setNLoci(const short chr, const short nloc) {
-	if (chr >= 0 && chr < nNLoci) {
-		if (nloc > 0) nLoci[chr] = nloc;
-		else nLoci[chr] = 0;
-	}
-}
-
-int Species::getNLoci(const short chr) {
-	if (chr >= 0 && chr < nChromosomes) return nLoci[chr];
-	else return 0;
-}
-
-void Species::deleteLoci(void) {
-	if (nLoci != NULL) { delete[] nLoci; nLoci = NULL; }
-}
-
-// Trait functions
-
-// Set 1:1 mapping of trait to chromosome
-void Species::set1ChromPerTrait(const int nloc) {
-	nChromosomes = nTraits;
-	if (nLoci != NULL) deleteLoci();
-	nLoci = new short[1];
-	if (nloc > 0) nLoci[0] = nloc;
-	else nLoci[0] = 1;
-}
-
-bool Species::has1ChromPerTrait(void) { return trait1Chromosome; }
-
-// Set trait attributes for the species
-void Species::setTraits(void) {
-
-	emigTrait[0] = 0; emigTrait[1] = 0;
-	movtTrait[0] = 0; movtTrait[1] = 0;
-	settTrait[0] = 0; settTrait[1] = 0;
-	nTraits = 0;
-#if RSDEBUG
-	DebugGUI("Species::setTraits(): 0000 nChromosomes=" + Int2Str(nChromosomes)
-		+ " nTraits=" + Int2Str(nTraits)
-		+ " indVarEmig=" + Int2Str((int)indVarEmig)
-		+ " indVarTrfr=" + Int2Str((int)indVarTrfr)
-		+ " indVarSett=" + Int2Str((int)indVarSett)
-	);
-#endif
-
-	if (indVarEmig) {
-		if (sexDepEmig) {
-			if (densDepEmig) nTraits += 6; else nTraits += 2;
-		}
-		else {
-			if (densDepEmig) nTraits += 3; else nTraits += 1;
-		}
-		emigTrait[0] = 0; emigTrait[1] = nTraits;
-	}
-#if RSDEBUG
-	//DebugGUI("Species::setTraits(): 1111 nTraits=" + Int2Str(nTraits));
-#endif
-
-	int movttraits = 0;
-	if (indVarTrfr) {
-		if (moveModel) {
-			if (moveType == 1) { // SMS
-				movttraits = 1; // in contain batch 2
-				if (goalType == 2) movttraits += 3; //in contain batch 2
-			}
-			if (moveType == 2) movttraits = 2;
-		}
-		else {
-			if (sexDepTrfr) {
-				if (twinKern) movttraits = 6; else movttraits = 2;
-			}
-			else {
-				if (twinKern) movttraits = 3; else movttraits = 1;
-			}
-		}
-		movtTrait[0] = nTraits; movtTrait[1] = movttraits;
-		nTraits += movttraits;
-	}
-#if RSDEBUG
-	//DebugGUI("Species::setTraits(): 2222 nTraits=" + Int2Str(nTraits));
-#endif
-
-	int setttraits = 0;
-	if (indVarSett) {
-		if (sexDepSett) setttraits = 6; else setttraits = 3;
-		settTrait[0] = nTraits; settTrait[1] = setttraits;
-		nTraits += setttraits;
-	}
-
-	setTraitNames();
-
-	//if (trait1Chromosome) {
-	//	nChromosomes = nTraits;
-	//}
-#if RSDEBUG
-	DebugGUI("Species::setTraits(): 9999 nChromosomes=" + Int2Str(nChromosomes)
-		+ " nTraits=" + Int2Str(nTraits));
-#endif
+void Species::resetGeneticParameters() {
+	mutationsOn = true;
+	numberOfNeutralLoci = -9999;
+	numberOfAdaptiveTraits = 0;
+	genomeSize = -9999;
+	recombinationRate = -9999;
+	nSampleCellsFst = -9999;
+	nIndsToSample = -9999;
+	chromosomeEnds.clear();
+	samplePatchList.clear();
+	stagesToSampleFrom.clear();
 
 }
 
-void Species::setTraitNames(void) {
-#if RSDEBUG
-	//DebugGUI("Species::setTraitNames(): nTraits=" + Int2Str(nTraits)
-	//	+ " nTraitNames=" + Int2Str(nTraitNames)
-	//	+ " traitnames=" + Int2Str((int)traitnames)
-	//	);
-	//if (traitnames != NULL) {
-	//	DebugGUI("Species::setTraitNames(): traitnames[0]=" + traitnames[0]
-	//		);
-	//	if (nTraits > 1) {
-	//		DebugGUI("Species::setTraitNames(): traitnames[1]=" + traitnames[1]
-	//			);
-	//	}
-	//}
-#endif
-	deleteTraitNames();
-	nTraitNames = nTraits;
-	traitnames = new string[nTraitNames];
-	int trait = 0;
-	if (indVarEmig) {
-		if (sexDepEmig) {
-			if (densDepEmig) {
-				traitnames[trait++] = "d0_F";
-				traitnames[trait++] = "d0_M";
-				traitnames[trait++] = "alpha_F";
-				traitnames[trait++] = "alpha_M";
-				traitnames[trait++] = "beta_F";
-				traitnames[trait++] = "beta_M";
-			}
-			else {
-				traitnames[trait++] = "d0_F";
-				traitnames[trait++] = "d0_M";
-			}
-		}
-		else {
-			traitnames[trait++] = "d0";
-			if (densDepEmig) {
-				traitnames[trait++] = "alpha";
-				traitnames[trait++] = "beta";
-			}
-		}
-	}
-
-	if (indVarTrfr) {
-		if (moveModel) {
-			if (moveType == 1) { // SMS
-				traitnames[trait++] = "DP";
-				if (goalType == 2) {
-					traitnames[trait++] = "GB";
-					traitnames[trait++] = "alphaDB";
-					traitnames[trait++] = "betaDB";
-				}
-			}
-			if (moveType == 2) { // CRW
-				traitnames[trait++] = "stepL";
-				traitnames[trait++] = "rho";
-			}
-		}
-		else {
-			if (sexDepTrfr) {
-				if (twinKern)
-				{
-					traitnames[trait++] = "meanDistI_F";
-					traitnames[trait++] = "meanDistI_M";
-					traitnames[trait++] = "meanDistII_F";
-					traitnames[trait++] = "meanDistII_M";
-					traitnames[trait++] = "probKernI_F";
-					traitnames[trait++] = "probKernI_M";
-				}
-				else {
-					traitnames[trait++] = "meanDistI_F";
-					traitnames[trait++] = "meanDistI_M";
-				}
-			}
-			else {
-				traitnames[trait++] = "meanDistI";
-				if (twinKern)
-				{
-					traitnames[trait++] = "meanDistII";
-					traitnames[trait++] = "probKernI";
-				}
-			}
-		}
-	}
-
-	if (indVarSett) {
-		if (sexDepSett) {
-			traitnames[trait++] = "s0_F";
-			traitnames[trait++] = "s0_M";
-			traitnames[trait++] = "alphaS_F";
-			traitnames[trait++] = "alphaS_M";
-			traitnames[trait++] = "betaS_F";
-			traitnames[trait++] = "betaS_M";
-		}
-		else {
-			traitnames[trait++] = "s0";
-			traitnames[trait++] = "alphaS";
-			traitnames[trait++] = "betaS";
-		}
-	}
+bool Species::isDiploid() const {
+	return isDiploid;
 }
 
-void Species::deleteTraitNames(void) {
-	if (traitnames != NULL) {
-#if RSDEBUG
-		//DebugGUI("Species::deleteTraitNames(): traitnames=" + Int2Str((int)traitnames)
-		//	);
-#endif
-		delete[] traitnames;
-		traitnames = NULL;
-	}
-}
-
-string Species::getTraitName(const int trait) {
-	string name = "not used";
-	if (traitnames != NULL) {
-		if (trait >= 0 && trait < nTraits) {
-			name = traitnames[trait];
-		}
-	}
-	return name;
-}
-
-int Species::getNTraits(void) { return nTraits; }
-
-void Species::setTraitData(const int ntraits) {
-#if RSDEBUG
-	//DebugGUI(("Species::setTraitData(): traitdata=" + Int2Str((int)traitdata)
-	//	+ " ntraits=" + Int2Str(ntraits)
-	//	).c_str());
-#endif
-	deleteTraitData();
-	traitdata = new traitData;
-	if (ntraits > 0) {
-		traitdata->nTraitMaps = ntraits;
-		traitdata->traitmaps = new traitMap * [ntraits];
-		for (int i = 0; i < ntraits; i++) {
-			traitdata->traitmaps[i] = new traitMap;
-		}
-	}
-	else { // neutral markers only
-		traitdata->nTraitMaps = 0;
-	}
-	traitdata->neutralloci = new traitMap;
-	traitdata->neutralloci->nAlleles = 0;
-#if RSDEBUG
-	//DebugGUI(("Species::setTraitData(): traitdata=" + Int2Str((int)traitdata)
-	//	+ " nTraitMaps=" + Int2Str(traitdata->nTraitMaps)
-	//	).c_str());
-#endif
-}
-
-void Species::deleteTraitData(void) {
-	if (traitdata != NULL) {
-#if RSDEBUG
-		//DebugGUI(("Species::deleteTraitData(): traitdata=" + Int2Str((int)traitdata)
-		//	+ " nTraitMaps=" + Int2Str(traitdata->nTraitMaps)
-		//	).c_str());
-#endif
-		for (int i = 0; i < traitdata->nTraitMaps; i++) {
-			if (traitdata->traitmaps[i]->traitalleles != 0) {
-				for (int j = 0; j < traitdata->traitmaps[i]->nAlleles; j++) {
-					delete traitdata->traitmaps[i]->traitalleles[j];
-				}
-			}
-			delete[] traitdata->traitmaps[i];
-		}
-		deleteNeutralLoci();
-		delete traitdata;
-		traitdata = NULL;
-	}
-}
-
-int Species::getNTraitMaps(void) {
-	if (traitdata == NULL) return 0;
-	else return traitdata->nTraitMaps;
-}
-
-void Species::setTraitMap(const short trait, const short nalleles) {
-	traitdata->traitmaps[trait]->nAlleles = nalleles;
-	traitdata->traitmaps[trait]->traitalleles = new traitAllele * [nalleles];
-	for (int i = 0; i < nalleles; i++) {
-		traitdata->traitmaps[trait]->traitalleles[i] = new traitAllele;
-	}
-}
-
-int Species::getNTraitAlleles(const int trait) {
-	int nalleles = 0;
-	if (traitdata != NULL) {
-		if (trait >= 0 && trait < traitdata->nTraitMaps) {
-			nalleles = traitdata->traitmaps[trait]->nAlleles;
-		}
-	}
-	return nalleles;
-}
-
-void Species::setTraitAllele(const short trait, const short allele,
-	const short chr, const short loc)
+void Species::setNumberOfNeutralLoci(int nN)
 {
-	traitdata->traitmaps[trait]->traitalleles[allele] = new traitAllele;
-	if (chr >= 0 && loc >= 0) {
-		traitdata->traitmaps[trait]->traitalleles[allele]->chromo = chr;
-		traitdata->traitmaps[trait]->traitalleles[allele]->locus = loc;
-	}
-	else {
-		traitdata->traitmaps[trait]->traitalleles[allele]->chromo = 0;
-		traitdata->traitmaps[trait]->traitalleles[allele]->locus = 0;
-	}
+	numberOfNeutralLoci = nN;
 }
 
-traitAllele Species::getTraitAllele(const short trait, const short allele) {
-	traitAllele a; a.chromo = 0; a.locus = 0;
-	if (traitdata != NULL) {
-		if (trait >= 0 && trait < traitdata->nTraitMaps) {
-			if (allele >= 0 && allele < traitdata->traitmaps[trait]->nAlleles) {
-				a = *traitdata->traitmaps[trait]->traitalleles[allele];
-			}
-		}
-	}
-	return a;
+int Species::getNumberOfNeutralLoci() const
+{
+	return numberOfNeutralLoci;
 }
 
-// Neutral loci functions
-
-// Identify neutral loci and determine whether there is pleiotropy
-void Species::setNeutralLoci(bool neutralMarkersOnly) {
-	bool neutral;
-	int nneutral = 0;
-	// find minimum of no. of defined / applied traits
-	int ntraits;
-	if (traitdata == 0) ntraits = 0;
-	else ntraits = traitdata->nTraitMaps;
-	if (ntraits > nTraits) ntraits = nTraits;
-#if RSDEBUG
-	//DebugGUI("Species::setNeutralLoci(): neutralMarkersOnly=" + Int2Str((int)neutralMarkersOnly)
-	//	+ " nNLoci=" + Int2Str(nNLoci)
-	//	+ " nTraits=" + Int2Str(nTraits) + " ntraits=" + Int2Str(ntraits)
-	//);
-#endif
-
-// determine no. of neutral loci
-	deleteNeutralLoci();
-	for (int i = 0; i < nNLoci; i++) { // each chromosome
-		for (int j = 0; j < nLoci[i]; j++) { // each locus
-			neutral = true;
-			for (int t = 0; t < ntraits; t++) { // each trait
-				for (int a = 0; a < traitdata->traitmaps[t]->nAlleles; a++) {
-#if RSDEBUG
-					//DebugGUI("Species::setNeutralLoci(): i=" + Int2Str(i)
-					//	+ " j=" + Int2Str(j) + " t=" + Int2Str(t) + " a=" + Int2Str(a)
-					//	+ " chromo=" + Int2Str(traitdata->traitmaps[t]->traitalleles[a]->chromo)
-					//	+ " locus=" + Int2Str(traitdata->traitmaps[t]->traitalleles[a]->locus)
-					//);
-#endif
-					if (i == traitdata->traitmaps[t]->traitalleles[a]->chromo
-						&& j == traitdata->traitmaps[t]->traitalleles[a]->locus) {
-#if RSDEBUG
-						//DebugGUI("Species::setNeutralLoci(): FALSE");
-#endif
-						neutral = false; // as locus contributes to a trait
-						a = 999999;
-					}
-				}
-				if (!neutral) t = 999999;
-			}
-			if (neutral) nneutral++;
-		}
-	}
-
-	traitdata->neutralloci = new traitMap;
-	traitdata->neutralloci->nAlleles = nneutral;
-	if (nneutral < 1) return;
-
-	// record neutral markers
-	traitdata->neutralloci->traitalleles = new traitAllele * [nneutral];
-	nneutral = 0;
-	for (int i = 0; i < nNLoci; i++) { // each chromosome
-		for (int j = 0; j < nLoci[i]; j++) { // each locus
-			neutral = true;
-			for (int t = 0; t < ntraits; t++) { // each trait
-				for (int a = 0; a < traitdata->traitmaps[t]->nAlleles; a++) {
-					if (i == traitdata->traitmaps[t]->traitalleles[a]->chromo
-						&& j == traitdata->traitmaps[t]->traitalleles[a]->locus) {
-						neutral = false; // as locus contributes to a trait
-						a = 999999;
-					}
-				}
-				if (!neutral) t = 999999;
-			}
-			if (neutral) {
-				traitdata->neutralloci->traitalleles[nneutral] = new traitAllele;
-				traitdata->neutralloci->traitalleles[nneutral]->chromo = i;
-				traitdata->neutralloci->traitalleles[nneutral]->locus = j;
-				nneutral++;
-			}
-		}
-	}
-
-	pleiotropic = false;
-	if (neutralMarkersOnly) return; // pleiotropy cannot apply
-
-	// determine whether there is pleiotropy
-	int chr, loc;
-	int nloci = 0; // maximum no. of loci on any one chromosome
-	for (int i = 0; i < nNLoci; i++) {
-		if (nloci < nLoci[i]) nloci = nLoci[i];
-	}
-	int*** locfreq;
-	locfreq = new int** [nNLoci];
-	for (int i = 0; i < nNLoci; i++) {
-		locfreq[i] = new int* [nloci];
-		for (int j = 0; j < nloci; j++) {
-			locfreq[i][j] = new int[ntraits];
-			for (int t = 0; t < ntraits; t++) locfreq[i][j][t] = 0;
-		}
-	}
-	for (int t = 0; t < ntraits; t++) { // each trait
-		for (int a = 0; a < traitdata->traitmaps[t]->nAlleles; a++) {
-			chr = traitdata->traitmaps[t]->traitalleles[a]->chromo;
-			loc = traitdata->traitmaps[t]->traitalleles[a]->locus;
-			locfreq[chr][loc][t]++;
-		}
-	}
-#if RSDEBUG
-	//for (int i = 0; i < nNLoci; i++) {
-	//	for (int j = 0; j < nloci; j++)
-	//		for (int t = 0; t < ntraits; t++)
-	//			DebugGUI("locfreq[" + Int2Str(i) + "][" + Int2Str(j) + "][" + Int2Str(t)
-	//				+ "]=" + Int2Str(locfreq[i][j][t]));
-	//}
-#endif
-	for (int i = 0; i < nNLoci; i++) {
-		for (int j = 0; j < nloci; j++) {
-			// remove multiple contributions of a locus to a particular trait
-			// (i.e. prevent recording of pseudo-pleiotropy)
-			for (int t = 0; t < ntraits; t++) {
-				if (locfreq[i][j][t] > 0) locfreq[i][j][t] = 1;
-			}
-			// sum at level of chromosome/locus
-			for (int t = 1; t < ntraits; t++) {
-				locfreq[i][j][0] += locfreq[i][j][t];
-			}
-			if (locfreq[i][j][0] > 1) pleiotropic = true;
-		}
-	}
-	for (int i = 0; i < nNLoci; i++) {
-		for (int j = 0; j < nloci; j++) {
-			delete[] locfreq[i][j];
-		}
-		delete[] locfreq[i];
-	}
-	delete[] locfreq;
-
+int Species::incrementAdaptiveTraits()
+{
+	numberOfAdaptiveTraits++;
+	return numberOfAdaptiveTraits;
 }
 
-void Species::deleteNeutralLoci(void) {
-	if (traitdata->neutralloci != NULL) {
-		for (int i = 0; i < traitdata->neutralloci->nAlleles; i++) {
-			delete traitdata->neutralloci->traitalleles[i];
-		}
-		delete[] traitdata->neutralloci;
-	}
-	traitdata->neutralloci = NULL;
+int Species::getNumberOfAdaptiveTraits() const
+{
+	return numberOfAdaptiveTraits;
 }
 
-int Species::getNNeutralLoci(void) {
-	int nn = 0;
-	if (traitdata != NULL) {
-		if (traitdata->neutralloci != NULL) {
-			nn = traitdata->neutralloci->nAlleles;
+void Species::addTrait(TraitType traitType, const ProtoTrait& trait) {
+
+	TraitType traitT = traitType;
+	//hack to deal with multiple adaptive traits, could be handled better
+	if (traitType == ADAPTIVE) {
+		int n = incrementAdaptiveTraits();
+
+		switch (n) {
+		case 1:
+		{
+			traitT = ADAPTIVE1;
+			break;
+		}
+		case 2:
+		{
+			traitT = ADAPTIVE2;
+			break;
+		}
+		case 3:
+		{
+			traitT = ADAPTIVE3;
+			break;
+		}
+		case 4:
+		{
+			traitT = ADAPTIVE4;
+			break;
+		}
+		case 5:
+		{
+			traitT = ADAPTIVE5;
+			break;
+		}
+		default:
+		{
+			cout << endl << ("Error:: Too many adaptive traits in Traits file, max = 5 \n");
+			break; //should return false
+		}
 		}
 	}
-	return nn;
+	traitTable.emplace(traitT, make_unique<ProtoTrait>(trait));
 }
 
-traitAllele Species::getNeutralAllele(const short allele) {
-	traitAllele a; a.chromo = 0; a.locus = 0;
-	if (traitdata != NULL) {
-		if (allele >= 0 && allele < traitdata->neutralloci->nAlleles) {
-			a = *traitdata->neutralloci->traitalleles[allele];
-		}
-	}
-	return a;
+ProtoTrait* Species::getTrait(TraitType trait) const {
+	return traitTable.find(trait)->second.get();
 }
+
+void Species::clearTraitTable() {
+	traitTable.clear();
+}
+
+//map<TraitType, std::unique_ptr<ProtoTrait>>&  Species::getTraitTable(void) 
+//{
+//	return traitTable;
+//}
+
+set<TraitType> Species::getTraitTypes() {
+	auto kv = views::keys(traitTable);
+	set<TraitType> keys{ kv.begin(), kv.end() };
+	return keys;
+}
+
+int Species::getNTraits() const {
+	return traitTable.size();
+}
+
+int Species::getNPositionsForTrait(const TraitType trait) const {
+	return this->getTrait(trait)->getPositionsSize();
+}
+
+int Species::getGenomeSize() const {
+	return genomeSize;
+}
+
+float Species::getRecombinationRate() const {
+	return recombinationRate;
+}
+
+set<int> Species::getChromosomeEnds() const {
+	return chromosomeEnds;
+}
+
 
 //---------------------------------------------------------------------------
 
@@ -969,7 +525,6 @@ emigRules Species::getEmig(void) {
 	emigRules e;
 	e.densDep = densDepEmig; e.stgDep = stgDepEmig; e.sexDep = sexDepEmig;
 	e.indVar = indVarEmig; e.emigStage = emigStage;
-	e.emigTrait[0] = emigTrait[0]; e.emigTrait[1] = emigTrait[1];
 	return e;
 }
 
@@ -1000,54 +555,7 @@ float Species::getEmigD0(short stg, short sex) {
 	}
 }
 
-void Species::setEmigParams(const short stg, const short sex, const emigParams e) {
-	//if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES)
-	if (stg >= 0 && stg < 1 && sex >= 0 && sex < NSEXES) // implemented for stage 0 only
-	{
-		if (e.d0Mean >= 0.0 && e.d0Mean < 1.0) d0Mean[stg][sex] = e.d0Mean;
-		if (e.d0SD > 0.0 && e.d0SD < 1.0) d0SD[stg][sex] = e.d0SD;
-		//	if (e.d0MutnSize > 0.0 && e.d0MutnSize < 1.0) d0MutnSize = e.d0MutnSize;
-		alphaMean[stg][sex] = e.alphaMean;
-		if (e.alphaSD > 0.0) alphaSD[stg][sex] = e.alphaSD;
-		//	if (e.alphaMutnSize > 0.0) alphaMutnSize = e.alphaMutnSize;
-		betaMean[stg][sex] = e.betaMean;
-		if (e.betaSD > 0.0) betaSD[stg][sex] = e.betaSD;
-		//	if (e.betaMutnSize > 0.0) betaMutnSize = e.betaMutnSize;
-	}
-}
 
-emigParams Species::getEmigParams(short stg, short sex) {
-	emigParams e;
-	//if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES)
-	if (stg >= 0 && stg < 1 && sex >= 0 && sex < NSEXES) // implemented for stage 0 only
-	{
-		e.d0Mean = d0Mean[stg][sex]; e.d0SD = d0SD[stg][sex];
-		e.d0Scale = d0Scale;
-		e.alphaMean = alphaMean[stg][sex]; e.alphaSD = alphaSD[stg][sex];
-		e.alphaScale = alphaScale;
-		e.betaMean = betaMean[stg][sex]; e.betaSD = betaSD[stg][sex];
-		e.betaScale = betaScale;
-	}
-	else {
-		e.d0Mean = e.alphaMean = e.betaMean = e.d0SD = e.alphaSD = e.betaSD = 0.0;
-		e.d0Scale = d0Scale;
-		e.alphaScale = alphaScale;
-		e.betaScale = betaScale;
-	}
-	return e;
-}
-
-void Species::setEmigScales(const emigScales s) {
-	if (s.d0Scale >= 0.0 && s.d0Scale < 1.0) d0Scale = s.d0Scale;
-	if (s.alphaScale >= 0.0) alphaScale = s.alphaScale;
-	if (s.betaScale >= 0.0) betaScale = s.betaScale;
-}
-
-emigScales Species::getEmigScales(void) {
-	emigScales s;
-	s.d0Scale = d0Scale; s.alphaScale = alphaScale; s.betaScale = betaScale;
-	return s;
-}
 
 //---------------------------------------------------------------------------
 
@@ -1072,7 +580,6 @@ trfrRules Species::getTrfr(void) {
 	t.twinKern = twinKern;
 	t.habMort = habMort;
 	t.moveType = moveType; t.costMap = costMap;
-	t.movtTrait[0] = movtTrait[0]; t.movtTrait[1] = movtTrait[1];
 	return t;
 }
 
@@ -1155,132 +662,6 @@ trfrSMSTraits Species::getSMSTraits(void) {
 	return m;
 }
 
-void Species::setKernParams(const short stg, const short sex,
-	const trfrKernParams k, const double resol)
-{
-	//if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES)
-	if (stg >= 0 && stg < 1 && sex >= 0 && sex < NSEXES) // implemented for stage 0 only
-	{
-		if (k.dist1Mean > 0.0 && k.dist1Mean >= resol && k.dist1SD > 0.0) {
-			dist1Mean[stg][sex] = k.dist1Mean;  dist1SD[stg][sex] = k.dist1SD;
-		}
-		if (k.dist2Mean > 0.0 && k.dist2Mean >= resol && k.dist2SD > 0.0) {
-			dist2Mean[stg][sex] = k.dist2Mean;  dist2SD[stg][sex] = k.dist2SD;
-		}
-		if (k.PKern1Mean > 0.0 && k.PKern1Mean < 1.0 && k.PKern1SD > 0.0 && k.PKern1SD < 1.0) {
-			PKern1Mean[stg][sex] = k.PKern1Mean; PKern1SD[stg][sex] = k.PKern1SD;
-		}
-	}
-}
-
-trfrKernParams Species::getKernParams(short stg, short sex) {
-	trfrKernParams k;
-	//if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES)
-	if (stg >= 0 && stg < 1 && sex >= 0 && sex < NSEXES) // implemented for stage 0 only
-	{
-		k.dist1Mean = dist1Mean[stg][sex];  k.dist1SD = dist1SD[stg][sex];
-		k.dist2Mean = dist2Mean[stg][sex];  k.dist2SD = dist2SD[stg][sex];
-		k.PKern1Mean = PKern1Mean[stg][sex]; k.PKern1SD = PKern1SD[stg][sex];
-		k.dist1Scale = dist1Scale; k.dist2Scale = dist2Scale; k.PKern1Scale = PKern1Scale;
-	}
-	else {
-		k.dist1Mean = 100000.0; k.dist1SD = 0.001f; k.dist1Scale = 1.0;
-		k.dist2Mean = 100000.0; k.dist2SD = 0.001f; k.dist2Scale = 1.0;
-		k.PKern1Mean = 0.5;  k.PKern1SD = 0.1f; k.PKern1Scale = 0.1f;
-	}
-	return k;
-}
-
-void Species::setSMSParams(const short stg, const short sex, const trfrSMSParams s) {
-	//if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES)
-	if (stg >= 0 && stg < 1 && sex >= 0 && sex < 1) // implemented for stage 0 & sex 0 only
-	{
-		if (s.dpMean >= 1.0 && s.dpSD > 0.0) {
-			dpMean[stg][sex] = s.dpMean; dpSD[stg][sex] = s.dpSD;
-		}
-		if (s.gbMean >= 1.0 && s.gbSD > 0.0) {
-			gbMean[stg][sex] = s.gbMean; gbSD[stg][sex] = s.gbSD;
-		}
-		if (s.alphaDBMean > 0.0 && s.alphaDBSD > 0.0) {
-			alphaDBMean[stg][sex] = s.alphaDBMean; alphaDBSD[stg][sex] = s.alphaDBSD;
-		}
-		if (s.betaDBMean >= 1.0 && s.betaDBSD > 0.0) {
-			betaDBMean[stg][sex] = s.betaDBMean; betaDBSD[stg][sex] = s.betaDBSD;
-		}
-	}
-}
-
-trfrSMSParams Species::getSMSParams(short stg, short sex) {
-	trfrSMSParams s;
-	//if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES)
-	if (stg >= 0 && stg < 1 && sex >= 0 && sex < 1) // implemented for stage 0 & sex 0 only
-	{
-		s.dpMean = dpMean[stg][sex]; s.dpSD = dpSD[stg][sex];
-		s.gbMean = gbMean[stg][sex]; s.gbSD = gbSD[stg][sex];
-		s.alphaDBMean = alphaDBMean[stg][sex]; s.alphaDBSD = alphaDBSD[stg][sex];
-		s.betaDBMean = betaDBMean[stg][sex];  s.betaDBSD = betaDBSD[stg][sex];
-		s.dpScale = dpScale; s.gbScale = gbScale;
-		s.alphaDBScale = alphaDBScale; s.betaDBScale = betaDBScale;
-	}
-	else {
-		s.dpMean = 1.0; s.dpSD = 0.1f; s.dpScale = 0.1f;
-		s.gbMean = 1.0; s.gbSD = 0.1f; s.gbScale = 0.1f;
-		s.alphaDBMean = 1.0;  s.alphaDBSD = 0.1f; s.alphaDBScale = 0.1f;
-		s.betaDBMean = 10.0; s.betaDBSD = 1.0; s.betaDBScale = 1.0;
-	}
-	return s;
-}
-
-void Species::setCRWParams(const short stg, const short sex, const trfrCRWParams m) {
-	//if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES)
-	if (stg >= 0 && stg < 1 && sex >= 0 && sex < 1) // implemented for stage 0 & sex 0 only
-	{
-		if (m.stepLgthMean > 0.0 && m.stepLgthSD > 0.0) {
-			stepLgthMean[stg][sex] = m.stepLgthMean; stepLgthSD[stg][sex] = m.stepLgthSD;
-		}
-		if (m.rhoMean > 0.0 && m.rhoMean < 1.0 && m.rhoSD > 0.0 && m.rhoSD < 1.0) {
-			rhoMean[stg][sex] = m.rhoMean; rhoSD[stg][sex] = m.rhoSD;
-		}
-	}
-}
-
-trfrCRWParams Species::getCRWParams(short stg, short sex) {
-	trfrCRWParams m;
-	//if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES)
-	if (stg >= 0 && stg < 1 && sex >= 0 && sex < 1) // implemented for stage 0 & sex 0 only
-	{
-		m.stepLgthMean = stepLgthMean[stg][sex]; m.stepLgthSD = stepLgthSD[stg][sex];
-		m.rhoMean = rhoMean[stg][sex]; m.rhoSD = rhoSD[stg][sex];
-		m.stepLScale = stepLScale; m.rhoScale = rhoScale;
-	}
-	else {
-		m.stepLgthMean = 1.0; m.stepLgthSD = 0.1f; m.stepLScale = 0.1f;
-		m.rhoMean = 0.5; m.rhoSD = 0.1f; m.rhoScale = 0.1f;
-	}
-	return m;
-}
-
-void Species::setTrfrScales(const trfrScales s) {
-	if (s.dist1Scale >= 0.0) dist1Scale = s.dist1Scale;
-	if (s.dist2Scale >= 0.0) dist2Scale = s.dist2Scale;
-	if (s.PKern1Scale > 0.0 && s.PKern1Scale < 1.0) PKern1Scale = s.PKern1Scale;
-	if (s.dpScale > 0.0) dpScale = s.dpScale;
-	if (s.gbScale > 0.0) gbScale = s.gbScale;
-	if (s.alphaDBScale > 0.0) alphaDBScale = s.alphaDBScale;
-	if (s.betaDBScale > 0.0)  betaDBScale = s.betaDBScale;
-	if (s.stepLScale > 0.0) stepLScale = s.stepLScale;
-	if (s.rhoScale > 0.0 && s.rhoScale < 1.0) rhoScale = s.rhoScale;
-}
-
-trfrScales Species::getTrfrScales(void) {
-	trfrScales s;
-	s.dist1Scale = dist1Scale; s.dist2Scale = dist2Scale; s.PKern1Scale = PKern1Scale;
-	s.dpScale = dpScale; s.gbScale = gbScale;
-	s.alphaDBScale = alphaDBScale; s.betaDBScale = betaDBScale;
-	s.stepLScale = stepLScale; s.rhoScale = rhoScale;
-	return s;
-}
-
 short Species::getMovtHabDim() { return habDimTrfr; }
 
 void Species::createHabCostMort(short nhab) {
@@ -1339,7 +720,6 @@ void Species::setSettle(const settleType s) {
 settleType Species::getSettle(void) {
 	settleType s;
 	s.stgDep = stgDepSett; s.sexDep = sexDepSett; s.indVar = indVarSett;
-	s.settTrait[0] = settTrait[0]; s.settTrait[1] = settTrait[1];
 	return s;
 }
 
@@ -1392,6 +772,27 @@ void Species::setSettTraits(const short stg, const short sex, const settleTraits
 	}
 }
 
+void Species::setGeneticParameters(const set<int>& chromosomeEnds, const int genomeSize, const float recombinationRate,
+	const set<int>& samplePatchList, const string nIndsToSample, const set<int>& stagesToSampleFrom, string nSampleCellsFst)
+{
+	this->genomeSize = genomeSize;
+	for (auto position : chromosomeEnds) {
+		if (position > this->getGenomeSize() - 1)
+			cout << endl << "Genetics file: ERROR - chromosome ends " << position << " must not exceed genome size" << endl;
+	}
+	this->chromosomeEnds = chromosomeEnds;
+	this->recombinationRate = recombinationRate;
+	this->samplePatchList = samplePatchList;
+	this->nSampleCellsFst = nSampleCellsFst;
+	this->nIndsToSample = nIndsToSample;
+	this->stagesToSampleFrom = stagesToSampleFrom;
+}
+
+//only called for cell based landscape
+void Species::setSamplePatchList(const set<int>& samplePatchList) {
+	this->samplePatchList = samplePatchList;
+}
+
 settleTraits Species::getSettTraits(short stg, short sex) {
 	settleTraits dd;
 	if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES) {
@@ -1401,53 +802,8 @@ settleTraits Species::getSettTraits(short stg, short sex) {
 	return dd;
 }
 
-void Species::setSettParams(const short stg, const short sex, const settParams s) {
-	//if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES)
-	if (stg >= 0 && stg < 1 && sex >= 0 && sex < NSEXES) // implemented for stage 0 only
-	{
-		if (s.s0Mean >= 0.0 && s.s0Mean < 1.0) s0Mean[stg][sex] = s.s0Mean;
-		if (s.s0SD > 0.0 && s.s0SD < 1.0) s0SD[stg][sex] = s.s0SD;
-		alphaSMean[stg][sex] = s.alphaSMean;
-		if (s.alphaSSD > 0.0) alphaSSD[stg][sex] = s.alphaSSD;
-		betaSMean[stg][sex] = s.betaSMean;
-		if (s.betaSSD > 0.0) betaSSD[stg][sex] = s.betaSSD;
-		if (sex == 0) {
-			if (s.s0Scale > 0.0 && s.s0Scale < 1.0) s0Scale = s.s0Scale;
-			if (s.alphaSScale > 0.0) alphaSScale = s.alphaSScale;
-			if (s.betaSScale > 0.0) betaSScale = s.betaSScale;
-		}
-	}
-}
 
-settParams Species::getSettParams(short stg, short sex) {
-	settParams s;
-	//if (stg >= 0 && stg < NSTAGES && sex >= 0 && sex < NSEXES)
-	if (stg >= 0 && stg < 1 && sex >= 0 && sex < NSEXES) // implemented for stage 0 only
-	{
-		s.s0Mean = s0Mean[stg][sex]; s.s0SD = s0SD[stg][sex];
-		s.alphaSMean = alphaSMean[stg][sex]; s.alphaSSD = alphaSSD[stg][sex];
-		s.betaSMean = betaSMean[stg][sex]; s.betaSSD = betaSSD[stg][sex];
-	}
-	else {
-		s.s0Mean = s.alphaSMean = s.betaSMean = s.s0SD = s.alphaSSD = s.betaSSD = 0.0;
-	}
-	s.s0Scale = s0Scale;
-	s.alphaSScale = alphaSScale;
-	s.betaSScale = betaSScale;
-	return s;
-}
 
-void Species::setSettScales(const settScales s) {
-	if (s.s0Scale >= 0.0 && s.s0Scale < 1.0) s0Scale = s.s0Scale;
-	if (s.alphaSScale >= 0.0) alphaSScale = s.alphaSScale;
-	if (s.betaSScale >= 0.0) betaSScale = s.betaSScale;
-}
-
-settScales Species::getSettScales(void) {
-	settScales s;
-	s.s0Scale = s0Scale; s.alphaSScale = alphaSScale; s.betaSScale = betaSScale;
-	return s;
-}
 
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------

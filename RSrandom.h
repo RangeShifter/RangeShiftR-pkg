@@ -40,14 +40,9 @@
 #include <fstream>
  //#include <iostream>
 
- //#if RS_RCPP && !R_CMD
+//#if RS_RCPP && !R_CMD
 #include "../Version.h"
 //#endif
-
-//#if !RS_RCPP && R_CMD
-//#include "../../Batch/Version.h"
-//#endif
-
 using namespace std;
 
 #if RSDEBUG
@@ -66,6 +61,7 @@ extern ofstream DEBUGLOG;
 #if !LINUX_CLUSTER
 #include <ctime>
 #endif
+#include <set>
 
 class RSrandom
 {
@@ -75,10 +71,14 @@ public:
 	~RSrandom(void);
 	double Random(void);
 	int IRandom(int, int);
+	float FRandom(float, float);
 	int Bernoulli(double);
 	double Normal(double, double);
+	double Gamma(double, double);
+	double NegExp(double);
 	int Poisson(double);
 	mt19937 getRNG(void);
+	void fixNewSeed(int);
 
 private:
 	mt19937* gen;
@@ -103,6 +103,7 @@ private:
 #if RSWIN64
 #include <ctime>
 #endif
+#include <set>
 
 class RSrandom {
 
@@ -112,9 +113,13 @@ public:
 	mt19937 getRNG(void);
 	double Random(void);
 	int IRandom(int, int);
+	float FRandom(float, float);
 	int Bernoulli(double);
 	double Normal(double, double);
+	double Gamma(double, double);
+	double NegExp(double);
 	int Poisson(double);
+	void fixNewSeed(int);
 	/* ADDITIONAL DISTRIBUTIONS
 		double Beta(double,double);
 		double Gamma(double,double); // !! make sure correct definition is used: using shape and scale (as defined here) OR using shape/alpha and rate/beta (=1/scale)

@@ -30,12 +30,17 @@
 ofstream outrange;
 ofstream outoccup, outsuit;
 ofstream outtraitsrows;
+ofstream outwcfstat;
+ofstream outperlocusfstat;
+ofstream outpairwisefst;
 
 //---------------------------------------------------------------------------
 
 Community::Community(Landscape* pLand) {
 	pLandscape = pLand;
 	indIx = 0;
+	pColdStorage = 0;
+	pNeutralStatistics = 0;
 }
 
 Community::~Community(void) {
@@ -44,6 +49,7 @@ Community::~Community(void) {
 		delete subComms[i];
 	}
 	subComms.clear();
+	delete pColdStorage;
 }
 
 SubCommunity* Community::addSubComm(Patch* pPch, int num) {
@@ -67,6 +73,11 @@ void Community::initialise(Species* pSpecies, int year)
 	Cell* pCell;
 	landParams ppLand = pLandscape->getLandParams();
 	initParams init = paramsInit->getInit();
+
+	if (pColdStorage != 0)
+		delete pColdStorage;
+
+	pColdStorage = new Population();
 
 	nsubcomms = (int)subComms.size();
 
@@ -418,7 +429,44 @@ void Community::patchChanges(void) {
 	}
 }
 
-void Community::reproduction(int yr)
+void Community::addIndividualsToColdStorage() {
+	int nsubcomms = (int)subComms.size();
+	for (int i = 0; i < nsubcomms; i++) { // all sub-communities
+		subComms[i]->copyIndividualsForColdStorage(pColdStorage);
+	}
+}
+
+void Community::createAverageTraitIndividualAndStore(Species* pSpecies, Landscape* pLandscape) {
+	int nsubcomms = (int)subComms.size();
+	int totalInds = 0;
+	Patch* pPatch = pLandscape->getPatchData(0).pPatch;
+	Cell* pCell = pPatch->getRandomCell();
+	Individual* avgInd = new Individual(pCell, pPatch, 0, 0, 0, pSpecies->getDemogr().propMales, true, pSpecies->getTrfr().moveType);
+
+	emigTraits avgEmigTraits = emigTraits();
+	settleTraits avgSettleTraits = settleTraits();
+
+
+	for (int i = 0; i < nsubcomms; i++) { // all sub-communities
+
+		totalInds += subComms[i]->addEmigrationAndSettlementTraitValues(avgEmigTraits, avgSettleTraits);
+		subComms[i]->addTransferDataForInd(avgInd->getTrfrData());
+
+
+	}
+	//divide to get the mean
+	avgInd->getTrfrData()->divideTraitsBy(totalInds);
+	avgEmigTraits.divideTraitsBy(totalInds);
+	avgSettleTraits.divideTraitsBy(totalInds);
+
+	avgInd->setEmigTraits(avgEmigTraits);
+	avgInd->setSettleTraits(avgSettleTraits);
+
+	pColdStorage->recruit(avgInd);
+
+}
+
+void Community::reproduction(int yr, bool cloneFromColdStorage)
 {
 	float eps = 0.0; // epsilon for environmental stochasticity
 	landParams land = pLandscape->getLandParams();
@@ -435,7 +483,7 @@ void Community::reproduction(int yr)
 				eps = pLandscape->getGlobalStoch(yr);
 			}
 		}
-		subComms[i]->reproduction(land.resol, eps, land.rasterType, land.patchModel);
+		subComms[i]->reproduction(land.resol, eps, land.rasterType, land.patchModel, cloneFromColdStorage, pColdStorage);
 	}
 #if RSDEBUG
 	DEBUGLOG << "Community::reproduction(): finished" << endl;
@@ -688,23 +736,6 @@ void Community::outInds(int rep, int yr, int gen, int landNr) {
 	}
 }
 
-// Write records to genetics file
-void Community::outGenetics(int rep, int yr, int gen, int landNr) {
-	//landParams ppLand = pLandscape->getLandParams();
-	if (landNr >= 0) { // open the file
-		subComms[0]->outGenetics(rep, yr, gen, landNr);
-		return;
-	}
-	if (landNr == -999) { // close the file
-		subComms[0]->outGenetics(rep, yr, gen, landNr);
-		return;
-	}
-	// generate output for each sub-community (patch) in the community
-	int nsubcomms = (int)subComms.size();
-	for (int i = 0; i < nsubcomms; i++) { // all sub-communities
-		subComms[i]->outGenetics(rep, yr, gen, landNr);
-	}
-}
 
 // Open range file and write header record
 bool Community::outRangeHeaders(Species* pSpecies, int landNr)
@@ -737,15 +768,9 @@ bool Community::outRangeHeaders(Species* pSpecies, int landNr)
 
 	if (sim.batchMode) {
 		name = paramsSim->getDir(2)
-#if RS_RCPP
 			+ "Batch" + Int2Str(sim.batchNum) + "_"
 			+ "Sim" + Int2Str(sim.simulation) + "_Land"
 			+ Int2Str(landNr)
-#else
-			+ "Batch" + Int2Str(sim.batchNum) + "_"
-			+ "Sim" + Int2Str(sim.simulation) + "_Land"
-			+ Int2Str(landNr)
-#endif
 			+ "_Range.txt";
 	}
 	else {
@@ -1337,6 +1362,7 @@ void Community::outTraits(traitCanvas tcanv, Species* pSpecies,
 				ts[y].sumS0[i] = ts[y].ssqS0[i] = 0.0;
 				ts[y].sumAlphaS[i] = ts[y].ssqAlphaS[i] = 0.0;
 				ts[y].sumBetaS[i] = ts[y].ssqBetaS[i] = 0.0;
+				ts[y].sumFitness[i] = ts[y].ssqFitness[i] = 0.0;
 			}
 		}
 	}
@@ -1367,6 +1393,7 @@ void Community::outTraits(traitCanvas tcanv, Species* pSpecies,
 					ts[y].sumS0[s] += sctraits.sumS0[s];     ts[y].ssqS0[s] += sctraits.ssqS0[s];
 					ts[y].sumAlphaS[s] += sctraits.sumAlphaS[s]; ts[y].ssqAlphaS[s] += sctraits.ssqAlphaS[s];
 					ts[y].sumBetaS[s] += sctraits.sumBetaS[s];  ts[y].ssqBetaS[s] += sctraits.ssqBetaS[s];
+					ts[y].sumFitness[s] += sctraits.sumFitness[s]; ts[y].ssqFitness[s] += sctraits.ssqFitness[s];
 				}
 			}
 		}
@@ -1573,6 +1600,26 @@ void Community::writeTraitsRows(Species* pSpecies, int rep, int yr, int gen, int
 		//	}
 	}
 
+	if (pSpecies->getNumberOfAdaptiveTraits() > 0) {
+		if (NSEXES > 1) {
+			if (ts.ninds[0] > 0) mn = ts.sumFitness[0] / (double)ts.ninds[0]; else mn = 0.0;
+			if (ts.ninds[0] > 1) sd = ts.ssqFitness[0] / (double)ts.ninds[0] - mn * mn; else sd = 0.0;
+			if (sd > 0.0) sd = sqrt(sd); else sd = 0.0;
+			outtraitsrows << "\t" << mn << "\t" << sd;
+			if (ts.ninds[1] > 0) mn = ts.sumFitness[1] / (double)ts.ninds[1]; else mn = 0.0;
+			if (ts.ninds[1] > 1) sd = ts.ssqFitness[1] / (double)ts.ninds[1] - mn * mn; else sd = 0.0;
+			if (sd > 0.0) sd = sqrt(sd); else sd = 0.0;
+			outtraitsrows << "\t" << mn << "\t" << sd;
+		}
+		else {
+			if (ts.ninds[0] > 0) mn = ts.sumFitness[0] / (double)ts.ninds[0]; else mn = 0.0;
+			if (ts.ninds[0] > 1) sd = ts.ssqFitness[0] / (double)ts.ninds[0] - mn * mn; else sd = 0.0;
+			if (sd > 0.0) sd = sqrt(sd); else sd = 0.0;
+			outtraitsrows << "\t" << mn << "\t" << sd;
+		}
+	}
+
+
 	outtraitsrows << endl;
 }
 
@@ -1663,6 +1710,15 @@ bool Community::outTraitsRowsHeaders(Species* pSpecies, int landNr) {
 		outtraitsrows << "\tmeanBetaS\tstdBetaS";
 		//	}
 	}
+
+	if (pSpecies->getNumberOfAdaptiveTraits() > 0) {
+		if (NSEXES > 1) {
+			outtraitsrows << "\tF_meanFitness\tF_stdFitness\tM_meanFitness\tM_stdFitness";
+		}
+		else
+			outtraitsrows << "\tmeanFitness\tstdFitness";
+	}
+
 	outtraitsrows << endl;
 
 	return outtraitsrows.is_open();
@@ -1713,6 +1769,294 @@ Rcpp::IntegerMatrix Community::addYearToPopList(int rep, int yr) {  // TODO: def
 	return pop_map_year;
 }
 #endif
+
+// ----------------------------------------------------------------------------------------
+// Sample individuals from sample patches
+// ----------------------------------------------------------------------------------------
+
+
+void Community::sampleIndividuals(Species* pSpecies) {
+
+	const set<int> patchList = pSpecies->getSamplePatches();
+	string n = pSpecies->getNIndsToSample();
+	const set<int> stages = pSpecies->getStagesToSample();
+
+	for (int patchId : patchList) {
+		const auto patch = pLandscape->findPatch(patchId);
+		const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
+		pPop->sampleIndsWithoutReplacement(n, stages);
+	}
+}
+
+// ----------------------------------------------------------------------------------------
+// Open population level Fstat output file
+// ----------------------------------------------------------------------------------------
+
+bool Community::openWCFstatFile(Species* pSpecies, int landNr)
+{
+
+	if (landNr == -999) { // close the file
+		if (outwcfstat.is_open()) outwcfstat.close();
+		outwcfstat.clear();
+		return true;
+	}
+
+	string name;
+	simParams sim = paramsSim->getSim();
+
+
+#if RSDEBUG
+	DEBUGLOG << "Community::outNeutralGeneticHeaders(): simulation=" << sim.simulation
+		<< " sim.batchMode=" << sim.batchMode
+		<< " landNr=" << landNr << endl;
+#endif
+
+	if (sim.batchMode) {
+		name = paramsSim->getDir(2)
+			+ "Batch" + Int2Str(sim.batchNum) + "_"
+			+ "Sim" + Int2Str(sim.simulation) + "_Land"
+			+ Int2Str(landNr)
+			+ "_neutralGenetics.txt";
+	}
+	else {
+		name = paramsSim->getDir(2) + "Sim" + Int2Str(sim.simulation) + "_neutralGenetics.txt";
+	}
+	outwcfstat.open(name.c_str());
+	outwcfstat << "Rep\tYear\tRepSeason\tnExtantPatches\tnIndividuals\tfst\tfis\tfit\tmeanAllelePerLocus\tmeanAllelePerLocusPatches\tmeanFixedLoci\tmeanFixedLociPatches\tmeanObHeterozygosity";
+
+
+	outwcfstat << endl;
+
+#if RSDEBUG
+	DEBUGLOG << "Community::outwcfstat(): finished" << endl;
+#endif
+
+	return outwcfstat.is_open();
+}
+
+// ----------------------------------------------------------------------------------------
+// open per locus WC fstat using MS approach, this will output MS calculated FIS, FIT, FST
+// in general population neutral genetics output file
+// ----------------------------------------------------------------------------------------
+
+bool Community::openWCPerLocusFstatFile(Species* pSpecies, Landscape* pLandscape, const int landNr, const int rep)
+{
+
+	const set<int> patchList = pSpecies->getSamplePatches();
+
+	if (landNr == -999) { // close the file
+		if (outperlocusfstat.is_open()) outperlocusfstat.close();
+		outperlocusfstat.clear();
+		return true;
+	}
+
+	string name;
+	simParams sim = paramsSim->getSim();
+
+
+#if RSDEBUG
+	DEBUGLOG << "Community::outNeutralGeneticHeaders(): simulation=" << sim.simulation
+		<< " sim.batchMode=" << sim.batchMode
+		<< " landNr=" << landNr << endl;
+#endif
+
+	if (sim.batchMode) {
+		name = paramsSim->getDir(2)
+			+ "Batch" + Int2Str(sim.batchNum) + "_"
+			+ "Sim" + Int2Str(sim.simulation) + "_Land"
+			+ Int2Str(landNr) + "_Rep"
+			+ Int2Str(rep)
+			+ "_perLocusNeutralGenetics.txt";
+	}
+	else {
+		name = paramsSim->getDir(2) + "Sim" + Int2Str(sim.simulation) + "_Rep" + Int2Str(rep) + "_perLocusNeutralGenetics.txt";
+	}
+	outperlocusfstat.open(name.c_str());
+	outperlocusfstat << "Year\tRepSeason\tlocus\tfst\tfis\tfit\tpopHet";
+
+
+
+	for (int patchId : patchList) {
+		outperlocusfstat << "\tpatch_" + Int2Str(patchId) + "_Het";
+	}
+
+
+	outperlocusfstat << endl;
+
+#if RSDEBUG
+	DEBUGLOG << "Community::outperlocusfstat(): finished" << endl;
+#endif
+
+	return outperlocusfstat.is_open();
+}
+
+// ----------------------------------------------------------------------------------------
+// open pairwise fst file
+// ----------------------------------------------------------------------------------------
+
+bool Community::openPairwiseFSTFile(Species* pSpecies, Landscape* pLandscape, const int landNr, const int rep) {
+
+	const set<int> patchList = pSpecies->getSamplePatches();
+
+	if (landNr == -999) { // close the file
+		if (outpairwisefst.is_open()) outpairwisefst.close();
+		outpairwisefst.clear();
+		return true;
+	}
+
+	string name;
+	simParams sim = paramsSim->getSim();
+
+
+#if RSDEBUG
+	DEBUGLOG << "Community::outNeutralGeneticHeaders(): simulation=" << sim.simulation
+		<< " sim.batchMode=" << sim.batchMode
+		<< " landNr=" << landNr << endl;
+#endif
+
+	if (sim.batchMode) {
+		name = paramsSim->getDir(2)
+			+ "Batch" + Int2Str(sim.batchNum) + "_"
+			+ "Sim" + Int2Str(sim.simulation) + "_Land"
+			+ Int2Str(landNr) + "_Rep"
+			+ Int2Str(rep)
+			+ "_pairwisePatchNeutralGenetics.txt";
+	}
+	else {
+		name = paramsSim->getDir(2) + "Sim" + Int2Str(sim.simulation) + "_Rep" + Int2Str(rep) + "_pairwisePatchNeutralGenetics.txt";
+	}
+	outpairwisefst.open(name.c_str());
+	outpairwisefst << "Year\tRepSeason\tpatchA\tpatchB\tfst";
+
+	outpairwisefst << endl;
+
+#if RSDEBUG
+	DEBUGLOG << "Community::outpairwisefst(): finished" << endl;
+#endif
+
+	return outpairwisefst.is_open();
+
+
+}
+
+// ----------------------------------------------------------------------------------------
+// Write population level FST results file
+// ----------------------------------------------------------------------------------------
+
+void Community::writeWCFstatFile(int rep, int yr, int gen) {
+
+	outwcfstat << rep << "\t" << yr << "\t" << gen << "\t";
+
+	outwcfstat << pNeutralStatistics->getNExtantPatchs() << "\t" << pNeutralStatistics->getNIndividuals() << "\t";
+
+	outwcfstat << pNeutralStatistics->getFstWC() << "\t" << pNeutralStatistics->getFisWC() << "\t" << pNeutralStatistics->getFitWC() << "\t";
+
+	outwcfstat << pNeutralStatistics->getNbAllGlobal() << "\t" << pNeutralStatistics->getNbAllLocal() << "\t" << pNeutralStatistics->getFixLocGlobal()
+		<< "\t" << pNeutralStatistics->getFixLocLocal() << "\t" << pNeutralStatistics->getHo();
+
+	outwcfstat << endl;
+}
+
+// ----------------------------------------------------------------------------------------
+// Write per locus FST results file
+// ----------------------------------------------------------------------------------------
+
+void Community::writeWCPerLocusFstatFile(Species* pSpecies, const int yr, const int gen, const  int nAlleles, const int nLoci, set<int> const& patchList)
+{
+	const set<int> positions = pSpecies->getTrait(SNP)->getPositions();
+
+	int loci = 0;
+	for (int position : positions) {
+
+		outperlocusfstat << yr << "\t" << gen << "\t" << position << "\t";
+		outperlocusfstat << pNeutralStatistics->get_fst_WC_loc(loci) << "\t" << pNeutralStatistics->get_fis_WC_loc(loci) <<
+			"\t" << pNeutralStatistics->get_fit_WC_loc(loci) << "\t" << pNeutralStatistics->get_ho_loc(loci);
+
+		for (int patchId : patchList) {
+			const auto patch = pLandscape->findPatch(patchId);
+			const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
+			int popSize = pPop->sampleSize();
+			int het = 0;
+			for (unsigned int a = 0; a < nAlleles; ++a) {
+				het += pPop->getHetero(loci, a);
+			}
+			outperlocusfstat << "\t" << het / (2.0 * popSize);
+		}
+		++loci;
+		outperlocusfstat << endl;
+	}
+}
+
+
+// ----------------------------------------------------------------------------------------
+// Write pairwise FST results file
+// ----------------------------------------------------------------------------------------
+void Community::writePairwiseFSTFile(Species* pSpecies, const int yr, const int gen, const  int nAlleles, const int nLoci, set<int> const& patchList) {
+
+	//within patch fst (diagonal of matrix)
+	int i = 0;
+	for (int patchId : patchList) {
+		outpairwisefst << yr << "\t" << gen << "\t";
+		outpairwisefst << patchId << "\t" << patchId << "\t" << pNeutralStatistics->getPairwiseFst(i, i) << endl;
+		++i;
+	}
+
+	// between patch fst
+	i = 0;
+	for (int patchIdA : patchList | std::views::take(patchList.size() - 1)) {
+		int j = i + 1;
+		for (int patchIdB : patchList | std::views::drop(j)) {
+			outpairwisefst << yr << "\t" << gen << "\t";
+			outpairwisefst << patchIdA << "\t" << patchIdB << "\t" << pNeutralStatistics->getPairwiseFst(i, j) << endl;
+			++j;
+		}
+		++i;
+	}
+}
+
+
+// ----------------------------------------------------------------------------------------
+// Output and calculate neutral statistics
+// ----------------------------------------------------------------------------------------
+
+
+void Community::outNeutralGenetics(Species* pSpecies, int rep, int yr, int gen, bool perLocus, bool pairwise) {
+
+	const int nAlleles = (int)(pSpecies->getTrait(SNP)->getMutationParameters().find(MAX)->second);
+	const int nLoci = (int)pSpecies->getNPositionsForTrait(SNP);
+	const set<int> patchList = pSpecies->getSamplePatches();
+	int nInds = 0;
+
+	for (int patchId : patchList) {
+		const auto patch = pLandscape->findPatch(patchId);
+		const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
+		nInds += pPop->sampleSize();
+	}
+
+	if (pNeutralStatistics == 0)
+		pNeutralStatistics = make_unique<NeutralStatsManager>(patchList, nLoci);
+
+	pNeutralStatistics->updateAlleleTables(pSpecies, pLandscape, patchList);
+	pNeutralStatistics->calculateHo(patchList, nInds, nLoci, pSpecies, pLandscape);
+	pNeutralStatistics->setLociDiversityCounter(patchList, nInds, pSpecies, pLandscape);
+
+	if (perLocus) {
+		pNeutralStatistics->calculateFstatWC_MS(patchList, nInds, nLoci, nAlleles, pSpecies, pLandscape);
+		pNeutralStatistics->calculateHo2(patchList, nInds, nLoci, pSpecies, pLandscape);
+		writeWCPerLocusFstatFile(pSpecies, yr, gen, nAlleles, nLoci, patchList);
+	}
+	else {
+		pNeutralStatistics->calculateFstatWC(patchList, nInds, nLoci, nAlleles, pSpecies, pLandscape);
+	}
+
+	if (pairwise) {
+		pNeutralStatistics->setFstMatrix(patchList, nInds, nLoci, pSpecies, pLandscape);
+		writePairwiseFSTFile(pSpecies, yr, gen, nAlleles, nLoci, patchList);
+	}
+
+	// always write out the minimum stats
+	writeWCFstatFile(rep, yr, gen);
+}
 
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------

@@ -59,17 +59,19 @@
 #include <iomanip>
 #include <stdlib.h>
 #include <vector>
+#include <sstream>
 using namespace std;
 //#if RS_RCPP && !R_CMD
 #include "../Version.h"
 //#endif
 
-//#if !RS_RCPP && R_CMD
-//#include "../../Batch/Version.h"
-//#endif
-
 #include "RSrandom.h"
 
+class Landscape;
+
+#define NODATACOST 100000 // cost to use in place of nodata value for SMS;
+#define ABSNODATACOST 100 // cost to use in place of nodata value for SMS;
+// when boundaries are absorbing
 #define NSTAGES 10		// maximum number of stages permitted
 #define NSEXES 2			// maximum number of sexes permitted
 #define PARAMDEBUG 0
@@ -85,7 +87,7 @@ typedef unsigned long long intptr;
 #else
 typedef unsigned int intptr;
 #endif
-#endif
+#endif // RS_RCPP
 
 #if RS_RCPP
 #ifndef R_EXT_CONSTANTS_H_  // the R headers define PI as a macro, so that the 'else' line results in an error
@@ -116,6 +118,63 @@ const string Float2Str(const float);
 const string Double2Str(const double);
 const rgb draw_wheel(int);
 
+//--------------------------------------------------------------------------
+
+/** Trait types **/
+
+enum TraitType {
+	SNP, 
+	ADAPTIVE, ADAPTIVE1, ADAPTIVE2, ADAPTIVE3, ADAPTIVE4, ADAPTIVE5,
+
+	E_D0_F, E_ALPHA_F, E_BETA_F,
+	S_S0_F, S_ALPHA_F, S_BETA_F,
+
+	E_D0_M, E_ALPHA_M, E_BETA_M,
+	S_S0_M, S_ALPHA_M, S_BETA_M,
+
+	CRW_STEPLENGTH_F, CRW_STEPCORRELATION_F,
+	CRW_STEPLENGTH_M, CRW_STEPCORRELATION_M,
+
+	KERNEL_MEANDIST_1_F, KERNEL_MEANDIST_2_F, KERNEL_PROBABILITY_F,
+	KERNEL_MEANDIST_1_M, KERNEL_MEANDIST_2_M, KERNEL_PROBABILITY_M,
+
+	SMS_DP, SMS_GB, SMS_ALPHADB, SMS_BETADB
+};
+
+typedef std::string parameter_t;
+
+constexpr auto MEAN = "mean";
+constexpr auto SDEV = "sd";
+constexpr auto MIN = "min";
+constexpr auto MAX = "max";
+constexpr auto SHAPE = "shape";
+constexpr auto SCALE = "scale";
+//enums
+
+//enum GeneType { SNP, MICROSATELLITE, QTL, DELETERIOUS };
+
+enum DistributionType { UNIFORM, NORMAL, GAMMA, NEGEXP, SCALED, KAM, SSM, NONE };
+
+enum ExpressionType { AVERAGE, ADDITIVE, NEUTRAL, MULTIPLICATIVE };
+
+/** Param's types **/
+typedef enum { KERNEL, SMS, CRW} movement_t;
+
+//GeneType convertToGeneType(const string& );
+
+float convertParameters(string, string);
+bool iequals(std::string_view lhs, std::string_view rhs);
+set<int> convertStringToSet(string);
+set<int> convertStringToPatches(string, int, Landscape*);
+set<int> convertStringToStages(string);
+set<int> convertStringToChromosomeEnds(string, int);
+
+//sex types
+typedef enum {
+	FEM = 0, MAL = 1, BOTH = 2
+} sex_t;
+
+const sex_t stringToSex(const std::string& str);
 //---------------------------------------------------------------------------
 
 // Environmental gradient parameters
@@ -282,14 +341,13 @@ struct simParams {
 	int simulation; int reps; int years;
 	//	int outStartRange;
 	//	int outStartOcc;
-	int outStartPop; int outStartInd; int outStartGenetic;
+	int outStartPop; int outStartInd;
 	int outStartTraitCell; int outStartTraitRow; int outStartConn;
-	int outIntRange; int outIntOcc; int outIntPop; int outIntInd; int outIntGenetic;
+	int outIntRange; int outIntOcc; int outIntPop; int outIntInd;
 	int outIntTraitCell; int outIntTraitRow; int outIntConn;
 	int mapInt; int traitInt;
 	bool batchMode; bool absorbing;
 	bool outRange; bool outOccup; bool outPop; bool outInds;
-	bool outGenetics; short outGenType; bool outGenXtab;
 	bool outTraitsCells; bool outTraitsRows; bool outConnect;
 	bool saveMaps;
 	bool drawLoaded; bool saveTraitMaps;
@@ -298,6 +356,11 @@ struct simParams {
 	int outStartPaths; int outIntPaths;
 	bool outPaths;	bool ReturnPopRaster; bool CreatePopFile;
 #endif
+	int fionaOptions;
+	int storeIndsYr;
+	bool fixReplicateSeed;
+	bool outputWCFstat, outputPerLocusWCFstat, outputPairwiseFst;
+	int outputGeneticInterval;
 };
 
 struct simView {
@@ -312,6 +375,7 @@ public:
 	paramSim(void);
 	~paramSim(void);
 	void setSim(simParams);
+	void setGeneticSim(bool outputWCFstat, bool outputPerLocusWCFstat, bool outputPairwiseFst, int outputGeneticInterval);
 	simParams getSim(void);
 	int getSimNum(void);
 	void setViews(simView);
@@ -332,7 +396,6 @@ private:
 	//	int outStartOcc;				// output start year for occupancy file
 	int outStartPop;				// output start year for population file
 	int outStartInd;				// output start year for individuals file
-	int outStartGenetic; 		// output start year for genetics file
 	int outStartTraitCell;	// output start year for traits by cell file
 	int outStartTraitRow;		// output start year for traits by row file
 	int outStartConn;				// output start year for connectivity matrix
@@ -340,7 +403,6 @@ private:
 	int outIntOcc;					// output interval for occupancy file
 	int outIntPop;					// output interval for population file
 	int outIntInd;					// output interval for individuals file
-	int outIntGenetic;			// output interval for genetics file
 	int outIntTraitCell;		// output interval for traits by cell file
 	int outIntTraitRow;			// output interval for traits by row file
 	int outIntConn;					// output interval for connectivity matrix
@@ -354,10 +416,6 @@ private:
 	bool outOccup;					// produce output occupancy file?
 	bool outPop;						// produce output population file?
 	bool outInds;						// produce output individuals file?
-	bool outGenetics;				// produce output genetics file?
-	short outGenType;				// produce output genetics for: 0 = juveniles only
-	// 1 = all individuals, 2 = adults (i.e. final stage) only
-	bool outGenXtab;				// produce output genetics as a cross table?
 	bool outTraitsCells;		// produce output summary traits by cell file?
 	bool outTraitsRows;			// produce output summary traits by row (y) file?
 	bool outConnect;				// produce output connectivity file?
@@ -382,6 +440,13 @@ private:
 	bool viewGraph;					// view population/occupancy graph on screen?
 	string dir;							// full name of working directory
 
+	int fionaOptions;
+	int storeIndsYr;
+	bool fixReplicateSeed;
+	bool outputWCFstat;
+	bool outputPerLocusWCFstat;
+	bool outputPairwiseFst;
+	int outputGeneticInterval;
 };
 
 #if RSDEBUG

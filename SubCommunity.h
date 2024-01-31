@@ -39,7 +39,7 @@
 
  Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
- Last updated: 26 October 2021 by Steve Palmer
+ Last updated: 25 June 2021 by Greta Bocedi
 
  ------------------------------------------------------------------------------*/
 
@@ -50,14 +50,7 @@
 #include <algorithm>
 using namespace std;
 
-//#if RS_RCPP && !R_CMD
 #include "../Version.h"
-//#endif
-
-//#if !RS_RCPP && R_CMD
-//#include "../../Batch/Version.h"
-//#endif
-
 #include "Parameters.h"
 #include "Landscape.h"
 #include "Population.h"
@@ -99,7 +92,9 @@ public:
 		int,		// Landscape resolution
 		float,	// epsilon - global stochasticity value 
 		short,	// raster type (see Landscape)
-		bool		// TRUE for a patch-based model, FALSE for a cell-based model
+		bool,		// TRUE for a patch-based model, FALSE for a cell-based model
+		bool, // TRUE if cloning from cold storage
+		Population* //cold storage
 	);
 	void emigration(void);
 	// Remove emigrants from their natal patch and add to patch 0 (matrix)
@@ -139,8 +134,16 @@ public:
 						//	  	 		1 - development and survival
 	);
 	void ageIncrement(void);
+	void copyIndividualsForColdStorage(Population*);
+
+	int addEmigrationAndSettlementTraitValues(emigTraits& avgEmTraits, settleTraits& avgSettleTraits);
+
+	void addTransferDataForInd(trfrData* avgTrfrData);
+
 	// Find the population of a given species in a given patch
 	Population* findPop(Species*, Patch*);
+
+	int getPopulationCountForStage(int stage);
 	void createOccupancy(
 		int	// no. of rows = (no. of years / interval) + 1
 	);
@@ -166,13 +169,6 @@ public:
 
 	void outInds( // Write records to individuals file
 		Landscape*,	// pointer to Landscape
-		int,				// replicate
-		int,				// year
-		int,				// generation
-		int					// Landscape number (>= 0 to open the file, -999 to close the file
-								//									 -1 to write data records)
-	);
-	void outGenetics( // Write records to genetics file
 		int,				// replicate
 		int,				// year
 		int,				// generation
