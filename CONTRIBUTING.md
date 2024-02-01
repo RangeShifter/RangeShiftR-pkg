@@ -72,14 +72,10 @@ Maintainers will review the pull request, possibly request changes, and eventual
 #### New features
 
 Do you have an idea of a new feature in the RangeShifter platform that should be integrated and is of use for other RangeShifter users? 
-Please get in touch with the RangeShifter development team (rangeshiftr@uni-potsdam.de*) to discuss a collaboration.
-
-*Mail address needs to be discussed
+Please get in touch with the RangeShifter development team (rangeshiftr@uni-potsdam.de) to discuss a collaboration.
 
 ⚠️ We advise to contact the developer team as early as possible if you plan on implementing a new feature. This could prevent simultaneous development of the same feature and coordinate potential joint development.
 
-Alternatively*, proceed as with the bug fix above: create your own branch or fork _from `develop`_ and work from there, and submit a pull request when your new features are ready to join the core code. 
+Alternatively, proceed as with the bug fix above: create your own branch or fork _from `develop`_ and work from there, and submit a pull request when your new features are ready to join the core code. 
 We recommend that you update your branch regularly to new changes on `develop` (using `git merge develop`) to reduce the risk of merge conflicts or your version getting out-of-touch in the late stages of development.
 We also recommend that you work in small commits, as this makes the code easier to debug, and makes it easier for maintainers to understand your contributions when reviewing a pull request.
-
-*Do we welcome independent contributions?
