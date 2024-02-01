@@ -21,21 +21,16 @@
  *	You should have received a copy of the GNU General Public License
  *	along with RangeShifter. If not, see <https://www.gnu.org/licenses/>.
  *
- * File Created by RH March 2023. Code adapted from NEMO (https://nemo2.sourceforge.io/)
+ * File Created by Roslyn Henry March 2023. Code adapted from NEMO (https://nemo2.sourceforge.io/)
  --------------------------------------------------------------------------*/
 
  // ----------------------------------------------------------------------------------------
  // Cstor
  // ----------------------------------------------------------------------------------------
 
-
-
 NeutralStatsManager::NeutralStatsManager(set<int> const& patchList, const int nLoci) {
-
 	this->_fst_matrix = PatchMatrix(patchList.size(), patchList.size());
-
 	globalAlleleTable.reserve(nLoci); //don't have to be pointers, not shared or moved
-
 }
 
 // ----------------------------------------------------------------------------------------
@@ -46,7 +41,7 @@ NeutralStatsManager::NeutralStatsManager(set<int> const& patchList, const int nL
 void NeutralStatsManager::updateAlleleTables(Species* pSpecies, Landscape* pLandscape, set<int> const& patchList) {
 
 	const int nLoci = pSpecies->getNPositionsForTrait(SNP);
-	const int nAlleles = (int)pSpecies->getTrait(SNP)->getMutationParameters().find(MAX)->second;
+	const int nAlleles = (int)pSpecies->getSpTrait(SNP)->getMutationParameters().find(MAX)->second;
 	const int chromosomes = (pSpecies->isDiploid() ? 2 : 1);
 
 	if (!globalAlleleTable.empty())
@@ -60,16 +55,16 @@ void NeutralStatsManager::updateAlleleTables(Species* pSpecies, Landscape* pLand
 		pPop->updateAlleleTable();
 		populationSize += pPop->sampleSize();
 
-		for (int loci = 0; loci < nLoci; loci++) {
+		for (int thisLocus = 0; thisLocus < nLoci; thisLocus++) {
 			for (int allele = 0; allele < nAlleles; allele++) {
 
-				int patchAlleleCount = pPop->getAlleleCount(loci, allele);
+				int patchAlleleCount = pPop->getAlleleCount(thisLocus, allele);
 
-				if (globalAlleleTable.size() <= loci) { //if first allele of new loci (should only happen in first calculation step)
+				if (globalAlleleTable.size() <= thisLocus) { //if first allele of new loci (should only happen in first calculation step)
 					NeutralData n = NeutralData(nAlleles, allele, patchAlleleCount);
 					globalAlleleTable.push_back(n);
 				}
-				else globalAlleleTable[loci].incrementCountBy(patchAlleleCount, allele);
+				else globalAlleleTable[thisLocus].incrementCountBy(patchAlleleCount, allele);
 			}
 		}
 	}
@@ -102,7 +97,7 @@ void NeutralStatsManager::setLociDiversityCounter(set<int> const& patchList, con
 {
 	unsigned int i, j, k;
 	const int nLoci = pSpecies->getNPositionsForTrait(SNP);
-	const int nAlleles = (int)pSpecies->getTrait(SNP)->getMutationParameters().find(MAX)->second;
+	const int nAlleles = (int)pSpecies->getSpTrait(SNP)->getMutationParameters().find(MAX)->second;
 	const int chromosomes = (pSpecies->isDiploid() ? 2 : 1);
 	unsigned int nbpatch = 0;
 	double patch_mean, pop_mean = 0;
@@ -128,7 +123,7 @@ void NeutralStatsManager::setLociDiversityCounter(set<int> const& patchList, con
 			for (i = 0; i < nLoci; ++i)
 				for (j = 0; j < nAlleles; ++j) {
 					patch_mean += (pPop->getAlleleCount(i, j) != 0);
-					pop_div[i][j] |= (pPop->getAlleleCount(i, j) != 0);
+					pop_div[i][j] |= (pPop->getAlleleCount(i, j) != 0); // OR
 				}
 			// add mean nb of alleles per locus for Patch k to the pop mean
 			pop_mean += patch_mean / nLoci;
@@ -223,18 +218,18 @@ void NeutralStatsManager::calculateHt(Species* pSpecies, Landscape* pLandscape, 
 	vector<double>locihet(nLoci, 1);
 	double freq;
 
-	for (int loci = 0; loci < nLoci; ++loci) {
+	for (int thisLocus = 0; thisLocus < nLoci; ++thisLocus) {
 
 		for (int allele = 0; allele < nAlleles; ++allele) {
 
-			freq = globalAlleleTable[loci].getFrequency(allele);
+			freq = globalAlleleTable[thisLocus].getFrequency(allele);
 
 			freq *= freq; //squared frequencies
 
-			locihet[loci] -= freq;  //1 - sum of p2 = expected heterozygosity
+			locihet[thisLocus] -= freq;  //1 - sum of p2 = expected heterozygosity
 		}
 
-		ht += locihet[loci];
+		ht += locihet[thisLocus];
 	}
 
 	_ht = ht / nLoci;
@@ -307,7 +302,7 @@ void NeutralStatsManager::calculateFstatWC(set<int> const& patchList, const int 
 
 	double a = 0, b = 0, c = 0, x;
 
-	for (unsigned int loci = 0; loci < nLoci; ++loci) {
+	for (unsigned int thisLocus = 0; thisLocus < nLoci; ++thisLocus) {
 
 		for (unsigned int allele = 0; allele < nAlleles; ++allele) {
 
@@ -317,18 +312,18 @@ void NeutralStatsManager::calculateFstatWC(set<int> const& patchList, const int 
 				const auto patch = pLandscape->findPatch(patchId);
 				const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
 
-				var = pPop->getAlleleFrequency(loci, allele) - globalAlleleTable[loci].getFrequency(allele); //(p_liu - pbar_u)^2 
+				var = pPop->getAlleleFrequency(thisLocus, allele) - globalAlleleTable[thisLocus].getFrequency(allele); //(p_liu - pbar_u)^2 
 
 				var *= var;
 
 				s2 += var * pPop->sampleSize();
 
-				h_bar += pPop->getHetero(loci, allele);
+				h_bar += pPop->getHetero(thisLocus, allele);
 
 			}//end for pop
 
 			s2 *= s2_denom;
-			p_bar = globalAlleleTable[loci].getFrequency(allele);
+			p_bar = globalAlleleTable[thisLocus].getFrequency(allele);
 			h_bar *= inverse_n_total;
 
 			x = p_bar * (1 - p_bar) - r * s2;
@@ -370,7 +365,6 @@ void NeutralStatsManager::calculateFstatWC_MS(set<int> const& patchList, const i
 	}
 
 	nc = (nInds - sum_weights) / (extantPs - 1);
-
 
 	unsigned int npl = extantPs; //all loci typed in all patches
 
@@ -451,16 +445,12 @@ void NeutralStatsManager::calculateFstatWC_MS(set<int> const& patchList, const i
 
 				SSP[all_cntr] += 2 * popSize * var;
 			}
-
 			all_cntr++;
 		}
-
 	}
-
 
 	if (all_cntr != tot_num_allele)
 		cout << endl << ("Error:: allele counter and total number of alleles differ in WC mean squared Fstat calculation \n");
-
 
 	//these shouldn't have to be dynamically allocated manually, if using a vector from stl then would do allocation for you 
 
@@ -505,9 +495,6 @@ void NeutralStatsManager::calculateFstatWC_MS(set<int> const& patchList, const i
 			SIGB += sigb[i];
 			SIGW += sigw[i];
 		}
-
-
-
 		double lsiga, lsigb, lsigw;
 
 		//	cout<<"  computing sigma per locus\n";
@@ -517,13 +504,10 @@ void NeutralStatsManager::calculateFstatWC_MS(set<int> const& patchList, const i
 			lsiga = lsigb = lsigw = 0;
 
 			for (unsigned int l = 0; l < alploc[i]; ++l) {
-
 				lsiga += siga[allcntr];
 				lsigb += sigb[allcntr];
 				lsigw += sigw[allcntr];
-
 				allcntr++;
-
 			}
 
 			_fst_WC_loc[i] = lsiga / (lsiga + lsigb + lsigw);
@@ -560,7 +544,7 @@ void NeutralStatsManager::calculateFstatWC_MS(set<int> const& patchList, const i
 
 void NeutralStatsManager::setFstMatrix(set<int> const& patchList, const int nInds, const int nLoci, Species* pSpecies, Landscape* pLandscape) {
 
-	const int nAlleles = (int)pSpecies->getTrait(SNP)->getMutationParameters().find(MAX)->second;
+	const int nAlleles = (int)pSpecies->getSpTrait(SNP)->getMutationParameters().find(MAX)->second;
 
 	vector<int> patchVect;
 
@@ -571,7 +555,6 @@ void NeutralStatsManager::setFstMatrix(set<int> const& patchList, const int nInd
 	//initialise 
 
 	 if (_fst_matrix.length() != nPatches * nPatches)
-
 		_fst_matrix = PatchMatrix(nPatches, nPatches);
 
 	//reset table
@@ -588,7 +571,6 @@ void NeutralStatsManager::setFstMatrix(set<int> const& patchList, const int nInd
 	double sum_weights = 0;
 
 	tot_size = nInds * 2; //diploid
-
 
 	for (unsigned int i = 0; i < nPatches; ++i) {
 
@@ -682,7 +664,6 @@ void NeutralStatsManager::setFstMatrix(set<int> const& patchList, const int nInd
 					numerator[i][j] += pi * (1 - pj) + pj * (1 - pi); //equ. 7 of Weir & Hill 2002
 				}
 			}
-
 
 	for (unsigned int i = 0; i < nPatches - 1; ++i) {
 		if (!pop_sizes[i]) continue;

@@ -1,7 +1,7 @@
 #ifndef TRAITFACTORYH
 #define TRAITFACTORYH
 
-#include "ProtoTrait.h"
+#include "SpeciesTrait.h"
 #include "SNPTrait.h"
 #include "QTLTrait.h"
 #include "AdaptiveTrait.h"
@@ -11,7 +11,7 @@ class TraitFactory
 public:
 	TraitFactory() {};
 
-	unique_ptr<TTrait> Create(const TraitType traitType, ProtoTrait* protoTrait)
+	unique_ptr<TTrait> Create(const TraitType traitType, SpeciesTrait* protoTrait)
 	{
 		if (traitType == SNP) {
 			return make_unique<SNPTrait>(protoTrait);

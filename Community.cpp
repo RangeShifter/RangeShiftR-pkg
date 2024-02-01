@@ -1963,14 +1963,14 @@ void Community::writeWCFstatFile(int rep, int yr, int gen) {
 
 void Community::writeWCPerLocusFstatFile(Species* pSpecies, const int yr, const int gen, const  int nAlleles, const int nLoci, set<int> const& patchList)
 {
-	const set<int> positions = pSpecies->getTrait(SNP)->getPositions();
+	const set<int> positions = pSpecies->getSpTrait(SNP)->getPositions();
 
-	int loci = 0;
+	int thisLocus = 0;
 	for (int position : positions) {
 
 		outperlocusfstat << yr << "\t" << gen << "\t" << position << "\t";
-		outperlocusfstat << pNeutralStatistics->get_fst_WC_loc(loci) << "\t" << pNeutralStatistics->get_fis_WC_loc(loci) <<
-			"\t" << pNeutralStatistics->get_fit_WC_loc(loci) << "\t" << pNeutralStatistics->get_ho_loc(loci);
+		outperlocusfstat << pNeutralStatistics->get_fst_WC_loc(thisLocus) << "\t" << pNeutralStatistics->get_fis_WC_loc(thisLocus) <<
+			"\t" << pNeutralStatistics->get_fit_WC_loc(thisLocus) << "\t" << pNeutralStatistics->get_ho_loc(thisLocus);
 
 		for (int patchId : patchList) {
 			const auto patch = pLandscape->findPatch(patchId);
@@ -1978,11 +1978,11 @@ void Community::writeWCPerLocusFstatFile(Species* pSpecies, const int yr, const 
 			int popSize = pPop->sampleSize();
 			int het = 0;
 			for (unsigned int a = 0; a < nAlleles; ++a) {
-				het += pPop->getHetero(loci, a);
+				het += pPop->getHetero(thisLocus, a);
 			}
 			outperlocusfstat << "\t" << het / (2.0 * popSize);
 		}
-		++loci;
+		++thisLocus;
 		outperlocusfstat << endl;
 	}
 }
@@ -2022,7 +2022,7 @@ void Community::writePairwiseFSTFile(Species* pSpecies, const int yr, const int 
 
 void Community::outNeutralGenetics(Species* pSpecies, int rep, int yr, int gen, bool perLocus, bool pairwise) {
 
-	const int nAlleles = (int)(pSpecies->getTrait(SNP)->getMutationParameters().find(MAX)->second);
+	const int nAlleles = (int)(pSpecies->getSpTrait(SNP)->getMutationParameters().find(MAX)->second);
 	const int nLoci = (int)pSpecies->getNPositionsForTrait(SNP);
 	const set<int> patchList = pSpecies->getSamplePatches();
 	int nInds = 0;

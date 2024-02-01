@@ -343,8 +343,8 @@ void Population::resetAlleleTable() {
 void Population::updateAlleleTable() {
 
 	const int nLoci = pSpecies->getNPositionsForTrait(SNP);
-	const int nAlleles = (int)pSpecies->getTrait(SNP)->getMutationParameters().find(MAX)->second;
-	const auto& positions = pSpecies->getTrait(SNP)->getPositions();
+	const int nAlleles = (int)pSpecies->getSpTrait(SNP)->getMutationParameters().find(MAX)->second;
+	const auto& positions = pSpecies->getSpTrait(SNP)->getPositions();
 
 	if (alleleTable.size() != 0)
 		resetAlleleTable();
@@ -388,17 +388,17 @@ void Population::updateAlleleTable() {
 	}
 }
 
-double Population::getAlleleFrequency(int loci, int allele) {
-	return alleleTable[loci].getFrequency(allele);
+double Population::getAlleleFrequency(int locus, int allele) {
+	return alleleTable[locus].getFrequency(allele);
 }
 
 
-int Population::getAlleleCount(int loci, int allele) {
-	return alleleTable[loci].getCount(allele);
+int Population::getAlleleCount(int locus, int allele) {
+	return alleleTable[locus].getCount(allele);
 }
 
-double Population::getHetero(int loci, int allele) {
-	return alleleTable[loci].getHetero(allele);
+double Population::getHetero(int locus, int allele) {
+	return alleleTable[locus].getHetero(allele);
 }
 
 // ----------------------------------------------------------------------------------------
@@ -419,14 +419,14 @@ int Population::countHeterozygoteLoci() {
 // ----------------------------------------------------------------------------------------
 
 vector<double> Population::countLociHeterozyotes() {
-	const auto& positions = pSpecies->getTrait(SNP)->getPositions();
+	const auto& positions = pSpecies->getSpTrait(SNP)->getPositions();
 	vector<double> hetero(positions.size(), 0);
 
 	for (Individual* ind : sampledInds) {
 		const auto trait = ind->getTrait(SNP);
 		int counter = 0;
 		for (auto position : positions) {
-			hetero[counter] += trait->isHeterozygoteAtLoci(position);
+			hetero[counter] += trait->isHeterozygoteAtLocus(position);
 			counter++;
 		}
 	}
@@ -439,20 +439,20 @@ vector<double> Population::countLociHeterozyotes() {
 
 double Population::computeHs() {
 	int nLoci = pSpecies->getNPositionsForTrait(SNP);
-	int nAlleles = (int)pSpecies->getTrait(SNP)->getInitialParameters().find(MAX)->second;
+	int nAlleles = (int)pSpecies->getSpTrait(SNP)->getInitialParameters().find(MAX)->second;
 	double hs = 0;
 	double freq;
 
 	vector<double>locihet(nLoci, 1);
 
 	if (sampledInds.size() > 0) {
-		for (int loci = 0; loci < nLoci; ++loci) {
+		for (int thisLocus = 0; thisLocus < nLoci; ++thisLocus) {
 			for (int allele = 0; allele < nAlleles; ++allele) {
-				freq = getAlleleFrequency(loci, allele);
+				freq = getAlleleFrequency(thisLocus, allele);
 				freq *= freq; //squared frequencies (expected _homozygosity)
-				locihet[loci] -= freq; //1 - sum of p2 = expected heterozygosity
+				locihet[thisLocus] -= freq; //1 - sum of p2 = expected heterozygosity
 			}
-			hs += locihet[loci];
+			hs += locihet[thisLocus];
 		}
 	}
 	return hs;

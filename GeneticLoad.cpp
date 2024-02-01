@@ -4,20 +4,19 @@
 // for initialising population
 // ----------------------------------------------------------------------------------------
 
-GeneticLoad::GeneticLoad(ProtoTrait* P)
+GeneticLoad::GeneticLoad(SpeciesTrait* P)
 {
-
-	pProtoTrait = P;
+	pSpeciesTrait = P;
 
 	if (wildType.get() == nullptr)
-		wildType = make_shared<Mutation>(0.0, 0.0);
+		wildType = make_shared<Allele>(0.0, 0.0);
 
-	ExpressionType expressionType = pProtoTrait->getExpressionType();
+	ExpressionType expressionType = pSpeciesTrait->getExpressionType();
 
-	_inherit_func_ptr = (pProtoTrait->getPloidy() == 1) ? &GeneticLoad::inheritHaploid : &GeneticLoad::inheritDiploid; //this could be changed if we wanted some alternative form of inheritance
+	_inherit_func_ptr = (pSpeciesTrait->getPloidy() == 1) ? &GeneticLoad::inheritHaploid : &GeneticLoad::inheritDiploid; //this could be changed if we wanted some alternative form of inheritance
 
-	DistributionType mutationDistribution = pProtoTrait->getMutationDistribution();
-	map<parameter_t, float> mutationParameters = pProtoTrait->getMutationParameters();
+	DistributionType mutationDistribution = pSpeciesTrait->getMutationDistribution();
+	map<parameter_t, float> mutationParameters = pSpeciesTrait->getMutationParameters();
 
 	switch (mutationDistribution) {
 	case UNIFORM:
@@ -56,7 +55,6 @@ GeneticLoad::GeneticLoad(ProtoTrait* P)
 		if (!mutationParameters.count(MEAN))
 			cout << endl << ("Error:: adaptive mutation distribution set to negative exponential (negative decay) so parameters must contain mean value (e.g. mean= ) \n");
 
-
 		break;
 	}
 
@@ -66,8 +64,8 @@ GeneticLoad::GeneticLoad(ProtoTrait* P)
 	}
 	}
 
-	DistributionType dominanceDistribution = pProtoTrait->getDominanceDistribution();
-	map<parameter_t, float> dominanceParameters = pProtoTrait->getDominanceParameters();
+	DistributionType dominanceDistribution = pSpeciesTrait->getDominanceDistribution();
+	map<parameter_t, float> dominanceParameters = pSpeciesTrait->getDominanceParameters();
 
 	switch (dominanceDistribution) {
 	case UNIFORM:
@@ -120,8 +118,8 @@ GeneticLoad::GeneticLoad(ProtoTrait* P)
 	}
 	}
 
-	DistributionType initialDistribution = pProtoTrait->getInitialDistribution();
-	map<parameter_t, float> initialParameters = pProtoTrait->getInitialParameters();
+	DistributionType initialDistribution = pSpeciesTrait->getInitialDistribution();
+	map<parameter_t, float> initialParameters = pSpeciesTrait->getInitialParameters();
 
 	//switch (expressionType) {
 	//case MULTIPLICATIVE:
@@ -144,7 +142,7 @@ GeneticLoad::GeneticLoad(ProtoTrait* P)
 // for creating new individuals
 // ----------------------------------------------------------------------------------------
 
-GeneticLoad::GeneticLoad(const GeneticLoad& T) : pProtoTrait(T.pProtoTrait), _inherit_func_ptr(T._inherit_func_ptr)
+GeneticLoad::GeneticLoad(const GeneticLoad& T) : pSpeciesTrait(T.pSpeciesTrait), _inherit_func_ptr(T._inherit_func_ptr)
 {}
 
 // ----------------------------------------------------------------------------------------
@@ -152,10 +150,10 @@ GeneticLoad::GeneticLoad(const GeneticLoad& T) : pProtoTrait(T.pProtoTrait), _in
 // ----------------------------------------------------------------------------------------
 void GeneticLoad::mutate()
 {
-	const int positionsSize = pProtoTrait->getPositionsSize();
-	const auto& positions = pProtoTrait->getPositions();
-	const short ploidy = pProtoTrait->getPloidy();
-	const float mutationRate = pProtoTrait->getMutationRate();
+	const int positionsSize = pSpeciesTrait->getPositionsSize();
+	const auto& positions = pSpeciesTrait->getPositions();
+	const short ploidy = pSpeciesTrait->getPloidy();
+	const float mutationRate = pSpeciesTrait->getMutationRate();
 
 	auto rng = pRandom->getRNG();
 
@@ -175,15 +173,15 @@ void GeneticLoad::mutate()
 				float newSelectionCoef = drawSelectionCoef();
 				float newDominanceCoef = drawDominance(newSelectionCoef);
 
-				auto it = mutations.find(m); //find if position in map already has mutations there
+				auto it = genes.find(m); //find if position in map already has mutations there
 
-				if (it == mutations.end()) {   // not found so create new entry in map with wildtype as char default
-					vector<shared_ptr<Mutation>> newAllelePair(2);
-					newAllelePair[p] = make_shared<Mutation>(newSelectionCoef, newDominanceCoef); //put new mutation value in 
-					mutations.insert(make_pair(m, newAllelePair));
+				if (it == genes.end()) {   // not found so create new entry in map with wildtype as char default
+					vector<shared_ptr<Allele>> newAllelePair(2);
+					newAllelePair[p] = make_shared<Allele>(newSelectionCoef, newDominanceCoef); //put new mutation value in 
+					genes.insert(make_pair(m, newAllelePair));
 				}
 				else { //position found, already mutations there
-					it->second[p] = make_shared<Mutation>(newSelectionCoef, newDominanceCoef);
+					it->second[p] = make_shared<Allele>(newSelectionCoef, newDominanceCoef);
 				}
 			}
 		}
@@ -196,8 +194,8 @@ void GeneticLoad::mutate()
 
 float GeneticLoad::drawDominance(float selCoef) {
 
-	DistributionType dominanceDistribution = pProtoTrait->getDominanceDistribution();
-	map<parameter_t, float> dominanceParameters = pProtoTrait->getDominanceParameters();
+	DistributionType dominanceDistribution = pSpeciesTrait->getDominanceDistribution();
+	map<parameter_t, float> dominanceParameters = pSpeciesTrait->getDominanceParameters();
 
 	float h = 1.0; //default dominance is  1
 
@@ -254,8 +252,8 @@ float GeneticLoad::drawDominance(float selCoef) {
 
 float GeneticLoad::drawSelectionCoef() {
 
-	DistributionType mutationDistribution = pProtoTrait->getMutationDistribution();
-	map<parameter_t, float> mutationParameters = pProtoTrait->getMutationParameters();
+	DistributionType mutationDistribution = pSpeciesTrait->getMutationDistribution();
+	map<parameter_t, float> mutationParameters = pSpeciesTrait->getMutationParameters();
 
 	float s = 0.0; //default selection coefficient is 0
 
@@ -304,21 +302,18 @@ float GeneticLoad::drawSelectionCoef() {
 // ----------------------------------------------------------------------------------------
 
 
-void GeneticLoad::inherit(TTrait* parent, set<unsigned int> const& recomPositions, sex_t whichChromosome, int startingChromosome)
+void GeneticLoad::inherit(TTrait* parentTrait, set<unsigned int> const& recomPositions, sex_t whichChromosome, int startingChromosome)
 {
-
-	auto parentCast = dynamic_cast<GeneticLoad*> (parent); //horrible
+	auto parentCast = dynamic_cast<GeneticLoad*> (parentTrait); //horrible
 
 	const auto& parent_seq = parentCast->get_mutations();
 	if (parent_seq.size() > 0) //else nothing to inherit
 		(this->*_inherit_func_ptr) (whichChromosome, parent_seq, recomPositions, startingChromosome);
-
-
 }
 
-void GeneticLoad::inheritDiploid(sex_t whichChromosome, map<int, vector<shared_ptr<Mutation>>> const& parentMutations, set<unsigned int> const& recomPositions, int parentChromosome) {
+void GeneticLoad::inheritDiploid(sex_t whichChromosome, map<int, vector<shared_ptr<Allele>>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome) {
 
-	auto it = recomPositions.lower_bound(parentMutations.begin()->first);
+	auto it = recomPositions.lower_bound(parentGenes.begin()->first);
 
 	unsigned int nextBreakpoint = *it;
 
@@ -327,7 +322,7 @@ void GeneticLoad::inheritDiploid(sex_t whichChromosome, map<int, vector<shared_p
 		parentChromosome = !parentChromosome; // switch to the other one
 		// use 1-parentChromosome, or switch to a sex_t ?
 
-	for (auto const& [locus, allelePair] : parentMutations) {
+	for (auto const& [locus, allelePair] : parentGenes) {
 
 		while (locus > nextBreakpoint) {
 			std::advance(it, 1);
@@ -337,16 +332,15 @@ void GeneticLoad::inheritDiploid(sex_t whichChromosome, map<int, vector<shared_p
 
 		if (locus <= nextBreakpoint) {
 			auto& allele = allelePair[parentChromosome];
-			auto it = mutations.find(locus);
-			if (it == mutations.end()) {
+			auto it = genes.find(locus);
+			if (it == genes.end()) {
 				// locus does not exist yet, initiate it
-				vector<shared_ptr<Mutation>> newAllelePair(2);
+				vector<shared_ptr<Allele>> newAllelePair(2);
 				newAllelePair[whichChromosome] = allele;
-				mutations.insert(make_pair(locus, newAllelePair));
+				genes.insert(make_pair(locus, newAllelePair));
 			}
 			else {
 				// locus already exists
-				// presumably bc already inherited from other parent
 				// set corresponding allele
 				it->second[whichChromosome] = allele;
 			}
@@ -354,9 +348,9 @@ void GeneticLoad::inheritDiploid(sex_t whichChromosome, map<int, vector<shared_p
 	}
 }
 
-void GeneticLoad::inheritHaploid(sex_t chromosome, map<int, vector<shared_ptr<Mutation>>> const& parentMutations, set<unsigned int> const& recomPositions, int parentChromosome)
+void GeneticLoad::inheritHaploid(sex_t chromosome, map<int, vector<shared_ptr<Allele>>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome)
 {
-	mutations = parentMutations;
+	genes = parentGenes;
 }
 
 // ----------------------------------------------------------------------------------------
@@ -367,40 +361,39 @@ float GeneticLoad::express() {
 
 	float phenotype = 1.0;
 
-	for (auto const& [locus, pAllelePair] : mutations)
+	for (auto const& [locus, pAllelePair] : genes)
 	{
 		auto pAlleleLeft  = (!pAllelePair[0]) ? wildType : pAllelePair[0];
 		auto pAlleleRight = (!pAllelePair[1]) ? wildType : pAllelePair[1];
 
 		if (pAlleleLeft.get()->getId() != pAlleleRight.get()->getId()) // heterozygote
 		{
-			phenotype *= 1 + pAlleleLeft->getSelectionCoef()  * pAlleleLeft->getDominanceCoef();
-			phenotype *= 1 + pAlleleRight->getSelectionCoef() * pAlleleRight->getDominanceCoef();
+			phenotype *= 1 + pAlleleLeft->getAlleleValue()  * pAlleleLeft->getDominanceCoef();
+			phenotype *= 1 + pAlleleRight->getAlleleValue() * pAlleleRight->getDominanceCoef();
 		}
 		else { // homozygote
-			phenotype *= 1 + pAlleleLeft->getSelectionCoef();
-			phenotype *= 1 + pAlleleRight->getSelectionCoef();
+			phenotype *= 1 + pAlleleLeft->getAlleleValue();
+			phenotype *= 1 + pAlleleRight->getAlleleValue();
 		}
 	}
 	return phenotype;
 }
 
 // ----------------------------------------------------------------------------------------
-// check if particular loci is heterozygote
+// check if particular locus is heterozygote
 // ----------------------------------------------------------------------------------------
 
 
-bool GeneticLoad::isHeterozygoteAtLoci(int loci) const {
+bool GeneticLoad::isHeterozygoteAtLocus(int locus) const {
 
-	auto it = mutations.find(loci);
+	auto it = genes.find(locus);
 
-	if (it == mutations.end()) //not found so must be wildtype homozygous
+	if (it == genes.end()) //not found so must be wildtype homozygous
 		return false;
 	else {
 		auto a = (!it->second[0]) ? wildType : it->second[0];
 		auto b = (!it->second[1]) ? wildType : it->second[1];
 		return a != b;
-
 	}
 }
 
@@ -413,13 +406,11 @@ int GeneticLoad::countHeterozygoteLoci() const {
 
 	int count = 0;
 
-	for (auto const& [key, val] : mutations) {
-
-		auto a = (!val[0]) ? wildType : val[0];
-		auto b = (!val[1]) ? wildType : val[1];
-		count += a != b;
+	for (auto const& [locus, allelePair] : genes) {
+		auto alleleLeft = (!allelePair[0]) ? wildType : allelePair[0];
+		auto alleleRight = (!allelePair[1]) ? wildType : allelePair[1];
+		count += alleleLeft != alleleRight;
 	}
-
 	return count;
 }
 
@@ -428,13 +419,13 @@ int GeneticLoad::countHeterozygoteLoci() const {
 // ----------------------------------------------------------------------------------------
 
 
-float GeneticLoad::getSelectionCoefAtLoci(short chromosome, int position) const {
+float GeneticLoad::getSelectionCoefAtLoci(short whichChromosome, int position) const {
 
-	auto it = mutations.find(position);
+	auto it = genes.find(position);
 
-	if (it == mutations.end()) {
-		return wildType->getSelectionCoef(); //must still be wildtype at loci
+	if (it == genes.end()) {
+		return wildType->getAlleleValue(); //must still be wildtype at loci
 	}
 	else
-		return (!it->second[chromosome]) ? wildType->getSelectionCoef() : it->second[chromosome]->getSelectionCoef();
+		return (!it->second[whichChromosome]) ? wildType->getAlleleValue() : it->second[whichChromosome]->getAlleleValue();
 }

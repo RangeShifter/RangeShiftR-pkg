@@ -171,7 +171,7 @@ set<int> convertStringToChromosomeEnds(string, int);
 
 //sex types
 typedef enum {
-	FEM = 0, MAL = 1, BOTH = 2
+	FEM = 0, MAL = 1
 } sex_t;
 
 const sex_t stringToSex(const std::string& str);

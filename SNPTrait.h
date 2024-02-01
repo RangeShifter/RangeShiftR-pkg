@@ -15,17 +15,16 @@ class SNPTrait : public TTrait {
 private:
 
 	inline static int wildType = -999;
+	constexpr int maxSNPAlleles = UCHAR_MAX + 1; // allele is char, can take value 0-255
 
-	ProtoTrait* pProtoTrait;
+	SpeciesTrait* pProtoTrait;
 
 	//vector<vector<char>> mutations; 
 
-	map<int, vector<unsigned char>> mutations; //position <strand A , strand B>>
-
+	map<int, vector<unsigned char>> genes; //position <strand A , strand B>>
 
 	void (SNPTrait::* _mutate_func_ptr) (void);
 	void (SNPTrait::* _inherit_func_ptr) (sex_t chromosome, map<int, vector<unsigned char>> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
-
 
 	void inheritDiploid(sex_t chromosome, map<int, vector<unsigned char>> const&, set<unsigned int> const& recomPositions, int parentChromosome);
 
@@ -43,7 +42,7 @@ public:
 
 	//this one for species held trait table, e.g. prototype table, sets static members
 
-	SNPTrait(ProtoTrait* P);
+	SNPTrait(SpeciesTrait* P);
 
 	//this one for individuals, static members are not reset
 	SNPTrait(const SNPTrait& T);
@@ -64,13 +63,13 @@ public:
 
 	bool isInherited() const override { return pProtoTrait->isInherited(); }
 
-	map<int, vector<unsigned char>>& get_mutations() { return mutations; } //returning reference, reciever must be const
+	map<int, vector<unsigned char>>& get_mutations() { return genes; } //returning reference, reciever must be const
 
 	virtual float getSelectionCoefAtLoci(short chromosome, int position) const override;
 
 	virtual int countHeterozygoteLoci() const;
 
-	virtual bool isHeterozygoteAtLoci(int loci) const override;
+	virtual bool isHeterozygoteAtLocus(int locus) const override;
 
 	virtual float express() { return -9999; }
 

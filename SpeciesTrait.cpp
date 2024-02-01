@@ -1,9 +1,9 @@
 
-#include "ProtoTrait.h"
+#include "SpeciesTrait.h"
 #include "Species.h"
 
 //could be handled in header file but here for now for flexibility
-ProtoTrait::ProtoTrait(vector<string> parameters, Species* pSpecies) {
+SpeciesTrait::SpeciesTrait(vector<string> parameters, Species* pSpecies) {
 
 	bool neutralPresent = false;
 	if (ploidy == 0) this->ploidy = pSpecies->isDiploid() ? 2 : 1;
@@ -39,7 +39,7 @@ ProtoTrait::ProtoTrait(vector<string> parameters, Species* pSpecies) {
 	}
 }
 
-TraitType ProtoTrait::stringToTraitType(const std::string& str, sex_t sex) const {
+TraitType SpeciesTrait::stringToTraitType(const std::string& str, sex_t sex) const {
 
 	if (sex == MAL) {
 		if (str == "emigration_d0") return E_D0_M;
@@ -74,14 +74,14 @@ TraitType ProtoTrait::stringToTraitType(const std::string& str, sex_t sex) const
 	}
 }
 
-ExpressionType ProtoTrait::stringToExpressionType(const std::string& str) const {
+ExpressionType SpeciesTrait::stringToExpressionType(const std::string& str) const {
 	if (str == "average") return AVERAGE;
 	else if (str == "additive") return ADDITIVE;
 	else if (str == "multiplicative") return MULTIPLICATIVE;
 	else if (str == "#") return NEUTRAL;
 }
 
-DistributionType ProtoTrait::stringToDistributionType(const std::string& str) const
+DistributionType SpeciesTrait::stringToDistributionType(const std::string& str) const
 {
 	if (str == "#") return NONE;
 	else if (str == "uniform") return UNIFORM;
@@ -93,7 +93,7 @@ DistributionType ProtoTrait::stringToDistributionType(const std::string& str) co
 	else if (str == "SSM") return SSM;
 }
 
-map<parameter_t, float> ProtoTrait::stringToParameterMap(string parameters) const {
+map<parameter_t, float> SpeciesTrait::stringToParameterMap(string parameters) const {
 
 	map<parameter_t, float> paramMap;
 	if (parameters != "#") {
@@ -120,17 +120,17 @@ map<parameter_t, float> ProtoTrait::stringToParameterMap(string parameters) cons
 	return paramMap;
 }
 
-set<int> ProtoTrait::selectRandomLociPositions(int noLoci, Species* pSpecies) const {
+set<int> SpeciesTrait::selectRandomLociPositions(int nbLoci, Species* pSpecies) const {
 
 	int genomeSize = pSpecies->getGenomeSize();
 	set<int> positions;
-	for (int i = 0; i < noLoci; ++i)
+	for (int i = 0; i < nbLoci; ++i)
 		positions.insert(pRandom->IRandom(0, genomeSize));
 	return positions;
 }
 
 
-set<int> ProtoTrait::stringToLoci(string pos, string nLoci, Species* pSpecies) const {
+set<int> SpeciesTrait::stringToLoci(string pos, string nLoci, Species* pSpecies) const {
 
 	set<int> positions;
 
@@ -167,6 +167,5 @@ set<int> ProtoTrait::stringToLoci(string pos, string nLoci, Species* pSpecies) c
 	else {
 		positions = selectRandomLociPositions(stoi(nLoci), pSpecies);
 	}
-
 	return positions;
 }

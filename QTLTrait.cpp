@@ -4,18 +4,18 @@
 // for initialising population
 // ----------------------------------------------------------------------------------------
 
-QTLTrait::QTLTrait(ProtoTrait* P)
+QTLTrait::QTLTrait(SpeciesTrait* P)
 {
-	pProtoTrait = P;
-	ExpressionType expressionType = pProtoTrait->getExpressionType();
+	pSpeciesTrait = P;
+	ExpressionType expressionType = pSpeciesTrait->getExpressionType();
 
-	if (!pProtoTrait->isInherited()) //there is a trait for individual variation but this isn't inherited variation it's sampled from initial distribution 
+	if (!pSpeciesTrait->isInherited()) //there is a trait for individual variation but this isn't inherited variation it's sampled from initial distribution 
 		_inherit_func_ptr = &QTLTrait::inheritInitialParameters;
 	else {
-		_inherit_func_ptr = (pProtoTrait->getPloidy() == 1) ? &QTLTrait::inheritHaploid : &QTLTrait::inheritDiploid; //this could be changed if we wanted some alternative form of inheritance
+		_inherit_func_ptr = (pSpeciesTrait->getPloidy() == 1) ? &QTLTrait::inheritHaploid : &QTLTrait::inheritDiploid; //this could be changed if we wanted some alternative form of inheritance
 
-		DistributionType mutationDistribution = pProtoTrait->getMutationDistribution();
-		map<parameter_t, float> mutationParameters = pProtoTrait->getMutationParameters();
+		DistributionType mutationDistribution = pSpeciesTrait->getMutationDistribution();
+		map<parameter_t, float> mutationParameters = pSpeciesTrait->getMutationParameters();
 
 		switch (mutationDistribution) {
 		case UNIFORM:
@@ -49,8 +49,8 @@ QTLTrait::QTLTrait(ProtoTrait* P)
 		}
 	}
 
-	DistributionType initialDistribution = pProtoTrait->getInitialDistribution();
-	map<parameter_t, float> initialParameters = pProtoTrait->getInitialParameters();
+	DistributionType initialDistribution = pSpeciesTrait->getInitialDistribution();
+	map<parameter_t, float> initialParameters = pSpeciesTrait->getInitialParameters();
 
 	switch (initialDistribution) {
 	case UNIFORM:
@@ -113,7 +113,7 @@ QTLTrait::QTLTrait(ProtoTrait* P)
 // for creating new individuals
 // ----------------------------------------------------------------------------------------
 
-QTLTrait::QTLTrait(const QTLTrait& T) : pProtoTrait(T.pProtoTrait), _mutate_func_ptr(T._mutate_func_ptr), _inherit_func_ptr(T._inherit_func_ptr), _express_func_ptr(T._express_func_ptr)
+QTLTrait::QTLTrait(const QTLTrait& T) : pSpeciesTrait(T.pSpeciesTrait), _mutate_func_ptr(T._mutate_func_ptr), _inherit_func_ptr(T._inherit_func_ptr), _express_func_ptr(T._express_func_ptr)
 {}
 
 
@@ -123,14 +123,14 @@ QTLTrait::QTLTrait(const QTLTrait& T) : pProtoTrait(T.pProtoTrait), _mutate_func
 // ----------------------------------------------------------------------------------------
 void QTLTrait::mutateUniform()
 {
-	const int positionsSize = pProtoTrait->getPositionsSize();
-	const auto& positions = pProtoTrait->getPositions();
-	const short ploidy = pProtoTrait->getPloidy();
-	const float mutationRate = pProtoTrait->getMutationRate();
+	const int positionsSize = pSpeciesTrait->getPositionsSize();
+	const auto& positions = pSpeciesTrait->getPositions();
+	const short ploidy = pSpeciesTrait->getPloidy();
+	const float mutationRate = pSpeciesTrait->getMutationRate();
 
 	auto rng = pRandom->getRNG();
 
-	map<parameter_t, float> mutationParameters = pProtoTrait->getMutationParameters();
+	map<parameter_t, float> mutationParameters = pSpeciesTrait->getMutationParameters();
 	float maxD = mutationParameters.find(MAX)->second;
 	float minD = mutationParameters.find(MIN)->second;
 
@@ -144,17 +144,13 @@ void QTLTrait::mutateUniform()
 				NbMut, rng);
 
 			for (int m : mutationPositions) {
-
-				auto it = mutations.find(m);
-				float currentSelCoef = it->second[p].get()->getSelectionCoef();//current
-				float newSelectionCoef = pRandom->FRandom(minD, maxD) + currentSelCoef;
-				it->second[p] = make_shared<Mutation>(newSelectionCoef, 1.0);
-
+				auto it = genes.find(m);
+				float currentAlleleVal = it->second[p].get()->getAlleleValue();//current
+				float newAlleleVal = pRandom->FRandom(minD, maxD) + currentAlleleVal;
+				it->second[p] = make_shared<Allele>(newAlleleVal, 1.0);
 			}
 		}
-
 	}
-
 }
 
 // ----------------------------------------------------------------------------------------
@@ -164,18 +160,17 @@ void QTLTrait::mutateUniform()
 void QTLTrait::mutateNormal()
 {
 
-	const int positionsSize = pProtoTrait->getPositionsSize();
-	const auto& positions = pProtoTrait->getPositions();
-	const short ploidy = pProtoTrait->getPloidy();
-	const float mutationRate = pProtoTrait->getMutationRate();
+	const int positionsSize = pSpeciesTrait->getPositionsSize();
+	const auto& positions = pSpeciesTrait->getPositions();
+	const short ploidy = pSpeciesTrait->getPloidy();
+	const float mutationRate = pSpeciesTrait->getMutationRate();
 
 	auto rng = pRandom->getRNG();
 
 
-	const map<parameter_t, float> mutationParameters = pProtoTrait->getMutationParameters();
+	const map<parameter_t, float> mutationParameters = pSpeciesTrait->getMutationParameters();
 	const float mean = mutationParameters.find(MEAN)->second;
 	const float sd = mutationParameters.find(SDEV)->second;
-
 
 	for (int p = 0; p < ploidy; p++) {
 
@@ -187,17 +182,13 @@ void QTLTrait::mutateNormal()
 				NbMut, rng);
 
 			for (int m : mutationPositions) {
-
-				auto it = mutations.find(m);
-				float currentSelCoef = it->second[p].get()->getSelectionCoef();//current
-				float newSelectionCoef = pRandom->Normal(mean, sd) + currentSelCoef;
-				it->second[p] = make_shared<Mutation>(newSelectionCoef, 1.0);
+				auto it = genes.find(m);
+				float currentAlleleVal = it->second[p].get()->getAlleleValue();//current
+				float newAlleleVal = pRandom->Normal(mean, sd) + currentAlleleVal;
+				it->second[p] = make_shared<Allele>(newAlleleVal, 1.0);
 			}
 		}
-
-
 	}
-
 }
 
 // ----------------------------------------------------------------------------------------
@@ -205,21 +196,18 @@ void QTLTrait::mutateNormal()
 // ----------------------------------------------------------------------------------------
 
 
-void QTLTrait::inherit(TTrait* parent, set<unsigned int> const& recomPositions, sex_t chromosome, int startingChromosome)
+void QTLTrait::inherit(TTrait* parentTrait, set<unsigned int> const& recomPositions, sex_t whichChromosome, int startingChromosome)
 {
-
-	auto parentCast = dynamic_cast<QTLTrait*> (parent); //horrible
+	auto parentCast = dynamic_cast<QTLTrait*> (parentTrait); //horrible
 
 	const auto& parent_seq = parentCast->get_mutations();
 	if (parent_seq.size() > 0) //else nothing to inherit, should always be something to inherit with QTL
-		(this->*_inherit_func_ptr) (chromosome, parent_seq, recomPositions, startingChromosome);
-
-
+		(this->*_inherit_func_ptr) (whichChromosome, parent_seq, recomPositions, startingChromosome);
 }
 
-void QTLTrait::inheritDiploid(sex_t chromosome, map<int, vector<shared_ptr<Mutation>>>  const& parentMutations, set<unsigned int> const& recomPositions, int parentChromosome) {
+void QTLTrait::inheritDiploid(sex_t whichChromosome, map<int, vector<shared_ptr<Allele>>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome) {
 
-	auto it = recomPositions.lower_bound(parentMutations.begin()->first);
+	auto it = recomPositions.lower_bound(parentGenes.begin()->first);
 
 	unsigned int nextBreakpoint = *it;
 
@@ -227,60 +215,45 @@ void QTLTrait::inheritDiploid(sex_t chromosome, map<int, vector<shared_ptr<Mutat
 	if (distance % 2 != 0)
 		parentChromosome = !parentChromosome; //switch chromosome
 
-	for (auto const& [key, val] : parentMutations) {
+	for (auto const& [locus, allelePair] : parentGenes) {
 
-		while (key > nextBreakpoint) {
+		while (locus > nextBreakpoint) {
 			std::advance(it, 1);
 			nextBreakpoint = *it;
 			parentChromosome = !parentChromosome; //switch chromosome
 		}
 
-		if (key <= nextBreakpoint) {
-			auto& sp = val[parentChromosome];
+		if (locus <= nextBreakpoint) {
+			auto& sp = allelePair[parentChromosome];
 
-
-			auto it = mutations.find(key);
-			if (it == mutations.end()) {
+			auto it = genes.find(locus);
+			if (it == genes.end()) {
 				// not found
-				vector<shared_ptr<Mutation>> vect(2);
-				vect[chromosome] = sp;
+				vector<shared_ptr<Allele>> newAllelePair(2);
+				newAllelePair[whichChromosome] = sp;
 
-				mutations.insert(make_pair(key, vect));
+				genes.insert(make_pair(locus, newAllelePair));
 			}
 			else {
-				it->second[chromosome] = sp;
-
-
+				it->second[whichChromosome] = sp;
 			}
-
-
-
 		}
-
-
-
 	}
-
-
-
-
-
 }
 
-void QTLTrait::inheritHaploid(sex_t chromosome, map<int, vector<shared_ptr<Mutation>>> const& parentMutations, set<unsigned int> const& recomPositions, int parentChromosome)
+void QTLTrait::inheritHaploid(sex_t chromosome, map<int, vector<shared_ptr<Allele>>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome)
 {
-	mutations = parentMutations;
+	genes = parentGenes;
 }
 
 // ----------------------------------------------------------------------------------------
 // 'Inherit' from initialisation parameters, for simulations with individual variation but no inheritance
 // ----------------------------------------------------------------------------------------
 
-void QTLTrait::inheritInitialParameters(sex_t chromosome, map<int, vector<shared_ptr<Mutation>>> const& parentMutations, set<unsigned int> const& recomPositions, int parentChromosome)
+void QTLTrait::inheritInitialParameters(sex_t whichChromosome, map<int, vector<shared_ptr<Allele>>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome)
 {
-	DistributionType initialDistribution = pProtoTrait->getInitialDistribution();
-	map<parameter_t, float> initialParameters = pProtoTrait->getInitialParameters();
-
+	DistributionType initialDistribution = pSpeciesTrait->getInitialDistribution();
+	map<parameter_t, float> initialParameters = pSpeciesTrait->getInitialParameters();
 
 	switch (initialDistribution) {
 	case UNIFORM:
@@ -330,33 +303,31 @@ void QTLTrait::inheritInitialParameters(sex_t chromosome, map<int, vector<shared
 
 void QTLTrait::initialiseNormal(float mean, float sd) {
 
-	const auto positions = pProtoTrait->getPositions();
-	short ploidy = pProtoTrait->getPloidy();
+	const auto positions = pSpeciesTrait->getPositions();
+	short ploidy = pSpeciesTrait->getPloidy();
 
 	for (auto position : positions) {
-		vector<shared_ptr<Mutation>> vect;
-
+		vector<shared_ptr<Allele>> newAllelePair;
 		for (int i = 0; i < ploidy; i++) {
-			float selectionCoef = pRandom->Normal(mean, sd);
-			vect.emplace_back(make_shared<Mutation>(selectionCoef, 1.0));//crude here to set dominance to 1 for qtl but can be changed later
+			float alleleVal = pRandom->Normal(mean, sd);
+			newAllelePair.emplace_back(make_shared<Allele>(alleleVal, QTLDominanceFactor));
 		}
-		mutations.insert(make_pair(position, vect));
+		genes.insert(make_pair(position, newAllelePair));
 	}
 }
 
 void QTLTrait::initialiseUniform(float min, float max) {
 
-	const auto positions = pProtoTrait->getPositions();
-	short ploidy = pProtoTrait->getPloidy();
+	const auto positions = pSpeciesTrait->getPositions();
+	short ploidy = pSpeciesTrait->getPloidy();
 
 	for (auto position : positions) {
-		vector<shared_ptr<Mutation>> vect;
-
+		vector<shared_ptr<Allele>> newAllelePair;
 		for (int i = 0; i < ploidy; i++) {
-			float selectionCoef = pRandom->FRandom(min, max);
-			vect.emplace_back(make_shared<Mutation>(selectionCoef, 1.0)); //crude here to set dominance to 1 for qtl but can be changed later
+			float alleleVal = pRandom->FRandom(min, max);
+			newAllelePair.emplace_back(make_shared<Allele>(alleleVal, QTLDominanceFactor));
 		}
-		mutations.insert(make_pair(position, vect));
+		genes.insert(make_pair(position, newAllelePair));
 	}
 }
 
@@ -368,27 +339,26 @@ float QTLTrait::expressAdditive() {
 
 	float phenotype = 0.0;
 
-	for (auto const& [key, val] : mutations)
+	for (auto const& [locus, allelePair] : genes)
 	{
-		for (auto m : val)
-			phenotype += m->getSelectionCoef();
+		for (auto m : allelePair)
+			phenotype += m->getAlleleValue();
 	}
-
 	return phenotype;
 }
 
 float QTLTrait::expressAverage() {
 
-	int positionsSize = pProtoTrait->getPositionsSize();
-	short ploidy = pProtoTrait->getPloidy();
+	int positionsSize = pSpeciesTrait->getPositionsSize();
+	short ploidy = pSpeciesTrait->getPloidy();
 	float phenotype = 0.0;
 
-	for (auto const& [key, val] : mutations)
+	for (auto const& [locus, allelePair] : genes)
 	{
-		for (auto& m : val)
-			phenotype += m->getSelectionCoef();
+		for (auto& m : allelePair)
+			phenotype += m->getAlleleValue();
 	}
-	phenotype = phenotype / (positionsSize * ploidy);
+	phenotype /= positionsSize * ploidy;
 	return phenotype;
 }
 
@@ -396,19 +366,17 @@ float QTLTrait::expressAverage() {
 // check if particular loci is heterozygote
 // ----------------------------------------------------------------------------------------
 
+bool QTLTrait::isHeterozygoteAtLocus(int locus) const {
 
-bool QTLTrait::isHeterozygoteAtLoci(int loci) const {
+	auto it = genes.find(locus);
 
-	auto it = mutations.find(loci);
-
-	if (it == mutations.end()) //not found
+	if (it == genes.end()) //not found
 		return false;
 	else {
 		if (it->second.size() == 1) //only one ptr there so must be allele and wildtype at loci (heterozygote)
 			return true;
 		else
 			return(it->second[0].get()->getId() != it->second[1].get()->getId());
-
 	}
 }
 
@@ -416,20 +384,17 @@ bool QTLTrait::isHeterozygoteAtLoci(int loci) const {
 // count heterozygote loci in genome 
 // ----------------------------------------------------------------------------------------
 
-
 int QTLTrait::countHeterozygoteLoci() const {
 
 	int count = 0;
+	for (auto const& [locus, allelePair] : genes) {
 
-	for (auto const& [key, val] : mutations) {
-
-		if (val.size() == 1) //only one ptr there so must be allele and wildtype at loci (heterozygote)
+		if (allelePair.size() == 1) //only one ptr there so must be allele and wildtype at loci (heterozygote)
 			count++;
 
-		if (val.size() == 2)
-			count += (val[0].get()->getId() != val[1].get()->getId());
+		if (allelePair.size() == 2)
+			count += (allelePair[0].get()->getId() != allelePair[1].get()->getId());
 	}
-
 	return count;
 }
 
@@ -437,16 +402,15 @@ int QTLTrait::countHeterozygoteLoci() const {
 // get allele value at loci 
 // ----------------------------------------------------------------------------------------
 
+float QTLTrait::getSelectionCoefAtLoci(short whichChromosome, int position) const {
 
-float QTLTrait::getSelectionCoefAtLoci(short chromosome, int position) const {
+	auto it = genes.find(position);
 
-	auto it = mutations.find(position);
-
-	if (it == mutations.end()) { //no mutations there, should never happen at QTLs should always hold a value 
+	if (it == genes.end()) { //no mutations there, should never happen at QTLs should always hold a value 
 		return 0; //must still be wildtype at loci
 		cout << endl << ("Error:: trying to find QTL at ", position, " but doesn't exist \n");
 	}
 	else
-		return it->second[chromosome].get()->getSelectionCoef();
+		return it->second[whichChromosome].get()->getAlleleValue();
 
 }

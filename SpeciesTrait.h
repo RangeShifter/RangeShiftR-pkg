@@ -1,5 +1,5 @@
-#ifndef PROTOTRAITH
-#define PROTOTRAITH
+#ifndef SPECIESTRAITH
+#define SPECIESTRAITH
 
 #include "Parameters.h"
 #include <map>
@@ -9,7 +9,7 @@
 
 class Species;
 
-class ProtoTrait {
+class SpeciesTrait {
 
 private:
     inline static int ploidy = 0;
@@ -27,7 +27,7 @@ private:
 
 public:
 
-    ProtoTrait(vector<string> parameters, Species* pSpecies);
+    SpeciesTrait(vector<string> parameters, Species* pSpecies);
 
     // Getters
     sex_t getSex() const { return sex; }

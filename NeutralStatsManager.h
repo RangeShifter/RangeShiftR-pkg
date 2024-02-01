@@ -4,7 +4,6 @@
 #include "Species.h"
 #include "Landscape.h"
 
-
 using namespace std;
 
 /**Creates an array of doubles of size = rows*cols, taken from NEMO**/
@@ -99,10 +98,6 @@ public:
 	void incrementHeteroBy(int count, int allele) { 
 		this->heteros[allele] += count; 
 	}
-
-
-
-
 };
 
 

@@ -232,9 +232,9 @@ public:
 	void clean(void); // Remove zero pointers to dead or dispersed individuals
 
 	void updateAlleleTable();
-	double getAlleleFrequency(int loci, int allele);
-	int getAlleleCount(int loci, int allele);
-	double getHetero(int loci, int allele);
+	double getAlleleFrequency(int locus, int allele);
+	int getAlleleCount(int locus, int allele);
+	double getHetero(int locus, int allele);
 	int countHeterozygoteLoci();
 	vector<double> countLociHeterozyotes();
 	double computeHs();

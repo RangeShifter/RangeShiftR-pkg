@@ -424,7 +424,7 @@ int Species::getNumberOfAdaptiveTraits() const
 	return numberOfAdaptiveTraits;
 }
 
-void Species::addTrait(TraitType traitType, const ProtoTrait& trait) {
+void Species::addTrait(TraitType traitType, const SpeciesTrait& trait) {
 
 	TraitType traitT = traitType;
 	//hack to deal with multiple adaptive traits, could be handled better
@@ -464,15 +464,15 @@ void Species::addTrait(TraitType traitType, const ProtoTrait& trait) {
 		}
 		}
 	}
-	traitTable.emplace(traitT, make_unique<ProtoTrait>(trait));
+	spTraitTable.emplace(traitT, make_unique<SpeciesTrait>(trait));
 }
 
-ProtoTrait* Species::getTrait(TraitType trait) const {
-	return traitTable.find(trait)->second.get();
+SpeciesTrait* Species::getSpTrait(TraitType trait) const {
+	return spTraitTable.find(trait)->second.get();
 }
 
 void Species::clearTraitTable() {
-	traitTable.clear();
+	spTraitTable.clear();
 }
 
 //map<TraitType, std::unique_ptr<ProtoTrait>>&  Species::getTraitTable(void) 
@@ -481,17 +481,17 @@ void Species::clearTraitTable() {
 //}
 
 set<TraitType> Species::getTraitTypes() {
-	auto kv = views::keys(traitTable);
+	auto kv = views::keys(spTraitTable);
 	set<TraitType> keys{ kv.begin(), kv.end() };
 	return keys;
 }
 
 int Species::getNTraits() const {
-	return traitTable.size();
+	return spTraitTable.size();
 }
 
 int Species::getNPositionsForTrait(const TraitType trait) const {
-	return this->getTrait(trait)->getPositionsSize();
+	return this->getSpTrait(trait)->getPositionsSize();
 }
 
 int Species::getGenomeSize() const {

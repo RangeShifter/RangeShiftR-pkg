@@ -118,9 +118,8 @@ void Individual::setSettleTraits(const settleTraits& settle) {
 	pSettleTraits = make_unique<settleTraits>(settle);
 }
 
-
 TTrait* Individual::getTrait(TraitType trait) const {
-	return this->traitTable.find(trait)->second.get();
+	return this->spTraitTable.find(trait)->second.get();
 }
 
 //map<TraitType, std::unique_ptr<TTrait>>  Individual::getTraitTable(void) const
@@ -129,7 +128,7 @@ TTrait* Individual::getTrait(TraitType trait) const {
 //}
 
 set<TraitType> Individual::getTraitTypes() {
-	auto kv = std::views::keys(this->traitTable);
+	auto kv = std::views::keys(this->spTraitTable);
 	set< TraitType > keys{ kv.begin(), kv.end() };
 	return keys;
 }
@@ -197,7 +196,7 @@ void Individual::inherit(Species* pSpecies, const Individual* mother, const Indi
 		if (trait == ADAPTIVE1 || trait == ADAPTIVE2 || trait == ADAPTIVE3 || trait == ADAPTIVE4 || trait == ADAPTIVE5)
 			fitness *= newTrait->express();
 
-		traitTable.insert(make_pair(trait, move(newTrait)));
+		spTraitTable.insert(make_pair(trait, move(newTrait)));
 	}
 }
 
@@ -222,7 +221,7 @@ void Individual::inherit(Species* pSpecies, const Individual* mother) {
 		if (trait == ADAPTIVE1 || trait == ADAPTIVE2 || trait == ADAPTIVE3 || trait == ADAPTIVE4 || trait == ADAPTIVE5)
 			fitness *= newTrait->express();
 
-		traitTable.insert(make_pair(trait, move(newTrait)));
+		spTraitTable.insert(make_pair(trait, move(newTrait)));
 	}
 }
 
@@ -231,12 +230,12 @@ void Individual::setUpGenes(Species* pSpecies, int resol) {
 
 	// this way to keep spp trait table immutable i.e. not able to call getTraitTable, 
 	// could pass it back by value (copy) instead but could be heavy if large map
-	const auto& speciesTraits = pSpecies->getTraitTypes();
+	const auto& traitTypes = pSpecies->getTraitTypes();
 
-	for (auto const& trait : speciesTraits)
+	for (auto const& traitType : traitTypes)
 	{
-		const auto spTrait = pSpecies->getTrait(trait);
-		this->traitTable.emplace(trait, traitFactory.Create(trait, spTrait));
+		const auto spTrait = pSpecies->getSpTrait(traitType);
+		this->spTraitTable.emplace(traitType, traitFactory.Create(traitType, spTrait));
 	}
 	setQTLPhenotypes(pSpecies, resol);
 }

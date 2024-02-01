@@ -3,7 +3,7 @@
 // ----------------------------------------------------------------------------------------
 // for initialising population
 // ----------------------------------------------------------------------------------------
-SNPTrait::SNPTrait(ProtoTrait* P)
+SNPTrait::SNPTrait(SpeciesTrait* P)
 {
 	pProtoTrait = P;
 
@@ -27,8 +27,8 @@ SNPTrait::SNPTrait(ProtoTrait* P)
 	if (wildType == -999)
 		wildType = (int)mutationParameters.find(MAX)->second - 1;
 
-	if (wildType > 255)
-		cout << endl << ("Error:: max number of alleles cannot exceed 256  \n");
+	if (wildType > maxSNPAlleles - 1)
+		cout << endl << ("Error:: max number of alleles cannot exceed " << maxSNPAlleles << ".\n");
 
 	DistributionType initialDistribution = pProtoTrait->getInitialDistribution();
 	map<parameter_t, float> initialParameters = pProtoTrait->getInitialParameters();
@@ -40,13 +40,13 @@ SNPTrait::SNPTrait(ProtoTrait* P)
 	case UNIFORM:
 	{
 		if (!initialParameters.count(MAX))
-			cout << endl << ("Error:: initial SNP/Microsat distribution parameter must contain max value if set to UNIFORM (e.g. max= ), max cannot exceed 256 \n");
+			cout << endl << ("Error:: initial SNP/Microsat distribution parameter must contain max value if set to UNIFORM (e.g. max= ), max cannot exceed " << maxSNPAlleles << "\n");
 
 		float maxD = initialParameters.find(MAX)->second;
-		if (maxD > 256) {
-			cout << endl << ("Warning:: initial SNP/Microsat distribution parameter max cannot exceed 256, resetting to 256 \n");
+		if (maxD > maxSNPAlleles) {
+			cout << endl << ("Warning:: initial SNP/Microsat distribution parameter max cannot exceed " << maxSNPAlleles << ", resetting to " << maxSNPAlleles << "\n");
 
-			maxD = 256; //reserve 255 for wildtype
+			maxD = maxSNPAlleles; //reserve 255 for wildtype
 		}
 		initialiseFull(maxD);
 
@@ -96,7 +96,7 @@ void SNPTrait::mutate_KAM()
 
 	int maxD = (int)mutationParameters.find(MAX)->second;
 
-	if (maxD > 256) maxD = 256; //reserve max value -1 for wildtype
+	if (maxD > maxSNPAlleles) maxD = maxSNPAlleles; //reserve max value -1 for wildtype
 
 	for (int p = 0; p < ploidy; p++) {
 
@@ -110,14 +110,14 @@ void SNPTrait::mutate_KAM()
 			for (int m : mutationPositions) {
 
 				mut = (unsigned char)pRandom->IRandom(0, maxD - 1); //draw new mutation, could draw wildtype
-				auto it = mutations.find(m); //find if position in map already has mutations there
+				auto it = genes.find(m); //find if position in map already has mutations there
 
-				if (it == mutations.end()) {   // not found so create new entry in map with wildtype as char default
+				if (it == genes.end()) {   // not found so create new entry in map with wildtype as char default
 
-					vector<unsigned char> vect(2, wildType);
-					vect[p] = mut; //put new mutation value in 
+					vector<unsigned char> allelePair(2, wildType);
+					allelePair[p] = mut; //put new mutation value in 
 
-					mutations.insert(make_pair(m, vect));
+					genes.insert(make_pair(m, allelePair));
 				}
 				else { //position found, already mutations there
 
@@ -127,17 +127,10 @@ void SNPTrait::mutate_KAM()
 					} while (mut == currentChar);
 
 					it->second[p] = mut; //overwrite with new value
-
 				}
-
-
 			}
 		}
-
-
 	}
-
-
 }
 
 
@@ -155,7 +148,7 @@ void SNPTrait::mutate_SSM()
 	map<parameter_t, float> mutationParameters = pProtoTrait->getMutationParameters();
 
 	int maxD = (int)mutationParameters.find(MAX)->second;
-	if (maxD > 256) maxD = 256; //reserved max value for wildtype
+	if (maxD > maxSNPAlleles) maxD = maxSNPAlleles; //reserved max value for wildtype
 
 	for (int p = 0; p < ploidy; p++) {
 
@@ -167,9 +160,8 @@ void SNPTrait::mutate_SSM()
 				NbMut, rng);
 
 			for (int m : mutationPositions) {
-
 				int mutateForward = pRandom->Bernoulli(0.5);
-				auto it = mutations.find(m);
+				auto it = genes.find(m);
 				auto currentAllele = it->second[p];//current
 				 //alleles values are from 0 to maxD - 1
 				if (mutateForward && currentAllele < maxD - 1)
@@ -178,13 +170,9 @@ void SNPTrait::mutate_SSM()
 					it->second[p] -= 1; //one step to the left
 				else //!direction && all == 0
 					it->second[p] += 1;
-
-
 			}
-
 		}
 	}
-
 }
 
 // ----------------------------------------------------------------------------------------
@@ -193,21 +181,19 @@ void SNPTrait::mutate_SSM()
 
 void SNPTrait::inherit(TTrait* parent, set<unsigned int> const& recomPositions, sex_t chromosome, int startingChromosome)
 {
-
 	auto parentCast = dynamic_cast<SNPTrait*> (parent); //horrible
 
 	const auto& parent_seq = parentCast->get_mutations();
 	if (parent_seq.size() > 0) //else nothing to inherit
 		(this->*_inherit_func_ptr) (chromosome, parent_seq, recomPositions, startingChromosome);
-
 }
 
 
 
-void SNPTrait::inheritDiploid(sex_t chromosome, map<int, vector<unsigned char>> const& parentMutations, set<unsigned int> const& recomPositions, int parentChromosome) {
+void SNPTrait::inheritDiploid(sex_t whichChromosome, map<int, vector<unsigned char>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome) {
 
-	if (parentMutations.size() > 0) {
-		auto it = recomPositions.lower_bound(parentMutations.begin()->first);
+	if (parentGenes.size() > 0) {
+		auto it = recomPositions.lower_bound(parentGenes.begin()->first);
 
 		unsigned int nextBreakpoint = *it;
 
@@ -216,65 +202,54 @@ void SNPTrait::inheritDiploid(sex_t chromosome, map<int, vector<unsigned char>> 
 			parentChromosome = !parentChromosome; //switch chromosome
 
 
-		for (auto const& [key, val] : parentMutations) {
+		for (auto const& [locus, allelePair] : parentGenes) {
 
-			while (key > nextBreakpoint) {
+			while (locus > nextBreakpoint) {
 				std::advance(it, 1);
 				nextBreakpoint = *it;
 				parentChromosome = !parentChromosome; //switch chromosome
 			}
 
-			if (key <= nextBreakpoint) {
-				unsigned char sp = val[parentChromosome];
+			if (locus <= nextBreakpoint) {
+				unsigned char sp = allelePair[parentChromosome];
 
-
-				auto it = mutations.find(key);
-				if (it == mutations.end()) {
+				auto it = genes.find(locus);
+				if (it == genes.end()) {
 					// not found
-					vector<unsigned char> vect(2, wildType);
-					vect[chromosome] = sp;
-					mutations.insert(make_pair(key, vect));
-
+					vector<unsigned char> newAllelePair(2, wildType);
+					newAllelePair[whichChromosome] = sp;
+					genes.insert(make_pair(locus, newAllelePair));
 				}
 				else {
-					it->second[chromosome] = sp;
+					it->second[whichChromosome] = sp;
 				}
-
-
 			}
-
-
-
 		}
 	}
 }
 
-void SNPTrait::inheritHaploid(sex_t chromosome, map<int, vector<unsigned char>> const& parentMutations, set<unsigned int> const& recomPositions, int parentChromosome)
+void SNPTrait::inheritHaploid(sex_t chromosome, map<int, vector<unsigned char>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome)
 {
-	mutations = parentMutations;
+	genes = parentGenes;
 }
 
 // ----------------------------------------------------------------------------------------
 // Initialise neutral loci
 // ----------------------------------------------------------------------------------------
 
-void SNPTrait::initialiseFull(int max)
+void SNPTrait::initialiseFull(int maxAlleleVal)
 {
-
 	const auto& positions = pProtoTrait->getPositions();
 	short ploidy = pProtoTrait->getPloidy();
 
 	for (auto position : positions) {
-		vector<unsigned char> vect;
+		vector<unsigned char> allelePair;
 
 		for (int i = 0; i < ploidy; i++) {
-
-			auto mut = (unsigned char)pRandom->IRandom(0, max - 1); //  allele values span 0 - max (255 ceiling) inclusive, max == wildtype
-			vect.emplace_back(mut);
+			auto alleleVal = (unsigned char)pRandom->IRandom(0, maxAlleleVal - 1); //  allele values span 0 - max (255 ceiling) inclusive, max == wildtype
+			allelePair.emplace_back(alleleVal);
 		}
-		mutations.insert(make_pair(position, vect));
-
-
+		genes.insert(make_pair(position, allelePair));
 	}
 }
 
@@ -284,11 +259,11 @@ void SNPTrait::initialiseFull(int max)
 // ----------------------------------------------------------------------------------------
 
 
-bool SNPTrait::isHeterozygoteAtLoci(int loci) const {
+bool SNPTrait::isHeterozygoteAtLocus(int locus) const {
 
-	auto it = mutations.find(loci);
+	auto it = genes.find(locus);
 
-	if (it == mutations.end()) //not found
+	if (it == genes.end()) //not found
 		return false;
 	else
 		return(it->second[0] != it->second[1]);
@@ -302,10 +277,9 @@ int SNPTrait::countHeterozygoteLoci() const {
 
 	int count = 0;
 
-	for (auto const& [key, val] : mutations) {
-			count += (val[0] != val[1]);
+	for (auto const& [locus, allelePair] : genes) {
+			count += (allelePair[0] != allelePair[1]);
 	}
-
 	return count;
 }
 
@@ -314,13 +288,12 @@ int SNPTrait::countHeterozygoteLoci() const {
 // ----------------------------------------------------------------------------------------
 
 
-float SNPTrait::getSelectionCoefAtLoci(short chromosome, int position) const {
+float SNPTrait::getSelectionCoefAtLoci(short whichChromosome, int position) const {
 
-	auto it = mutations.find(position);
+	auto it = genes.find(position);
 
-	if (it == mutations.end()) //no mutations there
+	if (it == genes.end()) //no mutations there
 		return wildType; //must still be wildtype at loci
 	else
-		return it->second[chromosome];
-
+		return it->second[whichChromosome];
 }

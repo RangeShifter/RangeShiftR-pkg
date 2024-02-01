@@ -4,9 +4,9 @@
 #include <vector>
 #include<set>
 
-#include "parameters.h"
-#include "Mutation.h"
-#include "ProtoTrait.h"
+#include "Parameters.h"
+#include "Allele.h"
+#include "SpeciesTrait.h"
 
 using namespace std;
 
@@ -34,7 +34,7 @@ public:
     //virtual   vector<vector<char>> get_mutations() const = 0;
     virtual float getSelectionCoefAtLoci(short chromosome, int i) const = 0;
     virtual int countHeterozygoteLoci() const = 0;
-    virtual bool isHeterozygoteAtLoci(int loci) const = 0;
+    virtual bool isHeterozygoteAtLocus(int loci) const = 0;
     virtual float express() = 0;
     virtual ~TTrait() { }
 };

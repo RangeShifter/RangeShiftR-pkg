@@ -50,7 +50,7 @@
 #include "../Version.h"
 //#endif
 #include "Parameters.h"
-#include "ProtoTrait.h"
+#include "SpeciesTrait.h"
 #include "TTrait.h"
 #include <ranges>
 
@@ -415,11 +415,11 @@ public:
 		short		// sex
 	);
 
-	void addTrait(TraitType traitType, const ProtoTrait& trait);
+	void addTrait(TraitType traitType, const SpeciesTrait& trait);
 
 	void clearTraitTable();
 
-	ProtoTrait* getTrait(TraitType trait) const;
+	SpeciesTrait* getSpTrait(TraitType trait) const;
 
 	//map<TraitType, std::unique_ptr<ProtoTrait>>& getTraitTable(void); //return by reference so ensure variable recieving is const
 
@@ -488,7 +488,7 @@ private:
 	// genome parameters
 
 	/**The traits table.*/
-	map<TraitType, std::unique_ptr<ProtoTrait>> traitTable;
+	map<TraitType, std::unique_ptr<SpeciesTrait>> spTraitTable;
 	set<int> chromosomeEnds;
 	int genomeSize;
 	bool isDiploid;

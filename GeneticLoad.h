@@ -12,18 +12,18 @@ class GeneticLoad : public TTrait {
 
 private:
 
-    ProtoTrait* pProtoTrait;
+    SpeciesTrait* pSpeciesTrait;
 
-    map<int, vector<shared_ptr<Mutation>>> mutations; // position <strand A , strand B>>
+    map<int, vector<shared_ptr<Allele>>> genes; // position <strand A , strand B>>
 
-    inline static shared_ptr<Mutation> wildType;
+    inline static shared_ptr<Allele> wildType;
 
    // void (AdaptiveTrait::* _mutate_func_ptr) (void);
-    void (GeneticLoad::* _inherit_func_ptr) (sex_t chromosome, map<int, vector<shared_ptr<Mutation>>> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
+    void (GeneticLoad::* _inherit_func_ptr) (sex_t chromosome, map<int, vector<shared_ptr<Allele>>> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
     //float (AdaptiveTrait::* _express_func_ptr) (void);
 
-    void inheritDiploid(sex_t chromosome, map<int, vector<shared_ptr<Mutation>>> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
-    void inheritHaploid(sex_t chromosome, map<int, vector<shared_ptr<Mutation>>> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
+    void inheritDiploid(sex_t chromosome, map<int, vector<shared_ptr<Allele>>> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
+    void inheritHaploid(sex_t chromosome, map<int, vector<shared_ptr<Allele>>> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
 
     float drawDominance(float);
     float drawSelectionCoef();
@@ -32,7 +32,7 @@ public:
 
     //this one for species held trait table, e.g. prototype table, sets static members
 
-    GeneticLoad(ProtoTrait* P);
+    GeneticLoad(SpeciesTrait* P);
 
     //this one for individuals, static members are not reset
     GeneticLoad(const GeneticLoad& T);
@@ -43,19 +43,19 @@ public:
 
     virtual void  mutate() override;
 
-    virtual int getNLoci()  const override { return pProtoTrait->getPositionsSize(); }
+    virtual int getNLoci()  const override { return pSpeciesTrait->getPositionsSize(); }
 
-    float getMutationRate() const override { return pProtoTrait->getMutationRate(); }
+    float getMutationRate() const override { return pSpeciesTrait->getMutationRate(); }
 
-    bool isInherited() const override { return pProtoTrait->isInherited(); }
+    bool isInherited() const override { return pSpeciesTrait->isInherited(); }
 
-    map<int, vector<shared_ptr<Mutation>>>& get_mutations() { return mutations; } //returning reference, reciever must be const
+    map<int, vector<shared_ptr<Allele>>>& get_mutations() { return genes; } //returning reference, reciever must be const
 
     virtual float getSelectionCoefAtLoci(short chromosome, int position) const override;
 
     virtual int countHeterozygoteLoci() const;
 
-    virtual bool isHeterozygoteAtLoci(int loci) const override;
+    virtual bool isHeterozygoteAtLocus(int locus) const override;
 
     virtual float express();
 
