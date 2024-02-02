@@ -38,15 +38,6 @@ Last updated: 12 January 2021 by Steve Palmer
 
 #include <stdlib.h>
 #include <fstream>
-//#include <iostream>
-
-#if RS_RCPP
-#include "../Version.h"
-#endif
-
-//#if !RS_RCPP && R_CMD
-//#include "../../Batch/Version.h"
-//#endif
 
 using namespace std;
 

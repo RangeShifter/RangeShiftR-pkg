@@ -52,13 +52,7 @@ Last updated: 25 June 2021 by Anne-Kathleen Malchow
 #include <vector>
 #include <algorithm>
 using namespace std;
-#if RS_RCPP
-#include "../Version.h"
-#endif
 
-//#if !RS_RCPP && R_CMD
-//#include "../../Batch/Version.h"
-//#endif
 #include "SubCommunity.h"
 #include "Landscape.h"
 #include "Patch.h"
