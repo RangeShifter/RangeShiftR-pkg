@@ -61,9 +61,6 @@
 #include <vector>
 #include <sstream>
 using namespace std;
-#if RS_RCPP
-#include "../Version.h"
-#endif
 
 #include "RSrandom.h"
 

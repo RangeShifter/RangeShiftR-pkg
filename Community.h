@@ -53,9 +53,6 @@
 #include <algorithm>
 #include <ranges>
 using namespace std;
-#if RS_RCPP
-#include "../Version.h"
-#endif
 
 #include "SubCommunity.h"
 #include "Landscape.h"

@@ -38,11 +38,6 @@
 
 #include <stdlib.h>
 #include <fstream>
- //#include <iostream>
-
-#if RS_RCPP
-#include "../Version.h"
-#endif
 
 using namespace std;
 

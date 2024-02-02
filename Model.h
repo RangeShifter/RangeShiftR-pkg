@@ -49,10 +49,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#if RS_RCPP
-#include "../Version.h"
-#endif
-
 #include "Parameters.h"
 #include "Landscape.h"
 #include "Community.h"

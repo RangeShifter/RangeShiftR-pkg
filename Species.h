@@ -45,10 +45,6 @@
 #ifndef SpeciesH
 #define SpeciesH
 
-#include <map>
-#if RS_RCPP
-#include "../Version.h"
-#endif
 #include "Parameters.h"
 #include "SpeciesTrait.h"
 #include "TTrait.h"

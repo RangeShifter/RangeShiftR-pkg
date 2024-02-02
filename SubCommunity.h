@@ -50,9 +50,6 @@
 #include <algorithm>
 using namespace std;
 
-#if RS_RCPP
-#include "../Version.h"
-#endif
 #include "Parameters.h"
 #include "Landscape.h"
 #include "Population.h"
