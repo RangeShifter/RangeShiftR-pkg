@@ -319,12 +319,8 @@ int RunModel(Landscape* pLandscape, int seqsim)
 		DEBUGLOG << "RunModel(): completed initialisation, rep=" << rep
 			<< " pSpecies=" << pSpecies << endl;
 #endif
-#if BATCH
-#if RS_RCPP && !R_CMD
-		Rcpp::Rcout << "RunModel(): completed initialisation " << endl;
-#else
-		cout << "RunModel(): completed initialisation " << endl;
-#endif
+#if BATCH && RS_RCPP && !R_CMD
+	Rcpp::Rcout << "RunModel(): completed initialisation " << endl;
 #endif
 
 		// open a new individuals file for each replicate
@@ -956,8 +952,8 @@ bool CheckDirectory(void)
 //For outputs and population visualisations pre-reproduction
 void PreReproductionOutput(Landscape* pLand, Community* pComm, int rep, int yr, int gen)
 {
-#if RSDEBUG || VCL
-	landParams ppLand = pLand->getLandParams();
+#if RSDEBUG
+landParams ppLand = pLand->getLandParams();
 #endif
 	simParams sim = paramsSim->getSim();
 	simView v = paramsSim->getViews();

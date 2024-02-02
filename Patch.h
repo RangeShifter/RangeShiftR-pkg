@@ -68,9 +68,9 @@
 #include <vector>
 using namespace std;
 
-//#if RS_RCPP && !R_CMD
+#if RS_RCPP
 #include "../Version.h"
-//#endif
+#endif
 #include "Parameters.h"
 #include "Cell.h"
 #include "Species.h"
