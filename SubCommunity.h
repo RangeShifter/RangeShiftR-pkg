@@ -50,14 +50,6 @@ Last updated: 26 October 2021 by Steve Palmer
 #include <algorithm>
 using namespace std;
 
-#if RS_RCPP
-#include "../Version.h"
-#endif
-
-//#if !RS_RCPP && R_CMD
-//#include "../../Batch/Version.h"
-//#endif
-
 #include "Parameters.h"
 #include "Landscape.h"
 #include "Population.h"
