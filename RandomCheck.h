@@ -28,10 +28,6 @@
 #include <fstream>
 using namespace std;
 
-#if RS_RCPP
-#include "../Version.h"
-#endif
-
 #include "Parameters.h"
 #include "RSrandom.h"
 

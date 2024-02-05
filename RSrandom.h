@@ -41,27 +41,14 @@ Last updated: 12 January 2021 by Steve Palmer
 #include <cassert>
 #include "Utils.h"
 
-#if RS_RCPP
-#include "../Version.h"
-#endif
-
-//#if !RS_RCPP && R_CMD
-//#include "../../Batch/Version.h"
-//#endif
-
 using namespace std;
 
 #if RSDEBUG
 extern ofstream DEBUGLOG;
 #endif
 
-
-
 #if !RS_RCPP
-
 //--------------- 2.) New version of RSrandom.cpp
-
-
 	#include <cmath>
 	#include <random>
 	#if !LINUX_CLUSTER
