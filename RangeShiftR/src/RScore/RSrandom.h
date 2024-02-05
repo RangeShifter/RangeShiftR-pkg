@@ -122,6 +122,9 @@ extern ofstream DEBUGLOG;
 
 #endif // !RS_RCPP
 
+#if RSDEBUG
+	void testRSrandom();
+#endif // RSDEBUG
 
 //---------------------------------------------------------------------------
 
