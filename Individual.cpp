@@ -1250,7 +1250,6 @@ int Individual::moveStep(Landscape* pLandscape, Species* pSpecies,
 	} // end of single movement step
 
 	return dispersing;
-
 }
 
 //---------------------------------------------------------------------------
@@ -1827,15 +1826,16 @@ void Individual::setCRW(crwParams* pCRW) {
 	crw = pCRW;
 }
 
-// Force initialisation of path as it sometimes doesn't set??
+// TP: Both functions below are a bad fix to an issue I have for testing
+// Smh upon exiting individual initialisation path and CRW get deallocated
+// Force initialisation of path
 void Individual::forceInitPath() {
 	pathData* pPath = new pathData;
 	pPath->out = pPath->year = pPath->total = 0;
 	pPath->pSettPatch = 0; pPath->settleStatus = 0;
 	setPath(pPath);
 }
-
-// Force initialisation of crw as it sometimes doesn't set??
+// Force initialisation of crw
 void Individual::forceInitCRW(const trfrMovtTraits& m) {
 	crwParams* pCRW = new crwParams;
 	pCRW->prevdrn = (float)(pRandom->Random() * 2.0 * PI);
@@ -1843,6 +1843,10 @@ void Individual::forceInitCRW(const trfrMovtTraits& m) {
 	pCRW->yc = ((float)pRandom->Random() * 0.999f) + (float)pCurrCell->getLocn().y;
 	pCRW->stepL = m.stepLength; pCRW->rho = m.rho;
 	setCRW(pCRW);
+}
+
+void Individual::setInitAngle(const float angle) {
+	crw->prevdrn = angle;
 }
 
 
@@ -2117,7 +2121,6 @@ void testIndividual() {
 			}
 		}		
 		Cell* init_cell = cell_vec[12]; // central
-		//Cell* final_cell = new Cell(ls_params.dimX - 1, ls_params.dimY - 1, 0, 0);
 		ls.setCellArray();
 		for (auto c : cell_vec) ls.addCellToLand(c);
 
@@ -2130,7 +2133,6 @@ void testIndividual() {
 
 		// Habitat-dependent mortality
 		sp.createHabCostMort(1);
-		// sp.setHabMort(hab_index, 0.0);
 
 		// Transfer rules
 		trfrRules trfr;
@@ -2165,15 +2167,11 @@ void testIndividual() {
 		// Create and set up individual
 		Individual ind(init_cell, init_patch, 1, 0, 0, 0.0, true, 2);
 
-		// ind.setYearSteps(); // if needed
-		// ind.getSteps();
-
 		// Set status
 		assert(ind.getStatus() == 0); // default status, not emigrating
 		int isDispersing = ind.moveStep(&ls, &sp, hab_index, false);
 		assert(ind.getStatus() == 0); // status didn't change
 		assert(ind.getCurrCell() == init_cell); // not emigrating so didn't move
-		//ind.~Individual();
 
 		// Per-step mortality
 		m.stepMort = 1.0; // should die 
@@ -2205,9 +2203,16 @@ void testIndividual() {
 		// Step size
 		ls = Landscape();
 		ls.setLandParams(ls_params, true);
-		// Only two suitable cells in opposite corners
-		init_cell = new Cell(0, 0, 0, 0);
-		Cell* final_cell = new Cell(ls_params.dimX - 1, ls_params.dimY - 1, 0, 0);
+
+		sp.createHabK(2);
+		const int hab_suitable = 0;
+		const int hab_unsuitable = 1;
+		sp.setHabK(hab_suitable, 100.0);
+		sp.setHabK(hab_unsuitable, 0.0);
+
+		// Initial cell unsuitable, suitable cell in opposite corner
+		init_cell = new Cell(0, 0, 0, hab_unsuitable);
+		Cell* final_cell = new Cell(ls_params.dimX - 1, ls_params.dimY - 1, 0, hab_suitable);
 		ls.setCellArray();
 		ls.addCellToLand(init_cell);
 		ls.addCellToLand(final_cell);
@@ -2215,8 +2220,10 @@ void testIndividual() {
 		ls.updateCarryingCapacity(&sp, 0, 0);
 		// Init cell is NOT in natal patch
 		Patch* natalPatch = new Patch(0, 0);
+		init_patch = (Patch*)init_cell->getPatch();
+
 		// Step length too short
-		m.stepLength = 0.1; // cannot reach final cell
+		m.stepLength = 0.1; // will not reach final cell
 		m.rho = 0.0; // random angle
 		sp.setMovtTraits(m);
 		steps.minSteps = 1;
@@ -2227,7 +2234,7 @@ void testIndividual() {
 		ind.setStatus(1); // dispersing
 		ind.forceInitPath();
 		ind.forceInitCRW(m);
-		// First step - individual can't reach final cell so still dispersing
+		// First step - still in unsuitable cell so still dispersing
 		isDispersing = ind.moveStep(&ls, &sp, hab_index, false);
 		assert(ind.getCurrCell() == init_cell);
 		assert(ind.getStatus() == 1);
@@ -2236,7 +2243,7 @@ void testIndividual() {
 		assert(ind.getCurrCell() == init_cell);
 		assert(ind.getStatus() == 3);
 		ind.setStatus(1); // dispersing again
-		// Third step - reaching max steps, dies
+		// Third step - reaching max steps, dies in unsuitable cell
 		isDispersing = ind.moveStep(&ls, &sp, hab_index, false);
 		assert(ind.getCurrCell() == init_cell);
 		assert(ind.getStatus() == 6);
@@ -2244,7 +2251,7 @@ void testIndividual() {
 		// Step length too long
 		m.stepLength = ls_params.dimX * SQRT2 * 1.5; // overshoots
 		sp.setMovtTraits(m);
-		ind = Individual(init_cell, natalPatch, 0, 0, 0, 0.0, true, 2);
+		ind = Individual(init_cell, init_patch, 0, 0, 0, 0.0, true, 2);
 		ind.setStatus(1); // dispersing
 		ind.forceInitPath();
 		ind.forceInitCRW(m);
@@ -2263,12 +2270,12 @@ void testIndividual() {
 		ind.setStatus(1); // dispersing
 		ind.forceInitPath();
 		ind.forceInitCRW(m);
-		// Initial angle still random but should eventually reach the right cell
+		// Initial angle still random but should eventually reach the suitable cell
 		isDispersing = ind.moveStep(&ls, &sp, hab_index, false);
 		assert(ind.getStatus() == 2);
 		assert(ind.getCurrCell() == final_cell);
 
-		// If boundaries are absorbing however, very likely to die
+		// If boundaries are absorbing however, most likely to die
 		ind = Individual(init_cell, natalPatch, 0, 0, 0, 0.0, true, 2);
 		ind.setStatus(1); // dispersing
 		ind.forceInitPath();
@@ -2279,15 +2286,27 @@ void testIndividual() {
 		assert(ind.getCurrCell() == 0); // deref apparently
 
 		// Correlation parameter
-		// If rho = 1, should move in a straight line (after moving out of initial patch)
-		
+		// If rho = 1 move in a straight line
+
+		// All cells are suitable
+		/*
+		vector<Cell*> cell_vec;
+		for (int x = ls_params.minX; x < ls_params.dimX; ++x) {
+			for (int y = ls_params.minY; y < ls_params.dimY; ++y) {
+				cell_vec.push_back(new Cell(x, y, 0, hab_suitable));
+			}
+		}
+		Cell* init_cell = cell_vec[12]; // central
+		ls.setCellArray();
+		for (auto c : cell_vec) ls.addCellToLand(c);
+		*/
 		// Add a central cell to get a diagonal of suitable cells
-		Cell* pMiddleCell = new Cell(2, 2, 0, hab_index);
+		Cell* pMiddleCell = new Cell(2, 2, 0, hab_suitable);
 		ls.addCellToLand(pMiddleCell);
 		ls.allocatePatches(&sp);
 		ls.updateCarryingCapacity(&sp, 0, 0);
-		m.stepLength = 2 * SQRT2; // move by 1 cell diagonally
-		m.rho = 1;
+		m.stepLength = 2 * SQRT2; // long enough to move by 1 cell diagonally
+		m.rho = 1; // init angle must be 0.7854
 		sp.setMovtTraits(m);
 		steps.maxStepsYr = steps.maxSteps = 2;
 		sp.setSteps(0, 0, steps);
@@ -2295,6 +2314,8 @@ void testIndividual() {
 		ind.setStatus(1); // dispersing
 		ind.forceInitPath();
 		ind.forceInitCRW(m);
+		const float diag_angle = 0.7854; // about 45 degrees
+		ind.setInitAngle(diag_angle);
 		isDispersing = ind.moveStep(&ls, &sp, hab_index, false);
 		assert(ind.getStatus() == 2);
 		assert(ind.getCurrCell() == pMiddleCell);
@@ -2302,10 +2323,10 @@ void testIndividual() {
 		isDispersing = ind.moveStep(&ls, &sp, hab_index, false);
 		assert(ind.getStatus() == 2);
 		assert(ind.getCurrCell() == final_cell);
+		// can set angle change through movt?
+		// can it go back to first cell?
+
 		// not a good test yet, must add other suitable cells
-		// and start outside of natal patch
-
-
 	}
 }
 #endif // RSDEBUG

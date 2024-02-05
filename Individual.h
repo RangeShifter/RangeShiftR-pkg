@@ -258,6 +258,7 @@ public:
 	void setCRW(crwParams* pCRW);
 	void forceInitPath();
 	void forceInitCRW(const trfrMovtTraits&);
+	void setInitAngle(const float angle);
 #endif
 
 private:
