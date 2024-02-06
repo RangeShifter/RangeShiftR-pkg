@@ -38,15 +38,8 @@ Last updated: 12 January 2021 by Steve Palmer
 
 #include <stdlib.h>
 #include <fstream>
-//#include <iostream>
-
-#if RS_RCPP
-#include "../Version.h"
-#endif
-
-//#if !RS_RCPP && R_CMD
-//#include "../../Batch/Version.h"
-//#endif
+#include <cassert>
+#include "Utils.h"
 
 using namespace std;
 
@@ -54,13 +47,8 @@ using namespace std;
 extern ofstream DEBUGLOG;
 #endif
 
-
-
 #if !RS_RCPP
-
 //--------------- 2.) New version of RSrandom.cpp
-
-
 	#include <cmath>
 	#include <random>
 	#if !LINUX_CLUSTER
@@ -131,6 +119,9 @@ extern ofstream DEBUGLOG;
 
 #endif // !RS_RCPP
 
+#if RSDEBUG
+	void testRSrandom();
+#endif // RSDEBUG
 
 //---------------------------------------------------------------------------
 
