@@ -2286,47 +2286,42 @@ void testIndividual() {
 		assert(ind.getCurrCell() == 0); // deref apparently
 
 		// Correlation parameter
-		// If rho = 1 move in a straight line
-
-		// All cells are suitable
-		/*
-		vector<Cell*> cell_vec;
+		// If rho = 1 should move in a straight line
+		// Many cells, all suitable
+		ls_params.dimX = ls_params.dimY = 10;
+		ls_params.minX = ls_params.minY = 0;
+		ls_params.maxX = ls_params.maxY = ls_params.dimX - 1;
+		ls_params.resol = 1;
+		ls = Landscape();
+		ls.setLandParams(ls_params, true);
+		cell_vec.clear();
 		for (int x = ls_params.minX; x < ls_params.dimX; ++x) {
 			for (int y = ls_params.minY; y < ls_params.dimY; ++y) {
 				cell_vec.push_back(new Cell(x, y, 0, hab_suitable));
 			}
 		}
-		Cell* init_cell = cell_vec[12]; // central
 		ls.setCellArray();
 		for (auto c : cell_vec) ls.addCellToLand(c);
-		*/
-		// Add a central cell to get a diagonal of suitable cells
-		Cell* pMiddleCell = new Cell(2, 2, 0, hab_suitable);
-		ls.addCellToLand(pMiddleCell);
 		ls.allocatePatches(&sp);
 		ls.updateCarryingCapacity(&sp, 0, 0);
-		m.stepLength = 2 * SQRT2; // long enough to move by 1 cell diagonally
-		m.rho = 1; // init angle must be 0.7854
+		// Individual moves by 1 along the diagonal
+		m.stepLength = ls_params.resol * SQRT2; // 1 diagonal cell
+		m.rho = 1; // angle = previous angle
 		sp.setMovtTraits(m);
-		steps.maxStepsYr = steps.maxSteps = 2;
+		steps.maxStepsYr = steps.maxSteps = ls_params.dimX;
 		sp.setSteps(0, 0, steps);
-		ind = Individual(init_cell, natalPatch, 0, 0, 0, 0.0, true, 2);
-		ind.setStatus(1); // dispersing
+		ind = Individual(cell_vec[0], natalPatch, 0, 0, 0, 0.0, true, 2);
 		ind.forceInitPath();
 		ind.forceInitCRW(m);
-		const float diag_angle = 0.7854; // about 45 degrees
+		const float diag_angle = PI / 4.0; // 45 degrees
 		ind.setInitAngle(diag_angle);
-		isDispersing = ind.moveStep(&ls, &sp, hab_index, false);
-		assert(ind.getStatus() == 2);
-		assert(ind.getCurrCell() == pMiddleCell);
-		ind.setStatus(1); // emigrate again
-		isDispersing = ind.moveStep(&ls, &sp, hab_index, false);
-		assert(ind.getStatus() == 2);
-		assert(ind.getCurrCell() == final_cell);
-		// can set angle change through movt?
-		// can it go back to first cell?
-
-		// not a good test yet, must add other suitable cells
+		// Individual moves only along diagonal cells
+		for (int i = 1; i < ls_params.dimX; ++i) {
+			ind.setStatus(1); // dispersing
+			isDispersing = ind.moveStep(&ls, &sp, hab_index, false);
+			assert(ind.getStatus() == 2);
+			assert(ind.getCurrCell() == cell_vec[i * (ls_params.dimX + 1)]);
+		}
 	}
 }
 #endif // RSDEBUG
