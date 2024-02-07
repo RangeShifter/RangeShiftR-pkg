@@ -15,7 +15,7 @@ RangeShifter is distributed with three user interfaces, each living in their own
 - RangeShifter Batch Mode (command line interface)
 - the RangeShiftR package (R interface)
 
-All three share the same source code for the core simulation (i.e., the actual model), which lives in its own repo (RScore). Each of the interfaces keeps a copy of this core code in a subfolder called RScore, kept in sync with the RScore repo via a git subtree (see [Git subtree usage section](https://github.com/RangeShifter/RScore/tree/development-guidelines#readme). 
+All three share the same source code for the core simulation (i.e., the actual model), which lives in its own repo (RScore). Each of the interfaces keeps a copy of this core code in a subfolder called RScore, kept in sync with the RScore repo via a git subtree (see [Git subtree usage section](https://github.com/RangeShifter/RScore?tab=readme-ov-file#usage-git-subtree). 
 
 ⚠️ If you wish to propose a change to the core code of the simulation, please do so *in the [RScore](https://github.com/RangeShifter/RScore) repo*, rather than in the RScore folder of either interface.
 
@@ -55,13 +55,13 @@ RangeShifter uses the following branching structure:
   
   In the meantime, we encourage contributors to work in small and frequent commits, and to merge `develop` into their branch often to update their branch with newest changes.
 
-If you need a reminder on the main git commands related to committing and branching, head to the [Git cheatsheet](https://github.com/RangeShifter/RScore/blob/development-guidelines/git_cheatsheet.md).
+If you need a reminder on the main git commands related to committing and branching, head to the [Git cheatsheet](https://github.com/RangeShifter/RScore/blob/main/git_cheatsheet.md).
 
 ## Contributing to the RangeShifter core code
 
-Any changes (issues, bugs, features) regarding the actual RangeShifter core code should be done in [this](https://github.com/RangeShifter/RScore) repository and can afterwards be synced with all interfaces using the git subtree feature (see [Git subtree](https://github.com/RangeShifter/RScore/tree/main#usage-git-subtrees) section in the README). 
+Any changes (issues, bugs, features) regarding the actual RangeShifter core code should be done in [this](https://github.com/RangeShifter/RScore) repository and can afterwards be synced with all interfaces using the git subtree feature (see [Git subtree](https://github.com/RangeShifter/RScore?tab=readme-ov-file#usage-git-subtree) section in the README). 
 
-Please check the [contributing guidelines for the RScore code](https://github.com/RangeShifter/RScore/blob/development-guidelines/CONTRIBUTING.md). 
+Please check the [contributing guidelines for the RScore code](https://github.com/RangeShifter/RScore/blob/main/CONTRIBUTING.md). 
 
 ## Contributing to the RangeShiftR package
 

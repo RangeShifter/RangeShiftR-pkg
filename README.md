@@ -54,6 +54,9 @@ See [Contributing guidelines](https://github.com/RangeShifter/RangeShiftR-packag
 -    [RScore](https://github.com/RangeShifter/RScore), source for RangeShifter's core code
 -    [RangeShifter batch mode](https://github.com/RangeShifter/RangeShifter_batch_dev), source for the batch mode interface
 
+## Maintainer
+
+- [@JetteReeg](https://github.com/JetteReeg)
 
 ## References
 
