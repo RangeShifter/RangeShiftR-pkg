@@ -1,4 +1,12 @@
-SOURCES = $(wildcard RScore/*.cpp)
+# all except RScore/main.cpp
+SOURCES = RScore/Cell.cpp RScore/Community.cpp RScore/FractalGenerator.cpp \
+	RScore/Genome.cpp RScore/Individual.cpp RScore/Landscape.cpp \
+	RScore/Model.cpp RScore/Parameters.cpp RScore/Patch.cpp \
+	RScore/Population.cpp RScore/RandomCheck.cpp RScore/RSrandom.cpp \
+	RScore/Species.cpp RScore/SubCommunity.cpp RScore/Utils.cpp
+
+OBJECTS = Rinterface.o RcppExports.o $(SOURCES:.cpp=.o)
+
 
 OBJECTS = Rinterface.o RcppExports.o $(SOURCES:.cpp=.o)
 
