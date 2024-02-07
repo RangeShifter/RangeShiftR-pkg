@@ -60,13 +60,6 @@ Last updated: 25 June 2021 by Steve Palmer
 #include <stdlib.h>
 #include <vector>
 using namespace std;
-//#if RS_RCPP && !R_CMD
-#include "../Version.h"
-//#endif
-
-//#if !RS_RCPP && R_CMD
-//#include "../../Batch/Version.h"
-//#endif
 
 #include "RSrandom.h"
 

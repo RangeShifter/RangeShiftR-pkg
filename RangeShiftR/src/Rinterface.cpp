@@ -4069,35 +4069,6 @@ void StreamErrorR(string filename)
 /* Batch mode of v2.0 currently has no facility to save maps (unless initiated from GUI).
  */
 
-const string Int2Str(const int x)
-{
-	ostringstream o;
-	if(!(o << x))
-		return "ERROR";
-	return o.str();
-}
-const string Int2Str(const int x, unsigned int width)
-{
-	ostringstream o;
-	if(!(o << std::setfill('0') << std::setw(width) << x))
-		return "ERROR";
-	return o.str();
-}
-const string Float2Str(const float x)
-{
-	ostringstream o;
-	if(!(o << x))
-		return "ERROR";
-	return o.str();
-}
-const string Double2Str(const double x)
-{
-	ostringstream o;
-	if(!(o << x))
-		return "ERROR";
-	return o.str();
-}
-
 void MemoLine(string msg)
 {
 	// dummy function for batch version

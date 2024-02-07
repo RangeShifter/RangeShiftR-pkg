@@ -68,14 +68,6 @@ Last updated: 25 June 2021 by Steve Palmer
 #include <vector>
 using namespace std;
 
-//#if RS_RCPP && !R_CMD
-#include "../Version.h"
-//#endif
-
-//#if !RS_RCPP && R_CMD
-//#include "../../Batch/Version.h"
-//#endif
-
 #include "Parameters.h"
 #include "Cell.h"
 #include "Species.h"

@@ -52,13 +52,7 @@ Last updated: 25 June 2021 by Anne-Kathleen Malchow
 #include <vector>
 #include <algorithm>
 using namespace std;
-//#if RS_RCPP && !R_CMD
-#include "../Version.h"
-//#endif
 
-//#if !RS_RCPP && R_CMD
-//#include "../../Batch/Version.h"
-//#endif
 #include "SubCommunity.h"
 #include "Landscape.h"
 #include "Patch.h"
@@ -103,12 +97,12 @@ public:
 
 	void survival(
 		short,	// part:		0 = determine survival & development,
-						//		 			1 = apply survival changes to the population
+			//		 			1 = apply survival changes to the population
 		short,	// option0:	0 = stage 0 (juveniles) only         )
-						//					1 = all stages                       ) used by part 0 only
-						//					2 = stage 1 and above (all non-juvs) )
+		//					1 = all stages                       ) used by part 0 only
+		//					2 = stage 1 and above (all non-juvs) )
 		short 	// option1:	0 - development only (when survival is annual)
-						//	  	 		1 - development and survival
+		//		  	 		1 - development and survival
 	);
 	void ageIncrement(void);
 	int totalInds(void);
@@ -187,8 +181,6 @@ public:
 	);
 	void outTraits( // Write records to traits file
 		traitCanvas,// pointers to canvases for drawing variable traits 
-//		emigCanvas,	// pointers to canvases for drawing emigration traits
-//		trfrCanvas, // pointers to canvases for drawing emigration traits
 								// see SubCommunity.h
 								// in the batch version, these are replaced by integers set to zero
 		Species*,		// pointer to Species
