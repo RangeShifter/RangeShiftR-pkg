@@ -46,7 +46,7 @@ For technical questions related to the RangeShiftR package interface and which c
 
 ## Contributing
 
-See [Contributing guidelines](https://github.com/RangeShifter/RangeShiftR-package-dev/CONTRIBUTING.md)
+See [Contributing guidelines](https://github.com/RangeShifter/RangeShiftR-package-dev/blob/main/CONTRIBUTING.md)
 
 ## See also
 
