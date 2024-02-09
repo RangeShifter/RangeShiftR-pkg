@@ -59,18 +59,12 @@ Cell::Cell(int xx, int yy, intptr patch, float hab)
 }
 
 Cell::~Cell() {
-#if RSDEBUG
-	//DEBUGLOG << "Cell::~Cell(): this = " << this << " smsData = " << smsData << endl;
-#endif
 	habIxx.clear();
 	habitats.clear();
 	if (smsData != 0) {
 		if (smsData->effcosts != 0) delete smsData->effcosts;
 		delete smsData;
 	}
-#if RSDEBUG
-	//DEBUGLOG << "Cell::~Cell(): deleted" << endl;
-#endif
 }
 
 void Cell::setHabIndex(short hx) {
@@ -118,12 +112,6 @@ void Cell::setPatch(intptr p) {
 }
 intptr Cell::getPatch(void)
 {
-#if RSDEBUG
-	//DebugGUI(("Cell::getPatch(): this=" + Int2Str((int)this)
-	//	+ " x=" + Int2Str(x) + " y=" + Int2Str(y)
-	//	+ " habIxx[0]=" + Int2Str(habIxx[0]) + " pPatch=" + Int2Str(pPatch)
-	//).c_str());
-#endif
 	return pPatch;
 }
 

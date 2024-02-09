@@ -262,13 +262,6 @@ void Community::initialise(Species* pSpecies, int year)
 			while (indIx < ninds && iind.year <= year) {
 				iind = paramsInit->getInitInd(indIx);
 				while (iind.year == year) {
-#if RSDEBUG
-					//DEBUGLOG << "Community::initialise(): year=" << year
-					//	<< " indIx=" << indIx << " iind.year=" << iind.year
-					//	<< " iind.patchID=" << iind.patchID << " iind.x=" << iind.x << " iind.y=" << iind.y
-					//	<< " iind.sex=" << iind.sex << " iind.age=" << iind.age << " iind.stage=" << iind.stage
-					//	<< endl;
-#endif
 					if (ppLand.patchModel) {
 						if (pLandscape->existsPatch(iind.patchID)) {
 							pPatch = pLandscape->findPatch(iind.patchID);
@@ -537,32 +530,18 @@ void Community::dispersal(short landIx)
 		for (int i = 0; i < nsubcomms; i++) { // all populations
 			subComms[i]->resetPossSettlers();
 		}
-#if RSDEBUG
-		//DEBUGLOG << "Community::dispersal() 1111: ndispersers=" << ndispersers << endl;
-#endif
 #if RS_RCPP // included also SEASONAL
 		ndispersers = matrix->transfer(pLandscape, landIx, nextseason);
 #else
 		ndispersers = matrix->transfer(pLandscape, landIx);
 #endif // SEASONAL || RS_RCPP
-#if RSDEBUG
-		//DEBUGLOG << "Community::dispersal() 2222: ndispersers=" << ndispersers << endl;
-#endif
 		matrix->completeDispersal(pLandscape, sim.outConnect);
-#if RSDEBUG
-		//DEBUGLOG << "Community::dispersal() 3333: ndispersers=" << ndispersers << endl;
-#endif
 	} while (ndispersers > 0);
 
 #if RSDEBUG
 	DEBUGLOG << "Community::dispersal(): matrix=" << matrix << endl;
 	t2 = time(0);
 	DEBUGLOG << "Community::dispersal(): transfer time=" << t2 - t1 << endl;
-#endif
-
-#if RSDEBUG
-	//int t3 = time(0);
-	//DEBUGLOG << "Community::dispersal(): completion time = " << t3-t2 << endl;
 #endif
 
 }
@@ -663,25 +642,9 @@ commStats Community::getStats(void)
 		patchPop = subComms[i]->getPopStats();
 		s.ninds += patchPop.nInds;
 		s.nnonjuvs += patchPop.nNonJuvs;
-#if RSDEBUG
-		//DEBUGLOG << "Community::getStats(): i = " << i
-		//	<< " pSpecies = " << patchPop.pSpecies << " pPatch = " << patchPop.pPatch
-		//	<< " nInds = " << patchPop.nInds << endl;
-#endif
 		if (patchPop.pPatch != 0) { // not the matrix patch
-#if RSDEBUG
-			//DEBUGLOG << "Community::getStats(): i = " << i
-			//	<< " patchNum = " << patchPop.pPatch->getPatchNum() << endl;
-#endif
 			if (patchPop.pPatch->getPatchNum() != 0) { // not matrix patch
 				localK = patchPop.pPatch->getK();
-#if RSDEBUG
-				//DEBUGLOG << "Community::getStats(): i= " << i
-				//	<< " pSpecies= " << patchPop.pSpecies << " pPatch= " << patchPop.pPatch
-				//	<< " patchNum= " << patchPop.pPatch->getPatchNum() << " localK= " << localK
-				//	<< " nInds= " << patchPop.nInds << " breeding= " << (int)patchPop.breeding
-				//	<< endl;
-#endif
 				if (localK > 0.0) s.suitable++;
 				if (patchPop.nInds > 0 && patchPop.breeding) {
 					s.occupied++;
@@ -962,17 +925,6 @@ void Community::outRange(Species* pSpecies, int rep, int yr, int gen)
 				ts.sumS0[j] += scts.sumS0[j];     ts.ssqS0[j] += scts.ssqS0[j];
 				ts.sumAlphaS[j] += scts.sumAlphaS[j]; ts.ssqAlphaS[j] += scts.ssqAlphaS[j];
 				ts.sumBetaS[j] += scts.sumBetaS[j];  ts.ssqBetaS[j] += scts.ssqBetaS[j];
-#if RSDEBUG
-				//DEBUGLOG << "Community::outRange(): i=" << i << " j=" << j
-				//	<< " scts.ninds[j]=" << scts.ninds[j]
-				//	<< " scts.sumD0[j]=" << scts.sumD0[j]
-				//	<< " scts.ssqD0[j]=" << scts.ssqD0[j]
-				//	<< endl;
-				//DEBUGLOG << "Community::outRange(): i=" << i << " j=" << j
-				//	<< " ts.ninds[j]=" << ts.ninds[j]
-				//	<< " ts.sumD0[j]=" << ts.sumD0[j] << " ts.ssqD0[j]=" << ts.ssqD0[j]
-				//	<< endl;
-#endif
 			}
 		}
 
@@ -1011,16 +963,6 @@ void Community::outRange(Species* pSpecies, int rep, int yr, int gen)
 						sdD0[g] = sdAlpha[g] = sdBeta[g] = 0.0;
 					}
 				}
-#if RSDEBUG
-				//DEBUGLOG << "Community::outRange(): ngenes=" << ngenes << " g=" << g
-				//	<< " ts.ninds[g]=" << ts.ninds[g]
-				//	<< " ts.sumD0[g]=" << ts.sumD0[g]
-				//	<< " ts.ssqD0[g]=" << ts.ssqD0[g]
-				//	<< endl;
-				//DEBUGLOG << "Community::outRange(): popsize=" << popsize
-				//	<< " mnD0[g]" << mnD0[g] << " sdD0[g]" << sdD0[g]
-				//	<< endl;
-#endif
 			}
 			if (emig.sexDep) {
 				outrange << "\t" << mnD0[0] << "\t" << sdD0[0];
@@ -1098,17 +1040,6 @@ void Community::outRange(Species* pSpecies, int rep, int yr, int gen)
 						if (sdBetaDB[g] > 0.0) sdBetaDB[g] = sqrt(sdBetaDB[g]); else sdBetaDB[g] = 0.0;
 					}
 				}
-#if RSDEBUG
-				//DEBUGLOG << "Community::outRange(): ngenes=" << ngenes << " g=" << g
-				//	<< " ts.ninds[g]=" << ts.ninds[g]
-				//	<< " ts.sumDP[g]=" << ts.sumDP[g] << " ts.ssqDP[g]=" << ts.ssqDP[g]
-				//	<< " ts.sumGB[g]=" << ts.sumGB[g] << " ts.ssqGB[g]=" << ts.ssqGB[g]
-				//	<< endl;
-				//DEBUGLOG << "Community::outRange(): popsize=" << popsize
-				//	<< " mnDP[g]" << mnDP[g] << " sdDP[g]" << sdDP[g]
-				//	<< " mnGB[g]" << mnGB[g] << " sdGB[g]" << sdGB[g]
-				//	<< endl;
-#endif
 			}
 			if (trfr.moveModel) {
 				if (trfr.moveType == 1) {
@@ -1282,35 +1213,17 @@ void Community::outOccSuit(bool view) {
 	simParams sim = paramsSim->getSim();
 	//streamsize prec = outsuit.precision();
 
-#if RSDEBUG
-//DEBUGLOG << "Community::outOccSuit(): sim.reps=" << sim.reps
-//	<< " sim.years=" << sim.years << " sim.outInt=" << sim.outInt << endl;
-#endif
 	for (int i = 0; i < (sim.years / sim.outIntOcc) + 1; i++) {
 		sum = ss = 0.0;
 		for (int rep = 0; rep < sim.reps; rep++) {
 			sum += occSuit[i][rep];
 			ss += occSuit[i][rep] * occSuit[i][rep];
-#if RSDEBUG
-			//DEBUGLOG << "Community::outOccSuit(): i=" << i << " rep=" << rep
-			//	<< " occSuit[i][rep]=" << occSuit[i][rep]
-			//	<< " sum=" << sum << " ss=" << ss
-			//	<< endl;
-#endif
 		}
 		mean = sum / (double)sim.reps;
 		sd = (ss - (sum * sum / (double)sim.reps)) / (double)(sim.reps - 1);
-#if RSDEBUG
-		//DEBUGLOG << "Community::outOccSuit(): i=" << i
-		//	<< " mean=" << mean << " sd=" << sd << endl;
-#endif
 		if (sd > 0.0) sd = sqrt(sd);
 		else sd = 0.0;
 		se = sd / sqrt((double)(sim.reps));
-#if RSDEBUG
-		//DEBUGLOG << "Community::outOccSuit(): i=" << i
-		//	<< " sd=" << sd << " se=" << se << endl;
-#endif
 
 //	outsuit << i*sim.outInt << "\t" << mean << "\t" << se << endl;
 //	if (view) viewOccSuit(i*sim.outInt,mean,se);
