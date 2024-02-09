@@ -547,7 +547,7 @@ void Landscape::addPatchNum(int p) {
 /* Create an artificial landscape (random or fractal), which can be
 either binary (habitat index 0 is the matrix, 1 is suitable habitat)
 or continuous (0 is the matrix, >0 is suitable habitat) */
-void Landscape::generatePatches(void)
+void Landscape::generatePatches(Species* pSpecies)
 {
 	int x, y, ncells;
 	double p;
