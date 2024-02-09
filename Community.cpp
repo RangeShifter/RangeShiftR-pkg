@@ -1648,7 +1648,6 @@ Rcpp::IntegerMatrix Community::addYearToPopList(int rep, int yr) {  // TODO: def
 	intptr subcomm = 0;
 	SubCommunity* pSubComm = 0;
 	popStats pop;
-	//pop.breeding = false;
 	pop.nInds = pop.nAdults = pop.nNonJuvs = 0;
 
 	for (int y = 0; y < ppLand.dimY; y++) {

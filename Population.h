@@ -50,9 +50,6 @@
 
 #include <vector>
 #include <algorithm>
- //#include <Math.hpp>
- //#include <math.h>
- //#include <stdlib.h>
 using namespace std;
 
 #include "Parameters.h"

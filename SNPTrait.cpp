@@ -28,7 +28,7 @@ SNPTrait::SNPTrait(SpeciesTrait* P)
 		wildType = (int)mutationParameters.find(MAX)->second - 1;
 
 	if (wildType > maxSNPAlleles - 1)
-		cout << endl << ("Error:: max number of alleles cannot exceed " << maxSNPAlleles << ".\n");
+		cout << endl << "Error:: max number of alleles cannot exceed " << maxSNPAlleles << ".\n";
 
 	DistributionType initialDistribution = pProtoTrait->getInitialDistribution();
 	map<parameter_t, float> initialParameters = pProtoTrait->getInitialParameters();
@@ -40,11 +40,11 @@ SNPTrait::SNPTrait(SpeciesTrait* P)
 	case UNIFORM:
 	{
 		if (!initialParameters.count(MAX))
-			cout << endl << ("Error:: initial SNP/Microsat distribution parameter must contain max value if set to UNIFORM (e.g. max= ), max cannot exceed " << maxSNPAlleles << "\n");
+			cout << endl << "Error:: initial SNP/Microsat distribution parameter must contain max value if set to UNIFORM (e.g. max= ), max cannot exceed " << maxSNPAlleles << "\n";
 
 		float maxD = initialParameters.find(MAX)->second;
 		if (maxD > maxSNPAlleles) {
-			cout << endl << ("Warning:: initial SNP/Microsat distribution parameter max cannot exceed " << maxSNPAlleles << ", resetting to " << maxSNPAlleles << "\n");
+			cout << endl << "Warning:: initial SNP/Microsat distribution parameter max cannot exceed " << maxSNPAlleles << ", resetting to " << maxSNPAlleles << "\n";
 
 			maxD = maxSNPAlleles; //reserve 255 for wildtype
 		}

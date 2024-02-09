@@ -50,7 +50,6 @@
 #include <ranges>
 using namespace std;
 
-//#include "mathlib.h"
 #include "Parameters.h"
 #include "Species.h"
 #include "Landscape.h"
@@ -334,13 +333,6 @@ public:
 		const short,	// landscape change index
 		const bool    // absorbing boundaries?
 	);
-	void drawMove(	// Visualise paths resulting from movement simulation model
-		// NULL for the batch version
-		const float,	// initial x co-ordinate
-		const float,	// initial y co-ordinate
-		const float,	// final x co-ordinate
-		const float		// final y co-ordinate
-	);
 	movedata smsMove( // Move to a neighbouring cell according to the SMS algorithm
 		Landscape*,		// pointer to Landscape
 		Species*,			// pointer to Species
@@ -435,5 +427,9 @@ extern ofstream DEBUGLOG;
 extern ofstream outMovePaths;
 #endif
 
-//---------------------------------------------------------------------------
+#if RSDEBUG
+void testIndividual();
 #endif
+
+//---------------------------------------------------------------------------
+#endif // IndividualH

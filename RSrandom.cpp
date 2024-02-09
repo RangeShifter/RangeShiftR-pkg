@@ -26,7 +26,6 @@
 
 #if !RS_RCPP 
 
-
 #if RSDEBUG
 #include "Parameters.h"
 extern paramSim* paramsSim;
@@ -221,9 +220,11 @@ float RSrandom::FRandom(float min, float max) {
 	return unif(*gen);
 }
 
-int RSrandom::Bernoulli(double p) {
-	return Random() < p;
-}
+	int RSrandom::Bernoulli(double p) {
+		if (p < 0) throw runtime_error("Bernoulli's p cannot be negative.\n");
+		if (p > 1) throw runtime_error("Bernoulli's p cannot be above 1.\n");
+		return Random() < p;
+	}
 
 double RSrandom::Normal(double mean, double sd) {
 	return mean + sd * pNormal->operator()(*gen);
@@ -303,4 +304,28 @@ double RSrandom::Cauchy(double loc, double scale) {
 
 #endif // RS_RCPP
 
+
+#if RSDEBUG
+	void testRSrandom() {
+
+		{
+			// Bernoulli distribution 
+			// Abuse cases
+			assert_error("Bernoulli's p cannot be negative.\n", []{
+				RSrandom rsr;
+				rsr.Bernoulli(-0.3);
+				});
+			assert_error("Bernoulli's p cannot be above 1.\n", [] {
+				RSrandom rsr;
+				rsr.Bernoulli(1.1);
+				});
+			// Use cases
+			RSrandom rsr;
+			assert(rsr.Bernoulli(0) == 0);
+			assert(rsr.Bernoulli(1) == 1);
+			int bern_trial = rsr.Bernoulli(0.5);
+			assert(bern_trial == 0 || bern_trial == 1);
+		}
+	}
+#endif // RSDEBUG
 //---------------------------------------------------------------------------

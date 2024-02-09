@@ -95,7 +95,7 @@ void NeutralStatsManager::resetGlobalAlleleTable() {
 
 void NeutralStatsManager::setLociDiversityCounter(set<int> const& patchList, const int nInds, Species* pSpecies, Landscape* pLandscape)
 {
-	unsigned int i, j, k;
+	int i, j;
 	const int nLoci = pSpecies->getNPositionsForTrait(SNP);
 	const int nAlleles = (int)pSpecies->getSpTrait(SNP)->getMutationParameters().find(MAX)->second;
 	const int chromosomes = (pSpecies->isDiploid() ? 2 : 1);
@@ -302,9 +302,9 @@ void NeutralStatsManager::calculateFstatWC(set<int> const& patchList, const int 
 
 	double a = 0, b = 0, c = 0, x;
 
-	for (unsigned int thisLocus = 0; thisLocus < nLoci; ++thisLocus) {
+	for (int thisLocus = 0; thisLocus < nLoci; ++thisLocus) {
 
-		for (unsigned int allele = 0; allele < nAlleles; ++allele) {
+		for (int allele = 0; allele < nAlleles; ++allele) {
 
 			s2 = p_bar = h_bar = 0;
 
@@ -371,20 +371,20 @@ void NeutralStatsManager::calculateFstatWC_MS(set<int> const& patchList, const i
 	//p = _alleleFreqTable
 	//pb = _globalAlleleFreq
 
-	vector<unsigned int> alploc(nLoci);
+	vector<int> alploc(nLoci);
 
 	unsigned int** alploc_table = new unsigned int* [nLoci];
 
-	for (unsigned int i = 0; i < nLoci; ++i)
+	for (int i = 0; i < nLoci; ++i)
 		alploc_table[i] = new unsigned int[nAlleles];
 
-	unsigned int tot_num_allele = 0;
+	int tot_num_allele = 0;
 
-	for (unsigned int l = 0; l < nLoci; ++l) {
+	for (int l = 0; l < nLoci; ++l) {
 
 		alploc[l] = 0;
 
-		for (unsigned int cnt, a = 0; a < nAlleles; ++a) {
+		for (int cnt, a = 0; a < nAlleles; ++a) {
 
 			cnt = 0;
 
@@ -411,13 +411,13 @@ void NeutralStatsManager::calculateFstatWC_MS(set<int> const& patchList, const i
 	vector<double> SSP(tot_num_allele);
 	vector<double> SSi(tot_num_allele);
 
-	unsigned int all_cntr = 0;
+	int all_cntr = 0;
 
 	double het, freq, var;
 
-	for (unsigned int l = 0; l < nLoci; ++l) {
+	for (int l = 0; l < nLoci; ++l) {
 
-		for (unsigned int a = 0; a < nAlleles && all_cntr < tot_num_allele; ++a) {
+		for (int a = 0; a < nAlleles && all_cntr < tot_num_allele; ++a) {
 
 			if (alploc_table[l][a] == 0) continue; //do not consider alleles not present in the pop
 
@@ -475,7 +475,7 @@ void NeutralStatsManager::calculateFstatWC_MS(set<int> const& patchList, const i
 		_fit_WC_loc.resize(nLoci);
 	
 	if (tot_num_allele != nLoci) { 
-		for (unsigned int i = 0; i < tot_num_allele; ++i) {
+		for (int i = 0; i < tot_num_allele; ++i) {
 
 			MSG[i] = SSG[i] / (2 * nInds);
 			sigw[i] = MSG[i]; //wasted!
@@ -499,11 +499,11 @@ void NeutralStatsManager::calculateFstatWC_MS(set<int> const& patchList, const i
 
 		//	cout<<"  computing sigma per locus\n";
 
-		for (unsigned int allcntr = 0, i = 0; i < nLoci; ++i) {
+		for (int allcntr = 0, i = 0; i < nLoci; ++i) {
 
 			lsiga = lsigb = lsigw = 0;
 
-			for (unsigned int l = 0; l < alploc[i]; ++l) {
+			for (int l = 0; l < alploc[i]; ++l) {
 				lsiga += siga[allcntr];
 				lsigb += sigb[allcntr];
 				lsigw += sigw[allcntr];
@@ -529,7 +529,7 @@ void NeutralStatsManager::calculateFstatWC_MS(set<int> const& patchList, const i
 		_fis_WC = 0;
 	} 
 
-	for (unsigned int i = 0; i < nLoci; ++i)
+	for (int i = 0; i < nLoci; ++i)
 		delete[]alploc_table[i];
 	delete[]alploc_table;
 }
@@ -564,7 +564,7 @@ void NeutralStatsManager::setFstMatrix(set<int> const& patchList, const int nInd
 	double* pop_weights = new double[nPatches];
 	double* pop_sizes = new double[nPatches];
 	double** numerator = new double* [nPatches];
-	for (unsigned int i = 0; i < nPatches; i++) numerator[i] = new double[nPatches];
+	for (int i = 0; i < nPatches; i++) numerator[i] = new double[nPatches];
 	double tot_size;
 	double numerator_W = 0;
 	double denominator = 0;
@@ -572,20 +572,20 @@ void NeutralStatsManager::setFstMatrix(set<int> const& patchList, const int nInd
 
 	tot_size = nInds * 2; //diploid
 
-	for (unsigned int i = 0; i < nPatches; ++i) {
+	for (int i = 0; i < nPatches; ++i) {
 
 		const auto patch = pLandscape->findPatch(patchVect[i]);
 		const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
 		pop_sizes[i] = pPop->sampleSize() * 2;
 		pop_weights[i] = pop_sizes[i] - (pop_sizes[i] * pop_sizes[i] / tot_size); //n_ic in Weir & Hill 2002
 		sum_weights += pop_weights[i];
-		for (unsigned int j = 0; j < nPatches; j++)
+		for (int j = 0; j < nPatches; j++)
 			numerator[i][j] = 0;
 	}
 
 	double p, pq, var, num;
 
-	for (unsigned int i = 0; i < nPatches; ++i) {
+	for (int i = 0; i < nPatches; ++i) {
 
 		if (!pop_sizes[i]) continue;
 
@@ -598,9 +598,9 @@ void NeutralStatsManager::setFstMatrix(set<int> const& patchList, const int nInd
 //		//	<< endl;
 //#endif
 
-		for (unsigned int l = 0; l < nLoci; ++l) {
+		for (int l = 0; l < nLoci; ++l) {
 
-			for (unsigned int u = 0; u < nAlleles; ++u) {
+			for (int u = 0; u < nAlleles; ++u) {
 
 				p = pPop->getAlleleFrequency(l, u); //p_liu
 
@@ -630,7 +630,7 @@ void NeutralStatsManager::setFstMatrix(set<int> const& patchList, const int nInd
 		}// end for locus
 	}//end for pop
 
-	for (unsigned int i = 0; i < nPatches; ++i) {
+	for (int i = 0; i < nPatches; ++i) {
 		if (!pop_sizes[i]) continue;
 		if(denominator != 0)
 			_fst_matrix.set(i, i, 1 - (numerator[i][i] * sum_weights / denominator));
@@ -646,15 +646,15 @@ void NeutralStatsManager::setFstMatrix(set<int> const& patchList, const int nInd
 
 	//pairwise Fst:
 	double pi, pj;
-	for (unsigned int l = 0; l < nLoci; ++l)
-		for (unsigned int u = 0; u < nAlleles; ++u)
-			for (unsigned int i = 0; i < nPatches - 1; ++i) {
+	for (int l = 0; l < nLoci; ++l)
+		for (int u = 0; u < nAlleles; ++u)
+			for (int i = 0; i < nPatches - 1; ++i) {
 				if (!pop_sizes[i]) continue;
 
 				const auto patch = pLandscape->findPatch(patchVect[i]);
 				const auto pPopI = (Population*)patch->getPopn((intptr)pSpecies);
 
-				for (unsigned int j = i + 1; j < nPatches; ++j) {
+				for (int j = i + 1; j < nPatches; ++j) {
 					if (!pop_sizes[j]) continue;
 					const auto patch = pLandscape->findPatch(patchVect[j]);
 					const auto pPopJ = (Population*)patch->getPopn((intptr)pSpecies);
@@ -665,9 +665,9 @@ void NeutralStatsManager::setFstMatrix(set<int> const& patchList, const int nInd
 				}
 			}
 
-	for (unsigned int i = 0; i < nPatches - 1; ++i) {
+	for (int i = 0; i < nPatches - 1; ++i) {
 		if (!pop_sizes[i]) continue;
-		for (unsigned int j = i + 1; j < nPatches; ++j) {
+		for (int j = i + 1; j < nPatches; ++j) {
 			if (!pop_sizes[j]) continue;
 			if (denominator != 0)
 				_fst_matrix.set(i, j, 1 - ((numerator[i][j] * sum_weights) / (2 * denominator)));
@@ -684,7 +684,7 @@ void NeutralStatsManager::setFstMatrix(set<int> const& patchList, const int nInd
 	} 
 	delete[] pop_weights;
 	delete[] pop_sizes;
-	for (unsigned int i = 0; i < nPatches; i++) delete[] numerator[i];
+	for (int i = 0; i < nPatches; i++) delete[] numerator[i];
 	delete[] numerator; 
 }
 

@@ -567,13 +567,6 @@ settleTraits Individual::getSettTraits(void) {
 	return s;
 }
 
-/*
-locus Individual::getAlleles(int g) {
-locus l; l.allele[0] = l.allele[1] = 0.0;
-if (pGenome != 0) l = pGenome->getAlleles(g);
-return l;
-}
-*/
 
 void Individual::setStatus(short s) {
 	if (s >= 0 && s <= 9) status = s;
@@ -1574,3 +1567,51 @@ double cauchy(double location, double scale) {
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
+
+#if RSDEBUG
+
+
+void testIndividual() {
+
+	Patch* pPatch = new Patch(0, 0);
+	int cell_x = 2;
+	int cell_y = 5;
+	int cell_hab = 2;
+	Cell* pCell = new Cell(cell_x, cell_y, (intptr)pPatch, cell_hab);
+
+	// Create an individual
+	short stg = 0;
+	short age = 0;
+	short repInt = 0;
+	float probmale = 0;
+	bool uses_movt_process = true;
+	short moveType = 1;
+	Individual ind(pCell, pPatch, stg, age, repInt, probmale, uses_movt_process, moveType);
+
+	// An individual can move to a neighbouring cell
+	//ind.moveto();
+
+	// Gets its sex drawn from pmale
+	
+	// Can age or develop
+
+	// 
+
+	// Reproduces
+	// depending on whether it is sexual or not
+	// depending on the stage
+	// depending on the trait inheritance
+
+
+	// Disperses
+	// Emigrates
+	// Transfers
+	// Settles
+
+	// Survives
+
+	// Develops
+
+}
+#endif // RSDEBUG
+

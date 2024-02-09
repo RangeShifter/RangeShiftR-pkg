@@ -186,12 +186,6 @@ float paramInit::getProp(short stg) {
 }
 
 void paramInit::addInitInd(initInd iind) {
-#if RSDEBUG
-	//DebugGUI(("paramInit::addInitInd(): iind.patchID=" + Int2Str(iind.patchID)
-	//	+ " iind.x=" + Int2Str(iind.x)
-	//	+ " iind.y=" + Int2Str(iind.y)
-	//	).c_str());
-#endif
 	initinds.push_back(iind);
 }
 

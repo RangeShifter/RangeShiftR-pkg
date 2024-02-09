@@ -38,6 +38,8 @@
 
 #include <stdlib.h>
 #include <fstream>
+#include <cassert>
+#include "Utils.h"
 
 using namespace std;
 
@@ -45,10 +47,7 @@ using namespace std;
 extern ofstream DEBUGLOG;
 #endif
 
-
-
 #if !RS_RCPP
-
 //--------------- 2.) New version of RSrandom.cpp
 
 
@@ -132,6 +131,9 @@ private:
 
 #endif // !RS_RCPP
 
+#if RSDEBUG
+	void testRSrandom();
+#endif // RSDEBUG
 
 //---------------------------------------------------------------------------
 

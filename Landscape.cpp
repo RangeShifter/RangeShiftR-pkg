@@ -675,7 +675,6 @@ void Landscape::generatePatches(Species* pSpecies)
 habitat cells are added to the matrix patch) */
 void Landscape::allocatePatches(Species* pSpecies)
 {
-//int hx;
 	float habK;
 	Patch* pPatch;
 	Cell* pCell;
@@ -1180,7 +1179,6 @@ int Landscape::readLandChange(int filenum, bool costs)
 	simParams sim = paramsSim->getSim();
 
 	if (filenum < 0) return 19;
-
 	if (patchModel) pchseq = patchCount();
 
 #if !RS_RCPP
@@ -2309,11 +2307,12 @@ int Landscape::readCosts(string fname)
 	wstring header;
 #else
 	string header;
+#endif
 	Cell* pCell;
 #if !RS_RCPP
 	simView v = paramsSim->getViews();
 #endif
-#endif
+
 	int maxcost = 0;
 
 #if RSDEBUG
@@ -2322,6 +2321,7 @@ int Landscape::readCosts(string fname)
 #endif
 #endif
 	// open cost file
+ // open cost file
 #if !RS_RCPP || RSWIN64
 	costs.open(fname.c_str());
 #else
@@ -2331,14 +2331,6 @@ int Landscape::readCosts(string fname)
 		costs.imbue(std::locale(costs.getloc(), new std::codecvt_utf16<wchar_t, 0x10ffff, std::consume_header>));
 	}
 #endif
-	//if (!costs.is_open()) {
-	//	MessageDlg("COSTS IS NOT OPEN!!!!!",
-	//				mtError, TMsgDlgButtons() << mbRetry,0);
-	//}
-	//else {
-	//	MessageDlg("Costs is open!",
-	//				mtError, TMsgDlgButtons() << mbRetry,0);
-	//}
 	// read headers and check that they correspond to the landscape ones
 	costs >> header;
 #if RS_RCPP
@@ -2361,6 +2353,7 @@ int Landscape::readCosts(string fname)
 	}
 	costs >> maxXcost >> header >> maxYcost >> header >> minLongCost;
 	costs >> header >> minLatCost >> header >> resolCost >> header >> NODATACost;
+
 
 #if !RS_RCPP
 	MemoLine("Loading costs map. Please wait...");
@@ -2411,7 +2404,7 @@ if (costs.eof()) {
 	}
 else EOFerrorR(fname);
 #else
-	MemoLine("Costs map loaded.");
+MemoLine("Costs map loaded.");
 #endif
 
 	costs.close(); costs.clear();

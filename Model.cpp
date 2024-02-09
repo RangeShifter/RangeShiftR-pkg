@@ -34,11 +34,8 @@ Rcpp::List RunModel(Landscape* pLandscape, int seqsim)
 int RunModel(Landscape* pLandscape, int seqsim)
 #endif
 {
-	//int Nsuit,yr,totalInds;
 	int yr, totalInds;
-	//float gradval,gradmin,gradmax;
 	bool filesOK;
-	//int t0,t1;
 
 	landParams ppLand = pLandscape->getLandParams();
 	envGradParams grad = paramsGrad->getGradient();
@@ -51,18 +48,12 @@ int RunModel(Landscape* pLandscape, int seqsim)
 	simParams sim = paramsSim->getSim();
 	simView v = paramsSim->getViews();
 
-	//t0 = time(0);
-
 #if RSDEBUG
 	landPix p = pLandscape->getLandPix();
 	DEBUGLOG << "RunModel(): reps=" << sim.reps
 		<< " ppLand.nHab=" << ppLand.nHab
 		<< " p.pix=" << p.pix
 		<< endl;
-	//DEBUGLOG << "RunModel(): random integers:";
-	//for (int i = 0; i < 5; i++) {
-	//	int rrrr = pRandom->IRandom(1000,2000); DEBUGLOG << " " << rrrr;
-	//}
 	DEBUGLOG << endl;
 #endif
 
@@ -184,17 +175,9 @@ int RunModel(Landscape* pLandscape, int seqsim)
 #else
 				SubCommunity* pSubComm = pComm->addSubComm(ppp.pPatch, ppp.patchNum); // SET UP ALL SUB-COMMUNITIES
 #endif
-				//			if (ppp.y >= 9995) {
-				//				DEBUGLOG << "RunModel(): i=" << i << " pSubComm=" << pSubComm
-				//					<< endl;
-				//			}
 #else
 				pComm->addSubComm(ppp.pPatch, ppp.patchNum); // SET UP ALL SUB-COMMUNITIES
 #endif
-				//	if (i == 0 || ppp.pPatch->getK() > 0.0) {
-				//		// SET UP SUB-COMMUNITY FOR MATRIX PATCH AND ANY PATCH HAVING NON-ZERO CARRYING CAPACITY
-				//		pComm->addSubComm(ppp.pPatch,ppp.patchNum);
-				//	}
 			}
 			MemoLine("...completed...");
 #if RSDEBUG
@@ -320,7 +303,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 			<< " pSpecies=" << pSpecies << endl;
 #endif
 #if BATCH && RS_RCPP && !R_CMD
-	Rcpp::Rcout << "RunModel(): completed initialisation " << endl;
+		Rcpp::Rcout << "RunModel(): completed initialisation " << endl;
 #endif
 
 		// open a new individuals file for each replicate
@@ -540,7 +523,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				pLandscape->resetConnectMatrix();
 
 			if (ppLand.dynamic && updateland) {
-				//			trfrRules trfr = pSpecies->getTrfr();
 				if (trfr.moveModel && trfr.moveType == 1) { // SMS
 					if (!trfr.costMap) pLandscape->resetCosts(); // in case habitats have changed
 				}
@@ -601,12 +583,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 					list_outPop.push_back(pComm->addYearToPopList(rep, yr), "rep" + std::to_string(rep) + "_year" + std::to_string(yr));
 				}
 #endif
-
-#if RSDEBUG
-				//DEBUGLOG << "RunModel(): completed RangePopOutput()"
-				//	<< " Total_Size = " << Total_Size << endl;
-#endif
-
 			// apply local extinction for generation 0 only
 			// CHANGED TO *BEFORE* RANGE & POPN OUTPUT PRODUCTION IN v1.1,
 			// SO THAT NOS. OF JUVENILES BORN CAN BE REPORTED
@@ -750,11 +726,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 
 		pComm->resetPopns();
 
-		//	if (batchMode) {
-		//		// delete the community of species using the landscape
-		//		pComm->resetPopns();
-		//	}
-
 			//Reset the gradient optimum
 		if (grad.gradient) paramsGrad->resetOptY();
 
@@ -878,7 +849,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 		MemoLine("Writing final occupancy output...");
 		pComm->outOccupancy();
 		pComm->outOccSuit(v.viewGraph);
-		//	pComm->deleteOccupancy((sim.years/sim.outInt)+1);
 		pComm->deleteOccupancy((sim.years / sim.outIntOcc) + 1);
 		pComm->outOccupancyHeaders(-999);
 		MemoLine("...finished");
@@ -899,16 +869,11 @@ int RunModel(Landscape* pLandscape, int seqsim)
 	if (sim.outInds) pComm->outInds(0, 0, 0, -999);
 	if (sim.outputWCFstat) 	pComm->openWCFstatFile(pSpecies, -999);
 	if (sim.outputPerLocusWCFstat) pComm->openWCPerLocusFstatFile(pSpecies, pLandscape, -999, 0);
-	if (sim.outputPairwiseFst) pComm->openPairwiseFSTFilei(pSpecies, pLandscape, -999, 0);
+	if (sim.outputPairwiseFst) pComm->openPairwiseFSTFile(pSpecies, pLandscape, -999, 0);
 
 	MemoLine("Deleting community...");
 	delete pComm; pComm = 0;
 	MemoLine("...finished");
-
-	// Write performance data
-	//t1 = time(0);
-	//RSlog << "Simulation," << sim.simulation << "," << sim.reps << "," << sim.years
-	//	<< "," << t1-t0 << endl;
 
 #if RS_RCPP && !R_CMD
 	return list_outPop;
@@ -953,7 +918,7 @@ bool CheckDirectory(void)
 void PreReproductionOutput(Landscape* pLand, Community* pComm, int rep, int yr, int gen)
 {
 #if RSDEBUG
-landParams ppLand = pLand->getLandParams();
+	landParams ppLand = pLand->getLandParams();
 #endif
 	simParams sim = paramsSim->getSim();
 	simView v = paramsSim->getViews();
@@ -966,10 +931,6 @@ landParams ppLand = pLand->getLandParams();
 		<< " outIntRange=" << sim.outIntRange
 		<< " outPop=" << sim.outPop << " outIntPop=" << sim.outIntPop
 		<< endl;
-#endif
-
-#if RSDEBUG
-	//DEBUGLOG << "PreReproductionOutput(): 22222 " << endl;
 #endif
 
 	traitCanvas tcanv;
@@ -989,23 +950,8 @@ landParams ppLand = pLand->getLandParams();
 	{
 		pComm->outTraits(tcanv, pSpecies, rep, yr, gen);
 	}
-
-#if RSDEBUG
-	//DEBUGLOG << "PreReproductionOutput(): 33333 " << endl;
-#endif
-
 	if (sim.outOccup && yr % sim.outIntOcc == 0 && gen == 0)
 		pComm->updateOccupancy(yr / sim.outIntOcc, rep);
-
-#if RSDEBUG
-	//DEBUGLOG << "PreReproductionOutput(): 88888 " << endl;
-#endif
-
-// Remaining graphical output actions are performed for GUI only
-
-#if RSDEBUG
-//DEBUGLOG << "PreReproductionOutput(): finished " << endl;
-#endif
 }
 
 //For outputs and population visualisations pre-reproduction
@@ -1164,9 +1110,7 @@ void OutParameters(Landscape* pLandscape)
 			//			<< " habitat map: " << chg.habfile << endl;
 		}
 	}
-
 	outPar << endl << "SPECIES DISTRIBUTION LOADED: \t";
-	//if (sim.initDistLoaded)
 	if (ppLand.spDist)
 	{
 		outPar << "yes" << endl;
@@ -1485,7 +1429,6 @@ void OutParameters(Landscape* pLandscape)
 		else outPar << "K ";
 		outPar << k << endl;
 	}
-
 	emigTraits ep0, ep1;
 	string sexdept = "SEX-DEPENDENT:   ";
 	string stgdept = "STAGE-DEPENDENT: ";
@@ -1495,7 +1438,6 @@ void OutParameters(Landscape* pLandscape)
 	outPar << endl << "DISPERSAL - EMIGRATION:\t";
 	if (emig.densDep) {
 		outPar << "density-dependent" << endl;
-
 		if (emig.sexDep) {
 			outPar << sexdept << "yes" << endl;
 			if (emig.stgDep) {
@@ -1746,7 +1688,6 @@ void OutParameters(Landscape* pLandscape)
 		outPar << "MAX. No. OF STEPS:\t ";
 		if (ssteps.maxSteps == 99999999) outPar << "not applied" << endl;
 		else outPar << ssteps.maxSteps << endl;
-
 		if (sett.sexDep) {
 			nsexes = 2;
 			outPar << sexdept << "yes" << endl;
@@ -1863,7 +1804,6 @@ void OutParameters(Landscape* pLandscape)
 	}
 
 	// Genetics
-
 	outPar << endl << "GENETICS:" << endl;
 	set<TraitType> traitList = pSpecies->getTraitTypes();
 

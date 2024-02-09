@@ -4,7 +4,7 @@
 #include "SpeciesTrait.h"
 #include "SNPTrait.h"
 #include "QTLTrait.h"
-#include "AdaptiveTrait.h"
+#include "GeneticLoad.h"
 
 class TraitFactory
 {

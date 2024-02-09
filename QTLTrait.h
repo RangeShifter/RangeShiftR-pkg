@@ -13,7 +13,7 @@ class QTLTrait : public TTrait {
 
 private:
 
-	constexpr double QTLDominanceFactor = 1.0; // that is, no dominance
+	const double QTLDominanceFactor = 1.0; // that is, no dominance
 
 	SpeciesTrait* pSpeciesTrait; // would be better as const so immutable, but means passing positions list is heavy and can't be passed by reference
 

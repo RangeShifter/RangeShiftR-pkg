@@ -107,7 +107,7 @@ public:
 		//					1 = all stages                       ) used by part 0 only
 		//					2 = stage 1 and above (all non-juvs) )
 		short 	// option1:	0 - development only (when survival is annual)
-						//	  	 		1 - development and survival
+		//		  	 		1 - development and survival
 	);
 	void ageIncrement(void);
 	int totalInds(void);

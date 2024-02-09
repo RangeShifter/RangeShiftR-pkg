@@ -57,7 +57,6 @@ Species::Species(void)
 			d0[i][j] = 0.0; alphaEmig[i][j] = 0.0; betaEmig[i][j] = 1.0;
 		}
 	}
-
 	// initialise transfer parameters
 	moveModel = false; stgDepTrfr = false; sexDepTrfr = false; distMort = false;
 	indVarTrfr = false;
@@ -79,7 +78,6 @@ Species::Species(void)
 	habDimTrfr = 0;
 	straigtenPath = false;
 	fullKernel = false;
-
 	// initialise settlement parameters
 	stgDepSett = false; sexDepSett = false; indVarSett = false;
 	minSteps = 0; maxSteps = 99999999;
@@ -90,7 +88,6 @@ Species::Species(void)
 			s0[i][j] = 1.0; alphaS[i][j] = 0.0; betaS[i][j] = 1.0;
 		}
 	}
-
 	// initialise attribute defaults
 	spNum = 0;
 	resetGeneticParameters();
@@ -114,7 +111,7 @@ short Species::getSpNum(void) { return spNum; }
 
 void Species::setDemogr(const demogrParams d) {
 	if (d.repType >= 0 && d.repType <= 2) repType = d.repType;
-	if (d.repType >= 1) isDiploid = true;
+	if (d.repType >= 1) diploid = true;
 	if (d.repSeasons >= 1) repSeasons = d.repSeasons;
 	stageStruct = d.stageStruct;
 	if (d.propMales > 0.0 && d.propMales < 1.0) propMales = d.propMales;
@@ -360,8 +357,6 @@ void Species::deleteDDwtSurv(void) {
 		delete[] ddwtSurv; ddwtSurv = 0;
 	}
 }
-
-// Functions to handle min/max R or K (under environmental stochasticity)
 //void Species::setMinMax(float min,float max) {
 void Species::setMinMax(float min, float max) {
 	if (min >= 0.0 && max > min) {
@@ -374,8 +369,6 @@ float Species::getMinMax(short opt) {
 }
 
 //---------------------------------------------------------------------------
-
-// Genetic functions
 
 void Species::turnOffMutations(void) {
 	mutationsOn = false;
@@ -395,12 +388,10 @@ void Species::resetGeneticParameters() {
 	nIndsToSample = -9999;
 	chromosomeEnds.clear();
 	samplePatchList.clear();
-	stagesToSampleFrom.clear();
-
 }
 
 bool Species::isDiploid() const {
-	return isDiploid;
+	return diploid;
 }
 
 void Species::setNumberOfNeutralLoci(int nN)
@@ -506,19 +497,14 @@ set<int> Species::getChromosomeEnds() const {
 	return chromosomeEnds;
 }
 
-
 //---------------------------------------------------------------------------
 
 // Emigration functions
-
 void Species::setEmig(const emigRules e) {
-#if RSDEBUG
-	//DebugGUI("Species::setEmig(): e.indVar=" + Int2Str((int)e.indVar));
-#endif
 	densDepEmig = e.densDep; stgDepEmig = e.stgDep; sexDepEmig = e.sexDep;
 	indVarEmig = e.indVar;
 	if (e.emigStage >= 0) emigStage = e.emigStage;
-	//setGenome();
+//setGenome();
 }
 
 emigRules Species::getEmig(void) {
@@ -555,8 +541,6 @@ float Species::getEmigD0(short stg, short sex) {
 	}
 }
 
-
-
 //---------------------------------------------------------------------------
 
 // Transfer functions
@@ -570,7 +554,7 @@ void Species::setTrfr(const trfrRules t) {
 	twinKern = t.twinKern;
 	habMort = t.habMort;
 	moveType = t.moveType; costMap = t.costMap;
-	//setGenome();
+//setGenome();
 }
 
 trfrRules Species::getTrfr(void) {
@@ -801,9 +785,6 @@ settleTraits Species::getSettTraits(short stg, short sex) {
 	else { dd.s0 = 1.0; dd.alpha = dd.beta = 0.0; }
 	return dd;
 }
-
-
-
 
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
