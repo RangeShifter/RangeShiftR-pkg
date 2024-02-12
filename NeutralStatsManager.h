@@ -15,9 +15,7 @@ private:
 
 public:
 
-	PatchMatrix() {};
-
-	PatchMatrix(unsigned int rows, unsigned int cols) : _rows(0), _cols(0), _length(0), _val(0) {
+	PatchMatrix(int rows = 0, int cols = 0) : _rows(0), _cols(0), _length(0), _val(0) {
 		_length = rows * cols;
 		_val.resize(_length);
 		_rows = rows; _cols = cols;
