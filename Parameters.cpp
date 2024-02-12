@@ -401,6 +401,33 @@ const sex_t stringToSex(const std::string& str) {
 	else throw logic_error("Traits file: ERROR - sex can either be 'female' or 'male'.");
 }
 
+set<int> convertStringToPatches(string str, int nb_patches, Landscape* pLandscape) {
+
+}
+
+set<int> convertStringToChromosomeEnds(string str, int genomeSize) {
+	set<int> chromosomeEnds;
+	if (str == "#")
+		chromosomeEnds.insert(genomeSize - 1); // last position in genome
+	else {
+		// Parse comma-separated list from input string
+		stringstream ss(str);
+		string strPos; 
+		int pos;
+		// Read comma-separated positions
+		while (std::getline(ss, strPos, ',')) {
+			pos = std::stoi(strPos);
+			if (pos > genomeSize)
+				throw logic_error("Genetics file: ERROR - chromosome ends must not exceed genome size.");
+			else {
+				chromosomeEnds.insert(pos);
+			}
+		}
+	}
+	return chromosomeEnds;
+}
+
+
 #if RS_RCPP
 bool paramSim::getReturnPopRaster(void) { return ReturnPopRaster; }
 bool paramSim::getCreatePopFile(void) { return CreatePopFile; }

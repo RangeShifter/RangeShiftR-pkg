@@ -760,10 +760,6 @@ void Species::setGeneticParameters(const std::set<int>& chromosomeEnds, const in
 	const std::set<int>& samplePatchList, const string nIndsToSample, const std::set<int>& stagesToSampleFrom, string nSampleCellsFst)
 {
 	this->genomeSize = genomeSize;
-	for (auto position : chromosomeEnds) {
-		if (position > this->getGenomeSize() - 1)
-			cout << endl << "Genetics file: ERROR - chromosome ends " << position << " must not exceed genome size" << endl;
-	}
 	this->chromosomeEnds = chromosomeEnds;
 	this->recombinationRate = recombinationRate;
 	this->samplePatchList = samplePatchList;
