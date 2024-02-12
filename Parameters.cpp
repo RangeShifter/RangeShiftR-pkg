@@ -395,6 +395,12 @@ string paramSim::getDir(int option) {
 	return s;
 }
 
+const sex_t stringToSex(const std::string& str) {
+	if (str == "female") return FEM;
+	else if (str == "male") return MAL;
+	else throw logic_error("Traits file: ERROR - sex can either be 'female' or 'male'.");
+}
+
 #if RS_RCPP
 bool paramSim::getReturnPopRaster(void) { return ReturnPopRaster; }
 bool paramSim::getCreatePopFile(void) { return CreatePopFile; }
