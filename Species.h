@@ -49,6 +49,8 @@
 #include "SpeciesTrait.h"
 #include "TTrait.h"
 #include <ranges>
+#include <map>
+#include <set>
 
  // structures for demographic parameters
 
@@ -280,7 +282,7 @@ public:
 		short		// option: 0 = return minimum, otherwise = return maximum
 	);
 
-	set<int>& getSamplePatches() {
+	std::set<int>& getSamplePatches() {
 		return samplePatchList;
 	};
 
@@ -288,7 +290,7 @@ public:
 		return nIndsToSample;
 	};
 
-	set<int>& getStagesToSample() {
+	std::set<int>& getStagesToSample() {
 		return stagesToSampleFrom;
 	}
 
@@ -419,19 +421,16 @@ public:
 
 	//map<TraitType, std::unique_ptr<ProtoTrait>>& getTraitTable(void); //return by reference so ensure variable recieving is const
 
-	set<TraitType> getTraitTypes();
+	std::set<TraitType> getTraitTypes();
 
 	int getNTraits() const;
 	int getNPositionsForTrait(const TraitType trait) const;
 	int getGenomeSize() const;
-	void setGenomeSize(int);
 	float getRecombinationRate() const;
-	void setRecombinationRate(float);
-	set<int> getChromosomeEnds() const;
-	void setChromosomeEnds(const set<int>& ends);
-	void setGeneticParameters(const set<int>& chromosomeEnds, const int genomeSize, const float recombinationRate,
-		const set<int>& samplePatchList, const string nIndsToSample, const set<int>& stagesToSampleFrom, string nSampleCellsFst);
-	void setSamplePatchList(const set<int>& samplePatchList);
+	std::set<int> getChromosomeEnds() const;
+	void setGeneticParameters(const std::set<int>& chromosomeEnds, const int genomeSize, const float recombinationRate,
+		const std::set<int>& samplePatchList, const string nIndsToSample, const std::set<int>& stagesToSampleFrom, string nSampleCellsFst);
+	void setSamplePatchList(const std::set<int>& samplePatchList);
 
 private:
 
@@ -484,17 +483,17 @@ private:
 	// genome parameters
 
 	/**The traits table.*/
-	map<TraitType, std::unique_ptr<SpeciesTrait>> spTraitTable;
-	set<int> chromosomeEnds;
+	std::map<TraitType, std::unique_ptr<SpeciesTrait>> spTraitTable;
+	std::set<int> chromosomeEnds;
 	int genomeSize;
 	bool diploid;
 	bool mutationsOn;
 	int numberOfNeutralLoci;
 	int numberOfAdaptiveTraits;
 	float recombinationRate;
-	set<int> samplePatchList;
+	std::set<int> samplePatchList;
 	string nSampleCellsFst; //for cell based landscape
-	set<int> stagesToSampleFrom;
+	std::set<int> stagesToSampleFrom;
 	string nIndsToSample; //could be integer or 'all', all means in in selected patches not necessarily all in population
 
 	// emigration parameters
@@ -569,7 +568,6 @@ private:
 	float betaS[NSTAGES][NSEXES];			// inflection point of the settlement reaction norm to density
 
 	// other attributes
-
 	int spNum;
 
 };

@@ -2,6 +2,8 @@
 #define SPECIESTRAITH
 
 #include "Parameters.h"
+#include "Species.h"
+
 #include <map>
 #include <vector>
 #include <set>

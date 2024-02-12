@@ -1,6 +1,5 @@
 
 #include "SpeciesTrait.h"
-#include "Species.h"
 
 //could be handled in header file but here for now for flexibility
 SpeciesTrait::SpeciesTrait(vector<string> parameters, Species* pSpecies) {
@@ -53,6 +52,7 @@ TraitType SpeciesTrait::stringToTraitType(const std::string& str, sex_t sex) con
 		else if (str == "kernel_probability") return KERNEL_PROBABILITY_M;
 		else if (str == "crw_stepLength") return CRW_STEPLENGTH_M;
 		else if (str == "crw_stepCorrelation") return CRW_STEPCORRELATION_M;
+		else throw logic_error(str + " is not a valid trait type.");
 	} else {
 		if (str == "emigration_d0") return E_D0_F;
 		else if (str == "emigration_alpha") return E_ALPHA_F;
@@ -71,6 +71,7 @@ TraitType SpeciesTrait::stringToTraitType(const std::string& str, sex_t sex) con
 		else if (str == "sms_betaDB") return SMS_BETADB;
 		else if (str == "neutral") return SNP;
 		else if (str == "adaptive") return ADAPTIVE;
+		else throw logic_error(str + " is not a valid trait type.");
 	}
 }
 
@@ -79,6 +80,7 @@ ExpressionType SpeciesTrait::stringToExpressionType(const std::string& str) cons
 	else if (str == "additive") return ADDITIVE;
 	else if (str == "multiplicative") return MULTIPLICATIVE;
 	else if (str == "#") return NEUTRAL;
+	else throw logic_error(str + " is not a valid gene expression type.");
 }
 
 DistributionType SpeciesTrait::stringToDistributionType(const std::string& str) const
@@ -91,6 +93,7 @@ DistributionType SpeciesTrait::stringToDistributionType(const std::string& str) 
 	else if (str == "negExp") return NEGEXP;
 	else if (str == "KAM") return KAM;
 	else if (str == "SSM") return SSM;
+	else throw logic_error(str + " is not a valid distribution type.");
 }
 
 map<parameter_t, float> SpeciesTrait::stringToParameterMap(string parameters) const {

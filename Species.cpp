@@ -756,8 +756,8 @@ void Species::setSettTraits(const short stg, const short sex, const settleTraits
 	}
 }
 
-void Species::setGeneticParameters(const set<int>& chromosomeEnds, const int genomeSize, const float recombinationRate,
-	const set<int>& samplePatchList, const string nIndsToSample, const set<int>& stagesToSampleFrom, string nSampleCellsFst)
+void Species::setGeneticParameters(const std::set<int>& chromosomeEnds, const int genomeSize, const float recombinationRate,
+	const std::set<int>& samplePatchList, const string nIndsToSample, const std::set<int>& stagesToSampleFrom, string nSampleCellsFst)
 {
 	this->genomeSize = genomeSize;
 	for (auto position : chromosomeEnds) {
