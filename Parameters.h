@@ -159,9 +159,7 @@ typedef enum { KERNEL, SMS, CRW} movement_t;
 
 //GeneType convertToGeneType(const string& );
 
-float convertParameters(string, string);
 bool iequals(std::string_view lhs, std::string_view rhs);
-set<int> convertStringToSet(string);
 set<int> convertStringToPatches(string, int, Landscape*);
 set<int> convertStringToStages(string);
 set<int> convertStringToChromosomeEnds(string, int);

@@ -138,29 +138,38 @@ set<int> SpeciesTrait::stringToLoci(string pos, string nLoci, Species* pSpecies)
 	set<int> positions;
 
 	if (pos != "random") {
-		//stringstream ss(pos);
 
-		//string value, valueWithin;
-		//while (std::getline(ss, value, ',')) {
-		//	stringstream sss(value);
-		//	vector<int> minMax;
-		//	while (std::getline(sss, valueWithin, '-')) {
-		//		minMax.push_back(stoi(valueWithin));
-		//	}
-		//	if (minMax[0] > pSpecies->getGenomeSize() || minMax[1] > pSpecies->getGenomeSize()) {
-		//		cout << endl << "Traits file: ERROR - trait positions must not exceed genome size" << endl;
-		//	}
-		//	else {
-		//		if (minMax.size() > 1) {
-		//			for (int i = minMax[0]; i < minMax[1] + 1; ++i) {
-		//				positions.insert(i);
-		//			}
-		//		}
-		//		else
-		//			positions.insert(minMax[0]);
-		//	}
-		//}
-		positions = convertStringToSet(pos);
+		// Parse comma-separated list from input string
+		stringstream ss(pos);
+		string value, valueWithin;
+		// Read comma-separated positions
+		while (std::getline(ss, value, ',')) {
+			stringstream sss(value);
+			vector<int> positionRange;
+			// Read single positions and dash-separated ranges
+			while (std::getline(sss, valueWithin, '-')) {
+				positionRange.push_back(stoi(valueWithin));
+			}
+			switch (positionRange.size())
+			{
+			case 1: // single position
+				if (positionRange[0] > pSpecies->getGenomeSize())
+					throw logic_error("Traits file: ERROR - trait positions must not exceed genome size");
+				positions.insert(positionRange[0]);
+				break;
+			case 2: // dash-separated range
+				if (positionRange[0] > pSpecies->getGenomeSize() || positionRange[1] > pSpecies->getGenomeSize()) {
+					throw logic_error("Traits file: ERROR - trait positions must not exceed genome size");
+				}
+				for (int i = positionRange[0]; i < positionRange[1] + 1; ++i) {
+					positions.insert(i);
+				}
+				break;
+			default: // zero or more than 2 values between commas: error
+				throw logic_error("Traits file: ERROR - incorrectly formatted position range.");
+				break;
+			}
+		}
 
 		for (auto position : positions) {
 			if (position > pSpecies->getGenomeSize())
