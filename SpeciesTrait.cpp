@@ -19,7 +19,7 @@ SpeciesTrait::SpeciesTrait(vector<string> parameters, Species* pSpecies) {
 	if (traitType == SNP || traitType == ADAPTIVE)
 		this->inherited = true;
 	else
-		this->inherited = iequals(parameters[10], "true") ? true : false;
+		this->inherited = (parameters[10] == "true") ? true : false;
 
 	if (this->isInherited()) {
 		this->mutationDistribution = stringToDistributionType(parameters[11]);
