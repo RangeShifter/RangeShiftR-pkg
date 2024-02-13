@@ -413,14 +413,17 @@ set<int> convertStringToPatches(const string& str, const int& nb_rnd_patches, co
 			std::sample(
 				existingPatches.begin(), 
 				existingPatches.end(), 
-				patches.begin(), 
-				nb_rnd_patches, 
+				std::inserter(patches, patches.end()),
+				nb_rnd_patches,
 				pRandom->getRNG()
 			);
 		}
 	} else if (str == "all") {
 		// Copy all patches into sampled patches
-		for (int pch : existingPatches) patches.insert(pch);
+		std::copy(existingPatches.begin(), 
+			existingPatches.end(),
+			std::inserter(patches, patches.end())
+		);
 	} else {
 		// comma-separated list of patches
 		stringstream ss(str);
