@@ -52,6 +52,8 @@
 #include <map>
 #include <set>
 
+class SpeciesTrait;
+
  // structures for demographic parameters
 
 struct demogrParams {
