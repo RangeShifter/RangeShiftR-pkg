@@ -56,7 +56,7 @@ Population::Population(Species* pSp, Patch* pPch, int ninds, int resol)
 	pSpecies = pSp;
 	pPatch = pPch;
 	// record the new population in the patch
-	patchPopn pp;
+	patchPopn pp = patchPopn();
 	pp.pSp = (intptr)pSpecies; pp.pPop = (intptr)this;
 	pPatch->addPopn(pp);
 #if RSDEBUG
@@ -229,7 +229,7 @@ Population::~Population(void) {
 
 traitsums Population::getTraits(Species* pSpecies) {
 	int g;
-	traitsums ts;
+	traitsums ts = traitsums();
 	for (int i = 0; i < NSEXES; i++) {
 		ts.ninds[i] = 0;
 		ts.sumD0[i] = ts.ssqD0[i] = 0.0;
@@ -456,10 +456,10 @@ double Population::computeHs() {
 
 popStats Population::getStats(void)
 {
-	popStats p;
+	popStats p = popStats();
 	int ninds;
 	float fec;
-	bool breeders[2]; breeders[0] = breeders[1] = false;
+	bool breeders[2] = { false, false };
 	demogrParams dem = pSpecies->getDemogr();
 	p.pSpecies = pSpecies;
 	p.pPatch = pPatch;
@@ -1147,7 +1147,7 @@ void Population::allEmigrate(void) {
 
 // If an Individual has been identified as an emigrant, remove it from the Population
 disperser Population::extractDisperser(int ix) {
-	disperser d;
+	disperser d = disperser();
 	indStats ind = inds[ix]->getStats();
 	if (ind.status == 1) { // emigrant
 		d.pInd = inds[ix]; d.yes = true;
@@ -1190,7 +1190,7 @@ void Population::addSettleTraitsForInd(int ix, settleTraits& avgSettleTraits) {
 // if it is a settler, return its new location and remove it from the current population
 // otherwise, leave it in the matrix population for possible reporting before deletion
 disperser Population::extractSettler(int ix) {
-	disperser d;
+	disperser d = disperser();
 	Cell* pCell;
 //Patch* pPatch;
 
@@ -1232,7 +1232,8 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 	Cell* pCell = 0;
 	indStats ind;
 	Population* pNewPopn = 0;
-	locn newloc, nbrloc;
+	locn newloc = locn();
+	locn nbrloc = locn();
 
 	landData ppLand = pLandscape->getLandData();
 	short reptype = pSpecies->getRepType();
@@ -1716,6 +1717,9 @@ void Population::survival0(float localK, short option0, short option1)
 		if ((ind.stage == 0 && option0 < 2) || (ind.stage > 0 && option0 > 0)) {
 			// condition for processing the stage is met...
 			if (ind.status < 6) { // not already doomed
+				if (ind.sex < sex_t::FEM || ind.sex > sex_t::MAL)
+					// ?? MSVC believes it's important to bound check ind.sex
+					throw runtime_error("Individual sex is out of bounds");
 				double probsurv = surv[ind.stage][ind.sex];
 				// does the individual survive?
 				if (pRandom->Bernoulli(probsurv)) { // survives
@@ -2129,7 +2133,7 @@ void Population::outIndividual(Landscape* pLandscape, int rep, int yr, int gen,
 				outInds << "\t" << ind.status;
 			}
 			pCell = inds[i]->getLocn(1);
-			locn loc;
+			locn loc = locn();
 			if (pCell == 0) loc.x = loc.y = -1; // beyond boundary or in no-data cell
 			else loc = pCell->getLocn();
 			pCell = inds[i]->getLocn(0);

@@ -235,7 +235,6 @@ public:
 	int countHeterozygoteLoci();
 	vector<double> countLociHeterozyotes();
 	double computeHs();
-	void updateHeteroTable();
 
 private:
 	short nStages;

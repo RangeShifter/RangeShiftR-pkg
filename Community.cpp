@@ -64,7 +64,7 @@ void Community::initialise(Species* pSpecies, int year)
 	int nsubcomms, npatches, ndistcells, spratio, patchnum, rr = 0;
 	locn distloc;
 	patchData pch;
-	patchLimits limits;
+	patchLimits limits = patchLimits();
 	intptr ppatch, subcomm;
 	std::vector <intptr> subcomms;
 	std::vector <bool> selected;
@@ -257,7 +257,8 @@ void Community::initialise(Species* pSpecies, int year)
 			indIx = 0; // reset index for initial individuals
 		}
 		else { // add any initial individuals for the current year
-			initInd iind; iind.year = 0;
+			initInd iind = initInd(); 
+			iind.year = 0;
 			int ninds = paramsInit->numInitInds();
 			while (indIx < ninds && iind.year <= year) {
 				iind = paramsInit->getInitInd(indIx);
@@ -505,7 +506,7 @@ void Community::dispersal(short landIx)
 #endif // SEASONAL || RS_RCPP
 {
 #if RSDEBUG
-	int t0, t1, t2;
+	time_t t0, t1, t2;
 	t0 = time(0);
 #endif
 
@@ -631,7 +632,7 @@ void Community::deleteOccupancy(int nrows) {
 // Determine range margins
 commStats Community::getStats(void)
 {
-	commStats s;
+	commStats s = commStats();
 	landParams ppLand = pLandscape->getLandParams();
 	s.ninds = s.nnonjuvs = s.suitable = s.occupied = 0;
 	s.minX = ppLand.maxX; s.minY = ppLand.maxY; s.maxX = s.maxY = 0;
@@ -883,9 +884,9 @@ void Community::outRange(Species* pSpecies, int rep, int yr, int gen)
 		outrange << "\t0\t0\t0\t0";
 
 	if (emig.indVar || trfr.indVar || sett.indVar) { // output trait means
-		traitsums ts;
+		traitsums ts = traitsums();
 		traitsums scts; // sub-community traits
-		traitCanvas tcanv;
+		traitCanvas tcanv = traitCanvas();
 		int ngenes, popsize;
 
 		tcanv.pcanvas[0] = NULL;
@@ -1889,8 +1890,8 @@ void Community::writeWCPerLocusFstatFile(Species* pSpecies, const int yr, const 
 			const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
 			int popSize = pPop->sampleSize();
 			int het = 0;
-			for (unsigned int a = 0; a < nAlleles; ++a) {
-				het += pPop->getHetero(thisLocus, a);
+			for (int a = 0; a < nAlleles; ++a) {
+				het += static_cast<int>(pPop->getHetero(thisLocus, a)); // not sure why this returns a double
 			}
 			outperlocusfstat << "\t" << het / (2.0 * popSize);
 		}

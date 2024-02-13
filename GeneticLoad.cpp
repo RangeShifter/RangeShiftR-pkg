@@ -211,27 +211,27 @@ float GeneticLoad::drawDominance(float selCoef) {
 	{
 		const float mean = dominanceParameters.find(MEAN)->second;
 		const float sd = dominanceParameters.find(SDEV)->second;
-		h = pRandom->Normal(mean, sd);
+		h = static_cast<float>(pRandom->Normal(mean, sd));
 		break;
 	}
 	case GAMMA:
 	{
 		const float shape = dominanceParameters.find(SHAPE)->second;
 		const float scale = dominanceParameters.find(SCALE)->second;
-		h = pRandom->Gamma(shape, scale);
+		h = static_cast<float>(pRandom->Gamma(shape, scale));
 		break;
 	}
 	case NEGEXP:
 	{
 		const float mean = dominanceParameters.find(MEAN)->second;
-		h = pRandom->NegExp(mean);
+		h = static_cast<float>(pRandom->NegExp(mean));
 		break;
 	}
 	case SCALED:
 	{
 		const float min = 0;
-		const float max = exp((-log(2 * 0.36) / 0.05) * selCoef);
-		h = pRandom->FRandom(min, max);
+		const float max = static_cast<float>(exp((-log(2 * 0.36) / 0.05) * selCoef));
+		h = static_cast<float>(pRandom->FRandom(min, max));
 		break;
 	}
 
@@ -270,7 +270,7 @@ float GeneticLoad::drawSelectionCoef() {
 	{
 		const float mean = mutationParameters.find(MEAN)->second;
 		const float sd = mutationParameters.find(SDEV)->second;
-		s = pRandom->Normal(mean, sd);
+		s = static_cast<float>(pRandom->Normal(mean, sd));
 
 		break;
 	}
@@ -278,13 +278,13 @@ float GeneticLoad::drawSelectionCoef() {
 	{
 		const float shape = mutationParameters.find(SHAPE)->second;
 		const float scale = mutationParameters.find(SCALE)->second;
-		s = pRandom->Gamma(shape, scale);
+		s = static_cast<float>(pRandom->Gamma(shape, scale));
 		break;
 	}
 	case NEGEXP:
 	{
 		const float mean = mutationParameters.find(MEAN)->second;
-		s = pRandom->NegExp(mean);
+		s = static_cast<float>(pRandom->NegExp(mean));
 		break;
 	}
 	default:
@@ -315,7 +315,7 @@ void GeneticLoad::inheritDiploid(sex_t whichChromosome, map<int, vector<shared_p
 
 	auto it = recomPositions.lower_bound(parentGenes.begin()->first);
 
-	unsigned int nextBreakpoint = *it;
+	int nextBreakpoint = *it;
 
 	auto distance = std::distance(recomPositions.begin(), it);
 	if (distance % 2 != 0)
