@@ -319,7 +319,7 @@ void GeneticLoad::inheritDiploid(sex_t whichChromosome, map<int, vector<shared_p
 
 	auto distance = std::distance(recomPositions.begin(), it);
 	if (distance % 2 != 0)
-		parentChromosome = !parentChromosome; // switch to the other one
+		parentChromosome = 1 - parentChromosome; // switch to the other one
 		// use 1-parentChromosome, or switch to a sex_t ?
 
 	for (auto const& [locus, allelePair] : parentGenes) {
@@ -327,7 +327,7 @@ void GeneticLoad::inheritDiploid(sex_t whichChromosome, map<int, vector<shared_p
 		while (locus > nextBreakpoint) {
 			std::advance(it, 1);
 			nextBreakpoint = *it;
-			parentChromosome = !parentChromosome; // switch to the other one
+			parentChromosome = 1 - parentChromosome; // switch to the other one
 		}
 
 		if (locus <= nextBreakpoint) {

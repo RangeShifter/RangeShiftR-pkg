@@ -199,7 +199,7 @@ void SNPTrait::inheritDiploid(sex_t whichChromosome, map<int, vector<unsigned ch
 
 		auto distance = std::distance(recomPositions.begin(), it);
 		if (distance - 1 % 2 != 0)
-			parentChromosome = !parentChromosome; //switch chromosome
+			parentChromosome = 1 - parentChromosome; //switch chromosome
 
 
 		for (auto const& [locus, allelePair] : parentGenes) {
@@ -207,7 +207,7 @@ void SNPTrait::inheritDiploid(sex_t whichChromosome, map<int, vector<unsigned ch
 			while (locus > nextBreakpoint) {
 				std::advance(it, 1);
 				nextBreakpoint = *it;
-				parentChromosome = !parentChromosome; //switch chromosome
+				parentChromosome = 1 - parentChromosome; //switch chromosome
 			}
 
 			if (locus <= nextBreakpoint) {
