@@ -401,8 +401,44 @@ const sex_t stringToSex(const std::string& str) {
 	else throw logic_error("Traits file: ERROR - sex can either be 'female' or 'male'.");
 }
 
-set<int> convertStringToPatches(string str, int nb_patches, Landscape* pLandscape) {
+set<int> convertStringToPatches(const string& str, const int& nb_rnd_patches, const vector<int>& existingPatches) {
+	
+	set<int> patches;
 
+	if (str == "random") {
+		if (nb_rnd_patches > existingPatches.size()) {
+			throw logic_error("Genetics file: ERROR - Nb of patches to randomly sample exceeds nb of existing patches.");
+		} else {
+			// Sample without replacement
+			std::sample(
+				existingPatches.begin(), 
+				existingPatches.end(), 
+				patches.begin(), 
+				nb_rnd_patches, 
+				pRandom->getRNG()
+			);
+		}
+	} else if (str == "all") {
+		// Copy all patches into sampled patches
+		for (int pch : existingPatches) patches.insert(pch);
+	} else {
+		// comma-separated list of patches
+		stringstream ss(str);
+		string strPch;
+		int pch;
+		bool patchExists;
+		// Read comma-separated values
+		while (std::getline(ss, strPch, ',')) {
+			pch = std::stoi(strPch);
+			patchExists = std::find(existingPatches.begin(), existingPatches.end(), pch) != existingPatches.end();
+			if (!patchExists)
+				throw logic_error("Genetics file: ERROR - sampled patch does not exist.");
+			else {
+				patches.insert(pch);
+			}
+		}
+	}
+	return patches;
 }
 
 set<int> convertStringToChromosomeEnds(string str, int genomeSize) {
@@ -426,6 +462,32 @@ set<int> convertStringToChromosomeEnds(string str, int genomeSize) {
 	}
 	return chromosomeEnds;
 }
+
+set<int> convertStringToStages(const string& str, const int& nbStages) {
+	set<int> stages;
+	if (str == "all") {
+		for (int stg = 0; stg < nbStages; ++stg) {
+			stages.insert(stg);
+		}
+	}
+	else {
+		// Parse comma-separated list from input string
+		stringstream ss(str);
+		string strStg;
+		int stg;
+		// Read comma-separated values
+		while (std::getline(ss, strStg, ',')) {
+			stg = std::stoi(strStg);
+			if (stg > nbStages - 1)
+				throw logic_error("Genetics file: ERROR - sampled stage exceeds number of stages.");
+			else {
+				stages.insert(stg);
+			}
+		}
+	}
+	return stages;
+}
+
 
 
 #if RS_RCPP

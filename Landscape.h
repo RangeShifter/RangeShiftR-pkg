@@ -234,6 +234,7 @@ public:
 
 	void setCellArray(void);
 	void addPatchNum(int);
+	std::vector<int> getPatchNums() const { return patchnums; }
 	void generatePatches(Species*); 		// create an artificial landscape
 	void allocatePatches(Species*);	// create patches for a cell-based landscape
 	Patch* newPatch(
