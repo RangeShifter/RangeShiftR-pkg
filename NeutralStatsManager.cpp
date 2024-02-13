@@ -29,7 +29,7 @@
  // ----------------------------------------------------------------------------------------
 
 NeutralStatsManager::NeutralStatsManager(set<int> const& patchList, const int nLoci) {
-	this->_fst_matrix = PatchMatrix(patchList.size(), patchList.size());
+	this->_fst_matrix = PatchMatrix(static_cast<int>(patchList.size()), static_cast<int>(patchList.size()));
 	globalAlleleTable.reserve(nLoci); //don't have to be pointers, not shared or moved
 }
 
@@ -282,17 +282,17 @@ void NeutralStatsManager::calculateFstatWC(set<int> const& patchList, const int 
 		int patchSize = pPop->sampleSize();
 		if (patchSize) {
 			extantPs++;
-			sum_weights += (patchSize * patchSize / nInds);
+			sum_weights += (patchSize * patchSize / static_cast<double>(nInds));
 		}
 	}
 
 	_n_extantPopulations = extantPs;
 	_n_individuals = nInds;
 
-	n_bar = nInds / extantPs;
+	n_bar = nInds / static_cast<double>(extantPs);
 	n_c = (nInds - sum_weights) / (extantPs - 1);
-	inverse_n_bar = 1 / (n_bar - 1);
-	inverse_n_total = 1 / nInds;
+	inverse_n_bar = 1.0 / (n_bar - 1);
+	inverse_n_total = 1.0 / nInds;
 
 	double var;
 	double s2, p_bar, h_bar;
@@ -359,7 +359,7 @@ void NeutralStatsManager::calculateFstatWC_MS(set<int> const& patchList, const i
 		int patchSize = pPop->sampleSize();
 		if (patchSize) {
 			extantPs++;
-			sum_weights += (patchSize * patchSize / nInds);
+			sum_weights += (patchSize * patchSize / static_cast<double>(nInds));
 		}
 
 	}
@@ -550,7 +550,7 @@ void NeutralStatsManager::setFstMatrix(set<int> const& patchList, const int nInd
 
 	copy(patchList.begin(), patchList.end(), std::back_inserter(patchVect)); //needs to be in vector to iterate over, copy preserves order
 
-	int nPatches = patchList.size();
+	int nPatches = static_cast<int>(patchList.size());
 
 	//initialise 
 

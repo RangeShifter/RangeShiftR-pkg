@@ -1111,9 +1111,6 @@ traitsums SubCommunity::outTraits(traitCanvas tcanv,
 			}
 
 			// CURRENTLY INDIVIDUAL VARIATION CANNOT BE SEX-DEPENDENT
-//			ngenes = 1;
-			double mnS0[2], mnAlpha[2], mnBeta[2], sdS0[2], sdAlpha[2], sdBeta[2];
-
 			if (writefile) outtraits << endl;
 
 			for (int s = 0; s < NSEXES; s++) {

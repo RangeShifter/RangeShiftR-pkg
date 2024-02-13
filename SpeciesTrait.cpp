@@ -34,7 +34,7 @@ SpeciesTrait::SpeciesTrait(vector<string> parameters, Species* pSpecies) {
 
 		if (pSpecies->getNumberOfNeutralLoci() > 0)
 			cout << endl << "Traits file: WARNING - can only have one set of neutral markers, overwriting previous" << endl;
-		else pSpecies->setNumberOfNeutralLoci(positions.size());
+		else pSpecies->setNumberOfNeutralLoci(static_cast<int>(positions.size()));
 	}
 }
 

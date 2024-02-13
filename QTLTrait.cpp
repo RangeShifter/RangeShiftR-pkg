@@ -20,10 +20,10 @@ QTLTrait::QTLTrait(SpeciesTrait* P)
 		switch (mutationDistribution) {
 		case UNIFORM:
 		{
-			if (!mutationParameters.count(MAX))
+			if (mutationParameters.count(MAX) != 1)
 				cout << endl << ("Error:: mutation uniform qtl distribution parameter must contain max value (e.g. max= ) \n");
 
-			if (!mutationParameters.count(MIN))
+			if (mutationParameters.count(MIN) != 1)
 				cout << endl << ("Error:: mutation uniform qtl distribution parameter must contain min value (e.g. min= ) \n");
 
 			_mutate_func_ptr = &QTLTrait::mutateUniform;
@@ -31,10 +31,10 @@ QTLTrait::QTLTrait(SpeciesTrait* P)
 		}
 		case NORMAL:
 		{
-			if (!mutationParameters.count(MEAN))
+			if (mutationParameters.count(MEAN) != 1)
 				cout << endl << ("Error:: qtl mutation distribution set to normal so parameters must contain mean value (e.g. mean= ) \n");
 
-			if (!mutationParameters.count(SDEV))
+			if (mutationParameters.count(SDEV) != 1)
 				cout << endl << ("Error::qtl mutation distribution set to normal so parameters must contain sdev value (e.g. sdev= ) \n");
 
 			_mutate_func_ptr = &QTLTrait::mutateNormal;
@@ -55,10 +55,10 @@ QTLTrait::QTLTrait(SpeciesTrait* P)
 	switch (initialDistribution) {
 	case UNIFORM:
 	{
-		if (!initialParameters.count(MAX))
+		if (initialParameters.count(MAX) != 1)
 			cout << endl << ("Error:: initial uniform qtl distribution parameter must contain max value (e.g. max= ) \n");
 
-		if (!initialParameters.count(MIN))
+		if (initialParameters.count(MIN) != 1)
 			cout << endl << ("Error:: initial uniform qtl distribution parameter must contain min value (e.g. min= ) \n");
 
 		float maxD = initialParameters.find(MAX)->second;
@@ -69,10 +69,10 @@ QTLTrait::QTLTrait(SpeciesTrait* P)
 	}
 	case NORMAL:
 	{
-		if (!initialParameters.count(MEAN))
+		if (initialParameters.count(MEAN) != 1)
 			cout << endl << ("Error:: initial normal qtl distribution parameter must contain mean value (e.g. mean= ) \n");
 
-		if (!initialParameters.count(SDEV))
+		if (initialParameters.count(SDEV) != 1)
 			cout << endl << ("Error:: initial normal qtl distribution parameter must contain sdev value (e.g. sdev= ) \n");
 
 		float mean = initialParameters.find(MEAN)->second;
@@ -209,18 +209,18 @@ void QTLTrait::inheritDiploid(sex_t whichChromosome, map<int, vector<shared_ptr<
 
 	auto it = recomPositions.lower_bound(parentGenes.begin()->first);
 
-	unsigned int nextBreakpoint = *it;
+	int nextBreakpoint = *it;
 
 	auto distance = std::distance(recomPositions.begin(), it);
 	if (distance % 2 != 0)
-		parentChromosome = !parentChromosome; //switch chromosome
+		parentChromosome = 1 - parentChromosome; //switch chromosome
 
 	for (auto const& [locus, allelePair] : parentGenes) {
 
 		while (locus > nextBreakpoint) {
 			std::advance(it, 1);
 			nextBreakpoint = *it;
-			parentChromosome = !parentChromosome; //switch chromosome
+			parentChromosome = 1 - parentChromosome; //switch chromosome
 		}
 
 		if (locus <= nextBreakpoint) {
@@ -258,10 +258,10 @@ void QTLTrait::inheritInitialParameters(sex_t whichChromosome, map<int, vector<s
 	switch (initialDistribution) {
 	case UNIFORM:
 	{
-		if (!initialParameters.count(MAX))
+		if (initialParameters.count(MAX) != 1)
 			cout << endl << ("Error:: initial uniform qtl distribution parameter must contain max value (e.g. max= ) \n");
 
-		if (!initialParameters.count(MIN))
+		if (initialParameters.count(MIN) != 1)
 			cout << endl << ("Error:: initial uniform qtl distribution parameter must contain min value (e.g. min= ) \n");
 
 		float maxD = initialParameters.find(MAX)->second;
@@ -273,10 +273,10 @@ void QTLTrait::inheritInitialParameters(sex_t whichChromosome, map<int, vector<s
 	}
 	case NORMAL:
 	{
-		if (!initialParameters.count(MEAN))
+		if (initialParameters.count(MEAN) != 1)
 			cout << endl << ("Error:: initial normal qtl distribution parameter must contain mean value (e.g. mean= ) \n");
 
-		if (!initialParameters.count(SDEV))
+		if (initialParameters.count(SDEV) != 1)
 			cout << endl << ("Error:: initial normal qtl distribution parameter must contain sdev value (e.g. sdev= ) \n");
 
 		float mean = initialParameters.find(MEAN)->second;
@@ -303,7 +303,7 @@ void QTLTrait::inheritInitialParameters(sex_t whichChromosome, map<int, vector<s
 
 void QTLTrait::initialiseNormal(float mean, float sd) {
 
-	const auto positions = pSpeciesTrait->getPositions();
+	const set<int> positions = pSpeciesTrait->getPositions();
 	short ploidy = pSpeciesTrait->getPloidy();
 
 	for (auto position : positions) {
@@ -318,7 +318,7 @@ void QTLTrait::initialiseNormal(float mean, float sd) {
 
 void QTLTrait::initialiseUniform(float min, float max) {
 
-	const auto positions = pSpeciesTrait->getPositions();
+	const set<int> positions = pSpeciesTrait->getPositions();
 	short ploidy = pSpeciesTrait->getPloidy();
 
 	for (auto position : positions) {
@@ -341,7 +341,7 @@ float QTLTrait::expressAdditive() {
 
 	for (auto const& [locus, allelePair] : genes)
 	{
-		for (auto m : allelePair)
+		for (const std::shared_ptr<Allele> m : allelePair)
 			phenotype += m->getAlleleValue();
 	}
 	return phenotype;

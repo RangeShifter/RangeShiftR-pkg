@@ -123,7 +123,7 @@ struct crwData : trfrData { // to hold data for CRW movement model
 	void clone(const trfrData& copyFrom) {
 
 
-		auto pCopy = dynamic_cast<const crwData&>(copyFrom);
+		const crwData& pCopy = dynamic_cast<const crwData&>(copyFrom);
 
 		stepLength = pCopy.stepLength;
 		rho = pCopy.rho;
@@ -154,7 +154,7 @@ struct smsData : trfrData {
 	//static float stepMort;
 	//static bool straigtenPath;
 
-	smsData(locn prevA, locn goalA) : prev(prevA), goal(goalA), dp(0.0), gb(0.0), alphaDB(0.0), betaDB(0.0) {}
+	smsData(locn prevA, locn goalA) : prev(prevA), goal(goalA), dp(0.0), gb(0.0), alphaDB(0.0), betaDB(0) {}
 	~smsData() {}
 
 
@@ -206,7 +206,7 @@ struct kernelData : trfrData {
 	movement_t getType() { return KERNEL; }
 
 	void clone(const trfrData& copyFrom) {
-		auto pCopy = dynamic_cast<const kernelData&>(copyFrom);
+		const kernelData& pCopy = dynamic_cast<const kernelData&>(copyFrom);
 		meanDist1 = pCopy.meanDist1;
 		meanDist2 = pCopy.meanDist2;
 		probKern1 = pCopy.probKern1;

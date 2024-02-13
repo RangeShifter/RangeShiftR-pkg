@@ -378,7 +378,7 @@ void Population::updateAlleleTable() {
 		std::for_each(alleleTable.begin(),
 			alleleTable.end(),
 			[&](NeutralData& v) -> void {
-				v.setFrequencies(sampledInds.size() * 2);
+				v.setFrequencies(static_cast<int>(sampledInds.size()) * 2);
 				//v->divideHeteros(sampledInds.size()); //weir and cockerham doesn't need this division??
 			});
 	}
@@ -926,7 +926,7 @@ void Population::fledge(void)
 }
 
 Individual* Population::sampleInd() const {
-	int index = pRandom->IRandom(0, inds.size() - 1);
+	int index = pRandom->IRandom(0, static_cast<int>(inds.size() - 1));
 	return inds[index];
 }
 
@@ -953,7 +953,7 @@ void Population::sampleIndsWithoutReplacement(string n, const set<int>& sampleSt
 }
 
 int Population::sampleSize() const {
-	return sampledInds.size();
+	return static_cast<int>(sampledInds.size());
 }
 
 set<Individual*> Population::getIndividualsInStage(int stage) {

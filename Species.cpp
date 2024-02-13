@@ -478,7 +478,7 @@ set<TraitType> Species::getTraitTypes() {
 }
 
 int Species::getNTraits() const {
-	return spTraitTable.size();
+	return static_cast<int>(spTraitTable.size());
 }
 
 int Species::getNPositionsForTrait(const TraitType trait) const {

@@ -11,6 +11,6 @@ public:
 	~Allele() {}
 	float getAlleleValue() const { return value; };
 	float getDominanceCoef() const { return dominance; };
-	float getId() const { return id; }
+	int getId() const { return id; }
 };
 #endif

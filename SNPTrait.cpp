@@ -21,7 +21,7 @@ SNPTrait::SNPTrait(SpeciesTrait* P)
 	if (mutationDistribution != SSM && mutationDistribution != KAM)
 		cout << endl << ("Error:: wrong mutation distribution for neutral markers, must be KAM or SSM \n");
 
-	if (!mutationParameters.count(MAX))
+	if (mutationParameters.count(MAX) != 1)
 		cout << endl << ("Error:: KAM or SSM mutation distribution parameter must contain max value (e.g. max= ), max cannot exceed 256  \n");
 
 	if (wildType == -999)
@@ -39,8 +39,8 @@ SNPTrait::SNPTrait(SpeciesTrait* P)
 	switch (initialDistribution) {
 	case UNIFORM:
 	{
-		if (!initialParameters.count(MAX))
-			cout << endl << "Error:: initial SNP/Microsat distribution parameter must contain max value if set to UNIFORM (e.g. max= ), max cannot exceed " << maxSNPAlleles << "\n";
+		if (initialParameters.count(MAX) != 1)
+			cout << endl << "Error:: initial SNP/Microsat distribution parameter must contain one max value if set to UNIFORM (e.g. max= ), max cannot exceed " << maxSNPAlleles << "\n";
 
 		float maxD = initialParameters.find(MAX)->second;
 		if (maxD > maxSNPAlleles) {
@@ -83,7 +83,6 @@ SNPTrait::SNPTrait(const SNPTrait& T) :
 // ----------------------------------------------------------------------------------------
 void SNPTrait::mutate_KAM()
 {
-
 	const int positionsSize = pProtoTrait->getPositionsSize();
 	const auto& positions = pProtoTrait->getPositions();
 	const short ploidy = pProtoTrait->getPloidy();
