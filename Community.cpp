@@ -1487,8 +1487,6 @@ void Community::writeTraitsRows(Species* pSpecies, int rep, int yr, int gen, int
 			outtraitsrows << "\t" << mn << "\t" << sd;
 		}
 	}
-
-
 	outtraitsrows << endl;
 }
 

@@ -89,20 +89,7 @@ void RangePopOutput(
 	int,				// year
 	int					// generation
 );
-void Outputs_Visuals_B(
-	int,	// replicate
-	int,	// year
-	int,	// generation
-	int		// Landscape number
-);
-void RefreshVisualCost(void);
 traitCanvas SetupTraitCanvas(void);
-void SetupVisualOutput(void);
-void ResetVisualOutput(void);
-void DrawPopnGraph(
-	Community*,	// pointer to Community
-	int					// year
-);
 void OutParameters(
 	Landscape*	// pointer to Landscape
 );
@@ -128,10 +115,6 @@ extern RSrandom *pRandom;
 #if BATCH
 extern void MemoLine(string);
 #endif
-void GUIsetLandScale(
-	int,	// landscape image height (pixels)
-	int		// landscape image width  (pixels)
-);
 
 #if RS_RCPP
 extern std::uint32_t RS_random_seed;
