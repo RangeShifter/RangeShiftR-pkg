@@ -554,8 +554,7 @@ void Population::extirpate(void) {
 
 //---------------------------------------------------------------------------
 // Produce juveniles and hold them in the juvs vector
-void Population::reproduction(const float localK, const float envval, const int resol, bool cloneFromColdStorage,
-	Population* pColdStorage)
+void Population::reproduction(const float localK, const float envval, const int resol)
 {
 
 	// get population size at start of reproduction
@@ -743,17 +742,12 @@ void Population::reproduction(const float localK, const float envval, const int 
 					for (int j = 0; j < njuvs; j++) {
 
 						Individual* newJuv;
-						if (cloneFromColdStorage) {
-							newJuv = pColdStorage->sampleInd()->traitClone(pCell, pPatch, dem.propMales, trfr.moveModel, trfr.moveType);
-						}
-						else {
 #if RSDEBUG
-							// NOTE: CURRENTLY SETTING ALL INDIVIDUALS TO RECORD NO. OF STEPS ...
-							newJuv = new Individual(pCell, pPatch, 0, 0, 0, dem.propMales, true, trfr.moveType);
+						// NOTE: CURRENTLY SETTING ALL INDIVIDUALS TO RECORD NO. OF STEPS ...
+						newJuv = new Individual(pCell, pPatch, 0, 0, 0, dem.propMales, true, trfr.moveType);
 #else
-							newJuv = new Individual(pCell, pPatch, 0, 0, 0, dem.propMales, trfr.moveModel, trfr.moveType);
+						newJuv = new Individual(pCell, pPatch, 0, 0, 0, dem.propMales, trfr.moveModel, trfr.moveType);
 #endif
-						}
 
 						if (pSpecies->getNTraits() > 0) {
 							newJuv->inheritTraits(pSpecies, inds[i], father, resol);
@@ -858,17 +852,12 @@ void Population::reproduction(const float localK, const float envval, const int 
 							for (int j = 0; j < njuvs; j++) {
 
 								Individual* newJuv;
-								if (cloneFromColdStorage) {
-									newJuv = pColdStorage->sampleInd()->traitClone(pCell, pPatch, dem.propMales, trfr.moveModel, trfr.moveType);
-								}
-								else {
 #if RSDEBUG
-									// NOTE: CURRENTLY SETTING ALL INDIVIDUALS TO RECORD NO. OF STEPS ...
-									newJuv = new Individual(pCell, pPatch, 0, 0, 0, dem.propMales, true, trfr.moveType);
+								// NOTE: CURRENTLY SETTING ALL INDIVIDUALS TO RECORD NO. OF STEPS ...
+								newJuv = new Individual(pCell, pPatch, 0, 0, 0, dem.propMales, true, trfr.moveType);
 #else
-									newJuv = new Individual(pCell, pPatch, 0, 0, 0, dem.propMales, trfr.moveModel, trfr.moveType);
+								newJuv = new Individual(pCell, pPatch, 0, 0, 0, dem.propMales, trfr.moveModel, trfr.moveType);
 #endif
-								}
 								if (pSpecies->getNTraits() > 0) {
 									newJuv->inheritTraits(pSpecies, inds[i], father, resol);
 								}
@@ -1160,31 +1149,6 @@ disperser Population::extractDisperser(int ix) {
 	return d;
 }
 
-Individual* Population::copyForColdStorage(int ix) {
-	demogrParams dem = pSpecies->getDemogr();
-	trfrRules trfr = pSpecies->getTrfr();
-	Individual* ind = inds[ix];
-	Individual* clone = ind->traitClone(pPatch->getRandomCell(), pPatch, dem.propMales, trfr.moveModel, trfr.moveType);
-	return clone;
-}
-
-void Population::addEmigTraitsForInd(int ix, emigTraits& avgEmTraits) {
-	const emigTraits indEmigTraits = inds[ix]->getEmigTraits();
-	avgEmTraits.d0 += indEmigTraits.d0;
-	avgEmTraits.alpha += indEmigTraits.alpha;
-	avgEmTraits.beta += indEmigTraits.beta;
-}
-
-void Population::addTransferDataForInd(int ix, trfrData* avgTrfrData) {
-	inds[ix]->getTrfrData()->addMyself(*avgTrfrData);
-}
-
-void Population::addSettleTraitsForInd(int ix, settleTraits& avgSettleTraits) {
-	const settleTraits settleTraits = inds[ix]->getSettTraits();
-	avgSettleTraits.alpha += settleTraits.alpha;
-	avgSettleTraits.beta += settleTraits.beta;
-	avgSettleTraits.s0 += settleTraits.s0;
-}
 
 // For an individual identified as being in the matrix population:
 // if it is a settler, return its new location and remove it from the current population

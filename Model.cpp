@@ -295,7 +295,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 		pComm->initialise(pSpecies, -1);
 		//	}
 		bool updateland = false;
-		bool cloneFromColdStorage = false;
 		int landIx = 0; // landscape change index
 
 #if RSDEBUG
@@ -400,22 +399,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 						//	<< endl;
 #endif
 					}
-				}
-			}
-
-			if (yr == sim.storeIndsYr) { //implement after first change only
-
-				if (sim.fionaOptions == 1)
-					pSpecies->turnOffMutations();
-
-				if (sim.fionaOptions == 2) {
-					pComm->addIndividualsToColdStorage();
-					cloneFromColdStorage = true;
-				}
-
-				if (sim.fionaOptions == 3) {
-					pComm->createAverageTraitIndividualAndStore(pSpecies, pLandscape);
-					cloneFromColdStorage = true;
 				}
 			}
 			// environmental gradient, stochasticity & local extinction
@@ -592,7 +575,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				}
 
 				// reproduction
-				pComm->reproduction(yr, cloneFromColdStorage);
+				pComm->reproduction(yr);
 
 				if (dem.stageStruct) {
 					if (sstruct.survival == 0) { // at reproduction

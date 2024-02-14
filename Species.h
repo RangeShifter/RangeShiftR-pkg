@@ -301,7 +301,6 @@ public:
 	}
 
 	// Genetic functions
-	void turnOffMutations(void);
 	void resetGeneticParameters();
 	bool areMutationsOn(void);
 	bool isDiploid() const;
