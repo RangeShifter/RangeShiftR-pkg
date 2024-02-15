@@ -275,6 +275,7 @@ traitsums Population::getTraits(Species* pSpecies) {
 			switch (trfr.moveType) {
 
 			case 1: // SMS
+			{
 				trfrSMSTraits sms = inds[i]->getSMSTraits();
 				g = 0; // CURRENTLY INDIVIDUAL VARIATION CANNOT BE SEX-DEPENDENT
 				ts.sumDP[g] += sms.dp; ts.ssqDP[g] += sms.dp * sms.dp;
@@ -282,12 +283,15 @@ traitsums Population::getTraits(Species* pSpecies) {
 				ts.sumAlphaDB[g] += sms.alphaDB; ts.ssqAlphaDB[g] += sms.alphaDB * sms.alphaDB;
 				ts.sumBetaDB[g] += sms.betaDB;  ts.ssqBetaDB[g] += sms.betaDB * sms.betaDB;
 				break;
+			}
 			case 2:
+			{
 				trfrCRWTraits c = inds[i]->getCRWTraits();
 				g = 0; // CURRENTLY INDIVIDUAL VARIATION CANNOT BE SEX-DEPENDENT
 				ts.sumStepL[g] += c.stepLength; ts.ssqStepL[g] += c.stepLength * c.stepLength;
 				ts.sumRho[g] += c.rho;        ts.ssqRho[g] += c.rho * c.rho;
 				break;
+			}
 			default:
 				throw runtime_error("moveModel enabled but moveType is neither 1 (SMS) or 2 (CRW).");
 				break;
