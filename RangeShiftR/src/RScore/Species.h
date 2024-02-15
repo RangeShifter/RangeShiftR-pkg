@@ -20,40 +20,32 @@
  --------------------------------------------------------------------------*/
 
 
-/*------------------------------------------------------------------------------
+ /*------------------------------------------------------------------------------
 
-RangeShifter v2.0 Species
+ RangeShifter v2.0 Species
 
-Implements the Species class
+ Implements the Species class
 
-There is ONE instance of a Species for each species within the Community
-AND THIS IS CURRENTLY LIMITED TO A SINGLE SPECIES.
-The class holds all the demographic and dispersal parameters of the species.
+ There is ONE instance of a Species for each species within the Community
+ AND THIS IS CURRENTLY LIMITED TO A SINGLE SPECIES.
+ The class holds all the demographic and dispersal parameters of the species.
 
-For full details of RangeShifter, please see:
-Bocedi G., Palmer S.C.F., Pe?er G., Heikkinen R.K., Matsinos Y.G., Watts K.
-and Travis J.M.J. (2014). RangeShifter: a platform for modelling spatial
-eco-evolutionary dynamics and species? responses to environmental changes.
-Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
+ For full details of RangeShifter, please see:
+ Bocedi G., Palmer S.C.F., Pe’er G., Heikkinen R.K., Matsinos Y.G., Watts K.
+ and Travis J.M.J. (2014). RangeShifter: a platform for modelling spatial
+ eco-evolutionary dynamics and species’ responses to environmental changes.
+ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
-Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
+ Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 28 July 2021 by Greta Bocedi
+ Last updated: 28 July 2021 by Greta Bocedi
 
-------------------------------------------------------------------------------*/
+ ------------------------------------------------------------------------------*/
 
 #ifndef SpeciesH
 #define SpeciesH
 
-//#if RS_RCPP && !R_CMD
-#include "../Version.h"
-//#endif
-
-//#if !RS_RCPP && R_CMD
-//#include "../../Batch/Version.h"
-//#endif
 #include "Parameters.h"
-#include <Rcpp.h>
 
 // structures for demographic parameters
 
@@ -78,23 +70,23 @@ struct densDepParams {
 struct genomeData {
 	int nLoci;
 	bool diploid; bool neutralMarkers; bool pleiotropic; bool trait1Chromosome;
-	double probMutn,probCrossover,alleleSD,mutationSD;
-} ;
+	double probMutn, probCrossover, alleleSD, mutationSD;
+};
 
 struct traitAllele {
 	short chromo; short locus;
-} ;
+};
 
 struct traitMap {
 	short nAlleles;
-	traitAllele **traitalleles;
-} ;
+	traitAllele** traitalleles;
+};
 
 struct traitData {
 	short nTraitMaps;
-	traitMap **traitmaps;
-	traitMap *neutralloci;
-} ;
+	traitMap** traitmaps;
+	traitMap* neutralloci;
+};
 
 // structures for emigration parameters
 
@@ -172,7 +164,7 @@ struct settleType {
 	short settTrait[2];
 };
 struct settleRules {
-	 bool densDep; bool wait; bool go2nbrLocn; bool findMate;
+	bool densDep; bool wait; bool go2nbrLocn; bool findMate;
 };
 struct settleSteps {
 	int minSteps; int maxSteps; int maxStepsYr;
@@ -562,14 +554,14 @@ private:
 	bool survDens;
 	bool survStageDens;
 	bool disperseOnLoss;	// individuals disperse on complete loss of patch
-												// (otherwise they die)
+	// (otherwise they die)
 	short habDimK;			// dimension of carrying capacities matrix
-	float *habK;				// habitat-specific carrying capacities (inds/cell)
+	float* habK;				// habitat-specific carrying capacities (inds/cell)
 	float devCoeff; 		// density-dependent development coefficient
 	float survCoeff; 		// density-dependent survival coefficient
-	float **ddwtFec;    // density-dependent weights matrix for fecundity
-	float **ddwtDev;    // density-dependent weights matrix for development
-	float **ddwtSurv;   // density-dependent weights matrix for survival
+	float** ddwtFec;    // density-dependent weights matrix for fecundity
+	float** ddwtDev;    // density-dependent weights matrix for development
+	float** ddwtSurv;   // density-dependent weights matrix for survival
 	// NB for the following arrays, sex 0 is females, sex 1 is males
 	float fec[NSTAGES][NSEXES];			// fecundities
 	float dev[NSTAGES][NSEXES];			// development probabilities
@@ -600,10 +592,10 @@ private:
 	double alleleSD;					// s.d. of initial allelic values around phenotypic value
 	double mutationSD;				// s.d. of mutation magnitude
 	short nNLoci;							// no. of nLoci set
-	short *nLoci;							// no. of loci per chromosome
+	short* nLoci;							// no. of loci per chromosome
 	short nTraitNames;				// no. of trait names set
-	traitData *traitdata;			// for mapping of chromosome loci to traits
-	string *traitnames;				// trait names for parameter output
+	traitData* traitdata;			// for mapping of chromosome loci to traits
+	string* traitnames;				// trait names for parameter output
 
 	// emigration parameters
 
@@ -612,8 +604,8 @@ private:
 	bool	sexDepEmig;   // sex-dependent emigration
 	bool	indVarEmig;   // individual variation in emigration
 	short emigStage;		// stage which emigrates (used for stage-strucutred population
-											// having individual variability in emigration probability)
-	// NB for the following arrays, sex 0 is females, sex 1 is males
+	// having individual variability in emigration probability)
+// NB for the following arrays, sex 0 is females, sex 1 is males
 	float	d0[NSTAGES][NSEXES];				 // maximum emigration probability
 	float	alphaEmig[NSTAGES][NSEXES];	 // slope of density-dependent reaction norm
 	float	betaEmig[NSTAGES][NSEXES];	 // inflection point of reaction norm (in terms of N/K)
@@ -663,7 +655,7 @@ private:
 	short moveType; 		// 1 = SMS, 2 = CRW
 	short pr;						// SMS perceptual range (cells)
 	short prMethod;			// SMS perceptual range evaluation method:
-											// 1 = arith. mean, 2 = harmonic mean, 3 = inverse weighted arith. mean
+	// 1 = arith. mean, 2 = harmonic mean, 3 = inverse weighted arith. mean
 	short memSize;			// SMS memory size (1-14 steps)
 	short goalType;			// SMS goal bias type: 0 = none, 1 = towards goal, 2 = dispersal bias
 	float dp;						// SMS directional persistence
@@ -671,7 +663,7 @@ private:
 	float alphaDB; 			// SMS dispersal bias decay rate
 	int betaDB; 				// SMS dispersal bias decay inflection point (no. of steps)
 	float stepMort;			// constant per-step mortality probability for movement models
-	double *habStepMort;	// habitat-dependent per-step mortality probability
+	double* habStepMort;	// habitat-dependent per-step mortality probability
 	float stepLength;		// CRW step length (m)
 	float rho;					// CRW correlation coefficient
 	double dpMean[1][NSEXES];				// mean of initial SMS directional persistence
@@ -693,14 +685,14 @@ private:
 	float stepLScale;								// scaling factor for step length (m)
 	float rhoScale;									// scaling factor for correlation coefficient
 	short habDimTrfr;		// dimension of habitat-dependent step mortality and costs matrices
-	int *habCost;				// habitat costs
+	int* habCost;				// habitat costs
 	bool costMap;				// import cost map from file?
 	bool straigtenPath;	// straighten path after decision not to settle
 	bool fullKernel;		// used to indicate special case when density-independent emigration
-											// is 1.0, and kernel-based movement within the natal cell is used
-											// to determine philopatry
+	// is 1.0, and kernel-based movement within the natal cell is used
+	// to determine philopatry
 
-	// settlement parameters
+// settlement parameters
 
 	bool stgDepSett;
 	bool sexDepSett;

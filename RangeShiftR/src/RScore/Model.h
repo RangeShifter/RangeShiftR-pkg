@@ -49,14 +49,6 @@ Last updated: 26 October 2021 by Steve Palmer
 #include <sys/types.h>
 #include <sys/stat.h>
 
-//#if RS_RCPP && !R_CMD
-#include "../Version.h"
-//#endif
-
-//#if !RS_RCPP && R_CMD
-//#include "../../Batch/Version.h"
-//#endif
-
 #include "Parameters.h"
 #include "Landscape.h"
 #include "Community.h"
@@ -75,12 +67,12 @@ extern ofstream DEBUGLOG;
 #if RS_RCPP && !R_CMD
 Rcpp::List RunModel(
 	Landscape*,	// pointer to Landscape
-	int					// sequential simulation number (always 0 for VCL version)
+	int					// sequential simulation number
 );
 #else
 int RunModel(
 	Landscape*,	// pointer to Landscape
-	int					// sequential simulation number (always 0 for VCL version)
+	int					// sequential simulation number
 );
 #endif // RS_RCPP && !R_CMD
 bool CheckDirectory(void);
@@ -125,11 +117,11 @@ extern Community *pComm;
 const bool batchMode = true;
 extern string landFile;
 extern vector <string> hfnames;
-extern string habmapname;		// see FormLand.cpp (VCL) OR Main.cpp (batch)
-extern string patchmapname;	// see FormLand.cpp (VCL) OR Main.cpp (batch)
-extern string distnmapname;	// see FormLand.cpp (VCL) OR Main.cpp (batch)
-extern string costmapname;	// see FormMove.cpp (VCL) OR Main.cpp (batch)
-extern string genfilename;	// see FormGenetics.cpp (VCL) OR Main.cpp (batch)
+extern string habmapname;		// see Main.cpp (batch)
+extern string patchmapname;	// see Main.cpp (batch)
+extern string distnmapname;	// see Main.cpp (batch)
+extern string costmapname;	// see Main.cpp (batch)
+extern string genfilename;	// see Main.cpp (batch)
 extern RSrandom *pRandom;
 
 // these functions to have different version for GUI and batch applications ...

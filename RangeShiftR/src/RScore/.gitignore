@@ -11,11 +11,9 @@ compile_commands.json
 Makefile
 .build-release/
 build-Release/
-*.txt
 *.project
 *.workspace
 *.mk
-*.txt
 *.tags
 
 # Hidden source
@@ -83,3 +81,7 @@ vignettes/*.pdf
 
 # compilation files
 *.o
+
+# Visual Studio files
+.vs/
+out/
