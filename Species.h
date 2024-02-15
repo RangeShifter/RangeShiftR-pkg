@@ -51,6 +51,7 @@
 #include <ranges>
 #include <map>
 #include <set>
+#include <ranges>
 
 class SpeciesTrait;
 
