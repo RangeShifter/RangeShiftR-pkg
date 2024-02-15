@@ -384,8 +384,8 @@ void Species::resetGeneticParameters() {
 	numberOfAdaptiveTraits = 0;
 	genomeSize = -9999;
 	recombinationRate = -9999;
-	nSampleCellsFst = -9999;
-	nIndsToSample = -9999;
+	nSampleCellsFst = "";
+	nIndsToSample = "";
 	chromosomeEnds.clear();
 	samplePatchList.clear();
 }
