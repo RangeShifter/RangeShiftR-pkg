@@ -289,6 +289,9 @@ traitsums Population::getTraits(Species* pSpecies) {
 				ts.sumRho[g] += c.rho;        ts.ssqRho[g] += c.rho * c.rho;
 				break;
 			}
+			default:
+				throw runtime_error("moveModel enabled but moveType is neither 1 (SMS) or 2 (CRW).");
+				break;
 		}
 		else {
 			trfrKernTraits k = inds[i]->getKernTraits();
