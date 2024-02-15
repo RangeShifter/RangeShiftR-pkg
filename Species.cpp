@@ -472,7 +472,7 @@ void Species::clearTraitTable() {
 //}
 
 set<TraitType> Species::getTraitTypes() {
-	auto kv = views::keys(spTraitTable);
+	auto kv = std::ranges::views::keys(spTraitTable);
 	set<TraitType> keys{ kv.begin(), kv.end() };
 	return keys;
 }
