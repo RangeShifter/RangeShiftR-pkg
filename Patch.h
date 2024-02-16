@@ -68,14 +68,6 @@
 #include <vector>
 using namespace std;
 
-#if RS_RCPP
-#include "../Version.h"
-#endif
-
-//#if !RS_RCPP && R_CMD
-//#include "../../Batch/Version.h"
-//#endif
-
 #include "Parameters.h"
 #include "Cell.h"
 #include "Species.h"

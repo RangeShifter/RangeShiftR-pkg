@@ -82,6 +82,6 @@ vignettes/*.pdf
 # compilation files
 *.o
 
-# Visual Studio
+# Visual Studio files
 .vs/
 out/

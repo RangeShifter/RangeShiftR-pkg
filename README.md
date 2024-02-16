@@ -2,7 +2,7 @@
 
 This repo contains the core simulation code for RangeShifter v2.0 and is not meant to be compiled or run on its own.
 
-<img src="https://github.com/RangeShifter/RScore/blob/development-guidelines/RScore_logo.png" align="right" height = 200/>
+<img src="https://github.com/RangeShifter/RScore/blob/main/RScore_logo.png" align="right" height = 200/>
 
 If you are only interested in using RangeShifter, you can ignore this and head to the repo of one of the interfaces:
 
@@ -65,3 +65,8 @@ git subtree add --prefix src/RScore RScore <the new branch>
 ## Contributing to RangeShifter core code
 
 See [CONTRIBUTING](https://github.com/RangeShifter/RScore/blob/main/CONTRIBUTING.md).
+
+## Maintainers
+
+- [@JetteReeg](https://github.com/JetteReeg)
+- [@TheoPannetier](https://github.com/TheoPannetier)
