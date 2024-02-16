@@ -42,7 +42,7 @@ Anyone who whishes to make changes to RangeShifter's code, including regular dev
 
 ![](branches.png)
 
-*Check out the [Git cheatsheet](https://github.com/RangeShifter/RScore/git_cheatsheet.md) for a reminder on the main git commands*
+*Check out the [Git cheatsheet](https://github.com/RangeShifter/RScore/blob/main/git_cheatsheet.md) for a reminder on the main git commands*
 
 This policy applies to RScore and all three RangeShifter interfaces.
 RangeShifter uses the following branching structure:
