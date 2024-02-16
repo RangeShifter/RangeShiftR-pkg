@@ -3,6 +3,9 @@
 
 #include <vector>
 #include <string>
+#include <memory>
+#include <map>
+#include <algorithm>
 
 #include "TTrait.h"
 

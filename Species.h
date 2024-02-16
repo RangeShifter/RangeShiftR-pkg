@@ -45,12 +45,14 @@
 #ifndef SpeciesH
 #define SpeciesH
 
-#include "Parameters.h"
-#include "SpeciesTrait.h"
-#include "TTrait.h"
 #include <ranges>
 #include <map>
 #include <set>
+#include <memory>
+
+#include "Parameters.h"
+#include "SpeciesTrait.h"
+#include "TTrait.h"
 
 class SpeciesTrait;
 
@@ -576,11 +578,6 @@ private:
 
 
 //---------------------------------------------------------------------------
-
-#if RSDEBUG
-//extern ofstream DEBUGLOG;
-extern void DebugGUI(string);
-#endif
 
 //---------------------------------------------------------------------------
 #endif

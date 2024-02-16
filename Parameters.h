@@ -60,6 +60,7 @@
 #include <stdlib.h>
 #include <vector>
 #include <sstream>
+#include <algorithm>
 using namespace std;
 
 #include "RSrandom.h"
@@ -443,7 +444,6 @@ private:
 
 #if RSDEBUG
 extern ofstream DEBUGLOG;
-void DebugGUI(string);
 #endif
 
 extern RSrandom* pRandom;

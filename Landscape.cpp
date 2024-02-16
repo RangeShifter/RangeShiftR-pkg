@@ -2354,11 +2354,6 @@ int Landscape::readCosts(string fname)
 	costs >> maxXcost >> header >> maxYcost >> header >> minLongCost;
 	costs >> header >> minLatCost >> header >> resolCost >> header >> NODATACost;
 
-
-#if !RS_RCPP
-	MemoLine("Loading costs map. Please wait...");
-#endif
-
 	for (int y = maxYcost - 1; y > -1; y--) {
 		for (int x = 0; x < maxXcost; x++) {
 #if RS_RCPP
@@ -2403,8 +2398,6 @@ if (costs.eof()) {
 #endif
 	}
 else EOFerrorR(fname);
-#else
-MemoLine("Costs map loaded.");
 #endif
 
 	costs.close(); costs.clear();

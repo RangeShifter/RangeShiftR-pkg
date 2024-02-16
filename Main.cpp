@@ -61,12 +61,7 @@ ofstream MUTNLOG;
 vector <string> hfnames;
 Species* pSpecies;
 Community* pComm;
-void DebugGUI(string msg) { 
-	// nothing
-}
-void MemoLine(string msg) {
-	/// nothing
-}
+
 traitCanvas SetupTraitCanvas(void) {
 	traitCanvas tcanv;
 	for (int i = 0; i < NTRAITS; i++) { tcanv.pcanvas[i] = 0; }

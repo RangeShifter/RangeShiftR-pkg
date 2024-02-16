@@ -48,6 +48,7 @@
 #include <queue>
 #include <algorithm>
 #include <ranges>
+#include <memory>
 using namespace std;
 
 #include "Parameters.h"

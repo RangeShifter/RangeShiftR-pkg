@@ -549,10 +549,7 @@ extern RSrandom* pRandom;
 
 #if RSDEBUG
 extern ofstream DEBUGLOG;
-extern void DebugGUI(string);
 #endif
-
-extern void MemoLine(string);
 
 #if RS_RCPP
 extern rasterdata landraster, patchraster, spdistraster, costsraster;

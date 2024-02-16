@@ -1,6 +1,8 @@
 #ifndef TRAITFACTORYH
 #define TRAITFACTORYH
 
+#include <memory>
+
 #include "SpeciesTrait.h"
 #include "SNPTrait.h"
 #include "QTLTrait.h"

@@ -37,12 +37,6 @@ Cell::Cell(int xx, int yy, intptr patch, int hab)
 	envVal = 1.0; // default - no effect of any gradient
 	envDev = eps = 0.0;
 	habIxx.push_back(hab);
-#if RSDEBUG
-	//DebugGUI(("Cell::Cell(): this=" + Int2Str((int)this)
-	//	+ " x=" + Int2Str(x) + " y=" + Int2Str(y)
-	//	+ " habIndex=" + Int2Str(habIndex)
-	//).c_str());
-#endif
 	visits = 0;
 	smsData = 0;
 }
@@ -68,12 +62,6 @@ Cell::~Cell() {
 }
 
 void Cell::setHabIndex(short hx) {
-#if RSDEBUG
-	//DebugGUI(("Cell::setHabIndex(): this=" + Int2Str((int)this)
-	//	+ " x=" + Int2Str(x) + " y=" + Int2Str(y)
-	//	+ " habIx=" + Int2Str(habIx)
-	//).c_str());
-#endif
 	if (hx < 0) habIxx.push_back(0);
 	else habIxx.push_back(hx);
 }

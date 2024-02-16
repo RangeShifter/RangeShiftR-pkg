@@ -546,9 +546,6 @@ float Species::getEmigD0(short stg, short sex) {
 // Transfer functions
 
 void Species::setTrfr(const trfrRules t) {
-#if RSDEBUG
-	//DebugGUI("Species::setTrfr(): t.indVar=" + Int2Str((int)t.indVar));
-#endif
 	moveModel = t.moveModel; stgDepTrfr = t.stgDep; sexDepTrfr = t.sexDep;
 	distMort = t.distMort; indVarTrfr = t.indVar;
 	twinKern = t.twinKern;

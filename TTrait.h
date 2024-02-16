@@ -2,7 +2,8 @@
 #define TRAITTH
 
 #include <vector>
-#include<set>
+#include <set>
+#include <memory>
 
 #include "Parameters.h"
 #include "Allele.h"

@@ -77,9 +77,6 @@ vector<land>& fractal_landscape(
 bool compare(const land&, const land&);
 
 extern RSrandom* pRandom;
-#if RSDEBUG
-extern void DebugGUI(string);
-#endif
 
 //---------------------------------------------------------------------------
 #endif

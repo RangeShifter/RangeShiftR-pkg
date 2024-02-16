@@ -51,6 +51,7 @@
 
 #include <vector>
 #include <algorithm>
+#include <memory>
 #include <ranges>
 using namespace std;
 
