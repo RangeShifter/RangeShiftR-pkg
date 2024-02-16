@@ -3246,12 +3246,12 @@ outPar << endl << "DISPERSAL - SETTLEMENT:" << endl;
 
 if (trfr.moveModel) {
 	string plusmating = "+ mating requirements";
-	ssteps = pSpecies->getSteps(0,0);
-
-	outPar << "MIN. No. OF STEPS:\t " << ssteps.minSteps << endl;
-	outPar << "MAX. No. OF STEPS:\t ";
-	if (ssteps.maxSteps == 99999999) outPar << "not applied" << endl;
-	else outPar << ssteps.maxSteps << endl;
+		// ssteps = pSpecies->getSteps(0, 0);
+		//
+		// outPar << "MIN. No. OF STEPS:\t " << ssteps.minSteps << endl;
+		// outPar << "MAX. No. OF STEPS:\t ";
+		// if (ssteps.maxSteps == 99999999) outPar << "not applied" << endl;
+		// else outPar << ssteps.maxSteps << endl;
 
 	if (sett.sexDep) {
 		nsexes = 2;
@@ -3259,22 +3259,60 @@ if (trfr.moveModel) {
 		if (sett.stgDep) {
 			nstages = sstruct.nStages;
 			outPar << stgdept << "yes" << endl;
-		}
+				for (int i = 0; i < nstages; i++) {
+				    if (dem.stageStruct && nstages > 1) outPar << "stage " << i << ": " << endl;
+				    for (int sx = 0; sx < nsexes; sx++) {
+				        if (sx == 0) outPar << "FEMALES:" << endl;
+				        else outPar << "MALES:" << endl;
+				        ssteps = pSpecies->getSteps(i, sx);
+
+				        outPar << "MIN. No. OF STEPS:\t " << ssteps.minSteps << endl;
+				        outPar << "MAX. No. OF STEPS:\t ";
+				        if (ssteps.maxSteps == 99999999) outPar << "not applied" << endl;
+				        else outPar << ssteps.maxSteps << endl
+				    }
+				}
+			}
 		else { // !sett.stgDep
 			nstages = 1;
 			outPar << stgdept << "no" << endl;
+				for (int sx = 0; sx < nsexes; sx++) {
+				    if (sx == 0) outPar << "FEMALES:" << endl;
+				    else outPar << "MALES:" << endl;
+				    ssteps = pSpecies->getSteps(0, sx);
+
+				    outPar << "MIN. No. OF STEPS:\t " << ssteps.minSteps << endl;
+				    outPar << "MAX. No. OF STEPS:\t ";
+				    if (ssteps.maxSteps == 99999999) outPar << "not applied" << endl;
+				    else outPar << ssteps.maxSteps << endl;
+				}
+			}
 		}
-	}
 	else { // !sett.sexDep
 		nsexes = 1;
 		outPar << sexdept << "no" << endl;
 		if (sett.stgDep) {
 			nstages = sstruct.nStages;
 			outPar << stgdept << "yes" << endl;
-		}
+				for (int i = 0; i < nstages; i++) {
+				    if (dem.stageStruct && nstages > 1) outPar << "stage " << i << ": " << endl;
+				    ssteps = pSpecies->getSteps(i, 0);
+
+				    outPar << "MIN. No. OF STEPS:\t " << ssteps.minSteps << endl;
+				    outPar << "MAX. No. OF STEPS:\t ";
+				    if (ssteps.maxSteps == 99999999) outPar << "not applied" << endl;
+				    else outPar << ssteps.maxSteps << endl;
+				}
+			}
 		else { // !sett.stgDep
 			nstages = 1;
 			outPar << stgdept << "no" << endl;
+				ssteps = pSpecies->getSteps(0, 0);
+
+				outPar << "MIN. No. OF STEPS:\t " << ssteps.minSteps << endl;
+				outPar << "MAX. No. OF STEPS:\t ";
+				if (ssteps.maxSteps == 99999999) outPar << "not applied" << endl;
+				else outPar << ssteps.maxSteps << endl;
 		}
 	}
 	for (int sx = 0; sx < nsexes; sx++) {
