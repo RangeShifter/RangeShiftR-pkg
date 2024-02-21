@@ -40,7 +40,16 @@ SpeciesTrait::SpeciesTrait(vector<string> parameters, Species* pSpecies) {
 
 TraitType SpeciesTrait::stringToTraitType(const std::string& str, sex_t sex) const {
 
-	if (sex == MAL) {
+	// Non-dispersal traits
+	if (str == "neutral") return SNP;
+	else if (str == "adaptive") return ADAPTIVE;
+	// Sex-invariant dispersal traits
+	else if (str == "sms_directionalPersistence") return SMS_DP;
+	else if (str == "sms_goalBias") return SMS_GB;
+	else if (str == "sms_alphaDB") return SMS_ALPHADB;
+	else if (str == "sms_betaDB") return SMS_BETADB;
+	// Sex-specific dispersal traits
+	else if (sex == MAL) {
 		if (str == "emigration_d0") return E_D0_M;
 		else if (str == "emigration_alpha") return E_ALPHA_M;
 		else if (str == "emigration_beta") return E_BETA_M;
@@ -53,7 +62,8 @@ TraitType SpeciesTrait::stringToTraitType(const std::string& str, sex_t sex) con
 		else if (str == "crw_stepLength") return CRW_STEPLENGTH_M;
 		else if (str == "crw_stepCorrelation") return CRW_STEPCORRELATION_M;
 		else throw logic_error(str + " is not a valid trait type.");
-	} else {
+	}
+	else {
 		if (str == "emigration_d0") return E_D0_F;
 		else if (str == "emigration_alpha") return E_ALPHA_F;
 		else if (str == "emigration_beta") return E_BETA_F;
@@ -65,12 +75,6 @@ TraitType SpeciesTrait::stringToTraitType(const std::string& str, sex_t sex) con
 		else if (str == "kernel_probability") return KERNEL_PROBABILITY_F;
 		else if (str == "crw_stepLength") return CRW_STEPLENGTH_F;
 		else if (str == "crw_stepCorrelation") return CRW_STEPCORRELATION_F;
-		else if (str == "sms_directionalPersistence") return SMS_DP;
-		else if (str == "sms_goalBias") return SMS_GB;
-		else if (str == "sms_alphaDB") return SMS_ALPHADB;
-		else if (str == "sms_betaDB") return SMS_BETADB;
-		else if (str == "neutral") return SNP;
-		else if (str == "adaptive") return ADAPTIVE;
 		else throw logic_error(str + " is not a valid trait type.");
 	}
 }

@@ -91,9 +91,7 @@ public:
 		int,		// Landscape resolution
 		float,	// epsilon - global stochasticity value 
 		short,	// raster type (see Landscape)
-		bool,		// TRUE for a patch-based model, FALSE for a cell-based model
-		bool, // TRUE if cloning from cold storage
-		Population* //cold storage
+		bool		// TRUE for a patch-based model, FALSE for a cell-based model
 	);
 	void emigration(void);
 	// Remove emigrants from their natal patch and add to patch 0 (matrix)
@@ -133,7 +131,6 @@ public:
 						//	  	 		1 - development and survival
 	);
 	void ageIncrement(void);
-	void copyIndividualsForColdStorage(Population*);
 
 	int addEmigrationAndSettlementTraitValues(emigTraits& avgEmTraits, settleTraits& avgSettleTraits);
 
@@ -142,7 +139,6 @@ public:
 	// Find the population of a given species in a given patch
 	Population* findPop(Species*, Patch*);
 
-	int getPopulationCountForStage(int stage);
 	void createOccupancy(
 		int	// no. of rows = (no. of years / interval) + 1
 	);

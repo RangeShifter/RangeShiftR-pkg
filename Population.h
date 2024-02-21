@@ -130,10 +130,7 @@ public:
 	void reproduction(
 		const float,	// local carrying capacity
 		const float,	// effect of environmental gradient and/or stochasticty
-		const int,			// Landscape resolution
-		bool,
-		Population*
-
+		const int			// Landscape resolution
 	);
 	// Following reproduction of ALL species, add juveniles to the population
 	void fledge(void);
@@ -151,7 +148,6 @@ public:
 	disperser extractSettler(
 		int   // index no. to the Individual in the inds vector
 	);
-	Individual* copyForColdStorage(int ix);
 	void addEmigTraitsForInd(int ix, emigTraits&);
 	void addSettleTraitsForInd(int, settleTraits&);
 	void addTransferDataForInd(int ix, trfrData* avgTrfrData);

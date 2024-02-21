@@ -868,6 +868,18 @@ void Landscape::addCellToPatch(Cell* pCell, Patch* pPatch, int hab) {
 	pPatch->addCell(pCell, loc.x, loc.y);
 }
 
+std::vector<int> Landscape::getTruePatchNums() const {
+	// Need access to patchnums in Batch interface to set up random sampled patches
+	// when patchnums member is not yet initialised.
+	// Bad solution, would be better to rm patchnums and use this in all instances
+	// but might break existing assumptions in current code.
+	vector<int> patchNums;
+	for (auto p : patches) {
+		patchNums.push_back(p->getPatchNum());
+	}
+	return patchNums;
+}
+
 patchData Landscape::getPatchData(int ix) {
 	patchData ppp;
 	ppp.pPatch = patches[ix]; ppp.patchNum = patches[ix]->getPatchNum();

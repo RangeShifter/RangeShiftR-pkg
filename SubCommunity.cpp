@@ -280,7 +280,7 @@ void SubCommunity::patchChange(void) {
 	}
 }
 
-void SubCommunity::reproduction(int resol, float epsGlobal, short rasterType, bool patchModel, bool cloneFromColdStorage, Population* pColdStorage)
+void SubCommunity::reproduction(int resol, float epsGlobal, short rasterType, bool patchModel)
 {
 	if (subCommNum == 0) return; // no reproduction in the matrix
 	float localK, envval;
@@ -317,7 +317,7 @@ void SubCommunity::reproduction(int resol, float epsGlobal, short rasterType, bo
 			}
 		}
 		for (int i = 0; i < npops; i++) { // all populations
-			popns[i]->reproduction(localK, envval, resol, cloneFromColdStorage, pColdStorage);
+			popns[i]->reproduction(localK, envval, resol);
 			popns[i]->fledge();
 		}
 	}
@@ -375,58 +375,7 @@ void SubCommunity::initiateDispersal(SubCommunity* matrix) {
 		// remove pointers to emigrants
 		popns[i]->clean();
 	}
-
 }
-
-void SubCommunity::copyIndividualsForColdStorage(Population* pColdStorage) {
-	int npops = (int)popns.size();
-	popStats pop;
-	Individual* clone;
-	for (int i = 0; i < npops; i++) { // all populations
-		pop = popns[i]->getStats();
-		for (int j = 0; j < pop.nInds; j++) {
-#if RSDEBUG
-			//DEBUGLOG << "SubCommunity::initiateDispersal(): i = " << i
-			//	<< " j " << j
-			//	<< endl;
-#endif
-
-			clone = popns[i]->copyForColdStorage(j);
-			pColdStorage->recruit(clone);
-		}
-	}
-
-}
-
-
-int SubCommunity::addEmigrationAndSettlementTraitValues(emigTraits& avgEmTraits, settleTraits& avgSettleTraits) {
-	int npops = (int)popns.size();
-	int totalInds = 0;
-	popStats pop;
-	for (int i = 0; i < npops; i++) { // all populations
-		pop = popns[i]->getStats();
-		for (int j = 0; j < pop.nInds; j++) {
-			popns[i]->addEmigTraitsForInd(j, avgEmTraits);
-			popns[i]->addSettleTraitsForInd(j, avgSettleTraits);
-			totalInds++;
-		}
-	}
-	return totalInds;
-}
-
-void SubCommunity::addTransferDataForInd(trfrData* avgTrfrData) {
-	int npops = (int)popns.size();
-	popStats pop;
-	for (int i = 0; i < npops; i++) { // all populations
-		pop = popns[i]->getStats();
-		for (int j = 0; j < pop.nInds; j++) {
-			popns[i]->addTransferDataForInd(j, avgTrfrData);
-		}
-	}
-}
-
-
-
 
 // Add an individual into the local population of its species in the patch
 void SubCommunity::recruit(Individual* pInd, Species* pSpecies) {

@@ -370,10 +370,6 @@ float Species::getMinMax(short opt) {
 
 //---------------------------------------------------------------------------
 
-void Species::turnOffMutations(void) {
-	mutationsOn = false;
-}
-
 bool Species::areMutationsOn(void) {
 	return mutationsOn;
 }

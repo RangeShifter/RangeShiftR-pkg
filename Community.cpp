@@ -39,7 +39,6 @@ ofstream outpairwisefst;
 Community::Community(Landscape* pLand) {
 	pLandscape = pLand;
 	indIx = 0;
-	pColdStorage = 0;
 	pNeutralStatistics = 0;
 }
 
@@ -49,7 +48,6 @@ Community::~Community(void) {
 		delete subComms[i];
 	}
 	subComms.clear();
-	delete pColdStorage;
 }
 
 SubCommunity* Community::addSubComm(Patch* pPch, int num) {
@@ -60,7 +58,6 @@ SubCommunity* Community::addSubComm(Patch* pPch, int num) {
 
 void Community::initialise(Species* pSpecies, int year)
 {
-
 	int nsubcomms, npatches, ndistcells, spratio, patchnum, rr = 0;
 	locn distloc;
 	patchData pch;
@@ -73,11 +70,6 @@ void Community::initialise(Species* pSpecies, int year)
 	Cell* pCell;
 	landParams ppLand = pLandscape->getLandParams();
 	initParams init = paramsInit->getInit();
-
-	if (pColdStorage != 0)
-		delete pColdStorage;
-
-	pColdStorage = new Population();
 
 	nsubcomms = (int)subComms.size();
 
@@ -423,44 +415,7 @@ void Community::patchChanges(void) {
 	}
 }
 
-void Community::addIndividualsToColdStorage() {
-	int nsubcomms = (int)subComms.size();
-	for (int i = 0; i < nsubcomms; i++) { // all sub-communities
-		subComms[i]->copyIndividualsForColdStorage(pColdStorage);
-	}
-}
-
-void Community::createAverageTraitIndividualAndStore(Species* pSpecies, Landscape* pLandscape) {
-	int nsubcomms = (int)subComms.size();
-	int totalInds = 0;
-	Patch* pPatch = pLandscape->getPatchData(0).pPatch;
-	Cell* pCell = pPatch->getRandomCell();
-	Individual* avgInd = new Individual(pCell, pPatch, 0, 0, 0, pSpecies->getDemogr().propMales, true, pSpecies->getTrfr().moveType);
-
-	emigTraits avgEmigTraits = emigTraits();
-	settleTraits avgSettleTraits = settleTraits();
-
-
-	for (int i = 0; i < nsubcomms; i++) { // all sub-communities
-
-		totalInds += subComms[i]->addEmigrationAndSettlementTraitValues(avgEmigTraits, avgSettleTraits);
-		subComms[i]->addTransferDataForInd(avgInd->getTrfrData());
-
-
-	}
-	//divide to get the mean
-	avgInd->getTrfrData()->divideTraitsBy(totalInds);
-	avgEmigTraits.divideTraitsBy(totalInds);
-	avgSettleTraits.divideTraitsBy(totalInds);
-
-	avgInd->setEmigTraits(avgEmigTraits);
-	avgInd->setSettleTraits(avgSettleTraits);
-
-	pColdStorage->recruit(avgInd);
-
-}
-
-void Community::reproduction(int yr, bool cloneFromColdStorage)
+void Community::reproduction(int yr)
 {
 	float eps = 0.0; // epsilon for environmental stochasticity
 	landParams land = pLandscape->getLandParams();
@@ -477,7 +432,7 @@ void Community::reproduction(int yr, bool cloneFromColdStorage)
 				eps = pLandscape->getGlobalStoch(yr);
 			}
 		}
-		subComms[i]->reproduction(land.resol, eps, land.rasterType, land.patchModel, cloneFromColdStorage, pColdStorage);
+		subComms[i]->reproduction(land.resol, eps, land.rasterType, land.patchModel);
 	}
 #if RSDEBUG
 	DEBUGLOG << "Community::reproduction(): finished" << endl;
@@ -1532,8 +1487,6 @@ void Community::writeTraitsRows(Species* pSpecies, int rep, int yr, int gen, int
 			outtraitsrows << "\t" << mn << "\t" << sd;
 		}
 	}
-
-
 	outtraitsrows << endl;
 }
 

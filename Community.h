@@ -80,14 +80,11 @@ public:
 		int				// year (relevent only for seedType == 2)
 	);
 	void addManuallySelected(void);
-	void addIndividualsToColdStorage(void);
-	void createAverageTraitIndividualAndStore(Species* pSpecies, Landscape* pLandscape);
 	void resetPopns(void);
 	void localExtinction(int);
 	void patchChanges(void);
 	void reproduction(
-		int,				// year
-		bool
+		int				// year
 	);
 	void emigration(void);
 #if RS_RCPP // included also SEASONAL
@@ -224,7 +221,6 @@ public:
 	void writeWCPerLocusFstatFile(Species* pSpecies, const int yr, const int gen, const  int nAlleles, const int nLoci, set<int> const& patchList);
 	void writePairwiseFSTFile(Species* pSpecies, const int yr, const int gen, const  int nAlleles, const int nLoci, set<int> const& patchList);
 
-
 private:
 	Landscape* pLandscape;
 	int indIx;				// index used to apply initial individuals
@@ -232,7 +228,6 @@ private:
 	std::vector <SubCommunity*> subComms;
 
 	//below won't work for multispecies
-	Population* pColdStorage;
 	unique_ptr<NeutralStatsManager> pNeutralStatistics;
 };
 

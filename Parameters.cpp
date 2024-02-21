@@ -239,8 +239,6 @@ paramSim::paramSim(void) {
 	outPaths = false; ReturnPopRaster = false; CreatePopFile = true;
 #endif
 	drawLoaded = false;
-	fionaOptions = 0.0;
-	storeIndsYr = -9999;
 	fixReplicateSeed = false;
 	viewLand = false; viewPatch = false; viewGrad = false; viewCosts = false;
 	viewPop = false; viewTraits = false; viewPaths = false; viewGraph = false;
@@ -285,8 +283,6 @@ void paramSim::setSim(simParams s) {
 	CreatePopFile = s.CreatePopFile;
 #endif
 	drawLoaded = s.drawLoaded;
-	fionaOptions = s.fionaOptions;
-	storeIndsYr = s.storeIndsYr;
 	fixReplicateSeed = s.fixReplicateSeed;
 }
 
@@ -327,8 +323,6 @@ simParams paramSim::getSim(void) {
 	s.CreatePopFile = CreatePopFile;
 #endif
 	s.drawLoaded = drawLoaded;
-	s.fionaOptions = fionaOptions;
-	s.storeIndsYr = storeIndsYr;
 	s.outputWCFstat = outputWCFstat;
 	s.outputPerLocusWCFstat = outputPerLocusWCFstat;
 	s.outputPairwiseFst = outputPairwiseFst;
