@@ -60,6 +60,7 @@
 #include <stdlib.h>
 #include <vector>
 #include <sstream>
+#include <algorithm>
 using namespace std;
 
 #include "RSrandom.h"
@@ -348,6 +349,8 @@ struct simParams {
 	int outStartPaths; int outIntPaths;
 	bool outPaths;	bool ReturnPopRaster; bool CreatePopFile;
 #endif
+	int fionaOptions;
+	int storeIndsYr;
 	bool fixReplicateSeed;
 	bool outputWCFstat, outputPerLocusWCFstat, outputPairwiseFst;
 	int outputGeneticInterval;
@@ -430,6 +433,8 @@ private:
 	bool viewGraph;					// view population/occupancy graph on screen?
 	string dir;							// full name of working directory
 
+	int fionaOptions;
+	int storeIndsYr;
 	bool fixReplicateSeed;
 	bool outputWCFstat;
 	bool outputPerLocusWCFstat;
@@ -439,7 +444,6 @@ private:
 
 #if RSDEBUG
 extern ofstream DEBUGLOG;
-void DebugGUI(string);
 #endif
 
 extern RSrandom* pRandom;

@@ -868,6 +868,18 @@ void Landscape::addCellToPatch(Cell* pCell, Patch* pPatch, int hab) {
 	pPatch->addCell(pCell, loc.x, loc.y);
 }
 
+std::vector<int> Landscape::getTruePatchNums() const {
+	// Need access to patchnums in Batch interface to set up random sampled patches
+	// when patchnums member is not yet initialised.
+	// Bad solution, would be better to rm patchnums and use this in all instances
+	// but might break existing assumptions in current code.
+	vector<int> patchNums;
+	for (auto p : patches) {
+		patchNums.push_back(p->getPatchNum());
+	}
+	return patchNums;
+}
+
 patchData Landscape::getPatchData(int ix) {
 	patchData ppp;
 	ppp.pPatch = patches[ix]; ppp.patchNum = patches[ix]->getPatchNum();
@@ -2354,11 +2366,6 @@ int Landscape::readCosts(string fname)
 	costs >> maxXcost >> header >> maxYcost >> header >> minLongCost;
 	costs >> header >> minLatCost >> header >> resolCost >> header >> NODATACost;
 
-
-#if !RS_RCPP
-	MemoLine("Loading costs map. Please wait...");
-#endif
-
 	for (int y = maxYcost - 1; y > -1; y--) {
 		for (int x = 0; x < maxXcost; x++) {
 #if RS_RCPP
@@ -2403,8 +2410,6 @@ if (costs.eof()) {
 #endif
 	}
 else EOFerrorR(fname);
-#else
-MemoLine("Costs map loaded.");
 #endif
 
 	costs.close(); costs.clear();
