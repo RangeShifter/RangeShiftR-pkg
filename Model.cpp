@@ -769,7 +769,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 
 }
 
-#if RS_EMBARCADERO || LINUX_CLUSTER || RS_RCPP
+#if LINUX_CLUSTER || RS_RCPP
 // Check whether a specified directory path exists
 bool is_directory(const char* pathname) {
 	struct stat info;
