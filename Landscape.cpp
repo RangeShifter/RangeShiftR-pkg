@@ -1424,7 +1424,9 @@ int Landscape::readLandChange(int filenum, bool costs)
 			}
 			if (costs) {
 				if (c < 1) { // invalid cost
+#if RS_RCPP
 				    Rcpp::Rcout << "Found invalid cost value of " << c << "in cell x " << x << " and y  " << y << std::endl;
+#endif
 					hfile.close(); hfile.clear();
 					if (pfile.is_open()) {
 						pfile.close(); pfile.clear();
