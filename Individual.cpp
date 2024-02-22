@@ -107,7 +107,10 @@ void Individual::setSettleTraits(const settleTraits& settle) {
 }
 
 TTrait* Individual::getTrait(TraitType trait) const {
-	return this->spTraitTable.find(trait)->second.get();
+	auto p = this->spTraitTable.find(trait);
+	if (p == spTraitTable.end())
+		throw runtime_error("Trait does not exist in trait table.");
+	else return p->second.get();
 }
 
 //map<TraitType, std::unique_ptr<TTrait>>  Individual::getTraitTable(void) const
