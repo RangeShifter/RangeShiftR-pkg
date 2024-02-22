@@ -470,10 +470,10 @@ private:
 	float** ddwtDev;    // density-dependent weights matrix for development
 	float** ddwtSurv;   // density-dependent weights matrix for survival
 	// NB for the following arrays, sex 0 is females, sex 1 is males
-	float fec[NSTAGES][NSEXES];			// fecundities
-	float dev[NSTAGES][NSEXES];			// development probabilities
-	float surv[NSTAGES][NSEXES];		// survival probabilities
-	short minAge[NSTAGES][NSEXES];	// minimum age to enter stage
+	float fec[maxNbStages][maxNbSexes];			// fecundities
+	float dev[maxNbStages][maxNbSexes];			// development probabilities
+	float surv[maxNbStages][maxNbSexes];		// survival probabilities
+	short minAge[maxNbStages][maxNbSexes];	// minimum age to enter stage
 	// NOTE - IN THEORY, NEXT 3 VARIABLES COULD BE COMMON, BUT WE WOULD NEED TO ENSURE THAT
 	// ALL MATRICES ARE DELETED IF THERE IS A CHANGE IN NO. OF STAGES OR REPRODUCTION TYPE
 	// ***** TO BE RECONSIDERED LATER *****
@@ -508,9 +508,9 @@ private:
 	short emigStage;		// stage which emigrates (used for stage-strucutred population
 	// having individual variability in emigration probability)
 // NB for the following arrays, sex 0 is females, sex 1 is males
-	float	d0[NSTAGES][NSEXES];				 // maximum emigration probability
-	float	alphaEmig[NSTAGES][NSEXES];	 // slope of density-dependent reaction norm
-	float	betaEmig[NSTAGES][NSEXES];	 // inflection point of reaction norm (in terms of N/K)
+	float	d0[maxNbStages][maxNbSexes];				 // maximum emigration probability
+	float	alphaEmig[maxNbStages][maxNbSexes];	 // slope of density-dependent reaction norm
+	float	betaEmig[maxNbStages][maxNbSexes];	 // inflection point of reaction norm (in terms of N/K)
 	// NB Initialisation parameters are made double to avoid conversion errors (reason unclear)
 	// on traits maps using FloatToStr()
 
@@ -523,9 +523,9 @@ private:
 	bool indVarTrfr;
 	bool twinKern;
 	bool habMort;		// habitat-dependent mortality
-	float	meanDist1[NSTAGES][NSEXES];	// mean of 1st dispersal kernel (m)
-	float	meanDist2[NSTAGES][NSEXES]; // mean of 2nd dispersal kernel (m)
-	float	probKern1[NSTAGES][NSEXES]; // probability of dispersing with the 1st kernel
+	float	meanDist1[maxNbStages][maxNbSexes];	// mean of 1st dispersal kernel (m)
+	float	meanDist2[maxNbStages][maxNbSexes]; // mean of 2nd dispersal kernel (m)
+	float	probKern1[maxNbStages][maxNbSexes]; // probability of dispersing with the 1st kernel
 	// NB INITIAL limits are made double to avoid conversion errors (reason unclear)
 	// on traits maps using FloatToStr()
 	// As evolving traits are are not stage-dependent, no. of rows can be 1
@@ -559,16 +559,16 @@ private:
 	bool stgDepSett;
 	bool sexDepSett;
 	bool indVarSett;   								// individual variation in settlement
-	bool densDepSett[NSTAGES][NSEXES];
-	bool wait[NSTAGES][NSEXES];				// wait to continue moving next season (stage-structured model only)
-	bool go2nbrLocn[NSTAGES][NSEXES];	// settle in neighbouring cell/patch if available (ditto)
-	bool findMate[NSTAGES][NSEXES];
+	bool densDepSett[maxNbStages][maxNbSexes];
+	bool wait[maxNbStages][maxNbSexes];				// wait to continue moving next season (stage-structured model only)
+	bool go2nbrLocn[maxNbStages][maxNbSexes];	// settle in neighbouring cell/patch if available (ditto)
+	bool findMate[maxNbStages][maxNbSexes];
 	int minSteps;     								// minimum no. of steps
 	int maxSteps;											// maximum total no. of steps
-	int maxStepsYr[NSTAGES][NSEXES]; 	// maximum no. of steps in any one dispersal period
-	float	s0[NSTAGES][NSEXES];				// maximum settlement probability
-	float alphaS[NSTAGES][NSEXES];		// slope of the settlement reaction norm to density
-	float betaS[NSTAGES][NSEXES];			// inflection point of the settlement reaction norm to density
+	int maxStepsYr[maxNbStages][maxNbSexes]; 	// maximum no. of steps in any one dispersal period
+	float	s0[maxNbStages][maxNbSexes];				// maximum settlement probability
+	float alphaS[maxNbStages][maxNbSexes];		// slope of the settlement reaction norm to density
+	float betaS[maxNbStages][maxNbSexes];			// inflection point of the settlement reaction norm to density
 
 	// other attributes
 	int spNum;

@@ -82,14 +82,14 @@ Population::Population(Species* pSp, Patch* pPch, int ninds, int resol)
 	else { nSexes = 2; probmale = dem.propMales; }
 
 	// set up population sub-totals
-	for (int stg = 0; stg < NSTAGES; stg++) {
-		for (int sex = 0; sex < NSEXES; sex++) {
+	for (int stg = 0; stg < maxNbStages; stg++) {
+		for (int sex = 0; sex < maxNbSexes; sex++) {
 			nInds[stg][sex] = 0;
 		}
 	}
 
 	// set up local copy of minimum age table
-	short minAge[NSTAGES][NSEXES];
+	short minAge[maxNbStages][maxNbSexes];
 	for (int stg = 0; stg < nStages; stg++) {
 		for (int sex = 0; sex < nSexes; sex++) {
 			if (dem.stageStruct) {
@@ -104,11 +104,6 @@ Population::Population(Species* pSp, Patch* pPch, int ninds, int resol)
 			else { // non-structured population
 				minAge[stg][sex] = 0;
 			}
-#if RSDEBUG
-			//DEBUGLOG << "Population::Population(): 1111 "
-			//	<< " minAge[" << stg << "][" << sex << "]=" << minAge[stg][sex]
-			//	<< endl;
-#endif
 		}
 	}
 
@@ -161,11 +156,6 @@ Population::Population(Species* pSp, Patch* pPch, int ninds, int resol)
 				}
 			}
 		}
-#if RSDEBUG
-		//DEBUGLOG << "Population::Population(): this=" << this
-		//	<< " n=" << n << " stg=" << stg << " minage=" << minage << " maxage=" << maxage
-		//	<< endl;
-#endif
 	// create individuals
 		int sex;
 		nindivs = (int)inds.size();
@@ -208,10 +198,6 @@ Population::Population(Species* pSp, Patch* pPch, int ninds, int resol)
 			nInds[stg][sex]++;
 		}
 	}
-#if RSDEBUG
-	//DEBUGLOG << "Population::Population(): this=" << this
-	//	<< " finished " << endl;
-#endif
 }
 
 Population::~Population(void) {
@@ -227,69 +213,79 @@ Population::~Population(void) {
 	juvs.clear();
 }
 
-traitsums Population::getTraits(Species* pSpecies) {
+traitsums Population::getIndTraitsSums(Species* pSpecies) {
 	int g;
 	traitsums ts = traitsums();
-	for (int i = 0; i < NSEXES; i++) {
-		ts.ninds[i] = 0;
-		ts.sumD0[i] = ts.ssqD0[i] = 0.0;
-		ts.sumAlpha[i] = ts.ssqAlpha[i] = 0.0; ts.sumBeta[i] = ts.ssqBeta[i] = 0.0;
-		ts.sumDist1[i] = ts.ssqDist1[i] = 0.0; ts.sumDist2[i] = ts.ssqDist2[i] = 0.0;
-		ts.sumProp1[i] = ts.ssqProp1[i] = 0.0;
-		ts.sumDP[i] = ts.ssqDP[i] = 0.0;
-		ts.sumGB[i] = ts.ssqGB[i] = 0.0;
-		ts.sumAlphaDB[i] = ts.ssqAlphaDB[i] = 0.0;
-		ts.sumBetaDB[i] = ts.ssqBetaDB[i] = 0.0;
-		ts.sumStepL[i] = ts.ssqStepL[i] = 0.0; ts.sumRho[i] = ts.ssqRho[i] = 0.0;
-		ts.sumS0[i] = ts.ssqS0[i] = 0.0;
-		ts.sumAlphaS[i] = ts.ssqAlphaS[i] = 0.0; ts.sumBetaS[i] = ts.ssqBetaS[i] = 0.0;
-		ts.sumFitness[i] = ts.ssqFitness[i] = 0.0;
+	for (int sex = 0; sex < maxNbSexes; sex++) {
+		ts.ninds[sex] = 0;
+		ts.sumD0[sex] = ts.ssqD0[sex] = 0.0;
+		ts.sumAlpha[sex] = ts.ssqAlpha[sex] = 0.0; 
+		ts.sumBeta[sex] = ts.ssqBeta[sex] = 0.0;
+		ts.sumDist1[sex] = ts.ssqDist1[sex] = 0.0;
+		ts.sumDist2[sex] = ts.ssqDist2[sex] = 0.0;
+		ts.sumProp1[sex] = ts.ssqProp1[sex] = 0.0;
+		ts.sumDP[sex] = ts.ssqDP[sex] = 0.0;
+		ts.sumGB[sex] = ts.ssqGB[sex] = 0.0;
+		ts.sumAlphaDB[sex] = ts.ssqAlphaDB[sex] = 0.0;
+		ts.sumBetaDB[sex] = ts.ssqBetaDB[sex] = 0.0;
+		ts.sumStepL[sex] = ts.ssqStepL[sex] = 0.0; 
+		ts.sumRho[sex] = ts.ssqRho[sex] = 0.0;
+		ts.sumS0[sex] = ts.ssqS0[sex] = 0.0;
+		ts.sumAlphaS[sex] = ts.ssqAlphaS[sex] = 0.0;
+		ts.sumBetaS[sex] = ts.ssqBetaS[sex] = 0.0;
+		ts.sumFitness[sex] = ts.ssqFitness[sex] = 0.0;
 	}
-	//locus loc;
 
 	emigRules emig = pSpecies->getEmig();
 	trfrRules trfr = pSpecies->getTrfr();
 	settleType sett = pSpecies->getSettle();
 
 	int ninds = (int)inds.size();
-#if RSDEBUG
-	//DEBUGLOG << "Population::getTraits(): ninds = " << ts.ninds[0]
-	////	<< " nalleles = "<< nalleles
-	////	<< " nemiggenes = " << nemiggenes << " ntrfrgenes = " << ntrfrgenes
-	//	<< endl;
-#endif
-	for (int i = 0; i < ninds; i++) {
-		int sex = inds[i]->getSex();
-		if (emig.sexDep || trfr.sexDep || sett.sexDep) g = sex; else g = 0;
+	for (int iInd = 0; iInd < ninds; iInd++) {
+		int sex = inds[iInd]->getSex();
+		if (emig.sexDep || trfr.sexDep || sett.sexDep) 
+			g = sex; 
+		else g = 0;
 		ts.ninds[g] += 1;
-		// emigration traits
-		emigTraits e = inds[i]->getEmigTraits();
-		if (emig.sexDep) g = sex; else g = 0;
-		ts.sumD0[g] += e.d0;    ts.ssqD0[g] += e.d0 * e.d0;
-		ts.sumAlpha[g] += e.alpha; ts.ssqAlpha[g] += e.alpha * e.alpha;
-		ts.sumBeta[g] += e.beta;  ts.ssqBeta[g] += e.beta * e.beta;
-		// transfer traits
 
+		// emigration traits
+		emigTraits e = inds[iInd]->getEmigTraits();
+		if (emig.sexDep) g = sex; 
+		else g = 0;
+		ts.sumD0[g] += e.d0;    
+		ts.ssqD0[g] += e.d0 * e.d0;
+		ts.sumAlpha[g] += e.alpha; 
+		ts.ssqAlpha[g] += e.alpha * e.alpha;
+		ts.sumBeta[g] += e.beta;  
+		ts.ssqBeta[g] += e.beta * e.beta;
+
+		// transfer traits
 		if (trfr.moveModel) {
 
 			switch (trfr.moveType) {
 
 			case 1: // SMS
 			{
-				trfrSMSTraits sms = inds[i]->getSMSTraits();
+				trfrSMSTraits sms = inds[iInd]->getSMSTraits();
 				g = 0; // CURRENTLY INDIVIDUAL VARIATION CANNOT BE SEX-DEPENDENT
-				ts.sumDP[g] += sms.dp; ts.ssqDP[g] += sms.dp * sms.dp;
-				ts.sumGB[g] += sms.gb; ts.ssqGB[g] += sms.gb * sms.gb;
-				ts.sumAlphaDB[g] += sms.alphaDB; ts.ssqAlphaDB[g] += sms.alphaDB * sms.alphaDB;
-				ts.sumBetaDB[g] += sms.betaDB;  ts.ssqBetaDB[g] += sms.betaDB * sms.betaDB;
+				ts.sumDP[g] += sms.dp; 
+				ts.ssqDP[g] += sms.dp * sms.dp;
+				ts.sumGB[g] += sms.gb;
+				ts.ssqGB[g] += sms.gb * sms.gb;
+				ts.sumAlphaDB[g] += sms.alphaDB;
+				ts.ssqAlphaDB[g] += sms.alphaDB * sms.alphaDB;
+				ts.sumBetaDB[g] += sms.betaDB; 
+				ts.ssqBetaDB[g] += sms.betaDB * sms.betaDB;
 				break;
 			}
 			case 2:
 			{
-				trfrCRWTraits c = inds[i]->getCRWTraits();
+				trfrCRWTraits c = inds[iInd]->getCRWTraits();
 				g = 0; // CURRENTLY INDIVIDUAL VARIATION CANNOT BE SEX-DEPENDENT
-				ts.sumStepL[g] += c.stepLength; ts.ssqStepL[g] += c.stepLength * c.stepLength;
-				ts.sumRho[g] += c.rho;        ts.ssqRho[g] += c.rho * c.rho;
+				ts.sumStepL[g] += c.stepLength;
+				ts.ssqStepL[g] += c.stepLength * c.stepLength;
+				ts.sumRho[g] += c.rho;       
+				ts.ssqRho[g] += c.rho * c.rho;
 				break;
 			}
 			default:
@@ -298,33 +294,33 @@ traitsums Population::getTraits(Species* pSpecies) {
 			}
 		}
 		else {
-			trfrKernTraits k = inds[i]->getKernTraits();
-			if (trfr.sexDep) g = sex; else g = 0;
-			ts.sumDist1[g] += k.meanDist1; ts.ssqDist1[g] += k.meanDist1 * k.meanDist1;
-			ts.sumDist2[g] += k.meanDist2; ts.ssqDist2[g] += k.meanDist2 * k.meanDist2;
-			ts.sumProp1[g] += k.probKern1; ts.ssqProp1[g] += k.probKern1 * k.probKern1;
+			trfrKernTraits k = inds[iInd]->getKernTraits();
+			if (trfr.sexDep) g = sex; 
+			else g = 0;
+			ts.sumDist1[g] += k.meanDist1; 
+			ts.ssqDist1[g] += k.meanDist1 * k.meanDist1;
+			ts.sumDist2[g] += k.meanDist2;
+			ts.ssqDist2[g] += k.meanDist2 * k.meanDist2;
+			ts.sumProp1[g] += k.probKern1; 
+			ts.ssqProp1[g] += k.probKern1 * k.probKern1;
 		}
 		// settlement traits
-		settleTraits s = inds[i]->getSettTraits();
-		if (sett.sexDep) g = sex; else g = 0;
+		settleTraits s = inds[iInd]->getSettTraits();
+		if (sett.sexDep) g = sex; 
+		else g = 0;
 		//	g = 0; // CURRENTLY INDIVIDUAL VARIATION CANNOT BE SEX-DEPENDENT
-		ts.sumS0[g] += s.s0;     ts.ssqS0[g] += s.s0 * s.s0;
-		ts.sumAlphaS[g] += s.alpha; ts.ssqAlphaS[g] += s.alpha * s.alpha;
-		ts.sumBetaS[g] += s.beta;   ts.ssqBetaS[g] += s.beta * s.beta;
+		ts.sumS0[g] += s.s0;     
+		ts.ssqS0[g] += s.s0 * s.s0;
+		ts.sumAlphaS[g] += s.alpha; 
+		ts.ssqAlphaS[g] += s.alpha * s.alpha;
+		ts.sumBetaS[g] += s.beta;   
+		ts.ssqBetaS[g] += s.beta * s.beta;
 
-		if (NSEXES > 1) g = sex; else g = 0;
-		ts.sumFitness[g] += inds[i]->getFitness();    ts.ssqFitness[g] += inds[i]->getFitness() * inds[i]->getFitness();
-
-#if RSDEBUG
-		//DEBUGLOG << "Population::getTraits():"
-		//	<< " i=" << i << " g=" << g << " a=" << a
-		//	<< " e.d0= " << e.d0 << " e.alpha= " << e.alpha << " e.beta= " << e.beta
-		//	<< " mnd0= " << emigTraits[g]->mnD0 << " mnAlpha= " << emigTraits[g]->mnAlpha << " mnBeta= " << emigTraits[g]->mnBeta
-		//	<< " sqd0= " << emigTraits[g]->sqD0 << " sqAlpha= " << emigTraits[g]->sqAlpha << " sqBeta= " << emigTraits[g]->sqBeta
-		//	<< endl;
-#endif
+		if (maxNbSexes > 1) g = sex; 
+		else g = 0;
+		ts.sumFitness[g] += inds[iInd]->getFitness();
+		ts.ssqFitness[g] += inds[iInd]->getFitness() * inds[iInd]->getFitness();
 	}
-
 	return ts;
 }
 
@@ -598,7 +594,7 @@ void Population::reproduction(const float localK, const float envval, const int 
 #endif
 
 // set up local copy of species fecundity table
-	float fec[NSTAGES][NSEXES];
+	float fec[maxNbStages][maxNbSexes];
 	for (int stg = 0; stg < sstruct.nStages; stg++) {
 		for (int sex = 0; sex < nsexes; sex++) {
 			if (dem.stageStruct) {
@@ -971,26 +967,20 @@ void Population::emigration(float localK)
 	emigRules emig = pSpecies->getEmig();
 	emigTraits eparams;
 	indStats ind;
-#if RSDEBUG
-	//DEBUGLOG << "Population::emigration(): this=" << this
-	//	<< " nStages=" << sstruct.nStages
-	////	<< " emig.emigGenes[0]=" << emig.emigGenes[0]
-	////	<< " emig.emigGenes[1]=" << emig.emigGenes[1]
-	//	<< endl;
-#endif
 
-// to avoid division by zero, assume carrying capacity is at least one individual
-// localK can be zero if there is a moving gradient or stochasticity in K
+	// to avoid division by zero, assume carrying capacity is at least one individual
+	// localK can be zero if there is a moving gradient or stochasticity in K
 	if (localK < 1.0) localK = 1.0;
-	NK = (float)totalPop() / localK;
+	NK = static_cast<float>(totalPop()) / localK;
 
-	int ninds = (int)inds.size();
+	int ninds = static_cast<int>(inds.size());
 
 	// set up local copy of emigration probability table
 	// used when there is no individual variability
 	// NB - IT IS DOUBTFUL THIS CONTRIBUTES ANY SUBSTANTIAL TIME SAVING
-	if (dem.repType == 0) nsexes = 1; else nsexes = 2;
-	double Pemig[NSTAGES][NSEXES];
+	if (dem.repType == 0) nsexes = 1; 
+	else nsexes = 2;
+	double Pemig[maxNbStages][maxNbSexes];
 
 	for (int stg = 0; stg < sstruct.nStages; stg++) {
 		for (int sex = 0; sex < nsexes; sex++) {
@@ -1014,15 +1004,6 @@ void Population::emigration(float localK)
 						}
 					}
 					Pemig[stg][sex] = eparams.d0 / (1.0 + exp(-(NK - eparams.beta) * eparams.alpha));
-#if RSDEBUG
-					//if (ppLand.patch_model) {
-					//	DEBUGLOG << "Population::emigration(): stg=" << stg << " sex=" << sex
-					//		<< " totalPop=" << totalPop() << " localK=" << localK << " NK=" << NK
-					//		<< " d0=" << eparams.d0 << " beta=" << eparams.beta << " alpha=" << eparams.alpha
-					//		<< " Pemig[stg][sex]=" << Pemig[stg][sex]
-					//		<< endl;
-					//}
-#endif
 				}
 				else { // density-independent
 					if (emig.sexDep) {
@@ -1043,18 +1024,12 @@ void Population::emigration(float localK)
 					}
 				}
 			} // end of !emig.indVar
-#if RSDEBUG
-//DEBUGLOG << "Population::emigration(): this=" << (int)this
-//	<< " totalPop()=" << totalPop()
-//	<< " Pemig[" << stg << "][" << sex << "]="<< Pemig[stg][sex] << endl;
-#endif
 		}
 	}
 
 	for (int i = 0; i < ninds; i++) {
 		ind = inds[i]->getStats();
-		if (ind.status < 1)
-		{
+		if (ind.status < 1) {
 			if (emig.indVar) { // individual variability in emigration
 				if (dem.stageStruct && ind.stage != emig.emigStage) {
 					// emigration may not occur
@@ -1095,14 +1070,6 @@ void Population::emigration(float localK)
 							Pdisp = Pemig[0][0];
 						}
 					}
-#if RSDEBUG
-					//if (ppLand.patch_model) {
-					//	DEBUGLOG << "Population::emigration(): i=" << i << " sex=" << ind.sex << " stage=" << ind.stage
-					//		<< " totalPop=" << totalPop() << " localK=" << localK << " NK=" << NK
-					//		<< " Pdisp=" << Pdisp
-					//		<< endl;
-					//}
-#endif
 				}
 				else { // density-independent
 					if (emig.sexDep) {
@@ -1547,9 +1514,9 @@ void Population::survival0(float localK, short option0, short option1)
 	// set up local copies of species development and survival tables
 	int nsexes;
 	if (dem.repType == 0) nsexes = 1; else nsexes = 2;
-	float dev[NSTAGES][NSEXES];
-	float surv[NSTAGES][NSEXES];
-	short minAge[NSTAGES][NSEXES];
+	float dev[maxNbStages][maxNbSexes];
+	float surv[maxNbStages][maxNbSexes];
+	short minAge[maxNbStages][maxNbSexes];
 	for (int stg = 0; stg < sstruct.nStages; stg++) {
 		for (int sex = 0; sex < nsexes; sex++) {
 			if (dem.stageStruct) {

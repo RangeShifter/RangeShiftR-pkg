@@ -57,7 +57,7 @@ using namespace std;
 //---------------------------------------------------------------------------
 
 struct traitCanvas { // canvases for drawing variable traits
-	int* pcanvas[NTRAITS]; // dummy variables for batch version
+	int* pcanvas[maxNbTraitsGUI]; // dummy variables for batch version
 };
 
 class SubCommunity {

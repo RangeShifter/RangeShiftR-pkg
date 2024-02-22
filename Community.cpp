@@ -441,7 +441,7 @@ void Community::reproduction(int yr)
 
 void Community::emigration(void)
 {
-	int nsubcomms = (int)subComms.size();
+	int nsubcomms = static_cast<int>(subComms.size());
 #if RSDEBUG
 	DEBUGLOG << "Community::emigration(): this=" << this
 		<< " nsubcomms=" << nsubcomms << endl;
@@ -846,7 +846,7 @@ void Community::outRange(Species* pSpecies, int rep, int yr, int gen)
 
 		tcanv.pcanvas[0] = NULL;
 
-		for (int i = 0; i < NSEXES; i++) {
+		for (int i = 0; i < maxNbSexes; i++) {
 			ts.ninds[i] = 0;
 			ts.sumD0[i] = ts.ssqD0[i] = 0.0;
 			ts.sumAlpha[i] = ts.ssqAlpha[i] = 0.0; ts.sumBeta[i] = ts.ssqBeta[i] = 0.0;
@@ -864,7 +864,7 @@ void Community::outRange(Species* pSpecies, int rep, int yr, int gen)
 		int nsubcomms = (int)subComms.size();
 		for (int i = 0; i < nsubcomms; i++) { // all sub-communities (incl. matrix)
 			scts = subComms[i]->outTraits(tcanv, pLandscape, rep, yr, gen, true);
-			for (int j = 0; j < NSEXES; j++) {
+			for (int j = 0; j < maxNbSexes; j++) {
 				ts.ninds[j] += scts.ninds[j];
 				ts.sumD0[j] += scts.sumD0[j];     ts.ssqD0[j] += scts.ssqD0[j];
 				ts.sumAlpha[j] += scts.sumAlpha[j];  ts.ssqAlpha[j] += scts.ssqAlpha[j];
@@ -1218,7 +1218,7 @@ void Community::outTraits(traitCanvas tcanv, Species* pSpecies,
 		// create array of traits means, etc., one for each row
 		ts = new traitsums[land.dimY];
 		for (int y = 0; y < land.dimY; y++) {
-			for (int i = 0; i < NSEXES; i++) {
+			for (int i = 0; i < maxNbSexes; i++) {
 				ts[y].ninds[i] = 0;
 				ts[y].sumD0[i] = ts[y].ssqD0[i] = 0.0;
 				ts[y].sumAlpha[i] = ts[y].ssqAlpha[i] = 0.0;
@@ -1249,7 +1249,7 @@ void Community::outTraits(traitCanvas tcanv, Species* pSpecies,
 			int y = loc.y;
 			if (sim.outTraitsRows && yr >= sim.outStartTraitRow && yr % sim.outIntTraitRow == 0)
 			{
-				for (int s = 0; s < NSEXES; s++) {
+				for (int s = 0; s < maxNbSexes; s++) {
 					ts[y].ninds[s] += sctraits.ninds[s];
 					ts[y].sumD0[s] += sctraits.sumD0[s];     ts[y].ssqD0[s] += sctraits.ssqD0[s];
 					ts[y].sumAlpha[s] += sctraits.sumAlpha[s];  ts[y].ssqAlpha[s] += sctraits.ssqAlpha[s];
@@ -1470,7 +1470,7 @@ void Community::writeTraitsRows(Species* pSpecies, int rep, int yr, int gen, int
 	}
 
 	if (pSpecies->getNumberOfAdaptiveTraits() > 0) {
-		if (NSEXES > 1) {
+		if (maxNbSexes > 1) {
 			if (ts.ninds[0] > 0) mn = ts.sumFitness[0] / (double)ts.ninds[0]; else mn = 0.0;
 			if (ts.ninds[0] > 1) sd = ts.ssqFitness[0] / (double)ts.ninds[0] - mn * mn; else sd = 0.0;
 			if (sd > 0.0) sd = sqrt(sd); else sd = 0.0;
@@ -1579,7 +1579,7 @@ bool Community::outTraitsRowsHeaders(Species* pSpecies, int landNr) {
 	}
 
 	if (pSpecies->getNumberOfAdaptiveTraits() > 0) {
-		if (NSEXES > 1) {
+		if (maxNbSexes > 1) {
 			outtraitsrows << "\tF_meanFitness\tF_stdFitness\tM_meanFitness\tM_stdFitness";
 		}
 		else

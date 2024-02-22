@@ -344,11 +344,9 @@ void SubCommunity::reproduction(int resol, float epsGlobal, short rasterType, bo
 void SubCommunity::emigration(void)
 {
 	if (subCommNum == 0) return; // no emigration from the matrix
-	float localK;
-	int npops = (int)popns.size();
-	// THE FOLLOWING MAY BE MORE EFFICIENT WHILST THERE IS ONLY ONE SPECIES ...
+	int npops = static_cast<int>(popns.size());
 	if (npops < 1) return;
-	localK = pPatch->getK();
+	float localK = pPatch->getK();
 	// NOTE that even if K is zero, it could have been >0 in previous time-step, and there
 	// might be emigrants if there is non-juvenile emigration
 	for (int i = 0; i < npops; i++) { // all populations
@@ -756,7 +754,7 @@ bool SubCommunity::outTraitsHeaders(Landscape* pLandscape, Species* pSpecies, in
 		}
 	}
 	if (pSpecies->getNumberOfAdaptiveTraits() > 0) {
-		if (NSEXES > 1) {
+		if (maxNbSexes > 1) {
 			outtraits << "\tF_meanFitness\tF_stdFitness\tM_meanFitness\tM_stdFitness";
 		}
 		else {
@@ -779,8 +777,8 @@ traitsums SubCommunity::outTraits(traitCanvas tcanv,
 	bool writefile = false;
 	if (sim.outTraitsCells && yr % sim.outIntTraitCell == 0 && !commlevel)
 		writefile = true;
-	traitsums ts, poptraits;
-	for (int i = 0; i < NSEXES; i++) {
+	traitsums ts, indTraitsSums;
+	for (int i = 0; i < maxNbSexes; i++) {
 		ts.ninds[i] = 0;
 		ts.sumD0[i] = ts.ssqD0[i] = 0.0;
 		ts.sumAlpha[i] = ts.ssqAlpha[i] = 0.0; ts.sumBeta[i] = ts.ssqBeta[i] = 0.0;
@@ -802,15 +800,15 @@ traitsums SubCommunity::outTraits(traitCanvas tcanv,
 	Species* pSpecies;
 	float localK;
 
-	for (int i = 0; i < npops; i++) { // all populations
+	for (int iPop = 0; iPop < npops; iPop++) { // all populations
 		localK = pPatch->getK();
-		if (localK > 0.0 && popns[i]->getNInds() > 0) {
-			pSpecies = popns[i]->getSpecies();
+		if (localK > 0.0 && popns[iPop]->getNInds() > 0) {
+			pSpecies = popns[iPop]->getSpecies();
 			demogrParams dem = pSpecies->getDemogr();
 			emigRules emig = pSpecies->getEmig();
 			trfrRules trfr = pSpecies->getTrfr();
 			settleType sett = pSpecies->getSettle();
-			poptraits = popns[i]->getTraits(pSpecies);
+			indTraitsSums = popns[iPop]->getIndTraitsSums(pSpecies);
 
 			if (writefile) {
 				outtraits << rep << "\t" << yr << "\t" << gen;
@@ -836,26 +834,26 @@ traitsums SubCommunity::outTraits(traitCanvas tcanv,
 					}
 				}
 				double mnD0[2], mnAlpha[2], mnBeta[2], sdD0[2], sdAlpha[2], sdBeta[2];
-				for (int g = 0; g < ngenes; g++) {
-					mnD0[g] = mnAlpha[g] = mnBeta[g] = sdD0[g] = sdAlpha[g] = sdBeta[g] = 0.0;
+				for (int iGene = 0; iGene < ngenes; iGene++) {
+					mnD0[iGene] = mnAlpha[iGene] = mnBeta[iGene] = sdD0[iGene] = sdAlpha[iGene] = sdBeta[iGene] = 0.0;
 					// individuals may have been counted by sex if there was
 					// sex dependency in another dispersal phase
-					if (ngenes == 2) popsize = poptraits.ninds[g];
-					else popsize = poptraits.ninds[0] + poptraits.ninds[1];
+					if (ngenes == 2) popsize = indTraitsSums.ninds[iGene];
+					else popsize = indTraitsSums.ninds[0] + indTraitsSums.ninds[1];
 					if (popsize > 0) {
-						mnD0[g] = poptraits.sumD0[g] / (double)popsize;
-						mnAlpha[g] = poptraits.sumAlpha[g] / (double)popsize;
-						mnBeta[g] = poptraits.sumBeta[g] / (double)popsize;
+						mnD0[iGene] = indTraitsSums.sumD0[iGene] / (double)popsize;
+						mnAlpha[iGene] = indTraitsSums.sumAlpha[iGene] / (double)popsize;
+						mnBeta[iGene] = indTraitsSums.sumBeta[iGene] / (double)popsize;
 						if (popsize > 1) {
-							sdD0[g] = poptraits.ssqD0[g] / (double)popsize - mnD0[g] * mnD0[g];
-							if (sdD0[g] > 0.0) sdD0[g] = sqrt(sdD0[g]); else sdD0[g] = 0.0;
-							sdAlpha[g] = poptraits.ssqAlpha[g] / (double)popsize - mnAlpha[g] * mnAlpha[g];
-							if (sdAlpha[g] > 0.0) sdAlpha[g] = sqrt(sdAlpha[g]); else sdAlpha[g] = 0.0;
-							sdBeta[g] = poptraits.ssqBeta[g] / (double)popsize - mnBeta[g] * mnBeta[g];
-							if (sdBeta[g] > 0.0) sdBeta[g] = sqrt(sdBeta[g]); else sdBeta[g] = 0.0;
+							sdD0[iGene] = indTraitsSums.ssqD0[iGene] / (double)popsize - mnD0[iGene] * mnD0[iGene];
+							if (sdD0[iGene] > 0.0) sdD0[iGene] = sqrt(sdD0[iGene]); else sdD0[iGene] = 0.0;
+							sdAlpha[iGene] = indTraitsSums.ssqAlpha[iGene] / (double)popsize - mnAlpha[iGene] * mnAlpha[iGene];
+							if (sdAlpha[iGene] > 0.0) sdAlpha[iGene] = sqrt(sdAlpha[iGene]); else sdAlpha[iGene] = 0.0;
+							sdBeta[iGene] = indTraitsSums.ssqBeta[iGene] / (double)popsize - mnBeta[iGene] * mnBeta[iGene];
+							if (sdBeta[iGene] > 0.0) sdBeta[iGene] = sqrt(sdBeta[iGene]); else sdBeta[iGene] = 0.0;
 						}
 						else {
-							sdD0[g] = sdAlpha[g] = sdBeta[g] = 0.0;
+							sdD0[iGene] = sdAlpha[iGene] = sdBeta[iGene] = 0.0;
 						}
 					}
 				}
@@ -897,44 +895,44 @@ traitsums SubCommunity::outTraits(traitCanvas tcanv,
 				double sdDist1[2], sdDist2[2], sdProp1[2], sdStepL[2], sdRho[2];
 				double mnDP[2], mnGB[2], mnAlphaDB[2], mnBetaDB[2];
 				double sdDP[2], sdGB[2], sdAlphaDB[2], sdBetaDB[2];
-				for (int g = 0; g < ngenes; g++) {
-					mnDist1[g] = mnDist2[g] = mnProp1[g] = mnStepL[g] = mnRho[g] = 0.0;
-					sdDist1[g] = sdDist2[g] = sdProp1[g] = sdStepL[g] = sdRho[g] = 0.0;
-					mnDP[g] = mnGB[g] = mnAlphaDB[g] = mnBetaDB[g] = 0.0;
-					sdDP[g] = sdGB[g] = sdAlphaDB[g] = sdBetaDB[g] = 0.0;
+				for (int iGene = 0; iGene < ngenes; iGene++) {
+					mnDist1[iGene] = mnDist2[iGene] = mnProp1[iGene] = mnStepL[iGene] = mnRho[iGene] = 0.0;
+					sdDist1[iGene] = sdDist2[iGene] = sdProp1[iGene] = sdStepL[iGene] = sdRho[iGene] = 0.0;
+					mnDP[iGene] = mnGB[iGene] = mnAlphaDB[iGene] = mnBetaDB[iGene] = 0.0;
+					sdDP[iGene] = sdGB[iGene] = sdAlphaDB[iGene] = sdBetaDB[iGene] = 0.0;
 					// individuals may have been counted by sex if there was
 					// sex dependency in another dispersal phase
-					if (ngenes == 2) popsize = poptraits.ninds[g];
-					else popsize = poptraits.ninds[0] + poptraits.ninds[1];
+					if (ngenes == 2) popsize = indTraitsSums.ninds[iGene];
+					else popsize = indTraitsSums.ninds[0] + indTraitsSums.ninds[1];
 					if (popsize > 0) {
-						mnDist1[g] = poptraits.sumDist1[g] / (double)popsize;
-						mnDist2[g] = poptraits.sumDist2[g] / (double)popsize;
-						mnProp1[g] = poptraits.sumProp1[g] / (double)popsize;
-						mnStepL[g] = poptraits.sumStepL[g] / (double)popsize;
-						mnRho[g] = poptraits.sumRho[g] / (double)popsize;
-						mnDP[g] = poptraits.sumDP[g] / (double)popsize;
-						mnGB[g] = poptraits.sumGB[g] / (double)popsize;
-						mnAlphaDB[g] = poptraits.sumAlphaDB[g] / (double)popsize;
-						mnBetaDB[g] = poptraits.sumBetaDB[g] / (double)popsize;
+						mnDist1[iGene] = indTraitsSums.sumDist1[iGene] / (double)popsize;
+						mnDist2[iGene] = indTraitsSums.sumDist2[iGene] / (double)popsize;
+						mnProp1[iGene] = indTraitsSums.sumProp1[iGene] / (double)popsize;
+						mnStepL[iGene] = indTraitsSums.sumStepL[iGene] / (double)popsize;
+						mnRho[iGene] = indTraitsSums.sumRho[iGene] / (double)popsize;
+						mnDP[iGene] = indTraitsSums.sumDP[iGene] / (double)popsize;
+						mnGB[iGene] = indTraitsSums.sumGB[iGene] / (double)popsize;
+						mnAlphaDB[iGene] = indTraitsSums.sumAlphaDB[iGene] / (double)popsize;
+						mnBetaDB[iGene] = indTraitsSums.sumBetaDB[iGene] / (double)popsize;
 						if (popsize > 1) {
-							sdDist1[g] = poptraits.ssqDist1[g] / (double)popsize - mnDist1[g] * mnDist1[g];
-							if (sdDist1[g] > 0.0) sdDist1[g] = sqrt(sdDist1[g]); else sdDist1[g] = 0.0;
-							sdDist2[g] = poptraits.ssqDist2[g] / (double)popsize - mnDist2[g] * mnDist2[g];
-							if (sdDist2[g] > 0.0) sdDist2[g] = sqrt(sdDist2[g]); else sdDist2[g] = 0.0;
-							sdProp1[g] = poptraits.ssqProp1[g] / (double)popsize - mnProp1[g] * mnProp1[g];
-							if (sdProp1[g] > 0.0) sdProp1[g] = sqrt(sdProp1[g]); else sdProp1[g] = 0.0;
-							sdStepL[g] = poptraits.ssqStepL[g] / (double)popsize - mnStepL[g] * mnStepL[g];
-							if (sdStepL[g] > 0.0) sdStepL[g] = sqrt(sdStepL[g]); else sdStepL[g] = 0.0;
-							sdRho[g] = poptraits.ssqRho[g] / (double)popsize - mnRho[g] * mnRho[g];
-							if (sdRho[g] > 0.0) sdRho[g] = sqrt(sdRho[g]); else sdRho[g] = 0.0;
-							sdDP[g] = poptraits.ssqDP[g] / (double)popsize - mnDP[g] * mnDP[g];
-							if (sdDP[g] > 0.0) sdDP[g] = sqrt(sdDP[g]); else sdDP[g] = 0.0;
-							sdGB[g] = poptraits.ssqGB[g] / (double)popsize - mnGB[g] * mnGB[g];
-							if (sdGB[g] > 0.0) sdGB[g] = sqrt(sdGB[g]); else sdGB[g] = 0.0;
-							sdAlphaDB[g] = poptraits.ssqAlphaDB[g] / (double)popsize - mnAlphaDB[g] * mnAlphaDB[g];
-							if (sdAlphaDB[g] > 0.0) sdAlphaDB[g] = sqrt(sdAlphaDB[g]); else sdAlphaDB[g] = 0.0;
-							sdBetaDB[g] = poptraits.ssqBetaDB[g] / (double)popsize - mnBetaDB[g] * mnBetaDB[g];
-							if (sdBetaDB[g] > 0.0) sdBetaDB[g] = sqrt(sdBetaDB[g]); else sdBetaDB[g] = 0.0;
+							sdDist1[iGene] = indTraitsSums.ssqDist1[iGene] / (double)popsize - mnDist1[iGene] * mnDist1[iGene];
+							if (sdDist1[iGene] > 0.0) sdDist1[iGene] = sqrt(sdDist1[iGene]); else sdDist1[iGene] = 0.0;
+							sdDist2[iGene] = indTraitsSums.ssqDist2[iGene] / (double)popsize - mnDist2[iGene] * mnDist2[iGene];
+							if (sdDist2[iGene] > 0.0) sdDist2[iGene] = sqrt(sdDist2[iGene]); else sdDist2[iGene] = 0.0;
+							sdProp1[iGene] = indTraitsSums.ssqProp1[iGene] / (double)popsize - mnProp1[iGene] * mnProp1[iGene];
+							if (sdProp1[iGene] > 0.0) sdProp1[iGene] = sqrt(sdProp1[iGene]); else sdProp1[iGene] = 0.0;
+							sdStepL[iGene] = indTraitsSums.ssqStepL[iGene] / (double)popsize - mnStepL[iGene] * mnStepL[iGene];
+							if (sdStepL[iGene] > 0.0) sdStepL[iGene] = sqrt(sdStepL[iGene]); else sdStepL[iGene] = 0.0;
+							sdRho[iGene] = indTraitsSums.ssqRho[iGene] / (double)popsize - mnRho[iGene] * mnRho[iGene];
+							if (sdRho[iGene] > 0.0) sdRho[iGene] = sqrt(sdRho[iGene]); else sdRho[iGene] = 0.0;
+							sdDP[iGene] = indTraitsSums.ssqDP[iGene] / (double)popsize - mnDP[iGene] * mnDP[iGene];
+							if (sdDP[iGene] > 0.0) sdDP[iGene] = sqrt(sdDP[iGene]); else sdDP[iGene] = 0.0;
+							sdGB[iGene] = indTraitsSums.ssqGB[iGene] / (double)popsize - mnGB[iGene] * mnGB[iGene];
+							if (sdGB[iGene] > 0.0) sdGB[iGene] = sqrt(sdGB[iGene]); else sdGB[iGene] = 0.0;
+							sdAlphaDB[iGene] = indTraitsSums.ssqAlphaDB[iGene] / (double)popsize - mnAlphaDB[iGene] * mnAlphaDB[iGene];
+							if (sdAlphaDB[iGene] > 0.0) sdAlphaDB[iGene] = sqrt(sdAlphaDB[iGene]); else sdAlphaDB[iGene] = 0.0;
+							sdBetaDB[iGene] = indTraitsSums.ssqBetaDB[iGene] / (double)popsize - mnBetaDB[iGene] * mnBetaDB[iGene];
+							if (sdBetaDB[iGene] > 0.0) sdBetaDB[iGene] = sqrt(sdBetaDB[iGene]); else sdBetaDB[iGene] = 0.0;
 						}
 					}
 				}
@@ -990,26 +988,26 @@ traitsums SubCommunity::outTraits(traitCanvas tcanv,
 				// CURRENTLY INDIVIDUAL VARIATION CANNOT BE SEX-DEPENDENT
 	//			ngenes = 1;
 				double mnS0[2], mnAlpha[2], mnBeta[2], sdS0[2], sdAlpha[2], sdBeta[2];
-				for (int g = 0; g < ngenes; g++) {
-					mnS0[g] = mnAlpha[g] = mnBeta[g] = sdS0[g] = sdAlpha[g] = sdBeta[g] = 0.0;
+				for (int iGene = 0; iGene < ngenes; iGene++) {
+					mnS0[iGene] = mnAlpha[iGene] = mnBeta[iGene] = sdS0[iGene] = sdAlpha[iGene] = sdBeta[iGene] = 0.0;
 					// individuals may have been counted by sex if there was
 					// sex dependency in another dispersal phase
-					if (ngenes == 2) popsize = poptraits.ninds[g];
-					else popsize = poptraits.ninds[0] + poptraits.ninds[1];
+					if (ngenes == 2) popsize = indTraitsSums.ninds[iGene];
+					else popsize = indTraitsSums.ninds[0] + indTraitsSums.ninds[1];
 					if (popsize > 0) {
-						mnS0[g] = poptraits.sumS0[g] / (double)popsize;
-						mnAlpha[g] = poptraits.sumAlphaS[g] / (double)popsize;
-						mnBeta[g] = poptraits.sumBetaS[g] / (double)popsize;
+						mnS0[iGene] = indTraitsSums.sumS0[iGene] / (double)popsize;
+						mnAlpha[iGene] = indTraitsSums.sumAlphaS[iGene] / (double)popsize;
+						mnBeta[iGene] = indTraitsSums.sumBetaS[iGene] / (double)popsize;
 						if (popsize > 1) {
-							sdS0[g] = poptraits.ssqS0[g] / (double)popsize - mnS0[g] * mnS0[g];
-							if (sdS0[g] > 0.0) sdS0[g] = sqrt(sdS0[g]); else sdS0[g] = 0.0;
-							sdAlpha[g] = poptraits.ssqAlphaS[g] / (double)popsize - mnAlpha[g] * mnAlpha[g];
-							if (sdAlpha[g] > 0.0) sdAlpha[g] = sqrt(sdAlpha[g]); else sdAlpha[g] = 0.0;
-							sdBeta[g] = poptraits.ssqBetaS[g] / (double)popsize - mnBeta[g] * mnBeta[g];
-							if (sdBeta[g] > 0.0) sdBeta[g] = sqrt(sdBeta[g]); else sdBeta[g] = 0.0;
+							sdS0[iGene] = indTraitsSums.ssqS0[iGene] / (double)popsize - mnS0[iGene] * mnS0[iGene];
+							if (sdS0[iGene] > 0.0) sdS0[iGene] = sqrt(sdS0[iGene]); else sdS0[iGene] = 0.0;
+							sdAlpha[iGene] = indTraitsSums.ssqAlphaS[iGene] / (double)popsize - mnAlpha[iGene] * mnAlpha[iGene];
+							if (sdAlpha[iGene] > 0.0) sdAlpha[iGene] = sqrt(sdAlpha[iGene]); else sdAlpha[iGene] = 0.0;
+							sdBeta[iGene] = indTraitsSums.ssqBetaS[iGene] / (double)popsize - mnBeta[iGene] * mnBeta[iGene];
+							if (sdBeta[iGene] > 0.0) sdBeta[iGene] = sqrt(sdBeta[iGene]); else sdBeta[iGene] = 0.0;
 						}
 						else {
-							sdS0[g] = sdAlpha[g] = sdBeta[g] = 0.0;
+							sdS0[iGene] = sdAlpha[iGene] = sdBeta[iGene] = 0.0;
 						}
 					}
 				}
@@ -1029,27 +1027,28 @@ traitsums SubCommunity::outTraits(traitCanvas tcanv,
 					}
 				}
 			}
+
 			if (pSpecies->getNumberOfAdaptiveTraits() > 0) {
 				ngenes = pSpecies->isDiploid() + 1;
 				double mnFitness[2], sdFitness[2];
-				for (int g = 0; g < ngenes; g++) {
-					mnFitness[g] = sdFitness[g] = 0.0;
+				for (int iGene = 0; iGene < ngenes; iGene++) {
+					mnFitness[iGene] = sdFitness[iGene] = 0.0;
 
-					if (ngenes == 2) popsize = poptraits.ninds[g];
-					else popsize = poptraits.ninds[0] + poptraits.ninds[1];
+					if (ngenes == 2) popsize = indTraitsSums.ninds[iGene];
+					else popsize = indTraitsSums.ninds[0] + indTraitsSums.ninds[1];
 					if (popsize > 0) {
-						mnFitness[g] = poptraits.sumFitness[g] / (double)popsize;
+						mnFitness[iGene] = indTraitsSums.sumFitness[iGene] / (double)popsize;
 						if (popsize > 1) {
-							sdFitness[g] = poptraits.ssqFitness[g] / (double)popsize - mnFitness[g] * mnFitness[g];
-							if (sdFitness[g] > 0.0) sdFitness[g] = sqrt(sdFitness[g]); else sdFitness[g] = 0.0;
+							sdFitness[iGene] = indTraitsSums.ssqFitness[iGene] / (double)popsize - mnFitness[iGene] * mnFitness[iGene];
+							if (sdFitness[iGene] > 0.0) sdFitness[iGene] = sqrt(sdFitness[iGene]); else sdFitness[iGene] = 0.0;
 						}
 						else {
-							sdFitness[g] = 0.0;
+							sdFitness[iGene] = 0.0;
 						}
 					}
 				}
 				if (writefile) {
-					if (NSEXES > 1) {
+					if (maxNbSexes > 1) {
 						outtraits << "\t" << mnFitness[0] << "\t" << sdFitness[0];
 						outtraits << "\t" << mnFitness[1] << "\t" << sdFitness[1];
 					}
@@ -1062,35 +1061,40 @@ traitsums SubCommunity::outTraits(traitCanvas tcanv,
 			// CURRENTLY INDIVIDUAL VARIATION CANNOT BE SEX-DEPENDENT
 			if (writefile) outtraits << endl;
 
-			for (int s = 0; s < NSEXES; s++) {
-				ts.ninds[s] += poptraits.ninds[s];
-				ts.sumD0[s] += poptraits.sumD0[s];     ts.ssqD0[s] += poptraits.ssqD0[s];
-				ts.sumAlpha[s] += poptraits.sumAlpha[s];  ts.ssqAlpha[s] += poptraits.ssqAlpha[s];
-				ts.sumBeta[s] += poptraits.sumBeta[s];   ts.ssqBeta[s] += poptraits.ssqBeta[s];
-				ts.sumDist1[s] += poptraits.sumDist1[s];  ts.ssqDist1[s] += poptraits.ssqDist1[s];
-				ts.sumDist2[s] += poptraits.sumDist2[s];  ts.ssqDist2[s] += poptraits.ssqDist2[s];
-				ts.sumProp1[s] += poptraits.sumProp1[s];  ts.ssqProp1[s] += poptraits.ssqProp1[s];
-				ts.sumDP[s] += poptraits.sumDP[s];     ts.ssqDP[s] += poptraits.ssqDP[s];
-				ts.sumGB[s] += poptraits.sumGB[s];     ts.ssqGB[s] += poptraits.ssqGB[s];
-				ts.sumAlphaDB[s] += poptraits.sumAlphaDB[s]; ts.ssqAlphaDB[s] += poptraits.ssqAlphaDB[s];
-				ts.sumBetaDB[s] += poptraits.sumBetaDB[s];  ts.ssqBetaDB[s] += poptraits.ssqBetaDB[s];
-				ts.sumStepL[s] += poptraits.sumStepL[s];  ts.ssqStepL[s] += poptraits.ssqStepL[s];
-				ts.sumRho[s] += poptraits.sumRho[s];    ts.ssqRho[s] += poptraits.ssqRho[s];
-				ts.sumS0[s] += poptraits.sumS0[s];     ts.ssqS0[s] += poptraits.ssqS0[s];
-				ts.sumAlphaS[s] += poptraits.sumAlphaS[s]; ts.ssqAlphaS[s] += poptraits.ssqAlphaS[s];
-				ts.sumBetaS[s] += poptraits.sumBetaS[s];  ts.ssqBetaS[s] += poptraits.ssqBetaS[s];
-				ts.sumFitness[s] += poptraits.sumFitness[s];  ts.ssqFitness[s] += poptraits.ssqFitness[s];
-#if RSDEBUG
-				//DEBUGLOG << "SubCommunity::outTraits(): i=" << i << " popns[i]=" << popns[i]
-				//	<< " s=" << s
-				////	<< " poptraits.sumRho[s]= " << poptraits.sumRho[s]
-				////	<< " ts.sumRho[s]= " << ts.sumRho[s]
-				//	<< " poptraits.sumDP[s]= " << poptraits.sumDP[s] << " poptraits.ssqDP[s]= " << poptraits.ssqDP[s]
-				//	<< " ts.sumDP[s]= " << ts.sumDP[s] << " ts.ssqDP[s]= " << ts.ssqDP[s]
-				//	<< " poptraits.sumGB[s]= " << poptraits.sumGB[s] << " poptraits.ssqGB[s]= " << poptraits.ssqGB[s]
-				//	<< " ts.sumGB[s]= " << ts.sumGB[s] << " ts.ssqGB[s]= " << ts.ssqGB[s]
-				//	<< endl;
-#endif
+			for (int iSex = 0; iSex < maxNbSexes; iSex++) {
+				ts.ninds[iSex] += indTraitsSums.ninds[iSex];
+				ts.sumD0[iSex] += indTraitsSums.sumD0[iSex];     
+				ts.ssqD0[iSex] += indTraitsSums.ssqD0[iSex];
+				ts.sumAlpha[iSex] += indTraitsSums.sumAlpha[iSex];  
+				ts.ssqAlpha[iSex] += indTraitsSums.ssqAlpha[iSex];
+				ts.sumBeta[iSex] += indTraitsSums.sumBeta[iSex];   
+				ts.ssqBeta[iSex] += indTraitsSums.ssqBeta[iSex];
+				ts.sumDist1[iSex] += indTraitsSums.sumDist1[iSex];  
+				ts.ssqDist1[iSex] += indTraitsSums.ssqDist1[iSex];
+				ts.sumDist2[iSex] += indTraitsSums.sumDist2[iSex];  
+				ts.ssqDist2[iSex] += indTraitsSums.ssqDist2[iSex];
+				ts.sumProp1[iSex] += indTraitsSums.sumProp1[iSex];  
+				ts.ssqProp1[iSex] += indTraitsSums.ssqProp1[iSex];
+				ts.sumDP[iSex] += indTraitsSums.sumDP[iSex];    
+				ts.ssqDP[iSex] += indTraitsSums.ssqDP[iSex];
+				ts.sumGB[iSex] += indTraitsSums.sumGB[iSex];    
+				ts.ssqGB[iSex] += indTraitsSums.ssqGB[iSex];
+				ts.sumAlphaDB[iSex] += indTraitsSums.sumAlphaDB[iSex];
+				ts.ssqAlphaDB[iSex] += indTraitsSums.ssqAlphaDB[iSex];
+				ts.sumBetaDB[iSex] += indTraitsSums.sumBetaDB[iSex]; 
+				ts.ssqBetaDB[iSex] += indTraitsSums.ssqBetaDB[iSex];
+				ts.sumStepL[iSex] += indTraitsSums.sumStepL[iSex]; 
+				ts.ssqStepL[iSex] += indTraitsSums.ssqStepL[iSex];
+				ts.sumRho[iSex] += indTraitsSums.sumRho[iSex];   
+				ts.ssqRho[iSex] += indTraitsSums.ssqRho[iSex];
+				ts.sumS0[iSex] += indTraitsSums.sumS0[iSex];     
+				ts.ssqS0[iSex] += indTraitsSums.ssqS0[iSex];
+				ts.sumAlphaS[iSex] += indTraitsSums.sumAlphaS[iSex]; 
+				ts.ssqAlphaS[iSex] += indTraitsSums.ssqAlphaS[iSex];
+				ts.sumBetaS[iSex] += indTraitsSums.sumBetaS[iSex]; 
+				ts.ssqBetaS[iSex] += indTraitsSums.ssqBetaS[iSex];
+				ts.sumFitness[iSex] += indTraitsSums.sumFitness[iSex];  
+				ts.ssqFitness[iSex] += indTraitsSums.ssqFitness[iSex];
 			}
 		}
 	}

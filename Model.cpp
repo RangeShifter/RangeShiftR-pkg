@@ -161,11 +161,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 #endif
 			for (int i = 0; i < npatches; i++) {
 				ppp = pLandscape->getPatchData(i);
-#if RSDEBUG
-				//DEBUGLOG << "RunModel(): i = " << i
-				//	<< " ppp.pPatch = " << ppp.pPatch << " ppp.patchNum = " << ppp.patchNum
-				//	<< endl;
-#endif
 #if RSWIN64
 #if LINUX_CLUSTER
 				pComm->addSubComm(ppp.pPatch, ppp.patchNum); // SET UP ALL SUB-COMMUNITIES
@@ -362,12 +357,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 #endif
 							pLandscape->setLandLimits(ppLand.minX, minY, ppLand.maxX, ppLand.maxY);
 							updateCC = true;
-#if RSDEBUG
-							//landData d = pLandscape->getLandData();
-							//DEBUGLOG << "RunModel(): landscape yr=" << yr
-							//	<< " minX=" << d.minX << " minY=" << d.minY << " maxX=" << d.maxX << " maxY=" << d.maxY
-							//	<< endl;
-#endif
 						}
 					}
 					if (yr == init.finalFrzYr) {
@@ -380,12 +369,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 #endif
 						pLandscape->setLandLimits(ppLand.minX, s.minY, ppLand.maxX, s.maxY);
 						updateCC = true;
-#if RSDEBUG
-						//landData d = pLandscape->getLandData();
-						//DEBUGLOG << "RunModel(): landscape yr=" << yr
-						//	<< " minX=" << d.minX << " minY=" << d.minY << " maxX=" << d.maxX << " maxY=" << d.maxY
-						//	<< endl;
-#endif
 					}
 				}
 			}
@@ -398,10 +381,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 					pLandscape->setEnvGradient(pSpecies, false);
 					updateCC = true;
 				}
-#if RSDEBUG
-				//DEBUGLOG << "RunModel(): yr=" << yr << " shift_begin=" << grad.shift_begin
-				//	<< " shift_stop=" << grad.shift_stop << " opt_y=" << grad.opt_y << endl;
-#endif
 				if (env.stoch) {
 					if (env.local) pLandscape->updateLocalStoch();
 					updateCC = true;
@@ -422,15 +401,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 							Cell* pCell;
 							patchchange = pLandscape->getPatchChange(ixpchchg++);
 							while (patchchange.chgnum <= landIx && ixpchchg <= npatchchanges) {
-#if RSDEBUG
-								//DEBUGLOG << "RunModel(): yr=" << yr << " landIx=" << landIx
-								//	<< " npatchchanges=" << npatchchanges << " ixpchchg=" << ixpchchg
-								//	<< " patchchange.chgnum=" << patchchange.chgnum
-								//	<< " .oldpatch=" << patchchange.oldpatch
-								//	<< " .newpatch=" << patchchange.newpatch
-								//	<< " .x=" << patchchange.x << " .y=" << patchchange.y
-								//	<< endl;
-#endif
 							// move cell from original patch to new patch
 								pCell = pLandscape->findCell(patchchange.x, patchchange.y);
 								if (patchchange.oldpatch != 0) { // not matrix
@@ -458,15 +428,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 							Cell* pCell;
 							costchange = pLandscape->getCostChange(ixcostchg++);
 							while (costchange.chgnum <= landIx && ixcostchg <= ncostchanges) {
-#if RSDEBUG
-								//DEBUGLOG << "RunModel(): yr=" << yr << " landIx=" << landIx
-								//	<< " ncostchanges=" << ncostchanges << " ixcostchg=" << ixcostchg
-								//	<< " costchange.chgnum=" << costchange.chgnum
-								//	<< " .x=" << costchange.x << " .y=" << costchange.y
-								//	<< " .oldcost=" << costchange.oldcost
-								//	<< " .newcost=" << costchange.newcost
-								//	<< endl;
-#endif
 								pCell = pLandscape->findCell(costchange.x, costchange.y);
 								if (pCell != 0) {
 									pCell->setCost(costchange.newcost);
@@ -580,7 +541,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 #endif
 
 				// Dispersal
-
 				pComm->emigration();
 #if RSDEBUG
 				DEBUGLOG << "RunModel(): yr=" << yr << " gen=" << gen << " completed emigration" << endl;
@@ -901,7 +861,7 @@ void PreReproductionOutput(Landscape* pLand, Community* pComm, int rep, int yr, 
 #endif
 
 	traitCanvas tcanv;
-	for (int i = 0; i < NTRAITS; i++) {
+	for (int i = 0; i < maxNbTraitsGUI; i++) {
 		tcanv.pcanvas[i] = 0;
 	}
 
@@ -1303,7 +1263,7 @@ void OutParameters(Landscape* pLandscape)
 		}
 
 		int mSize; // index for weights matrices
-		if (dem.repType == 2) mSize = sstruct.nStages * NSEXES;
+		if (dem.repType == 2) mSize = sstruct.nStages * maxNbSexes;
 		else mSize = sstruct.nStages;
 
 		outPar << "DENSITY-DEPENDENCE IN FECUNDITY:\t";
@@ -1313,8 +1273,8 @@ void OutParameters(Landscape* pLandscape)
 				outPar << "STAGE'S WEIGHTS:" << endl;
 				for (int i = 0; i < mSize; i++) {
 					if (dem.repType == 2) {
-						outPar << "stage " << i / NSEXES << " ";
-						if (i % NSEXES == 0) outPar << "males  : \t";
+						outPar << "stage " << i / maxNbSexes << " ";
+						if (i % maxNbSexes == 0) outPar << "males  : \t";
 						else outPar << "females: \t";
 					}
 					else outPar << "stage " << i << ": \t";
@@ -1335,8 +1295,8 @@ void OutParameters(Landscape* pLandscape)
 				outPar << "STAGE'S WEIGHTS:" << endl;
 				for (int i = 0; i < mSize; i++) {
 					if (dem.repType == 2) {
-						outPar << "stage " << i / NSEXES << " ";
-						if (i % NSEXES == 0) outPar << "males  : \t";
+						outPar << "stage " << i / maxNbSexes << " ";
+						if (i % maxNbSexes == 0) outPar << "males  : \t";
 						else outPar << "females: \t";
 					}
 					else outPar << "stage " << i << ": \t";
@@ -1355,8 +1315,8 @@ void OutParameters(Landscape* pLandscape)
 				outPar << "STAGE'S WEIGHTS:" << endl;
 				for (int i = 0; i < mSize; i++) {
 					if (dem.repType == 2) {
-						outPar << "stage " << i / NSEXES << " ";
-						if (i % NSEXES == 0) outPar << "males  : \t";
+						outPar << "stage " << i / maxNbSexes << " ";
+						if (i % maxNbSexes == 0) outPar << "males  : \t";
 						else outPar << "females: \t";
 					}
 					else outPar << "stage " << i << ": \t";

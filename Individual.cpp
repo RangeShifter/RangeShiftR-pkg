@@ -422,7 +422,6 @@ void Individual::setKernelTraits(Species* pSpecies, bool sexDep, bool twinKernel
 			k.meanDist2 = getTrait(KERNEL_MEANDIST_2_M)->express();
 			k.probKern1 = getTrait(KERNEL_PROBABILITY_M)->express();
 		}
-
 	}
 	else {
 		k.meanDist1 = getTrait(KERNEL_MEANDIST_1_F)->express();
@@ -431,7 +430,6 @@ void Individual::setKernelTraits(Species* pSpecies, bool sexDep, bool twinKernel
 			k.meanDist2 = getTrait(KERNEL_MEANDIST_2_F)->express();
 			k.probKern1 = getTrait(KERNEL_PROBABILITY_F)->express();
 		}
-
 	}
 	float meanDist1 = (float)(k.meanDist1);
 	float meanDist2 = (float)(k.meanDist2);
@@ -1370,8 +1368,8 @@ array3x3f Individual::getHabMatrix(Landscape* pLand, Species* pSpecies,
 	Cell* pCell;
 
 	landData land = pLand->getLandData();
-	if (absorbing) nodatacost = ABSNODATACOST;
-	else nodatacost = NODATACOST;
+	if (absorbing) nodatacost = absorbingNoDataCost;
+	else nodatacost = noDataCost;
 
 	for (int x2 = -1; x2 < 2; x2++) {   // index of relative move in x direction
 		for (int y2 = -1; y2 < 2; y2++) { // index of relative move in x direction
