@@ -118,9 +118,9 @@ void SubCommunity::initialInd(Landscape* pLandscape, Species* pSpecies,
 	Patch* pPatch, Cell* pCell, int ix)
 {
 
-	demogrParams dem = pSpecies->getDemogr();
-	stageParams sstruct = pSpecies->getStage();
-	emigRules emig = pSpecies->getEmig();
+	demogrParams dem = pSpecies->getDemogrParams();
+	stageParams sstruct = pSpecies->getStageParams();
+	emigRules emig = pSpecies->getEmigRules();
 	trfrRules trfr = pSpecies->getTrfr();
 	settleType sett = pSpecies->getSettle();
 	short stg, age, repInt;
@@ -267,9 +267,9 @@ void SubCommunity::patchChange(void) {
 	if (localK <= 0.0) { // patch in dynamic landscape has become unsuitable
 		for (int i = 0; i < npops; i++) { // all populations
 			pSpecies = popns[i]->getSpecies();
-			demogrParams dem = pSpecies->getDemogr();
+			demogrParams dem = pSpecies->getDemogrParams();
 			if (dem.stageStruct) {
-				stageParams sstruct = pSpecies->getStage();
+				stageParams sstruct = pSpecies->getStageParams();
 				if (sstruct.disperseOnLoss) popns[i]->allEmigrate();
 				else popns[i]->extirpate();
 			}
@@ -660,7 +660,7 @@ bool SubCommunity::outTraitsHeaders(Landscape* pLandscape, Species* pSpecies, in
 	}
 
 	string name;
-	emigRules emig = pSpecies->getEmig();
+	emigRules emig = pSpecies->getEmigRules();
 	trfrRules trfr = pSpecies->getTrfr();
 	settleType sett = pSpecies->getSettle();
 	simParams sim = paramsSim->getSim();
@@ -804,8 +804,8 @@ traitsums SubCommunity::outTraits(traitCanvas tcanv,
 		localK = pPatch->getK();
 		if (localK > 0.0 && popns[iPop]->getNInds() > 0) {
 			pSpecies = popns[iPop]->getSpecies();
-			demogrParams dem = pSpecies->getDemogr();
-			emigRules emig = pSpecies->getEmig();
+			demogrParams dem = pSpecies->getDemogrParams();
+			emigRules emig = pSpecies->getEmigRules();
 			trfrRules trfr = pSpecies->getTrfr();
 			settleType sett = pSpecies->getSettle();
 			indTraitsSums = popns[iPop]->getIndTraitsSums(pSpecies);

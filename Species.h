@@ -187,11 +187,11 @@ public:
 	void setStage( // Set stage structure parameters
 		const stageParams	// structure holding stage structure parameters
 	);
-	stageParams getStage(void); // Get stage structure parameters
+	stageParams getStageParams(void); // Get stage structure parameters
 	void setDemogr( // Set general demographic parameters
 		const demogrParams	// structure holding general demographic parameters
 	);
-	demogrParams getDemogr(void); // Get general demographic parameters
+	demogrParams getDemogrParams(void); // Get general demographic parameters
 	short getRepType(void);
 	bool stageStructured(void);
 	void setDensDep( // Set demographic density dependence coefficients
@@ -313,10 +313,10 @@ public:
 
 	// emigration parameter functions
 
-	void setEmig( // Set emigration rules
+	void setEmigRules( // Set emigration rules
 		const emigRules	// structure holding emigration rules
 	);
-	emigRules getEmig(void); // Get emigration rules
+	emigRules getEmigRules(void); // Get emigration rules
 	void setEmigTraits( // Set emigration trait parameters
 		const short,			// stage
 		const short,			// sex

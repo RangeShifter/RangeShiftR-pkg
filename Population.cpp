@@ -64,9 +64,9 @@ Population::Population(Species* pSp, Patch* pPch, int ninds, int resol)
 	//	<< " added population to patch " << endl;
 #endif
 
-	demogrParams dem = pSpecies->getDemogr();
-	stageParams sstruct = pSpecies->getStage();
-	emigRules emig = pSpecies->getEmig();
+	demogrParams dem = pSpecies->getDemogrParams();
+	stageParams sstruct = pSpecies->getStageParams();
+	emigRules emig = pSpecies->getEmigRules();
 	trfrRules trfr = pSpecies->getTrfr();
 	//trfrSMSTraits sms = pSpecies->getSMSTraits();
 	settleType sett = pSpecies->getSettle();
@@ -236,7 +236,7 @@ traitsums Population::getIndTraitsSums(Species* pSpecies) {
 		ts.sumFitness[sex] = ts.ssqFitness[sex] = 0.0;
 	}
 
-	emigRules emig = pSpecies->getEmig();
+	emigRules emig = pSpecies->getEmigRules();
 	trfrRules trfr = pSpecies->getTrfr();
 	settleType sett = pSpecies->getSettle();
 
@@ -463,7 +463,7 @@ popStats Population::getStats(void)
 	int ninds;
 	float fec;
 	bool breeders[2] = { false, false };
-	demogrParams dem = pSpecies->getDemogr();
+	demogrParams dem = pSpecies->getDemogrParams();
 	p.pSpecies = pSpecies;
 	p.pPatch = pPatch;
 	p.spNum = pSpecies->getSpNum();
@@ -577,9 +577,9 @@ void Population::reproduction(const float localK, const float envval, const int 
 
 	//envGradParams grad = paramsGrad->getGradient();
 	envStochParams env = paramsStoch->getStoch();
-	demogrParams dem = pSpecies->getDemogr();
-	stageParams sstruct = pSpecies->getStage();
-	emigRules emig = pSpecies->getEmig();
+	demogrParams dem = pSpecies->getDemogrParams();
+	stageParams sstruct = pSpecies->getStageParams();
+	emigRules emig = pSpecies->getEmigRules();
 	trfrRules trfr = pSpecies->getTrfr();
 	settleType sett = pSpecies->getSettle();
 
@@ -896,7 +896,7 @@ void Population::fledge(void)
 	//	<< " njuvs=" << (int)juvs.size()
 	//	<< endl;
 #endif
-	demogrParams dem = pSpecies->getDemogr();
+	demogrParams dem = pSpecies->getDemogrParams();
 
 	if (dem.stageStruct) { // juveniles are added to the individuals vector
 		inds.insert(inds.end(), juvs.begin(), juvs.end());
@@ -962,9 +962,9 @@ void Population::emigration(float localK)
 {
 	int nsexes;
 	double disp, Pdisp, NK;
-	demogrParams dem = pSpecies->getDemogr();
-	stageParams sstruct = pSpecies->getStage();
-	emigRules emig = pSpecies->getEmig();
+	demogrParams dem = pSpecies->getDemogrParams();
+	stageParams sstruct = pSpecies->getStageParams();
+	emigRules emig = pSpecies->getEmigRules();
 	emigTraits eparams;
 	indStats ind;
 
@@ -1505,8 +1505,8 @@ void Population::survival0(float localK, short option0, short option1)
 	//	  	 		1 - development and survival
 	//	  	 		2 - survival only (when survival is annual)
 	densDepParams ddparams = pSpecies->getDensDep();
-	demogrParams dem = pSpecies->getDemogr();
-	stageParams sstruct = pSpecies->getStage();
+	demogrParams dem = pSpecies->getDemogrParams();
+	stageParams sstruct = pSpecies->getStageParams();
 
 	// get surrent population size
 	int ninds = (int)inds.size();
@@ -1747,7 +1747,7 @@ void Population::survival1(void)
 
 void Population::ageIncrement(void) {
 	int ninds = (int)inds.size();
-	stageParams sstruct = pSpecies->getStage();
+	stageParams sstruct = pSpecies->getStageParams();
 	for (int i = 0; i < ninds; i++) {
 		inds[i]->ageIncrement(sstruct.maxAge);
 	}
@@ -1797,8 +1797,8 @@ bool Population::outPopHeaders(int landNr, bool patchModel) {
 
 	// NEED TO REPLACE CONDITIONAL COLUMNS BASED ON ATTRIBUTES OF ONE SPECIES TO COVER
 	// ATTRIBUTES OF *ALL* SPECIES AS DETECTED AT MODEL LEVEL
-	demogrParams dem = pSpecies->getDemogr();
-	stageParams sstruct = pSpecies->getStage();
+	demogrParams dem = pSpecies->getDemogrParams();
+	stageParams sstruct = pSpecies->getStageParams();
 	if (sim.batchMode) {
 		name = paramsSim->getDir(2)
 			+ "Batch" + Int2Str(sim.batchNum) + "_"
@@ -1844,7 +1844,7 @@ void Population::outPopulation(int rep, int yr, int gen, float eps,
 	Cell* pCell;
 
 // NEED TO REPLACE CONDITIONAL COLUMNS BASED ON ATTRIBUTES OF ONE SPECIES TO COVER
-	demogrParams dem = pSpecies->getDemogr();
+	demogrParams dem = pSpecies->getDemogrParams();
 
 	popStats p;
 	outPop << rep << "\t" << yr << "\t" << gen;
@@ -1974,8 +1974,8 @@ void Population::outIndsHeaders(int rep, int landNr, bool patchModel)
 	}
 
 	string name;
-	demogrParams dem = pSpecies->getDemogr();
-	emigRules emig = pSpecies->getEmig();
+	demogrParams dem = pSpecies->getDemogrParams();
+	emigRules emig = pSpecies->getEmigRules();
 	trfrRules trfr = pSpecies->getTrfr();
 	settleType sett = pSpecies->getSettle();
 	simParams sim = paramsSim->getSim();
@@ -2038,8 +2038,8 @@ void Population::outIndividual(Landscape* pLandscape, int rep, int yr, int gen,
 	pathSteps steps;
 	Cell* pCell;
 	landParams ppLand = pLandscape->getLandParams();
-	demogrParams dem = pSpecies->getDemogr();
-	emigRules emig = pSpecies->getEmig();
+	demogrParams dem = pSpecies->getDemogrParams();
+	emigRules emig = pSpecies->getEmigRules();
 	trfrRules trfr = pSpecies->getTrfr();
 	settleType sett = pSpecies->getSettle();
 	short spNum = pSpecies->getSpNum();

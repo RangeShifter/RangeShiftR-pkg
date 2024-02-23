@@ -120,7 +120,7 @@ void Species::setDemogr(const demogrParams d) {
 	if (d.lambda > 0.0) lambda = d.lambda;
 }
 
-demogrParams Species::getDemogr(void) {
+demogrParams Species::getDemogrParams(void) {
 	demogrParams d;
 	d.repType = repType;
 	d.repSeasons = repSeasons;
@@ -186,7 +186,7 @@ void Species::setStage(const stageParams s) {
 	disperseOnLoss = s.disperseOnLoss;
 }
 
-stageParams Species::getStage(void) {
+stageParams Species::getStageParams(void) {
 	stageParams s;
 	s.nStages = nStages; s.repInterval = repInterval; s.maxAge = maxAge;
 	s.survival = survival; s.probRep = probRep;
@@ -499,31 +499,39 @@ set<int> Species::getChromosomeEnds() const {
 //---------------------------------------------------------------------------
 
 // Emigration functions
-void Species::setEmig(const emigRules e) {
-	densDepEmig = e.densDep; stgDepEmig = e.stgDep; sexDepEmig = e.sexDep;
+void Species::setEmigRules(const emigRules e) {
+	densDepEmig = e.densDep; 
+	stgDepEmig = e.stgDep; 
+	sexDepEmig = e.sexDep;
 	indVarEmig = e.indVar;
 	if (e.emigStage >= 0) emigStage = e.emigStage;
 //setGenome();
 }
 
-emigRules Species::getEmig(void) {
+emigRules Species::getEmigRules(void) {
 	emigRules e;
-	e.densDep = densDepEmig; e.stgDep = stgDepEmig; e.sexDep = sexDepEmig;
-	e.indVar = indVarEmig; e.emigStage = emigStage;
+	e.densDep = densDepEmig; 
+	e.stgDep = stgDepEmig; 
+	e.sexDep = sexDepEmig;
+	e.indVar = indVarEmig; 
+	e.emigStage = emigStage;
 	return e;
 }
 
 void Species::setEmigTraits(const short stg, const short sex, const emigTraits e) {
 	if (stg >= 0 && stg < maxNbStages && sex >= 0 && sex < maxNbSexes) {
 		if (e.d0 >= 0.0 && e.d0 <= 1.0) d0[stg][sex] = e.d0;
-		alphaEmig[stg][sex] = e.alpha; betaEmig[stg][sex] = e.beta;
+		alphaEmig[stg][sex] = e.alpha; 
+		betaEmig[stg][sex] = e.beta;
 	}
 }
 
 emigTraits Species::getEmigTraits(short stg, short sex) {
 	emigTraits e;
 	if (stg >= 0 && stg < maxNbStages && sex >= 0 && sex < maxNbSexes) {
-		e.d0 = d0[stg][sex]; e.alpha = alphaEmig[stg][sex]; e.beta = betaEmig[stg][sex];
+		e.d0 = d0[stg][sex];
+		e.alpha = alphaEmig[stg][sex];
+		e.beta = betaEmig[stg][sex];
 	}
 	else {
 		e.d0 = e.alpha = e.beta = 0.0;

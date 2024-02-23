@@ -233,7 +233,7 @@ void Individual::setUpGenes(Species* pSpecies, int resol) {
 
 void Individual::setQTLPhenotypes(Species* pSpecies, int resol) {
 
-	const emigRules emig = pSpecies->getEmig();
+	const emigRules emig = pSpecies->getEmigRules();
 	const trfrRules trfr = pSpecies->getTrfr();
 	const settleType sett = pSpecies->getSettle();
 

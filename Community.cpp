@@ -673,9 +673,9 @@ bool Community::outRangeHeaders(Species* pSpecies, int landNr)
 
 	// NEED TO REPLACE CONDITIONAL COLUMNS BASED ON ATTRIBUTES OF ONE SPECIES TO COVER
 	// ATTRIBUTES OF *ALL* SPECIES AS DETECTED AT MODEL LEVEL
-	demogrParams dem = pSpecies->getDemogr();
-	stageParams sstruct = pSpecies->getStage();
-	emigRules emig = pSpecies->getEmig();
+	demogrParams dem = pSpecies->getDemogrParams();
+	stageParams sstruct = pSpecies->getStageParams();
+	emigRules emig = pSpecies->getEmigRules();
 	trfrRules trfr = pSpecies->getTrfr();
 	settleType sett = pSpecies->getSettle();
 
@@ -789,9 +789,9 @@ void Community::outRange(Species* pSpecies, int rep, int yr, int gen)
 
 	// NEED TO REPLACE CONDITIONAL COLUMNS BASED ON ATTRIBUTES OF ONE SPECIES TO COVER
 	// ATTRIBUTES OF *ALL* SPECIES AS DETECTED AT MODEL LEVEL
-	demogrParams dem = pSpecies->getDemogr();
-	stageParams sstruct = pSpecies->getStage();
-	emigRules emig = pSpecies->getEmig();
+	demogrParams dem = pSpecies->getDemogrParams();
+	stageParams sstruct = pSpecies->getStageParams();
+	emigRules emig = pSpecies->getEmigRules();
 	trfrRules trfr = pSpecies->getTrfr();
 	settleType sett = pSpecies->getSettle();
 
@@ -1290,7 +1290,7 @@ void Community::writeTraitsRows(Species* pSpecies, int rep, int yr, int gen, int
 	//simView v = paramsSim->getViews();
 	//landData land = pLandscape->getLandData();
 	//landOrigin origin = pLandscape->getOrigin();
-	emigRules emig = pSpecies->getEmig();
+	emigRules emig = pSpecies->getEmigRules();
 	trfrRules trfr = pSpecies->getTrfr();
 	settleType sett = pSpecies->getSettle();
 	double mn, sd;
@@ -1500,7 +1500,7 @@ bool Community::outTraitsRowsHeaders(Species* pSpecies, int landNr) {
 	}
 
 	string name;
-	emigRules emig = pSpecies->getEmig();
+	emigRules emig = pSpecies->getEmigRules();
 	trfrRules trfr = pSpecies->getTrfr();
 	settleType sett = pSpecies->getSettle();
 	simParams sim = paramsSim->getSim();
