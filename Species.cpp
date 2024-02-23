@@ -177,9 +177,12 @@ void Species::setStage(const stageParams s) {
 	if (s.maxAge >= 1) maxAge = s.maxAge;
 	if (s.survival >= 0 && s.survival <= 2) survival = s.survival;
 	if (s.probRep > 0.0 && s.probRep <= 1.0) probRep = s.probRep;
-	fecDens = s.fecDens;		fecStageDens = s.fecStageDens;
-	devDens = s.devDens;		devStageDens = s.devStageDens;
-	survDens = s.survDens;	survStageDens = s.survStageDens;
+	fecDens = s.fecDens;		
+	fecStageDens = s.fecStageDens;
+	devDens = s.devDens;		
+	devStageDens = s.devStageDens;
+	survDens = s.survDens;	
+	survStageDens = s.survStageDens;
 	disperseOnLoss = s.disperseOnLoss;
 }
 
@@ -541,12 +544,16 @@ float Species::getEmigD0(short stg, short sex) {
 
 // Transfer functions
 
-void Species::setTrfr(const trfrRules t) {
-	moveModel = t.moveModel; stgDepTrfr = t.stgDep; sexDepTrfr = t.sexDep;
-	distMort = t.distMort; indVarTrfr = t.indVar;
+void Species::setTrfrRules(const trfrRules t) {
+	moveModel = t.moveModel; 
+	stgDepTrfr = t.stgDep; 
+	sexDepTrfr = t.sexDep;
+	distMort = t.distMort;
+	indVarTrfr = t.indVar;
 	twinKern = t.twinKern;
 	habMort = t.habMort;
-	moveType = t.moveType; costMap = t.costMap;
+	moveType = t.moveType; 
+	costMap = t.costMap;
 //setGenome();
 }
 

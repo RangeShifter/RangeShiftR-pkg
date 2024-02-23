@@ -333,7 +333,7 @@ public:
 
 	// transfer parameter functions
 
-	void setTrfr( // Set transfer rules
+	void setTrfrRules( // Set transfer rules
 		const trfrRules	// structure holding transfer rules
 	);
 	trfrRules getTrfr(void); // Get transfer rules
