@@ -676,7 +676,7 @@ bool Community::outRangeHeaders(Species* pSpecies, int landNr)
 	demogrParams dem = pSpecies->getDemogrParams();
 	stageParams sstruct = pSpecies->getStageParams();
 	emigRules emig = pSpecies->getEmigRules();
-	trfrRules trfr = pSpecies->getTrfr();
+	transferRules trfr = pSpecies->getTransferRules();
 	settleType sett = pSpecies->getSettle();
 
 #if RSDEBUG
@@ -792,7 +792,7 @@ void Community::outRange(Species* pSpecies, int rep, int yr, int gen)
 	demogrParams dem = pSpecies->getDemogrParams();
 	stageParams sstruct = pSpecies->getStageParams();
 	emigRules emig = pSpecies->getEmigRules();
-	trfrRules trfr = pSpecies->getTrfr();
+	transferRules trfr = pSpecies->getTransferRules();
 	settleType sett = pSpecies->getSettle();
 
 	outrange << rep << "\t" << yr << "\t" << gen;
@@ -1291,7 +1291,7 @@ void Community::writeTraitsRows(Species* pSpecies, int rep, int yr, int gen, int
 	//landData land = pLandscape->getLandData();
 	//landOrigin origin = pLandscape->getOrigin();
 	emigRules emig = pSpecies->getEmigRules();
-	trfrRules trfr = pSpecies->getTrfr();
+	transferRules trfr = pSpecies->getTransferRules();
 	settleType sett = pSpecies->getSettle();
 	double mn, sd;
 
@@ -1501,7 +1501,7 @@ bool Community::outTraitsRowsHeaders(Species* pSpecies, int landNr) {
 
 	string name;
 	emigRules emig = pSpecies->getEmigRules();
-	trfrRules trfr = pSpecies->getTrfr();
+	transferRules trfr = pSpecies->getTransferRules();
 	settleType sett = pSpecies->getSettle();
 	simParams sim = paramsSim->getSim();
 

@@ -100,7 +100,7 @@ struct emigTraits {
 
 // structures for transfer parameters
 
-struct trfrRules {
+struct transferRules {
 	bool moveModel; bool stgDep; bool sexDep;
 	bool distMort; bool indVar;
 	bool twinKern;
@@ -108,7 +108,7 @@ struct trfrRules {
 	short moveType; bool costMap;
 	short movtTrait[2];
 };
-struct trfrKernTraits {
+struct trfrKernelParams {
 	float	meanDist1;
 	float	meanDist2;
 	float	probKern1;
@@ -116,7 +116,7 @@ struct trfrKernTraits {
 struct trfrMortParams {
 	float fixedMort; float mortAlpha; float mortBeta;
 };
-struct trfrMovtTraits {
+struct trfrMovtParams {
 	short	pr; short	prMethod; short	memSize; short goalType;
 	float	dp; float	gb; float alphaDB; int betaDB;
 	float	stepMort; float	stepLength; float	rho;
@@ -334,9 +334,9 @@ public:
 	// transfer parameter functions
 
 	void setTrfrRules( // Set transfer rules
-		const trfrRules	// structure holding transfer rules
+		const transferRules	// structure holding transfer rules
 	);
-	trfrRules getTrfr(void); // Get transfer rules
+	transferRules getTransferRules(void); // Get transfer rules
 	void setFullKernel( // Set fullKernel condition
 		bool						// fullKernel value
 	);
@@ -344,10 +344,10 @@ public:
 	void setKernTraits( // Set transfer by kernel parameters
 		const short,					// stage
 		const short,					// sex
-		const trfrKernTraits,	// structure holding transfer by kernel parameters
+		const trfrKernelParams,	// structure holding transfer by kernel parameters
 		const int							// Landscape resolution
 	);
-	trfrKernTraits getKernTraits( // Get transfer by kernel parameters
+	trfrKernelParams getKernTraits( // Get transfer by kernel parameters
 		short,	// stage
 		short		// sex
 	);
@@ -356,9 +356,9 @@ public:
 	);
 	trfrMortParams getMortParams(void); // Get transfer mortality parameters
 	void setMovtTraits( // Set transfer movement model parameters
-		const trfrMovtTraits	// structure holding transfer movement model parameters
+		const trfrMovtParams	// structure holding transfer movement model parameters
 	);
-	trfrMovtTraits getMovtTraits(void); // Get transfer movement model traits
+	trfrMovtParams getMovtTraits(void); // Get transfer movement model traits
 	trfrCRWTraits getCRWTraits(void);		// Get CRW traits
 	trfrSMSTraits getSMSTraits(void);		// Get SMS traits
 	// Return dimension of habitat-dependent step mortality and costs matrices

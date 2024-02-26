@@ -67,7 +67,7 @@ Population::Population(Species* pSp, Patch* pPch, int ninds, int resol)
 	demogrParams dem = pSpecies->getDemogrParams();
 	stageParams sstruct = pSpecies->getStageParams();
 	emigRules emig = pSpecies->getEmigRules();
-	trfrRules trfr = pSpecies->getTrfr();
+	transferRules trfr = pSpecies->getTransferRules();
 	//trfrSMSTraits sms = pSpecies->getSMSTraits();
 	settleType sett = pSpecies->getSettle();
 	initParams init = paramsInit->getInit();
@@ -237,7 +237,7 @@ traitsums Population::getIndTraitsSums(Species* pSpecies) {
 	}
 
 	emigRules emig = pSpecies->getEmigRules();
-	trfrRules trfr = pSpecies->getTrfr();
+	transferRules trfr = pSpecies->getTransferRules();
 	settleType sett = pSpecies->getSettle();
 
 	int ninds = (int)inds.size();
@@ -294,7 +294,7 @@ traitsums Population::getIndTraitsSums(Species* pSpecies) {
 			}
 		}
 		else {
-			trfrKernTraits k = inds[iInd]->getKernTraits();
+			trfrKernelParams k = inds[iInd]->getKernTraits();
 			if (trfr.sexDep) g = sex; 
 			else g = 0;
 			ts.sumDist1[g] += k.meanDist1; 
@@ -580,7 +580,7 @@ void Population::reproduction(const float localK, const float envval, const int 
 	demogrParams dem = pSpecies->getDemogrParams();
 	stageParams sstruct = pSpecies->getStageParams();
 	emigRules emig = pSpecies->getEmigRules();
-	trfrRules trfr = pSpecies->getTrfr();
+	transferRules trfr = pSpecies->getTransferRules();
 	settleType sett = pSpecies->getSettle();
 
 	if (dem.repType == 0) nsexes = 1; else nsexes = 2;
@@ -1175,7 +1175,7 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 
 	landData ppLand = pLandscape->getLandData();
 	short reptype = pSpecies->getRepType();
-	trfrRules trfr = pSpecies->getTrfr();
+	transferRules trfr = pSpecies->getTransferRules();
 	settleType settletype = pSpecies->getSettle();
 	settleRules sett;
 	settleTraits settDD;
@@ -1976,7 +1976,7 @@ void Population::outIndsHeaders(int rep, int landNr, bool patchModel)
 	string name;
 	demogrParams dem = pSpecies->getDemogrParams();
 	emigRules emig = pSpecies->getEmigRules();
-	trfrRules trfr = pSpecies->getTrfr();
+	transferRules trfr = pSpecies->getTransferRules();
 	settleType sett = pSpecies->getSettle();
 	simParams sim = paramsSim->getSim();
 
@@ -2040,7 +2040,7 @@ void Population::outIndividual(Landscape* pLandscape, int rep, int yr, int gen,
 	landParams ppLand = pLandscape->getLandParams();
 	demogrParams dem = pSpecies->getDemogrParams();
 	emigRules emig = pSpecies->getEmigRules();
-	trfrRules trfr = pSpecies->getTrfr();
+	transferRules trfr = pSpecies->getTransferRules();
 	settleType sett = pSpecies->getSettle();
 	short spNum = pSpecies->getSpNum();
 
@@ -2128,7 +2128,7 @@ void Population::outIndividual(Landscape* pLandscape, int rep, int yr, int gen,
 					} // end of CRW
 				}
 				else { // kernel
-					trfrKernTraits k = inds[i]->getKernTraits();
+					trfrKernelParams k = inds[i]->getKernTraits();
 					if (trfr.twinKern)
 					{
 						outInds << "\t" << k.meanDist1 << "\t" << k.meanDist2 << "\t" << k.probKern1;

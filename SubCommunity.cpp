@@ -121,7 +121,7 @@ void SubCommunity::initialInd(Landscape* pLandscape, Species* pSpecies,
 	demogrParams dem = pSpecies->getDemogrParams();
 	stageParams sstruct = pSpecies->getStageParams();
 	emigRules emig = pSpecies->getEmigRules();
-	trfrRules trfr = pSpecies->getTrfr();
+	transferRules trfr = pSpecies->getTransferRules();
 	settleType sett = pSpecies->getSettle();
 	short stg, age, repInt;
 	Individual* pInd;
@@ -661,7 +661,7 @@ bool SubCommunity::outTraitsHeaders(Landscape* pLandscape, Species* pSpecies, in
 
 	string name;
 	emigRules emig = pSpecies->getEmigRules();
-	trfrRules trfr = pSpecies->getTrfr();
+	transferRules trfr = pSpecies->getTransferRules();
 	settleType sett = pSpecies->getSettle();
 	simParams sim = paramsSim->getSim();
 
@@ -806,7 +806,7 @@ traitsums SubCommunity::outTraits(traitCanvas tcanv,
 			pSpecies = popns[iPop]->getSpecies();
 			demogrParams dem = pSpecies->getDemogrParams();
 			emigRules emig = pSpecies->getEmigRules();
-			trfrRules trfr = pSpecies->getTrfr();
+			transferRules trfr = pSpecies->getTransferRules();
 			settleType sett = pSpecies->getSettle();
 			indTraitsSums = popns[iPop]->getIndTraitsSums(pSpecies);
 

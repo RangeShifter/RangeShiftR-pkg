@@ -552,7 +552,7 @@ float Species::getEmigD0(short stg, short sex) {
 
 // Transfer functions
 
-void Species::setTrfrRules(const trfrRules t) {
+void Species::setTrfrRules(const transferRules t) {
 	moveModel = t.moveModel; 
 	stgDepTrfr = t.stgDep; 
 	sexDepTrfr = t.sexDep;
@@ -565,8 +565,8 @@ void Species::setTrfrRules(const trfrRules t) {
 //setGenome();
 }
 
-trfrRules Species::getTrfr(void) {
-	trfrRules t;
+transferRules Species::getTransferRules(void) {
+	transferRules t;
 	t.moveModel = moveModel; t.stgDep = stgDepTrfr; t.sexDep = sexDepTrfr;
 	t.distMort = distMort; t.indVar = indVarTrfr;
 	t.twinKern = twinKern;
@@ -582,7 +582,7 @@ void Species::setFullKernel(bool k) {
 bool Species::useFullKernel(void) { return fullKernel; }
 
 void Species::setKernTraits(const short stg, const short sex,
-	const trfrKernTraits k, const int resol)
+	const trfrKernelParams k, const int resol)
 {
 	if (stg >= 0 && stg < maxNbStages && sex >= 0 && sex < maxNbSexes) {
 		if (k.meanDist1 > 0.0 && k.meanDist1 >= (float)resol) meanDist1[stg][sex] = k.meanDist1;
@@ -591,8 +591,8 @@ void Species::setKernTraits(const short stg, const short sex,
 	}
 }
 
-trfrKernTraits Species::getKernTraits(short stg, short sex) {
-	trfrKernTraits k;
+trfrKernelParams Species::getKernTraits(short stg, short sex) {
+	trfrKernelParams k;
 	if (stg >= 0 && stg < maxNbStages && sex >= 0 && sex < maxNbSexes) {
 		k.meanDist1 = meanDist1[stg][sex];
 		k.meanDist2 = meanDist2[stg][sex];
@@ -616,7 +616,7 @@ trfrMortParams Species::getMortParams(void) {
 	return m;
 }
 
-void Species::setMovtTraits(const trfrMovtTraits m) {
+void Species::setMovtTraits(const trfrMovtParams m) {
 	if (m.pr >= 1) pr = m.pr;
 	if (m.prMethod >= 1 && m.prMethod <= 3) prMethod = m.prMethod;
 	if (m.memSize >= 1 && m.memSize <= 14) memSize = m.memSize;
@@ -631,8 +631,8 @@ void Species::setMovtTraits(const trfrMovtTraits m) {
 	straigtenPath = m.straigtenPath;
 }
 
-trfrMovtTraits Species::getMovtTraits(void) {
-	trfrMovtTraits m;
+trfrMovtParams Species::getMovtTraits(void) {
+	trfrMovtParams m;
 	m.pr = pr; m.prMethod = prMethod; m.memSize = memSize; m.goalType = goalType;
 	m.dp = dp; m.gb = gb; m.alphaDB = alphaDB;  m.betaDB = betaDB;
 	m.stepMort = stepMort; m.stepLength = stepLength; m.rho = rho;

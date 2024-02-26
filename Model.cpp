@@ -43,7 +43,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 	demogrParams dem = pSpecies->getDemogrParams();
 	stageParams sstruct = pSpecies->getStageParams();
 	//emigRules emig = pSpecies->getEmig();
-	trfrRules trfr = pSpecies->getTrfr();
+	transferRules trfr = pSpecies->getTransferRules();
 	initParams init = paramsInit->getInit();
 	simParams sim = paramsSim->getSim();
 	simView v = paramsSim->getViews();
@@ -705,7 +705,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 			pLandscape->resetPatches();
 		}
 		if (ppLand.dynamic) {
-			trfrRules trfr = pSpecies->getTrfr();
+			transferRules trfr = pSpecies->getTransferRules();
 			if (trfr.moveModel && trfr.moveType == 1) { // SMS
 				if (ixcostchg > 0) {
 					// apply any cost changes to reset landscape to original configuration
@@ -908,7 +908,7 @@ void OutParameters(Landscape* pLandscape)
 	demogrParams dem = pSpecies->getDemogrParams();
 	stageParams sstruct = pSpecies->getStageParams();
 	emigRules emig = pSpecies->getEmigRules();
-	trfrRules trfr = pSpecies->getTrfr();
+	transferRules trfr = pSpecies->getTransferRules();
 	settleType sett = pSpecies->getSettle();
 	settleRules srules;
 	settleSteps ssteps;
@@ -1530,7 +1530,7 @@ void OutParameters(Landscape* pLandscape)
 	else { // kernel
 		string meandist = "MEAN DISTANCE";
 		string probkern = "PROB. KERNEL I";
-		trfrKernTraits kern0, kern1;
+		trfrKernelParams kern0, kern1;
 		outPar << "dispersal kernel" << endl << "TYPE: \t";
 		if (trfr.twinKern) outPar << "double ";
 		outPar << "negative exponential" << endl;

@@ -265,13 +265,13 @@ public:
 
 
 	void setEmigTraits(Species* pSpecies, bool sexDep, bool densityDep);
-	void setTransferTraits(Species* pSpecies, trfrRules trfr, int resol);
+	void setTransferTraits(Species* pSpecies, transferRules trfr, int resol);
 
 	emigTraits getEmigTraits(void); // Get phenotypic emigration traits
 
 	void setKernelTraits(Species* pSpecies, bool sexDep, bool twinKernel, int resol);
 
-	trfrKernTraits getKernTraits(void); // Get phenotypic transfer by kernel traits
+	trfrKernelParams getKernTraits(void); // Get phenotypic transfer by kernel traits
 
 	void setSMSTraits(Species* pSpecies);
 

@@ -234,7 +234,7 @@ void Individual::setUpGenes(Species* pSpecies, int resol) {
 void Individual::setQTLPhenotypes(Species* pSpecies, int resol) {
 
 	const emigRules emig = pSpecies->getEmigRules();
-	const trfrRules trfr = pSpecies->getTrfr();
+	const transferRules trfr = pSpecies->getTransferRules();
 	const settleType sett = pSpecies->getSettle();
 
 	// record phenotypic traits
@@ -246,7 +246,7 @@ void Individual::setQTLPhenotypes(Species* pSpecies, int resol) {
 		this->setSettlementTraits(pSpecies, sett.sexDep);
 }
 
-void Individual::setTransferTraits(Species* pSpecies, trfrRules trfr, int resol) {
+void Individual::setTransferTraits(Species* pSpecies, transferRules trfr, int resol) {
 	if (trfr.moveModel) {
 		if (trfr.moveType == 1) {
 			setSMSTraits(pSpecies);
@@ -414,7 +414,7 @@ emigTraits Individual::getEmigTraits(void) {
 // Set phenotypic transfer by kernel traits
 void Individual::setKernelTraits(Species* pSpecies, bool sexDep, bool twinKernel, int resol) {
 
-	trfrKernTraits k; k.meanDist1 = k.meanDist2 = k.probKern1 = 0.0;
+	trfrKernelParams k; k.meanDist1 = k.meanDist2 = k.probKern1 = 0.0;
 	if (sexDep && this->sex == MAL) {
 		k.meanDist1 = getTrait(KERNEL_MEANDIST_1_M)->express();
 
@@ -453,8 +453,8 @@ void Individual::setKernelTraits(Species* pSpecies, bool sexDep, bool twinKernel
 
 
 // Get phenotypic emigration traits
-trfrKernTraits Individual::getKernTraits(void) {
-	trfrKernTraits k; k.meanDist1 = k.meanDist2 = k.probKern1 = 0.0;
+trfrKernelParams Individual::getKernTraits(void) {
+	trfrKernelParams k; k.meanDist1 = k.meanDist2 = k.probKern1 = 0.0;
 	if (pTrfrData != 0) {
 
 		auto& pKernel = dynamic_cast<const kernelData&>(*pTrfrData);
@@ -625,7 +625,7 @@ int Individual::moveKernel(Landscape* pLandscape, Species* pSpecies,
 	int dispersing = 1;
 	double xrand, yrand, meandist, dist, r1, rndangle, nx, ny;
 	float localK;
-	trfrKernTraits kern;
+	trfrKernelParams kern;
 	Cell* pCell;
 	Patch* pPatch;
 	locn loc = pCurrCell->getLocn();
@@ -633,7 +633,7 @@ int Individual::moveKernel(Landscape* pLandscape, Species* pSpecies,
 	landData land = pLandscape->getLandData();
 
 	bool usefullkernel = pSpecies->useFullKernel();
-	trfrRules trfr = pSpecies->getTrfr();
+	transferRules trfr = pSpecies->getTransferRules();
 	settleRules sett = pSpecies->getSettRules(stage, sex);
 
 	pCell = NULL;
@@ -833,7 +833,7 @@ int Individual::moveStep(Landscape* pLandscape, Species* pSpecies,
 	landData land = pLandscape->getLandData();
 	simParams sim = paramsSim->getSim();
 
-	trfrRules trfr = pSpecies->getTrfr();
+	transferRules trfr = pSpecies->getTransferRules();
 	trfrCRWTraits movt = pSpecies->getCRWTraits();
 	settleSteps settsteps = pSpecies->getSteps(stage, sex);
 
