@@ -261,7 +261,8 @@ struct initParams {
 };
 
 struct initInd {
-	int year, patchID, x, y; short species, sex, age, stage;
+	int year, patchID, x, y; 
+	short species, sex, age, stage;
 };
 
 class paramInit {
