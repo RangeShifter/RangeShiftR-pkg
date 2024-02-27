@@ -247,7 +247,7 @@ void Individual::setQTLPhenotypes(Species* pSpecies, int resol) {
 }
 
 void Individual::setTransferTraits(Species* pSpecies, transferRules trfr, int resol) {
-	if (trfr.moveModel) {
+	if (trfr.usesMovtProc) {
 		if (trfr.moveType == 1) {
 			setSMSTraits(pSpecies);
 		}

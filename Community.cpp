@@ -730,7 +730,7 @@ bool Community::outRangeHeaders(Species* pSpecies, int landNr)
 		}
 	}
 	if (trfr.indVar) {
-		if (trfr.moveModel) {
+		if (trfr.usesMovtProc) {
 			if (trfr.moveType == 1) {
 				outrange << "\tmeanDP\tstdDP\tmeanGB\tstdGB";
 				outrange << "\tmeanAlphaDB\tstdAlphaDB\tmeanBetaDB\tstdBetaDB";
@@ -940,7 +940,7 @@ void Community::outRange(Species* pSpecies, int rep, int yr, int gen)
 		}
 
 		if (trfr.indVar) {
-			if (trfr.moveModel) {
+			if (trfr.usesMovtProc) {
 				// CURRENTLY INDIVIDUAL VARIATION CANNOT BE SEX-DEPENDENT
 				ngenes = 1;
 			}
@@ -997,7 +997,7 @@ void Community::outRange(Species* pSpecies, int rep, int yr, int gen)
 					}
 				}
 			}
-			if (trfr.moveModel) {
+			if (trfr.usesMovtProc) {
 				if (trfr.moveType == 1) {
 					outrange << "\t" << mnDP[0] << "\t" << sdDP[0];
 					outrange << "\t" << mnGB[0] << "\t" << sdGB[0];
@@ -1354,7 +1354,7 @@ void Community::writeTraitsRows(Species* pSpecies, int rep, int yr, int gen, int
 	}
 
 	if (trfr.indVar) {
-		if (trfr.moveModel) {
+		if (trfr.usesMovtProc) {
 			if (trfr.moveType == 2) { // CRW
 				// NB - CURRENTLY CANNOT BE SEX-DEPENDENT...
 				if (popsize > 0) mn = ts.sumStepL[0] / (double)popsize; else mn = 0.0;
@@ -1544,7 +1544,7 @@ bool Community::outTraitsRowsHeaders(Species* pSpecies, int landNr) {
 		}
 	}
 	if (trfr.indVar) {
-		if (trfr.moveModel) {
+		if (trfr.usesMovtProc) {
 			if (trfr.moveType == 2) {
 				outtraitsrows << "\tmeanStepLength\tstdStepLength\tmeanRho\tstdRho";
 			}

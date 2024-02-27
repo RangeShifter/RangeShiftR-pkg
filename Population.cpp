@@ -260,7 +260,7 @@ traitsums Population::getIndTraitsSums(Species* pSpecies) {
 		ts.ssqBeta[g] += e.beta * e.beta;
 
 		// transfer traits
-		if (trfr.moveModel) {
+		if (trfr.usesMovtProc) {
 
 			switch (trfr.moveType) {
 
@@ -1193,7 +1193,7 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 		//DEBUGLOG << "Population::transfer(): 1111: i = " << i << " ID = " << inds[i]->getId()
 		//	<< endl;
 #endif
-		if (trfr.moveModel) {
+		if (trfr.usesMovtProc) {
 #if RSDEBUG
 			//pCell = inds[i]->getLocn(1);
 			//locn loc = pCell->getLocn();
@@ -1357,7 +1357,7 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 					ndispersers--;
 				}
 				else { // does not recruit
-					if (trfr.moveModel) {
+					if (trfr.usesMovtProc) {
 						ind.status = 1; // continue dispersing, unless ...
 						// ... maximum steps has been exceeded
 						pathSteps steps = inds[i]->getSteps();
@@ -1391,7 +1391,7 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 			}
 		}
 #endif
-		if (!trfr.moveModel && sett.go2nbrLocn && (ind.status == 3 || ind.status == 6))
+		if (!trfr.usesMovtProc && sett.go2nbrLocn && (ind.status == 3 || ind.status == 6))
 		{
 			// for kernel-based transfer only ...
 			// determine whether recruitment to a neighbouring cell is possible
@@ -2002,7 +2002,7 @@ void Population::outIndsHeaders(int rep, int landNr, bool patchModel)
 		else outInds << "\tEP";
 	}
 	if (trfr.indVar) {
-		if (trfr.moveModel) {
+		if (trfr.usesMovtProc) {
 			if (trfr.moveType == 1) { // SMS
 				outInds << "\tDP\tGB\tAlphaDB\tBetaDB";
 			}
@@ -2110,7 +2110,7 @@ void Population::outIndividual(Landscape* pLandscape, int rep, int yr, int gen,
 				}
 			} // end of if (emig.indVar)
 			if (trfr.indVar) {
-				if (trfr.moveModel) {
+				if (trfr.usesMovtProc) {
 					if (trfr.moveType == 1) { // SMS
 						trfrSMSTraits s = inds[i]->getSMSTraits();
 						outInds << "\t" << s.dp << "\t" << s.gb;

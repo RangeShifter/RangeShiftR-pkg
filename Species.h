@@ -101,7 +101,7 @@ struct emigTraits {
 // structures for transfer parameters
 
 struct transferRules {
-	bool moveModel; bool stgDep; bool sexDep;
+	bool usesMovtProc; bool stgDep; bool sexDep;
 	bool distMort; bool indVar;
 	bool twinKern;
 	bool habMort;

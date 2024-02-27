@@ -553,7 +553,7 @@ float Species::getEmigD0(short stg, short sex) {
 // Transfer functions
 
 void Species::setTrfrRules(const transferRules t) {
-	moveModel = t.moveModel; 
+	moveModel = t.usesMovtProc; 
 	stgDepTrfr = t.stgDep; 
 	sexDepTrfr = t.sexDep;
 	distMort = t.distMort;
@@ -567,7 +567,7 @@ void Species::setTrfrRules(const transferRules t) {
 
 transferRules Species::getTransferRules(void) {
 	transferRules t;
-	t.moveModel = moveModel; t.stgDep = stgDepTrfr; t.sexDep = sexDepTrfr;
+	t.usesMovtProc = moveModel; t.stgDep = stgDepTrfr; t.sexDep = sexDepTrfr;
 	t.distMort = distMort; t.indVar = indVarTrfr;
 	t.twinKern = twinKern;
 	t.habMort = habMort;

@@ -149,7 +149,7 @@ void SubCommunity::initialInd(Landscape* pLandscape, Species* pSpecies,
 	else {
 		if (iind.sex == 1) probmale = 1.0; else probmale = 0.0;
 	}
-	pInd = new Individual(pCell, pPatch, stg, age, repInt, probmale, trfr.moveModel, trfr.moveType);
+	pInd = new Individual(pCell, pPatch, stg, age, repInt, probmale, trfr.usesMovtProc, trfr.moveType);
 
 	// add new individual to the population
 	// NB THIS WILL NEED TO BE CHANGED FOR MULTIPLE SPECIES...
@@ -717,7 +717,7 @@ bool SubCommunity::outTraitsHeaders(Landscape* pLandscape, Species* pSpecies, in
 		}
 	}
 	if (trfr.indVar) {
-		if (trfr.moveModel) {
+		if (trfr.usesMovtProc) {
 			if (trfr.moveType == 1) {
 				outtraits << "\tmeanDP\tstdDP\tmeanGB\tstdGB";
 				outtraits << "\tmeanAlphaDB\tstdAlphaDB\tmeanBetaDB\tstdBetaDB";
@@ -879,7 +879,7 @@ traitsums SubCommunity::outTraits(traitCanvas tcanv,
 			}
 
 			if (trfr.indVar) {
-				if (trfr.moveModel) {
+				if (trfr.usesMovtProc) {
 					// CURRENTLY INDIVIDUAL VARIATION CANNOT BE SEX-DEPENDENT
 					ngenes = 1;
 				}
@@ -937,7 +937,7 @@ traitsums SubCommunity::outTraits(traitCanvas tcanv,
 					}
 				}
 				if (writefile) {
-					if (trfr.moveModel) {
+					if (trfr.usesMovtProc) {
 						if (trfr.moveType == 1) {
 							outtraits << "\t" << mnDP[0] << "\t" << sdDP[0];
 							outtraits << "\t" << mnGB[0] << "\t" << sdGB[0];

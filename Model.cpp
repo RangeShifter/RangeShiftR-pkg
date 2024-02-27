@@ -455,7 +455,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				pLandscape->resetConnectMatrix();
 
 			if (ppLand.dynamic && updateland) {
-				if (trfr.moveModel && trfr.moveType == 1) { // SMS
+				if (trfr.usesMovtProc && trfr.moveType == 1) { // SMS
 					if (!trfr.costMap) pLandscape->resetCosts(); // in case habitats have changed
 				}
 				// apply effects of landscape change to species present in changed patches
@@ -706,7 +706,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 		}
 		if (ppLand.dynamic) {
 			transferRules trfr = pSpecies->getTransferRules();
-			if (trfr.moveModel && trfr.moveType == 1) { // SMS
+			if (trfr.usesMovtProc && trfr.moveType == 1) { // SMS
 				if (ixcostchg > 0) {
 					// apply any cost changes to reset landscape to original configuration
 					// (provided that at least one has already occurred)
@@ -1411,7 +1411,7 @@ void OutParameters(Landscape* pLandscape)
 	else { // not density-dependent
 		string initprob = "INITIAL EMIGRATION PROB. ";
 		outPar << "density-independent" << endl;
-		if (!trfr.moveModel) { // transfer by kernel
+		if (!trfr.usesMovtProc) { // transfer by kernel
 			outPar << "USE FULL KERNEL TO DETERMINE EMIGRATION: ";
 			if (pSpecies->useFullKernel()) outPar << "yes";
 			else outPar << "no";
@@ -1455,7 +1455,7 @@ void OutParameters(Landscape* pLandscape)
 
 	outPar << endl << "DISPERSAL - TRANSFER: \t";
 
-	if (trfr.moveModel) {
+	if (trfr.usesMovtProc) {
 		bool straightenPath;
 		if (trfr.moveType == 1) { // SMS
 			trfrSMSTraits move = pSpecies->getSMSTraits();
@@ -1607,7 +1607,7 @@ void OutParameters(Landscape* pLandscape)
 
 	outPar << endl << "DISPERSAL - SETTLEMENT:" << endl;
 
-	if (trfr.moveModel) {
+	if (trfr.usesMovtProc) {
 		string plusmating = "+ mating requirements";
 		ssteps = pSpecies->getSteps(0, 0);
 
@@ -1920,7 +1920,7 @@ void OutParameters(Landscape* pLandscape)
 		outPar << endl;
 	}
 	else outPar << "no" << endl;
-	if (trfr.moveModel && trfr.moveType == 1) {
+	if (trfr.usesMovtProc && trfr.moveType == 1) {
 		outPar << "SMS HEAT MAPS: ";
 		if (sim.saveVisits) outPar << "yes" << endl;
 		else outPar << "no" << endl;
