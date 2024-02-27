@@ -76,7 +76,7 @@ Species::Species(void)
 	//costMapFile = "NULL";
 	fixedMort = 0.0; mortAlpha = 0.0; mortBeta = 1.0;
 	habDimTrfr = 0;
-	straigtenPath = false;
+	straightenPath = false;
 	fullKernel = false;
 	// initialise settlement parameters
 	stgDepSett = false; sexDepSett = false; indVarSett = false;
@@ -628,7 +628,7 @@ void Species::setMovtTraits(const trfrMovtParams m) {
 	if (m.stepMort >= 0.0 && m.stepMort < 1.0) stepMort = m.stepMort;
 	if (m.stepLength > 0.0) stepLength = m.stepLength;
 	if (m.rho > 0.0 && m.rho < 1.0) rho = m.rho;
-	straigtenPath = m.straigtenPath;
+	straightenPath = m.straightenPath;
 }
 
 trfrMovtParams Species::getMovtTraits(void) {
@@ -642,7 +642,7 @@ trfrMovtParams Species::getMovtTraits(void) {
 trfrCRWTraits Species::getCRWTraits(void) {
 	trfrCRWTraits m;
 	m.stepMort = stepMort; m.stepLength = stepLength; m.rho = rho;
-	m.straigtenPath = straigtenPath;
+	m.straightenPath = straightenPath;
 	return m;
 }
 
@@ -650,7 +650,7 @@ trfrSMSTraits Species::getSMSTraits(void) {
 	trfrSMSTraits m;
 	m.pr = pr; m.prMethod = prMethod; m.memSize = memSize; m.goalType = goalType;
 	m.dp = dp; m.gb = gb; m.alphaDB = alphaDB;  m.betaDB = betaDB; m.stepMort = stepMort;
-	m.straigtenPath = straigtenPath;
+	m.straightenPath = straightenPath;
 	return m;
 }
 

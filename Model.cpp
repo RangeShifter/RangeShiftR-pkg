@@ -1456,10 +1456,10 @@ void OutParameters(Landscape* pLandscape)
 	outPar << endl << "DISPERSAL - TRANSFER: \t";
 
 	if (trfr.moveModel) {
-		bool straigtenPath;
+		bool straightenPath;
 		if (trfr.moveType == 1) { // SMS
 			trfrSMSTraits move = pSpecies->getSMSTraits();
-			straigtenPath = move.straigtenPath;
+			straightenPath = move.straightenPath;
 			if (trfr.costMap) {
 				outPar << "SMS\tcosts from imported cost map" << endl;
 #if !RS_RCPP
@@ -1496,7 +1496,7 @@ void OutParameters(Landscape* pLandscape)
 		}
 		else { // CRW
 			trfrCRWTraits move = pSpecies->getCRWTraits();
-			straigtenPath = move.straigtenPath;
+			straightenPath = move.straightenPath;
 			outPar << "CRW" << endl;
 			string lgth = "STEP LENGTH (m) ";
 			string corr = "STEP CORRELATION";
@@ -1504,7 +1504,7 @@ void OutParameters(Landscape* pLandscape)
 			outPar << corr << ": " << move.rho << endl;
 		}
 		outPar << "STRAIGHTEN PATH AFTER DECISION NOT TO SETTLE: ";
-		if (straigtenPath) outPar << "yes" << endl;
+		if (straightenPath) outPar << "yes" << endl;
 		else outPar << "no" << endl;
 		outPar << "STEP MORTALITY:\t" << endl;
 		if (trfr.habMort)

@@ -922,7 +922,7 @@ int Individual::moveStep(Landscape* pLandscape, Species* pSpecies,
 				rho = 0.99; // to promote leaving natal patch
 				path->out = 0;
 			}
-			if (movt.straigtenPath && path->settleStatus > 0) {
+			if (movt.straightenPath && path->settleStatus > 0) {
 				// individual is in a patch and has already determined whether to settle
 				rho = 0.99; // to promote leaving the patch
 				path->out = 0;
@@ -1043,7 +1043,7 @@ movedata Individual::smsMove(Landscape* pLand, Species* pSpecies,
 	//get weights for directional persistence....
 	if ((path->out > 0 && path->out <= (movt.pr + 1))
 		|| natalPatch
-		|| (movt.straigtenPath && path->settleStatus > 0)) {
+		|| (movt.straightenPath && path->settleStatus > 0)) {
 		// inflate directional persistence to promote leaving the patch
 		if (indvar) nbr = getSimDir(current.x, current.y, 10.0f * pSMS.dp);
 		else nbr = getSimDir(current.x, current.y, 10.0f * movt.dp);

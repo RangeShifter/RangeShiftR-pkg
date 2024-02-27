@@ -120,18 +120,18 @@ struct trfrMovtParams {
 	short	pr; short	prMethod; short	memSize; short goalType;
 	float	dp; float	gb; float alphaDB; int betaDB;
 	float	stepMort; float	stepLength; float	rho;
-	bool straigtenPath;
+	bool straightenPath;
 };
 struct trfrCRWTraits {
 	float	stepMort;
 	float	stepLength;
 	float	rho;
-	bool	straigtenPath;
+	bool	straightenPath;
 };
 struct trfrSMSTraits {
 	short	pr; short	prMethod; short	memSize; short goalType;
 	float	dp; float	gb; float alphaDB; int betaDB; float	stepMort;
-	bool straigtenPath;
+	bool straightenPath;
 };
 
 // structures for settlement parameters
@@ -549,7 +549,7 @@ private:
 	short habDimTrfr;		// dimension of habitat-dependent step mortality and costs matrices
 	int* habCost;				// habitat costs
 	bool costMap;				// import cost map from file?
-	bool straigtenPath;	// straighten path after decision not to settle
+	bool straightenPath;	// straighten path after decision not to settle
 	bool fullKernel;		// used to indicate special case when density-independent emigration
 	// is 1.0, and kernel-based movement within the natal cell is used
 	// to determine philopatry
