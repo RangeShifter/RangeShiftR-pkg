@@ -29,7 +29,21 @@ private:
 
 public:
 
-    SpeciesTrait(vector<string> parameters, Species* pSpecies);
+    SpeciesTrait(
+        const TraitType& traitType,
+        const sex_t& sex,
+        const set<int>& pos,
+        const ExpressionType& expr,
+        const DistributionType& initDist,
+        const map<parameter_t, float> initParams,
+        const DistributionType& dominanceDist,
+        const map<parameter_t, float> dominanceParams,
+        bool isInherited, 
+        const float& mutationRate,
+        const DistributionType& mutationDist,
+        const map<parameter_t, float> mutationParams,
+        Species* pSpecies
+        );
 
     // Getters
     sex_t getSex() const { return sex; }
@@ -45,14 +59,5 @@ public:
     DistributionType getInitialDistribution() const { return initialDistribution; };
     map<parameter_t, float> getInitialParameters() const { return initialParameters; };
     ExpressionType getExpressionType() const { return expressionType; };
-
-    DistributionType stringToDistributionType(const std::string& str) const;
-    ExpressionType stringToExpressionType(const std::string& str) const;
-    map<parameter_t, float> stringToParameterMap(string parameters) const;
-
-    set<int> selectRandomLociPositions(int noLoci, Species* pSpecies) const;
-
-    set<int> stringToLoci(string pos, string nLoci, Species* pSpecies) const;
-    TraitType stringToTraitType(const std::string& str, sex_t sex) const;
 };
 #endif

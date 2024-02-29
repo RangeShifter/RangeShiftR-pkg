@@ -491,7 +491,7 @@ private:
 	int genomeSize;
 	bool diploid;
 	bool mutationsOn;
-	int numberOfNeutralLoci;
+	int numberOfNeutralLoci = 0;
 	int numberOfAdaptiveTraits;
 	float recombinationRate;
 	std::set<int> samplePatchList;
