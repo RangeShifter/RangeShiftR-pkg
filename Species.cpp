@@ -417,8 +417,8 @@ int Species::getNumberOfAdaptiveTraits() const
 void Species::addTrait(TraitType traitType, const SpeciesTrait& trait) {
 
 	TraitType traitT = traitType;
-	//hack to deal with multiple adaptive traits, could be handled better
-	if (traitType == ADAPTIVE) {
+	//hack to deal with multiple genetic load traits, could be handled better
+	if (traitType == GENETIC_LOAD) {
 		int n = incrementAdaptiveTraits();
 
 		switch (n) {
@@ -449,7 +449,7 @@ void Species::addTrait(TraitType traitType, const SpeciesTrait& trait) {
 		}
 		default:
 		{
-			cout << endl << ("Error:: Too many adaptive traits in Traits file, max = 5 \n");
+			cout << endl << ("Error:: Too many genetic load traits in Traits file, max = 5 \n");
 			break; //should return false
 		}
 		}

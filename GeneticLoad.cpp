@@ -22,10 +22,10 @@ GeneticLoad::GeneticLoad(SpeciesTrait* P)
 	case UNIFORM:
 	{
 		if (mutationParameters.count(MAX) != 1)
-			cout << endl << ("Error:: adaptive mutation uniform distribution parameter must contain one max value (e.g. max= ) \n");
+			cout << endl << ("Error:: genetic load mutation uniform distribution parameter must contain one max value (e.g. max= ) \n");
 
 		if (mutationParameters.count(MIN) != 1)
-			cout << endl << ("Error:: adaptive mutation uniform distribution parameter must contain one min value (e.g. min= ) \n");
+			cout << endl << ("Error:: genetic load mutation uniform distribution parameter must contain one min value (e.g. min= ) \n");
 
 		break;
 	}
@@ -33,34 +33,34 @@ GeneticLoad::GeneticLoad(SpeciesTrait* P)
 	{
 
 		if (mutationParameters.count(MEAN) != 1)
-			cout << endl << ("Error:: adaptive mutation distribution set to normal so parameters must contain one mean value (e.g. mean= ) \n");
+			cout << endl << ("Error:: genetic load mutation distribution set to normal so parameters must contain one mean value (e.g. mean= ) \n");
 
 		if (mutationParameters.count(SDEV) != 1)
-			cout << endl << ("Error:: adaptive mutation distribution set to normal so parameters must contain one sdev value (e.g. sdev= ) \n");
+			cout << endl << ("Error:: genetic load mutation distribution set to normal so parameters must contain one sdev value (e.g. sdev= ) \n");
 
 		break;
 	}
 	case GAMMA:
 	{
 		if (mutationParameters.count(SHAPE) != 1)
-			cout << endl << ("Error:: adaptive mutation distribution set to gamma so parameters must contain one shape value (e.g. shape= ) \n");
+			cout << endl << ("Error:: genetic load mutation distribution set to gamma so parameters must contain one shape value (e.g. shape= ) \n");
 
 		if (mutationParameters.count(SCALE) != 1)
-			cout << endl << ("Error:: adaptive mutation distribution set to gamma so parameters must contain one scale value (e.g. scale= ) \n");
+			cout << endl << ("Error:: genetic load mutation distribution set to gamma so parameters must contain one scale value (e.g. scale= ) \n");
 
 		break;
 	}
 	case NEGEXP:
 	{
 		if (mutationParameters.count(MEAN) != 1)
-			cout << endl << ("Error:: adaptive mutation distribution set to negative exponential (negative decay) so parameters must contain one mean value (e.g. mean= ) \n");
+			cout << endl << ("Error:: genetic load mutation distribution set to negative exponential (negative decay) so parameters must contain one mean value (e.g. mean= ) \n");
 
 		break;
 	}
 
 	default:
 	{
-		cout << endl << ("Error:: wrong parameter value for adaptive mutation model, must be uniform/normal/gamma/negExp \n");
+		cout << endl << ("Error:: wrong parameter value for genetic load mutation model, must be uniform/normal/gamma/negExp \n");
 	}
 	}
 
@@ -71,10 +71,10 @@ GeneticLoad::GeneticLoad(SpeciesTrait* P)
 	case UNIFORM:
 	{
 		if (dominanceParameters.count(MAX) != 1)
-			cout << endl << ("Error:: adaptive dominance uniform distribution parameter must contain one max value (e.g. max= ) \n");
+			cout << endl << ("Error:: genetic load dominance uniform distribution parameter must contain one max value (e.g. max= ) \n");
 
 		if (dominanceParameters.count(MIN) != 1)
-			cout << endl << ("Error:: adaptive dominance uniform distribution parameter must contain one min value (e.g. min= ) \n");
+			cout << endl << ("Error:: genetic load dominance uniform distribution parameter must contain one min value (e.g. min= ) \n");
 
 		break;
 	}
@@ -82,27 +82,27 @@ GeneticLoad::GeneticLoad(SpeciesTrait* P)
 	{
 
 		if (dominanceParameters.count(MEAN) != 1)
-			cout << endl << ("Error:: adaptive dominance distribution set to normal so parameters must contain one mean value (e.g. mean= ) \n");
+			cout << endl << ("Error:: genetic load dominance distribution set to normal so parameters must contain one mean value (e.g. mean= ) \n");
 
 		if (dominanceParameters.count(SDEV) != 1)
-			cout << endl << ("Error:: adaptive dominance distribution set to normal so parameters must contain one sdev value (e.g. sdev= ) \n");
+			cout << endl << ("Error:: genetic load dominance distribution set to normal so parameters must contain one sdev value (e.g. sdev= ) \n");
 
 		break;
 	}
 	case GAMMA:
 	{
 		if (dominanceParameters.count(SHAPE) != 1)
-			cout << endl << ("Error:: adaptive dominance distribution set to gamma so parameters must contain one shape value (e.g. shape= ) \n");
+			cout << endl << ("Error:: genetic load dominance distribution set to gamma so parameters must contain one shape value (e.g. shape= ) \n");
 
 		if (dominanceParameters.count(SCALE) != 1)
-			cout << endl << ("Error:: adaptive dominance distribution set to gamma so parameters must contain one scale value (e.g. scale= ) \n");
+			cout << endl << ("Error:: genetic load dominance distribution set to gamma so parameters must contain one scale value (e.g. scale= ) \n");
 
 		break;
 	}
 	case NEGEXP:
 	{
 		if (dominanceParameters.count(MEAN) != 1)
-			cout << endl << ("Error:: adaptive dominance distribution set to negative exponential (negative decay) so parameters must contain mean value (e.g. mean= ) \n");
+			cout << endl << ("Error:: genetic load dominance distribution set to negative exponential (negative decay) so parameters must contain mean value (e.g. mean= ) \n");
 
 		break;
 	}
@@ -113,28 +113,13 @@ GeneticLoad::GeneticLoad(SpeciesTrait* P)
 
 	default:
 	{
-		cout << endl << ("Error:: wrong parameter value for adaptive dominance model, must be uniform/normal/gamma/negExp/scaled \n");
+		cout << endl << ("Error:: wrong parameter value for genetic load dominance model, must be uniform/normal/gamma/negExp/scaled \n");
 		break; //should return false
 	}
 	}
 
 	DistributionType initialDistribution = pSpeciesTrait->getInitialDistribution();
 	map<parameter_t, float> initialParameters = pSpeciesTrait->getInitialParameters();
-
-	//switch (expressionType) {
-	//case MULTIPLICATIVE:
-	//{
-	//    _express_func_ptr = &AdaptiveTrait::expressMulti;
-	//    break;
-	//}
-	//default:
-	//{
-	//    cout << endl << ("wrong parameter value for parameter \"expression of adaptive mutations\", must be multiplicative  \n");
-	//    break; //should return false
-	//}
-
-	//}
-
 }
 
 
@@ -237,7 +222,7 @@ float GeneticLoad::drawDominance(float selCoef) {
 
 	default:
 	{
-		cout << endl << ("Error:: wrong parameter value for adaptive dominance model, must be uniform/normal/gamma/negExp/scaled \n");
+		cout << endl << ("Error:: wrong parameter value for genetic load dominance model, must be uniform/normal/gamma/negExp/scaled \n");
 		break; //should return false
 	}
 	}
@@ -289,7 +274,7 @@ float GeneticLoad::drawSelectionCoef() {
 	}
 	default:
 	{
-		cout << endl << ("Error:: wrong parameter value for adaptive mutation model, must be uniform/normal/gamma/negExp/scaled \n");
+		cout << endl << ("Error:: wrong parameter value for genetic load mutation model, must be uniform/normal/gamma/negExp/scaled \n");
 		break; //should return false
 	}
 	}
