@@ -377,18 +377,30 @@ void Individual::setSettPatch(const settlePatch s) {
 
 void Individual::setEmigTraits(Species* pSpecies, bool sexDep, bool densityDep) {
 	emigTraits e; e.d0 = e.alpha = e.beta = 0.0;
-	if (sexDep && this->getSex() == MAL) {
-		e.d0 = this->getTrait(E_D0_M)->express();
-		if (densityDep) {
-			e.alpha = getTrait(E_ALPHA_M)->express();
-			e.beta = getTrait(E_BETA_M)->express();
+	if (sexDep) {
+		if (this->getSex() == MAL) {
+			e.d0 = this->getTrait(E_D0_M)->express();
+			if (densityDep) {
+				e.alpha = getTrait(E_ALPHA_M)->express();
+				e.beta = getTrait(E_BETA_M)->express();
+			}
 		}
-	}
+		else if (this->getSex() == FEM) {
+			e.d0 = this->getTrait(E_D0_F)->express();
+			if (densityDep) {
+				e.alpha = getTrait(E_ALPHA_F)->express();
+				e.beta = getTrait(E_BETA_F)->express();
+			}
+		}
+		else {
+			throw runtime_error("Attempt to express invalid emigration trait sex.");
+		}
+	}	
 	else {
-		e.d0 = this->getTrait(E_D0_F)->express();
+		e.d0 = this->getTrait(E_D0)->express();
 		if (densityDep) {
-			e.alpha = getTrait(E_ALPHA_F)->express();
-			e.beta = getTrait(E_BETA_F)->express();
+			e.alpha = getTrait(E_ALPHA)->express();
+			e.beta = getTrait(E_BETA)->express();
 		}
 	}
 
@@ -415,22 +427,37 @@ emigTraits Individual::getEmigTraits(void) {
 void Individual::setKernelTraits(Species* pSpecies, bool sexDep, bool twinKernel, int resol) {
 
 	trfrKernelParams k; k.meanDist1 = k.meanDist2 = k.probKern1 = 0.0;
-	if (sexDep && this->sex == MAL) {
-		k.meanDist1 = getTrait(KERNEL_MEANDIST_1_M)->express();
 
-		if (twinKernel) { // twin kernel
-			k.meanDist2 = getTrait(KERNEL_MEANDIST_2_M)->express();
-			k.probKern1 = getTrait(KERNEL_PROBABILITY_M)->express();
+	if (sexDep) {
+		if (this->sex == MAL) {
+			k.meanDist1 = getTrait(KERNEL_MEANDIST_1_M)->express();
+
+			if (twinKernel) { // twin kernel
+				k.meanDist2 = getTrait(KERNEL_MEANDIST_2_M)->express();
+				k.probKern1 = getTrait(KERNEL_PROBABILITY_M)->express();
+			}
+		}
+		else if (this->sex == FEM) {
+			k.meanDist1 = getTrait(KERNEL_MEANDIST_1_F)->express();
+
+			if (twinKernel) { // twin kernel
+				k.meanDist2 = getTrait(KERNEL_MEANDIST_2_F)->express();
+				k.probKern1 = getTrait(KERNEL_PROBABILITY_F)->express();
+			}
+		}
+		else {
+			throw runtime_error("Attempt to express invalid kernel transfer trait sex.");
 		}
 	}
 	else {
-		k.meanDist1 = getTrait(KERNEL_MEANDIST_1_F)->express();
+		k.meanDist1 = getTrait(KERNEL_MEANDIST_1)->express();
 
 		if (twinKernel) { // twin kernel
-			k.meanDist2 = getTrait(KERNEL_MEANDIST_2_F)->express();
-			k.probKern1 = getTrait(KERNEL_PROBABILITY_F)->express();
+			k.meanDist2 = getTrait(KERNEL_MEANDIST_2)->express();
+			k.probKern1 = getTrait(KERNEL_PROBABILITY)->express();
 		}
 	}
+	
 	float meanDist1 = (float)(k.meanDist1);
 	float meanDist2 = (float)(k.meanDist2);
 	float probKern1 = (float)(k.probKern1);
@@ -521,13 +548,23 @@ trfrSMSTraits Individual::getSMSTraits(void) {
 // Set phenotypic transfer by CRW traits
 void Individual::setCRWTraits(Species* pSpecies, bool sexDep) {
 	trfrCRWTraits c; c.stepLength = c.rho = 0.0;
-	if (sexDep && this->sex == MAL) {
-		c.stepLength = getTrait(CRW_STEPLENGTH_M)->express();
-		c.rho = getTrait(CRW_STEPCORRELATION_M)->express();
+
+	if (sexDep) {
+		if (this->sex == MAL) {
+			c.stepLength = getTrait(CRW_STEPLENGTH_M)->express();
+			c.rho = getTrait(CRW_STEPCORRELATION_M)->express();
+		}
+		else if (this->sex == FEM) {
+			c.stepLength = getTrait(CRW_STEPLENGTH_F)->express();
+			c.rho = getTrait(CRW_STEPCORRELATION_F)->express();
+		}
+		else {
+			throw runtime_error("Attempt to express invalid CRW transfer trait sex.");
+		}
 	}
 	else {
-		c.stepLength = getTrait(CRW_STEPLENGTH_F)->express();
-		c.rho = getTrait(CRW_STEPCORRELATION_F)->express();
+		c.stepLength = getTrait(CRW_STEPLENGTH)->express();
+		c.rho = getTrait(CRW_STEPCORRELATION)->express();
 	}
 
 	auto& pCRW = dynamic_cast<crwData&>(*pTrfrData);
