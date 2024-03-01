@@ -61,19 +61,11 @@ void SubCommunity::setInitial(bool b) { initial = b; }
 
 void SubCommunity::initialise(Landscape* pLandscape, Species* pSpecies)
 {
-	//patchLimits limits;
-	//locn loc;
 	int ncells;
 	landParams ppLand = pLandscape->getLandParams();
 	initParams init = paramsInit->getInit();
-#if RSDEBUG
-	//DEBUGLOG << "SubCommunity::initialise(): subCommNum=" << subCommNum
-	//	<< " seedType="<< init.seedType
-	//	<< " popns.size()="<< popns.size()
-	//	<< endl;
-#endif
+
 // determine size of initial population
-//int hx,nInds;
 	int nInds = 0;
 	if (subCommNum == 0 // matrix patch
 		|| !initial)   		// not in initial region or distribution
@@ -102,10 +94,6 @@ void SubCommunity::initialise(Landscape* pLandscape, Species* pSpecies)
 		else nInds = 0;
 	}
 
-	// create new population (even if it has no individuals)
-	//popns.push_back(new Population(pSpecies,pPatch,nInds));
-	//newPopn(pSpecies,pPatch,nInds);
-
 	// create new population only if it is non-zero or the matrix popn
 	if (subCommNum == 0 || nInds > 0) {
 		newPopn(pLandscape, pSpecies, pPatch, nInds);
@@ -126,8 +114,6 @@ void SubCommunity::initialInd(Landscape* pLandscape, Species* pSpecies,
 	short stg, age, repInt;
 	Individual* pInd;
 	float probmale;
-	//	 bool movt;
-	//	 short moveType;
 
 	// create new population if not already in existence
 	int npopns = (int)popns.size();
@@ -168,18 +154,9 @@ void SubCommunity::initialInd(Landscape* pLandscape, Species* pSpecies,
 Population* SubCommunity::newPopn(Landscape* pLandscape, Species* pSpecies,
 	Patch* pPatch, int nInds)
 {
-#if RSDEBUG
-	//DEBUGLOG << "SubCommunity::newPopn(): subCommNum = " << subCommNum
-	//	<< " pPatch = " << pPatch << " nInds = "<< nInds << endl;
-#endif
 	landParams land = pLandscape->getLandParams();
 	int npopns = (int)popns.size();
 	popns.push_back(new Population(pSpecies, pPatch, nInds, land.resol));
-#if RSDEBUG
-	//DEBUGLOG << "SubCommunity::newPopn(): subCommNum = " << subCommNum
-	//	<< " npopns = " << npopns << " popns[npopns] = " << popns[npopns]
-	//	<< endl;
-#endif
 	return popns[npopns];
 }
 
@@ -188,14 +165,8 @@ popStats SubCommunity::getPopStats(void) {
 	p.pSpecies = 0; p.spNum = 0; p.nInds = p.nAdults = p.nNonJuvs = 0; p.breeding = false;
 	p.pPatch = pPatch;
 	// FOR SINGLE SPECIES IMPLEMENTATION, THERE IS ONLY ONE POPULATION IN THE PATCH
-	//p = popns[0]->getStats();
 	int npops = (int)popns.size();
 	for (int i = 0; i < npops; i++) { // all populations
-#if RSDEBUG
-		//DEBUGLOG << "SubCommunity::getPopStats(): npops = " << npops
-		//	<< " i = " << i
-		//	<< " popns[i] = " << popns[i] << endl;
-#endif
 		pop = popns[i]->getStats();
 		p.pSpecies = pop.pSpecies;
 		p.spNum = pop.spNum;
@@ -203,14 +174,6 @@ popStats SubCommunity::getPopStats(void) {
 		p.nNonJuvs += pop.nNonJuvs;
 		p.nAdults += pop.nAdults;
 		p.breeding = pop.breeding;
-#if RSDEBUG
-		//DEBUGLOG << "SubCommunity::getPopStats():"
-		//	<< " p.pSpecies = " << p.pSpecies
-		//	<< " p.pPatch = " << p.pPatch
-		//	<< " p.spNum = " << p.spNum
-		//	<< " p.nInds = " << p.nInds
-		//	<< endl;
-#endif
 	}
 	return p;
 }

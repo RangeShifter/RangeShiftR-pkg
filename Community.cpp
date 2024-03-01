@@ -75,16 +75,6 @@ void Community::initialise(Species* pSpecies, int year)
 
 	spratio = ppLand.spResol / ppLand.resol;
 
-#if RSDEBUG
-	DEBUGLOG << endl << "Community::initialise(): this=" << this
-		<< " seedType=" << init.seedType << " freeType=" << init.freeType
-		<< " minSeedX=" << init.minSeedX << " minSeedY=" << init.minSeedY
-		<< " maxSeedX=" << init.maxSeedX << " maxSeedY=" << init.maxSeedY
-		<< " indsFile=" << init.indsFile
-		<< " nsubcomms=" << nsubcomms << " spratio=" << spratio
-		<< endl;
-#endif
-
 	switch (init.seedType) {
 
 	case 0:	// free initialisation
@@ -311,12 +301,6 @@ void Community::initialise(Species* pSpecies, int year)
 		break;
 
 	} // end of switch (init.seedType)
-
-#if RSDEBUG
-	DEBUGLOG << "Community::initialise(): this=" << this
-		<< " nsubcomms=" << nsubcomms
-		<< endl;
-#endif
 
 }
 

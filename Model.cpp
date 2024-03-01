@@ -75,16 +75,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 		int npatches = pLandscape->patchCount();
 		for (int i = 0; i < npatches; i++) {
 			ppp = pLandscape->getPatchData(i);
-#if RSDEBUG
-			//DEBUGLOG << "RunModel(): i = " << i
-			//	<< " ppp.pPatch = " << ppp.pPatch << " ppp.patchNum = " << ppp.patchNum
-			//	<< endl;
-#endif
 			pComm->addSubComm(ppp.pPatch, ppp.patchNum); // SET UP ALL SUB-COMMUNITIES
-			//	if (i == 0 || ppp.pPatch->getK() > 0.0) {
-			//		// SET UP SUB-COMMUNITY FOR MATRIX PATCH AND ANY PATCH HAVING NON-ZERO CARRYING CAPACITY
-			//		pComm->addSubComm(ppp.pPatch,ppp.patchNum);
-			//	}
 		}
 		if (init.seedType == 0 && init.freeType < 2 && init.initFrzYr > 0) {
 			// restrict available landscape to initialised region
@@ -102,15 +93,8 @@ int RunModel(Landscape* pLandscape, int seqsim)
 
 	// Loop through replicates
 	for (int rep = 0; rep < sim.reps; rep++) {
-#if RSDEBUG
-		DEBUGLOG << endl << "RunModel(): starting simulation=" << sim.simulation << " rep=" << rep << endl;
-#endif
 #if RS_RCPP && !R_CMD
 		Rcpp::Rcout << endl << "starting replicate " << rep << endl;
-#else
-#if BATCH
-		cout << endl << "starting replicate " << rep << endl;
-#endif
 #endif
 
 		if (sim.saveVisits && !ppLand.generated) {
@@ -126,54 +110,36 @@ int RunModel(Landscape* pLandscape, int seqsim)
 		int ncostchanges = pLandscape->numCostChanges();
 		int ixpchchg = 0;
 		int ixcostchg = 0;
-#if RSDEBUG
-		DEBUGLOG << "RunModel(): npatchchanges=" << npatchchanges << " ncostchanges=" << ncostchanges << endl;
-#endif
 
 		if (ppLand.generated) {
-#if RSDEBUG
-			DEBUGLOG << endl << "RunModel(): generating new landscape ..." << endl;
-#endif
 			// delete previous community (if any)
 			// Note: this must be BEFORE the landscape is reset (as a sub-community accesses
 			// its corresponding patch upon deletion)
 			if (pComm != 0) delete pComm;
 			// generate new cell-based landscape
 			pLandscape->resetLand();
-#if RSDEBUG
-			DEBUGLOG << "RunModel(): finished resetting landscape" << endl << endl;
-#endif
 			pLandscape->generatePatches(pSpecies);
 			if (v.viewLand || sim.saveMaps) {
 				pLandscape->setLandMap();
 				pLandscape->drawLandscape(rep, 0, ppLand.landNum);
 			}
-#if RSDEBUG
-			DEBUGLOG << endl << "RunModel(): finished generating patches" << endl;
-#endif
 			pComm = new Community(pLandscape); // set up community
 			// set up a sub-community associated with each patch (incl. the matrix)
 			pLandscape->updateCarryingCapacity(pSpecies, 0, 0);
 			patchData ppp;
 			int npatches = pLandscape->patchCount();
-#if RSDEBUG
-			DEBUGLOG << "RunModel(): patch count is " << npatches << endl;
-#endif
 			for (int i = 0; i < npatches; i++) {
 				ppp = pLandscape->getPatchData(i);
-#if RSWIN64
-#if LINUX_CLUSTER
+				#if RSWIN64
+				#if LINUX_CLUSTER
 				pComm->addSubComm(ppp.pPatch, ppp.patchNum); // SET UP ALL SUB-COMMUNITIES
-#else
+				#else
 				SubCommunity* pSubComm = pComm->addSubComm(ppp.pPatch, ppp.patchNum); // SET UP ALL SUB-COMMUNITIES
-#endif
-#else
+				#endif
+				#else
 				pComm->addSubComm(ppp.pPatch, ppp.patchNum); // SET UP ALL SUB-COMMUNITIES
-#endif
+				#endif
 			}
-#if RSDEBUG
-			DEBUGLOG << endl << "RunModel(): finished generating populations" << endl;
-#endif
 		}
 		if (init.seedType == 0 && init.freeType < 2 && init.initFrzYr > 0) {
 			// restrict available landscape to initialised region
@@ -220,13 +186,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				}
 			}
 		}
-#if RSDEBUG
-		DEBUGLOG << "RunModel(): completed opening output files" << endl;
-#endif
 		if (!filesOK) {
-#if RSDEBUG
-			DEBUGLOG << "RunModel(): PROBLEM - closing output files" << endl;
-#endif
 			// close any files which may be open
 			if (sim.outRange) {
 				pComm->outRangeHeaders(pSpecies, -999);
@@ -245,11 +205,11 @@ int RunModel(Landscape* pLandscape, int seqsim)
 			if (sim.outputWCFstat) {
 				pComm->openWCFstatFile(pSpecies, -999);
 			}
-#if RS_RCPP && !R_CMD
+			#if RS_RCPP && !R_CMD
 			return Rcpp::List::create(Rcpp::Named("Errors") = 666);
-#else
+			#else
 			return 666;
-#endif
+			#endif
 		}
 
 		if (env.stoch && !env.local) {
@@ -272,22 +232,13 @@ int RunModel(Landscape* pLandscape, int seqsim)
 
 		// set up populations in the community
 		pLandscape->updateCarryingCapacity(pSpecies, 0, 0);
-#if RSDEBUG
-		DEBUGLOG << "RunModel(): completed updating carrying capacity" << endl;
-#endif
-		//	if (init.seedType != 2) {
 		pComm->initialise(pSpecies, -1);
-		//	}
 		bool updateland = false;
 		int landIx = 0; // landscape change index
 
-#if RSDEBUG
-		DEBUGLOG << "RunModel(): completed initialisation, rep=" << rep
-			<< " pSpecies=" << pSpecies << endl;
-#endif
-#if BATCH && RS_RCPP && !R_CMD
+		#if BATCH && RS_RCPP && !R_CMD
 		Rcpp::Rcout << "RunModel(): completed initialisation " << endl;
-#endif
+		#endif
 
 		// open a new individuals file for each replicate
 		if (sim.outInds)
@@ -299,26 +250,17 @@ int RunModel(Landscape* pLandscape, int seqsim)
 		if (sim.outputPairwiseFst) {
 			pComm->openPairwiseFSTFile(pSpecies, pLandscape, ppLand.landNum, rep);
 		}
-#if RSDEBUG
-		// output initialised Individuals
-		if (sim.outInds)
-			pComm->outInds(rep, -1, -1, -1);
-#endif
-#if RS_RCPP
+		#if RS_RCPP
 		// open a new movement paths file for each replicate
 		if (sim.outPaths)
 			pLandscape->outPathsHeaders(rep, 0);
-#endif
+		#endif
 
 		// years loop
 		for (yr = 0; yr < sim.years; yr++) {
-#if RSDEBUG
-			DEBUGLOG << endl << "RunModel(): starting simulation=" << sim.simulation
-				<< " rep=" << rep << " yr=" << yr << endl;
-#endif
-#if RS_RCPP && !R_CMD
+			#if RS_RCPP && !R_CMD
 			Rcpp::checkUserInterrupt();
-#endif
+			#endif
 			bool updateCC = false;
 			if (yr < 4
 				|| (yr < 31 && yr % 10 == 0)
@@ -328,11 +270,11 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				|| (yr < 300001 && yr % 100000 == 0)
 				|| (yr < 3000001 && yr % 1000000 == 0)
 				) {
-#if RS_RCPP && !R_CMD
+				#if RS_RCPP && !R_CMD
 				Rcpp::Rcout << "starting year " << yr << "..." << endl;
-#else
+				#else
 				cout << "starting year " << yr << endl;
-#endif
+				#endif
 			}
 			if (init.seedType == 0 && init.freeType < 2) {
 				// apply any range restrictions
@@ -348,13 +290,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 							commStats s = pComm->getStats();
 							int minY = s.maxY - init.restrictRows;
 							if (minY < 0) minY = 0;
-#if RSDEBUG
-							DEBUGLOG << "RunModel(): restriction yr=" << yr
-								<< " s.minY=" << s.minY << " s.maxY=" << s.maxY
-								<< " init.restrictRows=" << init.restrictRows
-								<< " minY=" << minY
-								<< endl;
-#endif
 							pLandscape->setLandLimits(ppLand.minX, minY, ppLand.maxX, ppLand.maxY);
 							updateCC = true;
 						}
@@ -362,11 +297,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 					if (yr == init.finalFrzYr) {
 						// apply final range restriction
 						commStats s = pComm->getStats();
-#if RSDEBUG
-						DEBUGLOG << "RunModel(): final restriction yr=" << yr
-							<< " s.minY=" << s.minY << " s.maxY=" << s.maxY
-							<< endl;
-#endif
 						pLandscape->setLandLimits(ppLand.minX, s.minY, ppLand.maxX, s.maxY);
 						updateCC = true;
 					}
@@ -386,13 +316,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 					updateCC = true;
 				}
 				if (ppLand.dynamic) {
-#if RSDEBUG
-					DEBUGLOG << "RunModel(): yr=" << yr << " landChg.chgnum=" << landChg.chgnum
-						<< " landChg.chgyear=" << landChg.chgyear
-						<< " npatchchanges=" << npatchchanges << " ncostchanges=" << ncostchanges
-						<< " ixpchchg=" << ixpchchg << " ixcostchg=" << ixcostchg
-						<< endl;
-#endif
 					if (yr == landChg.chgyear) { // apply landscape change
 						landIx = landChg.chgnum;
 						updateland = updateCC = true;
@@ -422,9 +345,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 							pLandscape->resetPatches(); // reset patch limits
 						}
 						if (landChg.costfile != "NULL") { // apply any SMS cost changes
-#if RSDEBUG
-							DEBUGLOG << "RunModel(): yr=" << yr << " landChg.costfile=" << landChg.costfile << endl;
-#endif
 							Cell* pCell;
 							costchange = pLandscape->getCostChange(ixcostchg++);
 							while (costchange.chgnum <= landIx && ixcostchg <= ncostchanges) {
@@ -482,21 +402,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 
 			for (int gen = 0; gen < dem.repSeasons; gen++) // generation loop
 			{
-#if RSDEBUG
-				// TEMPORARY RANDOM STREAM CHECK
-				//if (yr%1 == 0 && gen == 0)
-				if (yr % 1 == 0)
-				{
-					DEBUGLOG << endl << "RunModel(): start of gen " << gen << " in year " << yr
-						<< " for rep " << rep << " (";
-					for (int i = 0; i < 5; i++) {
-						int rrrr = pRandom->IRandom(1000, 2000);
-						DEBUGLOG << " " << rrrr;
-					}
-					DEBUGLOG << " )" << endl;
-				}
-#endif
-
 				if (v.viewPop || (sim.saveMaps && yr % sim.mapInt == 0)) {
 					if (updateland && gen == 0) {
 						pLandscape->drawLandscape(rep, landIx, ppLand.landNum);
@@ -536,23 +441,13 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				if (dem.stageStruct && (sim.outRange || sim.outPop))
 					RangePopOutput(pComm, rep, yr, gen);
 
-#if RSDEBUG
-				DEBUGLOG << "RunModel(): yr=" << yr << " gen=" << gen << " completed reproduction" << endl;
-#endif
-
 				// Dispersal
 				pComm->emigration();
-#if RSDEBUG
-				DEBUGLOG << "RunModel(): yr=" << yr << " gen=" << gen << " completed emigration" << endl;
-#endif
 #if RS_RCPP
 				pComm->dispersal(landIx, yr);
 #else
 				pComm->dispersal(landIx);
 #endif // RS_RCPP
-#if RSDEBUG
-				DEBUGLOG << "RunModel(): yr=" << yr << " gen=" << gen << " completed dispersal" << endl;
-#endif
 
 				// survival part 0
 				if (dem.stageStruct) {
@@ -570,41 +465,24 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				else { // non-structured population
 					pComm->survival(0, 1, 1);
 				}
-#if RSDEBUG
-				DEBUGLOG << "RunModel(): yr=" << yr << " gen=" << gen << " completed survival part 0" << endl;
-#endif
-
 
 				// output Individuals
 				if (sim.outInds && yr >= sim.outStartInd && yr % sim.outIntInd == 0)
 					pComm->outInds(rep, yr, gen, -1);
 				// output Genetics
-				//auto start = high_resolution_clock::now();
 				if ((sim.outputWCFstat || sim.outputPairwiseFst) && yr % sim.outputGeneticInterval == 0) {
 					if (pLandscape) pComm->sampleIndividuals(pSpecies);
 					pComm->outNeutralGenetics(pSpecies, rep, yr, gen, sim.outputPerLocusWCFstat, sim.outputPairwiseFst);
 
 				}
-				//auto	stop = high_resolution_clock::now();
-					// auto duration = duration_cast<microseconds>(stop - start);
-					//cout << "genetic output took " << duration.count() << endl;
-				// survival part 1
 				if (dem.stageStruct) {
-					//				if (sstruct.survival != 2) { // at reproduction or between reproduction events
 					pComm->survival(1, 0, 1);
-					//				}
 				}
 				else { // non-structured population
 					pComm->survival(1, 0, 1);
 				}
-#if RSDEBUG
-				DEBUGLOG << "RunModel(): yr=" << yr << " gen=" << gen << " completed survival part 1" << endl;
-#endif
 
 			} // end of the generation loop
-#if RSDEBUG
-			DEBUGLOG << "RunModel(): yr=" << yr << " completed generation loop" << endl;
-#endif
 
 			totalInds = pComm->totalInds();
 			if (totalInds <= 0) { yr++; break; }
@@ -617,9 +495,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 			if (dem.stageStruct && sstruct.survival == 2) {  // annual survival - all stages
 				pComm->survival(0, 1, 2);
 				pComm->survival(1, 0, 1);
-#if RSDEBUG
-				DEBUGLOG << "RunModel(): yr=" << yr << " completed annual survival" << endl;
-#endif
 			}
 
 			if (dem.stageStruct) {
@@ -627,9 +502,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				if (sim.outInds && yr >= sim.outStartInd && yr % sim.outIntInd == 0)
 					pComm->outInds(rep, yr, -1, -1); // list any individuals dying having reached maximum age
 				pComm->survival(1, 0, 1);						// delete any such individuals
-#if RSDEBUG
-				DEBUGLOG << "RunModel(): yr=" << yr << " completed Age_increment and final survival" << endl;
-#endif
 				totalInds = pComm->totalInds();
 				if (totalInds <= 0) { yr++; break; }
 			}
@@ -651,9 +523,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 			PreReproductionOutput(pLandscape, pComm, rep, yr, 0);
 		if (sim.outRange || sim.outPop)
 			RangePopOutput(pComm, rep, yr, 0);
-#if RSDEBUG
-		DEBUGLOG << "RunModel(): yr=" << yr << " completed final summary output" << endl;
-#endif
 
 		pComm->resetPopns();
 
@@ -661,12 +530,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 		if (grad.gradient) paramsGrad->resetOptY();
 
 		pLandscape->resetLandLimits();
-#if RSDEBUG
-		DEBUGLOG << "RunModel(): yr=" << yr << " landIx=" << "reset"
-			<< " npatchchanges=" << npatchchanges << " ncostchanges=" << ncostchanges
-			<< " ixpchchg=" << ixpchchg << " ixcostchg=" << ixcostchg
-			<< endl;
-#endif
 		if (ppLand.patchModel && ppLand.dynamic && ixpchchg > 0) {
 			// apply any patch changes to reset landscape to original configuration
 			// (provided that at least one has already occurred)
@@ -675,15 +538,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 			Cell* pCell;
 			patchchange = pLandscape->getPatchChange(ixpchchg++);
 			while (patchchange.chgnum <= 666666 && ixpchchg <= npatchchanges) {
-#if RSDEBUG
-				//DEBUGLOG << "RunModel(): yr=" << yr << " landIx=" << "reset"
-				//	<< " npatchchanges=" << npatchchanges << " ixpchchg=" << ixpchchg
-				//	<< " patchchange.chgnum=" << patchchange.chgnum
-				//	<< " .oldpatch=" << patchchange.oldpatch
-				//	<< " .newpatch=" << patchchange.newpatch
-				//	<< " .x=" << patchchange.x << " .y=" << patchchange.y
-				//	<< endl;
-#endif
 			// move cell from original patch to new patch
 				pCell = pLandscape->findCell(patchchange.x, patchchange.y);
 				if (patchchange.oldpatch != 0) { // not matrix
@@ -713,15 +567,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 					Cell* pCell;
 					costchange = pLandscape->getCostChange(ixcostchg++);
 					while (costchange.chgnum <= 666666 && ixcostchg <= ncostchanges) {
-#if RSDEBUG
-						//DEBUGLOG << "RunModel(): yr=" << yr << " landIx=" << landIx
-						//	<< " ncostchanges=" << ncostchanges << " ixcostchg=" << ixcostchg
-						//	<< " costchange.chgnum=" << costchange.chgnum
-						//	<< " .x=" << costchange.x << " .y=" << costchange.y
-						//	<< " .oldcost=" << costchange.oldcost
-						//	<< " .newcost=" << costchange.newcost
-						//	<< endl;
-#endif
 						pCell = pLandscape->findCell(costchange.x, costchange.y);
 						if (pCell != 0) {
 							pCell->setCost(costchange.newcost);
@@ -734,16 +579,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				if (!trfr.costMap) pLandscape->resetCosts(); // in case habitats have changed
 			}
 		}
-		//					if (landIx < pLandscape->numLandChanges()) { // get next change
-		//						landChg = pLandscape->getLandChange(landIx);
-		//					}
-		//					else {
-		//						landChg.chgyear = 9999999;
-		//					}
-#if RSDEBUG
-		DEBUGLOG << "RunModel(): yr=" << yr << " completed reset"
-			<< endl;
-#endif
 
 		if (sim.outConnect && ppLand.patchModel)
 			pLandscape->resetConnectMatrix(); // set connectivity matrix to zeroes
@@ -763,9 +598,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 #if RS_RCPP
 		if (sim.outPaths)
 			pLandscape->outPathsHeaders(rep, -999);
-#endif
-#if RSDEBUG
-		DEBUGLOG << endl << "RunModel(): finished rep=" << rep << endl;
 #endif
 
 	} // end of the replicates loop

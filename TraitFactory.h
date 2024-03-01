@@ -18,7 +18,11 @@ public:
 		if (traitType == SNP) {
 			return make_unique<SNPTrait>(protoTrait);
 		}
-		else if (traitType == ADAPTIVE1 || traitType == ADAPTIVE2 || traitType == ADAPTIVE3 || traitType == ADAPTIVE4 || traitType == ADAPTIVE5) {
+		else if (traitType == GENETIC_LOAD1 
+			|| traitType == GENETIC_LOAD2 
+			|| traitType == GENETIC_LOAD3 
+			|| traitType == GENETIC_LOAD4 
+			|| traitType == GENETIC_LOAD5) {
 			return make_unique<GeneticLoad>(protoTrait);
 		}
 		else {

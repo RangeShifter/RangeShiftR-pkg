@@ -392,7 +392,8 @@ string paramSim::getDir(int option) {
 const sex_t stringToSex(const std::string& str) {
 	if (str == "female") return FEM;
 	else if (str == "male") return MAL;
-	else throw logic_error("Traits file: ERROR - sex can either be 'female' or 'male'.");
+	else if (str == "n/a") return NA;
+	else return INVALID_SEX;
 }
 
 set<int> convertStringToPatches(const string& str, const int& nb_rnd_patches, const vector<int>& existingPatches) {

@@ -19,8 +19,6 @@ private:
 
 	SpeciesTrait* pProtoTrait;
 
-	//vector<vector<char>> mutations; 
-
 	map<int, vector<unsigned char>> genes; //position <strand A , strand B>>
 
 	void (SNPTrait::* _mutate_func_ptr) (void);

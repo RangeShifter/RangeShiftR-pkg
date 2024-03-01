@@ -117,7 +117,7 @@ const rgb draw_wheel(int);
 
 enum TraitType {
 	SNP, 
-	GENETIC_LOAD, ADAPTIVE1, ADAPTIVE2, ADAPTIVE3, ADAPTIVE4, ADAPTIVE5,
+	GENETIC_LOAD, GENETIC_LOAD1, GENETIC_LOAD2, GENETIC_LOAD3, GENETIC_LOAD4, GENETIC_LOAD5,
 
 	E_D0_F, E_ALPHA_F, E_BETA_F,
 	S_S0_F, S_ALPHA_F, S_BETA_F,
@@ -131,7 +131,9 @@ enum TraitType {
 	KERNEL_MEANDIST_1_F, KERNEL_MEANDIST_2_F, KERNEL_PROBABILITY_F,
 	KERNEL_MEANDIST_1_M, KERNEL_MEANDIST_2_M, KERNEL_PROBABILITY_M,
 
-	SMS_DP, SMS_GB, SMS_ALPHADB, SMS_BETADB
+	SMS_DP, SMS_GB, SMS_ALPHADB, SMS_BETADB,
+
+	INVALID_TRAIT // for error handling
 };
 
 typedef std::string parameter_t;
@@ -161,7 +163,9 @@ set<int> convertStringToChromosomeEnds(string, int);
 
 //sex types
 typedef enum {
-	FEM = 0, MAL = 1
+	FEM = 0, MAL = 1,
+	NA, // not applicable. e.g. fro SNP or genetic load trait
+	INVALID_SEX // error
 } sex_t;
 
 const sex_t stringToSex(const std::string& str);

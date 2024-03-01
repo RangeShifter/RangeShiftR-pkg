@@ -59,16 +59,11 @@ Population::Population(Species* pSp, Patch* pPch, int ninds, int resol)
 	patchPopn pp = patchPopn();
 	pp.pSp = (intptr)pSpecies; pp.pPop = (intptr)this;
 	pPatch->addPopn(pp);
-#if RSDEBUG
-	//DEBUGLOG << "Population::Population(): this=" << this
-	//	<< " added population to patch " << endl;
-#endif
 
 	demogrParams dem = pSpecies->getDemogrParams();
 	stageParams sstruct = pSpecies->getStageParams();
 	emigRules emig = pSpecies->getEmigRules();
 	transferRules trfr = pSpecies->getTransferRules();
-	//trfrSMSTraits sms = pSpecies->getSMSTraits();
 	settleType sett = pSpecies->getSettle();
 	initParams init = paramsInit->getInit();
 
@@ -123,10 +118,6 @@ Population::Population(Species* pSp, Patch* pPch, int ninds, int resol)
 		else { // non-structured - all individuals go into stage 1
 			n = ninds;
 		}
-		//	for (int sex = 0; sex < nSexes; sex++) {
-		//		if (n < nSexes) n = nSexes; // to ensure at least one individual of each age is created
-		//		subPops.push_back(new SubPop(loc,stg,sex,n/nSexes));
-		//	}
 			// establish initial age distribution
 		minage = maxage = stg;
 		if (dem.stageStruct) {

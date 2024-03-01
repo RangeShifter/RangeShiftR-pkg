@@ -184,7 +184,7 @@ void Individual::inherit(Species* pSpecies, const Individual* mother, const Indi
 			if (newTrait->getMutationRate() > 0 && pSpecies->areMutationsOn())
 				newTrait->mutate();
 		}
-		if (trait == ADAPTIVE1 || trait == ADAPTIVE2 || trait == ADAPTIVE3 || trait == ADAPTIVE4 || trait == ADAPTIVE5)
+		if (trait == GENETIC_LOAD1 || trait == GENETIC_LOAD2 || trait == GENETIC_LOAD3 || trait == GENETIC_LOAD4 || trait == GENETIC_LOAD5)
 			fitness *= newTrait->express();
 
 		spTraitTable.insert(make_pair(trait, move(newTrait)));
@@ -209,7 +209,7 @@ void Individual::inherit(Species* pSpecies, const Individual* mother) {
 			if (newTrait->getMutationRate() > 0 && pSpecies->areMutationsOn())
 				newTrait->mutate();
 		}
-		if (trait == ADAPTIVE1 || trait == ADAPTIVE2 || trait == ADAPTIVE3 || trait == ADAPTIVE4 || trait == ADAPTIVE5)
+		if (trait == GENETIC_LOAD1 || trait == GENETIC_LOAD2 || trait == GENETIC_LOAD3 || trait == GENETIC_LOAD4 || trait == GENETIC_LOAD5)
 			fitness *= newTrait->express();
 
 		spTraitTable.insert(make_pair(trait, move(newTrait)));
@@ -393,11 +393,11 @@ void Individual::setEmigTraits(Species* pSpecies, bool sexDep, bool densityDep) 
 	}
 
 	pEmigTraits = make_unique<emigTraits>();
-	pEmigTraits->d0 = (float)(e.d0);
-	pEmigTraits->alpha = (float)(e.alpha);
-	pEmigTraits->beta = (float)(e.beta);
-	if (pEmigTraits->d0 < 0.0) pEmigTraits->d0 = 0.0;
-	if (pEmigTraits->d0 > 1.0) pEmigTraits->d0 = 1.0;
+	pEmigTraits->d0 = e.d0;
+	pEmigTraits->alpha = e.alpha;
+	pEmigTraits->beta = e.beta;
+	if (pEmigTraits->d0 < 0.0) throw runtime_error("d0 value has become negative.");
+	if (pEmigTraits->d0 > 1.0) throw runtime_error("d0 value has exceeded 1.");
 	return;
 }
 

@@ -424,27 +424,27 @@ void Species::addTrait(TraitType traitType, const SpeciesTrait& trait) {
 		switch (n) {
 		case 1:
 		{
-			traitT = ADAPTIVE1;
+			traitT = GENETIC_LOAD1;
 			break;
 		}
 		case 2:
 		{
-			traitT = ADAPTIVE2;
+			traitT = GENETIC_LOAD2;
 			break;
 		}
 		case 3:
 		{
-			traitT = ADAPTIVE3;
+			traitT = GENETIC_LOAD3;
 			break;
 		}
 		case 4:
 		{
-			traitT = ADAPTIVE4;
+			traitT = GENETIC_LOAD4;
 			break;
 		}
 		case 5:
 		{
-			traitT = ADAPTIVE5;
+			traitT = GENETIC_LOAD5;
 			break;
 		}
 		default:
@@ -464,11 +464,6 @@ SpeciesTrait* Species::getSpTrait(TraitType trait) const {
 void Species::clearTraitTable() {
 	spTraitTable.clear();
 }
-
-//map<TraitType, std::unique_ptr<ProtoTrait>>&  Species::getTraitTable(void) 
-//{
-//	return traitTable;
-//}
 
 set<TraitType> Species::getTraitTypes() {
 	auto kv = std::ranges::views::keys(spTraitTable);
