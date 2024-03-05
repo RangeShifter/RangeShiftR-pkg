@@ -252,7 +252,7 @@ void Individual::setTransferTraits(Species* pSpecies, transferRules trfr, int re
 			setSMSTraits(pSpecies);
 		}
 		else
-			setCRWTraits(pSpecies, trfr.sexDep);
+			setCRWTraits(pSpecies);
 	}
 	else
 		setKernelTraits(pSpecies, trfr.sexDep, trfr.twinKern, resol);
@@ -546,26 +546,11 @@ trfrSMSTraits Individual::getSMSTraits(void) {
 
 
 // Set phenotypic transfer by CRW traits
-void Individual::setCRWTraits(Species* pSpecies, bool sexDep) {
+void Individual::setCRWTraits(Species* pSpecies) {
 	trfrCRWTraits c; c.stepLength = c.rho = 0.0;
 
-	if (sexDep) {
-		if (this->sex == MAL) {
-			c.stepLength = getTrait(CRW_STEPLENGTH_M)->express();
-			c.rho = getTrait(CRW_STEPCORRELATION_M)->express();
-		}
-		else if (this->sex == FEM) {
-			c.stepLength = getTrait(CRW_STEPLENGTH_F)->express();
-			c.rho = getTrait(CRW_STEPCORRELATION_F)->express();
-		}
-		else {
-			throw runtime_error("Attempt to express invalid CRW transfer trait sex.");
-		}
-	}
-	else {
-		c.stepLength = getTrait(CRW_STEPLENGTH)->express();
-		c.rho = getTrait(CRW_STEPCORRELATION)->express();
-	}
+	c.stepLength = getTrait(CRW_STEPLENGTH)->express();
+	c.rho = getTrait(CRW_STEPCORRELATION)->express();
 
 	auto& pCRW = dynamic_cast<crwData&>(*pTrfrData);
 	pCRW.stepLength = (float)(c.stepLength);

@@ -1878,17 +1878,24 @@ int Landscape::readLandscape(int fileNum, string habfile, string pchfile, string
 	}
 #endif
 
-	dimX = ncols; dimY = nrows; minX = maxY = 0; maxX = dimX - 1; maxY = dimY - 1;
+	dimX = ncols; 
+	dimY = nrows; 
+	minX = maxY = 0; 
+	maxX = dimX - 1;
+	maxY = dimY - 1;
+
 	if (fileNum == 0) {
 		// set initialisation limits to landscape limits
 		init.minSeedX = init.minSeedY = 0;
-		init.maxSeedX = maxX; init.maxSeedY = maxY;
+		init.maxSeedX = maxX; 
+		init.maxSeedY = maxY;
 		paramsInit->setInit(init);
 	}
 
 	if (fileNum == 0) {
 		if (patchModel) {
-			for (int i = 0; i < 5; i++) pfile >> header >> pfloat;
+			for (int i = 0; i < 5; i++) 
+				pfile >> header >> pfloat;
 			pfile >> header >> pchnodata;
 		}
 #if RS_RCPP
@@ -1937,37 +1944,33 @@ int Landscape::readLandscape(int fileNum, string habfile, string pchfile, string
 #endif
 					p = (int)pfloat;
 #if RS_RCPP
-					}
-				else {
-					// corrupt file stream
+					} else { // corrupt file stream
 #if RS_RCPP && !R_CMD
-					Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" << std::endl;
+						Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" << std::endl;
 #endif
-					StreamErrorR(pchfile);
-					hfile.close();
-					hfile.clear();
-					pfile.close();
-					pfile.clear();
-					return 132;
-				}
+						StreamErrorR(pchfile);
+						hfile.close();
+						hfile.clear();
+						pfile.close();
+						pfile.clear();
+						return 132;
+					}
 #endif
 				}
 #if RS_RCPP
-				}
-		else {
-			// corrupt file stream
+				} else { // corrupt file stream
 #if RS_RCPP && !R_CMD
 			Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" << std::endl;
 #endif
-			StreamErrorR(habfile);
-			hfile.close();
-			hfile.clear();
-			if (patchModel) {
-				pfile.close();
-				pfile.clear();
+					StreamErrorR(habfile);
+					hfile.close();
+					hfile.clear();
+					if (patchModel) {
+						pfile.close();
+						pfile.clear();
+						}
+					return 135;
 				}
-			return 135;
-		}
 #endif
 				if (h == habnodata)
 					addNewCellToLand(x, y, -1); // add cell only to landscape
@@ -1993,8 +1996,8 @@ int Landscape::readLandscape(int fileNum, string habfile, string pchfile, string
 						if (patchModel) {
 							if (p < 0 || p == pchnodata) { // invalid patch code
 #if RS_RCPP && !R_CMD
-						if (p == pchnodata) Rcpp::Rcout << "Found patch NA in valid habitat cell." << std::endl;
-						else Rcpp::Rcout << "Found negative patch ID in valid habitat cell." << std::endl;
+								if (p == pchnodata) Rcpp::Rcout << "Found patch NA in valid habitat cell." << std::endl;
+								else Rcpp::Rcout << "Found negative patch ID in valid habitat cell." << std::endl;
 #endif
 								hfile.close(); hfile.clear();
 								pfile.close(); pfile.clear();

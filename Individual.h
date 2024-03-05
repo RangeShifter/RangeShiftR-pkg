@@ -277,7 +277,7 @@ public:
 
 	trfrSMSTraits getSMSTraits(void); // Get phenotypic transfer by SMS traits
 
-	void setCRWTraits(Species* pSpecies, bool sexDep);
+	void setCRWTraits(Species* pSpecies);
 
 	trfrCRWTraits getCRWTraits(void); // Get phenotypic transfer by CRW traits
 

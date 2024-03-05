@@ -392,7 +392,7 @@ string paramSim::getDir(int option) {
 const sex_t stringToSex(const std::string& str) {
 	if (str == "female") return FEM;
 	else if (str == "male") return MAL;
-	else if (str == "n/a") return NA;
+	else if (str == "#") return NA;
 	else return INVALID_SEX;
 }
 
