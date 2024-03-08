@@ -24,7 +24,7 @@ Imports:
 RdMacros: Rdpack
 LinkingTo: Rcpp
 Encoding: UTF-8
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.1
 Collate: 
     'Rfunctions.R'
     'plotProbs.R'
@@ -41,4 +41,5 @@ Collate:
     'RcppExports.R'
     'RunRS.R'
     'addition.R'
+    'class_ManagementParams.R'
     'output_handling.R'
