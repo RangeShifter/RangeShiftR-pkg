@@ -30,12 +30,14 @@
 #' @include class_DispersalParams.R
 #' @include class_GeneticsParams.R
 #' @include class_InitialisationParams.R
+#' @include class_ManagementParams.R
 RSparams <- setClass("RSparams", slots = c(control = "ControlParams",
                                            simul = "SimulationParams",
                                            land = "LandParams",
                                            demog = "DemogParams",
                                            dispersal = "DispersalParams",
                                            gene = "GeneticsParams",
+                                           management = "ManagementParams",
                                            init = "InitialisationParams")
 )
 setValidity("RSparams", function(object) {
@@ -750,6 +752,8 @@ setValidity("RSparams", function(object) {
             msg <- c(msg, 'PropStages is not used for a population without stage structure.')
         }
     }
+    ## Management
+    validObject(object@management)
     if (is.null(msg)) TRUE else msg}
 )
 setMethod("show", "RSparams", function(object){
@@ -768,5 +772,7 @@ setMethod("show", "RSparams", function(object){
         print(object@gene)
         cat("\n")
     }
+    print(object@management)
+    cat("\n")
     print(object@init)}
 )

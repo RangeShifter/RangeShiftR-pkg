@@ -8,8 +8,6 @@ SOURCES = RScore/Cell.cpp RScore/Community.cpp RScore/FractalGenerator.cpp \
 OBJECTS = Rinterface.o RcppExports.o $(SOURCES:.cpp=.o)
 
 
-OBJECTS = Rinterface.o RcppExports.o $(SOURCES:.cpp=.o)
-
 CXX_STD = CXX11
 PKG_CXXFLAGS = -DRSWIN64 -DRS_RCPP -DBATCH -w
 #PKG_CXXFLAGS = -DRSDEBUG

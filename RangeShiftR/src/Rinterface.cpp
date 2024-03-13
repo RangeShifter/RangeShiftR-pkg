@@ -43,6 +43,7 @@ Author: Anne-Kathleen Malchow, Humboldt University Berlin
 #include "Rinterface.h"
 
 class msghdrs1;
+
 string habmapname, patchmapname, distnmapname; // req'd for compilation, but not used
 string costmapname, genfilename;               // ditto
 vector<string> hfnames;                        // ditto
@@ -55,6 +56,7 @@ paramSim* paramsSim;     // pointer to simulation parameters
 Species* pSpecies; // pointer to species
 Community* pComm;  // pointer to community
 RSrandom* pRandom; // pointer to random number routines
+Management* pManagement; // pointer to management routines
 
 #if RSDEBUG
 ofstream DEBUGLOG;
@@ -571,7 +573,7 @@ Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
 	delete paramsInit;
 	delete paramsSim;
 	delete pSpecies;
-
+    delete pManagement;
 	delete pRandom;
 
 	t1 = time(0);
@@ -3207,6 +3209,260 @@ int ReadArchFileR(wifstream& archFile)
 }
 
 //---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+
+int ReadTranslocationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
+{
+    // create new Management
+    if(pManagement != NULL)
+        delete pManagement;
+    pManagement = new Management;
+    // get landscape parameter
+    landParams paramsLand = pLandscape->getLandParams();
+
+    // get default values
+    managementParams m = pManagement->getManagementParams();
+    // Rcpp::Rcout << "ReadTranslocationR(): m.translocation=" << m.translocation << std::endl;
+    translocationParams t = pManagement->getTranslocationParams();
+    // Rcpp::Rcout << "ReadTranslocationR(): t.translocation_years= " << t.translocation_years.size() << std::endl;
+
+
+    Rcpp::S4 ManageParamsR("ManagementParams");
+    ManageParamsR = Rcpp::as<Rcpp::S4>(ParMaster.slot("management"));
+    Rcpp::S4 TranslocationParamsR("TranslocationParams");
+    TranslocationParamsR = Rcpp::as<Rcpp::S4>(ManageParamsR.slot("Translocation"));
+
+    Rcpp::IntegerVector translocation_years_R;
+    translocation_years_R = Rcpp::as<Rcpp::IntegerVector>(TranslocationParamsR.slot("years"));
+
+    Rcpp::IntegerMatrix translocation_matrix_R;
+    translocation_matrix_R = Rcpp::as<Rcpp::IntegerMatrix>(TranslocationParamsR.slot("TranLocMat"));
+
+    // in a cell-based model: users will give 2 more columns to define the x and y coordinates of the source and target cells
+    // we need to merge these cells into on integer, which can then be transformed backward to the x and y coordinate later
+    // if model is cell-based
+    if(!paramsLand.patchModel) {
+        // merge the source and target cells into one integer
+
+    }
+
+
+    // activate translocation if translocation_years_R is not empty
+    if(translocation_years_R.size() > 0) m.translocation = true;
+    // Rcpp::Rcout << "ReadTranslocationR(): m.translocation after read-in: " << m.translocation << std::endl;
+    pManagement->setManagementParams(m);
+
+    if(m.translocation) {
+        double catching_rate_R = Rcpp::as<double>(TranslocationParamsR.slot("catching_rate"));
+
+        // parse translocation_years_R to translocation_years
+        for (int i = 0; i < translocation_years_R.size(); i++) {
+            t.translocation_years.push_back(translocation_years_R[i]);
+        }
+
+        for (int i = 0; i < t.translocation_years.size(); i++) {
+            Rcpp::Rcout << "ReadTranslocationR(): t.translocation_years[" << i << "]=" << t.translocation_years[i] << std::endl;
+        }
+
+        // parse catching_rate_R to catching_rate
+        t.catching_rate = catching_rate_R;
+
+        Rcpp::Rcout << "ReadTranslocationR(): catching_rate: "<< t.catching_rate << std::endl;
+
+
+        // push_back the source to the source map
+        for (int i = 0; i < translocation_matrix_R.nrow(); ++i) {
+            // extract the year in the first column
+            int year = translocation_matrix_R(i,0);
+            if (t.source.find(year) == t.source.end()) {
+                // not found so add a new key
+                t.source.insert(std::pair<int, std::vector<int>>(year, std::vector<int>()));
+                t.source[year].push_back((int)translocation_matrix_R(i,1));
+
+            } else {
+                // found
+                t.source[year].push_back((int)translocation_matrix_R(i,1));
+            }
+
+        }
+
+        // check input
+        // loop over t.source map and print out the content
+        for (std::map<int, std::vector<int>>::iterator it = t.source.begin(); it != t.source.end(); ++it) {
+            Rcpp::Rcout << "ReadTranslocationR(): t.source[" << it->first << "]: ";
+            for (int i = 0; i < it->second.size(); i++) {
+                Rcpp::Rcout << it->second[i] << " ";
+            }
+            Rcpp::Rcout << std::endl;
+        }
+
+        // push_back the target to the target map
+        for (int i = 0; i < translocation_matrix_R.nrow(); ++i) {
+            // extract the year in the first column
+            int year = translocation_matrix_R(i,0);
+            if (t.target.find(year) == t.target.end()) {
+                // not found so add a new key
+                t.target.insert(std::pair<int, std::vector<int>>(year, std::vector<int>()));
+                t.target[year].push_back((int)translocation_matrix_R(i,2));
+
+            } else {
+                // found
+                t.target[year].push_back((int)translocation_matrix_R(i,2));
+            }
+
+        }
+
+        // check input
+        // loop over t.target map and print out the content
+        for (std::map<int, std::vector<int>>::iterator it = t.target.begin(); it != t.target.end(); ++it) {
+            Rcpp::Rcout << "ReadTranslocationR(): t.target[" << it->first << "]: ";
+            for (int i = 0; i < it->second.size(); i++) {
+                Rcpp::Rcout << it->second[i] << " ";
+            }
+            Rcpp::Rcout << std::endl;
+        }
+
+        // push_back the number of individuals to the nb map
+        for (int i = 0; i < translocation_matrix_R.nrow(); ++i) {
+            // extract the year in the first column
+            int year = translocation_matrix_R(i,0);
+            if (t.nb.find(year) == t.nb.end()) {
+                // not found so add a new key
+                t.nb.insert(std::pair<int, std::vector<int>>(year, std::vector<int>()));
+                t.nb[year].push_back((int)translocation_matrix_R(i,3));
+
+            } else {
+                // found
+                t.nb[year].push_back((int)translocation_matrix_R(i,3));
+            }
+
+        }
+
+        // check input
+        // loop over t.nb map and print out the content
+        for (std::map<int, std::vector<int>>::iterator it = t.nb.begin(); it != t.nb.end(); ++it) {
+            Rcpp::Rcout << "ReadTranslocationR(): t.nb[" << it->first << "]: ";
+            for (int i = 0; i < it->second.size(); i++) {
+                Rcpp::Rcout << it->second[i] << " ";
+            }
+            Rcpp::Rcout << std::endl;
+        }
+
+        // push_back the minimal age of the individuals to the min_age map
+        for (int i = 0; i < translocation_matrix_R.nrow(); ++i) {
+            // extract the year in the first column
+            int year = translocation_matrix_R(i,0);
+            if (t.min_age.find(year) == t.min_age.end()) {
+                // not found so add a new key
+                t.min_age.insert(std::pair<int, std::vector<int>>(year, std::vector<int>()));
+                t.min_age[year].push_back((int)translocation_matrix_R(i,4));
+
+            } else {
+                // found
+                t.min_age[year].push_back((int)translocation_matrix_R(i,4));
+            }
+
+        }
+
+        // check input
+        // loop over t.min_age map and print out the content
+        for (std::map<int, std::vector<int>>::iterator it = t.min_age.begin(); it != t.min_age.end(); ++it) {
+            Rcpp::Rcout << "ReadTranslocationR(): t.min_age[" << it->first << "]: ";
+            for (int i = 0; i < it->second.size(); i++) {
+                Rcpp::Rcout << it->second[i] << " ";
+            }
+            Rcpp::Rcout << std::endl;
+        }
+
+        // push_back the maximal age of the individuals to the max_age map
+        for (int i = 0; i < translocation_matrix_R.nrow(); ++i) {
+            // extract the year in the first column
+            int year = translocation_matrix_R(i,0);
+            if (t.max_age.find(year) == t.max_age.end()) {
+                // not found so add a new key
+                t.max_age.insert(std::pair<int, std::vector<int>>(year, std::vector<int>()));
+                t.max_age[year].push_back((int)translocation_matrix_R(i,5));
+
+            } else {
+                // found
+                t.max_age[year].push_back((int)translocation_matrix_R(i,5));
+            }
+
+        }
+
+        // check input
+        // loop over t.max_age map and print out the content
+        for (std::map<int, std::vector<int>>::iterator it = t.max_age.begin(); it != t.max_age.end(); ++it) {
+            Rcpp::Rcout << "ReadTranslocationR(): t.max_age[" << it->first << "]: ";
+            for (int i = 0; i < it->second.size(); i++) {
+                Rcpp::Rcout << it->second[i] << " ";
+            }
+            Rcpp::Rcout << std::endl;
+        }
+
+        // push_back the stage of the individuals to the stage map
+        for (int i = 0; i < translocation_matrix_R.nrow(); ++i) {
+            // extract the year in the first column
+            int year = translocation_matrix_R(i,0);
+            if (t.stage.find(year) == t.stage.end()) {
+                // not found so add a new key
+                t.stage.insert(std::pair<int, std::vector<int>>(year, std::vector<int>()));
+                t.stage[year].push_back((int)translocation_matrix_R(i,6));
+
+            } else {
+                // found
+                t.stage[year].push_back((int)translocation_matrix_R(i,6));
+            }
+
+        }
+
+        // check input
+        // loop over t.stage map and print out the content
+        for (std::map<int, std::vector<int>>::iterator it = t.stage.begin(); it != t.stage.end(); ++it) {
+            Rcpp::Rcout << "ReadTranslocationR(): t.stage[" << it->first << "]: ";
+            for (int i = 0; i < it->second.size(); i++) {
+                Rcpp::Rcout << it->second[i] << " ";
+            }
+            Rcpp::Rcout << std::endl;
+        }
+
+        // push_back the sex of the individuals to the sex map
+        for (int i = 0; i < translocation_matrix_R.nrow(); ++i) {
+            // extract the year in the first column
+            int year = translocation_matrix_R(i,0);
+            if (t.sex.find(year) == t.sex.end()) {
+                // not found so add a new key
+                t.sex.insert(std::pair<int, std::vector<int>>(year, std::vector<int>()));
+                t.sex[year].push_back((int)translocation_matrix_R(i,7));
+
+            } else {
+                // found
+                t.sex[year].push_back((int)translocation_matrix_R(i,7));
+            }
+
+        }
+
+        // check input
+        // loop over t.stage map and print out the content
+        for (std::map<int, std::vector<int>>::iterator it = t.sex.begin(); it != t.sex.end(); ++it) {
+            Rcpp::Rcout << "ReadTranslocationR(): t.sex[" << it->first << "]: ";
+            for (int i = 0; i < it->second.size(); i++) {
+                Rcpp::Rcout << it->second[i] << " ";
+            }
+            Rcpp::Rcout << std::endl;
+        }
+
+        pManagement->setTranslocationParams(t);
+
+    }
+
+    int error = 0;
+
+
+
+    return error;
+}
+//---------------------------------------------------------------------------
 
 Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 {
@@ -3399,6 +3655,11 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 					params_ok = false;
 				}
 				read_error = ReadSettlementR(ParMaster);
+				if(read_error) {
+					rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
+					params_ok = false;
+				}
+				read_error = ReadTranslocationR(pLandscape, ParMaster);
 				if(read_error) {
 					rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
 					params_ok = false;

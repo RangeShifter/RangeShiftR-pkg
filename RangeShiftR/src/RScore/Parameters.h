@@ -1,25 +1,25 @@
 /*----------------------------------------------------------------------------
- *	
- *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell 
- *	
+ *
+ *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell
+ *
  *	This file is part of RangeShifter.
- *	
+ *
  *	RangeShifter is free software: you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation, either version 3 of the License, or
  *	(at your option) any later version.
- *	
+ *
  *	RangeShifter is distributed in the hope that it will be useful,
  *	but WITHOUT ANY WARRANTY; without even the implied warranty of
  *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *	GNU General Public License for more details.
- *	
+ *
  *	You should have received a copy of the GNU General Public License
  *	along with RangeShifter. If not, see <https://www.gnu.org/licenses/>.
- *	
+ *
  --------------------------------------------------------------------------*/
- 
- 
+
+
 /*------------------------------------------------------------------------------
 
 RangeShifter v2.0 Parameters
@@ -34,9 +34,9 @@ paramStoch - Environmental stochasticity parameters
 Also declares some structures and functions used throughout the program.
 
 For full details of RangeShifter, please see:
-Bocedi G., Palmer S.C.F., Pe’er G., Heikkinen R.K., Matsinos Y.G., Watts K.
+Bocedi G., Palmer S.C.F., Pe?er G., Heikkinen R.K., Matsinos Y.G., Watts K.
 and Travis J.M.J. (2014). RangeShifter: a platform for modelling spatial
-eco-evolutionary dynamics and species’ responses to environmental changes.
+eco-evolutionary dynamics and species? responses to environmental changes.
 Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
@@ -59,6 +59,7 @@ Last updated: 25 June 2021 by Steve Palmer
 #include <iomanip>
 #include <stdlib.h>
 #include <vector>
+#include <map>
 using namespace std;
 
 #include "RSrandom.h"
@@ -167,7 +168,7 @@ private:
 
 struct envStochParams {
 	bool stoch; bool local; bool inK; bool localExt;
-	float ac; float std; 
+	float ac; float std;
 	float locExtProb;
 };
 
@@ -185,7 +186,7 @@ private:
 	bool local;				// applied locally (if not, application is global)
 	bool inK;					// in carrying capacity (if not, in growth rate)
 	bool localExt;		// local extinction applied
-	float ac;					// temporal autocorrelation coefficient		
+	float ac;					// temporal autocorrelation coefficient
 	float std;				// amplitude of fluctuations: sampled from N(0,std)
 	float locExtProb;	// local extinction probability
 };
@@ -377,6 +378,59 @@ private:
 
 };
 
+//---------------------------------------------------------------------------
+
+/*
+ * Add Management here to easily get started; but it should be added to it's own cpp file at some point
+ */
+
+// Structure for management parameters
+struct managementParams {
+    bool translocation; // Translocation
+};
+
+// Structure for translocation parameters
+struct translocationParams {
+     double catching_rate; // Catching rate
+     std::vector<int> translocation_years; // Number of years of translocation -> will be increased at the beginning of a simulation
+     std::map< int, std::vector <int> > source; // Source patch or cell: should be a vector of arrays
+     std::map< int, std::vector <int> > target; // Target patch or cell
+     std::map< int, std::vector <int> > nb; // number of ttanslocated individuals
+     std::map< int, std::vector <int> > min_age; // Minimum age of translocated individuals
+     std::map< int, std::vector <int> > max_age; // Maximum age of translocated individuals
+     std::map< int, std::vector <int> > stage; // Stage of translocated individuals
+     std::map< int, std::vector <int> > sex; // Sex of translocated individuals
+};
+
+//---------------------------------------------------------------------------
+
+class Management{
+public:
+    Management(void);
+    ~Management(void);
+    void setManagementParams( // function to set management parameters
+            const managementParams	// structure holding general management parameters
+    );
+    managementParams getManagementParams(void); // get management parameters
+    void setTranslocationParams( // function to set translocation parameters
+            const translocationParams	// structure holding translocation parameters
+            );
+    translocationParams getTranslocationParams(void);
+    // void Translocation(void); // Translocation
+    //
+    bool translocation; // Translocation
+    double catching_rate; // Catching rate
+    std::vector<int> translocation_years; // Number of years of translocation -> should be a dynamic vector
+    std::map< int, std::vector <int> > source; // Source patch or cell: should be a vector of arrays
+    std::map< int, std::vector <int> > target; // Target patch or cell
+    std::map< int, std::vector <int> > nb; // number of ttanslocated individuals
+    std::map< int, std::vector <int> > min_age; // Minimum age of translocated individuals
+    std::map< int, std::vector <int> > max_age; // Maximum age of translocated individuals
+    std::map< int, std::vector <int> > stage; // Stage of translocated individuals
+    std::map< int, std::vector <int> > sex; // Sex of translocated individuals
+
+};
+//---------------------------------------------------------------------------
 #if RSDEBUG
 extern ofstream DEBUGLOG;
 void DebugGUI(string);

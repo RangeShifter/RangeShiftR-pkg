@@ -38,6 +38,7 @@
 #'       demog = Demography(Rmax = 1.5),
 #'       dispersal = Dispersal(),
 #'       gene = Genetics(),
+#'       management = Management(),
 #'       init = Initialise(),
 #'       seed = 0)
 #' @include class_RSparams.R
@@ -47,6 +48,7 @@
 #' @param demog Set \code{\link[RangeShiftR]{Demography}} parameters
 #' @param dispersal Set \code{\link[RangeShiftR]{Dispersal}} parameters
 #' @param gene Set \code{\link[RangeShiftR]{Genetics}} parameters
+#' @param management Set \code{\link[RangeShiftR]{Management}} parameters
 #' @param init Set \code{\link[RangeShiftR]{Initialise}} parameters
 #' @param seed Set seed for random number generator. If non-positive, a random seed will be generated.
 #' @return returns a \emph{RangeShiftR} parameter master object (class 'RSparams')
@@ -112,6 +114,7 @@ RSsim <- function(batchnum = 1L,
                   demog = NULL,
                   dispersal = NULL,
                   gene = NULL,
+                  management = NULL,
                   init = NULL,
                   seed = 0L){
     args <- as.list(match.call())
@@ -122,12 +125,14 @@ RSsim <- function(batchnum = 1L,
                   demog = Demography(Rmax = 1.5),
                   dispersal = Dispersal(),
                   gene = Genetics(),
+                  management = Management(),
                   init = Initialise())
     if (!is.null(args$land))  s <- s + land
     if (!is.null(args$simul)) s <- s + simul
     if (!is.null(args$demog)) s <- s + demog
     if (!is.null(args$dispersal))  s <- s + dispersal
     if (!is.null(args$gene))  s <- s + gene
+    if (!is.null(args$management))  s <- s + management
     if (!is.null(args$init))  s <- s + init
     # check validity
     if(validObject(s)) return(s)

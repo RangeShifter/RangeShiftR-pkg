@@ -54,12 +54,15 @@ Author: Anne-Kathleen Malchow, Humboldt University Berlin
 using namespace std;
 
 #include <Rcpp.h>
+
 #include "RScore/Parameters.h"
 #include "RScore/Landscape.h"
 #include "RScore/Species.h"
 #include "RScore/SubCommunity.h"
 #include "RScore/RSrandom.h"
 #include "RScore/Model.h"
+
+
 
 
 //---------------------------------------------------------------------------
@@ -78,6 +81,7 @@ int ReadTransferR(Landscape*, Rcpp::S4);
 int ReadSettlementR(Rcpp::S4);
 int ReadInitialisationR(Landscape*, Rcpp::S4);
 int ReadGeneticsR(Rcpp::S4);
+int ReadTranslocationR(Landscape*,Rcpp::S4);
 
 int ParseInitIndsFileR(wifstream&);
 int ReadInitIndsFileR(int,Landscape*);

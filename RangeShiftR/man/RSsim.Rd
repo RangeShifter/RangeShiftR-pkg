@@ -10,6 +10,7 @@ RSsim(batchnum = 1L,
       demog = Demography(Rmax = 1.5),
       dispersal = Dispersal(),
       gene = Genetics(),
+      management = Management(),
       init = Initialise(),
       seed = 0)
 }
@@ -25,6 +26,8 @@ RSsim(batchnum = 1L,
 \item{dispersal}{Set \code{\link[RangeShiftR]{Dispersal}} parameters}
 
 \item{gene}{Set \code{\link[RangeShiftR]{Genetics}} parameters}
+
+\item{management}{Set \code{\link[RangeShiftR]{Management}} parameters}
 
 \item{init}{Set \code{\link[RangeShiftR]{Initialise}} parameters}
 

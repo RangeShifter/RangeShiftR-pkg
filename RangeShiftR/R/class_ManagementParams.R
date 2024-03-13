@@ -74,11 +74,11 @@
 #' @author Jette Reeg
 #' @name Translocation
 #' @export Translocation
-Translocation <- setClass("TranslocationParams", slots = c(years = "integer",
+Translocation <- setClass("TranslocationParams", slots = c(years = "numeric",
                                                            TranLocMat = "matrix",
-                                                           catching_rate = "integer")
+                                                           catching_rate = "numeric")
                           , prototype = list(years = 0L,
-                                             TranLocMat = matrix(0, nrow = 1, ncol = 8),
+                                             TranLocMat = matrix(0, nrow = 8, ncol = 8),
                                              catching_rate = 1L
                           )
 )
@@ -86,22 +86,22 @@ Translocation <- setClass("TranslocationParams", slots = c(years = "integer",
 setValidity("TranslocationParams", function(object) {
     msg <- NULL
     # Check if years is not NA, has at least one entry and is either a numeric or integer
-    if (is.na(object@years) || length(object@years)==0) {
+    if (any(is.na(object@years)) || length(object@years)==0) {
         msg <- c(msg, "Years must be defined")
     }else{
-        if (!is.integer(object@years) & !is.numeric(object@years)) {
+        if (!is.integer(object@years) && !is.numeric(object@years)) {
             msg <- c(msg, "Years must be numeric or integer")
         }
     }
 
     # Check if TranLocMat is not NA, is a matrix and has at least as many rows and years
-    if (any(is.na(object@TranLocMat)) || !is.matrix(object@TranLocMat)){
+    if (any(is.na(object@TranLocMat)) && !is.matrix(object@TranLocMat)){
         msg <- c(msg, "TranLocMat must be defined and be a matrix")
     }else {
         if(nrow(object@TranLocMat) < length(object@years)) {
             msg <- c(msg, "TranLocMat must have at least as many rows as years of Transclocation events")
         } else {
-            if(!all(sort(object@TranLocMat) == object@TranLocMat)){
+            if(!all(sort(object@TranLocMat[,1]) == object@TranLocMat[,1])){
                 msg <- c(msg, "Translocation matrix must contain subsequent years!")
             } else{
                 if (ncol(object@TranLocMat) != 8) {
