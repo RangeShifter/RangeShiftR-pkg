@@ -147,9 +147,6 @@ constexpr auto MIN = "min";
 constexpr auto MAX = "max";
 constexpr auto SHAPE = "shape";
 constexpr auto SCALE = "scale";
-//enums
-
-//enum GeneType { SNP, MICROSATELLITE, QTL, DELETERIOUS };
 
 enum DistributionType { UNIFORM, NORMAL, GAMMA, NEGEXP, SCALED, KAM, SSM, NONE };
 

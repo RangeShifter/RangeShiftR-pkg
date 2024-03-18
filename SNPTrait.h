@@ -42,9 +42,9 @@ public:
 
 	virtual unique_ptr<TTrait> clone() const override { return std::make_unique<SNPTrait>(*this); }
 
-	virtual void  inherit(TTrait* parent, set<unsigned int> const& recomPositions, sex_t chromosome, int startingChromosome) override;
+	virtual void inherit(TTrait* parent, set<unsigned int> const& recomPositions, sex_t chromosome, int startingChromosome) override;
 
-	virtual void    mutate() override { (this->*_mutate_func_ptr) (); }
+	virtual void mutate() override { (this->*_mutate_func_ptr) (); }
 
 	virtual int getNLoci()  const override { return pProtoTrait->getPositionsSize(); }
 
