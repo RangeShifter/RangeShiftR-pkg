@@ -153,7 +153,7 @@ constexpr auto SCALE = "scale";
 
 enum DistributionType { UNIFORM, NORMAL, GAMMA, NEGEXP, SCALED, KAM, SSM, NONE };
 
-enum ExpressionType { AVERAGE, ADDITIVE, NEUTRAL, MULTIPLICATIVE };
+enum ExpressionType { AVERAGE, ADDITIVE, NOTEXPR, MULTIPLICATIVE };
 
 /** Param's types **/
 typedef enum { KERNEL, SMS, CRW} movement_t;
