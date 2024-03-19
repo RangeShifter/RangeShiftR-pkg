@@ -155,12 +155,6 @@ enum ExpressionType { AVERAGE, ADDITIVE, NOTEXPR, MULTIPLICATIVE };
 /** Param's types **/
 typedef enum { KERNEL, SMS, CRW} movement_t;
 
-//GeneType convertToGeneType(const string& );
-
-set<int> convertStringToPatches(const string&, const int&, const vector<int>&);
-set<int> convertStringToStages(const string&, const int&);
-set<int> convertStringToChromosomeEnds(string, int);
-
 //sex types
 typedef enum {
 	FEM = 0, MAL = 1,
@@ -168,7 +162,6 @@ typedef enum {
 	INVALID_SEX // error
 } sex_t;
 
-const sex_t stringToSex(const std::string& str);
 //---------------------------------------------------------------------------
 
 // Environmental gradient parameters
