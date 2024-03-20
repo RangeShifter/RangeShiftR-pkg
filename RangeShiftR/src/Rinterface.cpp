@@ -3217,14 +3217,14 @@ int ReadTranslocationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
     if(pManagement != NULL)
         delete pManagement;
     pManagement = new Management;
-    // get landscape parameter
+    // get landscape parameter (to distinguish between patch and cell model)
     landParams paramsLand = pLandscape->getLandParams();
+    // get demographic parameter (to distinguish between sexual and asexual reproduction, and stage structured or not)
+    demogrParams dem = pSpecies->getDemogr();
 
     // get default values
     managementParams m = pManagement->getManagementParams();
-    // Rcpp::Rcout << "ReadTranslocationR(): m.translocation=" << m.translocation << std::endl;
     translocationParams t = pManagement->getTranslocationParams();
-    // Rcpp::Rcout << "ReadTranslocationR(): t.translocation_years= " << t.translocation_years.size() << std::endl;
 
 
     Rcpp::S4 ManageParamsR("ManagementParams");
@@ -3238,18 +3238,10 @@ int ReadTranslocationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
     Rcpp::IntegerMatrix translocation_matrix_R;
     translocation_matrix_R = Rcpp::as<Rcpp::IntegerMatrix>(TranslocationParamsR.slot("TranLocMat"));
 
-    // in a cell-based model: users will give 2 more columns to define the x and y coordinates of the source and target cells
-    // we need to merge these cells into on integer, which can then be transformed backward to the x and y coordinate later
-    // if model is cell-based
-    if(!paramsLand.patchModel) {
-        // merge the source and target cells into one integer
-
-    }
-
-
     // activate translocation if translocation_years_R is not empty
     if(translocation_years_R.size() > 0) m.translocation = true;
-    // Rcpp::Rcout << "ReadTranslocationR(): m.translocation after read-in: " << m.translocation << std::endl;
+
+    // set and update the management parameters
     pManagement->setManagementParams(m);
 
     if(m.translocation) {
@@ -3270,72 +3262,104 @@ int ReadTranslocationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
         Rcpp::Rcout << "ReadTranslocationR(): catching_rate: "<< t.catching_rate << std::endl;
 
 
-        // push_back the source to the source map
+
         for (int i = 0; i < translocation_matrix_R.nrow(); ++i) {
-            // extract the year in the first column
+
+            // extract the year in the first column and initialize the year for each map if needed
             int year = translocation_matrix_R(i,0);
             if (t.source.find(year) == t.source.end()) {
                 // not found so add a new key
-                t.source.insert(std::pair<int, std::vector<int>>(year, std::vector<int>()));
-                t.source[year].push_back((int)translocation_matrix_R(i,1));
+                t.source.insert(std::pair<int, std::vector<locn>>(year, std::vector<locn>()));
+                t.target.insert(std::pair<int, std::vector<locn>>(year, std::vector<locn>()));
+                t.nb.insert(std::pair<int, std::vector<int>>(year, std::vector<int>()));
+                if(dem.stageStruct) {
+                    t.min_age.insert(std::pair<int, std::vector<int>>(year, std::vector<int>()));
+                    t.max_age.insert(std::pair<int, std::vector<int>>(year, std::vector<int>()));
+                    t.stage.insert(std::pair<int, std::vector<int>>(year, std::vector<int>()));
+                }
+                if(dem.repSeasons!=0) {
+                    t.sex.insert(std::pair<int, std::vector<int>>(year, std::vector<int>()));
+                }
 
-            } else {
-                // found
-                t.source[year].push_back((int)translocation_matrix_R(i,1));
             }
 
+            // push_back the source to the source map
+            locn s;
+            if(paramsLand.patchModel){ // if patch model, the x is the patch ID
+                s.x = translocation_matrix_R(i,1);
+                s.y = -9;
+            } else {
+                // found
+                s.x = translocation_matrix_R(i,1);
+                s.y = translocation_matrix_R(i,2);
+            }
+            t.source[year].push_back(s);
+
+            // push_back the target to the target map
+            if(paramsLand.patchModel){ // if patch model, the x is the patch ID
+                s.x = translocation_matrix_R(i,2);
+                s.y = -9;
+            } else {
+                // found
+                s.x = translocation_matrix_R(i,3);
+                s.y = translocation_matrix_R(i,4);
+            }
+            t.target[year].push_back(s);
+
+            // push_back the number of individuals to the nb map
+            if(paramsLand.patchModel){
+                t.nb[year].push_back((int)translocation_matrix_R(i,3));
+            } else {
+                // cell-based
+                t.nb[year].push_back((int)translocation_matrix_R(i,5));
+            }
+
+            // only if stage structured
+            if(dem.stageStruct) {
+                // push_back the minimal age of the individuals to the min_age map
+                // the maximal age of the individuals to the max_age map
+                // and the stage of the individuals to the stage map
+                if(paramsLand.patchModel){
+                    t.min_age[year].push_back((int)translocation_matrix_R(i,4));
+                    t.max_age[year].push_back((int)translocation_matrix_R(i,5));
+                    t.stage[year].push_back((int)translocation_matrix_R(i,6));
+                } else {
+                    // cell-based
+                    t.min_age[year].push_back((int)translocation_matrix_R(i,6));
+                    t.max_age[year].push_back((int)translocation_matrix_R(i,7));
+                    t.stage[year].push_back((int)translocation_matrix_R(i,8));
+                }
+            }
+
+            if(dem.repSeasons!=0) {
+                // push_back the sex of the individuals to the sex map
+                if(paramsLand.patchModel){
+                    t.sex[year].push_back((int)translocation_matrix_R(i,7));
+                } else {
+                    // cell-based
+                    t.sex[year].push_back((int)translocation_matrix_R(i,9));
+                }
+            }
         }
 
         // check input
         // loop over t.source map and print out the content
-        for (std::map<int, std::vector<int>>::iterator it = t.source.begin(); it != t.source.end(); ++it) {
+        for (std::map<int, std::vector<locn>>::iterator it = t.source.begin(); it != t.source.end(); ++it) {
             Rcpp::Rcout << "ReadTranslocationR(): t.source[" << it->first << "]: ";
             for (int i = 0; i < it->second.size(); i++) {
-                Rcpp::Rcout << it->second[i] << " ";
+                Rcpp::Rcout << it->second[i].x << " " << it->second[i].y << " ";
             }
             Rcpp::Rcout << std::endl;
-        }
-
-        // push_back the target to the target map
-        for (int i = 0; i < translocation_matrix_R.nrow(); ++i) {
-            // extract the year in the first column
-            int year = translocation_matrix_R(i,0);
-            if (t.target.find(year) == t.target.end()) {
-                // not found so add a new key
-                t.target.insert(std::pair<int, std::vector<int>>(year, std::vector<int>()));
-                t.target[year].push_back((int)translocation_matrix_R(i,2));
-
-            } else {
-                // found
-                t.target[year].push_back((int)translocation_matrix_R(i,2));
-            }
-
         }
 
         // check input
         // loop over t.target map and print out the content
-        for (std::map<int, std::vector<int>>::iterator it = t.target.begin(); it != t.target.end(); ++it) {
+        for (std::map<int, std::vector<locn>>::iterator it = t.target.begin(); it != t.target.end(); ++it) {
             Rcpp::Rcout << "ReadTranslocationR(): t.target[" << it->first << "]: ";
             for (int i = 0; i < it->second.size(); i++) {
-                Rcpp::Rcout << it->second[i] << " ";
+                Rcpp::Rcout << it->second[i].x << " " << it->second[i].y << " ";
             }
             Rcpp::Rcout << std::endl;
-        }
-
-        // push_back the number of individuals to the nb map
-        for (int i = 0; i < translocation_matrix_R.nrow(); ++i) {
-            // extract the year in the first column
-            int year = translocation_matrix_R(i,0);
-            if (t.nb.find(year) == t.nb.end()) {
-                // not found so add a new key
-                t.nb.insert(std::pair<int, std::vector<int>>(year, std::vector<int>()));
-                t.nb[year].push_back((int)translocation_matrix_R(i,3));
-
-            } else {
-                // found
-                t.nb[year].push_back((int)translocation_matrix_R(i,3));
-            }
-
         }
 
         // check input
@@ -3348,110 +3372,53 @@ int ReadTranslocationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
             Rcpp::Rcout << std::endl;
         }
 
-        // push_back the minimal age of the individuals to the min_age map
-        for (int i = 0; i < translocation_matrix_R.nrow(); ++i) {
-            // extract the year in the first column
-            int year = translocation_matrix_R(i,0);
-            if (t.min_age.find(year) == t.min_age.end()) {
-                // not found so add a new key
-                t.min_age.insert(std::pair<int, std::vector<int>>(year, std::vector<int>()));
-                t.min_age[year].push_back((int)translocation_matrix_R(i,4));
-
-            } else {
-                // found
-                t.min_age[year].push_back((int)translocation_matrix_R(i,4));
+        if(dem.stageStruct) {
+            // check input
+            // loop over t.min_age map and print out the content
+            for (std::map<int, std::vector<int>>::iterator it = t.min_age.begin(); it != t.min_age.end(); ++it) {
+                Rcpp::Rcout << "ReadTranslocationR(): t.min_age[" << it->first << "]: ";
+                for (int i = 0; i < it->second.size(); i++) {
+                    Rcpp::Rcout << it->second[i] << " ";
+                }
+                Rcpp::Rcout << std::endl;
             }
 
-        }
-
-        // check input
-        // loop over t.min_age map and print out the content
-        for (std::map<int, std::vector<int>>::iterator it = t.min_age.begin(); it != t.min_age.end(); ++it) {
-            Rcpp::Rcout << "ReadTranslocationR(): t.min_age[" << it->first << "]: ";
-            for (int i = 0; i < it->second.size(); i++) {
-                Rcpp::Rcout << it->second[i] << " ";
-            }
-            Rcpp::Rcout << std::endl;
-        }
-
-        // push_back the maximal age of the individuals to the max_age map
-        for (int i = 0; i < translocation_matrix_R.nrow(); ++i) {
-            // extract the year in the first column
-            int year = translocation_matrix_R(i,0);
-            if (t.max_age.find(year) == t.max_age.end()) {
-                // not found so add a new key
-                t.max_age.insert(std::pair<int, std::vector<int>>(year, std::vector<int>()));
-                t.max_age[year].push_back((int)translocation_matrix_R(i,5));
-
-            } else {
-                // found
-                t.max_age[year].push_back((int)translocation_matrix_R(i,5));
+            // check input
+            // loop over t.max_age map and print out the content
+            for (std::map<int, std::vector<int>>::iterator it = t.max_age.begin(); it != t.max_age.end(); ++it) {
+                Rcpp::Rcout << "ReadTranslocationR(): t.max_age[" << it->first << "]: ";
+                for (int i = 0; i < it->second.size(); i++) {
+                    Rcpp::Rcout << it->second[i] << " ";
+                }
+                Rcpp::Rcout << std::endl;
             }
 
-        }
-
-        // check input
-        // loop over t.max_age map and print out the content
-        for (std::map<int, std::vector<int>>::iterator it = t.max_age.begin(); it != t.max_age.end(); ++it) {
-            Rcpp::Rcout << "ReadTranslocationR(): t.max_age[" << it->first << "]: ";
-            for (int i = 0; i < it->second.size(); i++) {
-                Rcpp::Rcout << it->second[i] << " ";
+            // check input
+            // loop over t.stage map and print out the content
+            for (std::map<int, std::vector<int>>::iterator it = t.stage.begin(); it != t.stage.end(); ++it) {
+                Rcpp::Rcout << "ReadTranslocationR(): t.stage[" << it->first << "]: ";
+                for (int i = 0; i < it->second.size(); i++) {
+                    Rcpp::Rcout << it->second[i] << " ";
+                }
+                Rcpp::Rcout << std::endl;
             }
-            Rcpp::Rcout << std::endl;
         }
 
-        // push_back the stage of the individuals to the stage map
-        for (int i = 0; i < translocation_matrix_R.nrow(); ++i) {
-            // extract the year in the first column
-            int year = translocation_matrix_R(i,0);
-            if (t.stage.find(year) == t.stage.end()) {
-                // not found so add a new key
-                t.stage.insert(std::pair<int, std::vector<int>>(year, std::vector<int>()));
-                t.stage[year].push_back((int)translocation_matrix_R(i,6));
+        // only if sexual reproduction
+        if(dem.repSeasons!=0) {
 
-            } else {
-                // found
-                t.stage[year].push_back((int)translocation_matrix_R(i,6));
+            // check input
+            // loop over t.stage map and print out the content
+            for (std::map<int, std::vector<int>>::iterator it = t.sex.begin(); it != t.sex.end(); ++it) {
+                Rcpp::Rcout << "ReadTranslocationR(): t.sex[" << it->first << "]: ";
+                for (int i = 0; i < it->second.size(); i++) {
+                    Rcpp::Rcout << it->second[i] << " ";
+                }
+                Rcpp::Rcout << std::endl;
             }
-
         }
 
-        // check input
-        // loop over t.stage map and print out the content
-        for (std::map<int, std::vector<int>>::iterator it = t.stage.begin(); it != t.stage.end(); ++it) {
-            Rcpp::Rcout << "ReadTranslocationR(): t.stage[" << it->first << "]: ";
-            for (int i = 0; i < it->second.size(); i++) {
-                Rcpp::Rcout << it->second[i] << " ";
-            }
-            Rcpp::Rcout << std::endl;
-        }
-
-        // push_back the sex of the individuals to the sex map
-        for (int i = 0; i < translocation_matrix_R.nrow(); ++i) {
-            // extract the year in the first column
-            int year = translocation_matrix_R(i,0);
-            if (t.sex.find(year) == t.sex.end()) {
-                // not found so add a new key
-                t.sex.insert(std::pair<int, std::vector<int>>(year, std::vector<int>()));
-                t.sex[year].push_back((int)translocation_matrix_R(i,7));
-
-            } else {
-                // found
-                t.sex[year].push_back((int)translocation_matrix_R(i,7));
-            }
-
-        }
-
-        // check input
-        // loop over t.stage map and print out the content
-        for (std::map<int, std::vector<int>>::iterator it = t.sex.begin(); it != t.sex.end(); ++it) {
-            Rcpp::Rcout << "ReadTranslocationR(): t.sex[" << it->first << "]: ";
-            for (int i = 0; i < it->second.size(); i++) {
-                Rcpp::Rcout << it->second[i] << " ";
-            }
-            Rcpp::Rcout << std::endl;
-        }
-
+        // set and update the translocation parameters
         pManagement->setTranslocationParams(t);
 
     }

@@ -411,7 +411,7 @@ void Population::reproduction(const float localK, const float envval, const int 
 				if (sstruct.fecDens) { // apply density dependence
 					float effect = 0.0;
 					if (sstruct.fecStageDens) { // stage-specific density dependence
-						// NOTE: matrix entries represent effect of ROW on COLUMN 
+						// NOTE: matrix entries represent effect of ROW on COLUMN
 						// AND males precede females
 						float weight = 0.0;
 						for (int effstg = 0; effstg < nStages; effstg++) {
@@ -886,7 +886,7 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 				// this condition can occur in a patch-based model at the time of a dynamic landscape
 				// change when there is a range restriction in place, since a patch can straddle the
 				// range restriction and an individual forced to disperse upon patch removal could
-				// start its trajectory beyond the boundary of the restrictyed range - such a model is 
+				// start its trajectory beyond the boundary of the restrictyed range - such a model is
 				// not good practice, but the condition must be handled by killing the individual conceerned
 				ind.status = 6;
 			}
@@ -1167,7 +1167,7 @@ void Population::survival0(float localK, short option0, short option1)
 				// which must develop to stage 1 if they survive
 					float effect = 0.0;
 					if (sstruct.devStageDens) { // stage-specific density dependence
-						// NOTE: matrix entries represent effect of ROW on COLUMN 
+						// NOTE: matrix entries represent effect of ROW on COLUMN
 						// AND males precede females
 						float weight = 0.0;
 						for (int effstg = 0; effstg < nStages; effstg++) {
@@ -1193,7 +1193,7 @@ void Population::survival0(float localK, short option0, short option1)
 				if (option1 != 0 && sstruct.survDens) {
 					float effect = 0.0;
 					if (sstruct.survStageDens) { // stage-specific density dependence
-						// NOTE: matrix entries represent effect of ROW on COLUMN 
+						// NOTE: matrix entries represent effect of ROW on COLUMN
 						// AND males precede females
 						float weight = 0.0;
 						for (int effstg = 0; effstg < nStages; effstg++) {
@@ -1665,6 +1665,45 @@ void Population::outGenetics(const int rep, const int year, const int landNr)
 	}
 
 }
+
+std::set <Individual*> Population::getIndsWithCharacteristics( // Return a set of individuals with specified characteristics
+        int min_age,	// min age (0 if not set)
+        int max_age,    // max age (max age if not set)
+        int stage,    // stage
+        int sex     //sex
+){
+    set<Individual*> filteredInds;
+    for (auto ind : inds) {
+        // if individual is not in transfer state
+        if (ind->getStats().status > 3){
+            if (ind->getStats().age >= min_age &&
+                ind->getStats().age <= max_age){
+                if (stage =! -9){
+                    if (ind->getStats().stage == stage){
+                        if(sex != -9){
+                            if(ind->getStats().sex == sex){
+                                filteredInds.insert(ind); // if age is within range, stage is set and correct and sex is set and correct -> add individual
+                                };// end stage and sex true
+                            } else{
+                                filteredInds.insert(ind);// if sex is not set -> don't check the sex
+                        }; // end sex not checked but stage true
+                    };
+                } else{ // if stage is not set, check sex anyways
+                    if(sex != -9){
+                        if(ind->getStats().sex == sex){
+                            filteredInds.insert(ind); // if age is within range, stage is not set and sex is set and correct -> add individual
+                        }; // end if age is within range, sex is set and correct and stage is not set
+                    } else{
+                        filteredInds.insert(ind);
+                    };// if stage and sex is not set add individual independent of sex and stage
+                }; // end if stage is not set
+            }; // end if age is within range
+        };
+    };
+
+    return filteredInds;
+
+};
 
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------

@@ -61,7 +61,7 @@ using namespace std;
 #include "RScore/SubCommunity.h"
 #include "RScore/RSrandom.h"
 #include "RScore/Model.h"
-
+#include "RScore/Management.h"
 
 
 

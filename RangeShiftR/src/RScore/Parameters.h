@@ -380,56 +380,63 @@ private:
 
 //---------------------------------------------------------------------------
 
-/*
- * Add Management here to easily get started; but it should be added to it's own cpp file at some point
- */
-
-// Structure for management parameters
-struct managementParams {
-    bool translocation; // Translocation
-};
-
-// Structure for translocation parameters
-struct translocationParams {
-     double catching_rate; // Catching rate
-     std::vector<int> translocation_years; // Number of years of translocation -> will be increased at the beginning of a simulation
-     std::map< int, std::vector <int> > source; // Source patch or cell: should be a vector of arrays
-     std::map< int, std::vector <int> > target; // Target patch or cell
-     std::map< int, std::vector <int> > nb; // number of ttanslocated individuals
-     std::map< int, std::vector <int> > min_age; // Minimum age of translocated individuals
-     std::map< int, std::vector <int> > max_age; // Maximum age of translocated individuals
-     std::map< int, std::vector <int> > stage; // Stage of translocated individuals
-     std::map< int, std::vector <int> > sex; // Sex of translocated individuals
-};
-
-//---------------------------------------------------------------------------
-
-class Management{
-public:
-    Management(void);
-    ~Management(void);
-    void setManagementParams( // function to set management parameters
-            const managementParams	// structure holding general management parameters
-    );
-    managementParams getManagementParams(void); // get management parameters
-    void setTranslocationParams( // function to set translocation parameters
-            const translocationParams	// structure holding translocation parameters
-            );
-    translocationParams getTranslocationParams(void);
-    // void Translocation(void); // Translocation
-    //
-    bool translocation; // Translocation
-    double catching_rate; // Catching rate
-    std::vector<int> translocation_years; // Number of years of translocation -> should be a dynamic vector
-    std::map< int, std::vector <int> > source; // Source patch or cell: should be a vector of arrays
-    std::map< int, std::vector <int> > target; // Target patch or cell
-    std::map< int, std::vector <int> > nb; // number of ttanslocated individuals
-    std::map< int, std::vector <int> > min_age; // Minimum age of translocated individuals
-    std::map< int, std::vector <int> > max_age; // Maximum age of translocated individuals
-    std::map< int, std::vector <int> > stage; // Stage of translocated individuals
-    std::map< int, std::vector <int> > sex; // Sex of translocated individuals
-
-};
+// /*
+//  * Add Management here to easily get started; but it should be added to it's own cpp file at some point
+//  */
+//
+// // Structure for management parameters
+// struct managementParams {
+//     bool translocation; // Translocation
+// };
+//
+// // structure for saving coordinates; x can also be a Patch ID
+// struct coords {
+//     int x;
+//     int y;
+// };
+//
+// // Structure for translocation parameters
+// struct translocationParams {
+//      double catching_rate; // Catching rate
+//      std::vector<int> translocation_years; // Number of years of translocation -> will be increased at the beginning of a simulation
+//      std::map< int, std::vector <coords> > source; // Source patch or cell: should be a vector of arrays
+//      std::map< int, std::vector <coords> > target; // Target patch or cell
+//      std::map< int, std::vector <int> > nb; // number of ttanslocated individuals
+//      std::map< int, std::vector <int> > min_age; // Minimum age of translocated individuals
+//      std::map< int, std::vector <int> > max_age; // Maximum age of translocated individuals
+//      std::map< int, std::vector <int> > stage; // Stage of translocated individuals
+//      std::map< int, std::vector <int> > sex; // Sex of translocated individuals
+// };
+//
+//
+// //---------------------------------------------------------------------------
+//
+// class Management{
+// public:
+//     Management(void);
+//     ~Management(void);
+//     void setManagementParams( // function to set management parameters
+//             const managementParams	// structure holding general management parameters
+//     );
+//     managementParams getManagementParams(void); // get management parameters
+//     void setTranslocationParams( // function to set translocation parameters
+//             const translocationParams	// structure holding translocation parameters
+//             );
+//     translocationParams getTranslocationParams(void);
+//     // void Translocation(void); // Translocation
+//     //
+//     bool translocation; // Translocation
+//     double catching_rate; // Catching rate
+//     std::vector<int> translocation_years; // Number of years of translocation -> should be a dynamic vector
+//     std::map< int, std::vector <coords> > source; // Source patch or cell: should be a vector of arrays
+//     std::map< int, std::vector <coords> > target; // Target patch or cell
+//     std::map< int, std::vector <int> > nb; // number of ttanslocated individuals
+//     std::map< int, std::vector <int> > min_age; // Minimum age of translocated individuals
+//     std::map< int, std::vector <int> > max_age; // Maximum age of translocated individuals
+//     std::map< int, std::vector <int> > stage; // Stage of translocated individuals
+//     std::map< int, std::vector <int> > sex; // Sex of translocated individuals
+//
+// };
 //---------------------------------------------------------------------------
 #if RSDEBUG
 extern ofstream DEBUGLOG;

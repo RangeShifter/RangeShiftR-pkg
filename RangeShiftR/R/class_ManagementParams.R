@@ -30,21 +30,21 @@
 #'
 #'
 #' @usage Translocation(years = 1,
-#'                      TranLocMat = 0,
+#'                      TransLocMat = 0,
 #'                      catching_rate = 0.5
 #'                       )
 #'
 #' @param years Vector of years in which translocation events should take place
-#' @param TranLocMat Matrix of translocation events. Each row represents a translocation event. Columns represent:
+#' @param TransLocMat Matrix of translocation events. Each row represents a translocation event. Columns represent:
 #'
-#'  - the year of the event,
-#'  - the source location (\code{Patch_ID} in case of cell-based models or \code{X} and \code{Y} location in case of cell-based models),
-#'  - the target location,
-#'  - the number of individuals which are tried to be catched,
-#'  - minimal age of each individual,
-#'  - maximal age of the individual,
-#'  - stage of the individual,
-#'  - sex of the individual
+#'  - the year of the event,\cr
+#'  - the source location (\code{Patch_ID} in case of cell-based models or \code{X} and \code{Y} location in case of cell-based models),\cr
+#'  - the target location,\cr
+#'  - the number of individuals which are tried to be catched,\cr
+#'  - minimal age of each individual,\cr
+#'  - maximal age of the individual,\cr
+#'  - stage of the individual,\cr
+#'  - sex of the individual\cr
 #' @param catching_rate Catching success rate
 #'
 #' @details
@@ -57,14 +57,17 @@
 #'
 #' In the columns of the \code{TranLocMat} the year, source and target location as well as the number of individuals and the characteristics are defined:
 #'
-#' - \code{year} of the translocation event
-#' - \code{Patch_ID} or \code{X} and \code{Y} location of the source location from which individuals are catched
-#' - \code{Patch_ID} or \code{X} and \code{Y} location of the target location to which individuals are transferred
-#' - \code{nb_catch} how many individuals of the given set of characteristics are tried to be catched
-#' - \code{min_age} minimal age of the individual: 0-MaxAge, Set to 0 to ignore lower boundary
-#' - \code{max_age} maximal age of the individual: \code{min_age}-MaxAge, , Set 0 to ignore upper boundary
-#' - \code{stage} of the individual: Only for non-stage structured models, otherwise set to 'NA'
-#' - \code{sex} of the individual: Only for sexual models, otherwise set to 'NA'
+#' - \code{year} of the translocation event \cr
+#' - \code{Patch_ID} or \code{X} and \code{Y} location of the source location from which individuals are catched \cr
+#' - \code{Patch_ID} or \code{X} and \code{Y} location of the target location to which individuals are transferred \cr
+#' - \code{nb_catch} how many individuals of the given set of characteristics are tried to be catched \cr
+#' - \code{min_age} minimal age of the individual in the interval of 0-MaxAge. \cr
+#' - \code{max_age} maximal age of the individual in the interval of \code{min_age}-MaxAge.\cr
+#' - \code{stage} of the individual. \cr
+#' - \code{sex} of the individual: Only for sexual models, otherwise set to, otherwise set to -9 to ignore  \cr
+#'
+#' \code{min_age}, \code{max_age} and \code{stage} can only be defined for stage structured models. For non stage structured models, or to ignore the characteristic, set the value to -9.
+#' \code{sex} can only be defined for sexual models. For non sexual models, or to ignore the characteristic, set the value to -9.
 #'
 #' To avoid unsuccessful translocation events, you should set the range of allowed characteristics as broad as possible.
 #'
@@ -104,8 +107,8 @@ setValidity("TranslocationParams", function(object) {
             if(!all(sort(object@TranLocMat[,1]) == object@TranLocMat[,1])){
                 msg <- c(msg, "Translocation matrix must contain subsequent years!")
             } else{
-                if (ncol(object@TranLocMat) != 8) {
-                    msg <- c(msg, "TranLocMat must have 8 columns: year, source location, target location, number of individuals, min age, max age, stage.")
+                if (ncol(object@TranLocMat) != 8 && ncol(object@TranLocMat) != 10) { # 8 is only true for patch-based models; for cell based models it should be 10
+                    msg <- c(msg, "TranLocMat must have 8 or 10 columns: year, source location (patch ID OR 2 columns X and Y), target location (patch ID OR 2 columns X and Y), number of individuals, min age, max age, stage.")
                 }
             }
 

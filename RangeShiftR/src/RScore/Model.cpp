@@ -43,6 +43,8 @@ int RunModel(Landscape* pLandscape, int seqsim)
 	demogrParams dem = pSpecies->getDemogr();
 	stageParams sstruct = pSpecies->getStage();
 	trfrRules trfr = pSpecies->getTrfr();
+	managementParams manage = pManagement->getManagementParams();
+	translocationParams transloc = pManagement->getTranslocationParams();
 	initParams init = paramsInit->getInit();
 	simParams sim = paramsSim->getSim();
 	simView v = paramsSim->getViews();
@@ -511,6 +513,14 @@ int RunModel(Landscape* pLandscape, int seqsim)
 					if (env.localExt) pComm->localExtinction(0);
 					if (grad.gradient && grad.gradType == 3) pComm->localExtinction(1);
 				}
+
+				// Add translocations here; maybe need to be changed before the PreReproductionOutput()?
+				if(manage.translocation && std::find(transloc.translocation_years.begin(), transloc.translocation_years.end(), yr) != transloc.translocation_years.end())
+				    pManagement->translocate(yr
+                                     , pLandscape
+                                     //, pComm
+                                     , pSpecies
+                                     );
 
 				// reproduction
 				pComm->reproduction(yr);
