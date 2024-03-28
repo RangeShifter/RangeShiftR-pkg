@@ -52,10 +52,13 @@
 #include <map>
 using namespace std;
 
+#include <Rcpp.h> // for Rcpp::Rcout
 #include "Parameters.h"
 #include "Species.h"
 #include "Cell.h"
 #include "Landscape.h"
+
+#include "SubCommunity.h"
 #include "Population.h"
 
 
@@ -130,6 +133,10 @@ public:
     std::map< int, std::vector <int> > sex; // Sex of translocated individuals
 
 };
+
+//---------------------------------------------------------------------------
+
+extern paramSim *paramsSim;
 
 //---------------------------------------------------------------------------
 #endif

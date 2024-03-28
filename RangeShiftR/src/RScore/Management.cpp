@@ -43,7 +43,15 @@ Management::Management(void) {
 
 }
 
-Management::~Management(void) {}
+Management::~Management(void) {
+    translocation_years.clear();
+    source.clear();
+    target.clear();
+    nb.clear();
+    min_age.clear();
+    max_age.clear();
+    stage.clear();
+}
 
 managementParams Management::getManagementParams(void) {
     managementParams m;
@@ -57,6 +65,7 @@ void Management::setManagementParams(const managementParams m){
 
 translocationParams Management::getTranslocationParams(void) {
     translocationParams t;
+    t.catching_rate = catching_rate;
     t.translocation_years = translocation_years;
     t.source = source;
     t.target = target;
@@ -70,6 +79,7 @@ translocationParams Management::getTranslocationParams(void) {
 
 // not sure if this is a good way, so won't use it for now
 void Management::setTranslocationParams(const translocationParams t){
+    catching_rate = t.catching_rate;
     translocation_years = t.translocation_years;
     source = t.source;
     target = t.target;
@@ -83,9 +93,9 @@ void Management::setTranslocationParams(const translocationParams t){
 
 void Management::translocate(int yr
                                  , Landscape* pLandscape
-                                 // , Community* pComm
                                  , Species* pSpecies
                                  ){
+    Rcpp::Rcout << "Start translocation events in year " << yr << endl;
     landParams ppLand = pLandscape->getLandParams();
     auto it = nb.find(yr); // the number of translocation events is determined by the number of elements of the maps at year yr
     auto nb_it = nb.find(yr);
@@ -95,38 +105,134 @@ void Management::translocate(int yr
     auto max_age_it = max_age.find(yr);
     auto stage_it = stage.find(yr);
     auto sex_it = sex.find(yr);
-
     // iterate over the number of events
     for (int e = 0; e < it->second.size(); e++) {
+        Rcpp::Rcout << "Translocation event " << e << " in year " << yr << endl;
         // find the source patch
-        Patch* patch;
+        Patch* s_patch;
+        Population* s_pPop;
         if(ppLand.patchModel){
             if(pLandscape->existsPatch(source_it->second[e].x)){
-                patch = pLandscape->findPatch(source_it->second[e].x);
+                Rcpp::Rcout << "Source patch exist." << endl;
+                s_patch = pLandscape->findPatch(source_it->second[e].x);
+                if (s_patch != 0) {
+                    // test if population in patch is not zero
+                    s_pPop = (Population*)s_patch->getPopn((intptr)pSpecies); // returns the population of the species in that cell
+                    if (s_pPop != 0 && s_pPop->getNInds() > 0){
+                    } else {
+                        Rcpp::Rcout << "Population does not exist in source patch or is 0! skipping translocation event." << endl;
+                        return;
+                    }
+                } else {
+                    Rcpp::Rcout << "Source patch was found but NULL! skipping translocation event." << endl; // not sure if this ever happens
+                    return;
+                }
+    //
+            } else{
+                Rcpp::Rcout << "Source patch was not found in landscape! skipping translocation event." << endl;
+                return;
             }
        } else{
            Cell* pCell;
            pCell = pLandscape->findCell(source_it->second[e].x, source_it->second[e].y);
            if (pCell != 0) {
-               intptr ppatch = pCell->getPatch();
-               if (ppatch != 0) {
-                   patch = (Patch*)ppatch;
+               Rcpp::Rcout << "Source cell was found" << endl;
+               intptr s_ppatch = pCell->getPatch();
+               if (s_ppatch != 0) {
+                   s_patch = (Patch*)s_ppatch;
+                   // test if population in patch is not zero
+                   s_pPop = (Population*)s_patch->getPopn((intptr)pSpecies); // returns the population of the species in that cell
+                   if (s_pPop != 0 && s_pPop->getNInds() > 0){
+                   } else {
+                       Rcpp::Rcout << "Population does not exist in source cell or is 0! skipping translocation event." << endl;
+                       return;
+                   }
+               } else {
+                   Rcpp::Rcout << "Source cell does not exist! skipping translocation event." << endl;
+                   return;
                }
+           } else {
+               Rcpp::Rcout << "Cell does not belong to landscape! skipping translocation event." << endl;
+               return;
            }
         }
-       const auto pPop = (Population*)patch->getPopn((intptr)pSpecies); // returns the population in that cell
+       // find the target patch and check for existence
+       Patch* t_patch;
+       Population* t_pPop;
+       if(ppLand.patchModel){
+           if(pLandscape->existsPatch(target_it->second[e].x)){
+                Rcpp::Rcout << "Target patch exist." << endl;
+                t_patch = pLandscape->findPatch(target_it->second[e].x);
+           } else{
+               Rcpp::Rcout << "Target patch was not found in landscape! skipping translocation event." << endl;
+               return;
+           }
+       } else{
+           Cell* pCell;
+           pCell = pLandscape->findCell(target_it->second[e].x, target_it->second[e].y);
+           if (pCell != 0) {
+               Rcpp::Rcout << "Target cell was found" << endl;
+               intptr t_ppatch = pCell->getPatch();
+               if (t_ppatch != 0) {
+                   t_patch = (Patch*)t_ppatch;
+               } else {
+                   Rcpp::Rcout << "Target cell does not exist! skipping translocation event." << endl;
+                   return;
+               }
+           } else {
+               Rcpp::Rcout << "Target cell does not belong to landscape! skipping translocation event." << endl;
+               return;
+           }
+       }
+
+       // only if source and target cell/patch exist, we can translocate individuals:
         // get individuals with the given characteristics in that population
         int min_age = min_age_it->second[e];
         int max_age = max_age_it->second[e];
         int stage = stage_it->second[e];
         int sex = sex_it->second[e];
-        std::set <Individual*> sampledInds;
-        sampledInds = pPop->getIndsWithCharacteristics(min_age, max_age, stage, sex); // checking values was done when reading in the parameters
-        // for the number of individuals to be translocated or the length of the vectorof individuals
-        // sample randomly from sampledInds
-        // try to catch the individual
-        // if individual is caught: translocate to new location
+        int nb = nb_it->second[e];
+        int nbSampledInds = 0;
+        // We made already sure by now that in s_pPop at least some individuals exist
+        nbSampledInds = s_pPop->sampleIndividuals(nb, min_age, max_age, stage, sex); // checking values was done when reading in the parameters
+        popStats s_stats = s_pPop->getStats();
+        Individual* catched_individual;
+        int translocated = 0;
+        // loop over all indsividuals, extract sampled individuals, try to catch individual + translocate them to new patch
+        for (int j = 0; j < s_stats.nInds; j++) {
+            // if there are individuals to catch
+            if(s_pPop->getSizeSampledInds()){
+                // if this individual is matching one of the sampled individuals
+                catched_individual = s_pPop->catchIndividual(catching_rate, j); // catch individual in the source patch
+                if (catched_individual !=NULL) { // translocated individual - has already been removed from natal population
+                    // Check if a population of this species already exists in target patch t_patch
+                    t_pPop = (Population*)t_patch->getPopn((intptr)pSpecies);
+                    if (t_pPop == 0) { // translocated individual is the first in a previously uninhabited patch
+                        Rcpp::Rcout << "Population does not exist in target patch. Creating new population." << endl;
+                        // create a new population in the corresponding sub-community
+                        SubCommunity* pSubComm = (SubCommunity*)t_patch->getSubComm();
+                        t_pPop = pSubComm->newPopn(pLandscape, pSpecies, t_patch, 0);
+                    }
+                    catched_individual->setStatus(4); // make sure individual is not dispersing after the translocation
+                    t_pPop->recruit(catched_individual); // recruit individual to target population
+                    translocated ++;
+                    simParams sim = paramsSim->getSim();
+                    if (sim.outConnect) { // increment connectivity totals
+                        int newpatch = t_patch->getSeqNum();
+                        Cell* pPrevCell = catched_individual->getLocn(0); // previous cell
+                        intptr prev_patch = pPrevCell->getPatch();
+                        if (prev_patch != 0) {
+                            Patch* pPrevPatch = (Patch*)prev_patch;
+                            int prevpatch = pPrevPatch->getSeqNum();
+                            pLandscape->incrConnectMatrix(prevpatch, newpatch);
+                        }
+                    }
 
+                }
+            }
+        }
+        Rcpp::Rcout << "Successfully translocated " << translocated << " out of " << nb_it->second[e] << " individuals in translocation event " << e <<"." << endl;
+        // remove pointers to sampled individuals
+        s_pPop->clean();
     }
-
 };

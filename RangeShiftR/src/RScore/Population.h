@@ -215,11 +215,39 @@ public:
 	);
 	void clean(void); // Remove zero pointers to dead or dispersed individuals
 
-	std::set <Individual*> getIndsWithCharacteristics( // Return a set of individuals with specified characteristics
+	std::vector<Individual*> getIndsWithCharacteristics( // Return a set of individuals with specified characteristics
 		int,	// min age
 		int,    // max age
 		int,    // stage
 		int     //sex
+	);
+	void cleanSampledInds(
+	    Individual* // individual to remove from sampled individuals vector
+	); // clean sampled individuals vector
+
+	int sampleIndividuals( // Select a set of individuals with specified characteristics; return the number of individuals with those characteristics
+	// void sampleIndividuals( // Select a set of individuals with specified characteristics; return the number of individuals with those characteristics
+	        int, //number of individuals to sample
+        	int,	// min age (0 if not set)
+        	int,    // max age (max age if not set)
+        	int,    // stage
+        	int     //sex
+	);
+
+	Individual* catchIndividual(
+	    double, // catching rate
+	    int
+	);
+
+	// void completeTranslocation(
+	//         std::vector <Individual*> // catched individuals
+	// );
+
+	// void recruitTranslocated(
+	//         Individual*
+	// );
+
+	bool getSizeSampledInds(
 	);
 
 private:
@@ -232,6 +260,8 @@ private:
 	std::vector <Individual*> inds; // all individuals in population except ...
 	std::vector <Individual*> juvs; // ... juveniles until reproduction of ALL species
 																	// has been completed
+
+	std::vector <Individual*> sampledInds; // individuals with specified characteristics
 
 };
 

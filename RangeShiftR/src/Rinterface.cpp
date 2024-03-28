@@ -76,6 +76,7 @@ int sexesDem;  // no. of explicit sexes for demographic model
 int sexesDisp; // no. of explicit sexes for dispersal model
 int firstsimul;
 int fileNtraits; // no. of traits defined in genetic architecture file
+int translocation;
 rasterdata landraster,patchraster,spdistraster,costsraster;
 // rasterdata landraster;
 // ...including names of the input files
@@ -495,6 +496,10 @@ Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
 	stageParams sstruct = pSpecies->getStage();
 	trfrRules trfr = pSpecies->getTrfr();
 
+	// create new Management
+	pManagement = new Management;
+	managementParams m = pManagement->getManagementParams();
+
 	if(errors == 0) {
 		//   nSimuls = b.nSimuls;
 		//   nLandscapes = b.nLandscapes;
@@ -511,9 +516,15 @@ Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
 			trfr.moveModel = true;
 			trfr.moveType = transfer;
 		}
+		if(translocation == 0)
+			m.translocation = false;
+		else
+			m.translocation = true;
+
 		pSpecies->setDemogr(dem);
 		pSpecies->setStage(sstruct);
 		pSpecies->setTrfr(trfr);
+		pManagement->setManagementParams(m);
 
 		simParams sim = paramsSim->getSim();
 		sim.batchMode = true;
@@ -3213,6 +3224,7 @@ int ReadArchFileR(wifstream& archFile)
 
 int ReadTranslocationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 {
+    int error = 0;
     // create new Management
     if(pManagement != NULL)
         delete pManagement;
@@ -3221,6 +3233,8 @@ int ReadTranslocationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
     landParams paramsLand = pLandscape->getLandParams();
     // get demographic parameter (to distinguish between sexual and asexual reproduction, and stage structured or not)
     demogrParams dem = pSpecies->getDemogr();
+    // get simulation parameter (to get the number of years)
+    simParams sim = paramsSim->getSim();
 
     // get default values
     managementParams m = pManagement->getManagementParams();
@@ -3232,32 +3246,58 @@ int ReadTranslocationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
     Rcpp::S4 TranslocationParamsR("TranslocationParams");
     TranslocationParamsR = Rcpp::as<Rcpp::S4>(ManageParamsR.slot("Translocation"));
 
+    double catching_rate_R = Rcpp::as<double>(TranslocationParamsR.slot("catching_rate"));
+
     Rcpp::IntegerVector translocation_years_R;
     translocation_years_R = Rcpp::as<Rcpp::IntegerVector>(TranslocationParamsR.slot("years"));
 
     Rcpp::IntegerMatrix translocation_matrix_R;
-    translocation_matrix_R = Rcpp::as<Rcpp::IntegerMatrix>(TranslocationParamsR.slot("TranLocMat"));
+    translocation_matrix_R = Rcpp::as<Rcpp::IntegerMatrix>(TranslocationParamsR.slot("TransLocMat"));
 
     // activate translocation if translocation_years_R is not empty
-    if(translocation_years_R.size() > 0) m.translocation = true;
+    if(translocation_years_R[0] > 0) m.translocation = true;
+    Rcpp::Rcout << "ReadTranslocationR(): m.translocation is here: " << m.translocation << std::endl;
 
     // set and update the management parameters
     pManagement->setManagementParams(m);
 
     if(m.translocation) {
-        double catching_rate_R = Rcpp::as<double>(TranslocationParamsR.slot("catching_rate"));
+        // check if catcing rate as valid value:
+        if(catching_rate_R > 0 || catching_rate_R <= 1) {
+            // parse catching_rate_R to catching_rate
+            t.catching_rate = catching_rate_R;
+        } else{
+            Rcpp::Rcout << "ReadTranslocationR(): catching_rate must be between 0 and 1" << std::endl;
+            error = 600;
+            return error;
+            }
+
 
         // parse translocation_years_R to translocation_years
         for (int i = 0; i < translocation_years_R.size(); i++) {
-            t.translocation_years.push_back(translocation_years_R[i]);
+            // check if the year is within the simulated years
+            if(translocation_years_R[i] > 0 || translocation_years_R[i] <= sim.years) {
+                // check if year is not already in the vector
+                if(std::find(t.translocation_years.begin(), t.translocation_years.end(), translocation_years_R[i]) == t.translocation_years.end()) {
+                    t.translocation_years.push_back(translocation_years_R[i]);
+                }else{
+                    Rcpp::Rcout << "ReadTranslocationR(): translocation_years[" << i << "]=" << translocation_years_R[i] << " already exists. Make sure that you only include each year once." << std::endl;
+                    error = 600;
+                    return error;
+                }
+            } else{
+                Rcpp::Rcout << "ReadTranslocationR(): translocation_years[" << i << "]=" << translocation_years_R[i] << " is not within the simulated years" << std::endl;
+                error = 600;
+                return error;
+            }
+
         }
 
         for (int i = 0; i < t.translocation_years.size(); i++) {
             Rcpp::Rcout << "ReadTranslocationR(): t.translocation_years[" << i << "]=" << t.translocation_years[i] << std::endl;
         }
 
-        // parse catching_rate_R to catching_rate
-        t.catching_rate = catching_rate_R;
+
 
         Rcpp::Rcout << "ReadTranslocationR(): catching_rate: "<< t.catching_rate << std::endl;
 
@@ -3272,38 +3312,77 @@ int ReadTranslocationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
                 t.source.insert(std::pair<int, std::vector<locn>>(year, std::vector<locn>()));
                 t.target.insert(std::pair<int, std::vector<locn>>(year, std::vector<locn>()));
                 t.nb.insert(std::pair<int, std::vector<int>>(year, std::vector<int>()));
-                if(dem.stageStruct) {
+                // if(dem.stageStruct) {
                     t.min_age.insert(std::pair<int, std::vector<int>>(year, std::vector<int>()));
                     t.max_age.insert(std::pair<int, std::vector<int>>(year, std::vector<int>()));
                     t.stage.insert(std::pair<int, std::vector<int>>(year, std::vector<int>()));
-                }
-                if(dem.repSeasons!=0) {
+                // }
+                // if(dem.repType!=0) {
                     t.sex.insert(std::pair<int, std::vector<int>>(year, std::vector<int>()));
-                }
+                // }
 
             }
 
             // push_back the source to the source map
             locn s;
             if(paramsLand.patchModel){ // if patch model, the x is the patch ID
-                s.x = translocation_matrix_R(i,1);
-                s.y = -9;
+                // only if patch ID exists? otherwise exit?
+                if(translocation_matrix_R(i,1) <= pLandscape->patchCount() && translocation_matrix_R(i,1) > 0){
+                    s.x = translocation_matrix_R(i,1);
+                    s.y = -9;
+                } else{
+                    Rcpp::Rcout << "ReadTranslocationR(): patch ID of source location " << translocation_matrix_R(i,1) << " is either 0 or greater than the number of overall patches." << std::endl;
+                    error = 600;
+                    return error;
+                }
+
             } else {
-                // found
-                s.x = translocation_matrix_R(i,1);
-                s.y = translocation_matrix_R(i,2);
-            }
+                // if cell-based model
+                // check if x and y values are inside boundaries
+                bool data = true;
+                data = pLandscape->checkDataCell(translocation_matrix_R(i,1), translocation_matrix_R(i,2)); // TODO: check why simulation is crashing if checking for cell
+                if(data == false){ // cell is out of boundary
+                    Rcpp::Rcout << "ReadTranslocationR(): source location " << translocation_matrix_R(i,1) << " is outside the landscape." << std::endl;
+                    error = 600;
+                    return error;
+                } else{ // cell is within landscape
+                        s.x = translocation_matrix_R(i,1);
+                        s.y = translocation_matrix_R(i,2);
+                };
+            };
+
             t.source[year].push_back(s);
 
             // push_back the target to the target map
             if(paramsLand.patchModel){ // if patch model, the x is the patch ID
-                s.x = translocation_matrix_R(i,2);
-                s.y = -9;
+                // only if patch ID exists? otherwise exit?
+                if(translocation_matrix_R(i,2) <= pLandscape->patchCount() && translocation_matrix_R(i,2) > 0){
+                    s.x = translocation_matrix_R(i,2);
+                    s.y = -9;
+                } else{
+                    Rcpp::Rcout << "ReadTranslocationR(): patch ID of target location " << translocation_matrix_R(i,2) << " is either 0 or greater than the number of overall patches." << std::endl;
+                    error = 600;
+                    return error;
+                }
             } else {
-                // found
-                s.x = translocation_matrix_R(i,3);
-                s.y = translocation_matrix_R(i,4);
+                // if cell-based model
+                // check if x and y values are inside boundaries and habitat
+                if(translocation_matrix_R(i,3) > 0 && translocation_matrix_R(i,3) <= paramsLand.maxX){
+                    s.x = translocation_matrix_R(i,3);
+                } else{
+                    Rcpp::Rcout << "ReadTranslocationR(): x value of target location " << translocation_matrix_R(i,3) << " is either 0 or greater than the maximum x value." << std::endl;
+                    error = 600;
+                    return error;
+                }
+                if(translocation_matrix_R(i,4) > 0 && translocation_matrix_R(i,4) <= paramsLand.maxY){
+                    s.y = translocation_matrix_R(i,4);
+                } else{
+                    Rcpp::Rcout << "ReadTranslocationR(): y value of target location " << translocation_matrix_R(i,4) << " is either 0 or greater than the maximum y value." << std::endl;
+                    error = 600;
+                    return error;
+                }
             }
+
             t.target[year].push_back(s);
 
             // push_back the number of individuals to the nb map
@@ -3329,9 +3408,13 @@ int ReadTranslocationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
                     t.max_age[year].push_back((int)translocation_matrix_R(i,7));
                     t.stage[year].push_back((int)translocation_matrix_R(i,8));
                 }
+            } else{
+                t.min_age[year].push_back(-9);
+                t.max_age[year].push_back(-9);
+                t.stage[year].push_back(-9);
             }
 
-            if(dem.repSeasons!=0) {
+            if(dem.repType!=0) {
                 // push_back the sex of the individuals to the sex map
                 if(paramsLand.patchModel){
                     t.sex[year].push_back((int)translocation_matrix_R(i,7));
@@ -3339,6 +3422,8 @@ int ReadTranslocationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
                     // cell-based
                     t.sex[year].push_back((int)translocation_matrix_R(i,9));
                 }
+            } else{
+                t.sex[year].push_back(-9);
             }
         }
 
@@ -3405,7 +3490,7 @@ int ReadTranslocationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
         }
 
         // only if sexual reproduction
-        if(dem.repSeasons!=0) {
+        if(dem.repType!=0) {
 
             // check input
             // loop over t.stage map and print out the content
@@ -3422,11 +3507,6 @@ int ReadTranslocationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
         pManagement->setTranslocationParams(t);
 
     }
-
-    int error = 0;
-
-
-
     return error;
 }
 //---------------------------------------------------------------------------
@@ -3626,11 +3706,14 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 					rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
 					params_ok = false;
 				}
-				read_error = ReadTranslocationR(pLandscape, ParMaster);
-				if(read_error) {
-					rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
-					params_ok = false;
+				if(translocation){
+				    read_error = ReadTranslocationR(pLandscape, ParMaster);
+				    if(read_error) {
+					    rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
+					    params_ok = false;
+				    }
 				}
+
 				if(params_ok) {
 #if RSDEBUG
 					DebugGUI("RunBatchR(): simulation i=" + Int2Str(i));
@@ -3710,7 +3793,10 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 				delete pLandscape;
 				pLandscape = NULL;
 			}
-
+			if(pManagement != NULL) {
+			    delete pManagement;
+			    pManagement = NULL;
+			}
 		} // end of landOK condition
 
 	} // end of nLandscapes loop
@@ -3748,6 +3834,8 @@ void setglobalvarsR(Rcpp::S4 control)
 	stagestruct = Rcpp::as<int>(control.slot("stagestruct"));
 	stages = Rcpp::as<int>(control.slot("stages"));
 	transfer = Rcpp::as<int>(control.slot("transfer"));
+	translocation = Rcpp::as<int>(control.slot("translocation"));
+	Rcpp::Rcout << "setglobalvarsR(): translocation: " << translocation << std::endl;
 
 #if RSDEBUG
 	/*

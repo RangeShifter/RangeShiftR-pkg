@@ -62,6 +62,7 @@ using namespace std;
 #include "RScore/RSrandom.h"
 #include "RScore/Model.h"
 #include "RScore/Management.h"
+#include "RScore/Cell.h"
 
 
 

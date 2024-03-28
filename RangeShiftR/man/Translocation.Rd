@@ -38,11 +38,11 @@ sex nd dispersal status. Additionally, you can define a catching success rate to
 \details{
 In each \code{year} of a translocation event, individuals are selected from a given source location and transferred to a new target location.
 The success of catching an individual in the source location is defined by the \code{catching_rate}.
-To select only individuals within a certain range of characteristics, a Translocation Matrix \code{TranLocMat} is defined in which the characteristics of the individuals are defined for each translocation event.
-Each row of the translocation matrix \code{TranLocMat} holds a unique combination of source and target location as well as characteristics of catched individuals.
+To select only individuals within a certain range of characteristics, a Translocation Matrix \code{TransLocMat} is defined in which the characteristics of the individuals are defined for each translocation event.
+Each row of the translocation matrix \code{TransLocMat} holds a unique combination of source and target location as well as characteristics of catched individuals.
 You may add more than one translocation event per year, i.e. there may be multiple source and target locations for each year of a translocation event or multiple individual characteristics for a certain pair of source and target location.
 
-In the columns of the \code{TranLocMat} the year, source and target location as well as the number of individuals and the characteristics are defined:
+In the columns of the \code{TransLocMat} the year, source and target location as well as the number of individuals and the characteristics are defined:
 
 - \code{year} of the translocation event \cr
 - \code{Patch_ID} or \code{X} and \code{Y} location of the source location from which individuals are catched \cr

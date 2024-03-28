@@ -488,6 +488,14 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				}
 #endif
 
+				// TODO move translocation before dispersal?
+				if (manage.translocation && std::find(transloc.translocation_years.begin(), transloc.translocation_years.end(), yr) != transloc.translocation_years.end()) {
+				    pManagement->translocate(yr
+                                     , pLandscape
+                                     , pSpecies
+                                     );
+				}
+
 				if (v.viewPop || (sim.saveMaps && yr % sim.mapInt == 0)) {
 					if (updateland && gen == 0) {
 						pLandscape->drawLandscape(rep, landIx, ppLand.landNum);
@@ -513,14 +521,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 					if (env.localExt) pComm->localExtinction(0);
 					if (grad.gradient && grad.gradType == 3) pComm->localExtinction(1);
 				}
-
-				// Add translocations here; maybe need to be changed before the PreReproductionOutput()?
-				if(manage.translocation && std::find(transloc.translocation_years.begin(), transloc.translocation_years.end(), yr) != transloc.translocation_years.end())
-				    pManagement->translocate(yr
-                                     , pLandscape
-                                     //, pComm
-                                     , pSpecies
-                                     );
 
 				// reproduction
 				pComm->reproduction(yr);
@@ -569,6 +569,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				else { // non-structured population
 					pComm->survival(0, 1, 1);
 				}
+
 #if RSDEBUG
 				DEBUGLOG << "RunModel(): yr=" << yr << " gen=" << gen << " completed survival part 0" << endl;
 #endif

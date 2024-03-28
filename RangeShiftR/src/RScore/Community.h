@@ -59,7 +59,7 @@ using namespace std;
 #include "Cell.h"
 #include "Species.h"
 
-#include "Management.h"
+// #include "Management.h"
 
 //---------------------------------------------------------------------------
 struct commStats {
@@ -208,9 +208,6 @@ public:
 #if RS_RCPP && !R_CMD
     Rcpp::IntegerMatrix addYearToPopList(int,int);
 #endif
-
-    //sample individuals for genetics (or could be used for anything)
-    void sampleIndividuals(Management*);
 
 private:
 	Landscape *pLandscape;

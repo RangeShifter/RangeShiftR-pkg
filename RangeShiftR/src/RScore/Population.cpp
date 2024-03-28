@@ -204,6 +204,11 @@ Population::~Population(void) {
 		if (juvs[i] != NULL) delete juvs[i];
 	}
 	juvs.clear();
+	int nsampledInds = (int)sampledInds.size();
+	for (int i = 0; i < nsampledInds; i++) {
+	    if (sampledInds[i] != NULL) sampledInds[i]=NULL;
+	}
+	sampledInds.clear();
 }
 
 traitsums Population::getTraits(Species* pSpecies) {
@@ -1666,47 +1671,181 @@ void Population::outGenetics(const int rep, const int year, const int landNr)
 
 }
 
-std::set <Individual*> Population::getIndsWithCharacteristics( // Return a set of individuals with specified characteristics
+// ---------------------------------------------------------------------------
+// Extract all individuals of a population with certain characteristics based on age, stage and sex
+// returns a set of pointers to the individuals
+// ---------------------------------------------------------------------------
+std::vector <Individual*> Population::getIndsWithCharacteristics( // Select a set of individuals with specified characteristics
         int min_age,	// min age (0 if not set)
         int max_age,    // max age (max age if not set)
         int stage,    // stage
         int sex     //sex
 ){
-    set<Individual*> filteredInds;
-    for (auto ind : inds) {
-        // if individual is not in transfer state
-        if (ind->getStats().status > 3){
-            if (ind->getStats().age >= min_age &&
-                ind->getStats().age <= max_age){
-                if (stage =! -9){
-                    if (ind->getStats().stage == stage){
-                        if(sex != -9){
-                            if(ind->getStats().sex == sex){
-                                filteredInds.insert(ind); // if age is within range, stage is set and correct and sex is set and correct -> add individual
-                                };// end stage and sex true
-                            } else{
-                                filteredInds.insert(ind);// if sex is not set -> don't check the sex
-                        }; // end sex not checked but stage true
-                    };
-                } else{ // if stage is not set, check sex anyways
-                    if(sex != -9){
-                        if(ind->getStats().sex == sex){
-                            filteredInds.insert(ind); // if age is within range, stage is not set and sex is set and correct -> add individual
-                        }; // end if age is within range, sex is set and correct and stage is not set
-                    } else{
-                        filteredInds.insert(ind);
-                    };// if stage and sex is not set add individual independent of sex and stage
-                }; // end if stage is not set
-            }; // end if age is within range
-        };
-    };
+    // get all suitable individuals based on settings
+    std::vector <Individual*> filteredInds;
+    int ninds = (int)inds.size();
+    Rcpp::Rcout << "Number individuals in cell: " << ninds << endl;
+
+    if (ninds > 0) {
+        // copy ALL individuals to filteredInds
+        for (int i = 0; i < ninds; i++) {
+            filteredInds.push_back(inds[i]);
+        }
+
+        // // check status of inividuals
+        // // TODO not sure if this is needed?
+        // for (int i = 0; i < ninds; i++) {
+        //     if (inds[i] != NULL && inds[i]->getStats().status < 4){
+        //         Rcpp::Rcout << "Status: " << inds[i]->getStats().status << endl;
+        //         filteredInds[i] = NULL; // set it to NULL
+        //     }
+        // }
+
+        // Check minimal age
+        if (min_age!=-9){
+            // loop over all number of individuals in cell
+            for (int i = 0; i < ninds; i++) {
+                if (filteredInds[i] != NULL && inds[i]->getStats().age < min_age){ // if not already NULL + age too young
+                    filteredInds[i] = NULL; // set it to NULL
+                }
+            }
+        }
+        // check max age
+        if (max_age!=-9){
+            // loop over all number of individuals in cell
+            for (int i = 0; i < ninds; i++) {
+                if (filteredInds[i] != NULL && inds[i]->getStats().age < max_age){// if not already NULL + age too old
+                    if (filteredInds[i] != NULL) filteredInds[i] = NULL; // set it to NULL if not already NULL
+                }
+            }
+        }
+        // check stage
+        if (stage!=-9){
+            // loop over all number of individuals in cell
+            for (int i = 0; i < ninds; i++) {
+                if (filteredInds[i] != NULL && inds[i]->getStats().stage != stage){// if not already NULL + stage not correct
+                    if (filteredInds[i] != NULL) filteredInds[i] = NULL; // set it to NULL if not already NULL
+                }
+            }
+        }
+        // check sex
+        if (sex!=-9){
+            // loop over all number of individuals in cell
+            for (int i = 0; i < ninds; i++) {
+                if (filteredInds[i] != NULL && inds[i]->getStats().sex != sex){// if not already NULL + sex not correct
+                    if (filteredInds[i] != NULL) filteredInds[i] = NULL; // set it to NULL if not already NULL
+                }
+            }
+        }
+    } else {
+        Rcpp::Rcout << "No individuals in source patch" << endl;
+        return filteredInds;
+        }
+    int nfiltered = 0;
+    for ( auto filtered : filteredInds){
+        if (filtered != NULL) nfiltered++;
+    }
+
+    // loop over iterator of filteredInds and remove NULL values
+    filteredInds.erase(std::remove(filteredInds.begin(), filteredInds.end(), nullptr), filteredInds.end());
 
     return filteredInds;
+};
+// ---------------------------------------------------------------------------
+// Clean the sampled individuals
+// ---------------------------------------------------------------------------
+void Population::cleanSampledInds(Individual* pInd // Return a set of individuals with specified characteristics
+){
+    // find inds[j] and remove it from sampledInds
+    sampledInds.erase(std::remove(sampledInds.begin(), sampledInds.end(), pInd), sampledInds.end());
+};
+// ---------------------------------------------------------------------------
+// Sample N individuals from the population with a given set of characteristics
+// ---------------------------------------------------------------------------
+int Population::sampleIndividuals( // Select a set of individuals with specified characteristics
+// void Population::sampleIndividuals( // Select a set of individuals with specified characteristics
+        int nb,	// number of individuals to sample
+        int min_age,	// min age (0 if not set)
+        int max_age,    // max age (max age if not set)
+        int stage,    // stage
+        int sex     //sex
+        ){
+    if(sampledInds.size() > 0)  sampledInds.clear(); // clear old vector
+    auto rng = pRandom->getRNG(); // random number for sampling from suitable individuals
 
+    // get individuals with the characteristics
+    std::vector <Individual*> filtered;
+    filtered = getIndsWithCharacteristics(min_age, max_age, stage, sex);
+
+    Rcpp::Rcout << "Number of individuals with fitting characteristics: " << filtered.size() << endl;
+
+    if (filtered.size() <= nb)
+        // Sample all individuals in selected stages
+        sampledInds = filtered;
+    else {
+        vector<Individual*> out;
+        // Sample n individuals across filtered individuals
+        std::sample(filtered.begin(), filtered.end(), std::back_inserter(out), nb, rng);
+        std::copy(out.begin(), out.end(), std::inserter(sampledInds, sampledInds.end()));
+    }
+
+    int nb_sampled = 0;
+    if (sampledInds.size() > 0) {
+        for (int i = 0; i < (int)sampledInds.size(); i++) {
+            if (sampledInds[i] != NULL) nb_sampled++;
+        }
+    }
+    return nb_sampled;
+}
+// ---------------------------------------------------------------------------
+// catch individuals according to catching rate
+// ---------------------------------------------------------------------------
+Individual* Population::catchIndividual( // Translocate a set of individuals with specified characteristics
+        double catching_rate,
+        int j
+){
+    Individual* catched;
+    int id = inds[j]->getId();
+    // If individual is part of the sampledInds vector:
+    if (std::find(sampledInds.begin(), sampledInds.end(), inds[j]) != std::end(sampledInds)){
+        // try to catch individual
+        if (pRandom->Bernoulli(catching_rate)){
+            indStats indstat = inds[j]->getStats();
+            catched = inds[j];
+            // remove individual from source patch
+            inds[j] = 0;
+            nInds[indstat.stage][indstat.sex]--;
+            cleanSampledInds(catched); // clean vector of sampled individuals after the event
+            return catched;
+        }else {
+            cleanSampledInds(inds[j]); // clean vector of sampled individuals after the event
+            return NULL;
+            }
+    } else {
+        return NULL;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// // Add a specified individual to the new or current population of a patch
+// void Population::recruitTranslocated(Individual* catched_individual) {
+//     Rcpp::Rcout << "Recruit translocated individual" << endl;
+//     Rcpp::Rcout << "Individual ID: " << catched_individual->getId() << endl;
+//     Rcpp::Rcout << "Size of population" << getNInds() << endl;
+//     inds.push_back(catched_individual);
+//     Rcpp::Rcout << "Size of population after translocation" << getNInds() << endl;
+//     indStats ind = catched_individual->getStats();
+//     nInds[ind.stage][ind.sex]++;
+// }
+
+// ---------------------------------------------------------------------------
+bool Population::getSizeSampledInds(
+){
+    bool size = false;
+    if (sampledInds.size() > 0) size = true;
+    return size;
 };
 
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 
 

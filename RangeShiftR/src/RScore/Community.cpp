@@ -1556,13 +1556,6 @@ Rcpp::IntegerMatrix Community::addYearToPopList(int rep, int yr) {  // TODO: def
 	return pop_map_year;
 }
 #endif
-
-// ---------------------------------------------------------------------------
-// Sample individuals with given management parameter
-void Community::sampleIndividuals(Management* pManagement) {
-
-};
-
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------

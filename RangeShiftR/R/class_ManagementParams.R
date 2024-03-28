@@ -51,11 +51,11 @@
 #'
 #' In each \code{year} of a translocation event, individuals are selected from a given source location and transferred to a new target location.
 #' The success of catching an individual in the source location is defined by the \code{catching_rate}.
-#' To select only individuals within a certain range of characteristics, a Translocation Matrix \code{TranLocMat} is defined in which the characteristics of the individuals are defined for each translocation event.
-#' Each row of the translocation matrix \code{TranLocMat} holds a unique combination of source and target location as well as characteristics of catched individuals.
+#' To select only individuals within a certain range of characteristics, a Translocation Matrix \code{TransLocMat} is defined in which the characteristics of the individuals are defined for each translocation event.
+#' Each row of the translocation matrix \code{TransLocMat} holds a unique combination of source and target location as well as characteristics of catched individuals.
 #' You may add more than one translocation event per year, i.e. there may be multiple source and target locations for each year of a translocation event or multiple individual characteristics for a certain pair of source and target location.
 #'
-#' In the columns of the \code{TranLocMat} the year, source and target location as well as the number of individuals and the characteristics are defined:
+#' In the columns of the \code{TransLocMat} the year, source and target location as well as the number of individuals and the characteristics are defined:
 #'
 #' - \code{year} of the translocation event \cr
 #' - \code{Patch_ID} or \code{X} and \code{Y} location of the source location from which individuals are catched \cr
@@ -78,10 +78,10 @@
 #' @name Translocation
 #' @export Translocation
 Translocation <- setClass("TranslocationParams", slots = c(years = "numeric",
-                                                           TranLocMat = "matrix",
+                                                           TransLocMat = "matrix",
                                                            catching_rate = "numeric")
-                          , prototype = list(years = 0L,
-                                             TranLocMat = matrix(0, nrow = 8, ncol = 8),
+                          , prototype = list(years = -9L,
+                                             TransLocMat = matrix(0, nrow = 8, ncol = 8),
                                              catching_rate = 1L
                           )
 )
@@ -97,23 +97,42 @@ setValidity("TranslocationParams", function(object) {
         }
     }
 
-    # Check if TranLocMat is not NA, is a matrix and has at least as many rows and years
-    if (any(is.na(object@TranLocMat)) && !is.matrix(object@TranLocMat)){
-        msg <- c(msg, "TranLocMat must be defined and be a matrix")
+    # Check if TransLocMat is not NA, is a matrix and has at least as many rows and years
+    if (any(is.na(object@TransLocMat)) && !is.matrix(object@TransLocMat)){
+        msg <- c(msg, "TransLocMat must be defined and be a matrix")
     }else {
-        if(nrow(object@TranLocMat) < length(object@years)) {
-            msg <- c(msg, "TranLocMat must have at least as many rows as years of Transclocation events")
+        if(nrow(object@TransLocMat) < length(object@years)) {
+            msg <- c(msg, "TransLocMat must have at least as many rows as years of Transclocation events")
         } else {
-            if(!all(sort(object@TranLocMat[,1]) == object@TranLocMat[,1])){
+            if(!all(sort(object@TransLocMat[,1]) == object@TransLocMat[,1])){
                 msg <- c(msg, "Translocation matrix must contain subsequent years!")
             } else{
-                if (ncol(object@TranLocMat) != 8 && ncol(object@TranLocMat) != 10) { # 8 is only true for patch-based models; for cell based models it should be 10
-                    msg <- c(msg, "TranLocMat must have 8 or 10 columns: year, source location (patch ID OR 2 columns X and Y), target location (patch ID OR 2 columns X and Y), number of individuals, min age, max age, stage.")
+                if (ncol(object@TransLocMat) != 8 && ncol(object@TransLocMat) != 10) { # 8 is only true for patch-based models; for cell based models it should be 10
+                    msg <- c(msg, "TransLocMat must have 8 or 10 columns: year, source location (patch ID OR 2 columns X and Y), target location (patch ID OR 2 columns X and Y), number of individuals, min age, max age, stage.")
                 }
             }
 
         }
     }
+
+    # Check if TransLocMat has valid entries:
+    # for patch based models:
+    # Check if second column (source patch ID) is numeric and ID exists
+    # check if third column (target patch ID) is numeric and ID exists
+    # check if fourth column (number of individuals) is numeric and greater than 0
+    # check if fifth column (min age) is numeric and equal or greater than 0 or -9
+    # check if sixth column (max age) is numeric and between min age and MaxAge or -9
+    # check if seventh column (stage) is numeric and either between 0 and number of stages or -9
+    # check if eighth column (sex) is numeric and either 0, 1 or -9
+    # for cell based models:
+    # Check if second and fourth column (source and target X cells) is numeric and within X boundaries of the landscape
+    # Check if third and fifth column (source and target Y cells) is numeric and within Y boundaries of the landscape
+    # check if sixth column (number of individuals) is numeric and greater than 0
+    # check if seventh column (min age) is numeric and equal or greater than 0 or -9
+    # check if eighth column (max age) is numeric and between min age and MaxAge or -9
+    # check if nineth column (stage) is numeric and either between 0 and number of stages or -9
+    # check if tenth column (sex) is numeric and either 0, 1 or -9
+
 
     # Check if catching_rate is not NA and is a numeric
     if (is.na(object@catching_rate)) {
@@ -143,12 +162,15 @@ setMethod("show", "TranslocationParams", function(object){
     cat("  Years of translocation events: ", object@years, "\n")
     cat("  Catching rate: ", object@catching_rate, "\n")
     cat("  Translocation Matrix: \n")
-    print(object@TranLocMat)
+    print(object@TransLocMat)
 })
 
 
 
 #### MANAGEMENT ####
+
+# define this ClassUnion so that the 'Translocation' slot in the parameter master class 'RSparams' can be FALSE for not considering translocations
+setClassUnion("TranslocationSlot", c("logical", "TranslocationParams"))
 
 # Superclass holding the subclasses 'Translocation', but eventually also 'Hunting' and 'Poaching'
 
@@ -171,8 +193,8 @@ setMethod("show", "TranslocationParams", function(object){
 #' @author Jette Reeg
 #' @name Management
 #' @export Management
-Management <- setClass("ManagementParams", slots = c(Translocation = "TranslocationParams")
-                      , prototype = list(Translocation = Translocation())
+Management <- setClass("ManagementParams", slots = c(Translocation = "TranslocationSlot")
+                      , prototype = list(Translocation = FALSE)
 )
 
 setValidity("ManagementParams", function(object) {

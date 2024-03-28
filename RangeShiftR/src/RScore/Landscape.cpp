@@ -894,6 +894,18 @@ Cell* Landscape::findCell(int x, int y) {
 	else return 0;
 }
 
+bool Landscape::checkDataCell(int x, int y) {
+    Cell* pCell;
+    pCell = findCell(x, y); // TODO: simulation is crashing if I want to do anything with pCell
+    // Rcpp::Rcout << "x = " << x << " y = " << y << " pCell = " << pCell << endl;
+    // if (pCell != 0) Rcpp::Rcout << "x = " << x << " y = " << y << " pCell = " << pCell << endl;
+    // else Rcpp::Rcout << "pCell is not unequal to 0" << endl;
+    // if (pCell == 0) return false; // is a no data cell
+    // else return false;
+    return true;
+}
+
+
 int Landscape::patchCount(void) {
 	return (int)patches.size();
 }
