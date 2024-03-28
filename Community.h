@@ -209,7 +209,7 @@ public:
 	void sampleIndividuals(Species* pSpecies);
 
 	//control neutral stat output
-	void outNeutralGenetics(Species* pSpecies, int rep, int yr, int gen, bool perLocus, bool pairwise);
+	void outNeutralGenetics(Species* pSpecies, int rep, int yr, int gen, bool fstat, bool perLocus, bool pairwise);
 
 	//file openers
 	bool openWCFstatFile(Species* pSpecies, const int landNr);

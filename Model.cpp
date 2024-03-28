@@ -468,9 +468,9 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				if (sim.outInds && yr >= sim.outStartInd && yr % sim.outIntInd == 0)
 					pComm->outInds(rep, yr, gen, -1);
 				// output Genetics
-				if ((sim.outputWCFstat || sim.outputPairwiseFst) && yr % sim.outputGeneticInterval == 0) {
+				if ((sim.outputWCFstat || sim.outputPairwiseFst || sim.outputPerLocusWCFstat) && yr % sim.outputGeneticInterval == 0) {
 					if (pLandscape) pComm->sampleIndividuals(pSpecies);
-					pComm->outNeutralGenetics(pSpecies, rep, yr, gen, sim.outputPerLocusWCFstat, sim.outputPairwiseFst);
+					pComm->outNeutralGenetics(pSpecies, rep, yr, gen, sim.outputWCFstat, sim.outputPerLocusWCFstat, sim.outputPairwiseFst);
 				}
 				if (dem.stageStruct) {
 					pComm->survival(1, 0, 1);

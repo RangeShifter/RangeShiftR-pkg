@@ -1835,7 +1835,7 @@ void Community::writePairwiseFSTFile(Species* pSpecies, const int yr, const int 
 // ----------------------------------------------------------------------------------------
 
 
-void Community::outNeutralGenetics(Species* pSpecies, int rep, int yr, int gen, bool perLocus, bool pairwise) {
+void Community::outNeutralGenetics(Species* pSpecies, int rep, int yr, int gen, bool fstat, bool perLocus, bool pairwise) {
 
 	const int nAlleles = (int)(pSpecies->getSpTrait(SNP)->getMutationParameters().find(MAX)->second);
 	const int nLoci = (int)pSpecies->getNPositionsForTrait(SNP);
@@ -1852,25 +1852,24 @@ void Community::outNeutralGenetics(Species* pSpecies, int rep, int yr, int gen, 
 		pNeutralStatistics = make_unique<NeutralStatsManager>(patchList, nLoci);
 
 	pNeutralStatistics->updateAlleleTables(pSpecies, pLandscape, patchList);
-	pNeutralStatistics->calculateHo(patchList, nInds, nLoci, pSpecies, pLandscape);
-	pNeutralStatistics->setLociDiversityCounter(patchList, nInds, pSpecies, pLandscape);
+
+	if (fstat) {
+		pNeutralStatistics->calculateHo(patchList, nInds, nLoci, pSpecies, pLandscape);
+		pNeutralStatistics->setLociDiversityCounter(patchList, nInds, pSpecies, pLandscape);
+		pNeutralStatistics->calculateFstatWC(patchList, nInds, nLoci, nAlleles, pSpecies, pLandscape);
+		writeWCFstatFile(rep, yr, gen);
+	}
 
 	if (perLocus) {
 		pNeutralStatistics->calculateFstatWC_MS(patchList, nInds, nLoci, nAlleles, pSpecies, pLandscape);
 		pNeutralStatistics->calculateHo2(patchList, nInds, nLoci, pSpecies, pLandscape);
 		writeWCPerLocusFstatFile(pSpecies, yr, gen, nAlleles, nLoci, patchList);
 	}
-	else {
-		pNeutralStatistics->calculateFstatWC(patchList, nInds, nLoci, nAlleles, pSpecies, pLandscape);
-	}
 
 	if (pairwise) {
 		pNeutralStatistics->setFstMatrix(patchList, nInds, nLoci, pSpecies, pLandscape);
 		writePairwiseFSTFile(pSpecies, yr, gen, nAlleles, nLoci, patchList);
 	}
-
-	// always write out the minimum stats
-	writeWCFstatFile(rep, yr, gen);
 }
 
 //---------------------------------------------------------------------------
