@@ -130,37 +130,37 @@ void NeutralStatsManager::setLociDiversityCounter(set<int> const& patchList, con
 		}
 	}
 
-	_nb_alleles_local = (nbpatch ? pop_mean / nbpatch : nanf("NULL"));
-	_nb_alleles_global = 0;
+	meanNbAllelesPerLocusPerPatch = (nbpatch ? pop_mean / nbpatch : nanf("NULL"));
+	meanNbAllelesPerLocus = 0;
 
 	for (i = 0; i < nLoci; ++i)
 		for (j = 0; j < nAlleles; ++j)
-			_nb_alleles_global += pop_div[i][j];
+			meanNbAllelesPerLocus += pop_div[i][j];
 
-	_nb_alleles_global /= nLoci;
+	meanNbAllelesPerLocus /= nLoci;
 
 	for (i = 0; i < nLoci; ++i)
 		delete[] pop_div[i];
 	delete[] pop_div;
 
 	//number of fixed loci, local and global counters:
-	_fix_loc_local = 0;
+	meanNbFixedAllelesPerPatch = 0;
 
 	for (int patchId : patchList) {
 		const auto patch = pLandscape->findPatch(patchId);
 		const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
 		for (i = 0; i < nLoci; ++i)
 			for (j = 0; j < nAlleles; ++j)
-				_fix_loc_local += (pPop->getAlleleFrequency(i, j) == 1);
+				meanNbFixedAllelesPerPatch += (pPop->getAlleleFrequency(i, j) == 1);
 	}
 
-	_fix_loc_local /= nbpatch;
-	_fix_loc_global = 0;
+	meanNbFixedAllelesPerPatch /= nbpatch;
+	totNbFixedAlleles = 0;
 
 	//globally:  
 	for (i = 0; i < nLoci; ++i)
 		for (j = 0; j < nAlleles; ++j)
-			_fix_loc_global += (globalAlleleTable[i].getFrequency(j) == 1);
+			totNbFixedAlleles += (globalAlleleTable[i].getFrequency(j) == 1);
 }
 
 // ----------------------------------------------------------------------------------------
@@ -241,8 +241,7 @@ void NeutralStatsManager::calculateHt(Species* pSpecies, Landscape* pLandscape, 
 
 void NeutralStatsManager::calculateHo2(set<int> const& patchList, const int nbInds, const int nbrLoci, Species* pSpecies, Landscape* pLandscape) {
 
-	vector<double> hetero(nbrLoci, 0);
-
+	vector<double> hetero(nbrLoci, 0); 
 	double nLoci = nbInds * nbrLoci;
 
 	for (int patchId : patchList) {
@@ -592,12 +591,6 @@ void NeutralStatsManager::setFstMatrix(set<int> const& patchList, const int nInd
 		const auto patch = pLandscape->findPatch(patchVect[i]);
 		const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
 
-//#if RSDEBUG
-//		DEBUGLOG << "OutputPairwiseStats: 644 "
-//			<< " population " << patch->getPatchNum() << " popSize[i] " << pop_sizes[i] << endl;
-//		//	<< endl;
-//#endif
-
 		for (int l = 0; l < nLoci; ++l) {
 
 			for (int u = 0; u < nAlleles; ++u) {
@@ -618,14 +611,6 @@ void NeutralStatsManager::setFstMatrix(set<int> const& patchList, const int nInd
 
 				denominator += pop_sizes[i] * var + pop_weights[i] * pq; //common denominator
 
-//#if RSDEBUG
-//				DEBUGLOG << "OutputPairwiseStats: 671 "
-//					<< " loci " << l << " allele " << u << " frequency " << p << " pq " << pq << " var " << var << " num " << num << 
-//					" numerator[i][i] " << numerator[i][i] << " numerator_W " << numerator_W << " denominator " << denominator
-//					<< endl;
-//#endif
-
-
 			} // end for allele
 		}// end for locus
 	}//end for pop
@@ -636,11 +621,6 @@ void NeutralStatsManager::setFstMatrix(set<int> const& patchList, const int nInd
 			_fst_matrix.set(i, i, 1 - (numerator[i][i] * sum_weights / denominator));
 		else
 			_fst_matrix.set(i, i, 0.0);
-//#if RSDEBUG
-//		DEBUGLOG << "OutputPairwiseStats: 717 "
-//			<< " result " << 1 - (numerator[i][i] * sum_weights / denominator) << " in matrix " << getPairwiseFst(i, i)
-//			<< endl;
-//#endif
 	}
 	_fst_WH = 1 - ((numerator_W * sum_weights) / (denominator * tot_size)); //equ. 9 Weir & Hill 2002
 
@@ -673,13 +653,6 @@ void NeutralStatsManager::setFstMatrix(set<int> const& patchList, const int nInd
 				_fst_matrix.set(i, j, 1 - ((numerator[i][j] * sum_weights) / (2 * denominator)));
 			else
 				_fst_matrix.set(i, j, 0.0);
-
-//#if RSDEBUG
-//			DEBUGLOG << "OutputPairwiseStats: 717 "
-//				<< " result " << 1 - ((numerator[i][j] * sum_weights) / (2 * denominator)) << " in matrix " << getPairwiseFst(i, j)
-//				<< endl;
-//#endif
-
 		}
 	} 
 	delete[] pop_weights;

@@ -105,8 +105,8 @@ class NeutralStatsManager {
 private:
 	int  _n_extantPopulations, _n_individuals;
 	/**F-statistics*/
-	double _ho, _hs, _ht, _hsnei, _htnei, _nb_alleles_local, _nb_alleles_global,
-		_fst, _fis, _fit, _fix_loc_local, _fix_loc_global;
+	double _ho, _hs, _ht, _hsnei, _htnei, meanNbAllelesPerLocusPerPatch, meanNbAllelesPerLocus,
+		_fst, _fis, _fit, meanNbFixedAllelesPerPatch, totNbFixedAlleles;
 	/**Weir & Hill (2002) F-stat estimates.*/
 	double _fst_WH;
 	/**Weir & Cockerham (1984) F-stat estimates.*/
@@ -152,10 +152,10 @@ public:
 	int getNExtantPatchs() const { return _n_extantPopulations;  }
 	int getNIndividuals() const { return _n_individuals;  }
 	double getWeightedFst() { return _fst_WH; }
-	double getNbAllLocal() const { return _nb_alleles_local; }
-	double getNbAllGlobal() const { return _nb_alleles_global; }
-	double getFixLocLocal() const { return _fix_loc_local; }
-	double getFixLocGlobal() const { return _fix_loc_global; }
+	double getMeanNbAllPerLocusPerPatch() const { return meanNbAllelesPerLocusPerPatch; }
+	double getMeanNbAllPerLocus() const { return meanNbAllelesPerLocus; }
+	double getMeanFixdAllelesPerPatch() const { return meanNbFixedAllelesPerPatch; }
+	double getTotalFixdAlleles() const { return totNbFixedAlleles; }
 	double getPairwiseFst(int i, int j) { return _fst_matrix.get(i, j); }
 	double get_fst_WC_loc(int i) const { return _fst_WC_loc[i]; }
 	double get_fis_WC_loc(int i) const { return _fis_WC_loc[i]; }

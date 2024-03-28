@@ -553,11 +553,6 @@ void Population::reproduction(const float localK, const float envval, const int 
 
 	// get population size at start of reproduction
 	int ninds = (int)inds.size();
-#if RSDEBUG
-//DEBUGLOG << "Population::reproduction(): this=" << this
-//	<< " ninds=" << ninds
-//	<< endl;
-#endif // RSDEBUG 
 	if (ninds == 0) return;
 
 	int nsexes, stage, sex, njuvs, nj, nmales, nfemales;
@@ -574,15 +569,10 @@ void Population::reproduction(const float localK, const float envval, const int 
 	transferRules trfr = pSpecies->getTransferRules();
 	settleType sett = pSpecies->getSettle();
 
-	if (dem.repType == 0) nsexes = 1; else nsexes = 2;
+	if (dem.repType == 0)
+		nsexes = 1; 
+	else nsexes = 2;
 
-#if RSDEBUG
-//DEBUGLOG << "Population::reproduction(): this=" << this
-//	<< " pSpecies=" << pSpecies
-//	<< " localK=" << localK << " envval=" << envval << " resol=" << resol
-//	<< " sstruct.nStages=" << sstruct.nStages << " nsexes=" << nsexes << " ninds=" << ninds
-//	<< endl;
-#endif
 
 // set up local copy of species fecundity table
 	float fec[maxNbStages][maxNbSexes];
@@ -595,28 +585,15 @@ void Population::reproduction(const float localK, const float envval, const int 
 				}
 				else
 					fec[stg][sex] = pSpecies->getFec(stg, sex);
-				//			if (sex == 0 && fec[stg][sex] > dem.lambda) dem.lambda = fec[stg][sex];
 			}
 			else { // non-structured population
 				if (stg == 1) fec[stg][sex] = dem.lambda; // adults
 				else fec[stg][sex] = 0.0; // juveniles
 			}
-#if RSDEBUG
-			//if (ninds > 0) {
-			//DEBUGLOG << "Population::reproduction(): fec[" << stg << "][" << sex << "] = " << fec[stg][sex]
-			//	<< endl;
-			//}
-#endif
 		}
 	}
 
 	if (dem.stageStruct) {
-#if RSDEBUG
-		//if (ninds > 0) {
-		//	DEBUGLOG << "Population::reproduction(): ninds=" << ninds << " localK=" << localK
-		//		<< " effect of density dependence:" << endl;
-		//}
-#endif
 	// apply environmental effects and density dependence
 	// to all non-zero female non-juvenile stages
 		for (int stg = 1; stg < nStages; stg++) {
@@ -648,26 +625,12 @@ void Population::reproduction(const float localK, const float envval, const int 
 									weight = pSpecies->getDDwtFec(stg, effstg);
 								}
 								effect += (float)nInds[effstg][effsex] * weight;
-#if RSDEBUG
-								//if (ninds > 0) {
-								//	DEBUGLOG << " effstg=" << effstg << " effsex=" << effsex << " nInds=" << nInds[effstg][effsex];
-								//	DEBUGLOG << " weight=" << weight << " effect=" << effect
-								//		<< endl;
-								//}
-#endif
 							}
 						}
 					}
 					else // not stage-specific
 						effect = (float)totalPop();
 					if (localK > 0.0) fec[stg][0] *= exp(-effect / localK);
-#if RSDEBUG
-					//if (ninds > 0) {
-					//	DEBUGLOG << " eff popn=" << effect << " exponential=" << exp(-effect/localK);
-					//	DEBUGLOG << " fec[" << stg << "][0]=" << fec[stg][0]
-					//		<< endl;
-					//}
-#endif
 				}
 			}
 		}
@@ -686,21 +649,12 @@ void Population::reproduction(const float localK, const float envval, const int 
 		}
 		// apply density dependence
 		if (localK > 0.0) {
-			//#if GOBYMODEL
-			//		ddeffect[1] = (float)ninds/localK;
-			//#else
 			if (dem.repType == 1 || dem.repType == 2) { // sexual model
 				// apply factor of 2 (as in manual, eqn. 6)
 				fec[1][0] *= 2.0;
 			}
 			fec[1][0] /= (1.0f + fabs(dem.lambda - 1.0f) * pow(((float)ninds / localK), dem.bc));
-			//#endif
 		}
-#if RSDEBUG
-		//DEBUGLOG << "Population::reproduction(): dem.lambda=" << dem.lambda << " ninds=" << ninds
-		//	<< " localK=" << localK << " dem.bc=" << dem.bc << " fec[1][0]=" << fec[1][0]
-		//	<< endl;
-#endif
 	}
 
 	double propBreed;
@@ -764,11 +718,6 @@ void Population::reproduction(const float localK, const float envval, const int 
 	case 2: // complex sexual model
 		// count breeding females and males
 		// add breeding males to list of potential fathers
-#if RSDEBUG
-//DEBUGLOG << "Population::reproduction(): case 1:"
-//	<< " fec[1][0]=" << fec[1][0] << " fec[1][1]=" << fec[1][1]
-//	<< endl;
-#endif
 		nfemales = nmales = 0;
 		for (int i = 0; i < ninds; i++) {
 			ind = inds[i]->getStats();
@@ -776,27 +725,14 @@ void Population::reproduction(const float localK, const float envval, const int 
 			if (ind.sex == 1 && fec[ind.stage][1] > 0.0) {
 				fathers.push_back(inds[i]);
 				nmales++;
-#if RSDEBUG
-				//DEBUGLOG << "Population::reproduction(): i=" << i << " nmales=" << nmales
-				//	<< " inds[i]=" << inds[i] << endl;
-#endif
 			}
 		}
-#if RSDEBUG
-		//DEBUGLOG << "Population::reproduction(): breeding nfemales=" << nfemales
-		//	<< " breeding nmales=" << nmales << endl;
-#endif
 		if (nfemales > 0 && nmales > 0)
 		{ // population can breed
 			if (dem.repType == 2) { // complex sexual model
 				// calculate proportion of eligible females which breed
 				propBreed = (2.0 * dem.harem * nmales) / (nfemales + dem.harem * nmales);
 				if (propBreed > 1.0) propBreed = 1.0;
-#if RSDEBUG
-				//DEBUGLOG << "Population::reproduction(): harem=" << dem.harem
-				//	<< " nfemales=" << nfemales << " nmales=" << nmales << " propBreed=" << propBreed
-				//	<< endl;
-#endif
 			}
 			else propBreed = 1.0;
 			for (int i = 0; i < ninds; i++) {
@@ -821,20 +757,11 @@ void Population::reproduction(const float localK, const float envval, const int 
 						// NECESSARILY EQUAL THE EXPECTED NO. FROM EQN. 7 IN THE MANUAL...
 						if (pRandom->Bernoulli(propBreed)) {
 							expected = fec[stage][0]; // breeds
-#if RSDEBUG
-							//DEBUGLOG << "Population::reproduction(): THIS LINE SHOULD NOT APPEAR FOR GOBY MODEL"
-							//	<< " expected=" << expected
-							//	<< endl;
-#endif
 						}
 						else expected = 0.0; // fails to breed
 						if (expected <= 0.0) njuvs = 0;
 						else njuvs = pRandom->Poisson(expected);
-#if RSDEBUG
-						//DEBUGLOG << "Population::reproduction():"
-						//	<< " i " << i << " ID=" << inds[i]->getId() << " stage=" << stage
-						//	<< " expected=" << expected << " njuvs=" << njuvs << endl;
-#endif
+
 						if (njuvs > 0)
 						{
 							nj = (int)juvs.size();
@@ -844,7 +771,6 @@ void Population::reproduction(const float localK, const float envval, const int 
 							father = fathers[rrr];
 							pCell = pPatch->getRandomCell();
 							for (int j = 0; j < njuvs; j++) {
-
 								Individual* newJuv;
 #if RSDEBUG
 								// NOTE: CURRENTLY SETTING ALL INDIVIDUALS TO RECORD NO. OF STEPS ...
@@ -881,17 +807,10 @@ void Population::reproduction(const float localK, const float envval, const int 
 // Following reproduction of ALL species, add juveniles to the population prior to dispersal
 void Population::fledge(void)
 {
-#if RSDEBUG
-	//DEBUGLOG << "Population::fledge(): this=" << this
-	//	<< " ninds=" << (int)inds.size()
-	//	<< " njuvs=" << (int)juvs.size()
-	//	<< endl;
-#endif
 	demogrParams dem = pSpecies->getDemogrParams();
 
 	if (dem.stageStruct) { // juveniles are added to the individuals vector
 		inds.insert(inds.end(), juvs.begin(), juvs.end());
-		//	nInds += nJuvs; nJuvs = 0;
 	}
 	else { // all adults die and juveniles replace adults
 		int ninds = (int)inds.size();

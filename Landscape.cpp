@@ -555,8 +555,6 @@ void Landscape::generatePatches(Species* pSpecies)
 	Cell* pCell;
 
 	vector <land> ArtLandscape;
-
-
 	setCellArray();
 
 	int patchnum = 0;  // initial patch number for cell-based landscape
@@ -654,15 +652,13 @@ void Landscape::generatePatches(Species* pSpecies)
 	}
 
 	simParams sim = paramsSim->getSim();
-	if (pSpecies->getNumberOfNeutralLoci() > 0 && (sim.outputWCFstat || sim.outputPairwiseFst)) {
+	if (pSpecies->getNumberOfNeutralLoci() > 0 && (sim.outputWCFstat || sim.outputPairwiseFst || sim.outputPerLocusWCFstat)) {
 
 		string cellsToSample = pSpecies->getNSampleCellsFst();
 		int n = (cellsToSample == "all") ? -9999 : stoi(cellsToSample);
-
 		auto patchesToSample = samplePatches(n, (cellsToSample == "all"));
 
 		pSpecies->setSamplePatchList(patchesToSample);
-
 	}
 }
 
@@ -698,8 +694,6 @@ void Landscape::allocatePatches(Species* pSpecies)
 			for (int x = 0; x < dimX; x++) {
 				if (cells[y][x] != 0) { // not no-data cell
 					pCell = cells[y][x];
-					//				hx = pCell->getHabIndex();
-					//				habK = pSpecies->getHabK(hx);
 					habK = 0.0;
 					int nhab = pCell->nHabitats();
 					for (int i = 0; i < nhab; i++) {
@@ -725,7 +719,6 @@ void Landscape::allocatePatches(Species* pSpecies)
 					pCell = cells[y][x];
 					habK = 0.0;
 					int nhab = pCell->nHabitats();
-					//				for (int i = 0; i < nHab; i++)
 					for (int i = 0; i < nhab; i++)
 					{
 						habK += pSpecies->getHabK(i) * pCell->getHabitat(i) / 100.0f;
@@ -771,7 +764,7 @@ void Landscape::allocatePatches(Species* pSpecies)
 	} // end of switch (rasterType)
 
 	simParams sim = paramsSim->getSim();
-	if (pSpecies->getNumberOfNeutralLoci() > 0 && (sim.outputWCFstat || sim.outputPairwiseFst)) {
+	if (pSpecies->getNumberOfNeutralLoci() > 0 && (sim.outputWCFstat || sim.outputPairwiseFst || sim.outputPerLocusWCFstat)) {
 
 		string cellsToSample = pSpecies->getNSampleCellsFst();
 		int n = (cellsToSample == "all") ? -9999 : stoi(cellsToSample);
@@ -920,12 +913,9 @@ set<int> Landscape::samplePatches(int n, bool all) {
 
 
 	if (!all) {
-
 		auto rng = pRandom->getRNG();
-
 		sample(allPatches.begin(), allPatches.end(), std::back_inserter(sampledPatches),
 			n, rng);
-
 	}
 	else sampledPatches = allPatches;
 

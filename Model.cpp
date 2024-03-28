@@ -69,8 +69,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 		pComm = new Community(pLandscape); // set up community
 		// set up a sub-community associated with each patch (incl. the matrix)
 		pLandscape->updateCarryingCapacity(pSpecies, 0, 0);
-		//	if (ppLand.rasterType <= 2 && ppLand.dmgLoaded) 
-		//		pLandscape->updateDamageIndices();
 		patchData ppp;
 		int npatches = pLandscape->patchCount();
 		for (int i = 0; i < npatches; i++) {
@@ -473,7 +471,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				if ((sim.outputWCFstat || sim.outputPairwiseFst) && yr % sim.outputGeneticInterval == 0) {
 					if (pLandscape) pComm->sampleIndividuals(pSpecies);
 					pComm->outNeutralGenetics(pSpecies, rep, yr, gen, sim.outputPerLocusWCFstat, sim.outputPairwiseFst);
-
 				}
 				if (dem.stageStruct) {
 					pComm->survival(1, 0, 1);
