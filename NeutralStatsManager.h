@@ -102,15 +102,15 @@ private:
 
 	/**Pairwise Fst matrix.*/
 	PatchMatrix _fst_matrix;
-	vector<SNPtable> globalAlleleTable; //don't have to be pointers, not shared or moved
+	vector<SNPtable> globalSNPtables; //don't have to be pointers, not shared or moved
 
 public: 
 
 	NeutralStatsManager(set<int> const& patchList, const int nLoci);
 
-	void updateAlleleTables(Species* pSpecies, Landscape* pLandscape, set<int> const& patchList);
+	void updateAllSNPTables(Species* pSpecies, Landscape* pLandscape, set<int> const& patchList);
 
-	void resetGlobalAlleleTable();
+	void resetGlobalSNPtables();
 
 	void setLociDiversityCounter(set<int> const& patchList, const int nInds, Species* pSpecies, Landscape* pLandscape);
 

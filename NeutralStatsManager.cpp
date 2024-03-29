@@ -30,7 +30,7 @@
 
 NeutralStatsManager::NeutralStatsManager(set<int> const& patchList, const int nLoci) {
 	this->_fst_matrix = PatchMatrix(static_cast<int>(patchList.size()), static_cast<int>(patchList.size()));
-	globalAlleleTable.reserve(nLoci); //don't have to be pointers, not shared or moved
+	globalSNPtables.reserve(nLoci); //don't have to be pointers, not shared or moved
 }
 
 // ----------------------------------------------------------------------------------------
@@ -38,14 +38,14 @@ NeutralStatsManager::NeutralStatsManager(set<int> const& patchList, const int nL
 // ----------------------------------------------------------------------------------------
 
 
-void NeutralStatsManager::updateAlleleTables(Species* pSpecies, Landscape* pLandscape, set<int> const& patchList) {
+void NeutralStatsManager::updateAllSNPTables(Species* pSpecies, Landscape* pLandscape, set<int> const& patchList) {
 
 	const int nLoci = pSpecies->getNPositionsForTrait(SNP);
 	const int nAlleles = (int)pSpecies->getSpTrait(SNP)->getMutationParameters().find(MAX)->second;
 	const int chromosomes = (pSpecies->isDiploid() ? 2 : 1);
 
-	if (!globalAlleleTable.empty())
-		resetGlobalAlleleTable();
+	if (!globalSNPtables.empty())
+		resetGlobalSNPtables();
 
 	int populationSize = 0;
 
@@ -55,7 +55,7 @@ void NeutralStatsManager::updateAlleleTables(Species* pSpecies, Landscape* pLand
 		const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
 		if (pPop == 0) throw runtime_error("Sampled patch does not contain a population.");
 
-		pPop->updateAlleleTable();
+		pPop->updatePopSNPtables();
 		populationSize += pPop->sampleSize();
 
 		for (int thisLocus = 0; thisLocus < nLoci; thisLocus++) {
@@ -63,19 +63,19 @@ void NeutralStatsManager::updateAlleleTables(Species* pSpecies, Landscape* pLand
 
 				int patchAlleleCount = pPop->getAlleleCount(thisLocus, allele);
 
-				if (globalAlleleTable.size() <= thisLocus) { //if first allele of new loci (should only happen in first calculation step)
+				if (globalSNPtables.size() <= thisLocus) { //if first allele of new loci (should only happen in first calculation step)
 					SNPtable n = SNPtable(nAlleles, allele, patchAlleleCount);
-					globalAlleleTable.push_back(n);
+					globalSNPtables.push_back(n);
 				}
-				else globalAlleleTable[thisLocus].incrementTallyBy(patchAlleleCount, allele);
+				else globalSNPtables[thisLocus].incrementTallyBy(patchAlleleCount, allele);
 			}
 		}
 	}
 
 	populationSize *= chromosomes;
 
-	std::for_each(globalAlleleTable.begin(),
-		globalAlleleTable.end(),
+	std::for_each(globalSNPtables.begin(),
+		globalSNPtables.end(),
 		[&](SNPtable &v) -> void {
 			v.setFrequencies(populationSize);
 		});
@@ -85,8 +85,8 @@ void NeutralStatsManager::updateAlleleTables(Species* pSpecies, Landscape* pLand
 // Reset allele tables in SNPtable structs
 // ----------------------------------------------------------------------------------------
 
-void NeutralStatsManager::resetGlobalAlleleTable() {
-	for (auto& entry : globalAlleleTable) {
+void NeutralStatsManager::resetGlobalSNPtables() {
+	for (auto& entry : globalSNPtables) {
 		entry.reset();
 	}
 }
@@ -163,7 +163,7 @@ void NeutralStatsManager::setLociDiversityCounter(set<int> const& patchList, con
 	//globally:  
 	for (i = 0; i < nLoci; ++i)
 		for (j = 0; j < nAlleles; ++j)
-			totNbFixedAlleles += (globalAlleleTable[i].getFrequency(j) == 1);
+			totNbFixedAlleles += (globalSNPtables[i].getFrequency(j) == 1);
 }
 
 // ----------------------------------------------------------------------------------------
@@ -225,7 +225,7 @@ void NeutralStatsManager::calculateHt(Species* pSpecies, Landscape* pLandscape, 
 
 		for (int allele = 0; allele < nAlleles; ++allele) {
 
-			freq = globalAlleleTable[thisLocus].getFrequency(allele);
+			freq = globalSNPtables[thisLocus].getFrequency(allele);
 
 			freq *= freq; //squared frequencies
 
@@ -314,7 +314,7 @@ void NeutralStatsManager::calculateFstatWC(set<int> const& patchList, const int 
 				const auto patch = pLandscape->findPatch(patchId);
 				const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
 
-				var = pPop->getAlleleFrequency(thisLocus, allele) - globalAlleleTable[thisLocus].getFrequency(allele); //(p_liu - pbar_u)^2 
+				var = pPop->getAlleleFrequency(thisLocus, allele) - globalSNPtables[thisLocus].getFrequency(allele); //(p_liu - pbar_u)^2 
 
 				var *= var;
 
@@ -325,7 +325,7 @@ void NeutralStatsManager::calculateFstatWC(set<int> const& patchList, const int 
 			}//end for pop
 
 			s2 *= s2_denom;
-			p_bar = globalAlleleTable[thisLocus].getFrequency(allele);
+			p_bar = globalSNPtables[thisLocus].getFrequency(allele);
 			h_bar *= inverse_n_total;
 
 			x = p_bar * (1 - p_bar) - r * s2;
@@ -437,7 +437,7 @@ void NeutralStatsManager::calculateFstatWC_MS(set<int> const& patchList, const i
 
 				freq = pPop->getAlleleFrequency(l, a);
 
-				var = freq - globalAlleleTable[l].getFrequency(a); //(p_liu - pbar_u)^2
+				var = freq - globalSNPtables[l].getFrequency(a); //(p_liu - pbar_u)^2
 
 				var *= var;
 
@@ -602,7 +602,7 @@ void NeutralStatsManager::setFstMatrix(set<int> const& patchList, const int nInd
 
 				pq = p * (1 - p);
 
-				var = p - globalAlleleTable[l].getFrequency(u); //(p_liu - pbar_u)^2 
+				var = p - globalSNPtables[l].getFrequency(u); //(p_liu - pbar_u)^2 
 
 				var *= var;
 

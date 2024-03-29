@@ -320,8 +320,8 @@ int Population::getNInds(void) { return (int)inds.size(); }
 // ----------------------------------------------------------------------------------------
 // reset allele table
 // ----------------------------------------------------------------------------------------
-void Population::resetAlleleTable() {
-	for (auto& entry : allSNPtables) {
+void Population::resetPopSNPtables() {
+	for (auto& entry : popSNPtables) {
 		entry.reset();
 	}
 }
@@ -330,19 +330,19 @@ void Population::resetAlleleTable() {
 //  allele frequency in population of sampled individuals 
 // ----------------------------------------------------------------------------------------
 
-void Population::updateAlleleTable() {
+void Population::updatePopSNPtables() {
 
 	const int nLoci = pSpecies->getNPositionsForTrait(SNP);
 	const int nAlleles = (int)pSpecies->getSpTrait(SNP)->getMutationParameters().find(MAX)->second;
 	const auto& positions = pSpecies->getSpTrait(SNP)->getPositions();
 
-	if (allSNPtables.size() != 0)
-		resetAlleleTable();
+	if (popSNPtables.size() != 0)
+		resetPopSNPtables();
 	else {
-		allSNPtables.reserve(nLoci);
+		popSNPtables.reserve(nLoci);
 
 		for (int l = 0; l < nLoci; l++) {
-			allSNPtables.push_back(SNPtable(nAlleles));
+			popSNPtables.push_back(SNPtable(nAlleles));
 		}
 	}
 
@@ -358,11 +358,11 @@ void Population::updateAlleleTable() {
 
 			bool isHetero = alleleOnChromA != alleleOnChromB;
 			if (isHetero) {
-				allSNPtables[whichLocus].incrementHeteroTally(alleleOnChromA);
-				allSNPtables[whichLocus].incrementHeteroTally(alleleOnChromB);
+				popSNPtables[whichLocus].incrementHeteroTally(alleleOnChromA);
+				popSNPtables[whichLocus].incrementHeteroTally(alleleOnChromB);
 			}
-			allSNPtables[whichLocus].incrementTally(alleleOnChromA);
-			allSNPtables[whichLocus].incrementTally(alleleOnChromB);
+			popSNPtables[whichLocus].incrementTally(alleleOnChromA);
+			popSNPtables[whichLocus].incrementTally(alleleOnChromB);
 
 			whichLocus++;
 		}
@@ -370,8 +370,8 @@ void Population::updateAlleleTable() {
 
 	if (sampledInds.size() > 0) {
 		std::for_each(
-			allSNPtables.begin(),
-			allSNPtables.end(),
+			popSNPtables.begin(),
+			popSNPtables.end(),
 			[&](SNPtable& thisLocus) -> void {
 				thisLocus.setFrequencies(static_cast<int>(sampledInds.size()) * 2); // /!\ assumes dipoidy?
 				//thisLocus->divideHeteros(sampledInds.size()); //weir and cockerham doesn't need this division??
@@ -380,15 +380,15 @@ void Population::updateAlleleTable() {
 }
 
 double Population::getAlleleFrequency(int locus, int allele) {
-	return allSNPtables[locus].getFrequency(allele);
+	return popSNPtables[locus].getFrequency(allele);
 }
 
 int Population::getAlleleCount(int locus, int allele) {
-	return allSNPtables[locus].getTally(allele);
+	return popSNPtables[locus].getTally(allele);
 }
 
 int Population::getHeteroTally(int locus, int allele) {
-	return allSNPtables[locus].getHeteroTally(allele);
+	return popSNPtables[locus].getHeteroTally(allele);
 }
 
 // ----------------------------------------------------------------------------------------

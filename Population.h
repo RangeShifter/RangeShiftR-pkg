@@ -224,7 +224,7 @@ public:
 
 	void clean(void); // Remove zero pointers to dead or dispersed individuals
 
-	void updateAlleleTable();
+	void updatePopSNPtables();
 	double getAlleleFrequency(int locus, int allele);
 	int getAlleleCount(int locus, int allele);
 	int getHeteroTally(int locus, int allele);
@@ -244,8 +244,8 @@ private:
 	// has been completed
 
 	std::set <Individual*> sampledInds;
-	vector<SNPtable> allSNPtables;
-	void resetAlleleTable();
+	vector<SNPtable> popSNPtables;
+	void resetPopSNPtables();
 };
 
 //---------------------------------------------------------------------------

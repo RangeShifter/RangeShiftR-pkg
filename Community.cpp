@@ -1853,7 +1853,7 @@ void Community::outNeutralGenetics(Species* pSpecies, int rep, int yr, int gen, 
 	if (pNeutralStatistics == 0)
 		pNeutralStatistics = make_unique<NeutralStatsManager>(patchList, nLoci);
 
-	pNeutralStatistics->updateAlleleTables(pSpecies, pLandscape, patchList);
+	pNeutralStatistics->updateAllSNPTables(pSpecies, pLandscape, patchList);
 
 	if (fstat) {
 		pNeutralStatistics->calculateHo(patchList, nInds, nLoci, pSpecies, pLandscape);
