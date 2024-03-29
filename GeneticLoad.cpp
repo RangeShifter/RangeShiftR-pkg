@@ -404,7 +404,7 @@ int GeneticLoad::countHeterozygoteLoci() const {
 // ----------------------------------------------------------------------------------------
 
 
-float GeneticLoad::getSelectionCoefAtLoci(short whichChromosome, int position) const {
+float GeneticLoad::getAlleleValueAtLocus(short whichChromosome, int position) const {
 
 	auto it = genes.find(position);
 

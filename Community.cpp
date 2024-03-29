@@ -1634,7 +1634,9 @@ void Community::sampleIndividuals(Species* pSpecies) {
 	for (int patchId : patchList) {
 		const auto patch = pLandscape->findPatch(patchId);
 		auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
-		pPop->sampleIndsWithoutReplacement(n, stages);
+		if (pPop != nullptr) {
+			pPop->sampleIndsWithoutReplacement(n, stages);
+		}
 	}
 }
 
@@ -1789,7 +1791,7 @@ void Community::writeWCPerLocusFstatFile(Species* pSpecies, const int yr, const 
 			int popSize = pPop->sampleSize();
 			int het = 0;
 			for (int a = 0; a < nAlleles; ++a) {
-				het += static_cast<int>(pPop->getHetero(thisLocus, a)); // not sure why this returns a double
+				het += static_cast<int>(pPop->getHeteroTally(thisLocus, a)); // not sure why this returns a double
 			}
 			outperlocusfstat << "\t" << het / (2.0 * popSize);
 		}

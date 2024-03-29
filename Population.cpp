@@ -321,7 +321,7 @@ int Population::getNInds(void) { return (int)inds.size(); }
 // reset allele table
 // ----------------------------------------------------------------------------------------
 void Population::resetAlleleTable() {
-	for (auto& entry : alleleTable) {
+	for (auto& entry : allSNPtables) {
 		entry.reset();
 	}
 }
@@ -336,13 +336,13 @@ void Population::updateAlleleTable() {
 	const int nAlleles = (int)pSpecies->getSpTrait(SNP)->getMutationParameters().find(MAX)->second;
 	const auto& positions = pSpecies->getSpTrait(SNP)->getPositions();
 
-	if (alleleTable.size() != 0)
+	if (allSNPtables.size() != 0)
 		resetAlleleTable();
 	else {
-		alleleTable.reserve(nLoci);
+		allSNPtables.reserve(nLoci);
 
 		for (int l = 0; l < nLoci; l++) {
-			alleleTable.push_back(NeutralData(nAlleles));
+			allSNPtables.push_back(SNPtable(nAlleles));
 		}
 	}
 
@@ -350,45 +350,45 @@ void Population::updateAlleleTable() {
 
 		const auto trait = individual->getTrait(SNP);
 
-		int lociCounter = 0;
+		int whichLocus = 0;
 		for (auto position : positions) {
 
-			auto a = (int)trait->getSelectionCoefAtLoci(0, position);
-			auto b = (int)trait->getSelectionCoefAtLoci(1, position);
+			int alleleOnChromA = (int)trait->getAlleleValueAtLocus(0, position);
+			int alleleOnChromB = (int)trait->getAlleleValueAtLocus(1, position);
 
-			int isHetero = a != b;
-			alleleTable[lociCounter].incrementHeteroBy(isHetero, a);
-			alleleTable[lociCounter].incrementHeteroBy(isHetero, b);
+			bool isHetero = alleleOnChromA != alleleOnChromB;
+			if (isHetero) {
+				allSNPtables[whichLocus].incrementHeteroTally(alleleOnChromA);
+				allSNPtables[whichLocus].incrementHeteroTally(alleleOnChromB);
+			}
+			allSNPtables[whichLocus].incrementTally(alleleOnChromA);
+			allSNPtables[whichLocus].incrementTally(alleleOnChromB);
 
-			alleleTable[lociCounter].incrementCount(a);
-			alleleTable[lociCounter].incrementCount(b);
-
-			lociCounter++;
+			whichLocus++;
 		}
-
 	}
 
 	if (sampledInds.size() > 0) {
-		std::for_each(alleleTable.begin(),
-			alleleTable.end(),
-			[&](NeutralData& v) -> void {
-				v.setFrequencies(static_cast<int>(sampledInds.size()) * 2);
-				//v->divideHeteros(sampledInds.size()); //weir and cockerham doesn't need this division??
+		std::for_each(
+			allSNPtables.begin(),
+			allSNPtables.end(),
+			[&](SNPtable& thisLocus) -> void {
+				thisLocus.setFrequencies(static_cast<int>(sampledInds.size()) * 2); // /!\ assumes dipoidy?
+				//thisLocus->divideHeteros(sampledInds.size()); //weir and cockerham doesn't need this division??
 			});
 	}
 }
 
 double Population::getAlleleFrequency(int locus, int allele) {
-	return alleleTable[locus].getFrequency(allele);
+	return allSNPtables[locus].getFrequency(allele);
 }
-
 
 int Population::getAlleleCount(int locus, int allele) {
-	return alleleTable[locus].getCount(allele);
+	return allSNPtables[locus].getTally(allele);
 }
 
-double Population::getHetero(int locus, int allele) {
-	return alleleTable[locus].getHetero(allele);
+int Population::getHeteroTally(int locus, int allele) {
+	return allSNPtables[locus].getHeteroTally(allele);
 }
 
 // ----------------------------------------------------------------------------------------
@@ -1778,13 +1778,6 @@ void Population::outPopulation(int rep, int yr, int gen, float eps,
 			outPop << "\t" << eps << "\t" << envval << "\t" << k;
 		}
 	}
-#if RSDEBUG
-	//DEBUGLOG << "Population::outPopulation(): this=" << this
-	//	<< " patchNum=" << pPatch->getPatchNum()
-	//	<< " totalPop()=" << totalPop()
-	//	<< " nStages=" << nStages << " nSexes=" << nSexes
-	//	<< endl;
-#endif
 	outPop << "\t" << pSpecies->getSpNum();
 	if (dem.stageStruct) {
 		p = getStats();
@@ -1808,65 +1801,6 @@ void Population::outPopulation(int rep, int yr, int gen, float eps,
 		}
 	}
 	outPop << endl;
-
-	/*
-	#if RS_ABC
-	obsdata obs;
-	if (abcYear) {
-		int nobs = (int)pABCmaster->NObs();
-		for (int i = 0; i < nobs; i++) {
-			obs = pABCmaster->getObsData(i);
-	#if RSDEBUG
-	//DEBUGLOG << "Population::outPopulation(): this=" << this << " i=" << i << " yr=" << yr
-	//	<< " obs.year=" << obs.year << " obs.type=" << obs.type << " obs.name=" << obs.name
-	//	<< " obs.x=" << obs.x << " obs.y=" << obs.y
-	//	<< endl;
-	#endif
-			if (obs.year == yr && obs.type == 2) {
-				if (obs.name == "NInds" || obs.name == "Occupied") {
-					bool match = false;
-					if (patchModel) {
-						if (obs.x == pPatch->getPatchNum()) {
-							match = true;
-	#if RSDEBUG
-	//DEBUGLOG << "Population::outPopulation(): i=" << i << " PROCESS Population NInds"
-	//	<< " obs.id=" << obs.id << " obs.value=" << obs.value << " obs.x=" << obs.x
-	//	<< " pPatch->PatchNum()=" << pPatch->getPatchNum()
-	//	<< " totalPop()=" << totalPop() << " p.nNonJuvs=" << p.nNonJuvs
-	//	<< endl;
-	#endif
-						}
-					}
-					else {
-						locn loc = pPatch->getCentroid();
-						if (obs.x == loc.x && obs.y == loc.y) {
-							match = true;
-	#if RSDEBUG
-	DEBUGLOG << "Population::outPopulation(): i=" << i << " PROCESS Population NInds"
-		<< " obs.id=" << obs.id << " obs.value=" << obs.value << " obs.x="
-		<< obs.x << " obs.y=" << obs.y << " loc.x=" << loc.x << " loc.y=" << loc.y
-		<< " totalPop()=" << totalPop() << " p.nNonJuvs=" << p.nNonJuvs
-		<< endl;
-	#endif
-						}
-					}
-					if (match) {
-						if (obs.name == "NInds") {
-							if (dem.stageStruct)
-								pABCmaster->AddNewPred(sim.simulation,obs.id,rep,obs.value,p.nNonJuvs,obs.weight);
-							else
-								pABCmaster->AddNewPred(sim.simulation,obs.id,rep,obs.value,totalPop(),obs.weight);
-						}
-						else { // obs.name == "Occupied"
-							pABCmaster->AddNewPred(sim.simulation,obs.id,rep,obs.value,p.breeding,obs.weight);
-						}
-					}
-				}
-			}
-		}
-	}
-	#endif // ABC
-	*/
 }
 
 //---------------------------------------------------------------------------

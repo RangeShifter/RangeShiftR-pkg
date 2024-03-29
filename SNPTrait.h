@@ -54,7 +54,7 @@ public:
 
 	map<int, vector<unsigned char>>& get_mutations() { return genes; } //returning reference, reciever must be const
 
-	virtual float getSelectionCoefAtLoci(short chromosome, int position) const override;
+	virtual float getAlleleValueAtLocus(short chromosome, int position) const override;
 
 	virtual int countHeterozygoteLoci() const;
 

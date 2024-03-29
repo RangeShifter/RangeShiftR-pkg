@@ -48,54 +48,40 @@ public:
 };
 
 
-struct NeutralData {
+struct SNPtable {
 
 private:
-	//int lociPosition;
-	//char allele;
-	vector<int> counts;
-	vector<double> freqs;
-	vector<double> heteros;
+	vector<int> alleleTallies;
+	vector<double> alleleFrequencies;
+	vector<int> alleleHeterozygoteTallies;
 
 public:
 	//for community allele table, heteros not technically needed so don't reserve 
-	NeutralData(int nAllele, int allele, int alleleCount) : counts(nAllele), freqs(nAllele) {
-		this->incrementCountBy(alleleCount, allele);
+	SNPtable(int nAllele, int allele, int alleleCount) : alleleTallies(nAllele), alleleFrequencies(nAllele) {
+		this->incrementTallyBy(alleleCount, allele);
 	};
 
 	//for population allele tables 
-	NeutralData(int nAllele) : counts(nAllele), freqs(nAllele), heteros(nAllele) {};
+	SNPtable(int nAllele) : alleleTallies(nAllele), alleleFrequencies(nAllele), alleleHeterozygoteTallies(nAllele) {};
 
 	void setFrequencies(int populationSize) {
-		int i = 0;
-		for (auto count : counts) {
-			if (freqs.size() <= i)
-				freqs.push_back(((count != 0) ? count / static_cast<double>(populationSize) : 0));
-			else
-				freqs[i] = ((count != 0) ? count / static_cast<double>(populationSize) : 0);
-			++i;
+		for (int i = 0; i < alleleFrequencies.size(); i++) {
+			alleleFrequencies[i] = alleleTallies[i] / static_cast<double>(populationSize);
 		}
 	};
 
 	void reset() {
-		fill(counts.begin(), counts.end(), 0); fill(freqs.begin(), freqs.end(), 0);
-		fill(heteros.begin(), heteros.end(), 0);
+		fill(alleleTallies.begin(), alleleTallies.end(), 0); fill(alleleFrequencies.begin(), alleleFrequencies.end(), 0);
+		fill(alleleHeterozygoteTallies.begin(), alleleHeterozygoteTallies.end(), 0);
 	}
 
-	int getCount(int allele) { 
-		return counts[allele]; 
-	};
-	double getFrequency(int allele) { return freqs[allele]; };
+	int getTally(int whichAllele) { return alleleTallies[whichAllele]; };
+	double getFrequency(int whichAllele) { return alleleFrequencies[whichAllele]; };
+	int getHeteroTally(int whichAllele) { return alleleHeterozygoteTallies[whichAllele]; };
 
-	double getHetero(int allele) { return heteros[allele]; };
-
-	void incrementCount(int allele) { counts[allele]++; };
-
-	void incrementCountBy(int count, int allele) { this->counts[allele] += count; }
-
-	void incrementHeteroBy(int count, int allele) { 
-		this->heteros[allele] += count; 
-	}
+	void incrementTally(int whichAllele) { alleleTallies[whichAllele]++; };
+	void incrementTallyBy(int count, int whichAllele) { this->alleleTallies[whichAllele] += count; }
+	void incrementHeteroTally(int whichAllele) { this->alleleHeterozygoteTallies[whichAllele]++; }
 };
 
 
@@ -116,7 +102,7 @@ private:
 
 	/**Pairwise Fst matrix.*/
 	PatchMatrix _fst_matrix;
-	vector<NeutralData> globalAlleleTable; //don't have to be pointers, not shared or moved
+	vector<SNPtable> globalAlleleTable; //don't have to be pointers, not shared or moved
 
 public: 
 

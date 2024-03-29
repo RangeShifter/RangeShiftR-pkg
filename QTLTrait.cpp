@@ -402,7 +402,7 @@ int QTLTrait::countHeterozygoteLoci() const {
 // get allele value at loci 
 // ----------------------------------------------------------------------------------------
 
-float QTLTrait::getSelectionCoefAtLoci(short whichChromosome, int position) const {
+float QTLTrait::getAlleleValueAtLocus(short whichChromosome, int position) const {
 
 	auto it = genes.find(position);
 

@@ -498,7 +498,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				pComm->ageIncrement(); // increment age of all individuals
 				if (sim.outInds && yr >= sim.outStartInd && yr % sim.outIntInd == 0)
 					pComm->outInds(rep, yr, -1, -1); // list any individuals dying having reached maximum age
-				pComm->survival(1, 0, 1);						// delete any such individuals
+				pComm->survival(1, 0, 1);					// delete any such individuals
 				totalInds = pComm->totalInds();
 				if (totalInds <= 0) { yr++; break; }
 			}

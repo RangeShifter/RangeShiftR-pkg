@@ -652,7 +652,8 @@ void Landscape::generatePatches(Species* pSpecies)
 	}
 
 	simParams sim = paramsSim->getSim();
-	if (pSpecies->getNumberOfNeutralLoci() > 0 && (sim.outputWCFstat || sim.outputPairwiseFst || sim.outputPerLocusWCFstat)) {
+	if (pSpecies->getNumberOfNeutralLoci() > 0 && 
+		(sim.outputWCFstat || sim.outputPairwiseFst || sim.outputPerLocusWCFstat)) {
 
 		string cellsToSample = pSpecies->getNSampleCellsFst();
 		int n = (cellsToSample == "all") ? -9999 : stoi(cellsToSample);
@@ -923,7 +924,6 @@ set<int> Landscape::samplePatches(int n, bool all) {
 	copy(sampledPatches.begin(), sampledPatches.end(), inserter(patchIds, patchIds.end()));
 
 	return patchIds;
-
 }
 
 void Landscape::resetPatchPopns(void) {
@@ -1586,8 +1586,11 @@ void Landscape::recordPatchChanges(int landIx) {
 int Landscape::numPatchChanges(void) { return (int)patchchanges.size(); }
 
 patchChange Landscape::getPatchChange(int i) {
-	patchChange c; c.chgnum = 99999999; c.x = c.y = c.oldpatch = c.newpatch = -1;
-	if (i >= 0 && i < (int)patchchanges.size()) c = patchchanges[i];
+	patchChange c; 
+	c.chgnum = 99999999; 
+	c.x = c.y = c.oldpatch = c.newpatch = -1;
+	if (i >= 0 && i < (int)patchchanges.size()) 
+		c = patchchanges[i];
 	return c;
 }
 

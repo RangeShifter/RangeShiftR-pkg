@@ -34,7 +34,7 @@ NeutralStatsManager::NeutralStatsManager(set<int> const& patchList, const int nL
 }
 
 // ----------------------------------------------------------------------------------------
-// Set allele tables in NeutralData structs
+// Set allele tables in SNPtable structs
 // ----------------------------------------------------------------------------------------
 
 
@@ -51,7 +51,10 @@ void NeutralStatsManager::updateAlleleTables(Species* pSpecies, Landscape* pLand
 
 	for (int patchId : patchList) {
 		const auto patch = pLandscape->findPatch(patchId);
+		if (patch == 0) throw runtime_error("Sampled patch does not exist.");
 		const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
+		if (pPop == 0) throw runtime_error("Sampled patch does not contain a population.");
+
 		pPop->updateAlleleTable();
 		populationSize += pPop->sampleSize();
 
@@ -61,10 +64,10 @@ void NeutralStatsManager::updateAlleleTables(Species* pSpecies, Landscape* pLand
 				int patchAlleleCount = pPop->getAlleleCount(thisLocus, allele);
 
 				if (globalAlleleTable.size() <= thisLocus) { //if first allele of new loci (should only happen in first calculation step)
-					NeutralData n = NeutralData(nAlleles, allele, patchAlleleCount);
+					SNPtable n = SNPtable(nAlleles, allele, patchAlleleCount);
 					globalAlleleTable.push_back(n);
 				}
-				else globalAlleleTable[thisLocus].incrementCountBy(patchAlleleCount, allele);
+				else globalAlleleTable[thisLocus].incrementTallyBy(patchAlleleCount, allele);
 			}
 		}
 	}
@@ -73,13 +76,13 @@ void NeutralStatsManager::updateAlleleTables(Species* pSpecies, Landscape* pLand
 
 	std::for_each(globalAlleleTable.begin(),
 		globalAlleleTable.end(),
-		[&](NeutralData &v) -> void {
+		[&](SNPtable &v) -> void {
 			v.setFrequencies(populationSize);
 		});
 }
 
 // ----------------------------------------------------------------------------------------
-// Reset allele tables in NeutralData structs
+// Reset allele tables in SNPtable structs
 // ----------------------------------------------------------------------------------------
 
 void NeutralStatsManager::resetGlobalAlleleTable() {
@@ -317,7 +320,7 @@ void NeutralStatsManager::calculateFstatWC(set<int> const& patchList, const int 
 
 				s2 += var * pPop->sampleSize();
 
-				h_bar += pPop->getHetero(thisLocus, allele);
+				h_bar += pPop->getHeteroTally(thisLocus, allele);
 
 			}//end for pop
 
@@ -430,7 +433,7 @@ void NeutralStatsManager::calculateFstatWC_MS(set<int> const& patchList, const i
 				int popSize = pPop->sampleSize();
 				if (!popSize) continue; //skip empty patches
 
-				het = pPop->getHetero(l, a);
+				het = pPop->getHeteroTally(l, a);
 
 				freq = pPop->getAlleleFrequency(l, a);
 

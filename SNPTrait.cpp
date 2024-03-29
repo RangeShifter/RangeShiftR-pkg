@@ -287,7 +287,7 @@ int SNPTrait::countHeterozygoteLoci() const {
 // ----------------------------------------------------------------------------------------
 
 
-float SNPTrait::getSelectionCoefAtLoci(short whichChromosome, int position) const {
+float SNPTrait::getAlleleValueAtLocus(short whichChromosome, int position) const {
 
 	auto it = genes.find(position);
 

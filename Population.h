@@ -227,7 +227,7 @@ public:
 	void updateAlleleTable();
 	double getAlleleFrequency(int locus, int allele);
 	int getAlleleCount(int locus, int allele);
-	double getHetero(int locus, int allele);
+	int getHeteroTally(int locus, int allele);
 	int countHeterozygoteLoci();
 	vector<double> countLociHeterozyotes();
 	double computeHs();
@@ -244,7 +244,7 @@ private:
 	// has been completed
 
 	std::set <Individual*> sampledInds;
-	vector<NeutralData> alleleTable;
+	vector<SNPtable> allSNPtables;
 	void resetAlleleTable();
 };
 
