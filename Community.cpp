@@ -1846,12 +1846,17 @@ void Community::outNeutralGenetics(Species* pSpecies, int rep, int yr, int gen, 
 
 	for (int patchId : patchList) {
 		const auto patch = pLandscape->findPatch(patchId);
+		if (patch == 0) {
+			throw runtime_error("Sampled patch does not exist");
+		}
 		const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
-		nInds += pPop->sampleSize();
+		if (pPop != 0) { // empty patches do not contribute
+			nInds += pPop->sampleSize();
+		}
 	}
 
 	if (pNeutralStatistics == 0)
-		pNeutralStatistics = make_unique<NeutralStatsManager>(patchList, nLoci);
+		pNeutralStatistics = make_unique<NeutralStatsManager>(patchList.size(), nLoci);
 
 	pNeutralStatistics->updateAllSNPTables(pSpecies, pLandscape, patchList);
 

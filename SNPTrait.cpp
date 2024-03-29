@@ -275,7 +275,6 @@ bool SNPTrait::isHeterozygoteAtLocus(int locus) const {
 int SNPTrait::countHeterozygoteLoci() const {
 
 	int count = 0;
-
 	for (auto const& [locus, allelePair] : genes) {
 			count += (allelePair[0] != allelePair[1]);
 	}

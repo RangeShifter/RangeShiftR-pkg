@@ -379,16 +379,16 @@ void Population::updatePopSNPtables() {
 	}
 }
 
-double Population::getAlleleFrequency(int locus, int allele) {
-	return popSNPtables[locus].getFrequency(allele);
+double Population::getAlleleFrequency(int thisLocus, int whichAllele) {
+	return popSNPtables[thisLocus].getFrequency(whichAllele);
 }
 
-int Population::getAlleleCount(int locus, int allele) {
-	return popSNPtables[locus].getTally(allele);
+int Population::getAlleleTally(int thisLocus, int whichAllele) {
+	return popSNPtables[thisLocus].getTally(whichAllele);
 }
 
-int Population::getHeteroTally(int locus, int allele) {
-	return popSNPtables[locus].getHeteroTally(allele);
+int Population::getHeteroTally(int thisLocus, int whichAllele) {
+	return popSNPtables[thisLocus].getHeteroTally(whichAllele);
 }
 
 // ----------------------------------------------------------------------------------------
@@ -396,12 +396,12 @@ int Population::getHeteroTally(int locus, int allele) {
 // ----------------------------------------------------------------------------------------
 
 int Population::countHeterozygoteLoci() {
-	int hetero = 0;
+	int nbHetero = 0;
 	for (Individual* ind : sampledInds) {
 		const auto trait = ind->getTrait(SNP);
-		hetero += trait->countHeterozygoteLoci();
+		nbHetero += trait->countHeterozygoteLoci();
 	}
-	return hetero;
+	return nbHetero;
 }
 
 // ----------------------------------------------------------------------------------------

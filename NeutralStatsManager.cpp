@@ -28,8 +28,8 @@
  // Cstor
  // ----------------------------------------------------------------------------------------
 
-NeutralStatsManager::NeutralStatsManager(set<int> const& patchList, const int nLoci) {
-	this->_fst_matrix = PatchMatrix(static_cast<int>(patchList.size()), static_cast<int>(patchList.size()));
+NeutralStatsManager::NeutralStatsManager(const int& nbSampledPatches, const int nLoci) {
+	this->_fst_matrix = PatchMatrix(nbSampledPatches, nbSampledPatches);
 	globalSNPtables.reserve(nLoci); //don't have to be pointers, not shared or moved
 }
 
@@ -42,7 +42,7 @@ void NeutralStatsManager::updateAllSNPTables(Species* pSpecies, Landscape* pLand
 
 	const int nLoci = pSpecies->getNPositionsForTrait(SNP);
 	const int nAlleles = (int)pSpecies->getSpTrait(SNP)->getMutationParameters().find(MAX)->second;
-	const int chromosomes = (pSpecies->isDiploid() ? 2 : 1);
+	const int ploidy = (pSpecies->isDiploid() ? 2 : 1);
 
 	if (!globalSNPtables.empty())
 		resetGlobalSNPtables();
@@ -51,29 +51,31 @@ void NeutralStatsManager::updateAllSNPTables(Species* pSpecies, Landscape* pLand
 
 	for (int patchId : patchList) {
 		const auto patch = pLandscape->findPatch(patchId);
-		if (patch == 0) throw runtime_error("Sampled patch does not exist.");
 		const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
-		if (pPop == 0) throw runtime_error("Sampled patch does not contain a population.");
+		if (pPop != 0) {
 
-		pPop->updatePopSNPtables();
-		populationSize += pPop->sampleSize();
+			// Update this population's SNP counts tables
+			pPop->updatePopSNPtables();
+			populationSize += pPop->sampleSize();
 
-		for (int thisLocus = 0; thisLocus < nLoci; thisLocus++) {
-			for (int allele = 0; allele < nAlleles; allele++) {
+			// Update global SNP counts tables
+			for (int thisLocus = 0; thisLocus < nLoci; thisLocus++) {
+				for (int allele = 0; allele < nAlleles; allele++) {
 
-				int patchAlleleCount = pPop->getAlleleCount(thisLocus, allele);
+					int patchAlleleCount = pPop->getAlleleTally(thisLocus, allele);
 
-				if (globalSNPtables.size() <= thisLocus) { //if first allele of new loci (should only happen in first calculation step)
-					SNPtable n = SNPtable(nAlleles, allele, patchAlleleCount);
-					globalSNPtables.push_back(n);
+					if (globalSNPtables.size() <= thisLocus) { //if first allele of new loci (should only happen in first calculation step)
+						SNPtable newSNPtbl = SNPtable(nAlleles, allele, patchAlleleCount);
+						globalSNPtables.push_back(newSNPtbl);
+					}
+					else globalSNPtables[thisLocus].incrementTallyBy(patchAlleleCount, allele);
 				}
-				else globalSNPtables[thisLocus].incrementTallyBy(patchAlleleCount, allele);
 			}
 		}
 	}
 
-	populationSize *= chromosomes;
-
+	// Update global frequency
+	populationSize *= ploidy;
 	std::for_each(globalSNPtables.begin(),
 		globalSNPtables.end(),
 		[&](SNPtable &v) -> void {
@@ -101,69 +103,75 @@ void NeutralStatsManager::setLociDiversityCounter(set<int> const& patchList, con
 	int i, j;
 	const int nLoci = pSpecies->getNPositionsForTrait(SNP);
 	const int nAlleles = (int)pSpecies->getSpTrait(SNP)->getMutationParameters().find(MAX)->second;
-	const int chromosomes = (pSpecies->isDiploid() ? 2 : 1);
-	unsigned int nbpatch = 0;
-	double patch_mean, pop_mean = 0;
+	const int ploidy = (pSpecies->isDiploid() ? 2 : 1);
+	unsigned int nbPopulatedPatches = 0;
+	int nbAllelesInPatch = 0;
+	double meanAllelicDivInPatch = 0;
+	bool alleleExistsInPop = 0;
 
-	bool** pop_div;
+	bool** alleleExistsInCommTable;
 
 	// number of alleles per locus, Patch and pop counters:
-	pop_div = new bool* [nLoci];
+	alleleExistsInCommTable = new bool* [nLoci];
 
 	for (i = 0; i < nLoci; ++i) {
-		pop_div[i] = new bool[nAlleles];
+		alleleExistsInCommTable[i] = new bool[nAlleles];
 		for (j = 0; j < nAlleles; ++j)
-			pop_div[i][j] = 0;
+			alleleExistsInCommTable[i][j] = 0;
 	}
 
 	for (int patchId : patchList) {
 		const auto patch = pLandscape->findPatch(patchId);
 		const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
+		// if (pPop != 0) { }
 
-		nbpatch += (pPop->sampleSize() != 0);
+		nbPopulatedPatches += (pPop->sampleSize() != 0); // nbPopulatedPatches++ ?
 		if (pPop->sampleSize() > 0) {
-			patch_mean = 0;
+			nbAllelesInPatch = 0;
 			for (i = 0; i < nLoci; ++i)
 				for (j = 0; j < nAlleles; ++j) {
-					patch_mean += (pPop->getAlleleCount(i, j) != 0);
-					pop_div[i][j] |= (pPop->getAlleleCount(i, j) != 0); // OR
+					alleleExistsInPop = pPop->getAlleleTally(i, j) != 0;
+					nbAllelesInPatch += alleleExistsInPop;
+					alleleExistsInCommTable[i][j] |= alleleExistsInPop; // OR operator
 				}
 			// add mean nb of alleles per locus for Patch k to the pop mean
-			pop_mean += patch_mean / nLoci;
+			meanAllelicDivInPatch += static_cast<double>(nbAllelesInPatch) / nLoci;
 		}
 	}
+	meanNbAllelesPerLocusPerPatch = nbPopulatedPatches == 0 ? meanAllelicDivInPatch / nbPopulatedPatches : 0;
 
-	meanNbAllelesPerLocusPerPatch = (nbpatch ? pop_mean / nbpatch : nanf("NULL"));
+	// Compute mean allelic diversity per locus
 	meanNbAllelesPerLocus = 0;
-
 	for (i = 0; i < nLoci; ++i)
 		for (j = 0; j < nAlleles; ++j)
-			meanNbAllelesPerLocus += pop_div[i][j];
-
+			meanNbAllelesPerLocus += alleleExistsInCommTable[i][j];
 	meanNbAllelesPerLocus /= nLoci;
-
+	// Clear table 
 	for (i = 0; i < nLoci; ++i)
-		delete[] pop_div[i];
-	delete[] pop_div;
+		delete[] alleleExistsInCommTable[i];
+	delete[] alleleExistsInCommTable;
 
-	//number of fixed loci, local and global counters:
+	// Compute number of fixed loci per patch
+	// mean number of loci that are fixed at pop level per pop
 	meanNbFixedAllelesPerPatch = 0;
-
-	for (int patchId : patchList) {
-		const auto patch = pLandscape->findPatch(patchId);
-		const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
-		for (i = 0; i < nLoci; ++i)
-			for (j = 0; j < nAlleles; ++j)
-				meanNbFixedAllelesPerPatch += (pPop->getAlleleFrequency(i, j) == 1);
+	if (nbPopulatedPatches > 0) {
+		for (int patchId : patchList) {
+			const auto patch = pLandscape->findPatch(patchId);
+			const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
+			if (pPop != 0) {
+				for (i = 0; i < nLoci; ++i)
+					for (j = 0; j < nAlleles; ++j)
+						meanNbFixedAllelesPerPatch += pPop->getAlleleFrequency(i, j) == 1;
+			}
+		}
+		meanNbFixedAllelesPerPatch /= nbPopulatedPatches;
 	}
-
-	meanNbFixedAllelesPerPatch /= nbpatch;
-	totNbFixedAlleles = 0;
-
-	//globally:  
+	
+	// Compute number of fixed loci
+	nbGloballyFixedAlleles = 0;
 	for (i = 0; i < nLoci; ++i)
 		for (j = 0; j < nAlleles; ++j)
-			totNbFixedAlleles += (globalSNPtables[i].getFrequency(j) == 1);
+			nbGloballyFixedAlleles += globalSNPtables[i].getFrequency(j) == 1;
 }
 
 // ----------------------------------------------------------------------------------------
@@ -171,16 +179,18 @@ void NeutralStatsManager::setLociDiversityCounter(set<int> const& patchList, con
 // ----------------------------------------------------------------------------------------
 void NeutralStatsManager::calculateHo(set<int> const& patchList, const int nbInds, const int nbrLoci, Species* pSpecies, Landscape* pLandscape) {
 
-	double hetero = 0;
-	double nLoci = nbInds * nbrLoci;
+	int nbHetero = 0;
+	int nLoci = nbInds * nbrLoci;
 
 	if (nLoci != 0) {
 		for (int patchId : patchList) {
 			const auto patch = pLandscape->findPatch(patchId);
 			const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
-			hetero += pPop->countHeterozygoteLoci();
+			if (pPop != 0) {
+				nbHetero += pPop->countHeterozygoteLoci();
+			}
 		}
-		_ho = hetero / nLoci;
+		_ho = static_cast<double>(nbHetero) / static_cast<double>(nLoci);
 	}
 	else _ho = 0.0;
 }
@@ -394,7 +404,7 @@ void NeutralStatsManager::calculateFstatWC_MS(set<int> const& patchList, const i
 				const auto patch = pLandscape->findPatch(patchId);
 				const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
 
-				cnt += pPop->getAlleleCount(l, a);
+				cnt += pPop->getAlleleTally(l, a);
 
 			}
 			alploc_table[l][a] = (cnt != 0);

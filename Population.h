@@ -226,7 +226,7 @@ public:
 
 	void updatePopSNPtables();
 	double getAlleleFrequency(int locus, int allele);
-	int getAlleleCount(int locus, int allele);
+	int getAlleleTally(int locus, int allele);
 	int getHeteroTally(int locus, int allele);
 	int countHeterozygoteLoci();
 	vector<double> countLociHeterozyotes();
