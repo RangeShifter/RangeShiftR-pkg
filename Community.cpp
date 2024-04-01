@@ -1634,7 +1634,7 @@ void Community::sampleIndividuals(Species* pSpecies) {
 	for (int patchId : patchList) {
 		const auto patch = pLandscape->findPatch(patchId);
 		auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
-		if (pPop != nullptr) {
+		if (pPop != 0) {
 			pPop->sampleIndsWithoutReplacement(n, stages);
 		}
 	}
@@ -1754,8 +1754,8 @@ bool Community::openPairwiseFSTFile(Species* pSpecies, Landscape* pLandscape, co
 void Community::writeWCFstatFile(int rep, int yr, int gen) {
 
 	outwcfstat << rep << "\t" << yr << "\t" << gen << "\t";
-	outwcfstat << pNeutralStatistics->getNExtantPatchs() 
-		<< "\t" << pNeutralStatistics->getNIndividuals() << "\t";
+	outwcfstat << pNeutralStatistics->getNbPopulatedSampledPatches() 
+		<< "\t" << pNeutralStatistics->getTotalNbSampledInds() << "\t";
 	outwcfstat << pNeutralStatistics->getFstWC() << "\t" 
 		<< pNeutralStatistics->getFisWC() << "\t" 
 		<< pNeutralStatistics->getFitWC() << "\t";
@@ -1779,7 +1779,9 @@ void Community::writeWCPerLocusFstatFile(Species* pSpecies, const int yr, const 
 	int thisLocus = 0;
 	for (int position : positions) {
 
-		outperlocusfstat << yr << "\t" << gen << "\t" << position << "\t";
+		outperlocusfstat << yr << "\t" 
+			<< gen << "\t" 
+			<< position << "\t";
 		outperlocusfstat << pNeutralStatistics->get_fst_WC_loc(thisLocus) << "\t"
 			<< pNeutralStatistics->get_fis_WC_loc(thisLocus) << "\t" 
 			<< pNeutralStatistics->get_fit_WC_loc(thisLocus) << "\t" 
@@ -1788,12 +1790,24 @@ void Community::writeWCPerLocusFstatFile(Species* pSpecies, const int yr, const 
 		for (int patchId : patchList) {
 			const auto patch = pLandscape->findPatch(patchId);
 			const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
-			int popSize = pPop->sampleSize();
+			int popSize = 0;
 			int het = 0;
-			for (int a = 0; a < nAlleles; ++a) {
-				het += static_cast<int>(pPop->getHeteroTally(thisLocus, a)); // not sure why this returns a double
+			if (pPop != 0) {
+				popSize = pPop->sampleSize();
+				if (popSize == 0) {
+					outperlocusfstat << "\t" << "NA";
+				}
+				else {
+					for (int a = 0; a < nAlleles; ++a) {
+						het += static_cast<int>(pPop->getHeteroTally(thisLocus, a));
+					}
+					outperlocusfstat << "\t"
+						<< het / (2.0 * popSize);
+				}
 			}
-			outperlocusfstat << "\t" << het / (2.0 * popSize);
+			else {
+				outperlocusfstat << "\t" << "NA";
+			}
 		}
 		++thisLocus;
 		outperlocusfstat << endl;
@@ -1806,7 +1820,7 @@ void Community::writeWCPerLocusFstatFile(Species* pSpecies, const int yr, const 
 // ----------------------------------------------------------------------------------------
 void Community::writePairwiseFSTFile(Species* pSpecies, const int yr, const int gen, const  int nAlleles, const int nLoci, set<int> const& patchList) {
 
-	//within patch fst (diagonal of matrix)
+	// within patch fst (diagonal of matrix)
 	int i = 0;
 	for (int patchId : patchList) {
 		outpairwisefst << yr << "\t" << gen << "\t";

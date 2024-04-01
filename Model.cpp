@@ -457,7 +457,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 					}
 					if (sstruct.survival == 2) { // annually
 						pComm->survival(0, 1, 0); // development only of all stages
-						//					pComm->survival(0,1,0); // development only of all stages
 					}
 				}
 				else { // non-structured population

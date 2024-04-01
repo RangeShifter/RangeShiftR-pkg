@@ -29,7 +29,7 @@
  // ----------------------------------------------------------------------------------------
 
 NeutralStatsManager::NeutralStatsManager(const int& nbSampledPatches, const int nLoci) {
-	this->_fst_matrix = PatchMatrix(nbSampledPatches, nbSampledPatches);
+	this->pairwiseFstMatrix = PatchMatrix(nbSampledPatches, nbSampledPatches);
 	globalSNPtables.reserve(nLoci); //don't have to be pointers, not shared or moved
 }
 
@@ -64,7 +64,7 @@ void NeutralStatsManager::updateAllSNPTables(Species* pSpecies, Landscape* pLand
 
 					int patchAlleleCount = pPop->getAlleleTally(thisLocus, allele);
 
-					if (globalSNPtables.size() <= thisLocus) { //if first allele of new loci (should only happen in first calculation step)
+					if (globalSNPtables.size() <= thisLocus) { // if first allele of new loci (should only happen in first calculation step)
 						SNPtable newSNPtbl = SNPtable(nAlleles, allele, patchAlleleCount);
 						globalSNPtables.push_back(newSNPtbl);
 					}
@@ -123,19 +123,19 @@ void NeutralStatsManager::setLociDiversityCounter(set<int> const& patchList, con
 	for (int patchId : patchList) {
 		const auto patch = pLandscape->findPatch(patchId);
 		const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
-		// if (pPop != 0) { }
-
-		nbPopulatedPatches += (pPop->sampleSize() != 0); // nbPopulatedPatches++ ?
-		if (pPop->sampleSize() > 0) {
-			nbAllelesInPatch = 0;
-			for (i = 0; i < nLoci; ++i)
-				for (j = 0; j < nAlleles; ++j) {
-					alleleExistsInPop = pPop->getAlleleTally(i, j) != 0;
-					nbAllelesInPatch += alleleExistsInPop;
-					alleleExistsInCommTable[i][j] |= alleleExistsInPop; // OR operator
-				}
-			// add mean nb of alleles per locus for Patch k to the pop mean
-			meanAllelicDivInPatch += static_cast<double>(nbAllelesInPatch) / nLoci;
+		if (pPop != 0) { 
+			if (pPop->sampleSize() > 0) {
+				nbPopulatedPatches++;
+				nbAllelesInPatch = 0;
+				for (i = 0; i < nLoci; ++i)
+					for (j = 0; j < nAlleles; ++j) {
+						alleleExistsInPop = pPop->getAlleleTally(i, j) != 0;
+						nbAllelesInPatch += alleleExistsInPop;
+						alleleExistsInCommTable[i][j] |= alleleExistsInPop; // OR operator
+					}
+				// add mean nb of alleles per locus for Patch k to the pop mean
+				meanAllelicDivInPatch += static_cast<double>(nbAllelesInPatch) / nLoci;
+			}
 		}
 	}
 	meanNbAllelesPerLocusPerPatch = nbPopulatedPatches == 0 ? meanAllelicDivInPatch / nbPopulatedPatches : 0;
@@ -260,11 +260,12 @@ void NeutralStatsManager::calculateHo2(set<int> const& patchList, const int nbIn
 	for (int patchId : patchList) {
 		const auto patch = pLandscape->findPatch(patchId);
 		const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
-		if (pPop->sampleSize() > 0) {
-			const vector<double> heteroPatch = pPop->countLociHeterozyotes();
-
-			transform(hetero.begin(), hetero.end(), heteroPatch.begin(),
-				hetero.begin(), plus<double>());
+		if (pPop != 0) {
+			if (pPop->sampleSize() > 0) {
+				const vector<double> heteroPatch = pPop->countLociHeterozyotes();
+				transform(hetero.begin(), hetero.end(), heteroPatch.begin(),
+					hetero.begin(), plus<double>());
+			}
 		}
 	}
 
@@ -272,7 +273,7 @@ void NeutralStatsManager::calculateHo2(set<int> const& patchList, const int nbIn
 		for (double h : hetero) {
 			h /= nbInds;
 		}
-	ho_loc = hetero;
+	perLocusHo = hetero;
 }
 
 
@@ -281,77 +282,75 @@ void NeutralStatsManager::calculateHo2(set<int> const& patchList, const int nbIn
 // ----------------------------------------------------------------------------------------
 
 
-void NeutralStatsManager::calculateFstatWC(set<int> const& patchList, const int nInds, const int nLoci, const int nAlleles, Species* pSpecies, Landscape* pLandscape) {
+void NeutralStatsManager::calculateFstatWC(set<int> const& patchList, const int nbSampledIndsInComm, const int nLoci, const int nAlleles, Species* pSpecies, Landscape* pLandscape) {
 
-	double inverse_n_total;
+	double inverseNtotal;
 	double sum_weights = 0;
-	double n_bar, n_c, inverse_n_bar;
-	unsigned int extantPs = 0;
+	double nBar, nC, inverseNbar;
+	unsigned int nbPopulatedPatches = 0;
 
 	for (int patchId : patchList) {
 		const auto patch = pLandscape->findPatch(patchId);
 		const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
-		int patchSize = pPop->sampleSize();
-		if (patchSize) {
-			extantPs++;
-			sum_weights += (patchSize * patchSize / static_cast<double>(nInds));
+		if (pPop != 0) {
+			int nbSampledIndsinPop = pPop->sampleSize();
+			if (nbSampledIndsinPop > 0) {
+				nbPopulatedPatches++;
+				sum_weights += nbSampledIndsinPop * nbSampledIndsinPop / static_cast<double>(nbSampledIndsInComm);
+			}
 		}
 	}
 
-	_n_extantPopulations = extantPs;
-	_n_individuals = nInds;
+	nbExtantPops = nbPopulatedPatches;
+	totalNbSampledInds = nbSampledIndsInComm; // r * nBar
 
-	n_bar = nInds / static_cast<double>(extantPs);
-	n_c = (nInds - sum_weights) / (extantPs - 1);
-	inverse_n_bar = 1.0 / (n_bar - 1);
-	inverse_n_total = 1.0 / nInds;
+	nBar = nbSampledIndsInComm / static_cast<double>(nbPopulatedPatches); // average sample size
+	nC = (nbSampledIndsInComm - sum_weights) / (nbPopulatedPatches - 1);
+	inverseNbar = 1.0 / (nBar - 1);
+	inverseNtotal = 1.0 / nbSampledIndsInComm;
 
 	double var;
-	double s2, p_bar, h_bar;
-	double s2_denom = 1.0 / ((extantPs - 1) * n_bar),
-		r = (double)(extantPs - 1) / extantPs,
-		h_bar_factor = (2 * n_bar - 1) / (4 * n_bar);
-
-	double a = 0, b = 0, c = 0, x;
+	double s2, pBar, hBar;
+	double s2Denom = 1.0 / ((nbPopulatedPatches - 1) * nBar);
+	double rTerm = static_cast<double>(nbPopulatedPatches - 1) / nbPopulatedPatches;
+	double hBarFactor = (2 * nBar - 1) / (4 * nBar);
+	double a = 0, b = 0, c = 0, intermediateTerm;
 
 	for (int thisLocus = 0; thisLocus < nLoci; ++thisLocus) {
 
 		for (int allele = 0; allele < nAlleles; ++allele) {
 
-			s2 = p_bar = h_bar = 0;
+			s2 = hBar = 0;
+			pBar = globalSNPtables[thisLocus].getFrequency(allele);
 
 			for (int patchId : patchList) {
 				const auto patch = pLandscape->findPatch(patchId);
 				const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
+				if (pPop != 0) {
+					var = pPop->getAlleleFrequency(thisLocus, allele) - pBar;
+					var *= var;
+					s2 += var * pPop->sampleSize();
+					hBar += pPop->getHeteroTally(thisLocus, allele);
+				}
+			} //end for pop
 
-				var = pPop->getAlleleFrequency(thisLocus, allele) - globalSNPtables[thisLocus].getFrequency(allele); //(p_liu - pbar_u)^2 
+			s2 *= s2Denom;
+			hBar *= inverseNtotal;
 
-				var *= var;
-
-				s2 += var * pPop->sampleSize();
-
-				h_bar += pPop->getHeteroTally(thisLocus, allele);
-
-			}//end for pop
-
-			s2 *= s2_denom;
-			p_bar = globalSNPtables[thisLocus].getFrequency(allele);
-			h_bar *= inverse_n_total;
-
-			x = p_bar * (1 - p_bar) - r * s2;
-			a += s2 - inverse_n_bar * (x - 0.25 * h_bar);
-			b += x - h_bar_factor * h_bar;
-			c += h_bar; 
+			intermediateTerm = pBar * (1 - pBar) - rTerm * s2;
+			a += s2 - inverseNbar * (intermediateTerm - 0.25 * hBar);
+			b += intermediateTerm - hBarFactor * hBar;
+			c += hBar; 
 		} // end for allele 
 	} // end for locus
 
-	a *= n_bar / n_c;
-	b *= n_bar / (n_bar - 1);
+	a *= nBar / nC;
+	b *= nBar / (nBar - 1);
 	c *= 0.5;
 
-	_fst_WC = a / (a + b + c);
-	_fit_WC = (a + b) / (a + b + c);
-	_fis_WC = b / (b + c);
+	FstWeirCockerham = a / (a + b + c); // theta hat in eq. 1 in WC 1984
+	FitWeirCockerham = (a + b) / (a + b + c); // F hat
+	FisWeirCockerham = b / (b + c); // f hat
 }
 
 
@@ -359,191 +358,159 @@ void NeutralStatsManager::calculateFstatWC(set<int> const& patchList, const int 
 // Fstat Weir & Cockerham using Mean square approach. Similar to implementation in Hierfstat
 // ----------------------------------------------------------------------------------------
 
-void NeutralStatsManager::calculateFstatWC_MS(set<int> const& patchList, const int nInds, const int nLoci, const int nAlleles, Species* pSpecies, Landscape* pLandscape) {
+void NeutralStatsManager::calculateFstatWC_MS(set<int> const& patchList, const int nInds, const int nLoci, const int maxNbAllelesPerLocus, Species* pSpecies, Landscape* pLandscape) {
 
-	double sum_weights = 0;
+	double sumWeights = 0;
 	double nc;
-	unsigned int extantPs = 0;
+	unsigned int nbExtantPops = 0;
 
 	for (int patchId : patchList) {
 		const auto patch = pLandscape->findPatch(patchId);
 		const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
-		int patchSize = pPop->sampleSize();
-		if (patchSize) {
-			extantPs++;
-			sum_weights += (patchSize * patchSize / static_cast<double>(nInds));
-		}
-
-	}
-
-	nc = (nInds - sum_weights) / (extantPs - 1);
-
-	unsigned int npl = extantPs; //all loci typed in all patches
-
-	//p = _alleleFreqTable
-	//pb = _globalAlleleFreq
-
-	vector<int> alploc(nLoci);
-
-	unsigned int** alploc_table = new unsigned int* [nLoci];
-
-	for (int i = 0; i < nLoci; ++i)
-		alploc_table[i] = new unsigned int[nAlleles];
-
-	int tot_num_allele = 0;
-
-	for (int l = 0; l < nLoci; ++l) {
-
-		alploc[l] = 0;
-
-		for (int cnt, a = 0; a < nAlleles; ++a) {
-
-			cnt = 0;
-
-			for (int patchId : patchList) {
-				const auto patch = pLandscape->findPatch(patchId);
-				const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
-
-				cnt += pPop->getAlleleTally(l, a);
-
+		if (pPop != 0) {
+			int patchSize = pPop->sampleSize();
+			if (patchSize > 0) {
+				nbExtantPops++;
+				sumWeights += (patchSize * patchSize / static_cast<double>(nInds));
 			}
-			alploc_table[l][a] = (cnt != 0);
-			alploc[l] += (cnt != 0);
 		}
-
-		tot_num_allele += alploc[l];
 	}
 
-	//n, and nal are given by pop_sizes, same num ind typed at all loci in each patch
-//nc is the same for each locus
-//nt is given by tot_size, same tot num of ind typed for all loci
+	nc = (nInds - sumWeights) / (nbExtantPops - 1);
 
-//SSG: het/2 for each allele
-	vector<double> SSG(tot_num_allele);
-	vector<double> SSP(tot_num_allele);
-	vector<double> SSi(tot_num_allele);
+	vector<int> nbAllelesEachLocus(nLoci);
+	bool** alleleExistsTable = new bool* [nLoci];
+	for (int i = 0; i < nLoci; ++i)
+		alleleExistsTable[i] = new bool[maxNbAllelesPerLocus];
 
-	int all_cntr = 0;
+	int nbAllelesInComm = 0;
+	for (int locus = 0; locus < nLoci; ++locus) {
+		nbAllelesEachLocus[locus] = 0;
+		for (int allele = 0; allele < maxNbAllelesPerLocus; ++allele) {
+			int count = 0;
+			for (int patchId : patchList) {
+				const auto patch = pLandscape->findPatch(patchId);
+				const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
+				if (pPop != 0) count += pPop->getAlleleTally(locus, allele);
+			}
+			alleleExistsTable[locus][allele] = count != 0;
+			nbAllelesEachLocus[locus] += count != 0;
+		}
+		nbAllelesInComm += nbAllelesEachLocus[locus];
+	}
 
-	double het, freq, var;
+	// n, and nal are given by pop_sizes, same num ind typed at all loci in each patch
+	// nc is the same for each locus
+	// nt is given by tot_size, same tot num of ind typed for all loci
 
-	for (int l = 0; l < nLoci; ++l) {
+	//SSG: het/2 for each allele
+	vector<double> SSG(nbAllelesInComm);
+	vector<double> SSP(nbAllelesInComm);
+	vector<double> SSi(nbAllelesInComm);
 
-		for (int a = 0; a < nAlleles && all_cntr < tot_num_allele; ++a) {
+	int totalAlleleCounter = 0;
+	double het, pi, var, pBar;
+	int popSize;
 
-			if (alploc_table[l][a] == 0) continue; //do not consider alleles not present in the pop
+	for (int locus = 0; locus < nLoci; ++locus) {
+		for (int allele = 0; allele < maxNbAllelesPerLocus && totalAlleleCounter < nbAllelesInComm; ++allele) {
 
-			SSG[all_cntr] = 0;
-			SSi[all_cntr] = 0;
-			SSP[all_cntr] = 0;
+			if (alleleExistsTable[locus][allele] == false) continue; //do not consider alleles not present in the pop
+			SSG[totalAlleleCounter] = 0;
+			SSi[totalAlleleCounter] = 0;
+			SSP[totalAlleleCounter] = 0;
 
 			for (int patchId : patchList) {
 				const auto patch = pLandscape->findPatch(patchId);
 				const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
-				int popSize = pPop->sampleSize();
-				if (!popSize) continue; //skip empty patches
+				if (pPop == 0) popSize = 0;
+				else popSize = pPop->sampleSize();
+				if (popSize == 0) continue; // skip empty patches
 
-				het = pPop->getHeteroTally(l, a);
-
-				freq = pPop->getAlleleFrequency(l, a);
-
-				var = freq - globalSNPtables[l].getFrequency(a); //(p_liu - pbar_u)^2
-
+				het = pPop->getHeteroTally(locus, allele); // ni * h_i
+				pi = pPop->getAlleleFrequency(locus, allele);
+				pBar = globalSNPtables[locus].getFrequency(allele);
+				var = pi - pBar; //(p_liu - pbar_u)^2
 				var *= var;
 
-				SSG[all_cntr] += het;
-
-				SSi[all_cntr] += 2 * popSize * freq * (1 - freq) - het / 2;
-
-				SSP[all_cntr] += 2 * popSize * var;
+				SSG[totalAlleleCounter] += het; // numerator MSG
+				SSi[totalAlleleCounter] += 2 * popSize * pi * (1 - pi) - het / 2; // numerator
+				SSP[totalAlleleCounter] += 2 * popSize * var; // numerator MSP
 			}
-			all_cntr++;
+			totalAlleleCounter++;
 		}
 	}
 
-	if (all_cntr != tot_num_allele)
-		cout << endl << ("Error:: allele counter and total number of alleles differ in WC mean squared Fstat calculation \n");
+	if (totalAlleleCounter != nbAllelesInComm)
+		throw runtime_error("Error:: allele counter and total number of alleles differ in WC mean squared Fstat calculation \n");
 
 	//these shouldn't have to be dynamically allocated manually, if using a vector from stl then would do allocation for you 
-
-	vector<double> MSG(tot_num_allele);
-	vector<double> MSP(tot_num_allele);
-	vector<double> MSI(tot_num_allele);
-	vector<double> sigw(tot_num_allele);
-	vector<double> siga(tot_num_allele);
-	vector<double> sigb(tot_num_allele);
-
-	//	double *FST_pal = new double[tot_num_allele];
-	//	double *FIS_pal = new double[tot_num_allele];
+	vector<double> MSG(nbAllelesInComm);
+	vector<double> MSP(nbAllelesInComm);
+	vector<double> MSI(nbAllelesInComm);
+	vector<double> sigw(nbAllelesInComm);
+	vector<double> siga(nbAllelesInComm);
+	vector<double> sigb(nbAllelesInComm);
 
 	double SIGA = 0, SIGB = 0, SIGW = 0;
-
-	//per locus stats, resize should only happen in first timestep of calculation:
-	if (_fst_WC_loc.size() == 0)
-		_fst_WC_loc.resize(nLoci);
-	if (_fis_WC_loc.size() == 0)
-		_fis_WC_loc.resize(nLoci);
-	if (_fit_WC_loc.size() == 0)
-		_fit_WC_loc.resize(nLoci);
+	 
+	// per locus stats, resize should only happen in first timestep of calculation:
+	if (perLocusFstWeirCockerham.size() == 0)
+		perLocusFstWeirCockerham.resize(nLoci);
+	if (perLocusFisWeirCockerham.size() == 0)
+		perLocusFisWeirCockerham.resize(nLoci);
+	if (perLocusFitWeirCockerham.size() == 0)
+		perLocusFitWeirCockerham.resize(nLoci);
 	
-	if (tot_num_allele != nLoci) { 
-		for (int i = 0; i < tot_num_allele; ++i) {
+	if (nbAllelesInComm != nLoci) { // more than one allele per locus
+		for (int i = 0; i < nbAllelesInComm; ++i) {
 
 			MSG[i] = SSG[i] / (2 * nInds);
-			sigw[i] = MSG[i]; //wasted!
-
-			MSP[i] = SSP[i] / (npl - 1);
-
-			MSI[i] = SSi[i] / (nInds - npl);
-
-			sigb[i] = 0.5 * (MSI[i] - MSG[i]);
+			MSP[i] = SSP[i] / (nbExtantPops - 1);
+			MSI[i] = SSi[i] / (nInds - nbExtantPops);
 
 			siga[i] = (MSP[i] - MSI[i]) / (2 * nc);
-
-			//		FST_pal[i] = siga[i]/(siga[i]+sigb[i]+sigw[i]);
-			//		FIS_pal[i] = sigb[i]/(sigb[i]+sigw[i]);
+			sigb[i] = 0.5 * (MSI[i] - MSG[i]);
+			sigw[i] = MSG[i];
 
 			SIGA += siga[i];
 			SIGB += sigb[i];
 			SIGW += sigw[i];
 		}
-		double lsiga, lsigb, lsigw;
 
-		//	cout<<"  computing sigma per locus\n";
+		double locusSIGA, locusSIGB, locusSIGW;
+		int alleleCounter;
+		for (int locus = 0; locus < nLoci; ++locus) {
+			alleleCounter = 0;
+			locusSIGA = locusSIGB = locusSIGW = 0;
 
-		for (int allcntr = 0, i = 0; i < nLoci; ++i) {
-
-			lsiga = lsigb = lsigw = 0;
-
-			for (int l = 0; l < alploc[i]; ++l) {
-				lsiga += siga[allcntr];
-				lsigb += sigb[allcntr];
-				lsigw += sigw[allcntr];
-				allcntr++;
+			for (int allele = 0; allele < nbAllelesEachLocus[locus]; ++allele) {
+				locusSIGA += siga[alleleCounter];
+				locusSIGB += sigb[alleleCounter];
+				locusSIGW += sigw[alleleCounter];
+				alleleCounter++;
 			}
-
-			_fst_WC_loc[i] = lsiga / (lsiga + lsigb + lsigw);
-			_fis_WC_loc[i] = lsigb / (lsigb + lsigw);
-			_fit_WC_loc[i] = (lsiga + lsigb) / (lsiga + lsigb + lsigw);
-
+			perLocusFstWeirCockerham[locus] = locusSIGA / (locusSIGA + locusSIGB + locusSIGW);
+			perLocusFisWeirCockerham[locus] = locusSIGB / (locusSIGB + locusSIGW);
+			perLocusFitWeirCockerham[locus] = (locusSIGA + locusSIGB) / (locusSIGA + locusSIGB + locusSIGW);
 		}
 
 		// Total F-stats
-		_fst_WC = SIGA / (SIGA + SIGB + SIGW);
-		_fit_WC = (SIGA + SIGB) / (SIGA + SIGB + SIGW);
-		_fis_WC = SIGB / (SIGB + SIGW);
-
+		FstWeirCockerham = SIGA / (SIGA + SIGB + SIGW);
+		FitWeirCockerham = (SIGA + SIGB) / (SIGA + SIGB + SIGW);
+		FisWeirCockerham = SIGB / (SIGB + SIGW);
 	}
-	else { //then there is no variation at any locus, only 1 allele (wildtype) at each locus so don't calculate to avoid division by zero issues
-		// Total F-stats
-		_fst_WC = 0;
-		_fit_WC = 0;
-		_fis_WC = 0;
+	else { // no variation: only 1 allele (wildtype) at each locus 
+		// so don't calculate to avoid division by zero
+		FstWeirCockerham = 0;
+		FitWeirCockerham = 0;
+		FisWeirCockerham = 0;
 	} 
 
+	// Deallocate matrix
 	for (int i = 0; i < nLoci; ++i)
-		delete[]alploc_table[i];
-	delete[]alploc_table;
+		delete[]alleleExistsTable[i];
+	delete[]alleleExistsTable;
 }
 
 
@@ -560,118 +527,125 @@ void NeutralStatsManager::setFstMatrix(set<int> const& patchList, const int nInd
 
 	vector<int> patchVect;
 
-	copy(patchList.begin(), patchList.end(), std::back_inserter(patchVect)); //needs to be in vector to iterate over, copy preserves order
+	// Needs to be in vector to iterate over, copy preserves order
+	copy(patchList.begin(), patchList.end(), std::back_inserter(patchVect)); 
 
 	int nPatches = static_cast<int>(patchList.size());
 
-	//initialise 
+	// Initialise 
+	 if (pairwiseFstMatrix.getNbCells() != nPatches * nPatches)
+		pairwiseFstMatrix = PatchMatrix(nPatches, nPatches);
 
-	 if (_fst_matrix.length() != nPatches * nPatches)
-		_fst_matrix = PatchMatrix(nPatches, nPatches);
-
-	//reset table
-	_fst_matrix.assign(nanf("NULL"));
+	// Reset table
+	pairwiseFstMatrix.assign(nanf("NULL"));
 
 	//init
-	double* pop_weights = new double[nPatches];
-	double* pop_sizes = new double[nPatches];
-	double** numerator = new double* [nPatches];
-	for (int i = 0; i < nPatches; i++) numerator[i] = new double[nPatches];
-	double tot_size;
-	double numerator_W = 0;
+	vector<double> popWeights(nPatches);
+	vector<double> popSizes(nPatches);
+	double** numeratorPairwiseFst = new double* [nPatches];
+	for (int i = 0; i < nPatches; i++) numeratorPairwiseFst[i] = new double[nPatches];
+	double totSize;
+	double numeratorWeightedFst = 0;
 	double denominator = 0;
-	double sum_weights = 0;
+	double sumWeights = 0;
 
-	tot_size = nInds * 2; //diploid
+	totSize = nInds * 2; // diploid
 
+	// Calculate weight (n_ic) terms
 	for (int i = 0; i < nPatches; ++i) {
-
 		const auto patch = pLandscape->findPatch(patchVect[i]);
 		const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
-		pop_sizes[i] = pPop->sampleSize() * 2;
-		pop_weights[i] = pop_sizes[i] - (pop_sizes[i] * pop_sizes[i] / tot_size); //n_ic in Weir & Hill 2002
-		sum_weights += pop_weights[i];
+		if (pPop != 0) {
+			popSizes[i] = pPop->sampleSize() * 2;
+		} // else popSizes[i] remain default init value 0, safe
+		popWeights[i] = popSizes[i] - (popSizes[i] * popSizes[i] / totSize); // n_ic in Weir & Hill 2002
+		sumWeights += popWeights[i];
+
+		// Fill the pairwise Fst matrix with default value 0
 		for (int j = 0; j < nPatches; j++)
-			numerator[i][j] = 0;
+			numeratorPairwiseFst[i][j] = 0;
 	}
 
-	double p, pq, var, num;
-
+	// Calculate Fst numerators and denominators
+	double p, pq, pBar, sqDist, num;
 	for (int i = 0; i < nPatches; ++i) {
-
-		if (!pop_sizes[i]) continue;
-
+		if (popSizes[i] == 0) continue;
 		const auto patch = pLandscape->findPatch(patchVect[i]);
 		const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
 
 		for (int l = 0; l < nLoci; ++l) {
-
 			for (int u = 0; u < nAlleles; ++u) {
-
 				p = pPop->getAlleleFrequency(l, u); //p_liu
-
 				pq = p * (1 - p);
+				pBar = globalSNPtables[l].getFrequency(u);
+				sqDist = p - pBar; //(p_liu - pbar_u)^2 
+				sqDist *= sqDist;
 
-				var = p - globalSNPtables[l].getFrequency(u); //(p_liu - pbar_u)^2 
-
-				var *= var;
-
-				num = pq * pop_sizes[i] / (pop_sizes[i] - 1);
-
-				numerator[i][i] += num;
-
-				numerator_W += num * pop_sizes[i]; //see equ. 9, Weir & Hill 2002
-
-				denominator += pop_sizes[i] * var + pop_weights[i] * pq; //common denominator
+				num = pq * popSizes[i] / (popSizes[i] - 1);
+				numeratorPairwiseFst[i][i] += num;
+				numeratorWeightedFst += num * popSizes[i]; // see equ. 9, Weir & Hill 2002
+				denominator += popSizes[i] * sqDist + popWeights[i] * pq; //common denominator
 
 			} // end for allele
-		}// end for locus
-	}//end for pop
+		} // end for locus
+	} // end for pop
 
+	// Diagonals
+	double pairwiseFst;
 	for (int i = 0; i < nPatches; ++i) {
-		if (!pop_sizes[i]) continue;
-		if(denominator != 0)
-			_fst_matrix.set(i, i, 1 - (numerator[i][i] * sum_weights / denominator));
-		else
-			_fst_matrix.set(i, i, 0.0);
+		if (popSizes[i] == 0) continue;
+		else if (denominator != 0)
+		{
+			pairwiseFst = 1 - (numeratorPairwiseFst[i][i] * sumWeights / denominator);
+			pairwiseFstMatrix.set(i, i, pairwiseFst);
+		}
+		else pairwiseFstMatrix.set(i, i, 0.0);
 	}
-	_fst_WH = 1 - ((numerator_W * sum_weights) / (denominator * tot_size)); //equ. 9 Weir & Hill 2002
 
-	//pairwise Fst:
+	// Add allele frequencies to numerators
 	double pi, pj;
 	for (int l = 0; l < nLoci; ++l)
 		for (int u = 0; u < nAlleles; ++u)
 			for (int i = 0; i < nPatches - 1; ++i) {
-				if (!pop_sizes[i]) continue;
-
+				if (popSizes[i] == 0) continue;
 				const auto patch = pLandscape->findPatch(patchVect[i]);
 				const auto pPopI = (Population*)patch->getPopn((intptr)pSpecies);
 
 				for (int j = i + 1; j < nPatches; ++j) {
-					if (!pop_sizes[j]) continue;
+					if (popSizes[j] == 0) continue;
 					const auto patch = pLandscape->findPatch(patchVect[j]);
 					const auto pPopJ = (Population*)patch->getPopn((intptr)pSpecies);
 
 					pi = pPopI->getAlleleFrequency(l, u);
 					pj = pPopJ->getAlleleFrequency(l, u);
-					numerator[i][j] += pi * (1 - pj) + pj * (1 - pi); //equ. 7 of Weir & Hill 2002
+					numeratorPairwiseFst[i][j] += pi * (1 - pj) + pj * (1 - pi); // equ. 7 of Weir & Hill 2002
 				}
 			}
 
+	// Final estimates of pairwise Fst (beta_ii' in eq. 7 in WC 2002)
 	for (int i = 0; i < nPatches - 1; ++i) {
-		if (!pop_sizes[i]) continue;
+		if (popSizes[i] == 0) continue; // Fst for this pair remains NULL
 		for (int j = i + 1; j < nPatches; ++j) {
-			if (!pop_sizes[j]) continue;
-			if (denominator != 0)
-				_fst_matrix.set(i, j, 1 - ((numerator[i][j] * sum_weights) / (2 * denominator)));
-			else
-				_fst_matrix.set(i, j, 0.0);
+			if (popSizes[j] == 0) continue;
+			else if (denominator != 0) {
+				pairwiseFst = 1 - (numeratorPairwiseFst[i][j] * sumWeights) / (2 * denominator);
+				pairwiseFstMatrix.set(i, j, pairwiseFst);
+			}
+			else pairwiseFstMatrix.set(i, j, 0.0);
 		}
-	} 
-	delete[] pop_weights;
-	delete[] pop_sizes;
-	for (int i = 0; i < nPatches; i++) delete[] numerator[i];
-	delete[] numerator; 
+	}
+
+	// Estimator of global Fst weighted by sample sizes (beta_W in eq. 9 in WH 2002)
+	if (denominator != 0) {
+		weightedFstWeirHill = 1 - (numeratorWeightedFst * sumWeights) / (denominator * totSize); // beta_w in Eq. 9 in WH 2002
+	}
+	else {
+		weightedFstWeirHill = 0.0;
+	}
+
+	// Deallocate pairwise Fst matrix
+	for (int i = 0; i < nPatches; i++) delete[] numeratorPairwiseFst[i];
+	delete[] numeratorPairwiseFst; 
 }
 
 

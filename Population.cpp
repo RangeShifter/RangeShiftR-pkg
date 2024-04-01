@@ -838,19 +838,30 @@ void Population::sampleIndsWithoutReplacement(string n, const set<int>& sampleSt
 	auto rng = pRandom->getRNG();
 	set<Individual*> stagedInds;
 
+	// Stage individuals in eligible stages
 	for (int stage : sampleStages) {
 		auto sInds = getIndividualsInStage(stage);
 		stagedInds.insert(sInds.begin(), sInds.end());
 	}
 
-	if (n == "all" || stagedInds.size() < stoi(n))
+	if (n == "all") {
 		// Sample all individuals in selected stages
 		sampledInds = stagedInds;
+	}
 	else {
-		vector<Individual*> out;
-		// Sample n individuals across selected stages
-		sample(stagedInds.begin(), stagedInds.end(), std::back_inserter(out), stoi(n), rng);
-		std::copy(out.begin(), out.end(), std::inserter(sampledInds, sampledInds.end()));
+		int nbToSample = stoi(n);
+		if (stagedInds.size() <= nbToSample) {
+			// Sample all individuals in selected stages
+			sampledInds = stagedInds;
+		}
+		else {
+			vector<Individual*> tempSampledInds;
+			// Sample n individuals across selected stages
+			sample(stagedInds.begin(), stagedInds.end(), std::back_inserter(tempSampledInds), nbToSample, rng);
+			// Copy from vector to set
+			std::copy(tempSampledInds.begin(), tempSampledInds.end(), std::inserter(sampledInds, sampledInds.end()));
+			assert(sampledInds.size() == nbToSample);
+		}
 	}
 }
 
@@ -859,12 +870,12 @@ int Population::sampleSize() const {
 }
 
 set<Individual*> Population::getIndividualsInStage(int stage) {
-	set<Individual*> filteredInds;
+	set<Individual*> indsInStage;
 	for (auto ind : inds) {
 		if (ind->getStats().stage == stage)
-			filteredInds.insert(ind);
+			indsInStage.insert(ind);
 	}
-	return filteredInds;
+	return indsInStage;
 }
 
 // Determine which individuals will disperse
