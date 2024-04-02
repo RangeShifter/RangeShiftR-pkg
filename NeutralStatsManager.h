@@ -66,7 +66,7 @@ public:
 
 	void setFrequencies(int populationSize) {
 		for (int i = 0; i < alleleFrequencies.size(); i++) {
-			alleleFrequencies[i] = alleleTallies[i] / static_cast<double>(populationSize);
+			alleleFrequencies[i] = populationSize > 0 ? alleleTallies[i] / static_cast<double>(populationSize) : 0.0;
 		}
 	};
 
@@ -102,14 +102,14 @@ private:
 
 	/** Pairwise Fst matrix. */
 	PatchMatrix pairwiseFstMatrix;
-	vector<SNPtable> globalSNPtables; //don't have to be pointers, not shared or moved
+	vector<SNPtable> commSNPTables; //don't have to be pointers, not shared or moved
 
 public: 
 
 	NeutralStatsManager(const int& nbSampledPatches, const int nLoci);
 
 	void updateAllSNPTables(Species* pSpecies, Landscape* pLandscape, set<int> const& patchList);
-	void resetGlobalSNPtables();
+	void resetCommSNPtables();
 	void setLociDiversityCounter(set<int> const& patchList, const int nInds, Species* pSpecies, Landscape* pLandscape);
 	void setFstMatrix(set<int> const& patchList, const int nInds, const int nLoci, Species* pSpecies, Landscape* pLandscape);
 	void calculateHo(set<int> const& patchList, const int totalNbSampledInds, const int nbrLoci, Species* pSpecies, Landscape* pLandscape);
