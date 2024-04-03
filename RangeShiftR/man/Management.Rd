@@ -8,8 +8,8 @@
 Management(Translocation = Translocation())
 }
 \arguments{
-\item{Translocation}{Individuals are selected in one location and then transferred to a new location. You can define the year(s) of the translocation event(s),
-the source and target location, the number of individuals to be translocated and catching rates to define the success of really catching an individual.
+\item{Translocation}{Individuals are selected in one location and then transfered to a new location. You can define the year(s) of the translocation event(s),
+the source and target location, the number of individuals to be translocated and characteristics of individuals to be sampled from. The catching rate defines the success catching an individual.
 See \code{\link{Translocation}} for more details.}
 }
 \value{

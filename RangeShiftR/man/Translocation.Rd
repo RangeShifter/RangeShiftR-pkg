@@ -17,7 +17,7 @@ Translocation(years = 1,
 
  - the year of the event,\cr
  - the source location (\code{Patch_ID} in case of cell-based models or \code{X} and \code{Y} location in case of cell-based models),\cr
- - the target location,\cr
+ - the target location (\code{Patch_ID} in case of cell-based models or \code{X} and \code{Y} location in case of cell-based models),\cr
  - the number of individuals which are tried to be catched,\cr
  - minimal age of each individual,\cr
  - maximal age of the individual,\cr
@@ -30,33 +30,48 @@ Translocation(years = 1,
 a parameter object of class "ManagementParams"
 }
 \description{
-Translocation transfers individuals from one location to another in a given year. You should set at least one year for a translocation event,
-but you can also define multiple years. You can one or multiple locations (patches or cells) from which individuals should be catched and selected for translocation.
-The number and characteristics of selected individuals may vary between years. Individuals are selected according to the given minimal and maximal age, stage,
-sex nd dispersal status. Additionally, you can define a catching success rate to define the success of really catching an individual.
+This function translocates individuals from one location to another in a given year.
+You should set at least one year for a translocation event,
+but you can also define multiple years. You can define one or multiple locations (patches or cells) from which individuals
+should be selected and to which individuals are translocated.
+The number and characteristics of selected individuals may vary between years.
+Individuals may be selected according to their age, stage and sex, depending on the type of population.
 }
 \details{
-In each \code{year} of a translocation event, individuals are selected from a given source location and transferred to a new target location.
-The success of catching an individual in the source location is defined by the \code{catching_rate}.
-To select only individuals within a certain range of characteristics, a Translocation Matrix \code{TransLocMat} is defined in which the characteristics of the individuals are defined for each translocation event.
-Each row of the translocation matrix \code{TransLocMat} holds a unique combination of source and target location as well as characteristics of catched individuals.
-You may add more than one translocation event per year, i.e. there may be multiple source and target locations for each year of a translocation event or multiple individual characteristics for a certain pair of source and target location.
+Each unique combination of source and target location
+and criteria for individuals to be selected represent one translocation event.
 
-In the columns of the \code{TransLocMat} the year, source and target location as well as the number of individuals and the characteristics are defined:
+Additionally, you can define a catching success rate to define the success of catching a selected individual.
+
+
+
+To select individuals with certain criteria for translocation, a Translocation Matrix \code{TransLocMat} needs to be generated in which the characteristics of the individuals are defined for each translocation event.
+
+In the columns of the \code{TransLocMat} the year, source and target location as well as the number of individuals and the characteristics are defined in the following order:
 
 - \code{year} of the translocation event \cr
-- \code{Patch_ID} or \code{X} and \code{Y} location of the source location from which individuals are catched \cr
-- \code{Patch_ID} or \code{X} and \code{Y} location of the target location to which individuals are transferred \cr
+- \code{Patch_ID} or \code{X} and \code{Y} location of the source location from which individuals are catched. \cr
+- \code{Patch_ID} or \code{X} and \code{Y} location of the target location to which individuals are transferred. \cr
 - \code{nb_catch} how many individuals of the given set of characteristics are tried to be catched \cr
-- \code{min_age} minimal age of the individual in the interval of 0-MaxAge. \cr
-- \code{max_age} maximal age of the individual in the interval of \code{min_age}-MaxAge.\cr
-- \code{stage} of the individual. \cr
-- \code{sex} of the individual: Only for sexual models, otherwise set to, otherwise set to -9 to ignore  \cr
+- \code{min_age} minimal age of the individual in the interval of 0-MaxAge. Set to -9 to ignore. \cr
+- \code{max_age} maximal age of the individual in the interval of \code{min_age}-MaxAge. Set to -9 to ignore.\cr
+- \code{stage} of the individual. Set to -9 to ignore. \cr
+- \code{sex} of the individual: Only for sexual models, otherwise set to -9 to ignore  \cr
 
 \code{min_age}, \code{max_age} and \code{stage} can only be defined for stage structured models. For non stage structured models, or to ignore the characteristic, set the value to -9.
 \code{sex} can only be defined for sexual models. For non sexual models, or to ignore the characteristic, set the value to -9.
 
 To avoid unsuccessful translocation events, you should set the range of allowed characteristics as broad as possible.
+
+Each row of the translocation matrix \code{TransLocMat} holds a unique combination of a source and a target location, the number of individuals to catch as well as characteristics of these individuals.
+You may add more than one translocation event per year, i.e. there may be multiple source and target locations for each year of a translocation
+event or multiple individual characteristics for a certain pair of source and target location.
+
+In each \code{year} of a translocation event, individuals matching the given criteria in the source location are collected and a given number of individuals \code{nb_catch}
+are sampled from this subset. The success of catching one of these sampled individuals in the source location is defined by the \code{catching_rate}.
+Successfully catched individuals are then translocated to the target location and the individual will be assigend the status 4 (successfully dispersed) to avoid further dispersal.
+
+The source as well as the target location are required to be habitat patches or cells of the landscape. Otherwise the translocation event will not be skipped.
 }
 \references{
 \insertAllCited{}
