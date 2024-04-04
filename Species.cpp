@@ -383,7 +383,7 @@ void Species::resetGeneticParameters() {
 	numberOfAdaptiveTraits = 0;
 	genomeSize = -9999;
 	recombinationRate = -9999;
-	nSampleCellsFst = "";
+	nPatchesToSample = 0;
 	nIndsToSample = "";
 	chromosomeEnds.clear();
 	samplePatchList.clear();
@@ -760,18 +760,18 @@ void Species::setSettTraits(const short stg, const short sex, const settleTraits
 }
 
 void Species::setGeneticParameters(const std::set<int>& chromosomeEnds, const int genomeSize, const float recombinationRate,
-	const std::set<int>& samplePatchList, const string nIndsToSample, const std::set<int>& stagesToSampleFrom, string nSampleCellsFst)
+	const std::set<int>& samplePatchList, const string nIndsToSample, const std::set<int>& stagesToSampleFrom, int nPatchesToSampleFrom)
 {
 	this->genomeSize = genomeSize;
 	this->chromosomeEnds = chromosomeEnds;
 	this->recombinationRate = recombinationRate;
 	this->samplePatchList = samplePatchList;
-	this->nSampleCellsFst = nSampleCellsFst;
+	this->nPatchesToSample = nPatchesToSampleFrom;
 	this->nIndsToSample = nIndsToSample;
 	this->stagesToSampleFrom = stagesToSampleFrom;
 }
 
-//only called for cell based landscape
+// only called for cell based landscape
 void Species::setSamplePatchList(const set<int>& samplePatchList) {
 	this->samplePatchList = samplePatchList;
 }

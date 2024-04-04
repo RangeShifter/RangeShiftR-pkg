@@ -43,8 +43,15 @@ void NeutralStatsManager::updateAllSNPTables(Species* pSpecies, Landscape* pLand
 	const int nAlleles = (int)pSpecies->getSpTrait(SNP)->getMutationParameters().find(MAX)->second;
 	const int ploidy = (pSpecies->isDiploid() ? 2 : 1);
 
-	if (!commSNPTables.empty())
+	if (!commSNPTables.empty()) {
 		resetCommSNPtables();
+	}
+	else { // populate the tables with default values
+		for (int thisLocus = 0; thisLocus < nLoci; thisLocus++) {
+			SNPtable newSNPtbl = SNPtable(nAlleles);
+			commSNPTables.push_back(newSNPtbl);
+		}
+	}
 
 	int populationSize = 0;
 	int patchAlleleCount;
@@ -67,11 +74,7 @@ void NeutralStatsManager::updateAllSNPTables(Species* pSpecies, Landscape* pLand
 				else {
 					patchAlleleCount = 0;
 				}
-				if (commSNPTables.size() <= thisLocus) { // if first allele of new loci (should only happen in first calculation step)
-					SNPtable newSNPtbl = SNPtable(nAlleles, allele, patchAlleleCount);
-					commSNPTables.push_back(newSNPtbl);
-				}
-				else commSNPTables[thisLocus].incrementTallyBy(patchAlleleCount, allele);
+				commSNPTables[thisLocus].incrementTallyBy(patchAlleleCount, allele);
 			}
 		}
 	}

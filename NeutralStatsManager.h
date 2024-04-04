@@ -56,11 +56,6 @@ private:
 	vector<int> alleleHeterozygoteTallies;
 
 public:
-	//for community allele table, heteros not technically needed so don't reserve 
-	SNPtable(int nAllele, int allele, int alleleCount) : alleleTallies(nAllele), alleleFrequencies(nAllele) {
-		this->incrementTallyBy(alleleCount, allele);
-	};
-
 	//for population allele tables 
 	SNPtable(int nAllele) : alleleTallies(nAllele), alleleFrequencies(nAllele), alleleHeterozygoteTallies(nAllele) {};
 

@@ -344,9 +344,8 @@ struct simParams {
 	int outStartPaths; int outIntPaths;
 	bool outPaths;	bool ReturnPopRaster; bool CreatePopFile;
 #endif
-	int fionaOptions;
-	int storeIndsYr;
 	bool fixReplicateSeed;
+	string patchSamplingOption;
 	bool outputWCFstat, outputPerLocusWCFstat, outputPairwiseFst;
 	int outputGeneticInterval;
 };
@@ -363,7 +362,7 @@ public:
 	paramSim(void);
 	~paramSim(void);
 	void setSim(simParams);
-	void setGeneticSim(bool outputWCFstat, bool outputPerLocusWCFstat, bool outputPairwiseFst, int outputGeneticInterval);
+	void setGeneticSim(string patchSamplingOption, bool outputWCFstat, bool outputPerLocusWCFstat, bool outputPairwiseFst, int outputGeneticInterval);
 	simParams getSim(void);
 	int getSimNum(void);
 	void setViews(simView);
@@ -380,8 +379,6 @@ private:
 	int simulation;					// simulation no.
 	int reps;								// no. of replicates
 	int years;							// no. of years
-	//	int outStartRange;			// output start year for range file
-	//	int outStartOcc;				// output start year for occupancy file
 	int outStartPop;				// output start year for population file
 	int outStartInd;				// output start year for individuals file
 	int outStartTraitCell;	// output start year for traits by cell file
@@ -398,8 +395,7 @@ private:
 	int traitInt;						// output interval for evolving traits maps
 	int slowFactor;					// to reduce speed of movement paths on screen
 	bool batchMode;					//
-	bool absorbing; 				// landscape boundary and no-data regions are
-	// absorbing boundaries
+	bool absorbing; 				// landscape boundary and no-data regions are absorbing boundaries
 	bool outRange;					// produce output range file?
 	bool outOccup;					// produce output occupancy file?
 	bool outPop;						// produce output population file?
@@ -428,9 +424,8 @@ private:
 	bool viewGraph;					// view population/occupancy graph on screen?
 	string dir;							// full name of working directory
 
-	int fionaOptions;
-	int storeIndsYr;
 	bool fixReplicateSeed;
+	string patchSamplingOption;
 	bool outputWCFstat;
 	bool outputPerLocusWCFstat;
 	bool outputPairwiseFst;

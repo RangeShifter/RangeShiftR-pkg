@@ -132,10 +132,6 @@ public:
 	);
 	void ageIncrement(void);
 
-	int addEmigrationAndSettlementTraitValues(emigTraits& avgEmTraits, settleTraits& avgSettleTraits);
-
-	void addTransferDataForInd(trfrData* avgTrfrData);
-
 	// Find the population of a given species in a given patch
 	Population* findPop(Species*, Patch*);
 

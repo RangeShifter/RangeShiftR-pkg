@@ -298,8 +298,8 @@ public:
 		return stagesToSampleFrom;
 	}
 
-	string getNSampleCellsFst() {
-		return nSampleCellsFst;
+	int getNbPatchesToSample() {
+		return nPatchesToSample;
 	}
 
 	// Genetic functions
@@ -432,7 +432,7 @@ public:
 	float getRecombinationRate() const;
 	std::set<int> getChromosomeEnds() const;
 	void setGeneticParameters(const std::set<int>& chromosomeEnds, const int genomeSize, const float recombinationRate,
-		const std::set<int>& samplePatchList, const string nIndsToSample, const std::set<int>& stagesToSampleFrom, string nSampleCellsFst);
+		const std::set<int>& samplePatchList, const string nIndsToSample, const std::set<int>& stagesToSampleFrom, int nPatchesToSampleFrom);
 	void setSamplePatchList(const std::set<int>& samplePatchList);
 
 private:
@@ -495,7 +495,7 @@ private:
 	int numberOfAdaptiveTraits;
 	float recombinationRate;
 	std::set<int> samplePatchList;
-	string nSampleCellsFst; //for cell based landscape
+	int nPatchesToSample; //for cell based landscape
 	std::set<int> stagesToSampleFrom;
 	string nIndsToSample; //could be integer or 'all', all means in in selected patches not necessarily all in population
 

@@ -650,17 +650,6 @@ void Landscape::generatePatches(Species* pSpecies)
 			}
 		}
 	}
-
-	simParams sim = paramsSim->getSim();
-	if (pSpecies->getNumberOfNeutralLoci() > 0 && 
-		(sim.outputWCFstat || sim.outputPairwiseFst || sim.outputPerLocusWCFstat)) {
-
-		string cellsToSample = pSpecies->getNSampleCellsFst();
-		int n = (cellsToSample == "all") ? -9999 : stoi(cellsToSample);
-		auto patchesToSample = samplePatches(n, (cellsToSample == "all"));
-
-		pSpecies->setSamplePatchList(patchesToSample);
-	}
 }
 
 //---------------------------------------------------------------------------
@@ -763,18 +752,6 @@ void Landscape::allocatePatches(Species* pSpecies)
 		break;
 
 	} // end of switch (rasterType)
-
-	simParams sim = paramsSim->getSim();
-	if (pSpecies->getNumberOfNeutralLoci() > 0 && (sim.outputWCFstat || sim.outputPairwiseFst || sim.outputPerLocusWCFstat)) {
-
-		string cellsToSample = pSpecies->getNSampleCellsFst();
-		int n = (cellsToSample == "all") ? -9999 : stoi(cellsToSample);
-
-		auto patchesToSample = samplePatches(n, (cellsToSample == "all"));
-
-		pSpecies->setSamplePatchList(patchesToSample);
-
-	}
 }
 
 Patch* Landscape::newPatch(int num)
@@ -862,18 +839,6 @@ void Landscape::addCellToPatch(Cell* pCell, Patch* pPatch, int hab) {
 	pPatch->addCell(pCell, loc.x, loc.y);
 }
 
-std::vector<int> Landscape::getTruePatchNums() const {
-	// Need access to patchnums in Batch interface to set up random sampled patches
-	// when patchnums member is not yet initialised.
-	// Bad solution, would be better to rm patchnums and use this in all instances
-	// but might break existing assumptions in current code.
-	vector<int> patchNums;
-	for (auto p : patches) {
-		patchNums.push_back(p->getPatchNum());
-	}
-	return patchNums;
-}
-
 patchData Landscape::getPatchData(int ix) {
 	patchData ppp;
 	ppp.pPatch = patches[ix]; ppp.patchNum = patches[ix]->getPatchNum();
@@ -903,26 +868,35 @@ Patch* Landscape::findPatch(int num) {
 	return 0;
 }
 
-set<int> Landscape::samplePatches(int n, bool all) {
+
+set<int> Landscape::samplePatches(const string& samplingOption, int nbToSample, Species* pSpecies) {
 
 	vector<int> sampledPatches;
-	vector<int> allPatches;
+	vector<int> occupiedPatches;
 
-	int npatches = (int)patches.size();
-	for (int i = 0; i < npatches; i++)
-		allPatches.push_back(patches[i]->getPatchNum());
-
-
-	if (!all) {
-		auto rng = pRandom->getRNG();
-		sample(allPatches.begin(), allPatches.end(), std::back_inserter(sampledPatches),
-			n, rng);
+	// Get list of viable patches
+	for (auto p : patches) {
+		// p->getPopn();
+		if (p->speciesIsPresent(pSpecies)) 
+			occupiedPatches.push_back(p->getPatchNum());
 	}
-	else sampledPatches = allPatches;
+
+	if (samplingOption == "all") {
+		sampledPatches = occupiedPatches;
+	}
+	else if (samplingOption == "random") {
+		if (nbToSample > occupiedPatches.size())
+			nbToSample = occupiedPatches.size();
+		auto rng = pRandom->getRNG();
+		sample(occupiedPatches.begin(), occupiedPatches.end(), std::back_inserter(sampledPatches),
+			nbToSample, rng);
+	}
+	else {
+		throw logic_error("Sampling option should be random or all when sampling patches.");
+	}
 
 	set<int> patchIds;
 	copy(sampledPatches.begin(), sampledPatches.end(), inserter(patchIds, patchIds.end()));
-
 	return patchIds;
 }
 

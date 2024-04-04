@@ -291,7 +291,7 @@ public:
 	Patch* findPatch(
 		int   // Patch id no.
 	);
-	set<int> samplePatches(int n, bool all);
+	set<int> samplePatches(const string& samplingOption, int nbToSample, Species* pSpecies);
 	int checkTotalCover(void);
 	void resetPatchPopns(void);
 	void updateCarryingCapacity(
@@ -451,9 +451,8 @@ public:
 		string	// cost file name (may be NULL)
 	);
 	void listPatches(void);
-	int readCosts(
-		string	// costs file name
-	);
+	int readCosts(string);	// costs file name
+
 	// the following four functions are implemented for the GUI version only
 	// in the batch version, they are defined, but empty
 	void setLandMap(void);
@@ -461,10 +460,6 @@ public:
 		int,	// replicate no.
 		int,	// landscape index number (always 0 if landscape is not dynamic)
 		int		// landscape no.
-	);
-	void drawGradient(void); // Draw environmental gradient map
-	void drawGlobalStoch(	// Draw environmental stochasticity time-series
-		int		// no. of years
 	);
 
 	void resetVisits(void);

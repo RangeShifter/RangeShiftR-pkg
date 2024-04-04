@@ -148,9 +148,6 @@ public:
 	disperser extractSettler(
 		int   // index no. to the Individual in the inds vector
 	);
-	void addEmigTraitsForInd(int ix, emigTraits&);
-	void addSettleTraitsForInd(int, settleTraits&);
-	void addTransferDataForInd(int ix, trfrData* avgTrfrData);
 	void recruit( // Add a specified individual to the population
 		Individual*	// pointer to Individual
 	);

@@ -286,7 +286,8 @@ void paramSim::setSim(simParams s) {
 	fixReplicateSeed = s.fixReplicateSeed;
 }
 
-void paramSim::setGeneticSim(bool outputWCFstat, bool outputPerLocusWCFstat, bool outputPairwiseFst, int outputGeneticInterval) {
+void paramSim::setGeneticSim(string patchSamplingOption, bool outputWCFstat, bool outputPerLocusWCFstat, bool outputPairwiseFst, int outputGeneticInterval) {
+	this->patchSamplingOption = patchSamplingOption;
 	this->outputWCFstat = outputWCFstat;
 	this->outputPerLocusWCFstat = outputPerLocusWCFstat;
 	this->outputPairwiseFst = outputPairwiseFst;
@@ -323,6 +324,7 @@ simParams paramSim::getSim(void) {
 	s.CreatePopFile = CreatePopFile;
 #endif
 	s.drawLoaded = drawLoaded;
+	s.patchSamplingOption = patchSamplingOption;
 	s.outputWCFstat = outputWCFstat;
 	s.outputPerLocusWCFstat = outputPerLocusWCFstat;
 	s.outputPairwiseFst = outputPairwiseFst;
