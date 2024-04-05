@@ -338,12 +338,12 @@ void NeutralStatsManager::calculateFstatWC(set<int> const& patchList, const int 
 						var = pPop->getAlleleFrequency(thisLocus, allele) - pBar;
 						var *= var;
 						s2 += var * pPop->sampleSize();
-						hBar += pPop->getHeteroTally(thisLocus, allele);
+						hBar += pPop->getHeteroTally(thisLocus, allele); // n_i * h_i
 					}
 				} //end for pop
 
 				s2 *= s2Denom;
-				hBar *= inverseNtotal;
+				hBar *= inverseNtotal; // / (r * n_bar)
 
 				intermediateTerm = pBar * (1 - pBar) - rTerm * s2;
 				a += s2 - inverseNbar * (intermediateTerm - 0.25 * hBar);

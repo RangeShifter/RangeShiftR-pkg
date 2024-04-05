@@ -374,7 +374,6 @@ void Population::updatePopSNPtables() {
 			popSNPtables.end(),
 			[&](SNPtable& thisLocus) -> void {
 				thisLocus.setFrequencies(static_cast<int>(sampledInds.size()) * 2); // /!\ assumes dipoidy?
-				//thisLocus->divideHeteros(sampledInds.size()); //weir and cockerham doesn't need this division??
 			});
 	}
 }
@@ -832,7 +831,7 @@ Individual* Population::sampleInd() const {
 	return inds[index];
 }
 
-void Population::sampleIndsWithoutReplacement(string n, const set<int>& sampleStages) {
+void Population::sampleIndsWithoutReplacement(string strNbToSample, const set<int>& sampleStages) {
 
 	sampledInds.clear();
 	auto rng = pRandom->getRNG();
@@ -844,12 +843,12 @@ void Population::sampleIndsWithoutReplacement(string n, const set<int>& sampleSt
 		stagedInds.insert(sInds.begin(), sInds.end());
 	}
 
-	if (n == "all") {
+	if (strNbToSample == "all") {
 		// Sample all individuals in selected stages
 		sampledInds = stagedInds;
 	}
-	else {
-		int nbToSample = stoi(n);
+	else { // random
+		int nbToSample = stoi(strNbToSample);
 		if (stagedInds.size() <= nbToSample) {
 			// Sample all individuals in selected stages
 			sampledInds = stagedInds;

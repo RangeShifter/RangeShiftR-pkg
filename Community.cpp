@@ -1628,17 +1628,17 @@ Rcpp::IntegerMatrix Community::addYearToPopList(int rep, int yr) {  // TODO: def
 void Community::sampleIndividuals(Species* pSpecies) {
 
 	const set<int> patchList = pSpecies->getSamplePatches();
-	string n = pSpecies->getNIndsToSample();
-	const set<int> stages = pSpecies->getStagesToSample();
+	string nbIndsToSample = pSpecies->getNIndsToSample();
+	const set<int> stagesToSampleFrom = pSpecies->getStagesToSample();
 
 	for (int patchId : patchList) {
 		const auto patch = pLandscape->findPatch(patchId);
 		if (patch == 0) {
-			throw runtime_error("Sampled patch doesn't exist!");
+			throw runtime_error("Sampled patch doesn't exist.");
 		}
 		auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
 		if (pPop != 0) {
-			pPop->sampleIndsWithoutReplacement(n, stages);
+			pPop->sampleIndsWithoutReplacement(nbIndsToSample, stagesToSampleFrom);
 		}
 	}
 }
