@@ -471,7 +471,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 
 					simParams sim = paramsSim->getSim();
 					if (sim.outputWCFstat || sim.outputPairwiseFst || sim.outputPerLocusWCFstat) {
-
 						if (sim.patchSamplingOption != "list") {
 							// then patches must be re-sampled every gen
 							int nbToSample = pSpecies->getNbPatchesToSample();
@@ -480,7 +479,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 						}
 						// otherwise always use the user-specified list (even if patches are empty)
 					}
-
 					pComm->sampleIndividuals(pSpecies);
 					pComm->outNeutralGenetics(pSpecies, rep, yr, gen, sim.outputWCFstat, sim.outputPerLocusWCFstat, sim.outputPairwiseFst);
 				}

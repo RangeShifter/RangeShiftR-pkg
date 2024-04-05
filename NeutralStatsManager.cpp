@@ -41,7 +41,7 @@ void NeutralStatsManager::updateAllSNPTables(Species* pSpecies, Landscape* pLand
 
 	const int nLoci = pSpecies->getNPositionsForTrait(SNP);
 	const int nAlleles = (int)pSpecies->getSpTrait(SNP)->getMutationParameters().find(MAX)->second;
-	const int ploidy = (pSpecies->isDiploid() ? 2 : 1);
+	const int ploidy = pSpecies->isDiploid() ? 2 : 1;
 
 	if (!commSNPTables.empty()) {
 		resetCommSNPtables();
@@ -53,7 +53,7 @@ void NeutralStatsManager::updateAllSNPTables(Species* pSpecies, Landscape* pLand
 		}
 	}
 
-	int populationSize = 0;
+	int nbSampledInds = 0;
 	int patchAlleleCount;
 
 	for (int patchId : patchList) {
@@ -62,7 +62,7 @@ void NeutralStatsManager::updateAllSNPTables(Species* pSpecies, Landscape* pLand
 		if (pPop != 0) {
 			// Update this population's SNP counts tables
 			pPop->updatePopSNPtables();
-			populationSize += pPop->sampleSize();
+			nbSampledInds += pPop->sampleSize();
 		}
 		// Update global SNP counts tables
 		for (int thisLocus = 0; thisLocus < nLoci; thisLocus++) {
@@ -80,11 +80,10 @@ void NeutralStatsManager::updateAllSNPTables(Species* pSpecies, Landscape* pLand
 	}
 
 	// Update global frequency
-	populationSize *= ploidy;
 	std::for_each(commSNPTables.begin(),
 		commSNPTables.end(),
 		[&](SNPtable& v) -> void {
-			v.setFrequencies(populationSize);
+			v.setFrequencies(nbSampledInds * ploidy);
 		});
 }
 
@@ -108,7 +107,7 @@ void NeutralStatsManager::setLociDiversityCounter(set<int> const& patchList, con
 	int i, j;
 	const int nLoci = pSpecies->getNPositionsForTrait(SNP);
 	const int nAlleles = (int)pSpecies->getSpTrait(SNP)->getMutationParameters().find(MAX)->second;
-	const int ploidy = (pSpecies->isDiploid() ? 2 : 1);
+	const int ploidy = pSpecies->isDiploid() ? 2 : 1;
 	unsigned int nbPopulatedPatches = 0;
 	int nbAllelesInPatch = 0;
 	double meanAllelicDivInPatch = 0;
@@ -195,7 +194,7 @@ void NeutralStatsManager::calculateHo(set<int> const& patchList, const int nbInd
 				nbHetero += pPop->countHeterozygoteLoci();
 			}
 		}
-		_ho = static_cast<double>(nbHetero) / static_cast<double>(nLoci);
+		_ho = static_cast<double>(nbHetero) / nLoci;
 	}
 	else _ho = 0.0;
 }
@@ -549,6 +548,7 @@ void NeutralStatsManager::calculateFstatWC_MS(set<int> const& patchList, const i
 void NeutralStatsManager::setFstMatrix(set<int> const& patchList, const int nInds, const int nLoci, Species* pSpecies, Landscape* pLandscape) {
 
 	const int nAlleles = (int)pSpecies->getSpTrait(SNP)->getMutationParameters().find(MAX)->second;
+	const int ploidy = pSpecies->isDiploid() ? 2 : 1;
 
 	// Needs to be in vector to iterate over, copy preserves order
 	vector<int> patchVect;
@@ -574,14 +574,14 @@ void NeutralStatsManager::setFstMatrix(set<int> const& patchList, const int nInd
 	double denominator = 0;
 	double sumWeights = 0;
 
-	totSize = nInds * 2; // diploid
+	totSize = nInds * ploidy; // diploid
 
 	// Calculate weight (n_ic) terms
 	for (int i = 0; i < nPatches; ++i) {
 		const auto patch = pLandscape->findPatch(patchVect[i]);
 		const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
 		if (pPop != 0) {
-			popSizes[i] = pPop->sampleSize() * 2.0;
+			popSizes[i] = pPop->sampleSize() * ploidy;
 		} // else popSizes[i] remain default init value 0, safe
 		popWeights[i] = popSizes[i] - (popSizes[i] * popSizes[i] / totSize); // n_ic in Weir & Hill 2002
 		sumWeights += popWeights[i];

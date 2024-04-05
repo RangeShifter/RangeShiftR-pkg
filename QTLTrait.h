@@ -47,7 +47,7 @@ public:
 	void mutate() override { (this->*_mutate_func_ptr) (); }
 	float express() override { return (this->*_express_func_ptr) (); }
 	void inherit(TTrait* parent, set<unsigned int> const& recomPositions, sex_t chromosome, int startingChromosome) override;
-	map<int, vector<shared_ptr<Allele>>>& get_mutations() { return genes; } // returning reference, receiver must be const
+	map<int, vector<shared_ptr<Allele>>>& getGenes() { return genes; } // returning reference, receiver must be const
 
 	// virtual float getAlleleValueAtLocus(short chromosome, int i) const override { return (double)mutations[chromosome][i]->getSelectionCoef(); }
 

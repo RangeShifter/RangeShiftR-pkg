@@ -61,7 +61,7 @@ public:
 
 	void setFrequencies(int populationSize) {
 		for (int i = 0; i < alleleFrequencies.size(); i++) {
-			alleleFrequencies[i] = populationSize > 0 ? alleleTallies[i] / static_cast<double>(populationSize) : 0.0;
+			alleleFrequencies[i] = populationSize > 0 ? static_cast<double>(alleleTallies[i]) / populationSize : 0.0;
 		}
 	};
 

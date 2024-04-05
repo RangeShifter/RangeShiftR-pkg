@@ -335,6 +335,7 @@ void Population::updatePopSNPtables() {
 	const int nLoci = pSpecies->getNPositionsForTrait(SNP);
 	const int nAlleles = (int)pSpecies->getSpTrait(SNP)->getMutationParameters().find(MAX)->second;
 	const auto& positions = pSpecies->getSpTrait(SNP)->getPositions();
+	const int ploidy = pSpecies->isDiploid() ? 2 : 1;
 
 	if (popSNPtables.size() != 0)
 		resetPopSNPtables();
@@ -354,16 +355,18 @@ void Population::updatePopSNPtables() {
 		for (auto position : positions) {
 
 			int alleleOnChromA = (int)trait->getAlleleValueAtLocus(0, position);
-			int alleleOnChromB = (int)trait->getAlleleValueAtLocus(1, position);
-
-			bool isHetero = alleleOnChromA != alleleOnChromB;
-			if (isHetero) {
-				popSNPtables[whichLocus].incrementHeteroTally(alleleOnChromA);
-				popSNPtables[whichLocus].incrementHeteroTally(alleleOnChromB);
-			}
 			popSNPtables[whichLocus].incrementTally(alleleOnChromA);
-			popSNPtables[whichLocus].incrementTally(alleleOnChromB);
 
+			if (ploidy == 2) {
+				int alleleOnChromB = (int)trait->getAlleleValueAtLocus(1, position);
+				popSNPtables[whichLocus].incrementTally(alleleOnChromB);
+
+				bool isHetero = alleleOnChromA != alleleOnChromB;
+				if (isHetero) {
+					popSNPtables[whichLocus].incrementHeteroTally(alleleOnChromA);
+					popSNPtables[whichLocus].incrementHeteroTally(alleleOnChromB);
+				}
+			}
 			whichLocus++;
 		}
 	}
@@ -373,7 +376,7 @@ void Population::updatePopSNPtables() {
 			popSNPtables.begin(),
 			popSNPtables.end(),
 			[&](SNPtable& thisLocus) -> void {
-				thisLocus.setFrequencies(static_cast<int>(sampledInds.size()) * 2); // /!\ assumes dipoidy?
+				thisLocus.setFrequencies(static_cast<int>(sampledInds.size()) * ploidy); // /!\ assumes dipoidy?
 			});
 	}
 }

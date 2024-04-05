@@ -200,7 +200,7 @@ void QTLTrait::inherit(TTrait* parentTrait, set<unsigned int> const& recomPositi
 {
 	auto parentCast = dynamic_cast<QTLTrait*> (parentTrait); //horrible
 
-	const auto& parent_seq = parentCast->get_mutations();
+	const auto& parent_seq = parentCast->getGenes();
 	if (parent_seq.size() > 0) //else nothing to inherit, should always be something to inherit with QTL
 		(this->*_inherit_func_ptr) (whichChromosome, parent_seq, recomPositions, startingChromosome);
 }

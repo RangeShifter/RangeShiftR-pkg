@@ -291,7 +291,7 @@ void GeneticLoad::inherit(TTrait* parentTrait, set<unsigned int> const& recomPos
 {
 	auto parentCast = dynamic_cast<GeneticLoad*> (parentTrait); //horrible
 
-	const auto& parent_seq = parentCast->get_mutations();
+	const auto& parent_seq = parentCast->getGenes();
 	if (parent_seq.size() > 0) //else nothing to inherit
 		(this->*_inherit_func_ptr) (whichChromosome, parent_seq, recomPositions, startingChromosome);
 }

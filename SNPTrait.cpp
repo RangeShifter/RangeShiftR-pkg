@@ -182,7 +182,7 @@ void SNPTrait::inherit(TTrait* parent, set<unsigned int> const& recomPositions, 
 {
 	auto parentCast = dynamic_cast<SNPTrait*> (parent); //horrible
 
-	const auto& parent_seq = parentCast->get_mutations();
+	const auto& parent_seq = parentCast->getGenes();
 	if (parent_seq.size() > 0) //else nothing to inherit
 		(this->*_inherit_func_ptr) (chromosome, parent_seq, recomPositions, startingChromosome);
 }

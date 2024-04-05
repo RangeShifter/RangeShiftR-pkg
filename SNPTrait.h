@@ -36,23 +36,20 @@ private:
 public:
 	//this one for species held trait table, e.g. prototype table, sets static members
 	SNPTrait(SpeciesTrait* P);
-
 	//this one for individuals, static members are not reset
 	SNPTrait(const SNPTrait& T);
+
+	virtual ~SNPTrait() { }
 
 	virtual unique_ptr<TTrait> clone() const override { return std::make_unique<SNPTrait>(*this); }
 
 	virtual void inherit(TTrait* parent, set<unsigned int> const& recomPositions, sex_t chromosome, int startingChromosome) override;
-
 	virtual void mutate() override { (this->*_mutate_func_ptr) (); }
 
 	virtual int getNLoci()  const override { return pProtoTrait->getPositionsSize(); }
-
 	float getMutationRate() const override { return pProtoTrait->getMutationRate(); }
-
 	bool isInherited() const override { return pProtoTrait->isInherited(); }
-
-	map<int, vector<unsigned char>>& get_mutations() { return genes; } //returning reference, reciever must be const
+	map<int, vector<unsigned char>>& getGenes() { return genes; } //returning reference, reciever must be const
 
 	virtual float getAlleleValueAtLocus(short chromosome, int position) const override;
 
@@ -62,6 +59,5 @@ public:
 
 	virtual float express() { return -9999; }
 
-	virtual ~SNPTrait() { }
 };
 #endif

@@ -52,7 +52,7 @@ public:
 
     bool isInherited() const override { return pSpeciesTrait->isInherited(); }
 
-    map<int, vector<shared_ptr<Allele>>>& get_mutations() { return genes; } //returning reference, reciever must be const
+    map<int, vector<shared_ptr<Allele>>>& getGenes() { return genes; } //returning reference, reciever must be const
 
     virtual float getAlleleValueAtLocus(short chromosome, int position) const override;
 
