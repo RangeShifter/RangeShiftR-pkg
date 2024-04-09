@@ -100,22 +100,21 @@ void SNPTrait::mutate_KAM()
 	for (int p = 0; p < ploidy; p++) {
 
 		unsigned int NbMut = pRandom->Poisson(positionsSize * mutationRate);
+		if (NbMut > positionsSize) NbMut = positionsSize;
 
 		if (NbMut > 0) {
 			vector<int> mutationPositions;
 			sample(positions.begin(), positions.end(), std::back_inserter(mutationPositions),
-				NbMut, rng);
+				NbMut, rng); // without replacement
 
 			for (int m : mutationPositions) {
 
-				mut = (unsigned char)pRandom->IRandom(0, maxD - 1); //draw new mutation, could draw wildtype
-				auto it = genes.find(m); //find if position in map already has mutations there
+				mut = (unsigned char)pRandom->IRandom(0, maxD - 1); // draw new mutation, could draw wildtype
+				auto it = genes.find(m); // find if position in map already has mutations there
 
-				if (it == genes.end()) {   // not found so create new entry in map with wildtype as char default
-
+				if (it == genes.end()) { // not found so create new entry in map with wildtype as char default
 					vector<unsigned char> allelePair(2, wildType);
-					allelePair[p] = mut; //put new mutation value in 
-
+					allelePair[p] = mut; //put new mutation value in
 					genes.insert(make_pair(m, allelePair));
 				}
 				else { //position found, already mutations there

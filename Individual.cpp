@@ -55,7 +55,6 @@ Individual::Individual(Cell* pCell, Patch* pPatch, short stg, short a, short rep
 		path = new pathData;
 		path->year = 0; path->total = 0; path->out = 0;
 		path->pSettPatch = 0; path->settleStatus = 0;
-		//	path->leftNatalPatch = false;
 		if (moveType == 1) { // SMS
 			// set up location data for SMS
 			pTrfrData = make_unique<smsData>(loc, loc);
@@ -73,18 +72,10 @@ Individual::Individual(Cell* pCell, Patch* pPatch, short stg, short a, short rep
 		path = 0;
 		pTrfrData = make_unique<kernelData>(0.0, 0.0, 0.0);
 	}
-	//pEmigTraits = make_unique<emigTraits>(nullptr);
-	//pSettleTraits = make_unique<settleTraits>(nullptr);
 }
 
 Individual::~Individual(void) {
 	if (path != 0) delete path;
-	//if (crw != 0) delete crw;
-	//if (smsData != 0) delete smsData;
-	//if (emigtraits != 0) delete emigtraits;
-	//if (kerntraits != 0) delete kerntraits;
-	//if (setttraits != 0) delete setttraits;
-
 }
 
 
@@ -112,11 +103,6 @@ TTrait* Individual::getTrait(TraitType trait) const {
 		throw runtime_error("Trait does not exist in trait table.");
 	else return p->second.get();
 }
-
-//map<TraitType, std::unique_ptr<TTrait>>  Individual::getTraitTable(void) const
-//{
-//	return traitTable;
-//}
 
 set<TraitType> Individual::getTraitTypes() {
 	auto kv = std::views::keys(this->spTraitTable);

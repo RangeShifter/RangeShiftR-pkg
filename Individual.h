@@ -255,8 +255,6 @@ public:
 
 	set<TraitType> getTraitTypes();
 
-	//map<TraitType, std::unique_ptr<TTrait>>  getTraitTable(void) const;
-
 	void inherit(Species* pSpecies, const Individual* mother, const Individual* father);
 
 	void inherit(Species* pSpecies, const Individual* mother); // haploid

@@ -306,8 +306,6 @@ public:
 	void resetGeneticParameters();
 	bool areMutationsOn(void);
 	bool isDiploid() const;
-	void setNumberOfNeutralLoci(int);
-	int getNumberOfNeutralLoci() const;
 	int incrementAdaptiveTraits();
 	int getNumberOfAdaptiveTraits() const;
 
@@ -491,7 +489,6 @@ private:
 	int genomeSize;
 	bool diploid;
 	bool mutationsOn;
-	int numberOfNeutralLoci = 0;
 	int numberOfAdaptiveTraits;
 	float recombinationRate;
 	std::set<int> samplePatchList;
@@ -566,7 +563,7 @@ private:
 	int minSteps;     								// minimum no. of steps
 	int maxSteps;											// maximum total no. of steps
 	int maxStepsYr[maxNbStages][maxNbSexes]; 	// maximum no. of steps in any one dispersal period
-	float	s0[maxNbStages][maxNbSexes];				// maximum settlement probability
+	float s0[maxNbStages][maxNbSexes];				// maximum settlement probability
 	float alphaS[maxNbStages][maxNbSexes];		// slope of the settlement reaction norm to density
 	float betaS[maxNbStages][maxNbSexes];			// inflection point of the settlement reaction norm to density
 

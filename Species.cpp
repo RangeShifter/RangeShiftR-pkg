@@ -379,7 +379,6 @@ bool Species::areMutationsOn(void) {
 
 void Species::resetGeneticParameters() {
 	mutationsOn = true;
-	numberOfNeutralLoci = -9999;
 	numberOfAdaptiveTraits = 0;
 	genomeSize = -9999;
 	recombinationRate = -9999;
@@ -391,16 +390,6 @@ void Species::resetGeneticParameters() {
 
 bool Species::isDiploid() const {
 	return diploid;
-}
-
-void Species::setNumberOfNeutralLoci(int nN)
-{
-	numberOfNeutralLoci = nN;
-}
-
-int Species::getNumberOfNeutralLoci() const
-{
-	return numberOfNeutralLoci;
 }
 
 int Species::incrementAdaptiveTraits()
@@ -417,7 +406,7 @@ int Species::getNumberOfAdaptiveTraits() const
 void Species::addTrait(TraitType traitType, const SpeciesTrait& trait) {
 
 	TraitType traitT = traitType;
-	//hack to deal with multiple genetic load traits, could be handled better
+	// hack to deal with multiple genetic load traits, could be handled better
 	if (traitType == GENETIC_LOAD) {
 		int n = incrementAdaptiveTraits();
 
