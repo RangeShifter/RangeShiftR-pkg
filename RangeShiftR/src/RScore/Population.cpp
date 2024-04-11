@@ -475,6 +475,7 @@ void Population::reproduction(const float localK, const float envval, const int 
 					// determine whether she must miss current breeding attempt
 					ind = inds[i]->getStats();
 					if (ind.fallow >= sstruct.repInterval) {
+					    if(sstruct.probRep > 1) Rcpp::Rcout << "probRep: " << sstruct.probRep << std::endl;
 						if (pRandom->Bernoulli(sstruct.probRep)) skipbreeding = false;
 						else skipbreeding = true;
 					}
@@ -539,6 +540,7 @@ void Population::reproduction(const float localK, const float envval, const int 
 						// determine whether she must miss current breeding attempt
 						ind = inds[i]->getStats();
 						if (ind.fallow >= sstruct.repInterval) {
+						    if(sstruct.probRep > 1) Rcpp::Rcout << "probRep: " << sstruct.probRep << std::endl;
 							if (pRandom->Bernoulli(sstruct.probRep)) skipbreeding = false;
 							else skipbreeding = true;
 						}
@@ -552,6 +554,7 @@ void Population::reproduction(const float localK, const float envval, const int 
 						inds[i]->resetFallow();
 						// NOTE: FOR COMPLEX SEXUAL MODEL, NO. OF FEMALES *ACTUALLY* BREEDING DOES NOT
 						// NECESSARILY EQUAL THE EXPECTED NO. FROM EQN. 7 IN THE MANUAL...
+						if(propBreed > 1) Rcpp::Rcout << "propBreed: " << propBreed << std::endl;
 						if (pRandom->Bernoulli(propBreed)) {
 							expected = fec[stage][0]; // breeds
 						}
@@ -754,7 +757,7 @@ void Population::emigration(float localK)
 
 
 			} // end of no individual variability
-
+			if (disp > 1) Rcpp::Rcout << "disp: " << disp << std::endl;
 			disp = pRandom->Bernoulli(Pdisp);
 
 			if (disp == 1) { // emigrant
@@ -951,6 +954,8 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 #endif //RS_RCPP
 								settprob = settDD.s0 /
 									(1.0 + exp(-(popsize / localK - (double)settDD.beta) * (double)settDD.alpha));
+
+								if (settprob > 1) Rcpp::Rcout << "settprob: " << settprob << std::endl;
 
 								if (pRandom->Bernoulli(settprob)) { // settlement allowed
 									densdepOK = true;
@@ -1233,11 +1238,13 @@ void Population::survival0(float localK, short option0, short option1)
 			if (ind.status < 6) { // not already doomed
 				double probsurv = surv[ind.stage][ind.sex];
 				// does the individual survive?
+				if (probsurv > 1) Rcpp::Rcout << "probsurv: " << probsurv << std::endl;
 				if (pRandom->Bernoulli(probsurv)) { // survives
 					// does the individual develop?
 					double probdev = dev[ind.stage][ind.sex];
 					if (ind.stage < nStages - 1) { // not final stage
 						if (ind.age >= minAge[ind.stage + 1][ind.sex]) { // old enough to enter next stage
+						    if (probdev > 1) Rcpp::Rcout << "probdev: " << probdev << std::endl;
 							if (pRandom->Bernoulli(probdev)) {
 								inds[i]->developing();
 							}
@@ -1692,14 +1699,13 @@ std::vector <Individual*> Population::getIndsWithCharacteristics( // Select a se
             filteredInds.push_back(inds[i]);
         }
 
-        // // check status of inividuals
-        // // TODO not sure if this is needed?
-        // for (int i = 0; i < ninds; i++) {
-        //     if (inds[i] != NULL && inds[i]->getStats().status < 4){
-        //         Rcpp::Rcout << "Status: " << inds[i]->getStats().status << endl;
-        //         filteredInds[i] = NULL; // set it to NULL
-        //     }
-        // }
+        // check status of inividuals
+        for (int i = 0; i < ninds; i++) {
+            if (inds[i] != NULL && inds[i]->getStats().status < 4){
+                Rcpp::Rcout << "Status: " << inds[i]->getStats().status << endl;
+                filteredInds[i] = NULL; // set it to NULL
+            }
+        }
 
         // Check minimal age
         if (min_age!=-9){
@@ -1809,6 +1815,7 @@ Individual* Population::catchIndividual( // Translocate a set of individuals wit
     // If individual is part of the sampledInds vector:
     if (std::find(sampledInds.begin(), sampledInds.end(), inds[j]) != std::end(sampledInds)){
         // try to catch individual
+        if(catching_rate > 1) Rcpp::Rcout << "Catching rate: " << catching_rate << std::endl;
         if (pRandom->Bernoulli(catching_rate)){
             indStats indstat = inds[j]->getStats();
             catched = inds[j];
