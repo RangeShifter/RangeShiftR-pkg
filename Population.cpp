@@ -376,7 +376,7 @@ void Population::updatePopSNPtables() {
 			popSNPtables.begin(),
 			popSNPtables.end(),
 			[&](SNPtable& thisLocus) -> void {
-				thisLocus.setFrequencies(static_cast<int>(sampledInds.size()) * ploidy); // /!\ assumes dipoidy?
+				thisLocus.setFrequencies(static_cast<int>(sampledInds.size()) * ploidy);
 			});
 	}
 }

@@ -59,9 +59,9 @@ public:
 	//for population allele tables 
 	SNPtable(int nAllele) : alleleTallies(nAllele), alleleFrequencies(nAllele), alleleHeterozygoteTallies(nAllele) {};
 
-	void setFrequencies(int populationSize) {
+	void setFrequencies(int sampleSize) {
 		for (int i = 0; i < alleleFrequencies.size(); i++) {
-			alleleFrequencies[i] = populationSize > 0 ? static_cast<double>(alleleTallies[i]) / populationSize : 0.0;
+			alleleFrequencies[i] = sampleSize > 0 ? static_cast<double>(alleleTallies[i]) / sampleSize : 0.0;
 		}
 	};
 

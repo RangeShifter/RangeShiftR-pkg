@@ -259,7 +259,6 @@ void NeutralStatsManager::calculateHt(Species* pSpecies, Landscape* pLandscape, 
 void NeutralStatsManager::calculateHo2(set<int> const& patchList, const int nbInds, const int nbrLoci, Species* pSpecies, Landscape* pLandscape) {
 
 	vector<double> hetero(nbrLoci, 0);
-	double nLoci = nbInds * nbrLoci;
 
 	for (int patchId : patchList) {
 		const auto patch = pLandscape->findPatch(patchId);
@@ -292,15 +291,17 @@ void NeutralStatsManager::calculateFstatWC(set<int> const& patchList, const int 
 	double sumWeights = 0;
 	double nBar, nC, inverseNbar;
 	unsigned int nbPopulatedPatches = 0;
+	const int ploidy = pSpecies->isDiploid() ? 2 : 1;
+	const int totalSampleSize = nbSampledIndsInComm * ploidy;
 
 	for (int patchId : patchList) {
 		const auto patch = pLandscape->findPatch(patchId);
 		const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
 		if (pPop != 0) {
-			int nbSampledIndsinPop = pPop->sampleSize();
-			if (nbSampledIndsinPop > 0) {
+			int sampleSize = pPop->sampleSize() * ploidy;
+			if (sampleSize > 0) {
 				nbPopulatedPatches++;
-				sumWeights += static_cast<double>(nbSampledIndsinPop * nbSampledIndsinPop) / nbSampledIndsInComm;
+				sumWeights += static_cast<double>(sampleSize * sampleSize) / totalSampleSize;
 			}
 		}
 	}
@@ -311,8 +312,8 @@ void NeutralStatsManager::calculateFstatWC(set<int> const& patchList, const int 
 	if (nbPopulatedPatches > 1) {
 
 		// Calculate F stats
-		nBar = static_cast<double>(nbSampledIndsInComm) / nbPopulatedPatches; // average sample size, cannot be less than 1
-		nC = (nbSampledIndsInComm - sumWeights) / nbPopulatedPatches - 1;
+		nBar = static_cast<double>(totalSampleSize) / nbPopulatedPatches; // average sample size, cannot be less than 1
+		nC = (totalSampleSize - sumWeights) / nbPopulatedPatches - 1;
 		double nBarMinusOne = (nBar == 1.0) ? 1.0 : nBar - 1.0; // avoid / 0 if exactly 1 ind per pop
 		inverseNbar = 1.0 / nBarMinusOne;
 		inverseNtotal = 1.0 / nbSampledIndsInComm;
@@ -322,8 +323,8 @@ void NeutralStatsManager::calculateFstatWC(set<int> const& patchList, const int 
 		double s2Denom = 1.0 / ((nbPopulatedPatches - 1) * nBar);
 		double rTerm = static_cast<double>(nbPopulatedPatches - 1) / nbPopulatedPatches;
 		double hBarFactor = (2 * nBarMinusOne) / (4 * nBar);
-		double a = 0, b = 0, c = 0, intermediateTerm;
 
+		double a = 0, b = 0, c = 0, intermediateTerm;
 		for (int thisLocus = 0; thisLocus < nLoci; ++thisLocus) {
 			for (int allele = 0; allele < nAlleles; ++allele) {
 
@@ -336,7 +337,7 @@ void NeutralStatsManager::calculateFstatWC(set<int> const& patchList, const int 
 					if (pPop != 0) {
 						var = pPop->getAlleleFrequency(thisLocus, allele) - pBar;
 						var *= var;
-						s2 += var * pPop->sampleSize();
+						s2 += var * pPop->sampleSize() * ploidy;
 						hBar += pPop->getHeteroTally(thisLocus, allele); // n_i * h_i
 					}
 				} //end for pop
@@ -375,15 +376,17 @@ void NeutralStatsManager::calculateFstatWC_MS(set<int> const& patchList, const i
 
 	double sumWeights = 0;
 	unsigned int nbExtantPops = 0;
+	const int ploidy = pSpecies->isDiploid() ? 2 : 1;
+	const int totSampleSize = nInds * ploidy;
 
 	for (int patchId : patchList) {
 		const auto patch = pLandscape->findPatch(patchId);
 		const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
 		if (pPop != 0) {
-			int patchSize = pPop->sampleSize();
-			if (patchSize > 0) {
+			int ni = pPop->sampleSize() * ploidy;
+			if (ni > 0) {
 				nbExtantPops++;
-				sumWeights += static_cast<double>(patchSize * patchSize) / nInds;
+				sumWeights += static_cast<double>(ni * ni) / totSampleSize;
 			}
 		}
 	}
@@ -473,7 +476,7 @@ void NeutralStatsManager::calculateFstatWC_MS(set<int> const& patchList, const i
 		double SIGA = 0, SIGB = 0, SIGW = 0;
 
 		if (nbAllelesInComm != nLoci) { // more than one allele per locus
-			double nc = (nInds - sumWeights) / (nbExtantPops - 1);
+			double nc = (totSampleSize - sumWeights) / (nbExtantPops - 1);
 			int MSiDenom = nInds == nbExtantPops ? 1 : nInds - nbExtantPops; // avoid /0 if exactly 1 ind per pop
 
 			for (int i = 0; i < nbAllelesInComm; ++i) {
@@ -574,7 +577,7 @@ void NeutralStatsManager::setFstMatrix(set<int> const& patchList, const int nInd
 	double denominator = 0;
 	double sumWeights = 0;
 
-	totSize = nInds * ploidy; // diploid
+	totSize = nInds * ploidy;
 
 	// Calculate weight (n_ic) terms
 	for (int i = 0; i < nPatches; ++i) {
