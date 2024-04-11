@@ -109,22 +109,17 @@ void SNPTrait::mutate_KAM()
 			for (int m : mutationPositions) {
 
 				mut = (unsigned char)pRandom->IRandom(0, maxSNPval); // draw new mutation, could draw wildtype
-				auto it = genes.find(m); // find if position in map already has mutations there
 
-				if (it == genes.end()) { // not found so create new entry in map with wildtype as char default
-					vector<unsigned char> allelePair(2, wildType);
-					allelePair[whichChromosome] = mut; //put new mutation value in
-					genes.insert(make_pair(m, allelePair));
-				}
-				else { //position found, already mutations there
+				auto it = genes.find(m);
+				if (it == genes.end())
+					throw runtime_error("Locus selected for mutation doesn't exist.");
 
-					auto currentChar = it->second[whichChromosome]; //current mutation
-					do {
-						mut = (unsigned char)pRandom->IRandom(0, maxSNPval); //make sure new value differs from old , could be a problem here with infinite loops
-					} while (mut == currentChar);
+				auto currentChar = it->second[whichChromosome]; //current mutation
+				do {
+					mut = (unsigned char)pRandom->IRandom(0, maxSNPval); //make sure new value differs from old , could be a problem here with infinite loops
+				} while (mut == currentChar);
 
-					it->second[whichChromosome] = mut; //overwrite with new value
-				}
+				it->second[whichChromosome] = mut; //overwrite with new value
 			}
 		}
 	}
@@ -160,7 +155,7 @@ void SNPTrait::mutate_SSM()
 				int mutateForward = pRandom->Bernoulli(0.5);
 				auto it = genes.find(m);
 				if (it == genes.end())
-					throw runtime_error("");
+					throw runtime_error("Locus selected for mutation doesn't exist.");
 
 				auto currentAllele = it->second[whichChromosome];
 				if (mutateForward == 1 && currentAllele < maxSNPval)
