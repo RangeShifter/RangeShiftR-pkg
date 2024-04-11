@@ -15,7 +15,7 @@ QTLTrait::QTLTrait(SpeciesTrait* P)
 		_inherit_func_ptr = (pSpeciesTrait->getPloidy() == 1) ? &QTLTrait::inheritHaploid : &QTLTrait::inheritDiploid; //this could be changed if we wanted some alternative form of inheritance
 
 		DistributionType mutationDistribution = pSpeciesTrait->getMutationDistribution();
-		map<parameter_t, float> mutationParameters = pSpeciesTrait->getMutationParameters();
+		map<GenParamType, float> mutationParameters = pSpeciesTrait->getMutationParameters();
 
 		switch (mutationDistribution) {
 		case UNIFORM:
@@ -34,7 +34,7 @@ QTLTrait::QTLTrait(SpeciesTrait* P)
 			if (mutationParameters.count(MEAN) != 1)
 				cout << endl << ("Error:: qtl mutation distribution set to normal so parameters must contain mean value (e.g. mean= ) \n");
 
-			if (mutationParameters.count(SDEV) != 1)
+			if (mutationParameters.count(SD) != 1)
 				cout << endl << ("Error::qtl mutation distribution set to normal so parameters must contain sdev value (e.g. sdev= ) \n");
 
 			_mutate_func_ptr = &QTLTrait::mutateNormal;
@@ -50,7 +50,7 @@ QTLTrait::QTLTrait(SpeciesTrait* P)
 	}
 
 	DistributionType initialDistribution = pSpeciesTrait->getInitialDistribution();
-	map<parameter_t, float> initialParameters = pSpeciesTrait->getInitialParameters();
+	map<GenParamType, float> initialParameters = pSpeciesTrait->getInitialParameters();
 
 	switch (initialDistribution) {
 	case UNIFORM:
@@ -72,11 +72,11 @@ QTLTrait::QTLTrait(SpeciesTrait* P)
 		if (initialParameters.count(MEAN) != 1)
 			cout << endl << ("Error:: initial normal qtl distribution parameter must contain mean value (e.g. mean= ) \n");
 
-		if (initialParameters.count(SDEV) != 1)
+		if (initialParameters.count(SD) != 1)
 			cout << endl << ("Error:: initial normal qtl distribution parameter must contain sdev value (e.g. sdev= ) \n");
 
 		float mean = initialParameters.find(MEAN)->second;
-		float sd = initialParameters.find(SDEV)->second;
+		float sd = initialParameters.find(SD)->second;
 
 		initialiseNormal(mean, sd);
 		break;
@@ -130,7 +130,7 @@ void QTLTrait::mutateUniform()
 
 	auto rng = pRandom->getRNG();
 
-	map<parameter_t, float> mutationParameters = pSpeciesTrait->getMutationParameters();
+	map<GenParamType, float> mutationParameters = pSpeciesTrait->getMutationParameters();
 	float maxD = mutationParameters.find(MAX)->second;
 	float minD = mutationParameters.find(MIN)->second;
 
@@ -168,9 +168,9 @@ void QTLTrait::mutateNormal()
 	auto rng = pRandom->getRNG();
 
 
-	const map<parameter_t, float> mutationParameters = pSpeciesTrait->getMutationParameters();
+	const map<GenParamType, float> mutationParameters = pSpeciesTrait->getMutationParameters();
 	const float mean = mutationParameters.find(MEAN)->second;
-	const float sd = mutationParameters.find(SDEV)->second;
+	const float sd = mutationParameters.find(SD)->second;
 
 	for (int p = 0; p < ploidy; p++) {
 
@@ -253,7 +253,7 @@ void QTLTrait::inheritHaploid(sex_t chromosome, map<int, vector<shared_ptr<Allel
 void QTLTrait::inheritInitialParameters(sex_t whichChromosome, map<int, vector<shared_ptr<Allele>>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome)
 {
 	DistributionType initialDistribution = pSpeciesTrait->getInitialDistribution();
-	map<parameter_t, float> initialParameters = pSpeciesTrait->getInitialParameters();
+	map<GenParamType, float> initialParameters = pSpeciesTrait->getInitialParameters();
 
 	switch (initialDistribution) {
 	case UNIFORM:
@@ -276,11 +276,11 @@ void QTLTrait::inheritInitialParameters(sex_t whichChromosome, map<int, vector<s
 		if (initialParameters.count(MEAN) != 1)
 			cout << endl << ("Error:: initial normal qtl distribution parameter must contain mean value (e.g. mean= ) \n");
 
-		if (initialParameters.count(SDEV) != 1)
+		if (initialParameters.count(SD) != 1)
 			cout << endl << ("Error:: initial normal qtl distribution parameter must contain sdev value (e.g. sdev= ) \n");
 
 		float mean = initialParameters.find(MEAN)->second;
-		float sd = initialParameters.find(SDEV)->second;
+		float sd = initialParameters.find(SD)->second;
 
 		initialiseNormal(mean, sd);
 

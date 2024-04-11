@@ -139,17 +139,8 @@ enum TraitType {
 	INVALID_TRAIT // error
 };
 
-typedef std::string parameter_t;
-
-constexpr auto MEAN = "mean";
-constexpr auto SDEV = "sd";
-constexpr auto MIN = "min";
-constexpr auto MAX = "max";
-constexpr auto SHAPE = "shape";
-constexpr auto SCALE = "scale";
-
+enum GenParamType { MEAN, SD, MIN, MAX, SHAPE, SCALE, INVALID };
 enum DistributionType { UNIFORM, NORMAL, GAMMA, NEGEXP, SCALED, KAM, SSM, NONE };
-
 enum ExpressionType { AVERAGE, ADDITIVE, NOTEXPR, MULTIPLICATIVE };
 
 /** Param's types **/

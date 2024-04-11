@@ -20,12 +20,12 @@ private:
     set<int> positions;
     ExpressionType expressionType;
     DistributionType initialDistribution;
-    map<parameter_t, float> initialParameters;
+    map<GenParamType, float> initialParameters;
     DistributionType dominanceDistribution;
-    map<parameter_t, float> dominanceParameters;
+    map<GenParamType, float> dominanceParameters;
     bool inherited;
     DistributionType mutationDistribution;
-    map<parameter_t, float> mutationParameters;
+    map<GenParamType, float> mutationParameters;
 
 public:
 
@@ -35,13 +35,13 @@ public:
         const set<int>& pos,
         const ExpressionType& expr,
         const DistributionType& initDist,
-        const map<parameter_t, float> initParams,
+        const map<GenParamType, float> initParams,
         const DistributionType& dominanceDist,
-        const map<parameter_t, float> dominanceParams,
+        const map<GenParamType, float> dominanceParams,
         bool isInherited, 
         const float& mutationRate,
         const DistributionType& mutationDist,
-        const map<parameter_t, float> mutationParams,
+        const map<GenParamType, float> mutationParams,
         Species* pSpecies
         );
 
@@ -53,11 +53,11 @@ public:
     int getPositionsSize() const { return static_cast<int>(positions.size()); }
     bool isInherited() const { return inherited;  }
     DistributionType getMutationDistribution() const { return mutationDistribution; };
-    map<parameter_t, float> getMutationParameters() const { return mutationParameters; };
+    map<GenParamType, float> getMutationParameters() const { return mutationParameters; };
     DistributionType getDominanceDistribution() const { return dominanceDistribution; };
-    map<parameter_t, float> getDominanceParameters() const { return dominanceParameters; };
+    map<GenParamType, float> getDominanceParameters() const { return dominanceParameters; };
     DistributionType getInitialDistribution() const { return initialDistribution; };
-    map<parameter_t, float> getInitialParameters() const { return initialParameters; };
+    map<GenParamType, float> getInitialParameters() const { return initialParameters; };
     ExpressionType getExpressionType() const { return expressionType; };
 };
 #endif

@@ -16,7 +16,7 @@ GeneticLoad::GeneticLoad(SpeciesTrait* P)
 	_inherit_func_ptr = (pSpeciesTrait->getPloidy() == 1) ? &GeneticLoad::inheritHaploid : &GeneticLoad::inheritDiploid; //this could be changed if we wanted some alternative form of inheritance
 
 	DistributionType mutationDistribution = pSpeciesTrait->getMutationDistribution();
-	map<parameter_t, float> mutationParameters = pSpeciesTrait->getMutationParameters();
+	map<GenParamType, float> mutationParameters = pSpeciesTrait->getMutationParameters();
 
 	switch (mutationDistribution) {
 	case UNIFORM:
@@ -35,7 +35,7 @@ GeneticLoad::GeneticLoad(SpeciesTrait* P)
 		if (mutationParameters.count(MEAN) != 1)
 			cout << endl << ("Error:: genetic load mutation distribution set to normal so parameters must contain one mean value (e.g. mean= ) \n");
 
-		if (mutationParameters.count(SDEV) != 1)
+		if (mutationParameters.count(SD) != 1)
 			cout << endl << ("Error:: genetic load mutation distribution set to normal so parameters must contain one sdev value (e.g. sdev= ) \n");
 
 		break;
@@ -65,7 +65,7 @@ GeneticLoad::GeneticLoad(SpeciesTrait* P)
 	}
 
 	DistributionType dominanceDistribution = pSpeciesTrait->getDominanceDistribution();
-	map<parameter_t, float> dominanceParameters = pSpeciesTrait->getDominanceParameters();
+	map<GenParamType, float> dominanceParameters = pSpeciesTrait->getDominanceParameters();
 
 	switch (dominanceDistribution) {
 	case UNIFORM:
@@ -84,7 +84,7 @@ GeneticLoad::GeneticLoad(SpeciesTrait* P)
 		if (dominanceParameters.count(MEAN) != 1)
 			cout << endl << ("Error:: genetic load dominance distribution set to normal so parameters must contain one mean value (e.g. mean= ) \n");
 
-		if (dominanceParameters.count(SDEV) != 1)
+		if (dominanceParameters.count(SD) != 1)
 			cout << endl << ("Error:: genetic load dominance distribution set to normal so parameters must contain one sdev value (e.g. sdev= ) \n");
 
 		break;
@@ -119,7 +119,7 @@ GeneticLoad::GeneticLoad(SpeciesTrait* P)
 	}
 
 	DistributionType initialDistribution = pSpeciesTrait->getInitialDistribution();
-	map<parameter_t, float> initialParameters = pSpeciesTrait->getInitialParameters();
+	map<GenParamType, float> initialParameters = pSpeciesTrait->getInitialParameters();
 }
 
 
@@ -180,7 +180,7 @@ void GeneticLoad::mutate()
 float GeneticLoad::drawDominance(float selCoef) {
 
 	DistributionType dominanceDistribution = pSpeciesTrait->getDominanceDistribution();
-	map<parameter_t, float> dominanceParameters = pSpeciesTrait->getDominanceParameters();
+	map<GenParamType, float> dominanceParameters = pSpeciesTrait->getDominanceParameters();
 
 	float h = 1.0; //default dominance is  1
 
@@ -195,7 +195,7 @@ float GeneticLoad::drawDominance(float selCoef) {
 	case NORMAL:
 	{
 		const float mean = dominanceParameters.find(MEAN)->second;
-		const float sd = dominanceParameters.find(SDEV)->second;
+		const float sd = dominanceParameters.find(SD)->second;
 		h = static_cast<float>(pRandom->Normal(mean, sd));
 		break;
 	}
@@ -238,7 +238,7 @@ float GeneticLoad::drawDominance(float selCoef) {
 float GeneticLoad::drawSelectionCoef() {
 
 	DistributionType mutationDistribution = pSpeciesTrait->getMutationDistribution();
-	map<parameter_t, float> mutationParameters = pSpeciesTrait->getMutationParameters();
+	map<GenParamType, float> mutationParameters = pSpeciesTrait->getMutationParameters();
 
 	float s = 0.0; //default selection coefficient is 0
 
@@ -254,7 +254,7 @@ float GeneticLoad::drawSelectionCoef() {
 	case NORMAL:
 	{
 		const float mean = mutationParameters.find(MEAN)->second;
-		const float sd = mutationParameters.find(SDEV)->second;
+		const float sd = mutationParameters.find(SD)->second;
 		s = static_cast<float>(pRandom->Normal(mean, sd));
 
 		break;

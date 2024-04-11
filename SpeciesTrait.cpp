@@ -5,10 +5,10 @@
 SpeciesTrait::SpeciesTrait(
 	const TraitType& traitType, const sex_t& sx, 
 	const set<int>& pos, const ExpressionType& expr,
-	const DistributionType& initDist, const map<parameter_t, float> initParams,
-	const DistributionType& dominanceDist, const map<parameter_t, float> dominanceParams,
+	const DistributionType& initDist, const map<GenParamType, float> initParams,
+	const DistributionType& dominanceDist, const map<GenParamType, float> dominanceParams,
 	bool isInherited, const float& mutRate,
-	const DistributionType& mutationDist, const map<parameter_t, float> mutationParams,
+	const DistributionType& mutationDist, const map<GenParamType, float> mutationParams,
 	Species* pSpecies) :
 	sex{sx},
 	positions{pos},

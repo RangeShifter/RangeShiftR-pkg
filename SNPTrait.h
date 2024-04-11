@@ -15,7 +15,8 @@ class SNPTrait : public TTrait {
 private:
 
 	inline static int wildType = -999;
-	const int maxSNPAlleles = UCHAR_MAX + 1; // allele is char, can take value 0-255
+	const int SNPvalUpperBound = UCHAR_MAX; // i.e. 256
+	// allele is char, can take value 0-255
 
 	SpeciesTrait* pProtoTrait;
 
