@@ -124,7 +124,7 @@ QTLTrait::QTLTrait(const QTLTrait& T) : pSpeciesTrait(T.pSpeciesTrait), _mutate_
 void QTLTrait::mutateUniform()
 {
 	const int positionsSize = pSpeciesTrait->getPositionsSize();
-	const auto& positions = pSpeciesTrait->getPositions();
+	const auto& genePositions = pSpeciesTrait->getGenePositions();
 	const short ploidy = pSpeciesTrait->getPloidy();
 	const float mutationRate = pSpeciesTrait->getMutationRate();
 
@@ -140,7 +140,7 @@ void QTLTrait::mutateUniform()
 
 		if (NbMut > 0) {
 			vector<int> mutationPositions;
-			sample(positions.begin(), positions.end(), std::back_inserter(mutationPositions),
+			sample(genePositions.begin(), genePositions.end(), std::back_inserter(mutationPositions),
 				NbMut, rng);
 
 			for (int m : mutationPositions) {
@@ -161,7 +161,7 @@ void QTLTrait::mutateNormal()
 {
 
 	const int positionsSize = pSpeciesTrait->getPositionsSize();
-	const auto& positions = pSpeciesTrait->getPositions();
+	const auto& genePositions = pSpeciesTrait->getGenePositions();
 	const short ploidy = pSpeciesTrait->getPloidy();
 	const float mutationRate = pSpeciesTrait->getMutationRate();
 
@@ -178,7 +178,7 @@ void QTLTrait::mutateNormal()
 
 		if (NbMut > 0) {
 			vector<int> mutationPositions;
-			sample(positions.begin(), positions.end(), std::back_inserter(mutationPositions),
+			sample(genePositions.begin(), genePositions.end(), std::back_inserter(mutationPositions),
 				NbMut, rng);
 
 			for (int m : mutationPositions) {
@@ -303,10 +303,10 @@ void QTLTrait::inheritInitialParameters(sex_t whichChromosome, map<int, vector<s
 
 void QTLTrait::initialiseNormal(float mean, float sd) {
 
-	const set<int> positions = pSpeciesTrait->getPositions();
+	const set<int> genePositions = pSpeciesTrait->getGenePositions();
 	short ploidy = pSpeciesTrait->getPloidy();
 
-	for (auto position : positions) {
+	for (auto position : genePositions) {
 		vector<shared_ptr<Allele>> newAllelePair;
 		for (int i = 0; i < ploidy; i++) {
 			float alleleVal = pRandom->Normal(mean, sd);
@@ -318,10 +318,10 @@ void QTLTrait::initialiseNormal(float mean, float sd) {
 
 void QTLTrait::initialiseUniform(float min, float max) {
 
-	const set<int> positions = pSpeciesTrait->getPositions();
+	const set<int> genePositions = pSpeciesTrait->getGenePositions();
 	short ploidy = pSpeciesTrait->getPloidy();
 
-	for (auto position : positions) {
+	for (auto position : genePositions) {
 		vector<shared_ptr<Allele>> newAllelePair;
 		for (int i = 0; i < ploidy; i++) {
 			float alleleVal = pRandom->FRandom(min, max);

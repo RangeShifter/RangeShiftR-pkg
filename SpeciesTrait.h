@@ -17,7 +17,7 @@ private:
     inline static int ploidy = 0;
     float mutationRate;
     sex_t sex;
-    set<int> positions;
+    set<int> genePositions;
     ExpressionType expressionType;
     DistributionType initialDistribution;
     map<GenParamType, float> initialParameters;
@@ -49,8 +49,8 @@ public:
     sex_t getSex() const { return sex; }
     float getMutationRate() const { return mutationRate; }
     short getPloidy() const { return ploidy; }
-    set<int>& getPositions() { return positions; } // returning by reference, make sure receiver is const
-    int getPositionsSize() const { return static_cast<int>(positions.size()); }
+    set<int>& getGenePositions() { return genePositions; } // returning by reference, make sure receiver is const
+    int getPositionsSize() const { return static_cast<int>(genePositions.size()); }
     bool isInherited() const { return inherited;  }
     DistributionType getMutationDistribution() const { return mutationDistribution; };
     map<GenParamType, float> getMutationParameters() const { return mutationParameters; };

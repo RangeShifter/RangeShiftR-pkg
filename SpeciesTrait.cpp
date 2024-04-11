@@ -11,7 +11,7 @@ SpeciesTrait::SpeciesTrait(
 	const DistributionType& mutationDist, const map<GenParamType, float> mutationParams,
 	Species* pSpecies) :
 	sex{sx},
-	positions{pos},
+	genePositions{pos},
 	expressionType{expr},
 	initialDistribution{initDist},
 	initialParameters{initParams},

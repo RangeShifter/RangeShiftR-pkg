@@ -334,7 +334,7 @@ void Population::updatePopSNPtables() {
 
 	const int nLoci = pSpecies->getNPositionsForTrait(SNP);
 	const int nAlleles = (int)pSpecies->getSpTrait(SNP)->getMutationParameters().find(MAX)->second;
-	const auto& positions = pSpecies->getSpTrait(SNP)->getPositions();
+	const auto& positions = pSpecies->getSpTrait(SNP)->getGenePositions();
 	const int ploidy = pSpecies->isDiploid() ? 2 : 1;
 
 	if (popSNPtables.size() != 0)
@@ -411,7 +411,7 @@ int Population::countHeterozygoteLoci() {
 // ----------------------------------------------------------------------------------------
 
 vector<double> Population::countLociHeterozyotes() {
-	const auto& positions = pSpecies->getSpTrait(SNP)->getPositions();
+	const auto& positions = pSpecies->getSpTrait(SNP)->getGenePositions();
 	vector<double> hetero(positions.size(), 0);
 
 	for (Individual* ind : sampledInds) {

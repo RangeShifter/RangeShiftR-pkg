@@ -18,7 +18,7 @@ private:
 	const int SNPvalUpperBound = UCHAR_MAX; // i.e. 256
 	// allele is char, can take value 0-255
 
-	SpeciesTrait* pProtoTrait;
+	SpeciesTrait* pSpeciesTrait;
 
 	map<int, vector<unsigned char>> genes; //position <strand A , strand B>>
 
@@ -47,9 +47,9 @@ public:
 	virtual void inherit(TTrait* parent, set<unsigned int> const& recomPositions, sex_t chromosome, int startingChromosome) override;
 	virtual void mutate() override { (this->*_mutate_func_ptr) (); }
 
-	virtual int getNLoci()  const override { return pProtoTrait->getPositionsSize(); }
-	float getMutationRate() const override { return pProtoTrait->getMutationRate(); }
-	bool isInherited() const override { return pProtoTrait->isInherited(); }
+	virtual int getNLoci()  const override { return pSpeciesTrait->getPositionsSize(); }
+	float getMutationRate() const override { return pSpeciesTrait->getMutationRate(); }
+	bool isInherited() const override { return pSpeciesTrait->isInherited(); }
 	map<int, vector<unsigned char>>& getGenes() { return genes; } //returning reference, reciever must be const
 
 	virtual float getAlleleValueAtLocus(short chromosome, int position) const override;

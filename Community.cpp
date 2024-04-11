@@ -1777,7 +1777,7 @@ void Community::writeWCFstatFile(int rep, int yr, int gen) {
 
 void Community::writeWCPerLocusFstatFile(Species* pSpecies, const int yr, const int gen, const  int nAlleles, const int nLoci, set<int> const& patchList)
 {
-	const set<int> positions = pSpecies->getSpTrait(SNP)->getPositions();
+	const set<int> positions = pSpecies->getSpTrait(SNP)->getGenePositions();
 
 	int thisLocus = 0;
 	for (int position : positions) {

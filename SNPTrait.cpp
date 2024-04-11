@@ -5,12 +5,12 @@
 // ----------------------------------------------------------------------------------------
 SNPTrait::SNPTrait(SpeciesTrait* P)
 {
-	pProtoTrait = P;
+	pSpeciesTrait = P;
 
-	DistributionType mutationDistribution = pProtoTrait->getMutationDistribution();
-	map<GenParamType, float> mutationParameters = pProtoTrait->getMutationParameters();
+	DistributionType mutationDistribution = pSpeciesTrait->getMutationDistribution();
+	map<GenParamType, float> mutationParameters = pSpeciesTrait->getMutationParameters();
 
-	_inherit_func_ptr = (pProtoTrait->getPloidy() == 1) ? &SNPTrait::inheritHaploid : &SNPTrait::inheritDiploid; //this could be changed if we wanted some alternative form of inheritance
+	_inherit_func_ptr = (pSpeciesTrait->getPloidy() == 1) ? &SNPTrait::inheritHaploid : &SNPTrait::inheritDiploid; //this could be changed if we wanted some alternative form of inheritance
 
 	if (mutationDistribution == SSM)
 		_mutate_func_ptr = &SNPTrait::mutate_SSM;
@@ -30,8 +30,8 @@ SNPTrait::SNPTrait(SpeciesTrait* P)
 	if (wildType > SNPvalUpperBound)
 		cout << endl << "Error:: max number of alleles cannot exceed " << SNPvalUpperBound << ".\n";
 
-	DistributionType initialDistribution = pProtoTrait->getInitialDistribution();
-	map<GenParamType, float> initialParameters = pProtoTrait->getInitialParameters();
+	DistributionType initialDistribution = pSpeciesTrait->getInitialDistribution();
+	map<GenParamType, float> initialParameters = pSpeciesTrait->getInitialParameters();
 
 	if (mutationDistribution == SSM && initialDistribution != UNIFORM)
 		cout << endl << ("Error:: If using SSM mutation model must initialise genome with alleles (microsats) \n");
@@ -68,7 +68,7 @@ SNPTrait::SNPTrait(SpeciesTrait* P)
 // ----------------------------------------------------------------------------------------
 
 SNPTrait::SNPTrait(const SNPTrait& T) :
-	pProtoTrait(T.pProtoTrait), _mutate_func_ptr(T._mutate_func_ptr), _inherit_func_ptr(T._inherit_func_ptr) {
+	pSpeciesTrait(T.pSpeciesTrait), _mutate_func_ptr(T._mutate_func_ptr), _inherit_func_ptr(T._inherit_func_ptr) {
 
 }
 
@@ -82,15 +82,14 @@ SNPTrait::SNPTrait(const SNPTrait& T) :
 // ----------------------------------------------------------------------------------------
 void SNPTrait::mutate_KAM()
 {
-	const int positionsSize = pProtoTrait->getPositionsSize();
-	const auto& positions = pProtoTrait->getPositions();
-	const short ploidy = pProtoTrait->getPloidy();
-	const float mutationRate = pProtoTrait->getMutationRate();
+	const int positionsSize = pSpeciesTrait->getPositionsSize();
+	const auto& genePositions = pSpeciesTrait->getGenePositions();
+	const short ploidy = pSpeciesTrait->getPloidy();
+	const float mutationRate = pSpeciesTrait->getMutationRate();
 	auto rng = pRandom->getRNG();
 	unsigned char mut;
 
-	map<GenParamType, float> mutationParameters = pProtoTrait->getMutationParameters();
-
+	map<GenParamType, float> mutationParameters = pSpeciesTrait->getMutationParameters();
 
 	int maxSNPval = (int)mutationParameters.find(MAX)->second;
 
@@ -103,7 +102,7 @@ void SNPTrait::mutate_KAM()
 
 		if (NbMut > 0) {
 			vector<int> mutationPositions;
-			sample(positions.begin(), positions.end(), std::back_inserter(mutationPositions),
+			sample(genePositions.begin(), genePositions.end(), std::back_inserter(mutationPositions),
 				NbMut, rng); // without replacement
 
 			for (int m : mutationPositions) {
@@ -131,13 +130,13 @@ void SNPTrait::mutate_KAM()
 // ----------------------------------------------------------------------------------------
 void SNPTrait::mutate_SSM()
 {
-	const int positionsSize = pProtoTrait->getPositionsSize();
-	const auto& positions = pProtoTrait->getPositions();
-	const short ploidy = pProtoTrait->getPloidy();
-	const float mutationRate = pProtoTrait->getMutationRate();
+	const int positionsSize = pSpeciesTrait->getPositionsSize();
+	const auto& genePositions = pSpeciesTrait->getGenePositions();
+	const short ploidy = pSpeciesTrait->getPloidy();
+	const float mutationRate = pSpeciesTrait->getMutationRate();
 	auto rng = pRandom->getRNG();
 
-	map<GenParamType, float> mutationParameters = pProtoTrait->getMutationParameters();
+	map<GenParamType, float> mutationParameters = pSpeciesTrait->getMutationParameters();
 
 	int maxSNPval = (int)mutationParameters.find(MAX)->second;
 	if (maxSNPval > SNPvalUpperBound) maxSNPval = SNPvalUpperBound; //reserved max value for wildtype
@@ -148,7 +147,7 @@ void SNPTrait::mutate_SSM()
 
 		if (NbMut > 0) {
 			vector<int> mutationPositions;
-			sample(positions.begin(), positions.end(), std::back_inserter(mutationPositions),
+			sample(genePositions.begin(), genePositions.end(), std::back_inserter(mutationPositions),
 				NbMut, rng);
 
 			for (int m : mutationPositions) {
@@ -233,10 +232,10 @@ void SNPTrait::inheritHaploid(sex_t chromosome, map<int, vector<unsigned char>> 
 
 void SNPTrait::initialiseFull(int maxAlleleVal)
 {
-	const auto& positions = pProtoTrait->getPositions();
-	short ploidy = pProtoTrait->getPloidy();
+	const auto& genePositions = pSpeciesTrait->getGenePositions();
+	short ploidy = pSpeciesTrait->getPloidy();
 
-	for (auto position : positions) {
+	for (auto position : genePositions) {
 		vector<unsigned char> allelePair;
 
 		for (int i = 0; i < ploidy; i++) {

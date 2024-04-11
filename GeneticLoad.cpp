@@ -136,7 +136,7 @@ GeneticLoad::GeneticLoad(const GeneticLoad& T) : pSpeciesTrait(T.pSpeciesTrait),
 void GeneticLoad::mutate()
 {
 	const int positionsSize = pSpeciesTrait->getPositionsSize();
-	const auto& positions = pSpeciesTrait->getPositions();
+	const auto& genePositions = pSpeciesTrait->getGenePositions();
 	const short ploidy = pSpeciesTrait->getPloidy();
 	const float mutationRate = pSpeciesTrait->getMutationRate();
 
@@ -150,7 +150,7 @@ void GeneticLoad::mutate()
 		if (NbMut > 0) {
 			vector<int> mutationPositions;
 			// Draw which positions mutate
-			sample(positions.begin(), positions.end(), std::back_inserter(mutationPositions),
+			sample(genePositions.begin(), genePositions.end(), std::back_inserter(mutationPositions),
 				NbMut, rng);
 
 			for (int m : mutationPositions) {
