@@ -19,7 +19,7 @@ private:
 
 	SpeciesTrait* pSpeciesTrait; // would be better as const so immutable, but means passing positions list is heavy and can't be passed by reference
 
-	map<int, vector<shared_ptr<Allele>>> genes; //position <strand A , strand B>>
+	map<int, vector<shared_ptr<Allele>>> genes; // position <strand A , strand B>>
 
 	void (QTLTrait::* _mutate_func_ptr) (void);
 	void (QTLTrait::* _inherit_func_ptr) (sex_t chromosome, map<int, vector<shared_ptr<Allele>>> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
@@ -27,8 +27,8 @@ private:
 
 	void initialiseUniform(float min, float max);
 	void initialiseNormal(float mean, float sd);
-	void inheritDiploid(sex_t chromosome, map<int, vector<shared_ptr<Allele>>> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
-	void inheritHaploid(sex_t chromosome, map<int, vector<shared_ptr<Allele>>> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
+	void inheritDiploid(const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
+	void inheritHaploid(const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
 	void inheritInitialParameters(sex_t chromosome, map<int, vector<shared_ptr<Allele>>> const& parentMutations, set<unsigned int> const& recomPositions, int parentChromosome);
 	void mutateUniform();
 	void mutateNormal();
@@ -46,10 +46,8 @@ public:
 	bool isInherited() const override { return pSpeciesTrait->isInherited(); }
 	void mutate() override { (this->*_mutate_func_ptr) (); }
 	float express() override { return (this->*_express_func_ptr) (); }
-	void inherit(TTrait* parent, set<unsigned int> const& recomPositions, sex_t chromosome, int startingChromosome) override;
+	void inherit(const bool& fromMother, TTrait* parent, set<unsigned int> const& recomPositions, int startingChromosome) override;
 	map<int, vector<shared_ptr<Allele>>>& getGenes() { return genes; } // returning reference, receiver must be const
-
-	// virtual float getAlleleValueAtLocus(short chromosome, int i) const override { return (double)mutations[chromosome][i]->getSelectionCoef(); }
 
 	float getAlleleValueAtLocus(short chromosome, int i) const override;
 	int countHeterozygoteLoci() const;

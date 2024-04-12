@@ -146,6 +146,7 @@ void GeneticLoad::mutate()
 
 		// Determine nb of mutations
 		unsigned int NbMut = pRandom->Poisson(positionsSize * mutationRate);
+		if (NbMut > positionsSize) NbMut = positionsSize;
 
 		if (NbMut > 0) {
 			vector<int> mutationPositions;
@@ -158,14 +159,16 @@ void GeneticLoad::mutate()
 				float newSelectionCoef = drawSelectionCoef();
 				float newDominanceCoef = drawDominance(newSelectionCoef);
 
-				auto it = genes.find(m); //find if position in map already has mutations there
-
-				if (it == genes.end()) {   // not found so create new entry in map with wildtype as char default
+				auto it = genes.find(m);
+				if (it == genes.end()) {   
+					/*
 					vector<shared_ptr<Allele>> newAllelePair(2);
 					newAllelePair[p] = make_shared<Allele>(newSelectionCoef, newDominanceCoef); //put new mutation value in 
 					genes.insert(make_pair(m, newAllelePair));
+					*/
+					throw runtime_error("Locus sampled for mutation doesn't exist.");
 				}
-				else { //position found, already mutations there
+				else {
 					it->second[p] = make_shared<Allele>(newSelectionCoef, newDominanceCoef);
 				}
 			}
@@ -287,53 +290,50 @@ float GeneticLoad::drawSelectionCoef() {
 // ----------------------------------------------------------------------------------------
 
 
-void GeneticLoad::inherit(TTrait* parentTrait, set<unsigned int> const& recomPositions, sex_t whichChromosome, int startingChromosome)
+void GeneticLoad::inherit(const bool& fromMother, TTrait* parentTrait, set<unsigned int> const& recomPositions, int startingChromosome)
 {
 	auto parentCast = dynamic_cast<GeneticLoad*> (parentTrait); //horrible
 
 	const auto& parent_seq = parentCast->getGenes();
 	if (parent_seq.size() > 0) //else nothing to inherit
-		(this->*_inherit_func_ptr) (whichChromosome, parent_seq, recomPositions, startingChromosome);
+		(this->*_inherit_func_ptr) (fromMother, parent_seq, recomPositions, startingChromosome);
 }
 
-void GeneticLoad::inheritDiploid(sex_t whichChromosome, map<int, vector<shared_ptr<Allele>>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome) {
+void GeneticLoad::inheritDiploid(const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome) {
 
 	auto it = recomPositions.lower_bound(parentGenes.begin()->first);
-
 	int nextBreakpoint = *it;
-
 	auto distance = std::distance(recomPositions.begin(), it);
 	if (distance % 2 != 0)
 		parentChromosome = 1 - parentChromosome; // switch to the other one
 		// use 1-parentChromosome, or switch to a sex_t ?
 
 	for (auto const& [locus, allelePair] : parentGenes) {
-
 		while (locus > nextBreakpoint) {
 			std::advance(it, 1);
 			nextBreakpoint = *it;
 			parentChromosome = 1 - parentChromosome; // switch to the other one
 		}
-
 		if (locus <= nextBreakpoint) {
 			auto& allele = allelePair[parentChromosome];
+
 			auto it = genes.find(locus);
 			if (it == genes.end()) {
 				// locus does not exist yet, initiate it
+				if (!fromMother) throw runtime_error("Father-inherited locus does not exist.");
 				vector<shared_ptr<Allele>> newAllelePair(2);
-				newAllelePair[whichChromosome] = allele;
+				newAllelePair[sex_t::FEM] = allele;
 				genes.insert(make_pair(locus, newAllelePair));
-			}
-			else {
-				// locus already exists
-				// set corresponding allele
-				it->second[whichChromosome] = allele;
+			} 
+			else { // father, locus already exists
+				if (fromMother) throw runtime_error("Mother-inherited locus already exists.");
+				it->second[sex_t::MAL] = allele;
 			}
 		}
 	}
 }
 
-void GeneticLoad::inheritHaploid(sex_t chromosome, map<int, vector<shared_ptr<Allele>>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome)
+void GeneticLoad::inheritHaploid(const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome)
 {
 	genes = parentGenes;
 }

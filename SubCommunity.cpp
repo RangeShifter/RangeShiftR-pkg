@@ -105,7 +105,6 @@ void SubCommunity::initialise(Landscape* pLandscape, Species* pSpecies)
 void SubCommunity::initialInd(Landscape* pLandscape, Species* pSpecies,
 	Patch* pPatch, Cell* pCell, int ix)
 {
-
 	demogrParams dem = pSpecies->getDemogrParams();
 	stageParams sstruct = pSpecies->getStageParams();
 	emigRules emig = pSpecies->getEmigRules();

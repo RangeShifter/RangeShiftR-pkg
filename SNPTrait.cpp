@@ -172,18 +172,18 @@ void SNPTrait::mutate_SSM()
 // inheritance options
 // ----------------------------------------------------------------------------------------
 
-void SNPTrait::inherit(TTrait* parent, set<unsigned int> const& recomPositions, sex_t chromosome, int startingChromosome)
+void SNPTrait::inherit(const bool& fromMother, TTrait* parent, set<unsigned int> const& recomPositions, int startingChromosome)
 {
 	auto parentCast = dynamic_cast<SNPTrait*> (parent); //horrible
 
 	const auto& parent_seq = parentCast->getGenes();
 	if (parent_seq.size() > 0) //else nothing to inherit
-		(this->*_inherit_func_ptr) (chromosome, parent_seq, recomPositions, startingChromosome);
+		(this->*_inherit_func_ptr) (fromMother, parent_seq, recomPositions, startingChromosome);
 }
 
 
 
-void SNPTrait::inheritDiploid(sex_t whichChromosome, map<int, vector<unsigned char>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome) {
+void SNPTrait::inheritDiploid(const bool& fromMother, map<int, vector<unsigned char>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome) {
 
 	if (parentGenes.size() > 0) {
 		auto it = recomPositions.lower_bound(parentGenes.begin()->first);
@@ -208,20 +208,22 @@ void SNPTrait::inheritDiploid(sex_t whichChromosome, map<int, vector<unsigned ch
 
 				auto it = genes.find(locus);
 				if (it == genes.end()) {
+					if (!fromMother) throw runtime_error("Father-inherited locus does not exist.");
 					// not found
 					vector<unsigned char> newAllelePair(2, wildType);
-					newAllelePair[whichChromosome] = sp;
+					newAllelePair[sex_t::FEM] = sp;
 					genes.insert(make_pair(locus, newAllelePair));
 				}
 				else {
-					it->second[whichChromosome] = sp;
+					if (fromMother) throw runtime_error("Mother-inherited locus already exists.");
+					it->second[sex_t::MAL] = sp;
 				}
 			}
 		}
 	}
 }
 
-void SNPTrait::inheritHaploid(sex_t chromosome, map<int, vector<unsigned char>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome)
+void SNPTrait::inheritHaploid(const bool& fromMother, map<int, vector<unsigned char>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome)
 {
 	genes = parentGenes;
 }

@@ -241,6 +241,17 @@ int RunModel(Landscape* pLandscape, int seqsim)
 		// open a new individuals file for each replicate
 		if (sim.outInds)
 			pComm->outInds(rep, 0, 0, ppLand.landNum);
+
+		/*
+		if (sim.outGenetics) {
+			pComm->outGenetics(rep, 0, 0, ppLand.landNum);
+			if (!dem.stageStruct && sim.outStartGenetic == 0) {
+				// write genetic data for initialised individuals of non-strucutred population
+				pComm->outGenetics(rep, 0, 0, -1);
+			}
+		}
+		*/
+
 		// open a new genetics file for each replicate for per locus and pairwise stats
 		if (sim.outputPerLocusWCFstat) {
 			pComm->openWCPerLocusFstatFile(pSpecies, pLandscape, ppLand.landNum, rep);
@@ -466,7 +477,11 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				// output Individuals
 				if (sim.outInds && yr >= sim.outStartInd && yr % sim.outIntInd == 0)
 					pComm->outInds(rep, yr, gen, -1);
+
 				// output Genetics
+				//if (sim.outGenetics && yr >= sim.outStartGenetic && yr % sim.outIntGenetic == 0)
+				//	pComm->outGenetics(rep, yr, gen, -1);
+
 				if ((sim.outputWCFstat || sim.outputPairwiseFst || sim.outputPerLocusWCFstat) && yr % sim.outputGeneticInterval == 0) {
 
 					simParams sim = paramsSim->getSim();
@@ -592,6 +607,10 @@ int RunModel(Landscape* pLandscape, int seqsim)
 
 		if (sim.outInds) // close Individuals output file
 			pComm->outInds(rep, 0, 0, -999);
+
+		// if (sim.outGenetics) // close Genetics output file
+		//	pComm->outGenetics(rep, 0, 0, -999);
+
 		if (sim.outputPerLocusWCFstat) //close per locus file 
 			pComm->openWCPerLocusFstatFile(pSpecies, pLandscape, -999, rep);
 		if (sim.outputPairwiseFst) //close per locus file 
@@ -635,6 +654,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 	// close Individuals & Genetics output files if open
 	// they can still be open if the simulation was stopped by the user
 	if (sim.outInds) pComm->outInds(0, 0, 0, -999);
+	// if (sim.outGenetics) pComm->outGenetics(0, 0, 0, -999);
 	if (sim.outputWCFstat) 	pComm->openWCFstatFile(pSpecies, -999);
 	if (sim.outputPerLocusWCFstat) pComm->openWCPerLocusFstatFile(pSpecies, pLandscape, -999, 0);
 	if (sim.outputPairwiseFst) pComm->openPairwiseFSTFile(pSpecies, pLandscape, -999, 0);

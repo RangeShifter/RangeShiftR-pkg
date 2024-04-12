@@ -25,9 +25,8 @@ private:
 	void (SNPTrait::* _mutate_func_ptr) (void);
 	void (SNPTrait::* _inherit_func_ptr) (sex_t chromosome, map<int, vector<unsigned char>> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
 
-	void inheritDiploid(sex_t chromosome, map<int, vector<unsigned char>> const&, set<unsigned int> const& recomPositions, int parentChromosome);
-
-	void inheritHaploid(sex_t chromosome, map<int, vector<unsigned char>> const& parentMutations, set<unsigned int> const& recomPositions, int parentChromosome);
+	void inheritDiploid(const bool& fromMother, map<int, vector<unsigned char>> const&, set<unsigned int> const& recomPositions, int parentChromosome);
+	void inheritHaploid(const bool& fromMother, map<int, vector<unsigned char>> const& parentMutations, set<unsigned int> const& recomPositions, int parentChromosome);
 
 	void initialiseFull(int max); //other option is that mutations map is empty until a mutation happens, default when empty is to return a 0 value for wildtype
 
@@ -44,7 +43,7 @@ public:
 
 	virtual unique_ptr<TTrait> clone() const override { return std::make_unique<SNPTrait>(*this); }
 
-	virtual void inherit(TTrait* parent, set<unsigned int> const& recomPositions, sex_t chromosome, int startingChromosome) override;
+	virtual void inherit(const bool& fromMother, TTrait* parent, set<unsigned int> const& recomPositions, int startingChromosome) override;
 	virtual void mutate() override { (this->*_mutate_func_ptr) (); }
 
 	virtual int getNLoci()  const override { return pSpeciesTrait->getPositionsSize(); }

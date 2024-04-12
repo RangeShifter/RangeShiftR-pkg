@@ -171,15 +171,17 @@ void Individual::inherit(Species* pSpecies, const Individual* mother, const Indi
 		const auto fatherTrait = father->getTrait(trait);
 		auto newTrait = motherTrait->clone(); // shallow copy, pointer to proto trait initialised and empty sequence
 
-		newTrait->inherit(motherTrait, maternalRecomPositions, FEM, maternalStartingChromosome);
+		newTrait->inherit(true, motherTrait, maternalRecomPositions, maternalStartingChromosome);
 		if (newTrait->isInherited()) {
-			newTrait->inherit(fatherTrait, paternalRecomPositions, MAL, paternalStartingChromosome);
+			// Inherit father trait values
+			newTrait->inherit(false, fatherTrait, paternalRecomPositions, paternalStartingChromosome);
 			if (newTrait->getMutationRate() > 0 && pSpecies->areMutationsOn())
 				newTrait->mutate();
 		}
 		if (trait == GENETIC_LOAD1 || trait == GENETIC_LOAD2 || trait == GENETIC_LOAD3 || trait == GENETIC_LOAD4 || trait == GENETIC_LOAD5)
 			fitness *= newTrait->express();
 
+		// Add the inherited trait and genes to the newborn's list
 		spTraitTable.insert(make_pair(trait, move(newTrait)));
 	}
 }
@@ -187,7 +189,6 @@ void Individual::inherit(Species* pSpecies, const Individual* mother, const Indi
 void Individual::inherit(Species* pSpecies, const Individual* mother) {
 	set<unsigned int> recomPositions; //not used here cos haploid but need it for inherit function, not ideal 
 	int startingChromosome = 0;
-	//const auto mumTraitTable = mother->getTraitTable(); //assuming mother and father share the same genetic structure..
 
 	const auto& mumTraits = getTraitTypes();
 
@@ -205,6 +206,7 @@ void Individual::inherit(Species* pSpecies, const Individual* mother) {
 		if (trait == GENETIC_LOAD1 || trait == GENETIC_LOAD2 || trait == GENETIC_LOAD3 || trait == GENETIC_LOAD4 || trait == GENETIC_LOAD5)
 			fitness *= newTrait->express();
 
+		// Add the inherited trait and genes to the newborn's list
 		spTraitTable.insert(make_pair(trait, move(newTrait)));
 	}
 }

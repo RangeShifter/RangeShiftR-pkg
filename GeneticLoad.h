@@ -25,8 +25,8 @@ private:
     void (GeneticLoad::* _inherit_func_ptr) (sex_t chromosome, map<int, vector<shared_ptr<Allele>>> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
     //float (AdaptiveTrait::* _express_func_ptr) (void);
 
-    void inheritDiploid(sex_t chromosome, map<int, vector<shared_ptr<Allele>>> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
-    void inheritHaploid(sex_t chromosome, map<int, vector<shared_ptr<Allele>>> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
+    void inheritDiploid(const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
+    void inheritHaploid(const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
 
     float drawDominance(float);
     float drawSelectionCoef();
@@ -42,7 +42,7 @@ public:
 
     virtual unique_ptr<TTrait> clone() const override { return std::make_unique<GeneticLoad>(*this); }
 
-    virtual void  inherit(TTrait* parent, set<unsigned int> const& recomPositions, sex_t chromosome, int startingChromosome) override;
+    virtual void  inherit(const bool& fromMother, TTrait* parent, set<unsigned int> const& recomPositions, int startingChromosome) override;
 
     virtual void  mutate() override;
 

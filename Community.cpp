@@ -1270,10 +1270,6 @@ void Community::outTraits(traitCanvas tcanv, Species* pSpecies,
 void Community::writeTraitsRows(Species* pSpecies, int rep, int yr, int gen, int y,
 	traitsums ts)
 {
-	//simParams sim = paramsSim->getSim();
-	//simView v = paramsSim->getViews();
-	//landData land = pLandscape->getLandData();
-	//landOrigin origin = pLandscape->getOrigin();
 	emigRules emig = pSpecies->getEmigRules();
 	transferRules trfr = pSpecies->getTransferRules();
 	settleType sett = pSpecies->getSettle();
@@ -1284,7 +1280,6 @@ void Community::writeTraitsRows(Species* pSpecies, int rep, int yr, int gen, int
 	int popsize = ts.ninds[0] + ts.ninds[1];
 	outtraitsrows << rep << "\t" << yr << "\t" << gen
 		<< "\t" << y;
-	//	<< "\t"	<< y*land.resol + origin.minNorth;
 	if ((emig.indVar && emig.sexDep) || (trfr.indVar && trfr.sexDep))
 		outtraitsrows << "\t" << ts.ninds[0] << "\t" << ts.ninds[1];
 	else
@@ -1349,14 +1344,6 @@ void Community::writeTraitsRows(Species* pSpecies, int rep, int yr, int gen, int
 				if (popsize > 1) sd = ts.ssqRho[0] / (double)popsize - mn * mn; else sd = 0.0;
 				if (sd > 0.0) sd = sqrt(sd); else sd = 0.0;
 				outtraitsrows << "\t" << mn << "\t" << sd;
-				//			if (ts.ninds[0] > 0) mn = ts.sumStepL[0]/(double)ts.ninds[0]; else mn = 0.0;
-				//			if (ts.ninds[0] > 1) sd = ts.ssqStepL[0]/(double)ts.ninds[0] - mn*mn; else sd = 0.0;
-				//			if (sd > 0.0) sd = sqrt(sd); else sd = 0.0;
-				//			outtraitsrows << "\t" << mn << "\t" << sd;
-				//			if (ts.ninds[0] > 0) mn = ts.sumRho[0]/(double)ts.ninds[0]; else mn = 0.0;
-				//			if (ts.ninds[0] > 1) sd = ts.ssqRho[0]/(double)ts.ninds[0] - mn*mn; else sd = 0.0;
-				//			if (sd > 0.0) sd = sqrt(sd); else sd = 0.0;
-				//			outtraitsrows << "\t" << mn << "\t" << sd;
 			}
 		}
 		else { // dispersal kernel

@@ -196,21 +196,19 @@ void QTLTrait::mutateNormal()
 // ----------------------------------------------------------------------------------------
 
 
-void QTLTrait::inherit(TTrait* parentTrait, set<unsigned int> const& recomPositions, sex_t whichChromosome, int startingChromosome)
+void QTLTrait::inherit(const bool& fromMother, TTrait* parentTrait, set<unsigned int> const& recomPositions, int startingChromosome)
 {
 	auto parentCast = dynamic_cast<QTLTrait*> (parentTrait); //horrible
 
 	const auto& parent_seq = parentCast->getGenes();
 	if (parent_seq.size() > 0) //else nothing to inherit, should always be something to inherit with QTL
-		(this->*_inherit_func_ptr) (whichChromosome, parent_seq, recomPositions, startingChromosome);
+		(this->*_inherit_func_ptr) (fromMother, parent_seq, recomPositions, startingChromosome);
 }
 
-void QTLTrait::inheritDiploid(sex_t whichChromosome, map<int, vector<shared_ptr<Allele>>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome) {
+void QTLTrait::inheritDiploid(const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome) {
 
 	auto it = recomPositions.lower_bound(parentGenes.begin()->first);
-
 	int nextBreakpoint = *it;
-
 	auto distance = std::distance(recomPositions.begin(), it);
 	if (distance % 2 != 0)
 		parentChromosome = 1 - parentChromosome; //switch chromosome
@@ -225,23 +223,23 @@ void QTLTrait::inheritDiploid(sex_t whichChromosome, map<int, vector<shared_ptr<
 
 		if (locus <= nextBreakpoint) {
 			auto& sp = allelePair[parentChromosome];
-
 			auto it = genes.find(locus);
 			if (it == genes.end()) {
-				// not found
+				// locus does not exist yet, initiate it
+				if (!fromMother) throw runtime_error("Father-inherited locus does not exist.");
 				vector<shared_ptr<Allele>> newAllelePair(2);
-				newAllelePair[whichChromosome] = sp;
-
+				newAllelePair[sex_t::FEM] = allele;
 				genes.insert(make_pair(locus, newAllelePair));
 			}
-			else {
-				it->second[whichChromosome] = sp;
+			else { // father, locus already exists
+				if (fromMother) throw runtime_error("Mother-inherited locus already exists.");
+				it->second[sex_t::MAL] = allele;
 			}
 		}
 	}
 }
 
-void QTLTrait::inheritHaploid(sex_t chromosome, map<int, vector<shared_ptr<Allele>>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome)
+void QTLTrait::inheritHaploid(const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome)
 {
 	genes = parentGenes;
 }
