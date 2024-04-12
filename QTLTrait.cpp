@@ -108,15 +108,12 @@ QTLTrait::QTLTrait(SpeciesTrait* P)
 	}
 }
 
-
 // ----------------------------------------------------------------------------------------
 // for creating new individuals
 // ----------------------------------------------------------------------------------------
 
 QTLTrait::QTLTrait(const QTLTrait& T) : pSpeciesTrait(T.pSpeciesTrait), _mutate_func_ptr(T._mutate_func_ptr), _inherit_func_ptr(T._inherit_func_ptr), _express_func_ptr(T._express_func_ptr)
 {}
-
-
 
 // ----------------------------------------------------------------------------------------
 // mutate uniform
@@ -137,6 +134,7 @@ void QTLTrait::mutateUniform()
 	for (int p = 0; p < ploidy; p++) {
 
 		unsigned int NbMut = pRandom->Poisson(positionsSize * mutationRate);
+		if (NbMut > positionsSize) NbMut = positionsSize;
 
 		if (NbMut > 0) {
 			vector<int> mutationPositions;
@@ -145,6 +143,8 @@ void QTLTrait::mutateUniform()
 
 			for (int m : mutationPositions) {
 				auto it = genes.find(m);
+				if (it == genes.end())
+					throw runtime_error("Locus sampled for mutation doesn't exist.");
 				float currentAlleleVal = it->second[p].get()->getAlleleValue();//current
 				float newAlleleVal = pRandom->FRandom(minD, maxD) + currentAlleleVal;
 				it->second[p] = make_shared<Allele>(newAlleleVal, 1.0);
@@ -159,14 +159,12 @@ void QTLTrait::mutateUniform()
 
 void QTLTrait::mutateNormal()
 {
-
 	const int positionsSize = pSpeciesTrait->getPositionsSize();
 	const auto& genePositions = pSpeciesTrait->getGenePositions();
 	const short ploidy = pSpeciesTrait->getPloidy();
 	const float mutationRate = pSpeciesTrait->getMutationRate();
 
 	auto rng = pRandom->getRNG();
-
 
 	const map<GenParamType, float> mutationParameters = pSpeciesTrait->getMutationParameters();
 	const float mean = mutationParameters.find(MEAN)->second;
@@ -175,6 +173,7 @@ void QTLTrait::mutateNormal()
 	for (int p = 0; p < ploidy; p++) {
 
 		unsigned int NbMut = pRandom->Poisson(positionsSize * mutationRate);
+		if (NbMut > positionsSize) NbMut = positionsSize;
 
 		if (NbMut > 0) {
 			vector<int> mutationPositions;
@@ -183,6 +182,8 @@ void QTLTrait::mutateNormal()
 
 			for (int m : mutationPositions) {
 				auto it = genes.find(m);
+				if (it == genes.end())
+					throw runtime_error("Locus sampled for mutation doesn't exist.");
 				float currentAlleleVal = it->second[p].get()->getAlleleValue();//current
 				float newAlleleVal = pRandom->Normal(mean, sd) + currentAlleleVal;
 				it->second[p] = make_shared<Allele>(newAlleleVal, 1.0);

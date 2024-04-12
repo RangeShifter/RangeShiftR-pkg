@@ -168,9 +168,7 @@ void GeneticLoad::mutate()
 					*/
 					throw runtime_error("Locus sampled for mutation doesn't exist.");
 				}
-				else {
-					it->second[p] = make_shared<Allele>(newSelectionCoef, newDominanceCoef);
-				}
+				it->second[p] = make_shared<Allele>(newSelectionCoef, newDominanceCoef);
 			}
 		}
 	}

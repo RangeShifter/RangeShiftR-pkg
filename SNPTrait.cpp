@@ -144,6 +144,7 @@ void SNPTrait::mutate_SSM()
 	for (int whichChromosome = 0; whichChromosome < ploidy; whichChromosome++) {
 
 		unsigned int NbMut = pRandom->Poisson(positionsSize * mutationRate);
+		if (NbMut > positionsSize) NbMut = positionsSize;
 
 		if (NbMut > 0) {
 			vector<int> mutationPositions;
