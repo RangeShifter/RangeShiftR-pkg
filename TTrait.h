@@ -17,7 +17,7 @@ public:
     virtual void mutate() = 0;
 
     virtual unique_ptr<TTrait> clone() const = 0; //copies parameters (if not static) not gene seqeunces
-    virtual void inherit(TTrait*, set<unsigned int> const& , sex_t, int ) = 0;
+    virtual void inherit(const bool&, TTrait*, set<unsigned int> const& , int ) = 0;
 
     virtual int getNLoci() const = 0;
     virtual float getMutationRate() const = 0;

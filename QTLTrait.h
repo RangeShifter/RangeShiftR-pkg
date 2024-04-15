@@ -22,14 +22,14 @@ private:
 	map<int, vector<shared_ptr<Allele>>> genes; // position <strand A , strand B>>
 
 	void (QTLTrait::* _mutate_func_ptr) (void);
-	void (QTLTrait::* _inherit_func_ptr) (sex_t chromosome, map<int, vector<shared_ptr<Allele>>> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
+	void (QTLTrait::* _inherit_func_ptr) (const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
 	float (QTLTrait::* _express_func_ptr) (void);
 
 	void initialiseUniform(float min, float max);
 	void initialiseNormal(float mean, float sd);
 	void inheritDiploid(const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
 	void inheritHaploid(const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
-	void inheritInitialParameters(sex_t chromosome, map<int, vector<shared_ptr<Allele>>> const& parentMutations, set<unsigned int> const& recomPositions, int parentChromosome);
+	void inheritInitialParameters(const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parentMutations, set<unsigned int> const& recomPositions, int parentChromosome);
 	void mutateUniform();
 	void mutateNormal();
 	float expressAverage();

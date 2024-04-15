@@ -19,11 +19,13 @@ private:
 
     map<int, vector<shared_ptr<Allele>>> genes; // position <strand A , strand B>>
 
-    inline static shared_ptr<Allele> wildType;
+    inline static shared_ptr<Allele> wildType = make_shared<Allele>(0.0, 0.0);
 
    // void (AdaptiveTrait::* _mutate_func_ptr) (void);
-    void (GeneticLoad::* _inherit_func_ptr) (sex_t chromosome, map<int, vector<shared_ptr<Allele>>> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
+    void (GeneticLoad::* _inherit_func_ptr) (const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
     //float (AdaptiveTrait::* _express_func_ptr) (void);
+
+    void initialise();
 
     void inheritDiploid(const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
     void inheritHaploid(const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
@@ -42,7 +44,7 @@ public:
 
     virtual unique_ptr<TTrait> clone() const override { return std::make_unique<GeneticLoad>(*this); }
 
-    virtual void  inherit(const bool& fromMother, TTrait* parent, set<unsigned int> const& recomPositions, int startingChromosome) override;
+    virtual void inherit(const bool& fromMother, TTrait* parent, set<unsigned int> const& recomPositions, int startingChromosome) override;
 
     virtual void  mutate() override;
 

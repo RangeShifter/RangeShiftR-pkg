@@ -198,7 +198,7 @@ void Individual::inherit(Species* pSpecies, const Individual* mother) {
 
 		auto newTrait = motherTrait->clone(); //shallow copy, pointer to proto trait initialised and empty sequence
 
-		newTrait->inherit(motherTrait, recomPositions, FEM, startingChromosome);
+		newTrait->inherit(true, motherTrait, recomPositions, startingChromosome);
 		if (newTrait->isInherited()) {
 			if (newTrait->getMutationRate() > 0 && pSpecies->areMutationsOn())
 				newTrait->mutate();

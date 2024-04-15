@@ -229,12 +229,12 @@ void QTLTrait::inheritDiploid(const bool& fromMother, map<int, vector<shared_ptr
 				// locus does not exist yet, initiate it
 				if (!fromMother) throw runtime_error("Father-inherited locus does not exist.");
 				vector<shared_ptr<Allele>> newAllelePair(2);
-				newAllelePair[sex_t::FEM] = allele;
+				newAllelePair[sex_t::FEM] = sp;
 				genes.insert(make_pair(locus, newAllelePair));
 			}
 			else { // father, locus already exists
 				if (fromMother) throw runtime_error("Mother-inherited locus already exists.");
-				it->second[sex_t::MAL] = allele;
+				it->second[sex_t::MAL] = sp;
 			}
 		}
 	}
@@ -249,7 +249,7 @@ void QTLTrait::inheritHaploid(const bool& fromMother, map<int, vector<shared_ptr
 // 'Inherit' from initialisation parameters, for simulations with individual variation but no inheritance
 // ----------------------------------------------------------------------------------------
 
-void QTLTrait::inheritInitialParameters(sex_t whichChromosome, map<int, vector<shared_ptr<Allele>>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome)
+void QTLTrait::inheritInitialParameters(const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome)
 {
 	DistributionType initialDistribution = pSpeciesTrait->getInitialDistribution();
 	map<GenParamType, float> initialParameters = pSpeciesTrait->getInitialParameters();

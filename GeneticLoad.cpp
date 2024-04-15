@@ -8,8 +8,7 @@ GeneticLoad::GeneticLoad(SpeciesTrait* P)
 {
 	pSpeciesTrait = P;
 
-	if (wildType.get() == nullptr)
-		wildType = make_shared<Allele>(0.0, 0.0);
+	initialise();
 
 	ExpressionType expressionType = pSpeciesTrait->getExpressionType();
 
@@ -72,50 +71,51 @@ GeneticLoad::GeneticLoad(SpeciesTrait* P)
 	{
 		if (dominanceParameters.count(MAX) != 1)
 			cout << endl << ("Error:: genetic load dominance uniform distribution parameter must contain one max value (e.g. max= ) \n");
-
 		if (dominanceParameters.count(MIN) != 1)
 			cout << endl << ("Error:: genetic load dominance uniform distribution parameter must contain one min value (e.g. min= ) \n");
-
 		break;
 	}
 	case NORMAL:
 	{
-
 		if (dominanceParameters.count(MEAN) != 1)
 			cout << endl << ("Error:: genetic load dominance distribution set to normal so parameters must contain one mean value (e.g. mean= ) \n");
-
 		if (dominanceParameters.count(SD) != 1)
 			cout << endl << ("Error:: genetic load dominance distribution set to normal so parameters must contain one sdev value (e.g. sdev= ) \n");
-
 		break;
 	}
 	case GAMMA:
 	{
 		if (dominanceParameters.count(SHAPE) != 1)
 			cout << endl << ("Error:: genetic load dominance distribution set to gamma so parameters must contain one shape value (e.g. shape= ) \n");
-
 		if (dominanceParameters.count(SCALE) != 1)
 			cout << endl << ("Error:: genetic load dominance distribution set to gamma so parameters must contain one scale value (e.g. scale= ) \n");
-
 		break;
 	}
 	case NEGEXP:
 	{
 		if (dominanceParameters.count(MEAN) != 1)
 			cout << endl << ("Error:: genetic load dominance distribution set to negative exponential (negative decay) so parameters must contain mean value (e.g. mean= ) \n");
-
 		break;
 	}
 	case SCALED:
 	{
 		break;
 	}
-
 	default:
 	{
 		cout << endl << ("Error:: wrong parameter value for genetic load dominance model, must be uniform/normal/gamma/negExp/scaled \n");
 		break; //should return false
 	}
+	}
+}
+
+void GeneticLoad::initialise() {
+	// All positions start at wild type, mutations accumulate through simulation
+	const set<int> genePositions = pSpeciesTrait->getGenePositions();
+	short ploidy = pSpeciesTrait->getPloidy();
+	const vector<shared_ptr<Allele>> wildTypeGene(ploidy, wildType);
+	for (auto position : genePositions) {
+		genes.insert(make_pair(position, wildTypeGene));
 	}
 }
 

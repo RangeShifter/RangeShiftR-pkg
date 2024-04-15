@@ -23,7 +23,7 @@ private:
 	map<int, vector<unsigned char>> genes; //position <strand A , strand B>>
 
 	void (SNPTrait::* _mutate_func_ptr) (void);
-	void (SNPTrait::* _inherit_func_ptr) (sex_t chromosome, map<int, vector<unsigned char>> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
+	void (SNPTrait::* _inherit_func_ptr) (const bool& fromMother, map<int, vector<unsigned char>> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
 
 	void inheritDiploid(const bool& fromMother, map<int, vector<unsigned char>> const&, set<unsigned int> const& recomPositions, int parentChromosome);
 	void inheritHaploid(const bool& fromMother, map<int, vector<unsigned char>> const& parentMutations, set<unsigned int> const& recomPositions, int parentChromosome);
