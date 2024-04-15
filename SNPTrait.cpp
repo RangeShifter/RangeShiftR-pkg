@@ -24,8 +24,7 @@ SNPTrait::SNPTrait(SpeciesTrait* P)
 	if (mutationParameters.count(MAX) != 1)
 		cout << endl << ("Error:: KAM or SSM mutation distribution parameter must contain max value (e.g. max= ), max cannot exceed 256  \n");
 
-	if (wildType == -999)
-		wildType = (int)mutationParameters.find(MAX)->second - 1;
+	wildType = (int)mutationParameters.find(MAX)->second - 1;
 
 	if (wildType > SNPvalUpperBound)
 		cout << endl << "Error:: max number of alleles cannot exceed " << SNPvalUpperBound << ".\n";
@@ -286,9 +285,7 @@ int SNPTrait::countHeterozygoteLoci() const {
 float SNPTrait::getAlleleValueAtLocus(short whichChromosome, int position) const {
 
 	auto it = genes.find(position);
-
 	if (it == genes.end()) //no mutations there
-		return wildType; //must still be wildtype at loci
-	else
-		return it->second[whichChromosome];
+		throw runtime_error("The neutral locus queried for its allele value does not exist.");
+	return it->second[whichChromosome];
 }

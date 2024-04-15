@@ -395,9 +395,7 @@ int GeneticLoad::countHeterozygoteLoci() const {
 float GeneticLoad::getAlleleValueAtLocus(short whichChromosome, int position) const {
 
 	auto it = genes.find(position);
-	if (it == genes.end()) {
-		return wildType->getAlleleValue(); //must still be wildtype at loci
-	}
-	else
-		return it->second[whichChromosome] == 0 ? wildType->getAlleleValue() : it->second[whichChromosome]->getAlleleValue();
+	if (it == genes.end())
+		throw runtime_error("The genetic load locus queried for its allele value does not exist.");
+	return it->second[whichChromosome] == 0 ? wildType->getAlleleValue() : it->second[whichChromosome]->getAlleleValue();
 }

@@ -396,11 +396,8 @@ float QTLTrait::getAlleleValueAtLocus(short whichChromosome, int position) const
 
 	auto it = genes.find(position);
 
-	if (it == genes.end()) { //no mutations there, should never happen at QTLs should always hold a value 
-		return 0; //must still be wildtype at loci
-		cout << endl << ("Error:: trying to find QTL at ", position, " but doesn't exist \n");
-	}
-	else
-		return it->second[whichChromosome].get()->getAlleleValue();
+	if (it == genes.end())
+		throw runtime_error("The QTL locus queried for its allele value does not exist.");
+	return it->second[whichChromosome].get()->getAlleleValue();
 
 }

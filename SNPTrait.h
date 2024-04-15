@@ -14,7 +14,7 @@ class SNPTrait : public TTrait {
 
 private:
 
-	inline static int wildType = -999;
+	inline static int wildType;
 	const int SNPvalUpperBound = UCHAR_MAX; // i.e. 256
 	// allele is char, can take value 0-255
 
