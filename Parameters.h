@@ -337,8 +337,9 @@ struct simParams {
 #endif
 	bool fixReplicateSeed;
 	string patchSamplingOption;
+	bool outGenes;
 	bool outputWCFstat, outputPerLocusWCFstat, outputPairwiseFst;
-	int outputGeneticInterval;
+	int outputGeneticInterval, outStartGenetics;
 };
 
 struct simView {
@@ -417,9 +418,11 @@ private:
 
 	bool fixReplicateSeed;
 	string patchSamplingOption;
+	bool outputGenes;
 	bool outputWCFstat;
 	bool outputPerLocusWCFstat;
 	bool outputPairwiseFst;
+	int outputStartGenetics;
 	int outputGeneticInterval;
 };
 

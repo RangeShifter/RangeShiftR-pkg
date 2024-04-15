@@ -208,6 +208,8 @@ public:
 	//sample individuals for genetics (or could be used for anything)
 	void sampleIndividuals(Species* pSpecies);
 
+	bool openOutGenesFile(const bool& isDiploid, const int landNr, const int rep);
+
 	//control neutral stat output
 	void outNeutralGenetics(Species* pSpecies, int rep, int yr, int gen, bool fstat, bool perLocus, bool pairwise);
 

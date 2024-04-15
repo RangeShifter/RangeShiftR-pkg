@@ -252,6 +252,14 @@ int RunModel(Landscape* pLandscape, int seqsim)
 		}
 		*/
 
+		if (sim.outGenes) {
+			if (!pComm->openOutGenesFile(pSpecies->isDiploid(), ppLand.landNum, rep))
+				throw logic_error("Output genes file could not be initialised.");
+			if (outStartGenes == 0) {
+				pComm->outGenes();
+			}
+		}
+
 		// open a new genetics file for each replicate for per locus and pairwise stats
 		if (sim.outputPerLocusWCFstat) {
 			pComm->openWCPerLocusFstatFile(pSpecies, pLandscape, ppLand.landNum, rep);
@@ -479,8 +487,9 @@ int RunModel(Landscape* pLandscape, int seqsim)
 					pComm->outInds(rep, yr, gen, -1);
 
 				// output Genetics
-				//if (sim.outGenetics && yr >= sim.outStartGenetic && yr % sim.outIntGenetic == 0)
-				//	pComm->outGenetics(rep, yr, gen, -1);
+				if (sim.outGenes && yr >= sim.outStartGenetic && yr % sim.outputGeneticInterval == 0) {
+					pComm->outGenes(yr, gen);
+				}
 
 				if ((sim.outputWCFstat || sim.outputPairwiseFst || sim.outputPerLocusWCFstat) && yr % sim.outputGeneticInterval == 0) {
 
@@ -608,8 +617,9 @@ int RunModel(Landscape* pLandscape, int seqsim)
 		if (sim.outInds) // close Individuals output file
 			pComm->outInds(rep, 0, 0, -999);
 
-		// if (sim.outGenetics) // close Genetics output file
-		//	pComm->outGenetics(rep, 0, 0, -999);
+		if (sim.outGenes) {
+			pComm->openOutGenesFile(pSpecies->isDiploid(), -999, rep);
+		}
 
 		if (sim.outputPerLocusWCFstat) //close per locus file 
 			pComm->openWCPerLocusFstatFile(pSpecies, pLandscape, -999, rep);
@@ -654,7 +664,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 	// close Individuals & Genetics output files if open
 	// they can still be open if the simulation was stopped by the user
 	if (sim.outInds) pComm->outInds(0, 0, 0, -999);
-	// if (sim.outGenetics) pComm->outGenetics(0, 0, 0, -999);
+	if (sim.outGenes) pComm->openOutGenesFile(pSpecies->isDiploid(), -999, 0);
 	if (sim.outputWCFstat) 	pComm->openWCFstatFile(pSpecies, -999);
 	if (sim.outputPerLocusWCFstat) pComm->openWCPerLocusFstatFile(pSpecies, pLandscape, -999, 0);
 	if (sim.outputPairwiseFst) pComm->openPairwiseFSTFile(pSpecies, pLandscape, -999, 0);

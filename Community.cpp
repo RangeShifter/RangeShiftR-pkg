@@ -30,6 +30,7 @@
 ofstream outrange;
 ofstream outoccup, outsuit;
 ofstream outtraitsrows;
+ofstream outgenes;
 ofstream outwcfstat;
 ofstream outperlocusfstat;
 ofstream outpairwisefst;
@@ -1397,34 +1398,6 @@ void Community::writeTraitsRows(Species* pSpecies, int rep, int yr, int gen, int
 	}
 
 	if (sett.indVar) {
-		// NB - CURRENTLY CANNOT BE SEX-DEPENDENT...
-	//	if (sett.sexDep) {
-	//		if (ts.ninds[0] > 0) mn = ts.sumS0[0]/(double)ts.ninds[0]; else mn = 0.0;
-	//		if (ts.ninds[0] > 1) sd = ts.ssqS0[0]/(double)ts.ninds[0] - mn*mn; else sd = 0.0;
-	//		if (sd > 0.0) sd = sqrt(sd); else sd = 0.0;
-	//		outtraitsrows << "\t" << mn << "\t" << sd;
-	//		if (ts.ninds[1] > 0) mn = ts.sumS0[1]/(double)ts.ninds[1]; else mn = 0.0;
-	//		if (ts.ninds[1] > 1) sd = ts.ssqS0[1]/(double)ts.ninds[1] - mn*mn; else sd = 0.0;
-	//		if (sd > 0.0) sd = sqrt(sd); else sd = 0.0;
-	//		outtraitsrows << "\t" << mn << "\t" << sd;
-	//		if (ts.ninds[0] > 0) mn = ts.sumAlphaS[0]/(double)ts.ninds[0]; else mn = 0.0;
-	//		if (ts.ninds[0] > 1) sd = ts.ssqAlphaS[0]/(double)ts.ninds[0] - mn*mn; else sd = 0.0;
-	//		if (sd > 0.0) sd = sqrt(sd); else sd = 0.0;
-	//		outtraitsrows << "\t" << mn << "\t" << sd;
-	//		if (ts.ninds[1] > 0) mn = ts.sumAlphaS[1]/(double)ts.ninds[1]; else mn = 0.0;
-	//		if (ts.ninds[1] > 1) sd = ts.ssqAlphaS[1]/(double)ts.ninds[1] - mn*mn; else sd = 0.0;
-	//		if (sd > 0.0) sd = sqrt(sd); else sd = 0.0;
-	//		outtraitsrows << "\t" << mn << "\t" << sd;
-	//		if (ts.ninds[0] > 0) mn = ts.sumBetaS[0]/(double)ts.ninds[0]; else mn = 0.0;
-	//		if (ts.ninds[0] > 1) sd = ts.ssqBetaS[0]/(double)ts.ninds[0] - mn*mn; else sd = 0.0;
-	//		if (sd > 0.0) sd = sqrt(sd); else sd = 0.0;
-	//		outtraitsrows << "\t" << mn << "\t" << sd;
-	//		if (ts.ninds[1] > 0) mn = ts.sumBetaS[1]/(double)ts.ninds[1]; else mn = 0.0;
-	//		if (ts.ninds[1] > 1) sd = ts.ssqBetaS[1]/(double)ts.ninds[1] - mn*mn; else sd = 0.0;
-	//		if (sd > 0.0) sd = sqrt(sd); else sd = 0.0;
-	//		outtraitsrows << "\t" << mn << "\t" << sd;
-	//	}
-	//	else { // no sex dependence in settlement
 		if (popsize > 0) mn = ts.sumS0[0] / (double)popsize; else mn = 0.0;
 		if (popsize > 1) sd = ts.ssqS0[0] / (double)popsize - mn * mn; else sd = 0.0;
 		if (sd > 0.0) sd = sqrt(sd); else sd = 0.0;
@@ -1437,7 +1410,6 @@ void Community::writeTraitsRows(Species* pSpecies, int rep, int yr, int gen, int
 		if (popsize > 1) sd = ts.ssqBetaS[0] / (double)popsize - mn * mn; else sd = 0.0;
 		if (sd > 0.0) sd = sqrt(sd); else sd = 0.0;
 		outtraitsrows << "\t" << mn << "\t" << sd;
-		//	}
 	}
 
 	if (pSpecies->getNumberOfAdaptiveTraits() > 0) {
@@ -1607,10 +1579,45 @@ Rcpp::IntegerMatrix Community::addYearToPopList(int rep, int yr) {  // TODO: def
 }
 #endif
 
+bool Community::openOutGenesFile(const bool& isDiploid, const int landNr, const int rep)
+{
+	if (landNr == -999) { // close the file
+		if (outperlocusfstat.is_open()) outperlocusfstat.close();
+		outperlocusfstat.clear();
+		return true;
+	}
+
+	string name;
+	simParams sim = paramsSim->getSim();
+
+	if (sim.batchMode) {
+		name = paramsSim->getDir(2)
+			+ "Batch" + Int2Str(sim.batchNum) + "_"
+			+ "Sim" + Int2Str(sim.simulation) + "_Land"
+			+ Int2Str(landNr) + "_Rep"
+			+ Int2Str(rep)
+			+ "_geneValues.txt";
+	}
+	else {
+		name = paramsSim->getDir(2) + "Sim" + Int2Str(sim.simulation) + "_Rep" + Int2Str(rep) + "_geneValues.txt";
+	}
+
+	outgenes.open(name.c_str());
+	outgenes << "Year\tRepSeason\tIndID\ttraitType\tlocusPosition";
+	if (isDiploid) {
+		outgenes << "\talleleValueA\talleleValueB";
+	}
+	else {
+		outgenes << "\talleleValue";
+	}
+	outgenes << endl;
+
+	return outgenes.is_open();
+}
+
 // ----------------------------------------------------------------------------------------
 // Sample individuals from sample patches
 // ----------------------------------------------------------------------------------------
-
 
 void Community::sampleIndividuals(Species* pSpecies) {
 

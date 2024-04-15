@@ -325,9 +325,11 @@ simParams paramSim::getSim(void) {
 #endif
 	s.drawLoaded = drawLoaded;
 	s.patchSamplingOption = patchSamplingOption;
+	s.outGenes = outputGenes;
 	s.outputWCFstat = outputWCFstat;
 	s.outputPerLocusWCFstat = outputPerLocusWCFstat;
 	s.outputPairwiseFst = outputPairwiseFst;
+	s.outStartGenetics = outputStartGenetics;
 	s.outputGeneticInterval = outputGeneticInterval;
 
 	return s;
