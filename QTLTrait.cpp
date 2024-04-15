@@ -10,7 +10,7 @@ QTLTrait::QTLTrait(SpeciesTrait* P)
 	ExpressionType expressionType = pSpeciesTrait->getExpressionType();
 
 	if (!pSpeciesTrait->isInherited()) //there is a trait for individual variation but this isn't inherited variation it's sampled from initial distribution 
-		_inherit_func_ptr = &QTLTrait::inheritInitialParameters;
+		_inherit_func_ptr = &QTLTrait::reInitialiseGenes;
 	else {
 		_inherit_func_ptr = (pSpeciesTrait->getPloidy() == 1) ? &QTLTrait::inheritHaploid : &QTLTrait::inheritDiploid; //this could be changed if we wanted some alternative form of inheritance
 
@@ -249,7 +249,7 @@ void QTLTrait::inheritHaploid(const bool& fromMother, map<int, vector<shared_ptr
 // 'Inherit' from initialisation parameters, for simulations with individual variation but no inheritance
 // ----------------------------------------------------------------------------------------
 
-void QTLTrait::inheritInitialParameters(const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome)
+void QTLTrait::reInitialiseGenes(const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome)
 {
 	DistributionType initialDistribution = pSpeciesTrait->getInitialDistribution();
 	map<GenParamType, float> initialParameters = pSpeciesTrait->getInitialParameters();
@@ -259,13 +259,10 @@ void QTLTrait::inheritInitialParameters(const bool& fromMother, map<int, vector<
 	{
 		if (initialParameters.count(MAX) != 1)
 			cout << endl << ("Error:: initial uniform qtl distribution parameter must contain max value (e.g. max= ) \n");
-
 		if (initialParameters.count(MIN) != 1)
 			cout << endl << ("Error:: initial uniform qtl distribution parameter must contain min value (e.g. min= ) \n");
-
 		float maxD = initialParameters.find(MAX)->second;
 		float minD = initialParameters.find(MIN)->second;
-
 		initialiseUniform(minD, maxD);
 		break;
 	}
@@ -273,17 +270,13 @@ void QTLTrait::inheritInitialParameters(const bool& fromMother, map<int, vector<
 	{
 		if (initialParameters.count(MEAN) != 1)
 			cout << endl << ("Error:: initial normal qtl distribution parameter must contain mean value (e.g. mean= ) \n");
-
 		if (initialParameters.count(SD) != 1)
 			cout << endl << ("Error:: initial normal qtl distribution parameter must contain sdev value (e.g. sdev= ) \n");
-
 		float mean = initialParameters.find(MEAN)->second;
 		float sd = initialParameters.find(SD)->second;
-
 		initialiseNormal(mean, sd);
 		break;
 	}
-
 	default:
 	{
 		cout << endl << ("wrong parameter value for parameter \"initialisation of qtl\", must be uniform/normal \n");
