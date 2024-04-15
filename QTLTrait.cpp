@@ -267,7 +267,6 @@ void QTLTrait::inheritInitialParameters(sex_t whichChromosome, map<int, vector<s
 		float minD = initialParameters.find(MIN)->second;
 
 		initialiseUniform(minD, maxD);
-
 		break;
 	}
 	case NORMAL:
@@ -282,7 +281,6 @@ void QTLTrait::inheritInitialParameters(sex_t whichChromosome, map<int, vector<s
 		float sd = initialParameters.find(SD)->second;
 
 		initialiseNormal(mean, sd);
-
 		break;
 	}
 

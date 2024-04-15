@@ -28,7 +28,7 @@ private:
 	void inheritDiploid(const bool& fromMother, map<int, vector<unsigned char>> const&, set<unsigned int> const& recomPositions, int parentChromosome);
 	void inheritHaploid(const bool& fromMother, map<int, vector<unsigned char>> const& parentMutations, set<unsigned int> const& recomPositions, int parentChromosome);
 
-	void initialiseFull(int max); //other option is that mutations map is empty until a mutation happens, default when empty is to return a 0 value for wildtype
+	void initialiseUniform(int max); //other option is that mutations map is empty until a mutation happens, default when empty is to return a 0 value for wildtype
 
 	void mutate_KAM();
 	void mutate_SSM();

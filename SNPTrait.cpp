@@ -47,7 +47,7 @@ SNPTrait::SNPTrait(SpeciesTrait* P)
 			cout << endl << "Warning:: initial SNP/Microsat distribution parameter max cannot exceed " << SNPvalUpperBound << ", resetting to " << SNPvalUpperBound << "\n";
 			maxSNPval = SNPvalUpperBound; //reserve 255 for wildtype
 		}
-		initialiseFull(maxSNPval);
+		initialiseUniform(maxSNPval);
 
 		break;
 	}
@@ -233,7 +233,7 @@ void SNPTrait::inheritHaploid(const bool& fromMother, map<int, vector<unsigned c
 // Initialise neutral loci
 // ----------------------------------------------------------------------------------------
 
-void SNPTrait::initialiseFull(int maxAlleleVal)
+void SNPTrait::initialiseUniform(int maxAlleleVal)
 {
 	const auto& genePositions = pSpeciesTrait->getGenePositions();
 	short ploidy = pSpeciesTrait->getPloidy();

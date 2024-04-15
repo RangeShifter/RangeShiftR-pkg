@@ -117,9 +117,6 @@ GeneticLoad::GeneticLoad(SpeciesTrait* P)
 		break; //should return false
 	}
 	}
-
-	DistributionType initialDistribution = pSpeciesTrait->getInitialDistribution();
-	map<GenParamType, float> initialParameters = pSpeciesTrait->getInitialParameters();
 }
 
 
@@ -173,11 +170,10 @@ void GeneticLoad::mutate()
 		}
 	}
 }
+
 // ----------------------------------------------------------------------------------------
 // get dominance value for new mutation
 // ----------------------------------------------------------------------------------------
-
-
 float GeneticLoad::drawDominance(float selCoef) {
 
 	DistributionType dominanceDistribution = pSpeciesTrait->getDominanceDistribution();
@@ -234,8 +230,6 @@ float GeneticLoad::drawDominance(float selCoef) {
 // ----------------------------------------------------------------------------------------
 // get selection coefficient for new mutation
 // ----------------------------------------------------------------------------------------
-
-
 float GeneticLoad::drawSelectionCoef() {
 
 	DistributionType mutationDistribution = pSpeciesTrait->getMutationDistribution();
@@ -286,7 +280,6 @@ float GeneticLoad::drawSelectionCoef() {
 // ----------------------------------------------------------------------------------------
 // inheritance options
 // ----------------------------------------------------------------------------------------
-
 
 void GeneticLoad::inherit(const bool& fromMother, TTrait* parentTrait, set<unsigned int> const& recomPositions, int startingChromosome)
 {
@@ -346,8 +339,10 @@ float GeneticLoad::express() {
 
 	for (auto const& [locus, pAllelePair] : genes)
 	{
-		shared_ptr<Allele> pAlleleLeft  = (!pAllelePair[0]) ? wildType : pAllelePair[0];
-		shared_ptr<Allele> pAlleleRight = (!pAllelePair[1]) ? wildType : pAllelePair[1];
+
+		// If not initialised yet, initialise now?
+		shared_ptr<Allele> pAlleleLeft  = pAllelePair[0] == 0 ? wildType : pAllelePair[0];
+		shared_ptr<Allele> pAlleleRight = pAllelePair[1] == 0 ? wildType : pAllelePair[1];
 
 		if (pAlleleLeft.get()->getId() != pAlleleRight.get()->getId()) // heterozygote
 		{
@@ -365,8 +360,6 @@ float GeneticLoad::express() {
 // ----------------------------------------------------------------------------------------
 // check if particular locus is heterozygote
 // ----------------------------------------------------------------------------------------
-
-
 bool GeneticLoad::isHeterozygoteAtLocus(int locus) const {
 
 	auto it = genes.find(locus);
@@ -374,8 +367,8 @@ bool GeneticLoad::isHeterozygoteAtLocus(int locus) const {
 	if (it == genes.end()) //not found so must be wildtype homozygous
 		return false;
 	else {
-		shared_ptr<Allele> alleleRight = (!it->second[0]) ? wildType : it->second[0];
-		shared_ptr<Allele> alleleLeft = (!it->second[1]) ? wildType : it->second[1];
+		shared_ptr<Allele> alleleRight = it->second[0] == 0 ? wildType : it->second[0];
+		shared_ptr<Allele> alleleLeft = it->second[1] == 0 ? wildType : it->second[1];
 		return alleleRight != alleleLeft;
 	}
 }
@@ -383,15 +376,12 @@ bool GeneticLoad::isHeterozygoteAtLocus(int locus) const {
 // ----------------------------------------------------------------------------------------
 // count heterozygote loci in genome 
 // ----------------------------------------------------------------------------------------
-
-
 int GeneticLoad::countHeterozygoteLoci() const {
 
 	int count = 0;
-
 	for (auto const& [locus, allelePair] : genes) {
-		shared_ptr<Allele> alleleLeft = (!allelePair[0]) ? wildType : allelePair[0];
-		shared_ptr<Allele> alleleRight = (!allelePair[1]) ? wildType : allelePair[1];
+		shared_ptr<Allele> alleleLeft = allelePair[0] == 0 ? wildType : allelePair[0];
+		shared_ptr<Allele> alleleRight = allelePair[1] == 0 ? wildType : allelePair[1];
 		count += alleleLeft != alleleRight;
 	}
 	return count;
@@ -405,10 +395,9 @@ int GeneticLoad::countHeterozygoteLoci() const {
 float GeneticLoad::getAlleleValueAtLocus(short whichChromosome, int position) const {
 
 	auto it = genes.find(position);
-
 	if (it == genes.end()) {
 		return wildType->getAlleleValue(); //must still be wildtype at loci
 	}
 	else
-		return (!it->second[whichChromosome]) ? wildType->getAlleleValue() : it->second[whichChromosome]->getAlleleValue();
+		return it->second[whichChromosome] == 0 ? wildType->getAlleleValue() : it->second[whichChromosome]->getAlleleValue();
 }
