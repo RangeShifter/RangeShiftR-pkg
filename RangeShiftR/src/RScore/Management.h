@@ -123,6 +123,7 @@ public:
     //
     bool translocation; // Translocation
     double catching_rate; // Catching rate
+    bool non_dispersed; // whether non-dispersed individuals should be translocated
     std::vector<int> translocation_years; // Number of years of translocation -> should be a dynamic vector
     std::map< int, std::vector <locn> > source; // Source patch or cell: should be a vector of arrays
     std::map< int, std::vector <locn> > target; // Target patch or cell

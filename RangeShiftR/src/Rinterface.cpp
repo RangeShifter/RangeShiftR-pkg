@@ -1627,7 +1627,7 @@ int ReadStageStructureR(Rcpp::S4 ParMaster)
 				ss = (float)trmatrix(i - 1, i); // survival prob
 			else
 				ss = (float)trmatrix(i, i);
-			if((i + 2) != matrixsize)
+			if((i + 2) != matrixsize && (i + 1) != matrixsize) // was if((i + 2) != matrixsize); but what happens in the last column (matrixsize -1)? (i+1) would be out of bounds
 				dd = (float)trmatrix(i + 1, i); // development prob
 			else
 				dd = 0.0;
@@ -3339,7 +3339,7 @@ int ReadTranslocationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
             } else {
                 // if cell-based model
                 // check if x and y values are inside boundaries
-                bool data = true;
+                bool data = false;
                 data = pLandscape->checkDataCell(translocation_matrix_R(i,1), translocation_matrix_R(i,2)); // TODO: check why simulation is crashing if checking for cell
                 if(data == false){ // cell is out of boundary
                     Rcpp::Rcout << "ReadTranslocationR(): source location " << translocation_matrix_R(i,1) << " is outside the landscape." << std::endl;

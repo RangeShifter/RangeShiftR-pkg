@@ -32,6 +32,7 @@
 Management::Management(void) {
     translocation = false;
     catching_rate = 1.0; // Catching rate
+    non_dispersed = false; // do not consider non-dispersed individuals
     std::vector<int> translocation_years; // Number of years of translocation
     std::map< int, std::vector <locn> > source; // Source patch or cell: should be a vector of arrays
     std::map< int, std::vector <locn> > target; // Target patch or cell
@@ -213,19 +214,19 @@ void Management::translocate(int yr
                         SubCommunity* pSubComm = (SubCommunity*)t_patch->getSubComm();
                         t_pPop = pSubComm->newPopn(pLandscape, pSpecies, t_patch, 0);
                     }
-                    catched_individual->setStatus(4); // make sure individual is not dispersing after the translocation
+                    catched_individual->setStatus(10); // make sure individual is not dispersing after the translocation
                     t_pPop->recruit(catched_individual); // recruit individual to target population
                     translocated ++;
+                    // NOTE:
+                    // the variables pCurrCell and pPrevCell are not updated! These are important for the dispersal process!
+                    // currently, translocated individuals are not considered as potential emigrants, thus there is no problem in changing that
+                    // however, if we want to consider dispersal events after translocation, we need to adapt that; but that would also mean, that we might loose the information
+                    // about the natal patch of an individual?
                     simParams sim = paramsSim->getSim();
                     if (sim.outConnect) { // increment connectivity totals
                         int newpatch = t_patch->getSeqNum();
-                        Cell* pPrevCell = catched_individual->getLocn(0); // previous cell
-                        intptr prev_patch = pPrevCell->getPatch();
-                        if (prev_patch != 0) {
-                            Patch* pPrevPatch = (Patch*)prev_patch;
-                            int prevpatch = pPrevPatch->getSeqNum();
-                            pLandscape->incrConnectMatrix(prevpatch, newpatch);
-                        }
+                        int prevpatch = s_patch->getSeqNum();
+                        pLandscape->incrConnectMatrix(prevpatch, newpatch);
                     }
 
                 }

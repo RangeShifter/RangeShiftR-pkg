@@ -29,6 +29,8 @@
 #' should be selected and to which individuals are translocated.
 #' The number and characteristics of selected individuals may vary between years.
 #' Individuals may be selected according to their age, stage and sex, depending on the type of population.
+#' Only individuals which are currently not in the transfer phase are allowed to be translocated.
+#' After being translocated, individuals are assumed to not disperse further.
 #'
 #' Each unique combination of source and target location
 #' and criteria for individuals to be selected represent one translocation event.

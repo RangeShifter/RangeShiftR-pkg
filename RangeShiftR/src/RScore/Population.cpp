@@ -693,7 +693,7 @@ void Population::emigration(float localK)
 
 	for (int i = 0; i < ninds; i++) {
 		ind = inds[i]->getStats();
-		if (ind.status < 1)
+		if (ind.status < 1) // ToDo: Maybe allow dispersal after translocation? If so, we need to update the pPrevCell and pCurrCell variables of the translocated individuals!
 		{
 			if (emig.indVar) { // individual variability in emigration
 				if (dem.stageStruct && ind.stage != emig.emigStage) {
@@ -1235,10 +1235,10 @@ void Population::survival0(float localK, short option0, short option1)
 		indStats ind = inds[i]->getStats();
 		if ((ind.stage == 0 && option0 < 2) || (ind.stage > 0 && option0 > 0)) {
 			// condition for processing the stage is met...
-			if (ind.status < 6) { // not already doomed
+			if (ind.status < 6 || ind.status == 10) { // not already doomed
 				double probsurv = surv[ind.stage][ind.sex];
 				// does the individual survive?
-				if (probsurv > 1) Rcpp::Rcout << "probsurv: " << probsurv << std::endl;
+				if (probsurv > 1) Rcpp::Rcout << "probsurv at stage: " << ind.stage << " and sex " << ind.sex << " : " << probsurv << std::endl;
 				if (pRandom->Bernoulli(probsurv)) { // survives
 					// does the individual develop?
 					double probdev = dev[ind.stage][ind.sex];
@@ -1266,7 +1266,7 @@ void Population::survival1(void)
 	int ninds = (int)inds.size();
 	for (int i = 0; i < ninds; i++) {
 		indStats ind = inds[i]->getStats();
-		if (ind.status > 5) { // doomed to die
+		if (ind.status > 5 && ind.status != 10) { // doomed to die 10 is translocated
 			delete inds[i];
 			inds[i] = NULL;
 			nInds[ind.stage][ind.sex]--;
@@ -1701,8 +1701,8 @@ std::vector <Individual*> Population::getIndsWithCharacteristics( // Select a se
 
         // check status of inividuals
         for (int i = 0; i < ninds; i++) {
-            if (inds[i] != NULL && inds[i]->getStats().status < 4){
-                Rcpp::Rcout << "Status: " << inds[i]->getStats().status << endl;
+            if (inds[i] != NULL && inds[i]->getStats().status != 0 && inds[i]->getStats().status != 4 && inds[i]->getStats().status != 5){ // only accept individuals with status 0, 4 or 5 (not in transfer phase + not dead + not already translocated)
+                // Rcpp::Rcout << "Status: " << inds[i]->getStats().status << endl;
                 filteredInds[i] = NULL; // set it to NULL
             }
         }
