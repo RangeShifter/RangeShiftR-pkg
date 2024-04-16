@@ -58,6 +58,5 @@ public:
 	virtual bool isHeterozygoteAtLocus(int locus) const override;
 
 	virtual float express() { return -9999; }
-
 };
 #endif

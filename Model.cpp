@@ -242,21 +242,11 @@ int RunModel(Landscape* pLandscape, int seqsim)
 		if (sim.outInds)
 			pComm->outInds(rep, 0, 0, ppLand.landNum);
 
-		/*
-		if (sim.outGenetics) {
-			pComm->outGenetics(rep, 0, 0, ppLand.landNum);
-			if (!dem.stageStruct && sim.outStartGenetic == 0) {
-				// write genetic data for initialised individuals of non-strucutred population
-				pComm->outGenetics(rep, 0, 0, -1);
-			}
-		}
-		*/
-
 		if (sim.outGenes) {
 			if (!pComm->openOutGenesFile(pSpecies->isDiploid(), ppLand.landNum, rep))
 				throw logic_error("Output genes file could not be initialised.");
-			if (outStartGenes == 0) {
-				pComm->outGenes();
+			if (sim.outStartGenetics == 0) {
+				pComm->outGenes(0, 0);
 			}
 		}
 
@@ -487,7 +477,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 					pComm->outInds(rep, yr, gen, -1);
 
 				// output Genetics
-				if (sim.outGenes && yr >= sim.outStartGenetic && yr % sim.outputGeneticInterval == 0) {
+				if (sim.outGenes && yr >= sim.outStartGenetics && yr % sim.outputGeneticInterval == 0) {
 					pComm->outGenes(yr, gen);
 				}
 

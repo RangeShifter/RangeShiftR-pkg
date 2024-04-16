@@ -30,7 +30,7 @@
 ofstream outrange;
 ofstream outoccup, outsuit;
 ofstream outtraitsrows;
-ofstream outgenes;
+ofstream ofsGenes;
 ofstream outwcfstat;
 ofstream outperlocusfstat;
 ofstream outpairwisefst;
@@ -1086,7 +1086,6 @@ bool Community::outOccupancyHeaders(int option)
 
 	string name, nameI;
 	simParams sim = paramsSim->getSim();
-	//demogrParams dem = pSpecies->getDemogr();
 	landParams ppLand = pLandscape->getLandParams();
 	int outrows = (sim.years / sim.outIntOcc) + 1;
 
@@ -1129,7 +1128,6 @@ bool Community::outOccupancyHeaders(int option)
 void Community::outOccupancy(void) {
 	landParams ppLand = pLandscape->getLandParams();
 	simParams sim = paramsSim->getSim();
-	//streamsize prec = outoccup.precision();
 	locn loc;
 
 	int nsubcomms = (int)subComms.size();
@@ -1152,7 +1150,6 @@ void Community::outOccupancy(void) {
 void Community::outOccSuit(bool view) {
 	double sum, ss, mean, sd, se;
 	simParams sim = paramsSim->getSim();
-	//streamsize prec = outsuit.precision();
 
 	for (int i = 0; i < (sim.years / sim.outIntOcc) + 1; i++) {
 		sum = ss = 0.0;
@@ -1166,8 +1163,6 @@ void Community::outOccSuit(bool view) {
 		else sd = 0.0;
 		se = sd / sqrt((double)(sim.reps));
 
-//	outsuit << i*sim.outInt << "\t" << mean << "\t" << se << endl;
-//	if (view) viewOccSuit(i*sim.outInt,mean,se);
 		outsuit << i * sim.outIntOcc << "\t" << mean << "\t" << se << endl;
 		if (view) viewOccSuit(i * sim.outIntOcc, mean, se);
 	}
@@ -1185,18 +1180,12 @@ only, this function relies on the fact that subcommunities are created in the sa
 sequence as patches, which is in asecending order of x nested within descending
 order of y
 */
-//void Community::outTraits(emigCanvas ecanv,trfrCanvas tcanv,Species *pSpecies,
-//	int rep,int yr,int gen)
 void Community::outTraits(traitCanvas tcanv, Species* pSpecies,
 	int rep, int yr, int gen)
 {
 	simParams sim = paramsSim->getSim();
 	simView v = paramsSim->getViews();
 	landParams land = pLandscape->getLandParams();
-	//demogrParams dem = pSpecies->getDemogr();
-	//emigRules emig = pSpecies->getEmig();
-	//trfrRules trfr = pSpecies->getTrfr();
-	//locn loc;
 	traitsums* ts = 0;
 	traitsums sctraits;
 	if (sim.outTraitsRows && yr >= sim.outStartTraitRow && yr % sim.outIntTraitRow == 0) {
@@ -1227,8 +1216,6 @@ void Community::outTraits(traitCanvas tcanv, Species* pSpecies,
 		// generate output for each sub-community (patch) in the community
 		int nsubcomms = (int)subComms.size();
 		for (int i = 1; i < nsubcomms; i++) { // // all except matrix sub-community
-			//		sctraits = subComms[i]->outTraits(ecanv,tcanv,pLandscape,rep,yr,gen);
-			//		sctraits = subComms[i]->outTraits(tcanv,pLandscape,rep,yr,gen,v.viewGrad);
 			sctraits = subComms[i]->outTraits(tcanv, pLandscape, rep, yr, gen, false);
 			locn loc = subComms[i]->getLocn();
 			int y = loc.y;
@@ -1260,10 +1247,6 @@ void Community::outTraits(traitCanvas tcanv, Species* pSpecies,
 			}
 		}
 	}
-	//if (sim.outTraitsRows && yr >= sim.outStartTraitRow && yr%sim.outIntTraitRow == 0)
-	//{
-	//	if (ts != 0) delete[] ts;
-	//}
 	if (ts != 0) { delete[] ts; ts = 0; }
 }
 
@@ -1586,7 +1569,6 @@ bool Community::openOutGenesFile(const bool& isDiploid, const int landNr, const 
 		outperlocusfstat.clear();
 		return true;
 	}
-
 	string name;
 	simParams sim = paramsSim->getSim();
 
@@ -1602,17 +1584,23 @@ bool Community::openOutGenesFile(const bool& isDiploid, const int landNr, const 
 		name = paramsSim->getDir(2) + "Sim" + Int2Str(sim.simulation) + "_Rep" + Int2Str(rep) + "_geneValues.txt";
 	}
 
-	outgenes.open(name.c_str());
-	outgenes << "Year\tRepSeason\tIndID\ttraitType\tlocusPosition";
+	ofsGenes.open(name.c_str());
+	ofsGenes << "Year\tGeneration\tIndID\ttraitType\tlocusPosition";
 	if (isDiploid) {
-		outgenes << "\talleleValueA\talleleValueB";
+		ofsGenes << "\talleleValueA\talleleValueB";
 	}
 	else {
-		outgenes << "\talleleValue";
+		ofsGenes << "\talleleValue";
 	}
-	outgenes << endl;
+	ofsGenes << endl;
+	return ofsGenes.is_open();
+}
 
-	return outgenes.is_open();
+void Community::outGenes(const int& year, const int& gen) {
+	if (!ofsGenes.is_open())
+		throw runtime_error("Could not open output gene values file.");
+	for (auto sub : subComms)
+		sub->outGenes(ofsGenes, year, gen);
 }
 
 // ----------------------------------------------------------------------------------------

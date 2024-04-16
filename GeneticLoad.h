@@ -63,7 +63,6 @@ public:
     virtual bool isHeterozygoteAtLocus(int locus) const override;
 
     virtual float express();
-
     virtual ~GeneticLoad() { }
 };
 #endif // GENETICLOADH

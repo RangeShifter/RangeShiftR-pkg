@@ -1063,6 +1063,12 @@ traitsums SubCommunity::outTraits(traitCanvas tcanv,
 	return ts;
 }
 
+
+void SubCommunity::outGenes(ofstream& oGenes, const int& year, const int& gen) {
+	for (auto pop : popns)
+		pop->outGenes(oGenes, year, gen);
+}
+
 //---------------------------------------------------------------------------
 
 //---------------------------------------------------------------------------

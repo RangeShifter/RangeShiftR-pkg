@@ -463,23 +463,10 @@ popStats Population::getStats(void)
 	p.nInds = (int)inds.size();
 	p.nNonJuvs = p.nAdults = 0;
 	p.breeding = false;
-#if RSDEBUG
-	//DEBUGLOG << "Population::getStats(): this=" << this
-	////	<< " p.pSpecies=" << p.pSpecies << " p.spNum=" << p.spNum
-	//	<< " p.pPatch=" << p.pPatch << " patchNum=" << p.pPatch->getPatchNum()
-	//	<< " nStages=" << nStages << " nSexes=" << nSexes << " p.nInds=" << p.nInds
-	//	<< endl;
-#endif
 	for (int stg = 1; stg < nStages; stg++) {
 		for (int sex = 0; sex < nSexes; sex++) {
 			ninds = nInds[stg][sex];
 			p.nNonJuvs += ninds;
-#if RSDEBUG
-			//DEBUGLOG << "Population::getStats(): this=" << this
-			//	<< " stg=" << stg << " sex=" << sex
-			//	<< " nInds[stg][sex]=" << nInds[stg][sex] << " p.nNonJuvs=" << p.nNonJuvs
-			//	<< endl;
-#endif
 			if (ninds > 0) {
 				if (pSpecies->stageStructured()) {
 					if (dem.repType == 2) fec = pSpecies->getFec(stg, sex);
@@ -497,13 +484,6 @@ popStats Population::getStats(void)
 	else {
 		if (breeders[0] && breeders[1]) p.breeding = true;
 	}
-#if RSDEBUG
-	//DEBUGLOG << "Population::getStats(): this=" << this
-	//	<< " p.nInds=" << p.nInds << " p.nAdults=" << p.nAdults << " p.nNonJuvs=" << p.nNonJuvs
-	//	<< " breeders[0]=" << breeders[0] << " breeders[1]=" << breeders[1]
-	//	<< " p.breeding=" << p.breeding
-	//	<< endl;
-#endif
 	return p;
 }
 
@@ -1890,7 +1870,6 @@ void Population::outIndsHeaders(int rep, int landNr, bool patchModel)
 void Population::outIndividual(Landscape* pLandscape, int rep, int yr, int gen,
 	int patchNum)
 {
-	//int x, y, p_id;
 	bool writeInd;
 	pathSteps steps;
 	Cell* pCell;
@@ -1933,24 +1912,14 @@ void Population::outIndividual(Landscape* pLandscape, int rep, int yr, int gen,
 			else loc = pCell->getLocn();
 			pCell = inds[i]->getLocn(0);
 			locn natalloc = pCell->getLocn();
-			//#if SEASONAL
-			//		pCell = inds[i]->getLocn(2);
-			//		locn prevloc = pCell->getLocn();
-			//#endif
 			if (ppLand.patchModel) {
 				outInds << "\t" << inds[i]->getNatalPatch()->getPatchNum();
 				if (loc.x == -1) outInds << "\t-1";
 				else outInds << "\t" << patchNum;
 			}
 			else { // cell-based model
-				// EITHER write co-ordinates in cell units ...
 				outInds << "\t" << (float)natalloc.x << "\t" << natalloc.y;
 				outInds << "\t" << (float)loc.x << "\t" << (float)loc.y;
-				// ... OR write co-ordinates in real-world units
-	//		outInds << "\t" << (float)natalloc.x * (float)ppLand.resol + (float)lim.minEast
-	//			 << "\t" << natalloc.y * (float)ppLand.resol + (float)lim.minNorth;
-	//		outInds  << "\t" << (float)loc.x * (float)ppLand.resol + (float)lim.minEast
-	//			<< "\t" << (float)loc.y * (float)ppLand.resol + (float)lim.minNorth;
 			}
 			if (dem.repType != 0) outInds << "\t" << ind.sex;
 			if (dem.stageStruct) outInds << "\t" << ind.age << "\t" << ind.stage;
@@ -2024,6 +1993,39 @@ void Population::outIndividual(Landscape* pLandscape, int rep, int yr, int gen,
 	}
 }
 
+void Population::outGenes(ofstream& oGenes, const int& yr, const int& gen) const {
+	
+	const bool isDiploid = pSpecies->isDiploid();
+	auto traitTypes = pSpecies->getTraitTypes();
+	int indID;
+	float alleleOnChromA, alleleOnChromB;
+
+	// Fetch map to positions for each trait
+	// Presumably faster than fetching for every individual
+	map<TraitType, set<int>> allGenePositions;
+	for (auto trType : traitTypes) {
+		set<int> traitPositions = pSpecies->getSpTrait(trType)->getGenePositions();
+		allGenePositions.insert(make_pair(trType, traitPositions));
+	}
+
+	set<int> positions;
+	for (Individual* ind : inds) {
+		indID = ind->getId();
+		for (auto trType : traitTypes) {
+			positions = allGenePositions[trType];
+			auto indTrait = ind->getTrait(trType);
+			for (auto pos : positions) {
+				alleleOnChromA = indTrait->getAlleleValueAtLocus(0, pos);
+				oGenes << yr << '\t' << gen << '\t' << indID << '\t' << trType << '\t' << pos << '\t' << alleleOnChromA;
+				if (isDiploid) {
+					alleleOnChromB = indTrait->getAlleleValueAtLocus(1, pos);
+					oGenes << '\t' << alleleOnChromB;
+				}
+				oGenes << endl;
+			}
+		}
+	}
+}
 
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------

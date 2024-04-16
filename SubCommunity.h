@@ -184,6 +184,8 @@ public:
 		int	// stage
 	);
 
+	void outGenes(ofstream& oGenes, const int& year, const int& gen);
+
 private:
 	intptr subCommNum;	// SubCommunity number
 		// 0 is reserved for the SubCommunity in the inter-patch matrix
