@@ -43,7 +43,7 @@ Anyone who whishes to make changes to RangeShifter's code, including regular dev
 <<<<<<<< HEAD:src/RScore/CONTRIBUTING.md
 ![](branches.png)
 
-*Check out the [Git cheatsheet](https://github.com/RangeShifter/RScore/git_cheatsheet.md) for a reminder on the main git commands*
+*Check out the [Git cheatsheet](https://github.com/RangeShifter/RScore/blob/main/git_cheatsheet.md) for a reminder on the main git commands*
 
 ========
 >>>>>>>> develop:CONTRIBUTING.md
