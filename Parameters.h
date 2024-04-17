@@ -337,7 +337,7 @@ struct simParams {
 #endif
 	bool fixReplicateSeed;
 	string patchSamplingOption;
-	bool outGenes;
+	bool outputGeneValues;
 	bool outputWCFstat, outputPerLocusWCFstat, outputPairwiseFst;
 	int outputGeneticInterval, outStartGenetics;
 };
@@ -354,7 +354,7 @@ public:
 	paramSim(void);
 	~paramSim(void);
 	void setSim(simParams);
-	void setGeneticSim(string patchSamplingOption, bool outputWCFstat, bool outputPerLocusWCFstat, bool outputPairwiseFst, int outputGeneticInterval);
+	void setGeneticSim(string patchSamplingOption, bool outputGeneticValues, bool outputWCFstat, bool outputPerLocusWCFstat, bool outputPairwiseFst, int outputStartGenetics, int outputGeneticInterval);
 	simParams getSim(void);
 	int getSimNum(void);
 	void setViews(simView);

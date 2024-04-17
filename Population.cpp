@@ -1993,7 +1993,7 @@ void Population::outIndividual(Landscape* pLandscape, int rep, int yr, int gen,
 	}
 }
 
-void Population::outGenes(ofstream& oGenes, const int& yr, const int& gen) const {
+void Population::outputGeneValues(ofstream& oGenes, const int& yr, const int& gen) const {
 	
 	const bool isDiploid = pSpecies->isDiploid();
 	auto traitTypes = pSpecies->getTraitTypes();

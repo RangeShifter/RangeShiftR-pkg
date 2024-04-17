@@ -1596,11 +1596,11 @@ bool Community::openOutGenesFile(const bool& isDiploid, const int landNr, const 
 	return ofsGenes.is_open();
 }
 
-void Community::outGenes(const int& year, const int& gen) {
+void Community::outputGeneValues(const int& year, const int& gen) {
 	if (!ofsGenes.is_open())
 		throw runtime_error("Could not open output gene values file.");
 	for (auto sub : subComms)
-		sub->outGenes(ofsGenes, year, gen);
+		sub->outputGeneValues(ofsGenes, year, gen);
 }
 
 // ----------------------------------------------------------------------------------------

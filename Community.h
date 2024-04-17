@@ -209,7 +209,7 @@ public:
 	void sampleIndividuals(Species* pSpecies);
 
 	bool openOutGenesFile(const bool& isDiploid, const int landNr, const int rep);
-	void outGenes(const int& year, const int& gen);
+	void outputGeneValues(const int& year, const int& gen);
 
 	//control neutral stat output
 	void outNeutralGenetics(Species* pSpecies, int rep, int yr, int gen, bool fstat, bool perLocus, bool pairwise);

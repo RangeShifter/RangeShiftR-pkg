@@ -1047,9 +1047,9 @@ traitsums SubCommunity::outTraits(traitCanvas tcanv,
 				ts.ssqBetaDB[iSex] += indTraitsSums.ssqBetaDB[iSex];
 				ts.sumStepL[iSex] += indTraitsSums.sumStepL[iSex]; 
 				ts.ssqStepL[iSex] += indTraitsSums.ssqStepL[iSex];
-				ts.sumRho[iSex] += indTraitsSums.sumRho[iSex];   
+				ts.sumRho[iSex] += indTraitsSums.sumRho[iSex];
 				ts.ssqRho[iSex] += indTraitsSums.ssqRho[iSex];
-				ts.sumS0[iSex] += indTraitsSums.sumS0[iSex];     
+				ts.sumS0[iSex] += indTraitsSums.sumS0[iSex];
 				ts.ssqS0[iSex] += indTraitsSums.ssqS0[iSex];
 				ts.sumAlphaS[iSex] += indTraitsSums.sumAlphaS[iSex]; 
 				ts.ssqAlphaS[iSex] += indTraitsSums.ssqAlphaS[iSex];
@@ -1063,10 +1063,9 @@ traitsums SubCommunity::outTraits(traitCanvas tcanv,
 	return ts;
 }
 
-
-void SubCommunity::outGenes(ofstream& oGenes, const int& year, const int& gen) {
+void SubCommunity::outputGeneValues(ofstream& oGenes, const int& year, const int& gen) {
 	for (auto pop : popns)
-		pop->outGenes(oGenes, year, gen);
+		pop->outputGeneValues(oGenes, year, gen);
 }
 
 //---------------------------------------------------------------------------

@@ -11,8 +11,6 @@
 
 using namespace std;
 
-ofstream outGenes;
-
 class TTrait {
 public:
     /** Mutation procedure, perform mutations on the genes sequence. **/

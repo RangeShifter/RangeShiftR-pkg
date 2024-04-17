@@ -184,7 +184,7 @@ public:
 		int	// stage
 	);
 
-	void outGenes(ofstream& oGenes, const int& year, const int& gen);
+	void outputGeneValues(ofstream& oGenes, const int& year, const int& gen);
 
 private:
 	intptr subCommNum;	// SubCommunity number

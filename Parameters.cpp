@@ -286,11 +286,13 @@ void paramSim::setSim(simParams s) {
 	fixReplicateSeed = s.fixReplicateSeed;
 }
 
-void paramSim::setGeneticSim(string patchSamplingOption, bool outputWCFstat, bool outputPerLocusWCFstat, bool outputPairwiseFst, int outputGeneticInterval) {
+void paramSim::setGeneticSim(string patchSamplingOption, bool outputGeneticValues, bool outputWCFstat, bool outputPerLocusWCFstat, bool outputPairwiseFst, int outputStartGenetics, int outputGeneticInterval) {
 	this->patchSamplingOption = patchSamplingOption;
+	this->outputGenes = outputGeneticValues;
 	this->outputWCFstat = outputWCFstat;
 	this->outputPerLocusWCFstat = outputPerLocusWCFstat;
 	this->outputPairwiseFst = outputPairwiseFst;
+	this->outputStartGenetics = outputGeneticInterval;
 	this->outputGeneticInterval = outputGeneticInterval;
 }
 
@@ -325,7 +327,7 @@ simParams paramSim::getSim(void) {
 #endif
 	s.drawLoaded = drawLoaded;
 	s.patchSamplingOption = patchSamplingOption;
-	s.outGenes = outputGenes;
+	s.outputGeneValues = outputGenes;
 	s.outputWCFstat = outputWCFstat;
 	s.outputPerLocusWCFstat = outputPerLocusWCFstat;
 	s.outputPairwiseFst = outputPairwiseFst;

@@ -242,11 +242,11 @@ int RunModel(Landscape* pLandscape, int seqsim)
 		if (sim.outInds)
 			pComm->outInds(rep, 0, 0, ppLand.landNum);
 
-		if (sim.outGenes) {
+		if (sim.outputGeneValues) {
 			if (!pComm->openOutGenesFile(pSpecies->isDiploid(), ppLand.landNum, rep))
 				throw logic_error("Output genes file could not be initialised.");
 			if (sim.outStartGenetics == 0) {
-				pComm->outGenes(0, 0);
+				pComm->outputGeneValues(0, 0);
 			}
 		}
 
@@ -477,8 +477,8 @@ int RunModel(Landscape* pLandscape, int seqsim)
 					pComm->outInds(rep, yr, gen, -1);
 
 				// output Genetics
-				if (sim.outGenes && yr >= sim.outStartGenetics && yr % sim.outputGeneticInterval == 0) {
-					pComm->outGenes(yr, gen);
+				if (sim.outputGeneValues && yr >= sim.outStartGenetics && yr % sim.outputGeneticInterval == 0) {
+					pComm->outputGeneValues(yr, gen);
 				}
 
 				if ((sim.outputWCFstat || sim.outputPairwiseFst || sim.outputPerLocusWCFstat) && yr % sim.outputGeneticInterval == 0) {
@@ -607,7 +607,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 		if (sim.outInds) // close Individuals output file
 			pComm->outInds(rep, 0, 0, -999);
 
-		if (sim.outGenes) {
+		if (sim.outputGeneValues) {
 			pComm->openOutGenesFile(pSpecies->isDiploid(), -999, rep);
 		}
 
@@ -654,7 +654,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 	// close Individuals & Genetics output files if open
 	// they can still be open if the simulation was stopped by the user
 	if (sim.outInds) pComm->outInds(0, 0, 0, -999);
-	if (sim.outGenes) pComm->openOutGenesFile(pSpecies->isDiploid(), -999, 0);
+	if (sim.outputGeneValues) pComm->openOutGenesFile(pSpecies->isDiploid(), -999, 0);
 	if (sim.outputWCFstat) 	pComm->openWCFstatFile(pSpecies, -999);
 	if (sim.outputPerLocusWCFstat) pComm->openWCPerLocusFstatFile(pSpecies, pLandscape, -999, 0);
 	if (sim.outputPairwiseFst) pComm->openPairwiseFSTFile(pSpecies, pLandscape, -999, 0);
