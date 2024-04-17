@@ -1993,7 +1993,7 @@ void Population::outIndividual(Landscape* pLandscape, int rep, int yr, int gen,
 	}
 }
 
-void Population::outputGeneValues(ofstream& oGenes, const int& yr, const int& gen) const {
+void Population::outputGeneValues(ofstream& ofsGenes, const int& yr, const int& gen) const {
 	
 	const bool isDiploid = pSpecies->isDiploid();
 	auto traitTypes = pSpecies->getTraitTypes();
@@ -2016,12 +2016,12 @@ void Population::outputGeneValues(ofstream& oGenes, const int& yr, const int& ge
 			auto indTrait = ind->getTrait(trType);
 			for (auto pos : positions) {
 				alleleOnChromA = indTrait->getAlleleValueAtLocus(0, pos);
-				oGenes << yr << '\t' << gen << '\t' << indID << '\t' << trType << '\t' << pos << '\t' << alleleOnChromA;
+				ofsGenes << yr << '\t' << gen << '\t' << indID << '\t' << trType << '\t' << pos << '\t' << alleleOnChromA;
 				if (isDiploid) {
 					alleleOnChromB = indTrait->getAlleleValueAtLocus(1, pos);
-					oGenes << '\t' << alleleOnChromB;
+					ofsGenes << '\t' << alleleOnChromB;
 				}
-				oGenes << endl;
+				ofsGenes << endl;
 			}
 		}
 	}

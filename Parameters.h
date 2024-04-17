@@ -318,8 +318,6 @@ private:
 struct simParams {
 	int batchNum;
 	int simulation; int reps; int years;
-	//	int outStartRange;
-	//	int outStartOcc;
 	int outStartPop; int outStartInd;
 	int outStartTraitCell; int outStartTraitRow; int outStartConn;
 	int outIntRange; int outIntOcc; int outIntPop; int outIntInd;

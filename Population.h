@@ -218,7 +218,7 @@ public:
 		int,				// generation
 		int					// Patch number
 	);
-	void outputGeneValues(ofstream& oGenes, const int& yr, const int& gen) const;
+	void outputGeneValues(ofstream& ofsGenes, const int& yr, const int& gen) const;
 	void clean(void); // Remove zero pointers to dead or dispersed individuals
 
 	void updatePopSNPtables();

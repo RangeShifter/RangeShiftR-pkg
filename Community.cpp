@@ -1565,8 +1565,8 @@ Rcpp::IntegerMatrix Community::addYearToPopList(int rep, int yr) {  // TODO: def
 bool Community::openOutGenesFile(const bool& isDiploid, const int landNr, const int rep)
 {
 	if (landNr == -999) { // close the file
-		if (outperlocusfstat.is_open()) outperlocusfstat.close();
-		outperlocusfstat.clear();
+		if (ofsGenes.is_open()) ofsGenes.close();
+		ofsGenes.clear();
 		return true;
 	}
 	string name;
@@ -1576,12 +1576,14 @@ bool Community::openOutGenesFile(const bool& isDiploid, const int landNr, const 
 		name = paramsSim->getDir(2)
 			+ "Batch" + Int2Str(sim.batchNum) + "_"
 			+ "Sim" + Int2Str(sim.simulation) + "_Land"
-			+ Int2Str(landNr) + "_Rep"
-			+ Int2Str(rep)
+			+ Int2Str(landNr) + "_Rep" + Int2Str(rep)
 			+ "_geneValues.txt";
 	}
 	else {
-		name = paramsSim->getDir(2) + "Sim" + Int2Str(sim.simulation) + "_Rep" + Int2Str(rep) + "_geneValues.txt";
+		name = paramsSim->getDir(2) 
+			+ "Sim" + Int2Str(sim.simulation) + "_Land"
+			+ Int2Str(landNr) + "_Rep" + Int2Str(rep) 
+			+ "_geneValues.txt";
 	}
 
 	ofsGenes.open(name.c_str());
