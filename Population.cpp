@@ -2009,7 +2009,7 @@ void Population::outputGeneValues(ofstream& ofsGenes, const int& yr, const int& 
 	}
 
 	set<int> positions;
-	for (Individual* ind : inds) {
+	for (Individual* ind : sampledInds) {
 		indID = ind->getId();
 		for (auto trType : traitTypes) {
 			positions = allGenePositions[trType];

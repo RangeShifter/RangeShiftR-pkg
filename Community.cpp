@@ -1598,11 +1598,21 @@ bool Community::openOutGenesFile(const bool& isDiploid, const int landNr, const 
 	return ofsGenes.is_open();
 }
 
-void Community::outputGeneValues(const int& year, const int& gen) {
+void Community::outputGeneValues(const int& year, const int& gen, Species* pSpecies) {
 	if (!ofsGenes.is_open())
 		throw runtime_error("Could not open output gene values file.");
-	for (auto sub : subComms)
-		sub->outputGeneValues(ofsGenes, year, gen);
+
+	const set<int> patchList = pSpecies->getSamplePatches();
+	for (int patchId : patchList) {
+		const auto patch = pLandscape->findPatch(patchId);
+		if (patch == 0) {
+			throw runtime_error("Sampled patch does not exist");
+		}
+		const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
+		if (pPop != 0) { 
+			pPop->outputGeneValues(ofsGenes, year, gen);
+		}
+	}
 }
 
 // ----------------------------------------------------------------------------------------

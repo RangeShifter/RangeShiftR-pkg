@@ -473,15 +473,11 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				if (sim.outInds && yr >= sim.outStartInd && yr % sim.outIntInd == 0)
 					pComm->outInds(rep, yr, gen, -1);
 
-				// output Genetics
-				if (sim.outputGeneValues && yr >= sim.outStartGenetics && yr % sim.outputGeneticInterval == 0) {
-					pComm->outputGeneValues(yr, gen);
-				}
-
-				if ((sim.outputWCFstat || sim.outputPairwiseFst || sim.outputPerLocusWCFstat) && yr % sim.outputGeneticInterval == 0) {
+				if ((sim.outputGeneValues || sim.outputWCFstat || sim.outputPairwiseFst || sim.outputPerLocusWCFstat)
+					&& yr >= sim.outStartGenetics
+					&& yr % sim.outputGeneticInterval == 0) {
 
 					simParams sim = paramsSim->getSim();
-					if (sim.outputWCFstat || sim.outputPairwiseFst || sim.outputPerLocusWCFstat) {
 						if (sim.patchSamplingOption != "list") {
 							// then patches must be re-sampled every gen
 							int nbToSample = pSpecies->getNbPatchesToSample();
@@ -489,9 +485,14 @@ int RunModel(Landscape* pLandscape, int seqsim)
 							pSpecies->setSamplePatchList(patchesToSample);
 						}
 						// otherwise always use the user-specified list (even if patches are empty)
-					}
 					pComm->sampleIndividuals(pSpecies);
-					pComm->outNeutralGenetics(pSpecies, rep, yr, gen, sim.outputWCFstat, sim.outputPerLocusWCFstat, sim.outputPairwiseFst);
+
+					if (sim.outputGeneValues) {
+						pComm->outputGeneValues(yr, gen, pSpecies);
+					}
+					if (sim.outputWCFstat || sim.outputPairwiseFst || sim.outputPerLocusWCFstat) {
+						pComm->outNeutralGenetics(pSpecies, rep, yr, gen, sim.outputWCFstat, sim.outputPerLocusWCFstat, sim.outputPairwiseFst);
+					}
 				}
 				if (dem.stageStruct) {
 					pComm->survival(1, 0, 1);
