@@ -227,7 +227,7 @@ setMethod("initialize", "ManagementParams", function(.Object,...) {
     .Object}
 )
 setMethod("show", "ManagementParams", function(object){
-    cat(" Management: \n  Translocation:\n")
+    cat(" Management: \n ")
     print(object@Translocation)
 })
 

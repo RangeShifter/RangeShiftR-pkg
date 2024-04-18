@@ -215,7 +215,7 @@ void Management::translocate(int yr
                         t_pPop = pSubComm->newPopn(pLandscape, pSpecies, t_patch, 0);
                     }
                     catched_individual->setStatus(10); // make sure individual is not dispersing after the translocation
-                    t_pPop->recruit(catched_individual); // recruit individual to target population
+                    t_pPop->recruit(catched_individual); // recruit individual to target population TODO:  maybe use a specified function which also updates pCurrCell + pPrevCell to a random cell in target patch?
                     translocated ++;
                     // NOTE:
                     // the variables pCurrCell and pPrevCell are not updated! These are important for the dispersal process!
