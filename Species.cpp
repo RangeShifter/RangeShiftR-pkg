@@ -379,7 +379,7 @@ bool Species::areMutationsOn(void) {
 
 void Species::resetGeneticParameters() {
 	mutationsOn = true;
-	numberOfAdaptiveTraits = 0;
+	nbGeneticLoadTraits = 0;
 	genomeSize = -9999;
 	recombinationRate = -9999;
 	nPatchesToSample = 0;
@@ -392,15 +392,15 @@ bool Species::isDiploid() const {
 	return diploid;
 }
 
-int Species::incrementAdaptiveTraits()
+int Species::incrNbGenLoadTraits()
 {
-	numberOfAdaptiveTraits++;
-	return numberOfAdaptiveTraits;
+	nbGeneticLoadTraits++;
+	return nbGeneticLoadTraits;
 }
 
-int Species::getNumberOfAdaptiveTraits() const
+int Species::getNbGenLoadTraits() const
 {
-	return numberOfAdaptiveTraits;
+	return nbGeneticLoadTraits;
 }
 
 void Species::addTrait(TraitType traitType, const SpeciesTrait& trait) {
@@ -408,7 +408,7 @@ void Species::addTrait(TraitType traitType, const SpeciesTrait& trait) {
 	TraitType traitT = traitType;
 	// hack to deal with multiple genetic load traits, could be handled better
 	if (traitType == GENETIC_LOAD) {
-		int n = incrementAdaptiveTraits();
+		int n = incrNbGenLoadTraits();
 
 		switch (n) {
 		case 1:

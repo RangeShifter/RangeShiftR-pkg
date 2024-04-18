@@ -715,12 +715,12 @@ bool SubCommunity::outTraitsHeaders(Landscape* pLandscape, Species* pSpecies, in
 			outtraits << "\tmeanBetaS\tstdBetaS";
 		}
 	}
-	if (pSpecies->getNumberOfAdaptiveTraits() > 0) {
+	if (pSpecies->getNbGenLoadTraits() > 0) {
 		if (maxNbSexes > 1) {
-			outtraits << "\tF_meanFitness\tF_stdFitness\tM_meanFitness\tM_stdFitness";
+			outtraits << "\tF_meanProbViable\tF_stdProbViable\tM_meanProbViable\tM_stdProbViable";
 		}
 		else {
-			outtraits << "\tmeanFitness\tstdFitness";
+			outtraits << "\tmeanProbViable\tstdProbViable";
 		}
 	}
 
@@ -753,7 +753,7 @@ traitsums SubCommunity::outTraits(traitCanvas tcanv,
 		ts.sumStepL[i] = ts.ssqStepL[i] = 0.0; ts.sumRho[i] = ts.ssqRho[i] = 0.0;
 		ts.sumS0[i] = ts.ssqS0[i] = 0.0;
 		ts.sumAlphaS[i] = ts.ssqAlphaS[i] = 0.0; ts.sumBetaS[i] = ts.ssqBetaS[i] = 0.0;
-		ts.sumFitness[i] = ts.ssqFitness[i] = 0.0;
+		ts.sumProbViability[i] = ts.ssqProbViability[i] = 0.0;
 	}
 
 	// generate output for each population within the sub-community (patch)
@@ -990,32 +990,32 @@ traitsums SubCommunity::outTraits(traitCanvas tcanv,
 				}
 			}
 
-			if (pSpecies->getNumberOfAdaptiveTraits() > 0) {
+			if (pSpecies->getNbGenLoadTraits() > 0) {
 				ngenes = pSpecies->isDiploid() + 1;
-				double mnFitness[2], sdFitness[2];
+				double mnProbViable[2], sdProbViable[2];
 				for (int iGene = 0; iGene < ngenes; iGene++) {
-					mnFitness[iGene] = sdFitness[iGene] = 0.0;
+					mnProbViable[iGene] = sdProbViable[iGene] = 0.0;
 
 					if (ngenes == 2) popsize = indTraitsSums.ninds[iGene];
 					else popsize = indTraitsSums.ninds[0] + indTraitsSums.ninds[1];
 					if (popsize > 0) {
-						mnFitness[iGene] = indTraitsSums.sumFitness[iGene] / (double)popsize;
+						mnProbViable[iGene] = indTraitsSums.sumProbViability[iGene] / (double)popsize;
 						if (popsize > 1) {
-							sdFitness[iGene] = indTraitsSums.ssqFitness[iGene] / (double)popsize - mnFitness[iGene] * mnFitness[iGene];
-							if (sdFitness[iGene] > 0.0) sdFitness[iGene] = sqrt(sdFitness[iGene]); else sdFitness[iGene] = 0.0;
+							sdProbViable[iGene] = indTraitsSums.ssqProbViability[iGene] / (double)popsize - mnProbViable[iGene] * mnProbViable[iGene];
+							if (sdProbViable[iGene] > 0.0) sdProbViable[iGene] = sqrt(sdProbViable[iGene]); else sdProbViable[iGene] = 0.0;
 						}
 						else {
-							sdFitness[iGene] = 0.0;
+							sdProbViable[iGene] = 0.0;
 						}
 					}
 				}
 				if (writefile) {
 					if (maxNbSexes > 1) {
-						outtraits << "\t" << mnFitness[0] << "\t" << sdFitness[0];
-						outtraits << "\t" << mnFitness[1] << "\t" << sdFitness[1];
+						outtraits << "\t" << mnProbViable[0] << "\t" << sdProbViable[0];
+						outtraits << "\t" << mnProbViable[1] << "\t" << sdProbViable[1];
 					}
 					else { // sex-independent
-						outtraits << "\t" << mnFitness[0] << "\t" << sdFitness[0];
+						outtraits << "\t" << mnProbViable[0] << "\t" << sdProbViable[0];
 					}
 				}
 			}
@@ -1055,8 +1055,8 @@ traitsums SubCommunity::outTraits(traitCanvas tcanv,
 				ts.ssqAlphaS[iSex] += indTraitsSums.ssqAlphaS[iSex];
 				ts.sumBetaS[iSex] += indTraitsSums.sumBetaS[iSex]; 
 				ts.ssqBetaS[iSex] += indTraitsSums.ssqBetaS[iSex];
-				ts.sumFitness[iSex] += indTraitsSums.sumFitness[iSex];  
-				ts.ssqFitness[iSex] += indTraitsSums.ssqFitness[iSex];
+				ts.sumProbViability[iSex] += indTraitsSums.sumProbViability[iSex];  
+				ts.ssqProbViability[iSex] += indTraitsSums.ssqProbViability[iSex];
 			}
 		}
 	}

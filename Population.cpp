@@ -224,7 +224,7 @@ traitsums Population::getIndTraitsSums(Species* pSpecies) {
 		ts.sumS0[sex] = ts.ssqS0[sex] = 0.0;
 		ts.sumAlphaS[sex] = ts.ssqAlphaS[sex] = 0.0;
 		ts.sumBetaS[sex] = ts.ssqBetaS[sex] = 0.0;
-		ts.sumFitness[sex] = ts.ssqFitness[sex] = 0.0;
+		ts.sumProbViability[sex] = ts.ssqProbViability[sex] = 0.0;
 	}
 
 	emigRules emig = pSpecies->getEmigRules();
@@ -309,8 +309,8 @@ traitsums Population::getIndTraitsSums(Species* pSpecies) {
 
 		if (maxNbSexes > 1) g = sex; 
 		else g = 0;
-		ts.sumFitness[g] += inds[iInd]->getFitness();
-		ts.ssqFitness[g] += inds[iInd]->getFitness() * inds[iInd]->getFitness();
+		ts.sumProbViability[g] += inds[iInd]->getProbViability();
+		ts.ssqProbViability[g] += inds[iInd]->getProbViability() * inds[iInd]->getProbViability();
 	}
 	return ts;
 }
@@ -683,7 +683,7 @@ void Population::reproduction(const float localK, const float envval, const int 
 							newJuv->inheritTraits(pSpecies, inds[i], father, resol);
 						}
 
-						if (newJuv->getFitness() < pRandom->Random()) {
+						if (newJuv->getProbViability() < pRandom->Random()) {
 							delete newJuv;
 						}
 						else {
@@ -763,7 +763,7 @@ void Population::reproduction(const float localK, const float envval, const int 
 								if (pSpecies->getNTraits() > 0) {
 									newJuv->inheritTraits(pSpecies, inds[i], father, resol);
 								}
-								if (newJuv->getFitness() < pRandom->Random()) {
+								if (newJuv->getProbViability() < pRandom->Random()) {
 									delete newJuv;
 								}
 								else {
@@ -1833,7 +1833,7 @@ void Population::outIndsHeaders(int rep, int landNr, bool patchModel)
 	else outInds << "\tNatal_X\tNatal_Y\tX\tY";
 	if (dem.repType != 0) outInds << "\tSex";
 	if (dem.stageStruct) outInds << "\tAge\tStage";
-	if (pSpecies->getNumberOfAdaptiveTraits() > 0) outInds << "\tFitness";
+	if (pSpecies->getNbGenLoadTraits() > 0) outInds << "\tProbViable";
 	if (emig.indVar) {
 		if (emig.densDep) outInds << "\tD0\tAlpha\tBeta";
 		else outInds << "\tEP";
@@ -1924,7 +1924,7 @@ void Population::outIndividual(Landscape* pLandscape, int rep, int yr, int gen,
 			if (dem.repType != 0) outInds << "\t" << ind.sex;
 			if (dem.stageStruct) outInds << "\t" << ind.age << "\t" << ind.stage;
 
-			if (pSpecies->getNumberOfAdaptiveTraits() > 0) outInds << "\t" << inds[i]->getFitness();
+			if (pSpecies->getNbGenLoadTraits() > 0) outInds << "\t" << inds[i]->getProbViability();
 		
 			if (emig.indVar) {
 				emigTraits e = inds[i]->getEmigTraits();

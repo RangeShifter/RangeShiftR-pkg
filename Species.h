@@ -306,8 +306,8 @@ public:
 	void resetGeneticParameters();
 	bool areMutationsOn(void);
 	bool isDiploid() const;
-	int incrementAdaptiveTraits();
-	int getNumberOfAdaptiveTraits() const;
+	int incrNbGenLoadTraits();
+	int getNbGenLoadTraits() const;
 
 	// emigration parameter functions
 
@@ -489,7 +489,7 @@ private:
 	int genomeSize;
 	bool diploid;
 	bool mutationsOn;
-	int numberOfAdaptiveTraits;
+	int nbGeneticLoadTraits;
 	float recombinationRate;
 	std::set<int> samplePatchList;
 	int nPatchesToSample; //for cell based landscape

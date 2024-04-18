@@ -103,8 +103,8 @@ struct traitsums { // sums of trait genes for dispersal
 	double ssqAlphaS[maxNbSexes];	// sum of squares of slope of settlement den-dep reaction norm
 	double sumBetaS[maxNbSexes]; 	// sum of inflection point of settlement reaction norm
 	double ssqBetaS[maxNbSexes]; 	// sum of squares of inflection point of settlement reaction norm
-	double sumFitness[maxNbSexes];
-	double ssqFitness[maxNbSexes];
+	double sumProbViability[maxNbSexes];
+	double ssqProbViability[maxNbSexes];
 };
 
 class Population {
