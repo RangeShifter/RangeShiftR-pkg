@@ -101,7 +101,8 @@ emigration_densdep <- F
 emigration_sexdep <- F
 emigration_stagedep <- F
 
-
+# management
+translocation <- F
 ```
 
 ```{r, echo =FALSE}
@@ -197,6 +198,12 @@ if(s@dispersal@Settlement@SexDep) settlement_sexdep <- T
 if(s@dispersal@Settlement@StageDep) settlement_stagedep <- T
 if(any(s@dispersal@Settlement@FindMate)) mate_finding <- T
 
+# Management
+if(!is.logical(s@management@Translocation)){
+    translocation <- T
+} 
+ 
+
 ```
 
 
@@ -264,11 +271,11 @@ There are three distinct temporal scales. The highest-level one has years as uni
 
 # Process overview and scheduling
 
-![General model workflow and schedule. The core of the model highlighted in blue is expanded in the flow chart in Fig. 2](./RSflowchart_big.pdf){height=70%}
+![General model workflow and schedule. The core of the model highlighted in blue is expanded in the flow chart in Fig. 2](./RSflowchart_big.png){height=70%}
 
 \newpage
 
-![General flowchart of the core model](./RSflowchart_detail.pdf){height=70%}
+![General flowchart of the core model](./RSflowchart_detail.png){height=70%}
 
 \newpage
 
@@ -354,7 +361,7 @@ Movement behaviours during the transfer phase are a core component of the disper
 
 See the submodel description for further details.
 
-### Settlement
+#### Settlement
 
 Settlement, or immigration, is the last phase of dispersal, when the organism stops in a new cell or patch of breeding habitat. This phase is determined by a suite of strategies, behaviours and reaction norms that lead individuals to the decision to stop in a particular place. Habitat selection, mate finding and density dependence are probably three of the main processes involved, but not the only ones. Like emigration, settlement is a complex process affected by multiple criteria including inter-individual variability and context dependencies. It can be influenced by the causes and mechanisms of the previous phases of dispersal [@clobertInformedDispersalHeterogeneity2009] and it has associated specific costs [@bonteCostsDispersal2012a], which can also feed back to the previous phases [@legalliardPatternsProcessesDispersal2012].
 
@@ -366,7 +373,7 @@ This specific use case of RangeShifter incorporates some basic settlement rules.
 
 For more details, see the description of the submodel.
 
-### Dispersal mortality
+#### Dispersal mortality
 
 Dispersal is often a costly process for an organism [@bonteCostsDispersal2012a] and, in some cases, a dispersing individual may suffer mortality. Obtaining a sensible representation of dispersal requires that these mortality costs are described appropriately and, for this, it is important to recognize how dispersal mortality is incorporated in RangeShifter.
 First, dispersal mortality can arise as a result of individuals failing to reach suitable habitat. `r if(dispersal_kernel){"For example, when individuals have no possibility to search for locally-suitable habitat, mortality occurs to all individuals that arrive in unsuitable habitat."}` `r if(movement_model){"Fo example, some individuals may fail to find suitable habitat before they use up a maximum number of movement steps. In this first case, dispersal mortality clearly depends upon the proportion of suitable habitat in the landscape and will increase as the availability of habitat declines."}`
@@ -375,6 +382,17 @@ First, dispersal mortality can arise as a result of individuals failing to reach
 `r if(movement_model){"A second source of dispersal mortality can be a per-step probability of mortality. This can be useful for representing mortality risks that increase with distance or time spent travelling."}``r if(movement_model & movement_cost){"Additionally, movement across a complex landscape is modeled more explicitly: the per-step mortality varies according to the nature of the local environment."}`
 
 For more details, see the description of the submodel.
+
+### Management
+
+`r if(translocation){"#### Translocation"}else{"Not applicable."}`
+
+`r if(translocation){"Translocation, the intentional capture of animals and following release in new areas, are a common conservation practice. They are used to establish new populations, to increase the size of small populations, to reintroduce species in areas where they have been extirpated, and to increase genetic diversity. 
+- indidivduals are selected by characteristics
+- how source and target patches are identified?
+https://www.conservationevidence.com/actions/2397
+"}`
+
 
 ## Emergence
 
@@ -928,6 +946,14 @@ if(movement_corrRW){
 
 Settle<- array_to_LaTeX(s@dispersal@Settlement@Settle)
 
+# Management
+if(!is.logical(s@management@Translocation)){
+    translocation <- T
+    if(length(s@management@Translocation@years)>1){
+        Translocation_years <- toString(s@management@Translocation@years)
+    } else Translocation_years <- s@management@Translocation@years
+    Translocation_matrix <- array_to_LaTeX(s@management@Translocation@TransLocMat)
+} 
 
 Simulation <- data.frame(
   "Parameter         "=c(
@@ -1414,6 +1440,37 @@ Dispersal <- data.frame(
     toString(s@dispersal@Settlement@FindMate)
   )
 )
+if(translocation){
+    # Management
+    Management <- data.frame(
+      "Management                       "=c(
+        "Translocation                  ","", "", "", "", ""
+      ),
+      "Parameter                     "=c(
+        # Translocation
+        "Catching_rate",          
+        "years",
+        "TransLocMat", "", "", ""
+      ),
+      "Description                        "=c(
+        #Translocation
+        "Probability of successfully catching a chosen individual",
+        "Year(s) in which translocation events are implemented",
+        "Translocation matrix with column names ",
+        "year, source (patch ID or XY coordinates), target (patch ID or XY coordinates), ", 
+        "number of selected individual, minimal age, maximal age, stage and sex",
+        "Rows represent one specific translocation event."
+      ),
+      "Values"=c(
+        # Translocation
+        as.character(s@management@Translocation@catching_rate),
+        Translocation_years,
+        Translocation_matrix, "", "", ""
+      )
+    )
+}
+
+
 # delete all off-switches
 Landscape <- Landscape[Landscape$Values!=-9 & Landscape$Values!="NULL",]
 rownames(Landscape) <- NULL
@@ -1429,6 +1486,7 @@ knitr::kable(Simulation, col.names = gsub("[.]", " ", names(Simulation)), captio
 knitr::kable(Landscape, col.names = gsub("[.]", " ", names(Landscape)), caption = 'Landscape parameters')
 knitr::kable(Demography, col.names = gsub("[.]", " ", names(Demography)), caption = 'Demography parameters')
 knitr::kable(Dispersal, col.names = gsub("[.]", " ", names(Dispersal)), caption = 'Dispersal parameters')
+if(translocation) knitr::kable(Management, col.names = gsub("[.]", " ", names(Management)), caption = 'Management parameters')
 knitr::kable(Initialisation, col.names = gsub("[.]", " ", names(Initialisation)), caption = 'Initialisation parameters')
 ```
 

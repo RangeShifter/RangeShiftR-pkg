@@ -6,7 +6,10 @@
    viewBox="-0.5 -0.5 471 755"
    id="svg188"
    sodipodi:docname="RSflowchart_big.svg"
-   inkscape:version="1.1.1 (1:1.1+202109281949+c3084ef5ed)"
+   inkscape:version="1.3.2 (091e20e, 2023-11-25, custom)"
+   inkscape:export-filename="RSflowchart_big.png"
+   inkscape:export-xdpi="600"
+   inkscape:export-ydpi="600"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -36,41 +39,78 @@
      inkscape:snap-center="true"
      inkscape:snap-object-midpoints="true"
      inkscape:zoom="2.5722563"
-     inkscape:cx="189.32795"
-     inkscape:cy="619.30065"
-     inkscape:window-width="1860"
-     inkscape:window-height="1043"
-     inkscape:window-x="60"
-     inkscape:window-y="0"
+     inkscape:cx="370.49185"
+     inkscape:cy="440.66371"
+     inkscape:window-width="3840"
+     inkscape:window-height="2054"
+     inkscape:window-x="-11"
+     inkscape:window-y="-11"
      inkscape:window-maximized="1"
-     inkscape:current-layer="g178" />
+     inkscape:current-layer="g178"
+     inkscape:showpageshadow="2"
+     inkscape:deskcolor="#d1d1d1" />
   <defs
      id="defs2" />
   <g
      id="g178">
+    <path
+       d="m 235,368.23805 v 20 -4 9.88"
+       fill="none"
+       stroke="#000000"
+       stroke-miterlimit="10"
+       pointer-events="stroke"
+       id="path48-8" />
+    <path
+       d="m 285.11805,311.0165 h 23.5 34.88"
+       fill="none"
+       stroke="#000000"
+       stroke-miterlimit="10"
+       pointer-events="stroke"
+       id="path58-1" />
     <rect
-       x="70"
-       y="447.5"
-       width="261"
-       height="194.5"
+       x="341.92911"
+       y="292.50461"
+       width="99.14183"
+       height="37.141827"
+       fill="#ffffff"
+       stroke="#000000"
+       pointer-events="all"
+       id="rect106-6"
+       style="stroke-width:0.858173" />
+    <path
+       d="M 290.00275,311.88277 234,367.88552 177.99725,311.88277 234,255.88 Z"
+       fill="#ffffff"
+       stroke="#000000"
+       stroke-miterlimit="10"
+       pointer-events="all"
+       id="path96-0"
+       style="stroke-width:1.06674" />
+    <rect
+       x="92.796516"
+       y="519.61237"
+       width="248.70351"
+       height="138.38773"
        fill="#dae8fc"
        stroke="none"
        pointer-events="all"
-       id="rect4" />
+       id="rect4"
+       style="stroke-width:0.823398" />
     <path
-       d="M 65 60 L 65 80 L 405 80 L 405 60"
+       d="m 64.883484,54.07826 v 8.976103 H 405.11652 V 54.07826"
        fill="none"
-       stroke="rgb(0, 0, 0)"
+       stroke="#000000"
        stroke-miterlimit="10"
        pointer-events="stroke"
-       id="path6" />
+       id="path6"
+       style="stroke-width:0.670159" />
     <path
-       d="M 0 60 L 20 0 L 130 0 L 110 60 Z"
-       fill="rgb(255, 255, 255)"
-       stroke="rgb(0, 0, 0)"
+       d="M -0.0045552,53.744397 21.372473,-0.00297822 H 138.94612 L 117.5691,53.744397 Z"
+       fill="#ffffff"
+       stroke="#000000"
        stroke-miterlimit="10"
        pointer-events="all"
-       id="path8" />
+       id="path8"
+       style="stroke-width:0.978502" />
     <g
        transform="translate(-0.5 -0.5)"
        id="g14">
@@ -90,6 +130,7 @@
                style="box-sizing: border-box; font-size: 0px; text-align: center;">
               <xhtml:div
                  style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal;">Species' <xhtml:br />
+
 
 distribution map</xhtml:div>
             </xhtml:div>
@@ -115,12 +156,13 @@ distribution map</xhtml:div>
       </switch>
     </g>
     <path
-       d="M 234 60 L 234 93.88"
+       d="M 234,52 V 80"
        fill="none"
-       stroke="rgb(0, 0, 0)"
+       stroke="#000000"
        stroke-miterlimit="10"
        pointer-events="stroke"
-       id="path16" />
+       id="path16"
+       style="stroke-width:0.90909" />
     <path
        d="M 234 100.88 L 230.5 93.88 L 237.5 93.88 Z"
        fill="rgb(0, 0, 0)"
@@ -129,12 +171,13 @@ distribution map</xhtml:div>
        pointer-events="all"
        id="path18" />
     <path
-       d="M 169 60 L 189 0 L 299 0 L 279 60 Z"
-       fill="rgb(255, 255, 255)"
-       stroke="rgb(0, 0, 0)"
+       d="M 169.00089,53.654393 190.68885,0.00106713 H 309.97263 L 288.28468,53.654393 Z"
+       fill="#ffffff"
+       stroke="#000000"
        stroke-miterlimit="10"
        pointer-events="all"
-       id="path20" />
+       id="path20"
+       style="stroke-width:0.98473" />
     <g
        transform="translate(-0.5 -0.5)"
        id="g26">
@@ -168,14 +211,15 @@ distribution map</xhtml:div>
       </switch>
     </g>
     <path
-       d="M 340 60 L 360 0 L 470 0 L 450 60 Z"
-       fill="rgb(255, 255, 255)"
-       stroke="rgb(0, 0, 0)"
+       d="M 335.07591,53.66729 355.83606,-0.01183013 H 470.0169 L 449.25675,53.66729 Z"
+       fill="#ffffff"
+       stroke="#000000"
        stroke-miterlimit="10"
        pointer-events="all"
-       id="path28" />
+       id="path28"
+       style="stroke-width:0.963668" />
     <g
-       transform="translate(0.18598965,-8.416)"
+       transform="translate(-1.8140103,-8.416)"
        id="g34">
       <switch
          id="switch32">
@@ -192,6 +236,7 @@ distribution map</xhtml:div>
                style="box-sizing: border-box; font-size: 0px; text-align: center;">
               <xhtml:div
                  style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal;">Artificial environ-<xhtml:br />
+
 
 mental gradient</xhtml:div>
             </xhtml:div>
@@ -217,30 +262,31 @@ mental gradient</xhtml:div>
       </switch>
     </g>
     <path
-       d="M 234 147 L 234 181.38"
+       d="m 233.38281,113.32192 v 34.38"
        fill="none"
-       stroke="rgb(0, 0, 0)"
+       stroke="#000000"
        stroke-miterlimit="10"
        pointer-events="stroke"
        id="path36" />
     <path
-       d="M 234 188.38 L 230.5 181.38 L 237.5 181.38 Z"
-       fill="rgb(0, 0, 0)"
-       stroke="rgb(0, 0, 0)"
+       d="m 233.30902,173.76 -3.5,-7 h 7 z"
+       fill="#000000"
+       stroke="#000000"
        stroke-miterlimit="10"
        pointer-events="all"
        id="path38" />
     <rect
-       x="184"
-       y="104"
-       width="100"
-       height="50"
-       fill="rgb(255, 255, 255)"
+       x="184.3119"
+       y="75.286308"
+       width="99.14183"
+       height="37.141827"
+       fill="#ffffff"
        stroke="#000000"
        pointer-events="all"
-       id="rect40" />
+       id="rect40"
+       style="stroke-width:0.858173" />
     <g
-       transform="translate(-0.5 -0.5)"
+       transform="translate(-0.49999619,-34.191979)"
        id="g46">
       <switch
          id="switch44">
@@ -263,30 +309,30 @@ mental gradient</xhtml:div>
         <text
            x="234"
            y="133"
-           fill="rgb(0, 0, 0)"
+           fill="#000000"
            font-family="Helvetica"
            font-size="12px"
            text-anchor="middle"
            id="text42"
-           style="-inkscape-font-specification:FreeSans;font-family:FreeSans;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal">Initialisation</text>
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:FreeSans;-inkscape-font-specification:FreeSans">Initialisation</text>
       </switch>
     </g>
     <path
-       d="M 234 291 L 234 311 L 234 307 L 234 316.88"
+       d="m 234,227 v 20 -4 9.88"
        fill="none"
-       stroke="rgb(0, 0, 0)"
+       stroke="#000000"
        stroke-miterlimit="10"
        pointer-events="stroke"
        id="path48" />
     <path
-       d="M 234 323.88 L 230.5 316.88 L 237.5 316.88 Z"
-       fill="rgb(0, 0, 0)"
-       stroke="rgb(0, 0, 0)"
+       d="m 234,255.88 -3.5,-7 h 7 z"
+       fill="#000000"
+       stroke="#000000"
        stroke-miterlimit="10"
        pointer-events="all"
        id="path50" />
     <g
-       transform="translate(-0.5 -0.5)"
+       transform="translate(8.1821939,-26.131283)"
        id="g56">
       <switch
          id="switch54">
@@ -308,31 +354,31 @@ mental gradient</xhtml:div>
         </foreignObject>
         <text
            x="214"
-           y="298"
-           fill="rgb(0, 0, 0)"
+           y="266"
+           fill="#000000"
            font-family="Helvetica"
            font-size="12px"
            text-anchor="middle"
            id="text52"
-           style="-inkscape-font-specification:FreeSans;font-family:FreeSans;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal">No</text>
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:FreeSans;-inkscape-font-specification:FreeSans">No</text>
       </switch>
     </g>
     <path
-       d="M 286.5 244 L 310 244 L 344.88 244"
+       d="M 280.5,176 H 304 338.88"
        fill="none"
-       stroke="rgb(0, 0, 0)"
+       stroke="#000000"
        stroke-miterlimit="10"
        pointer-events="stroke"
        id="path58" />
     <path
-       d="M 351.88 244 L 344.88 247.5 L 344.88 240.5 Z"
-       fill="rgb(0, 0, 0)"
-       stroke="rgb(0, 0, 0)"
+       d="m 341.88,176 -7,3.5 v -7 z"
+       fill="#000000"
+       stroke="#000000"
        stroke-miterlimit="10"
        pointer-events="all"
        id="path60" />
     <g
-       transform="translate(-0.5 -0.5)"
+       transform="translate(-3.0814844,-38.823572)"
        id="g66">
       <switch
          id="switch64">
@@ -354,24 +400,17 @@ mental gradient</xhtml:div>
         </foreignObject>
         <text
            x="313"
-           y="238"
-           fill="rgb(0, 0, 0)"
+           y="212"
+           fill="#000000"
            font-family="Helvetica"
            font-size="12px"
            text-anchor="middle"
            id="text62"
-           style="-inkscape-font-specification:FreeSans;font-family:FreeSans;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal">Yes</text>
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:FreeSans;-inkscape-font-specification:FreeSans">Yes</text>
       </switch>
     </g>
-    <path
-       d="M 234 191.5 L 286.5 244 L 234 296.5 L 181.5 244 Z"
-       fill="rgb(255, 255, 255)"
-       stroke="#000000"
-       stroke-miterlimit="10"
-       pointer-events="all"
-       id="path68" />
     <g
-       transform="translate(0.31799927,-6.362)"
+       transform="translate(-3.6521965,-51.62399)"
        id="g74">
       <switch
          id="switch72">
@@ -389,45 +428,67 @@ mental gradient</xhtml:div>
               <xhtml:div
                  style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal;">Gradient <xhtml:br />
 
+
 shifting?</xhtml:div>
             </xhtml:div>
           </xhtml:div>
         </foreignObject>
-        <text
-           x="234"
-           y="246"
-           fill="#000000"
-           font-family="Helvetica"
-           font-size="12px"
-           text-anchor="middle"
-           id="text70"
-           style="-inkscape-font-specification:FreeSans;font-family:FreeSans;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal"><tspan
-             sodipodi:role="line"
-             id="tspan15693"
+        <g
+           id="g1">
+          <path
+             d="m 237.03501,172.13591 55.74914,55.74894 -55.74914,55.74914 -55.74914,-55.74914 z"
+             fill="#ffffff"
+             stroke="#000000"
+             stroke-miterlimit="10"
+             pointer-events="all"
+             id="path68"
+             style="stroke-width:1.06188" />
+          <text
              x="234"
-             y="246">Gradient</tspan><tspan
-             sodipodi:role="line"
-             id="tspan15695"
-             x="234"
-             y="261">shifting?</tspan></text>
+             y="222"
+             fill="#000000"
+             font-family="Helvetica"
+             font-size="12px"
+             text-anchor="middle"
+             id="text70"
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:FreeSans;-inkscape-font-specification:FreeSans"><tspan
+               sodipodi:role="line"
+               id="tspan15693"
+               x="234"
+               y="222">Gradient</tspan><tspan
+               sodipodi:role="line"
+               id="tspan15695"
+               x="234"
+               y="237">shifting?</tspan></text>
+        </g>
       </switch>
+      <text
+         xml:space="preserve"
+         style="fill:#000000"
+         x="195.14828"
+         y="369.05762"
+         id="text1"><tspan
+           sodipodi:role="line"
+           id="tspan1"
+           x="195.14828"
+           y="369.05762">Translocation?</tspan></text>
     </g>
     <path
-       d="M 286.5 379.5 L 310 379.5 L 344.88 379.5"
+       d="M 288.5,447.5 H 312 346.88"
        fill="none"
-       stroke="rgb(0, 0, 0)"
+       stroke="#000000"
        stroke-miterlimit="10"
        pointer-events="stroke"
        id="path76" />
     <path
-       d="M 351.88 379.5 L 344.88 383 L 344.88 376 Z"
-       fill="rgb(0, 0, 0)"
-       stroke="rgb(0, 0, 0)"
+       d="m 339.88,447.5 -7,3.5 v -7 z"
+       fill="#000000"
+       stroke="#000000"
        stroke-miterlimit="10"
        pointer-events="all"
        id="path78" />
     <g
-       transform="translate(-0.5 -0.5)"
+       transform="translate(9.4814453,5.5332034)"
        id="g84">
       <switch
          id="switch82">
@@ -449,31 +510,31 @@ shifting?</xhtml:div>
         </foreignObject>
         <text
            x="312"
-           y="373"
-           fill="rgb(0, 0, 0)"
+           y="435"
+           fill="#000000"
            font-family="Helvetica"
            font-size="12px"
            text-anchor="middle"
            id="text80"
-           style="-inkscape-font-specification:FreeSans;font-family:FreeSans;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal">Yes</text>
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:FreeSans;-inkscape-font-specification:FreeSans">Yes</text>
       </switch>
     </g>
     <path
-       d="M 234 432 L 234 450 L 234 467.88"
+       d="m 234,498 v 18 17.88"
        fill="none"
-       stroke="rgb(0, 0, 0)"
+       stroke="#000000"
        stroke-miterlimit="10"
        pointer-events="stroke"
        id="path86" />
     <path
-       d="M 234 474.88 L 230.5 467.88 L 237.5 467.88 Z"
-       fill="rgb(0, 0, 0)"
-       stroke="rgb(0, 0, 0)"
+       d="m 234,540.88 -3.5,-7 h 7 z"
+       fill="#000000"
+       stroke="#000000"
        stroke-miterlimit="10"
        pointer-events="all"
        id="path88" />
     <g
-       transform="translate(-0.5 -0.5)"
+       transform="translate(7.856266,80.247357)"
        id="g94">
       <switch
          id="switch92">
@@ -496,82 +557,24 @@ shifting?</xhtml:div>
         <text
            x="211"
            y="432"
-           fill="rgb(0, 0, 0)"
-           font-family="Helvetica"
-           font-size="12px"
-           text-anchor="middle"
-           id="text90"
-           style="-inkscape-font-specification:FreeSans;font-family:FreeSans;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal">No</text>
-      </switch>
-    </g>
-    <path
-       d="M 234 327 L 286.5 379.5 L 234 432 L 181.5 379.5 Z"
-       fill="rgb(255, 255, 255)"
-       stroke="#000000"
-       stroke-miterlimit="10"
-       transform="rotate(90,234,379.5)"
-       pointer-events="all"
-       id="path96" />
-    <g
-       transform="translate(-0.12001071,-7.934)"
-       id="g102">
-      <switch
-         id="switch100">
-        <foreignObject
-           pointer-events="none"
-           width="100%"
-           height="100%"
-           requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
-           style="overflow: visible; text-align: left;">
-          <xhtml:div
-             style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 103px; height: 1px; padding-top: 380px; margin-left: 183px;">
-            <xhtml:div
-               data-drawio-colors="color: rgb(0, 0, 0); "
-               style="box-sizing: border-box; font-size: 0px; text-align: center;">
-              <xhtml:div
-                 style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal;">Environmental<xhtml:br />
-
-stochasticity?</xhtml:div>
-            </xhtml:div>
-          </xhtml:div>
-        </foreignObject>
-        <text
-           x="234"
-           y="383"
            fill="#000000"
            font-family="Helvetica"
            font-size="12px"
            text-anchor="middle"
-           id="text98"
-           style="-inkscape-font-specification:FreeSans;font-family:FreeSans;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal"><tspan
-             sodipodi:role="line"
-             id="tspan21701"
-             x="234"
-             y="383">Environmental</tspan><tspan
-             sodipodi:role="line"
-             id="tspan21703"
-             x="234"
-             y="398">stochasticity?</tspan></text>
+           id="text90"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:FreeSans;-inkscape-font-specification:FreeSans">No</text>
       </switch>
     </g>
     <path
-       d="M 405 265 L 405 306 L 234 306"
+       d="m 396.84179,196.05999 v 47.74949 H 234.01371"
        fill="none"
-       stroke="rgb(0, 0, 0)"
+       stroke="#000000"
        stroke-miterlimit="10"
        pointer-events="stroke"
-       id="path104" />
-    <rect
-       x="355"
-       y="219"
-       width="100"
-       height="50"
-       fill="rgb(255, 255, 255)"
-       stroke="#000000"
-       pointer-events="all"
-       id="rect106" />
+       id="path104"
+       style="stroke-width:1.05308" />
     <g
-       transform="translate(-0.5 -0.5)"
+       transform="translate(-12.5,-58.5)"
        id="g112">
       <switch
          id="switch110">
@@ -591,95 +594,65 @@ stochasticity?</xhtml:div>
             </xhtml:div>
           </xhtml:div>
         </foreignObject>
-        <text
-           x="405"
-           y="248"
-           fill="rgb(0, 0, 0)"
-           font-family="Helvetica"
-           font-size="12px"
-           text-anchor="middle"
-           id="text108"
-           style="-inkscape-font-specification:FreeSans;font-family:FreeSans;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal">Shifting</text>
-      </switch>
-    </g>
-    <rect
-       x="355"
-       y="354.5"
-       width="100"
-       height="50"
-       fill="rgb(255, 255, 255)"
-       stroke="#000000"
-       pointer-events="all"
-       id="rect114" />
-    <g
-       transform="translate(-0.5 -0.5)"
-       id="g120">
-      <switch
-         id="switch118">
-        <foreignObject
-           pointer-events="none"
-           width="100%"
-           height="100%"
-           requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
-           style="overflow: visible; text-align: left;">
-          <xhtml:div
-             style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 98px; height: 1px; padding-top: 380px; margin-left: 356px;">
-            <xhtml:div
-               data-drawio-colors="color: rgb(0, 0, 0); "
-               style="box-sizing: border-box; font-size: 0px; text-align: center;">
-              <xhtml:div
-                 style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal;">
-                <xhtml:span>Environmental</xhtml:span>
-                <xhtml:br />
-                <xhtml:span>stochasticity</xhtml:span>
-              </xhtml:div>
-            </xhtml:div>
-          </xhtml:div>
-        </foreignObject>
-        <text
-           x="405.44"
-           y="375.56601"
-           fill="#000000"
-           font-family="Helvetica"
-           font-size="12px"
-           text-anchor="middle"
-           id="text116"
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:FreeSans;-inkscape-font-specification:FreeSans"><tspan
-             sodipodi:role="line"
-             id="tspan116779"
-             x="405.44"
-             y="375.56601">Environmental</tspan><tspan
-             sodipodi:role="line"
-             x="405.44"
-             y="390.56601"
-             id="tspan116783">stochasticity</tspan></text>
+        <g
+           id="g2">
+          <rect
+             x="354.42911"
+             y="217.42909"
+             width="99.14183"
+             height="37.141827"
+             fill="#ffffff"
+             stroke="#000000"
+             pointer-events="all"
+             id="rect106"
+             style="stroke-width:0.858173" />
+          <text
+             x="405"
+             y="240"
+             fill="#000000"
+             font-family="Helvetica"
+             font-size="12px"
+             text-anchor="middle"
+             id="text108"
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:FreeSans;-inkscape-font-specification:FreeSans">Shifting</text>
+          <text
+             x="404.51859"
+             y="374.11719"
+             fill="#000000"
+             font-family="Helvetica"
+             font-size="12px"
+             text-anchor="middle"
+             id="text108-7"
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:FreeSans;-inkscape-font-specification:FreeSans">Translocation</text>
+        </g>
       </switch>
     </g>
     <path
-       d="M 234 528 L 234 548 L 234 540 L 234 549.88"
+       d="m 234,580 v 20 -8 9.88"
        fill="none"
-       stroke="rgb(0, 0, 0)"
+       stroke="#000000"
        stroke-miterlimit="10"
        pointer-events="stroke"
        id="path122" />
     <path
-       d="M 234 556.88 L 230.5 549.88 L 237.5 549.88 Z"
-       fill="rgb(0, 0, 0)"
-       stroke="rgb(0, 0, 0)"
+       d="m 234,600.88 -3.5,-7 h 7 z"
+       fill="#000000"
+       stroke="#000000"
        stroke-miterlimit="10"
        pointer-events="all"
        id="path124" />
     <rect
-       x="184"
-       y="478"
-       width="100"
-       height="50"
-       fill="rgb(255, 255, 255)"
+       x="183.92908"
+       y="541.92908"
+       width="99.141823"
+       height="37.141827"
+       fill="#ffffff"
        stroke="#000000"
        pointer-events="all"
-       id="rect126" />
+       id="rect126"
+       style="stroke-width:0.858173" />
     <g
-       transform="translate(-0.5 -0.5)"
+       transform="translate(-0.5,57.5)"
        id="g132">
       <switch
          id="switch130">
@@ -697,6 +670,7 @@ stochasticity?</xhtml:div>
               <xhtml:div
                  style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal;">Population<xhtml:br />
 
+
 dynamics</xhtml:div>
             </xhtml:div>
           </xhtml:div>
@@ -709,7 +683,7 @@ dynamics</xhtml:div>
            font-size="12px"
            text-anchor="middle"
            id="text128"
-           style="-inkscape-font-specification:FreeSans;font-family:FreeSans;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal"><tspan
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:FreeSans;-inkscape-font-specification:FreeSans"><tspan
              sodipodi:role="line"
              id="tspan32717"
              x="234.368"
@@ -717,16 +691,17 @@ dynamics</xhtml:div>
              sodipodi:role="line"
              id="tspan32719"
              x="234.368"
-             y="514.06598">dynamics</tspan></text>
+             y="514.06604">dynamics</tspan></text>
       </switch>
     </g>
     <path
-       d="M 234 610 L 234 637 L 234 671.88"
+       d="M 234,640.22755 V 654.03841 671.88"
        fill="none"
-       stroke="rgb(0, 0, 0)"
+       stroke="#000000"
        stroke-miterlimit="10"
        pointer-events="stroke"
-       id="path134" />
+       id="path134"
+       style="stroke-width:0.715202" />
     <path
        d="M 234 678.88 L 230.5 671.88 L 237.5 671.88 Z"
        fill="rgb(0, 0, 0)"
@@ -735,16 +710,17 @@ dynamics</xhtml:div>
        pointer-events="all"
        id="path136" />
     <rect
-       x="184"
-       y="560"
-       width="100"
-       height="50"
-       fill="rgb(255, 255, 255)"
+       x="184.07149"
+       y="602.31104"
+       width="99.141823"
+       height="37.141827"
+       fill="#ffffff"
        stroke="#000000"
        pointer-events="all"
-       id="rect138" />
+       id="rect138"
+       style="stroke-width:0.858173" />
     <g
-       transform="translate(-0.5 -0.5)"
+       transform="translate(-0.3956871,36.688171)"
        id="g144">
       <switch
          id="switch142">
@@ -767,12 +743,12 @@ dynamics</xhtml:div>
         <text
            x="234"
            y="589"
-           fill="rgb(0, 0, 0)"
+           fill="#000000"
            font-family="Helvetica"
            font-size="12px"
            text-anchor="middle"
            id="text140"
-           style="-inkscape-font-specification:FreeSans;font-family:FreeSans;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal">Dispersal</text>
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:FreeSans;-inkscape-font-specification:FreeSans">Dispersal</text>
       </switch>
     </g>
     <path
@@ -804,7 +780,9 @@ dynamics</xhtml:div>
 <xhtml:font
    style="font-size: 10px">(Range, populations, individuals,<xhtml:br />
 
+
 traits, genetic, connectivity matrix,<xhtml:br />
+
 
 SMS paths)</xhtml:font>
 </xhtml:div>
@@ -838,16 +816,17 @@ SMS paths)</xhtml:font>
       </switch>
     </g>
     <path
-       d="M 234 627 L 120 627 L 120 457 L 225.88 457"
+       d="M 234.05081,651.08881 H 119.94965 V 526.28534 H 225.9236"
        fill="none"
-       stroke="rgb(0, 0, 0)"
+       stroke="#000000"
        stroke-miterlimit="10"
        pointer-events="stroke"
-       id="path154" />
+       id="path154"
+       style="stroke-width:0.857198" />
     <path
-       d="M 232.88 457 L 225.88 460.5 L 225.88 453.5 Z"
-       fill="rgb(0, 0, 0)"
-       stroke="rgb(0, 0, 0)"
+       d="m 232.88,527 -7,3.5 v -7 z"
+       fill="#000000"
+       stroke="#000000"
        stroke-miterlimit="10"
        pointer-events="all"
        id="path156" />
@@ -862,7 +841,7 @@ SMS paths)</xhtml:font>
        pointer-events="all"
        id="rect158" />
     <g
-       transform="translate(-0.5 -0.5)rotate(270 108 543)"
+       transform="rotate(-90,131.18924,565.83768)"
        id="g164">
       <switch
          id="switch162">
@@ -893,23 +872,25 @@ SMS paths)</xhtml:font>
            font-size="10px"
            text-anchor="middle"
            id="text160"
-           style="font-size:12px;-inkscape-font-specification:FreeSans;font-family:FreeSans;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal">Reproductive seasons</text>
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:FreeSans;-inkscape-font-specification:FreeSans">Reproductive seasons</text>
       </switch>
     </g>
     <path
-       d="M 234 437 L 405 437 L 405 404.5"
+       d="M 234.04204,514.89235 H 396.85375 V 472.05592"
        fill="none"
-       stroke="rgb(0, 0, 0)"
+       stroke="#000000"
        stroke-miterlimit="10"
        pointer-events="stroke"
-       id="path166" />
+       id="path166"
+       style="stroke-width:1.12024" />
     <path
-       d="M 234 170 L 40 171 L 40 657 L 234 657"
+       d="M 233.97681,117.27271 40.022243,118.4041 V 668.22628 H 233.97681"
        fill="none"
-       stroke="rgb(0, 0, 0)"
+       stroke="#000000"
        stroke-miterlimit="10"
        pointer-events="stroke"
-       id="path168" />
+       id="path168"
+       style="stroke-width:1.06344" />
     <rect
        x="-50"
        y="364.5"
@@ -954,6 +935,165 @@ SMS paths)</xhtml:font>
            id="text172"
            style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:0;font-family:FreeSans;-inkscape-font-specification:FreeSans;writing-mode:lr-tb;direction:rtl">Years</text>
       </switch>
+    </g>
+    <path
+       d="m 234.45454,74.569166 -3.5,-7 h 7 z"
+       fill="#000000"
+       stroke="#000000"
+       stroke-miterlimit="10"
+       pointer-events="all"
+       id="path38-5" />
+    <g
+       id="g3"
+       transform="translate(0,-2)">
+      <path
+         d="M 290.00275,449.04989 234,505.05264 177.99725,449.04989 234,393.04712 Z"
+         fill="#ffffff"
+         stroke="#000000"
+         stroke-miterlimit="10"
+         pointer-events="all"
+         id="path96"
+         style="stroke-width:1.06674" />
+      <g
+         transform="translate(0.48185967,63.542969)"
+         id="g102">
+        <switch
+           id="switch100">
+          <foreignObject
+             pointer-events="none"
+             width="100%"
+             height="100%"
+             requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+             style="overflow: visible; text-align: left;">
+            <xhtml:div
+               style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 103px; height: 1px; padding-top: 380px; margin-left: 183px;">
+              <xhtml:div
+                 data-drawio-colors="color: rgb(0, 0, 0); "
+                 style="box-sizing: border-box; font-size: 0px; text-align: center;">
+                <xhtml:div
+                   style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal;">Environmental<xhtml:br />
+
+
+stochasticity?</xhtml:div>
+              </xhtml:div>
+            </xhtml:div>
+          </foreignObject>
+          <text
+             x="234"
+             y="383"
+             fill="#000000"
+             font-family="Helvetica"
+             font-size="12px"
+             text-anchor="middle"
+             id="text98"
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:FreeSans;-inkscape-font-specification:FreeSans"><tspan
+               sodipodi:role="line"
+               id="tspan21701"
+               x="234"
+               y="383">Environmental</tspan><tspan
+               sodipodi:role="line"
+               id="tspan21703"
+               x="234"
+               y="398">stochasticity?</tspan></text>
+        </switch>
+      </g>
+    </g>
+    <text
+       x="222.18219"
+       y="376.92941"
+       fill="#000000"
+       font-family="Helvetica"
+       font-size="12px"
+       text-anchor="middle"
+       id="text52-4"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:FreeSans;-inkscape-font-specification:FreeSans">No</text>
+    <path
+       d="m 396.83836,329.25426 v 49.01577 H 234.0172"
+       fill="none"
+       stroke="#000000"
+       stroke-miterlimit="10"
+       pointer-events="stroke"
+       id="path104-4"
+       style="stroke-width:1.06694" />
+    <text
+       x="309.91855"
+       y="304.75195"
+       fill="#000000"
+       font-family="Helvetica"
+       font-size="12px"
+       text-anchor="middle"
+       id="text62-8"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:FreeSans;-inkscape-font-specification:FreeSans">Yes</text>
+    <path
+       d="m 341.42911,310.82552 -7,3.5 v -7 z"
+       fill="#000000"
+       stroke="#000000"
+       stroke-miterlimit="10"
+       pointer-events="all"
+       id="path60-7" />
+    <path
+       d="m 234.75,389.61805 -3.5,-7 h 7 z"
+       fill="#000000"
+       stroke="#000000"
+       stroke-miterlimit="10"
+       pointer-events="all"
+       id="path50-2" />
+    <g
+       id="g4"
+       transform="translate(-13.499969,6)">
+      <rect
+         x="355"
+         y="416.5"
+         width="100"
+         height="50"
+         fill="#ffffff"
+         stroke="#000000"
+         pointer-events="all"
+         id="rect114" />
+      <g
+         transform="translate(-0.5,-0.5)"
+         id="g120">
+        <switch
+           id="switch118">
+          <foreignObject
+             pointer-events="none"
+             width="100%"
+             height="100%"
+             requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+             style="overflow: visible; text-align: left;">
+            <xhtml:div
+               style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 98px; height: 1px; padding-top: 380px; margin-left: 356px;">
+              <xhtml:div
+                 data-drawio-colors="color: rgb(0, 0, 0); "
+                 style="box-sizing: border-box; font-size: 0px; text-align: center;">
+                <xhtml:div
+                   style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal;">
+                  <xhtml:span>Environmental</xhtml:span>
+                  <xhtml:br />
+                  <xhtml:span>stochasticity</xhtml:span>
+                </xhtml:div>
+              </xhtml:div>
+            </xhtml:div>
+          </foreignObject>
+          <text
+             x="405.44"
+             y="437.56601"
+             fill="#000000"
+             font-family="Helvetica"
+             font-size="12px"
+             text-anchor="middle"
+             id="text116"
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:FreeSans;-inkscape-font-specification:FreeSans"><tspan
+               sodipodi:role="line"
+               id="tspan116779"
+               x="405.44"
+               y="437.56601">Environmental</tspan><tspan
+               sodipodi:role="line"
+               x="405.44"
+               y="452.56601"
+               id="tspan116783">stochasticity</tspan></text>
+        </switch>
+      </g>
     </g>
   </g>
   <switch

@@ -786,7 +786,7 @@ Management <- data.frame(
     # Translocation
     as.character(s@management@Translocation@catching_rate),
     Translocation_years,
-    Translocation_matrix, "", ""
+    Translocation_matrix, "", "", ""
   )
 )
 
