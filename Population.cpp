@@ -844,6 +844,9 @@ void Population::sampleIndsWithoutReplacement(string strNbToSample, const set<in
 			std::copy(tempSampledInds.begin(), tempSampledInds.end(), std::inserter(sampledInds, sampledInds.end()));
 			assert(sampledInds.size() == nbToSample);
 		}
+#if RSDEBUG
+		assert(sampledInds.size() <= inds.size());
+#endif
 	}
 }
 
