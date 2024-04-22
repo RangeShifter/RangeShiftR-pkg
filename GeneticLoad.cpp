@@ -336,23 +336,26 @@ void GeneticLoad::inheritHaploid(const bool& fromMother, map<int, vector<shared_
 float GeneticLoad::express() {
 
 	float phenotype = 1.0;
+	float sA, sB, hA, hB, sumDomCoeffs, hLocus;
 
 	for (auto const& [locus, pAllelePair] : genes)
 	{
+		shared_ptr<Allele> pAlleleA  = pAllelePair[0] == 0 ? wildType : pAllelePair[0];
+		shared_ptr<Allele> pAlleleB = pAllelePair[1] == 0 ? wildType : pAllelePair[1];
 
-		// If not initialised yet, initialise now?
-		shared_ptr<Allele> pAlleleLeft  = pAllelePair[0] == 0 ? wildType : pAllelePair[0];
-		shared_ptr<Allele> pAlleleRight = pAllelePair[1] == 0 ? wildType : pAllelePair[1];
-
-		if (pAlleleLeft.get()->getId() != pAlleleRight.get()->getId()) // heterozygote
-		{
-			phenotype *= 1 + pAlleleLeft->getAlleleValue()  * pAlleleLeft->getDominanceCoef();
-			phenotype *= 1 + pAlleleRight->getAlleleValue() * pAlleleRight->getDominanceCoef();
+		sA = pAlleleA->getAlleleValue();
+		hA = pAlleleA->getDominanceCoef();
+		if (pSpeciesTrait->getPloidy() == 2) {
+			sB = pAlleleB->getAlleleValue();
+			hB = pAlleleB->getDominanceCoef();
 		}
-		else { // homozygote
-			phenotype *= 1 + pAlleleLeft->getAlleleValue();
-			phenotype *= 1 + pAlleleRight->getAlleleValue();
+		else {
+			sB = 0.0;
+			hB = 0.0;
 		}
+		sumDomCoeffs = hA + hB;
+		hLocus = sumDomCoeffs == 0.0 ? 0.0 : hA / sumDomCoeffs;
+		phenotype *= 1 - hLocus * sA - (1 - hLocus) * sB;
 	}
 	return phenotype;
 }
