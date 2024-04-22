@@ -1302,33 +1302,36 @@ int Landscape::readLandChange(int filenum, bool costs)
 				if (p == pchnodata) Rcpp::Rcout << "Found patch NA in valid habitat cell." << std::endl;
 				else Rcpp::Rcout << "Found negative patch ID in valid habitat cell." << std::endl;
 #endif
-							hfile.close(); hfile.clear();
-							pfile.close(); pfile.clear();
-							return 34;
-						}
-						else {
-							patchChgMatrix[y][x][2] = p;
-							if (p > 0 && !existsPatch(p)) {
-								addPatchNum(p);
-								newPatch(pchseq++, p);
-							}
-						}
-					}
-					if (costs) {
-						if (c < 1) { // invalid cost
-							hfile.close(); hfile.clear();
-							if (pfile.is_open()) {
-								pfile.close(); pfile.clear();
-							}
-							return 38;
-						}
-						else {
-							costsChgMatrix[y][x][2] = c;
-						}
-					}
+				hfile.close(); hfile.clear();
+				pfile.close(); pfile.clear();
+				return 34;
+			}
+			else {
+				patchChgMatrix[y][x][2] = p;
+				if (p > 0 && !existsPatch(p)) {
+					addPatchNum(p);
+					newPatch(pchseq++, p);
 				}
 			}
 		}
+		if (costs) {
+			if (c < 1) { // invalid cost
+#if RS_RCPP
+			    Rcpp::Rcout << "Found invalid cost value of " << c << " in cell x " << x << " and y  " << y << std::endl;
+#endif
+				hfile.close(); hfile.clear();
+				if (pfile.is_open()) {
+					pfile.close(); pfile.clear();
+				}
+				return 38;
+			}
+			else {
+				costsChgMatrix[y][x][2] = c;
+			}
+		}
+	}
+			} // for x
+		} // for y
 #if RS_RCPP
 		hfile >> hfloat;
 		if (!hfile.eof()) EOFerrorR("habitatchgfile");
@@ -1440,33 +1443,36 @@ int Landscape::readLandChange(int filenum, bool costs)
 					if (p == pchnodata) Rcpp::Rcout << "Found patch NA in valid habitat cell." << std::endl;
 					else Rcpp::Rcout << "Found negative patch ID in valid habitat cell." << std::endl;
 #endif
-							hfile.close(); hfile.clear();
-							pfile.close(); pfile.clear();
-							return 34;
-						}
-						else {
-							patchChgMatrix[y][x][2] = p;
-							if (p > 0 && !existsPatch(p)) {
-								addPatchNum(p);
-								newPatch(pchseq++, p);
-							}
-						}
-					}
-					if (costs) {
-						if (c < 1) { // invalid cost
-							hfile.close(); hfile.clear();
-							if (pfile.is_open()) {
-								pfile.close(); pfile.clear();
-							}
-							return 38;
-						}
-						else {
-							costsChgMatrix[y][x][2] = c;
-						}
+					hfile.close(); hfile.clear();
+					pfile.close(); pfile.clear();
+					return 34;
+				}
+				else {
+					patchChgMatrix[y][x][2] = p;
+					if (p > 0 && !existsPatch(p)) {
+						addPatchNum(p);
+						newPatch(pchseq++, p);
 					}
 				}
 			}
+			if (costs) {
+				if (c < 1) { // invalid cost
+#if RS_RCPP
+				    Rcpp::Rcout << "Found invalid cost value of " << c << "in cell x " << x << " and y  " << y << std::endl;
+#endif
+					hfile.close(); hfile.clear();
+					if (pfile.is_open()) {
+						pfile.close(); pfile.clear();
+					}
+					return 38;
+				}
+				else {
+					costsChgMatrix[y][x][2] = c;
+				}
+			}
 		}
+			} // end x
+		} // end y
 #if RS_RCPP
 		hfile >> hfloat;
 		if (!hfile.eof()) EOFerrorR("habitatchgfile");
@@ -1694,9 +1700,7 @@ bool Landscape::inInitialDist(Species* pSpecies, locn loc) {
 }
 
 void Landscape::deleteDistribution(Species* pSpecies) {
-	// WILL NEED TO SELECT DISTRIBUTION FOR CORRECT SPECIES ...
-	// ... CURRENTLY IT IS THE ONLY ONE
-	if (distns[0] != 0) delete distns[0];
+	if (distns[0] != 0) delete distns[0]; distns.clear();
 }
 
 // Return no. of initial distributions
@@ -2327,14 +2331,18 @@ int Landscape::readCosts(string fname)
 #else
 	if (header != "ncols" && header != "NCOLS") {
 #endif
-		//	MessageDlg("The selected file is not a raster.",
-		//	MessageDlg("Header problem in import_CostsLand()",
-		//				mtError, TMsgDlgButtons() << mbRetry,0);
-		costs.close(); costs.clear();
-		return -1;
-	}
-	costs >> maxXcost >> header >> maxYcost >> header >> minLongCost;
-	costs >> header >> minLatCost >> header >> resolCost >> header >> NODATACost;
+
+//	MessageDlg("The selected file is not a raster.",
+//	MessageDlg("Header problem in import_CostsLand()",
+//				mtError, TMsgDlgButtons() << mbRetry,0);
+	costs.close(); costs.clear();
+	return -1;
+}
+double tmpresolCost;
+costs >> maxXcost >> header >> maxYcost >> header >> minLongCost;
+costs >> header >> minLatCost >> header >> tmpresolCost >> header >> NODATACost;
+resolCost = (int) tmpresolCost;
+
 
 	for (int y = maxYcost - 1; y > -1; y--) {
 		for (int x = 0; x < maxXcost; x++) {
@@ -2359,17 +2367,25 @@ int Landscape::readCosts(string fname)
 #endif
 			if (hc < 1 && hc != NODATACost) {
 #if RS_RCPP && !R_CMD
-		Rcpp::Rcout << "Cost map my only contain values of 1 or higher, but found " << fcost << "." << endl;
+		Rcpp::Rcout << "Cost map may only contain values of 1 or higher, but found " << fcost << "." << endl;
 #endif
-			// error - zero / negative cost not allowed
-				costs.close(); costs.clear();
-				return -999;
-			}
-			pCell = findCell(x, y);
-			if (pCell != 0) { // not no-data cell
-				pCell->setCost(hc);
-				if (hc > maxcost) maxcost = hc;
-			}
+		// error - zero / negative cost not allowed
+		costs.close(); costs.clear();
+		return -999;
+	}
+	pCell = findCell(x, y);
+	if (pCell != 0) { // not no-data cell
+	    if (hc > 0){ // only if cost value is  above 0 in a data cell
+	        pCell->setCost(hc);
+		    if (hc > maxcost) maxcost = hc;
+	    } else { // if cost value is below 0
+#if RS_RCPP && !R_CMD
+	    Rcpp::Rcout << "Cost map may only contain values of 1 or higher in habitat cells, but found " << hc << " in cell x: " << x << " y: " << y << "." << endl;
+#endif
+		throw runtime_error("Found negative- or zero-cost habitat cell.");
+	    }
+
+	} // end not no data cell
 		}
 	}
 #if RS_RCPP

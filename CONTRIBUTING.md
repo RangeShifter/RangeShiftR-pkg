@@ -17,7 +17,7 @@ RangeShifter is distributed with three user interfaces, each living in their own
 
 All three share the same source code for the core simulation (i.e., the actual model), which lives in this repo (RScore). Each of the interfaces keeps a copy of this core code in a subfolder called RScore, kept in sync with the RScore repo via a git subtree (see Git subtree usage section). 
 
-âš ï¸ If you wish to propose a change to one of the interfaces, please do so in the corresponding repo: [RangeShifter batch mode](https://github.com/RangeShifter/RangeShifter_batch_dev), [RangeShiftR package](https://github.com/RangeShifter/RangeShiftR-package-dev).
+⚠ If you wish to propose a change to one of the interfaces, please do so in the corresponding repo: [RangeShifter batch mode](https://github.com/RangeShifter/RangeShifter_batch_dev), [RangeShiftR package](https://github.com/RangeShifter/RangeShiftR-package-dev).
 
 *The RangeShifter GUI is currently being rewritten, and is not open source yet.
 
@@ -43,7 +43,7 @@ Anyone who whishes to make changes to RangeShifter's code, including regular dev
 <<<<<<<< HEAD:src/RScore/CONTRIBUTING.md
 ![](branches.png)
 
-*Check out the [Git cheatsheet](https://github.com/RangeShifter/RScore/git_cheatsheet.md) for a reminder on the main git commands*
+*Check out the [Git cheatsheet](https://github.com/RangeShifter/RScore/blob/main/git_cheatsheet.md) for a reminder on the main git commands*
 
 ========
 >>>>>>>> develop:CONTRIBUTING.md

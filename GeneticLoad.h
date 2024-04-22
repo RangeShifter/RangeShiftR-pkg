@@ -21,7 +21,9 @@ private:
 
     inline static shared_ptr<Allele> wildType = make_shared<Allele>(0.0, 0.0);
 
+   // void (AdaptiveTrait::* _mutate_func_ptr) (void);
     void (GeneticLoad::* _inherit_func_ptr) (const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
+    //float (AdaptiveTrait::* _express_func_ptr) (void);
 
     void initialise();
 

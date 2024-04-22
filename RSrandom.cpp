@@ -24,7 +24,7 @@
 
  //--------------- 2.) New version of RSrandom.cpp
 
-#if !RS_RCPP 
+#if !RS_RCPP
 
 #if RSDEBUG
 #include "Parameters.h"
@@ -98,6 +98,8 @@ float RSrandom::FRandom(float min, float max) {
 }
 
 int RSrandom::Bernoulli(double p) {
+	if (p < 0) throw runtime_error("Bernoulli's p cannot be negative.\n");
+	if (p > 1) throw runtime_error("Bernoulli's p cannot be above 1.\n");
     return Random() < p;
 }
 
@@ -132,7 +134,7 @@ void RSrandom::fixNewSeed(int seed) {
 //--------------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------------
 
-#else // if RS_RCPP 
+#else // if RS_RCPP
 
 //--------------- 3.) R package version of RSrandom.cpp
 
@@ -305,11 +307,11 @@ double RSrandom::Cauchy(double loc, double scale) {
 #endif // RS_RCPP
 
 
-#if RSDEBUG
+#if RSDEBUG && !RS_RCPP
 	void testRSrandom() {
 
 		{
-			// Bernoulli distribution 
+			// Bernoulli distribution
 			// Abuse cases
 			assert_error("Bernoulli's p cannot be negative.\n", []{
 				RSrandom rsr;

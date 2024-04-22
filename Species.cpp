@@ -80,11 +80,10 @@ Species::Species(void)
 	fullKernel = false;
 	// initialise settlement parameters
 	stgDepSett = false; sexDepSett = false; indVarSett = false;
-	minSteps = 0; maxSteps = 99999999;
 	for (int i = 0; i < maxNbStages; i++) {
 		for (int j = 0; j < maxNbSexes; j++) {
 			densDepSett[i][j] = false; wait[i][j] = false; go2nbrLocn[i][j] = false; findMate[i][j] = false;
-			maxStepsYr[i][j] = 99999999;
+			maxStepsYr[i][j] = 99999999; 	minSteps[i][j] = 0; maxSteps[i][j] = 99999999;
 			s0[i][j] = 1.0; alphaS[i][j] = 0.0; betaS[i][j] = 1.0;
 		}
 	}
@@ -720,24 +719,28 @@ settleRules Species::getSettRules(short stg, short sex) {
 }
 
 void Species::setSteps(const short stg, const short sex, const settleSteps s) {
-	if (stg == 0 && sex == 0) {
-		if (s.minSteps >= 0) minSteps = s.minSteps;
-		else minSteps = 0;
-		if (s.maxSteps >= 1) maxSteps = s.maxSteps;
-		else maxSteps = 99999999;
-	}
 	if (stg >= 0 && stg < maxNbStages && sex >= 0 && sex < maxNbSexes) {
 		if (s.maxStepsYr >= 1) maxStepsYr[stg][sex] = s.maxStepsYr;
 		else maxStepsYr[stg][sex] = 99999999;
+		if (s.minSteps >= 0) minSteps[stg][sex] = s.minSteps;
+		else minSteps[stg][sex] = 0;
+		if (s.maxSteps >= 1) maxSteps[stg][sex] = s.maxSteps;
+		else maxSteps[stg][sex] = 99999999;
 	}
 }
 
 settleSteps Species::getSteps(short stg, short sex) {
 	settleSteps s;
-	s.minSteps = minSteps;
-	s.maxSteps = maxSteps;
-	if (stg >= 0 && stg < maxNbStages && sex >= 0 && sex < maxNbSexes) s.maxStepsYr = maxStepsYr[stg][sex];
-	else s.maxStepsYr = 99999999;
+	if (stg >= 0 && stg < maxNbStages && sex >= 0 && sex < maxNbSexes) {
+	    s.maxStepsYr = maxStepsYr[stg][sex];
+	    s.minSteps = minSteps[stg][sex];
+	    s.maxSteps = maxSteps[stg][sex];
+	}
+	else {
+	    s.maxStepsYr = 99999999;
+	    s.minSteps = 0;
+	    s.maxSteps = 99999999;
+	}
 	return s;
 }
 
