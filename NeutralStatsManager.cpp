@@ -186,7 +186,7 @@ void NeutralStatsManager::calculateHo(set<int> const& patchList, const int nbInd
 	int nbHetero = 0;
 	int nLoci = nbInds * nbrLoci;
 
-	if (nLoci != 0) {
+	if (nLoci != 0 && pSpecies->isDiploid()) {
 		for (int patchId : patchList) {
 			const auto patch = pLandscape->findPatch(patchId);
 			const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
@@ -260,14 +260,16 @@ void NeutralStatsManager::calculateHo2(set<int> const& patchList, const int nbIn
 
 	vector<double> hetero(nbrLoci, 0);
 
-	for (int patchId : patchList) {
-		const auto patch = pLandscape->findPatch(patchId);
-		const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
-		if (pPop != 0) {
-			if (pPop->sampleSize() > 0) {
-				const vector<double> heteroPatch = pPop->countLociHeterozyotes();
-				transform(hetero.begin(), hetero.end(), heteroPatch.begin(),
-					hetero.begin(), plus<double>());
+	if (pSpecies->isDiploid()) {
+		for (int patchId : patchList) {
+			const auto patch = pLandscape->findPatch(patchId);
+			const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
+			if (pPop != 0) {
+				if (pPop->sampleSize() > 0) {
+					const vector<double> heteroPatch = pPop->countLociHeterozyotes();
+					transform(hetero.begin(), hetero.end(), heteroPatch.begin(),
+						hetero.begin(), plus<double>());
+				}
 			}
 		}
 	}

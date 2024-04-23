@@ -255,13 +255,10 @@ void SNPTrait::initialiseUniform(int maxAlleleVal)
 
 
 bool SNPTrait::isHeterozygoteAtLocus(int locus) const {
-
+	// assumes diploidy
 	auto it = genes.find(locus);
-
-	if (it == genes.end()) //not found
-		return false;
-	else
-		return(it->second[0] != it->second[1]);
+	if (it == genes.end()) throw runtime_error("SNP gene queried for heterozygosity does not exist.");
+	else return(it->second[0] != it->second[1]);
 }
 
 // ----------------------------------------------------------------------------------------
@@ -269,10 +266,10 @@ bool SNPTrait::isHeterozygoteAtLocus(int locus) const {
 // ----------------------------------------------------------------------------------------
 
 int SNPTrait::countHeterozygoteLoci() const {
-
+	// assumes diploidy
 	int count = 0;
 	for (auto const& [locus, allelePair] : genes) {
-			count += (allelePair[0] != allelePair[1]);
+		count += (allelePair[0] != allelePair[1]);
 	}
 	return count;
 }

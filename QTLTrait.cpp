@@ -357,16 +357,12 @@ float QTLTrait::expressAverage() {
 // ----------------------------------------------------------------------------------------
 
 bool QTLTrait::isHeterozygoteAtLocus(int locus) const {
-
+	// assumes diploidy
 	auto it = genes.find(locus);
-
 	if (it == genes.end()) //not found
-		return false;
+		throw runtime_error("QTL gene queried for heterozygosity does not exist.");
 	else {
-		if (it->second.size() == 1) //only one ptr there so must be allele and wildtype at loci (heterozygote)
-			return true;
-		else
-			return(it->second[0].get()->getId() != it->second[1].get()->getId());
+		return(it->second[0].get()->getId() != it->second[1].get()->getId());
 	}
 }
 
@@ -375,13 +371,10 @@ bool QTLTrait::isHeterozygoteAtLocus(int locus) const {
 // ----------------------------------------------------------------------------------------
 
 int QTLTrait::countHeterozygoteLoci() const {
+	// assumes diploidy
 
 	int count = 0;
 	for (auto const& [locus, allelePair] : genes) {
-
-		if (allelePair.size() == 1) //only one ptr there so must be allele and wildtype at loci (heterozygote)
-			count++;
-
 		if (allelePair.size() == 2)
 			count += (allelePair[0].get()->getId() != allelePair[1].get()->getId());
 	}

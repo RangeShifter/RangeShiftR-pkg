@@ -399,9 +399,11 @@ int Population::getHeteroTally(int thisLocus, int whichAllele) {
 
 int Population::countHeterozygoteLoci() {
 	int nbHetero = 0;
-	for (Individual* ind : sampledInds) {
-		const auto trait = ind->getTrait(SNP);
-		nbHetero += trait->countHeterozygoteLoci();
+	if (pSpecies->isDiploid()) {
+		for (Individual* ind : sampledInds) {
+			const auto trait = ind->getTrait(SNP);
+			nbHetero += trait->countHeterozygoteLoci();
+		}
 	}
 	return nbHetero;
 }
@@ -414,12 +416,14 @@ vector<double> Population::countLociHeterozyotes() {
 	const auto& positions = pSpecies->getSpTrait(SNP)->getGenePositions();
 	vector<double> hetero(positions.size(), 0);
 
-	for (Individual* ind : sampledInds) {
-		const auto trait = ind->getTrait(SNP);
-		int counter = 0;
-		for (auto position : positions) {
-			hetero[counter] += trait->isHeterozygoteAtLocus(position);
-			counter++;
+	if (pSpecies->isDiploid()) {
+		for (Individual* ind : sampledInds) {
+			const auto trait = ind->getTrait(SNP);
+			int counter = 0;
+			for (auto position : positions) {
+				hetero[counter] += trait->isHeterozygoteAtLocus(position);
+				counter++;
+			}
 		}
 	}
 	return hetero;

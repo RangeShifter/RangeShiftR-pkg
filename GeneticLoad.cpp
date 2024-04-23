@@ -312,7 +312,7 @@ void GeneticLoad::inheritDiploid(const bool& fromMother, map<int, vector<shared_
 			if (it == genes.end()) {
 				// locus does not exist yet, initiate it
 				if (!fromMother) throw runtime_error("Father-inherited locus does not exist.");
-				vector<shared_ptr<Allele>> newAllelePair(2);
+				vector<shared_ptr<Allele>> newAllelePair(2); // always diploid
 				newAllelePair[sex_t::FEM] = allele;
 				genes.insert(make_pair(locus, newAllelePair));
 			} 
@@ -361,11 +361,11 @@ float GeneticLoad::express() {
 // check if particular locus is heterozygote
 // ----------------------------------------------------------------------------------------
 bool GeneticLoad::isHeterozygoteAtLocus(int locus) const {
-
+	// assumes diploidy
 	auto it = genes.find(locus);
 
-	if (it == genes.end()) //not found so must be wildtype homozygous
-		return false;
+	if (it == genes.end())
+		throw runtime_error("Genetic load gene queried for heterozygosity does not exist.");
 	else {
 		shared_ptr<Allele> alleleRight = it->second[0] == 0 ? wildType : it->second[0];
 		shared_ptr<Allele> alleleLeft = it->second[1] == 0 ? wildType : it->second[1];
@@ -377,7 +377,7 @@ bool GeneticLoad::isHeterozygoteAtLocus(int locus) const {
 // count heterozygote loci in genome 
 // ----------------------------------------------------------------------------------------
 int GeneticLoad::countHeterozygoteLoci() const {
-
+	// assumes diploidy
 	int count = 0;
 	for (auto const& [locus, allelePair] : genes) {
 		shared_ptr<Allele> alleleLeft = allelePair[0] == 0 ? wildType : allelePair[0];
