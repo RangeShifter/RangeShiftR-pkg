@@ -169,7 +169,7 @@ void Individual::inherit(Species* pSpecies, const Individual* mother, const Indi
 	{
 		const auto motherTrait = mother->getTrait(trait);
 		const auto fatherTrait = father->getTrait(trait);
-		auto newTrait = motherTrait->clone(); // shallow copy, pointer to proto trait initialised and empty sequence
+		auto newTrait = motherTrait->clone(); // shallow copy, pointer to species trait initialised and empty sequence
 
 		newTrait->inherit(true, motherTrait, maternalRecomPositions, maternalStartingChromosome);
 		if (newTrait->isInherited()) {
@@ -195,8 +195,7 @@ void Individual::inherit(Species* pSpecies, const Individual* mother) {
 	for (auto const& trait : mumTraits)
 	{
 		const auto motherTrait = mother->getTrait(trait);
-
-		auto newTrait = motherTrait->clone(); //shallow copy, pointer to proto trait initialised and empty sequence
+		auto newTrait = motherTrait->clone(); // shallow copy, pointer to species trait initialised and empty sequence
 
 		newTrait->inherit(true, motherTrait, recomPositions, startingChromosome);
 		if (newTrait->isInherited()) {

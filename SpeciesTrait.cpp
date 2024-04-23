@@ -1,7 +1,7 @@
 
 #include "SpeciesTrait.h"
 
-//could be handled in header file but here for now for flexibility
+// Species trait constructor
 SpeciesTrait::SpeciesTrait(
 	const TraitType& traitType, const sex_t& sx, 
 	const set<int>& pos, const ExpressionType& expr,
@@ -22,5 +22,6 @@ SpeciesTrait::SpeciesTrait(
 	mutationParameters{mutationParams},
 	mutationRate{mutRate}
 {
-	if (ploidy == 0) this->ploidy = pSpecies->isDiploid() ? 2 : 1;
+	// Initialise ploidy only once per species
+	if (ploidy == NULL) this->ploidy = pSpecies->isDiploid() ? 2 : 1;
 }

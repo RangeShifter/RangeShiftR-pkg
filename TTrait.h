@@ -11,14 +11,12 @@
 
 using namespace std;
 
+// Base interface for all genetic traits
 class TTrait {
 public:
-    /** Mutation procedure, perform mutations on the genes sequence. **/
     virtual void mutate() = 0;
-
     virtual unique_ptr<TTrait> clone() const = 0; //copies parameters (if not static) not gene seqeunces
     virtual void inherit(const bool&, TTrait*, set<unsigned int> const& , int ) = 0;
-
     virtual int getNLoci() const = 0;
     virtual float getMutationRate() const = 0;
     virtual bool isInherited() const = 0;

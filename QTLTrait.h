@@ -10,14 +10,46 @@
 
 using namespace std;
 
-
+// Quantitative-trait-loci (QTL) trait
+// 
+// That is, all dispersal traits in RangeShifter,
+// which individual phenotype is determined by small contributions 
+// from (potentially) many quantitative loci
 class QTLTrait : public TTrait {
+
+public:
+	
+	// Species-level constructor, initialise
+	QTLTrait(SpeciesTrait* P);
+
+	// Individual-level constructor, called when new individual is created
+	QTLTrait(const QTLTrait& T);
+	
+	virtual ~QTLTrait() { }
+
+	virtual unique_ptr<TTrait> clone() const override { return std::make_unique<QTLTrait>(*this); }
+	
+	// Getters
+	int getNLoci()  const override { return pSpeciesTrait->getPositionsSize(); }
+	float getMutationRate() const override { return pSpeciesTrait->getMutationRate(); }
+	bool isInherited() const override { return pSpeciesTrait->isInherited(); }
+	
+	map<int, vector<shared_ptr<Allele>>>& getGenes() { return genes; } // returning reference, receiver must be const
+	
+	void mutate() override { (this->*_mutate_func_ptr) (); }
+	float express() override { return (this->*_express_func_ptr) (); }
+	void inherit(const bool& fromMother, TTrait* parent, set<unsigned int> const& recomPositions, int startingChromosome) override;
+
+	float getAlleleValueAtLocus(short chromosome, int i) const override;
+	int countHeterozygoteLoci() const;
+	bool isHeterozygoteAtLocus(int locus) const override;
 
 private:
 
-	const double QTLDominanceFactor = 1.0; // that is, no dominance
+	const double QTLDominanceFactor = 1.0; // no dominance for QTL traits (yet?)
 
-	SpeciesTrait* pSpeciesTrait; // would be better as const so immutable, but means passing positions list is heavy and can't be passed by reference
+	// Species-level trait attributes, invariant across individuals
+	SpeciesTrait* pSpeciesTrait; 
 
 	map<int, vector<shared_ptr<Allele>>> genes; // position <strand A , strand B>>
 
@@ -34,25 +66,6 @@ private:
 	void mutateNormal();
 	float expressAverage();
 	float expressAdditive();
-
-public:
-
-	//this one for species held trait table, e.g. prototype table, sets static members
-	QTLTrait(SpeciesTrait* P);
-	QTLTrait(const QTLTrait& T);
-	virtual unique_ptr<TTrait> clone() const override { return std::make_unique<QTLTrait>(*this); }
-	int getNLoci()  const override { return pSpeciesTrait->getPositionsSize(); }
-	float getMutationRate() const override { return pSpeciesTrait->getMutationRate(); }
-	bool isInherited() const override { return pSpeciesTrait->isInherited(); }
-	void mutate() override { (this->*_mutate_func_ptr) (); }
-	float express() override { return (this->*_express_func_ptr) (); }
-	void inherit(const bool& fromMother, TTrait* parent, set<unsigned int> const& recomPositions, int startingChromosome) override;
-	map<int, vector<shared_ptr<Allele>>>& getGenes() { return genes; } // returning reference, receiver must be const
-
-	float getAlleleValueAtLocus(short chromosome, int i) const override;
-	int countHeterozygoteLoci() const;
-	bool isHeterozygoteAtLocus(int locus) const override;
-	virtual ~QTLTrait() { }
 };
 
 #endif

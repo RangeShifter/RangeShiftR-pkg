@@ -1,9 +1,9 @@
 #include "QTLTrait.h"
 
 // ----------------------------------------------------------------------------------------
-// for initialising population
+//  Species-level constructor
+//  Sets members and functions that are invariant across individuals
 // ----------------------------------------------------------------------------------------
-
 QTLTrait::QTLTrait(SpeciesTrait* P)
 {
 	pSpeciesTrait = P;
@@ -17,15 +17,14 @@ QTLTrait::QTLTrait(SpeciesTrait* P)
 		DistributionType mutationDistribution = pSpeciesTrait->getMutationDistribution();
 		map<GenParamType, float> mutationParameters = pSpeciesTrait->getMutationParameters();
 
+		// Set mutation parameters
 		switch (mutationDistribution) {
 		case UNIFORM:
 		{
 			if (mutationParameters.count(MAX) != 1)
 				cout << endl << ("Error:: mutation uniform qtl distribution parameter must contain max value (e.g. max= ) \n");
-
 			if (mutationParameters.count(MIN) != 1)
 				cout << endl << ("Error:: mutation uniform qtl distribution parameter must contain min value (e.g. min= ) \n");
-
 			_mutate_func_ptr = &QTLTrait::mutateUniform;
 			break;
 		}
@@ -33,14 +32,11 @@ QTLTrait::QTLTrait(SpeciesTrait* P)
 		{
 			if (mutationParameters.count(MEAN) != 1)
 				cout << endl << ("Error:: qtl mutation distribution set to normal so parameters must contain mean value (e.g. mean= ) \n");
-
 			if (mutationParameters.count(SD) != 1)
 				cout << endl << ("Error::qtl mutation distribution set to normal so parameters must contain sdev value (e.g. sdev= ) \n");
-
 			_mutate_func_ptr = &QTLTrait::mutateNormal;
 			break;
 		}
-
 		default:
 		{
 			cout << endl << ("Error:: wrong parameter value for qtl mutation model, must be uniform/normal \n"); //unless want to add gamma or negative exp 
@@ -49,21 +45,18 @@ QTLTrait::QTLTrait(SpeciesTrait* P)
 		}
 	}
 
+	// Set initialisation parameters
 	DistributionType initialDistribution = pSpeciesTrait->getInitialDistribution();
 	map<GenParamType, float> initialParameters = pSpeciesTrait->getInitialParameters();
-
 	switch (initialDistribution) {
 	case UNIFORM:
 	{
 		if (initialParameters.count(MAX) != 1)
 			cout << endl << ("Error:: initial uniform qtl distribution parameter must contain max value (e.g. max= ) \n");
-
 		if (initialParameters.count(MIN) != 1)
 			cout << endl << ("Error:: initial uniform qtl distribution parameter must contain min value (e.g. min= ) \n");
-
 		float maxD = initialParameters.find(MAX)->second;
 		float minD = initialParameters.find(MIN)->second;
-
 		initialiseUniform(minD, maxD);
 		break;
 	}
@@ -71,17 +64,13 @@ QTLTrait::QTLTrait(SpeciesTrait* P)
 	{
 		if (initialParameters.count(MEAN) != 1)
 			cout << endl << ("Error:: initial normal qtl distribution parameter must contain mean value (e.g. mean= ) \n");
-
 		if (initialParameters.count(SD) != 1)
 			cout << endl << ("Error:: initial normal qtl distribution parameter must contain sdev value (e.g. sdev= ) \n");
-
 		float mean = initialParameters.find(MEAN)->second;
 		float sd = initialParameters.find(SD)->second;
-
 		initialiseNormal(mean, sd);
 		break;
 	}
-
 	default:
 	{
 		cout << endl << ("wrong parameter value for parameter \"initialisation of qtl\", must be uniform/normal \n");
@@ -89,6 +78,7 @@ QTLTrait::QTLTrait(SpeciesTrait* P)
 	}
 	}
 
+	// Set expression mode parameters
 	switch (expressionType) {
 	case AVERAGE:
 	{
@@ -109,7 +99,8 @@ QTLTrait::QTLTrait(SpeciesTrait* P)
 }
 
 // ----------------------------------------------------------------------------------------
-// for creating new individuals
+// Individual-level constructor
+// Copies members from a species-level reference
 // ----------------------------------------------------------------------------------------
 
 QTLTrait::QTLTrait(const QTLTrait& T) : pSpeciesTrait(T.pSpeciesTrait), _mutate_func_ptr(T._mutate_func_ptr), _inherit_func_ptr(T._inherit_func_ptr), _express_func_ptr(T._express_func_ptr)

@@ -8,6 +8,7 @@
 #include "QTLTrait.h"
 #include "GeneticLoad.h"
 
+// Create handled pointers to a new trait
 class TraitFactory
 {
 public:

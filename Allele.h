@@ -5,7 +5,7 @@ class Allele {
 	const int id;
 	const float value;
 	const float dominance;
-	inline static int counter = 0;
+	inline static int counter = 0; // track nb alleles to set unique ID for each allele
 public:
 	Allele(float alleleValue, float alleleDominance) : value(alleleValue), dominance(alleleDominance), id(counter) { ++counter; }
 	~Allele() {}
