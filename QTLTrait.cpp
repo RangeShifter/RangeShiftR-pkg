@@ -1,15 +1,17 @@
 #include "QTLTrait.h"
 
 // ----------------------------------------------------------------------------------------
-//  Species-level constructor
-//  Sets members and functions that are invariant across individuals
+//  Initialisation constructor
+//  Called when initialising community
+//  Sets up initial values, and immutable attributes (distributions and parameters)
+//	that are defined at the species-level
 // ----------------------------------------------------------------------------------------
 QTLTrait::QTLTrait(SpeciesTrait* P)
 {
 	pSpeciesTrait = P;
 	ExpressionType expressionType = pSpeciesTrait->getExpressionType();
 
-	if (!pSpeciesTrait->isInherited()) //there is a trait for individual variation but this isn't inherited variation it's sampled from initial distribution 
+	if (!pSpeciesTrait->isInherited()) // there is a trait for individual variation but this isn't inherited variation it's sampled from initial distribution 
 		_inherit_func_ptr = &QTLTrait::reInitialiseGenes;
 	else {
 		_inherit_func_ptr = (pSpeciesTrait->getPloidy() == 1) ? &QTLTrait::inheritHaploid : &QTLTrait::inheritDiploid; //this could be changed if we wanted some alternative form of inheritance
@@ -22,25 +24,25 @@ QTLTrait::QTLTrait(SpeciesTrait* P)
 		case UNIFORM:
 		{
 			if (mutationParameters.count(MAX) != 1)
-				cout << endl << ("Error:: mutation uniform qtl distribution parameter must contain max value (e.g. max= ) \n");
+				throw logic_error("Error:: mutation uniform qtl distribution parameter must contain max value (e.g. max= ) \n");
 			if (mutationParameters.count(MIN) != 1)
-				cout << endl << ("Error:: mutation uniform qtl distribution parameter must contain min value (e.g. min= ) \n");
+				throw logic_error("Error:: mutation uniform qtl distribution parameter must contain min value (e.g. min= ) \n");
 			_mutate_func_ptr = &QTLTrait::mutateUniform;
 			break;
 		}
 		case NORMAL:
 		{
 			if (mutationParameters.count(MEAN) != 1)
-				cout << endl << ("Error:: qtl mutation distribution set to normal so parameters must contain mean value (e.g. mean= ) \n");
+				throw logic_error("Error:: qtl mutation distribution set to normal so parameters must contain mean value (e.g. mean= ) \n");
 			if (mutationParameters.count(SD) != 1)
-				cout << endl << ("Error::qtl mutation distribution set to normal so parameters must contain sdev value (e.g. sdev= ) \n");
+				throw logic_error("Error::qtl mutation distribution set to normal so parameters must contain sdev value (e.g. sdev= ) \n");
 			_mutate_func_ptr = &QTLTrait::mutateNormal;
 			break;
 		}
 		default:
 		{
-			cout << endl << ("Error:: wrong parameter value for qtl mutation model, must be uniform/normal \n"); //unless want to add gamma or negative exp 
-			break; //should return false
+			throw logic_error("Error:: wrong parameter value for qtl mutation model, must be uniform/normal \n"); //unless want to add gamma or negative exp 
+			break;
 		}
 		}
 	}
@@ -52,9 +54,9 @@ QTLTrait::QTLTrait(SpeciesTrait* P)
 	case UNIFORM:
 	{
 		if (initialParameters.count(MAX) != 1)
-			cout << endl << ("Error:: initial uniform qtl distribution parameter must contain max value (e.g. max= ) \n");
+			throw logic_error("Error:: initial uniform qtl distribution parameter must contain max value (e.g. max= ) \n");
 		if (initialParameters.count(MIN) != 1)
-			cout << endl << ("Error:: initial uniform qtl distribution parameter must contain min value (e.g. min= ) \n");
+			throw logic_error("Error:: initial uniform qtl distribution parameter must contain min value (e.g. min= ) \n");
 		float maxD = initialParameters.find(MAX)->second;
 		float minD = initialParameters.find(MIN)->second;
 		initialiseUniform(minD, maxD);
@@ -63,9 +65,9 @@ QTLTrait::QTLTrait(SpeciesTrait* P)
 	case NORMAL:
 	{
 		if (initialParameters.count(MEAN) != 1)
-			cout << endl << ("Error:: initial normal qtl distribution parameter must contain mean value (e.g. mean= ) \n");
+			throw logic_error("Error:: initial normal qtl distribution parameter must contain mean value (e.g. mean= ) \n");
 		if (initialParameters.count(SD) != 1)
-			cout << endl << ("Error:: initial normal qtl distribution parameter must contain sdev value (e.g. sdev= ) \n");
+			throw logic_error("Error:: initial normal qtl distribution parameter must contain sdev value (e.g. sdev= ) \n");
 		float mean = initialParameters.find(MEAN)->second;
 		float sd = initialParameters.find(SD)->second;
 		initialiseNormal(mean, sd);
@@ -73,8 +75,8 @@ QTLTrait::QTLTrait(SpeciesTrait* P)
 	}
 	default:
 	{
-		cout << endl << ("wrong parameter value for parameter \"initialisation of qtl\", must be uniform/normal \n");
-		break; //should return false
+		throw logic_error("wrong parameter value for parameter \"initialisation of qtl\", must be uniform/normal \n");
+		break;
 	}
 	}
 
@@ -92,22 +94,25 @@ QTLTrait::QTLTrait(SpeciesTrait* P)
 	}
 	default:
 	{
-		cout << endl << ("wrong parameter value for parameter \"expression of qtl\", must be average/additive \n");
-		break; //should return false
+		throw logic_error("wrong parameter value for parameter \"expression of qtl\", must be average/additive \n");
+		break;
 	}
 	}
 }
 
 // ----------------------------------------------------------------------------------------
-// Individual-level constructor
-// Copies members from a species-level reference
+// Inheritance constructor
+// Copies immutable features from a parent trait
+// Only called via clone()
 // ----------------------------------------------------------------------------------------
-
 QTLTrait::QTLTrait(const QTLTrait& T) : pSpeciesTrait(T.pSpeciesTrait), _mutate_func_ptr(T._mutate_func_ptr), _inherit_func_ptr(T._inherit_func_ptr), _express_func_ptr(T._express_func_ptr)
 {}
 
 // ----------------------------------------------------------------------------------------
-// mutate uniform
+// Sample and apply mutations from a uniform distribution
+// 
+// Mutations drawn only for existing positions, 
+// that is no new genes are created during simulation
 // ----------------------------------------------------------------------------------------
 void QTLTrait::mutateUniform()
 {
@@ -145,9 +150,10 @@ void QTLTrait::mutateUniform()
 }
 
 // ----------------------------------------------------------------------------------------
-// mutate normal
+// Sample and apply mutations from a normal distribution
+// Mutations drawn only for existing positions, 
+// that is no new genes are created during simulation
 // ----------------------------------------------------------------------------------------
-
 void QTLTrait::mutateNormal()
 {
 	const int positionsSize = pSpeciesTrait->getPositionsSize();
@@ -184,19 +190,21 @@ void QTLTrait::mutateNormal()
 }
 
 // ----------------------------------------------------------------------------------------
-// inheritance options
+//  Wrapper to inheritance function
 // ----------------------------------------------------------------------------------------
-
-
-void QTLTrait::inherit(const bool& fromMother, TTrait* parentTrait, set<unsigned int> const& recomPositions, int startingChromosome)
+void QTLTrait::inheritGenes(const bool& fromMother, TTrait* parentTrait, set<unsigned int> const& recomPositions, int startingChromosome)
 {
-	auto parentCast = dynamic_cast<QTLTrait*> (parentTrait); //horrible
-
+	auto parentCast = dynamic_cast<QTLTrait*>(parentTrait); // must convert TTrait to QTLTrait
 	const auto& parent_seq = parentCast->getGenes();
-	if (parent_seq.size() > 0) //else nothing to inherit, should always be something to inherit with QTL
-		(this->*_inherit_func_ptr) (fromMother, parent_seq, recomPositions, startingChromosome);
+	(this->*_inherit_func_ptr)(fromMother, parent_seq, recomPositions, startingChromosome);
 }
 
+// ----------------------------------------------------------------------------------------
+// Inheritance for diploid, sexual species
+// Called once for each parent. Given a list of recombinant sites, 
+// populates offspring genes with appropriate parent alleles
+// Assumes mother genes are inherited first
+// ----------------------------------------------------------------------------------------
 void QTLTrait::inheritDiploid(const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome) {
 
 	auto it = recomPositions.lower_bound(parentGenes.begin()->first);
@@ -207,39 +215,47 @@ void QTLTrait::inheritDiploid(const bool& fromMother, map<int, vector<shared_ptr
 
 	for (auto const& [locus, allelePair] : parentGenes) {
 
+		// Switch chromosome if locus is past recombination site
 		while (locus > nextBreakpoint) {
-			std::advance(it, 1);
+			parentChromosome = 1 - parentChromosome;
+			std::advance(it, 1); // go to next recombination site
 			nextBreakpoint = *it;
-			parentChromosome = 1 - parentChromosome; //switch chromosome
 		}
 
 		if (locus <= nextBreakpoint) {
-			auto& sp = allelePair[parentChromosome];
-			auto it = genes.find(locus);
-			if (it == genes.end()) {
-				// locus does not exist yet, initiate it
+			auto& parentAllele = allelePair[parentChromosome];
+			auto itGene = genes.find(locus);
+			if (itGene == genes.end()) {
+				// locus does not exist yet, create and initialise it
 				if (!fromMother) throw runtime_error("Father-inherited locus does not exist.");
 				vector<shared_ptr<Allele>> newAllelePair(2);
-				newAllelePair[sex_t::FEM] = sp;
+				newAllelePair[sex_t::FEM] = parentAllele;
 				genes.insert(make_pair(locus, newAllelePair));
 			}
 			else { // father, locus already exists
 				if (fromMother) throw runtime_error("Mother-inherited locus already exists.");
-				it->second[sex_t::MAL] = sp;
+				itGene->second[sex_t::MAL] = parentAllele;
 			}
 		}
 	}
 }
 
+// ----------------------------------------------------------------------------------------
+// Inheritance for haploid, asexual species
+// Simply pass down parent genes
+// Arguments are still needed to match overloaded function in base class
+// ----------------------------------------------------------------------------------------
 void QTLTrait::inheritHaploid(const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome)
 {
 	genes = parentGenes;
 }
 
 // ----------------------------------------------------------------------------------------
-// 'Inherit' from initialisation parameters, for simulations with individual variation but no inheritance
+// Non-inheritance 
+// For cases where isInherited option is turned off
+// In this case, offspring alleles are populated using the initialise functions
+// Arguments are still needed to match overloaded function in base class
 // ----------------------------------------------------------------------------------------
-
 void QTLTrait::reInitialiseGenes(const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome)
 {
 	DistributionType initialDistribution = pSpeciesTrait->getInitialDistribution();
@@ -249,9 +265,9 @@ void QTLTrait::reInitialiseGenes(const bool& fromMother, map<int, vector<shared_
 	case UNIFORM:
 	{
 		if (initialParameters.count(MAX) != 1)
-			cout << endl << ("Error:: initial uniform qtl distribution parameter must contain max value (e.g. max= ) \n");
+			throw logic_error("Error:: initial uniform qtl distribution parameter must contain max value (e.g. max= ) \n");
 		if (initialParameters.count(MIN) != 1)
-			cout << endl << ("Error:: initial uniform qtl distribution parameter must contain min value (e.g. min= ) \n");
+			throw logic_error("Error:: initial uniform qtl distribution parameter must contain min value (e.g. min= ) \n");
 		float maxD = initialParameters.find(MAX)->second;
 		float minD = initialParameters.find(MIN)->second;
 		initialiseUniform(minD, maxD);
@@ -260,9 +276,9 @@ void QTLTrait::reInitialiseGenes(const bool& fromMother, map<int, vector<shared_
 	case NORMAL:
 	{
 		if (initialParameters.count(MEAN) != 1)
-			cout << endl << ("Error:: initial normal qtl distribution parameter must contain mean value (e.g. mean= ) \n");
+			throw logic_error("Error:: initial normal qtl distribution parameter must contain mean value (e.g. mean= ) \n");
 		if (initialParameters.count(SD) != 1)
-			cout << endl << ("Error:: initial normal qtl distribution parameter must contain sdev value (e.g. sdev= ) \n");
+			throw logic_error("Error:: initial normal qtl distribution parameter must contain sdev value (e.g. sdev= ) \n");
 		float mean = initialParameters.find(MEAN)->second;
 		float sd = initialParameters.find(SD)->second;
 		initialiseNormal(mean, sd);
@@ -270,18 +286,15 @@ void QTLTrait::reInitialiseGenes(const bool& fromMother, map<int, vector<shared_
 	}
 	default:
 	{
-		cout << endl << ("wrong parameter value for parameter \"initialisation of qtl\", must be uniform/normal \n");
+		throw logic_error("wrong parameter value for parameter \"initialisation of qtl\", must be uniform/normal \n");
 		break; //should return false
 	}
 	}
 }
 
-
 // ----------------------------------------------------------------------------------------
-// Initialisation options
+// QTL initialisation options
 // ----------------------------------------------------------------------------------------
-
-
 void QTLTrait::initialiseNormal(float mean, float sd) {
 
 	const set<int> genePositions = pSpeciesTrait->getGenePositions();
@@ -313,9 +326,8 @@ void QTLTrait::initialiseUniform(float min, float max) {
 }
 
 // ----------------------------------------------------------------------------------------
-// expression options
+// QTL gene expression options
 // ----------------------------------------------------------------------------------------
-
 float QTLTrait::expressAdditive() {
 
 	float phenotype = 0.0;
@@ -344,26 +356,22 @@ float QTLTrait::expressAverage() {
 }
 
 // ----------------------------------------------------------------------------------------
-// check if particular loci is heterozygote
+// Check if specific locus is heterozygote
 // ----------------------------------------------------------------------------------------
-
 bool QTLTrait::isHeterozygoteAtLocus(int locus) const {
 	// assumes diploidy
 	auto it = genes.find(locus);
 	if (it == genes.end()) //not found
 		throw runtime_error("QTL gene queried for heterozygosity does not exist.");
-	else {
+	else
 		return(it->second[0].get()->getId() != it->second[1].get()->getId());
-	}
 }
 
 // ----------------------------------------------------------------------------------------
-// count heterozygote loci in genome 
+// Count heterozygote loci in genome 
 // ----------------------------------------------------------------------------------------
-
 int QTLTrait::countHeterozygoteLoci() const {
 	// assumes diploidy
-
 	int count = 0;
 	for (auto const& [locus, allelePair] : genes) {
 		if (allelePair.size() == 2)
@@ -373,15 +381,12 @@ int QTLTrait::countHeterozygoteLoci() const {
 }
 
 // ----------------------------------------------------------------------------------------
-// get allele value at loci 
+// Get allele value at locus
 // ----------------------------------------------------------------------------------------
-
 float QTLTrait::getAlleleValueAtLocus(short whichChromosome, int position) const {
 
 	auto it = genes.find(position);
-
 	if (it == genes.end())
 		throw runtime_error("The QTL locus queried for its allele value does not exist.");
 	return it->second[whichChromosome].get()->getAlleleValue();
-
 }

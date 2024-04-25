@@ -10,53 +10,73 @@
 
 using namespace std;
 
+// Single-nucleotide polymorphism (SNP) traits
+// 
+// That is, neutral genetic variation - SNP traits 
+// do not express and are only used to compute neutral statistics 
+// e.g. the Fst.
+// To save on mem usage, allele values are represented by character types,
+// taking a value between 0 and a user-specified max >= 255
 class SNPTrait : public TTrait {
 
-private:
-
-	inline static int wildType;
-	const int SNPvalUpperBound = UCHAR_MAX; // i.e. 256
-	// allele is char, can take value 0-255
-
-	SpeciesTrait* pSpeciesTrait;
-
-	map<int, vector<unsigned char>> genes; //position <strand A , strand B>>
-
-	void (SNPTrait::* _mutate_func_ptr) (void);
-	void (SNPTrait::* _inherit_func_ptr) (const bool& fromMother, map<int, vector<unsigned char>> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
-
-	void inheritDiploid(const bool& fromMother, map<int, vector<unsigned char>> const&, set<unsigned int> const& recomPositions, int parentChromosome);
-	void inheritHaploid(const bool& fromMother, map<int, vector<unsigned char>> const& parentMutations, set<unsigned int> const& recomPositions, int parentChromosome);
-
-	void initialiseUniform(int max); //other option is that mutations map is empty until a mutation happens, default when empty is to return a 0 value for wildtype
-
-	void mutate_KAM();
-	void mutate_SSM();
-
 public:
-	//this one for species held trait table, e.g. prototype table, sets static members
+
+	// Initialisation constructor, set initial values and immutable features 
 	SNPTrait(SpeciesTrait* P);
-	//this one for individuals, static members are not reset
+
+	// Inheritance constructor, copies pointers to immutable features when cloning from parent
 	SNPTrait(const SNPTrait& T);
+
+	// Make a shallow copy to pass to offspring trait
+	// Return new pointer to new trait created by inheritance c'tor 
+	// This avoids copying shared attributes: distributions and parameters
+	virtual unique_ptr<TTrait> clone() const override { return std::make_unique<SNPTrait>(*this); }
 
 	virtual ~SNPTrait() { }
 
-	virtual unique_ptr<TTrait> clone() const override { return std::make_unique<SNPTrait>(*this); }
-
-	virtual void inherit(const bool& fromMother, TTrait* parent, set<unsigned int> const& recomPositions, int startingChromosome) override;
-	virtual void mutate() override { (this->*_mutate_func_ptr) (); }
-
+	// Getters
 	virtual int getNLoci()  const override { return pSpeciesTrait->getPositionsSize(); }
 	float getMutationRate() const override { return pSpeciesTrait->getMutationRate(); }
 	bool isInherited() const override { return pSpeciesTrait->isInherited(); }
 	map<int, vector<unsigned char>>& getGenes() { return genes; } //returning reference, reciever must be const
 
+	virtual void mutate() override { (this->*_mutate_func_ptr) (); }
+	virtual void inheritGenes(const bool& fromMother, TTrait* parent, set<unsigned int> const& recomPositions, int startingChromosome) override;
+	virtual float express() {
+		throw runtime_error("SNP trait shouldn't be expressed.");
+		return -9999;
+	}
+
 	virtual float getAlleleValueAtLocus(short chromosome, int position) const override;
-
 	virtual int countHeterozygoteLoci() const;
-
 	virtual bool isHeterozygoteAtLocus(int locus) const override;
 
-	virtual float express() { return -9999; }
+private:
+
+	inline static int wildType; // default allele value, value set at construction
+	const int SNPvalUpperBound = UCHAR_MAX; // alleles are char, can take value 0-255
+
+	// <Locus position, <Allele A, Allele B>>
+	map<int, vector<unsigned char>> genes;
+
+	// Initialisation
+	void initialiseUniform(int max); //other option is that mutations map is empty until a mutation happens, default when empty is to return a 0 value for wildtype
+
+	// Immutable features, set at initialisation
+	// and passed down to every subsequent trait copy
+	//// Species-level trait attributes, invariant across individuals
+	SpeciesTrait* pSpeciesTrait;
+	//// Species-level trait functions
+	void (SNPTrait::* _mutate_func_ptr) (void);
+	void (SNPTrait::* _inherit_func_ptr) (const bool& fromMother, map<int, vector<unsigned char>> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
+
+	// Possible values for immutable functions
+	//// Inheritance
+	void inheritDiploid(const bool& fromMother, map<int, vector<unsigned char>> const&, set<unsigned int> const& recomPositions, int parentChromosome);
+	void inheritHaploid(const bool& fromMother, map<int, vector<unsigned char>> const& parentMutations, set<unsigned int> const& recomPositions, int parentChromosome);
+	//// Mutation
+	void mutate_KAM();
+	void mutate_SSM(); // single-step mutations
+
 };
 #endif
