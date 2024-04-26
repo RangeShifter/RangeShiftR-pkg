@@ -1779,10 +1779,10 @@ void Community::writeWCPerLocusFstatFile(Species* pSpecies, const int yr, const 
 		outperlocusfstat << yr << "\t" 
 			<< gen << "\t" 
 			<< position << "\t";
-		outperlocusfstat << pNeutralStatistics->get_fst_WC_loc(thisLocus) << "\t"
-			<< pNeutralStatistics->get_fis_WC_loc(thisLocus) << "\t" 
-			<< pNeutralStatistics->get_fit_WC_loc(thisLocus) << "\t" 
-			<< pNeutralStatistics->get_ho_loc(thisLocus);
+		outperlocusfstat << pNeutralStatistics->getPerLocusFst(thisLocus) << "\t"
+			<< pNeutralStatistics->getPerLocusFis(thisLocus) << "\t" 
+			<< pNeutralStatistics->getPerLocusFit(thisLocus) << "\t" 
+			<< pNeutralStatistics->getPerLocusHo(thisLocus);
 
 		for (int patchId : patchList) {
 			const auto patch = pLandscape->findPatch(patchId);
@@ -1873,19 +1873,19 @@ void Community::outNeutralGenetics(Species* pSpecies, int rep, int yr, int gen, 
 
 	if (fstat) {
 		pNeutralStatistics->calculateHo(patchList, nInds, nLoci, pSpecies, pLandscape);
-		pNeutralStatistics->setLociDiversityCounter(patchList, nInds, pSpecies, pLandscape);
+		pNeutralStatistics->calcAllelicDiversityMetrics(patchList, nInds, pSpecies, pLandscape);
 		pNeutralStatistics->calculateFstatWC(patchList, nInds, nLoci, nAlleles, pSpecies, pLandscape);
 		writeWCFstatFile(rep, yr, gen);
 	}
 
 	if (perLocus) {
-		pNeutralStatistics->calculateFstatWC_MS(patchList, nInds, nLoci, nAlleles, pSpecies, pLandscape);
-		pNeutralStatistics->calculateHo2(patchList, nInds, nLoci, pSpecies, pLandscape);
+		pNeutralStatistics->calcPerLocusMeanSquaresFst(patchList, nInds, nLoci, nAlleles, pSpecies, pLandscape);
+		pNeutralStatistics->calculatePerLocusHo(patchList, nInds, nLoci, pSpecies, pLandscape);
 		writeWCPerLocusFstatFile(pSpecies, yr, gen, nAlleles, nLoci, patchList);
 	}
 
 	if (pairwise) {
-		pNeutralStatistics->setFstMatrix(patchList, nInds, nLoci, pSpecies, pLandscape);
+		pNeutralStatistics->calcPairwiseWeightedFst(patchList, nInds, nLoci, pSpecies, pLandscape);
 		writePairwiseFSTFile(pSpecies, yr, gen, nAlleles, nLoci, patchList);
 	}
 }

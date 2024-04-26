@@ -79,62 +79,84 @@ private:
 	vector<int> alleleHeterozygoteTallies; // nb of times each allele is found in a heterozygous pair
 };
 
+
+// Handles calculations of neutral statistics
 class NeutralStatsManager {
 
-private:
-	int  nbExtantPops, totalNbSampledInds;
-	/** F-statistics */
-	double _ho, _hs, _ht, _hsnei, _htnei, meanNbAllelesPerLocusPerPatch, meanNbAllelesPerLocus,
-		_fst, _fis, _fit, meanNbFixedAllelesPerPatch, nbGloballyFixedAlleles;
-	/** Weir & Hill (2002) F-stat estimates. */
-	double weightedFstWeirHill;
-	/** Weir & Cockerham (1984) F-stat estimates. */
-	double FstWeirCockerham, FisWeirCockerham, FitWeirCockerham;
-	/** Per-locus F-stats (Weir&Cockerham). */
-	vector<double> perLocusFstWeirCockerham, perLocusFisWeirCockerham, perLocusFitWeirCockerham, perLocusHo; //no need for pointers because shouldn't be copied or moved, resized 
-
-	/** Pairwise Fst matrix. */
-	PatchMatrix pairwiseFstMatrix;
-	vector<SNPCountsTable> commSNPTables; //don't have to be pointers, not shared or moved
-
-public: 
+public:
 
 	NeutralStatsManager(const int& nbSampledPatches, const int nLoci);
 
+	// Count alleles and their frequencies in all pops and community
 	void updateAllSNPTables(Species* pSpecies, Landscape* pLandscape, set<int> const& patchList);
 	void resetCommSNPtables();
-	void setLociDiversityCounter(set<int> const& patchList, const int nInds, Species* pSpecies, Landscape* pLandscape);
-	void setFstMatrix(set<int> const& patchList, const int nInds, const int nLoci, Species* pSpecies, Landscape* pLandscape);
+
+	void calcAllelicDiversityMetrics(set<int> const& patchList, const int nInds, Species* pSpecies, Landscape* pLandscape);
+	
+	// Heterozygosity calculations
 	void calculateHo(set<int> const& patchList, const int totalNbSampledInds, const int nbrLoci, Species* pSpecies, Landscape* pLandscape);
 	void calculateHs(set<int> const& patchList, const int nbrLoci, Species* pSpecies, Landscape* pLandscape);
 	void calculateHt(Species* pSpecies, Landscape* pLandscape, const int nLoci, const int nAlleles);
-	void calculateHo2(set<int> const& patchList, const int totalNbSampledInds, const int nbrLoci, Species* pSpecies, Landscape* pLandscape);
+	void calculatePerLocusHo(set<int> const& patchList, const int totalNbSampledInds, const int nbrLoci, Species* pSpecies, Landscape* pLandscape);
+	
+	// F-stats calculations
 	void calculateFstatWC(set<int> const& patchList, const int nInds, const int nLoci, const int nAlleles, Species* pSpecies, Landscape* pLandscape);
-	void calculateFstatWC_MS(set<int> const& patchList, const int nInds, const int nLoci, const int nAlleles, Species* pSpecies, Landscape* pLandscape);
+	void calcPerLocusMeanSquaresFst(set<int> const& patchList, const int nInds, const int nLoci, const int nAlleles, Species* pSpecies, Landscape* pLandscape);
+	void calcPairwiseWeightedFst(set<int> const& patchList, const int nInds, const int nLoci, Species* pSpecies, Landscape* pLandscape);
 
-	double getHsnei() const { return _hsnei; }
-	double getHtnei() const { return _htnei; }
-	double getHo() const { return _ho; }
-	double getHs() const { return _hs; }
-	double getHt() const { return _ht; }
-	double getFst() const { return _fst; }
-	double getFis() const { return _fis; }
-	double getFit() const { return _fit; }
-	double getFstWC() const { return FstWeirCockerham; }
-	double getFisWC() const { return FisWeirCockerham; }
-	double getFitWC() const { return FitWeirCockerham; }
-	int getNbPopulatedSampledPatches() const { return nbExtantPops;  }
-	int getTotalNbSampledInds() const { return totalNbSampledInds;  }
-	double getWeightedFst() { return weightedFstWeirHill; }
+	// Getters
+	int getNbPopulatedSampledPatches() const { return nbExtantPops; }
+	int getTotalNbSampledInds() const { return totalNbSampledInds; }
+	
 	double getMeanNbAllPerLocusPerPatch() const { return meanNbAllelesPerLocusPerPatch; }
 	double getMeanNbAllPerLocus() const { return meanNbAllelesPerLocus; }
 	double getMeanFixdAllelesPerPatch() const { return meanNbFixedAllelesPerPatch; }
 	double getTotalFixdAlleles() const { return nbGloballyFixedAlleles; }
+	
+	double getHo() const { return ho; }
+	double getHs() const { return hs; }
+	double getHt() const { return ht; }
+
+	double getPerLocusHo(int i) const { return perLocusHo[i]; }
+
+	double getFstWC() const { return fst; }
+	double getFisWC() const { return fis; }
+	double getFitWC() const { return fit; }
+
+	double getWeightedFst() { return weightedFst; }
+
+	double getPerLocusFst(int i) const { return perLocusFst[i]; }
+	double getPerLocusFis(int i) const { return perLocusFis[i]; }
+	double getPerLocusFit(int i) const { return perLocusFit[i]; }
+
 	double getPairwiseFst(int i, int j) { return pairwiseFstMatrix.get(i, j); }
-	double get_fst_WC_loc(int i) const { return perLocusFstWeirCockerham[i]; }
-	double get_fis_WC_loc(int i) const { return perLocusFisWeirCockerham[i]; }
-	double get_fit_WC_loc(int i) const { return perLocusFitWeirCockerham[i]; }
-	double get_ho_loc(int i) const { return perLocusHo[i]; }
+
+private:
+
+	int nbExtantPops, totalNbSampledInds;
+	vector<SNPCountsTable> commSNPCountTables; // community-level tallies of allele counts and freqs
+
+	double meanNbAllelesPerLocusPerPatch, meanNbAllelesPerLocus;
+	double meanNbFixedAllelesPerPatch, nbGloballyFixedAlleles;
+
+	double ho; // observed heterozygosity 
+	double hs; // expected population-level heterozygosity
+	double ht; // expected community-level heterozygosity
+	
+	vector<double> perLocusHo; // Per-locus observed heterozygosity
+
+	// F-statistics
+	// Weir & Cockerham (1984) F-stat estimates.
+	double fst, fis, fit;
+
+	// Weir & Hill (2002) F-stat estimates 
+	double weightedFst;
+
+	// Per-locus F-stats (Weir & Cockerham).
+	vector<double> perLocusFst, perLocusFis, perLocusFit;
+
+	// Pairwise Fst matrix
+	PatchMatrix pairwiseFstMatrix;
 };
 
 #endif

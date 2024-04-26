@@ -321,15 +321,15 @@ int Population::getNInds(void) { return (int)inds.size(); }
 // reset allele table
 // ----------------------------------------------------------------------------------------
 void Population::resetPopSNPtables() {
-	for (auto& entry : popSNPtables) {
+	for (auto& entry : popSNPCountTables) {
 		entry.reset();
 	}
 }
 
 // ----------------------------------------------------------------------------------------
-//  allele frequency in population of sampled individuals 
+// Populate population-level SNP count tables
+// Update allele occurrence and heterozygosity counts, and allele frequencies
 // ----------------------------------------------------------------------------------------
-
 void Population::updatePopSNPtables() {
 
 	const int nLoci = pSpecies->getNPositionsForTrait(SNP);
@@ -337,44 +337,46 @@ void Population::updatePopSNPtables() {
 	const auto& positions = pSpecies->getSpTrait(SNP)->getGenePositions();
 	const int ploidy = pSpecies->isDiploid() ? 2 : 1;
 
-	if (popSNPtables.size() != 0)
+	// Create /reset empty tables
+	if (popSNPCountTables.size() != 0)
 		resetPopSNPtables();
 	else {
-		popSNPtables.reserve(nLoci);
+		popSNPCountTables.reserve(nLoci);
 
 		for (int l = 0; l < nLoci; l++) {
-			popSNPtables.push_back(SNPCountsTable(nAlleles));
+			popSNPCountTables.push_back(SNPCountsTable(nAlleles));
 		}
 	}
 
+	// Fill tallies for each locus
 	for (Individual* individual : sampledInds) {
 
 		const auto trait = individual->getTrait(SNP);
-
 		int whichLocus = 0;
 		for (auto position : positions) {
 
 			int alleleOnChromA = (int)trait->getAlleleValueAtLocus(0, position);
-			popSNPtables[whichLocus].incrementTally(alleleOnChromA);
+			popSNPCountTables[whichLocus].incrementTally(alleleOnChromA);
 
-			if (ploidy == 2) {
+			if (ploidy == 2) { // second allele and heterozygosity
 				int alleleOnChromB = (int)trait->getAlleleValueAtLocus(1, position);
-				popSNPtables[whichLocus].incrementTally(alleleOnChromB);
+				popSNPCountTables[whichLocus].incrementTally(alleleOnChromB);
 
 				bool isHetero = alleleOnChromA != alleleOnChromB;
 				if (isHetero) {
-					popSNPtables[whichLocus].incrementHeteroTally(alleleOnChromA);
-					popSNPtables[whichLocus].incrementHeteroTally(alleleOnChromB);
+					popSNPCountTables[whichLocus].incrementHeteroTally(alleleOnChromA);
+					popSNPCountTables[whichLocus].incrementHeteroTally(alleleOnChromB);
 				}
 			}
 			whichLocus++;
 		}
 	}
 
+	// Fill frequencies
 	if (sampledInds.size() > 0) {
 		std::for_each(
-			popSNPtables.begin(),
-			popSNPtables.end(),
+			popSNPCountTables.begin(),
+			popSNPCountTables.end(),
 			[&](SNPCountsTable& thisLocus) -> void {
 				thisLocus.setFrequencies(static_cast<int>(sampledInds.size()) * ploidy);
 			});
@@ -382,21 +384,20 @@ void Population::updatePopSNPtables() {
 }
 
 double Population::getAlleleFrequency(int thisLocus, int whichAllele) {
-	return popSNPtables[thisLocus].getFrequency(whichAllele);
+	return popSNPCountTables[thisLocus].getFrequency(whichAllele);
 }
 
 int Population::getAlleleTally(int thisLocus, int whichAllele) {
-	return popSNPtables[thisLocus].getTally(whichAllele);
+	return popSNPCountTables[thisLocus].getTally(whichAllele);
 }
 
 int Population::getHeteroTally(int thisLocus, int whichAllele) {
-	return popSNPtables[thisLocus].getHeteroTally(whichAllele);
+	return popSNPCountTables[thisLocus].getHeteroTally(whichAllele);
 }
 
 // ----------------------------------------------------------------------------------------
 // Count number of heterozygotes loci in sampled individuals
 // ----------------------------------------------------------------------------------------
-
 int Population::countHeterozygoteLoci() {
 	int nbHetero = 0;
 	if (pSpecies->isDiploid()) {
@@ -409,12 +410,11 @@ int Population::countHeterozygoteLoci() {
 }
 
 // ----------------------------------------------------------------------------------------
-// Count number of heterozygotes per loci loci in sampled individuals
+// Count number of heterozygotes among sampled individuals for each locus
 // ----------------------------------------------------------------------------------------
-
-vector<double> Population::countLociHeterozyotes() {
+vector<int> Population::countNbHeterozygotesEachLocus() {
 	const auto& positions = pSpecies->getSpTrait(SNP)->getGenePositions();
-	vector<double> hetero(positions.size(), 0);
+	vector<int> hetero(positions.size(), 0);
 
 	if (pSpecies->isDiploid()) {
 		for (Individual* ind : sampledInds) {
@@ -430,23 +430,21 @@ vector<double> Population::countLociHeterozyotes() {
 }
 
 // ----------------------------------------------------------------------------------------
-//	compute the expected heterozygosity for population
+//	Compute the expected heterozygosity for population
 // ----------------------------------------------------------------------------------------
-
 double Population::computeHs() {
 	int nLoci = pSpecies->getNPositionsForTrait(SNP);
 	int nAlleles = (int)pSpecies->getSpTrait(SNP)->getInitialParameters().find(MAX)->second;
 	double hs = 0;
 	double freq;
-
-	vector<double>locihet(nLoci, 1);
+	vector<double> locihet(nLoci, 1);
 
 	if (sampledInds.size() > 0) {
 		for (int thisLocus = 0; thisLocus < nLoci; ++thisLocus) {
 			for (int allele = 0; allele < nAlleles; ++allele) {
 				freq = getAlleleFrequency(thisLocus, allele);
 				freq *= freq; //squared frequencies (expected _homozygosity)
-				locihet[thisLocus] -= freq; //1 - sum of p2 = expected heterozygosity
+				locihet[thisLocus] -= freq; // 1 - sum of p2 = expected heterozygosity
 			}
 			hs += locihet[thisLocus];
 		}
