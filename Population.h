@@ -241,7 +241,7 @@ private:
 	// has been completed
 
 	std::set <Individual*> sampledInds;
-	vector<SNPtable> popSNPtables;
+	vector<SNPCountsTable> popSNPtables;
 	void resetPopSNPtables();
 };
 

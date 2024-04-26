@@ -48,7 +48,7 @@ void NeutralStatsManager::updateAllSNPTables(Species* pSpecies, Landscape* pLand
 	}
 	else { // populate the tables with default values
 		for (int thisLocus = 0; thisLocus < nLoci; thisLocus++) {
-			SNPtable newSNPtbl = SNPtable(nAlleles);
+			SNPCountsTable newSNPtbl = SNPCountsTable(nAlleles);
 			commSNPTables.push_back(newSNPtbl);
 		}
 	}
@@ -82,7 +82,7 @@ void NeutralStatsManager::updateAllSNPTables(Species* pSpecies, Landscape* pLand
 	// Update global frequency
 	std::for_each(commSNPTables.begin(),
 		commSNPTables.end(),
-		[&](SNPtable& v) -> void {
+		[&](SNPCountsTable& v) -> void {
 			v.setFrequencies(nbSampledInds * ploidy);
 		});
 }
@@ -90,18 +90,15 @@ void NeutralStatsManager::updateAllSNPTables(Species* pSpecies, Landscape* pLand
 // ----------------------------------------------------------------------------------------
 // Reset allele tables in SNPtable structs
 // ----------------------------------------------------------------------------------------
-
 void NeutralStatsManager::resetCommSNPtables() {
 	for (auto& entry : commSNPTables) {
 		entry.reset();
 	}
 }
 
-
 // ----------------------------------------------------------------------------------------
 // set loci diversity
 // ----------------------------------------------------------------------------------------
-
 void NeutralStatsManager::setLociDiversityCounter(set<int> const& patchList, const int nInds, Species* pSpecies, Landscape* pLandscape)
 {
 	int i, j;
@@ -202,8 +199,6 @@ void NeutralStatsManager::calculateHo(set<int> const& patchList, const int nbInd
 // ----------------------------------------------------------------------------------------
 // calculate Hs per Nei and Chesser, currently not used but may be useful
 // ----------------------------------------------------------------------------------------
-
-
 void NeutralStatsManager::calculateHs(set<int> const& patchList, const int nbrLoci, Species* pSpecies, Landscape* pLandscape) {
 
 	double hs = 0;
@@ -226,8 +221,6 @@ void NeutralStatsManager::calculateHs(set<int> const& patchList, const int nbrLo
 // ----------------------------------------------------------------------------------------
 // calculate Ht per Nei and Chesser, currently not used but may be useful
 // ----------------------------------------------------------------------------------------
-
-
 void NeutralStatsManager::calculateHt(Species* pSpecies, Landscape* pLandscape, const int nLoci, const int nAlleles) {
 
 	double ht = 0;
@@ -255,7 +248,6 @@ void NeutralStatsManager::calculateHt(Species* pSpecies, Landscape* pLandscape, 
 // ----------------------------------------------------------------------------------------
 // calculate Ho per locus as per Nei and Chesser
 // ----------------------------------------------------------------------------------------
-
 void NeutralStatsManager::calculateHo2(set<int> const& patchList, const int nbInds, const int nbrLoci, Species* pSpecies, Landscape* pLandscape) {
 
 	vector<double> hetero(nbrLoci, 0);
@@ -281,12 +273,9 @@ void NeutralStatsManager::calculateHo2(set<int> const& patchList, const int nbIn
 	perLocusHo = hetero;
 }
 
-
 // ----------------------------------------------------------------------------------------
 // Fstat Weir & Cockerham
 // ----------------------------------------------------------------------------------------
-
-
 void NeutralStatsManager::calculateFstatWC(set<int> const& patchList, const int nbSampledIndsInComm, const int nLoci, const int nAlleles, Species* pSpecies, Landscape* pLandscape) {
 
 	double inverseNtotal;
@@ -369,11 +358,9 @@ void NeutralStatsManager::calculateFstatWC(set<int> const& patchList, const int 
 	}
 }
 
-
 // ----------------------------------------------------------------------------------------
 // Fstat Weir & Cockerham using Mean square approach. Similar to implementation in Hierfstat
 // ----------------------------------------------------------------------------------------
-
 void NeutralStatsManager::calculateFstatWC_MS(set<int> const& patchList, const int nInds, const int nLoci, const int maxNbAllelesPerLocus, Species* pSpecies, Landscape* pLandscape) {
 
 	double sumWeights = 0;
@@ -542,14 +529,12 @@ void NeutralStatsManager::calculateFstatWC_MS(set<int> const& patchList, const i
 	}
 }
 
-
 // ----------------------------------------------------------------------------------------
 // Patch pairwise Fst 
 // Computes the weighted within and between patch Fst's as well as the overall Fst (Theta).
-//	The method used here is that of Weir& Hill 2002, Ann.Rev.Genet. 36:721 - 750.
+// The method used here is that of Weir& Hill 2002, Ann.Rev.Genet. 36:721 - 750.
 // The weighting is done for samples(patches) of unequal sizes.
 // ----------------------------------------------------------------------------------------
-
 void NeutralStatsManager::setFstMatrix(set<int> const& patchList, const int nInds, const int nLoci, Species* pSpecies, Landscape* pLandscape) {
 
 	const int nAlleles = (int)pSpecies->getSpTrait(SNP)->getMutationParameters().find(MAX)->second;
@@ -567,7 +552,7 @@ void NeutralStatsManager::setFstMatrix(set<int> const& patchList, const int nInd
 		pairwiseFstMatrix = PatchMatrix(nPatches, nPatches);
 
 	// Reset table
-	pairwiseFstMatrix.assign(0.0); // or nanf("NULL")?
+	pairwiseFstMatrix.setAll(0.0); // or nanf("NULL")?
 
 	//init
 	vector<double> popWeights(nPatches);
@@ -684,8 +669,4 @@ void NeutralStatsManager::setFstMatrix(set<int> const& patchList, const int nInd
 		weightedFstWeirHill = 0.0;
 	}
 }
-
-
-
-
 

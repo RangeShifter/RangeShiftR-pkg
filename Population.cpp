@@ -343,7 +343,7 @@ void Population::updatePopSNPtables() {
 		popSNPtables.reserve(nLoci);
 
 		for (int l = 0; l < nLoci; l++) {
-			popSNPtables.push_back(SNPtable(nAlleles));
+			popSNPtables.push_back(SNPCountsTable(nAlleles));
 		}
 	}
 
@@ -375,7 +375,7 @@ void Population::updatePopSNPtables() {
 		std::for_each(
 			popSNPtables.begin(),
 			popSNPtables.end(),
-			[&](SNPtable& thisLocus) -> void {
+			[&](SNPCountsTable& thisLocus) -> void {
 				thisLocus.setFrequencies(static_cast<int>(sampledInds.size()) * ploidy);
 			});
 	}
