@@ -1089,31 +1089,11 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 	// each individual takes one step
 	// for dispersal by kernel, this should be the only step taken
 	int ninds = (int)inds.size();
-#if RSDEBUG
-	//DEBUGLOG << "Population::transfer(): 0000: ninds = " << ninds
-	//	<< " ndispersers = " << ndispersers << endl;
-#endif
+
 	for (int i = 0; i < ninds; i++) {
-#if RSDEBUG
-		//DEBUGLOG << "Population::transfer(): 1111: i = " << i << " ID = " << inds[i]->getId()
-		//	<< endl;
-#endif
 		if (trfr.usesMovtProc) {
-#if RSDEBUG
-			//pCell = inds[i]->getLocn(1);
-			//locn loc = pCell->getLocn();
-			//DEBUGLOG << "Population::transfer(): 1112: i = " << i << " ID = " << inds[i]->getId()
-			//	<< " before:" << " x = " << loc.x << " y = " << loc.y
-			//	<< endl;
-#endif
+
 			disperser = inds[i]->moveStep(pLandscape, pSpecies, landIx, sim.absorbing);
-#if RSDEBUG
-			//pCell = inds[i]->getLocn(1);
-			//newloc = pCell->getLocn();
-			//DEBUGLOG << "Population::transfer(): 1113: i = " << i << " ID = " << inds[i]->getId()
-			//	<< " after: " << " x = " << newloc.x << " y = " << newloc.y
-			//	<< endl;
-#endif
 		}
 		else {
 			disperser = inds[i]->moveKernel(pLandscape, pSpecies, reptype, sim.absorbing);
@@ -1134,10 +1114,6 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 			}
 		}
 	}
-#if RSDEBUG
-	//DEBUGLOG << "Population::transfer(): 5555: ninds=" << ninds
-	//	<< " ndispersers=" << ndispersers << endl;
-#endif
 
 	for (int i = 0; i < ninds; i++) {
 		ind = inds[i]->getStats();
@@ -1162,28 +1138,11 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 				ind.status = 6;
 			}
 			else {
-
-#if RSDEBUG
-				//newloc = pCell->getLocn();
-				//DEBUGLOG << "Population::transfer(): 6666: i=" << i << " ID=" << inds[i]->getId()
-				//	<< " sex=" << ind.sex << " status=" << ind.status
-				//	<< " pCell=" << pCell << " x=" << newloc.x << " y=" << newloc.y
-				//	<< " findMate=" << sett.findMate
-				////	<< " wait=" << sett.wait
-				////	<< " go2nbrLocn=" << sett.go2nbrLocn
-				//	<< endl;
-#endif
-
 				mateOK = false;
 				if (sett.findMate) {
 					// determine whether at least one individual of the opposite sex is present in the
 					// new population
 					if (matePresent(pCell, othersex)) mateOK = true;
-#if RSDEBUG
-					//DEBUGLOG << "Population::transfer(): 7777: othersex=" << othersex
-					//	<< " this=" << this << " pNewPopn=" << pNewPopn << " popsize=" << popsize << " mateOK=" << mateOK
-					//	<< endl;
-#endif
 				}
 				else { // no requirement to find a mate
 					mateOK = true;
@@ -1193,10 +1152,6 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 				if (sett.densDep)
 				{
 					patch = pCell->getPatch();
-#if RSDEBUG
-					//DEBUGLOG << "Population::transfer(): 8880: i=" << i << " patch=" << patch
-					//	<< endl;
-#endif
 					if (patch != 0) { // not no-data area
 						pPatch = (Patch*)patch;
 						if (settle.settleStatus == 0
@@ -1204,14 +1159,10 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 							// note: second condition allows for having moved from one patch to another
 							// adjacent one
 						{
-							//						inds[i]->resetPathOut(); // reset steps out of patch to zero
-													// determine whether settlement occurs in the (new) patch
+							// determine whether settlement occurs in the (new) patch
 							localK = (double)pPatch->getK();
 							popn = pPatch->getPopn((intptr)pSpecies);
-#if RSDEBUG
-							//DEBUGLOG << "Population::transfer(): 8881: i=" << i << " patchNum=" << pPatch->getPatchNum()
-							//	<< " localK=" << localK << " popn=" << popn << endl;
-#endif
+
 							if (popn == 0) { // population has not been set up in the new patch
 								popsize = 0.0;
 							}
@@ -1225,13 +1176,6 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 								else settDD = pSpecies->getSettTraits(ind.stage, ind.sex);
 								settprob = settDD.s0 /
 									(1.0 + exp(-(popsize / localK - (double)settDD.beta) * (double)settDD.alpha));
-#if RSDEBUG
-								//DEBUGLOG << "Population::transfer(): 8888: i=" << i << " ind.stage=" << ind.stage
-								//	<< " this=" << this << " pNewPopn=" << pNewPopn << " popsize=" << popsize
-								//	<< " localK=" << localK << " alpha=" << settDD.alpha << " beta=" << settDD.beta
-								//	<< " settprob=" << settprob
-								//	<< endl;
-#endif
 								if (pRandom->Bernoulli(settprob)) { // settlement allowed
 									densdepOK = true;
 									settle.settleStatus = 2;
@@ -1300,11 +1244,6 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 		{
 			// for kernel-based transfer only ...
 			// determine whether recruitment to a neighbouring cell is possible
-#if RSDEBUG
-//DEBUGLOG << "Population::transfer(): neighbour cell search: sett.go2nbrLocn = " << sett.go2nbrLocn
-//	<< " ind.status = " << ind.status
-//	<< endl;
-#endif
 			pCell = inds[i]->getLocn(1);
 			newloc = pCell->getLocn();
 			vector <Cell*> nbrlist;
@@ -1351,12 +1290,6 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 			// else list empty - do nothing - individual retains its current location and status
 		}
 	}
-#if RSDEBUG
-	//DEBUGLOG << "Population::transfer(): 9999: ninds = " << ninds
-	//	<< " ndispersers = " << ndispersers << endl;
-#endif
-
-
 	return ndispersers;
 }
 

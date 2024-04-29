@@ -718,7 +718,6 @@ int Individual::moveKernel(Landscape* pLandscape, Species* pSpecies,
 				yrand = (double)loc.y + pRandom->Random() * 0.999;
 
 				r1 = 0.0000001 + pRandom->Random() * (1.0 - 0.0000001);
-				//			dist = (-1.0*meandist)*std::log(r1);
 				dist = (-1.0 * meandist) * log(r1);  // for LINUX_CLUSTER
 
 				rndangle = pRandom->Random() * 2.0 * PI;
