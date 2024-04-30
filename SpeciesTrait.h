@@ -31,6 +31,8 @@ public:
         Species* pSpecies
     );
 
+    bool isValidTraitVal(const float& val) const;
+
     // Getters
     sex_t getSex() const { return sex; }
     float getMutationRate() const { return mutationRate; }
@@ -51,6 +53,7 @@ private:
 
     inline static int ploidy = 0;
     float mutationRate;
+    TraitType traitType;
     sex_t sex;
 
     // Positions in the genome of all genes (loci) pertaining to this trait

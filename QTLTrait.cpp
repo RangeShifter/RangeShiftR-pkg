@@ -120,6 +120,7 @@ void QTLTrait::mutateUniform()
 	const auto& genePositions = pSpeciesTrait->getGenePositions();
 	const short ploidy = pSpeciesTrait->getPloidy();
 	const float mutationRate = pSpeciesTrait->getMutationRate();
+	float newAlleleVal;
 
 	auto rng = pRandom->getRNG();
 
@@ -142,8 +143,10 @@ void QTLTrait::mutateUniform()
 				if (it == genes.end())
 					throw runtime_error("Locus sampled for mutation doesn't exist.");
 				float currentAlleleVal = it->second[p].get()->getAlleleValue();//current
-				float newAlleleVal = pRandom->FRandom(minD, maxD) + currentAlleleVal;
-				it->second[p] = make_shared<Allele>(newAlleleVal, 1.0);
+				do {
+					newAlleleVal = pRandom->FRandom(minD, maxD) + currentAlleleVal;
+				} while (!pSpeciesTrait->isValidTraitVal(newAlleleVal));
+				it->second[p] = make_shared<Allele>(newAlleleVal, QTLDominanceFactor);
 			}
 		}
 	}
@@ -166,6 +169,7 @@ void QTLTrait::mutateNormal()
 	const map<GenParamType, float> mutationParameters = pSpeciesTrait->getMutationParameters();
 	const float mean = mutationParameters.find(MEAN)->second;
 	const float sd = mutationParameters.find(SD)->second;
+	float newAlleleVal;
 
 	for (int p = 0; p < ploidy; p++) {
 
@@ -181,9 +185,11 @@ void QTLTrait::mutateNormal()
 				auto it = genes.find(m);
 				if (it == genes.end())
 					throw runtime_error("Locus sampled for mutation doesn't exist.");
-				float currentAlleleVal = it->second[p].get()->getAlleleValue();//current
-				float newAlleleVal = pRandom->Normal(mean, sd) + currentAlleleVal;
-				it->second[p] = make_shared<Allele>(newAlleleVal, 1.0);
+				float currentAlleleVal = it->second[p].get()->getAlleleValue(); //current
+				do {
+					newAlleleVal = pRandom->Normal(mean, sd) + currentAlleleVal;
+				} while (!pSpeciesTrait->isValidTraitVal(newAlleleVal));
+				it->second[p] = make_shared<Allele>(newAlleleVal, QTLDominanceFactor);
 			}
 		}
 	}

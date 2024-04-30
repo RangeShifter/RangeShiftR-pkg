@@ -126,6 +126,8 @@ void GeneticLoad::mutate()
 	const auto& genePositions = pSpeciesTrait->getGenePositions();
 	const short ploidy = pSpeciesTrait->getPloidy();
 	const float mutationRate = pSpeciesTrait->getMutationRate();
+	float newSelectionCoef;
+	float newDominanceCoef;
 
 	auto rng = pRandom->getRNG();
 
@@ -144,8 +146,12 @@ void GeneticLoad::mutate()
 				auto it = genes.find(m);
 				if (it == genes.end())
 					throw runtime_error("Locus sampled for mutation doesn't exist.");
-				float newSelectionCoef = drawSelectionCoef();
-				float newDominanceCoef = drawDominance(newSelectionCoef);
+				do {
+					newSelectionCoef = drawSelectionCoef();
+				} while (!pSpeciesTrait->isValidTraitVal(newSelectionCoef));
+				do {
+					newDominanceCoef = drawDominance(newSelectionCoef);
+				} while (newDominanceCoef < 0.0);
 				it->second[p] = make_shared<Allele>(newSelectionCoef, newDominanceCoef);
 			}
 		}
@@ -160,7 +166,7 @@ float GeneticLoad::drawDominance(float selCoef) {
 	DistributionType dominanceDistribution = pSpeciesTrait->getDominanceDistribution();
 	map<GenParamType, float> dominanceParameters = pSpeciesTrait->getDominanceParameters();
 
-	float h = 1.0; //default dominance is  1
+	float h;
 	switch (dominanceDistribution) {
 	case UNIFORM:
 	{
@@ -317,8 +323,6 @@ void GeneticLoad::inheritHaploid(const bool& fromMother, map<int, vector<shared_
 
 // ----------------------------------------------------------------------------------------
 // Expression genetic load
-// 
-// 
 // ----------------------------------------------------------------------------------------
 float GeneticLoad::express() {
 
