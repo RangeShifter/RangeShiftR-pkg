@@ -215,8 +215,9 @@ void QTLTrait::inheritDiploid(const bool& fromMother, map<int, vector<shared_ptr
 
 	auto it = recomPositions.lower_bound(parentGenes.begin()->first);
 	int nextBreakpoint = *it;
+	// Is the first parent gene position already recombinant?
 	auto distance = std::distance(recomPositions.begin(), it);
-	if (distance % 2 != 0)
+	if (distance % 2 != 0) // odd positions = switch, even = switch back
 		parentChromosome = 1 - parentChromosome; //switch chromosome
 
 	for (auto const& [locus, allelePair] : parentGenes) {
