@@ -82,10 +82,13 @@ SpeciesTrait::SpeciesTrait(
 bool SpeciesTrait::isValidTraitVal(const float& val) const {
 	switch (traitType)
 	{
-	// No need to check for SNPs - mutate functions are safe already
-	
+	// Neutral trait
+	case SNP: // only need to check for input parameters
+	{
+		return val >= 0.0 && val <= 255.0;
+	}
 	// Genetic Load
-	case GENETIC_LOAD1: case GENETIC_LOAD2: case GENETIC_LOAD3: case GENETIC_LOAD4: case GENETIC_LOAD5:
+	case GENETIC_LOAD: case GENETIC_LOAD1: case GENETIC_LOAD2: case GENETIC_LOAD3: case GENETIC_LOAD4: case GENETIC_LOAD5:
 	{
 		return val >= 0.0 && val <= 1.0; // substracted from a probability
 		break;
