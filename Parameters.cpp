@@ -198,13 +198,6 @@ initInd paramInit::getInitInd(int ix) {
 		iind.year = iind.patchID = iind.x = iind.y = iind.sex = iind.age = iind.stage = 0;
 		iind.species = -1;
 	}
-#if RSDEBUG
-	//DEBUGLOG << "paramInit::getInitInd(): ix=" << ix << " size()=" << initinds.size()
-	//	<< " iind.patchID=" << iind.patchID
-	//	<< " iind.x=" << iind.x
-	//	<< " iind.y=" << iind.y
-	//	<< endl;
-#endif
 	return iind;
 }
 
@@ -221,7 +214,6 @@ paramSim::paramSim(void) {
 	simulation = 0;
 	reps = years = 1;
 	outIntRange = 1;
-	//	outStartRange = outStartOcc = outStartPop = outStartInd = 0;
 	outStartPop = outStartInd = 0;
 	outStartTraitCell = outStartTraitRow = outStartConn = 0;
 	outIntOcc = outIntPop = outIntInd = outputGeneticInterval = 10;
@@ -259,8 +251,6 @@ void paramSim::setSim(simParams s) {
 	outPop = s.outPop; outInds = s.outInds;
 	outTraitsCells = s.outTraitsCells; outTraitsRows = s.outTraitsRows;
 	outConnect = s.outConnect;
-	//if (s.outStartRange >= 0) outStartRange =	s.outStartRange;
-	//if (s.outStartOcc >= 0) outStartOcc =	s.outStartOcc;
 	if (s.outStartPop >= 0) outStartPop = s.outStartPop;
 	if (s.outStartInd >= 0) outStartInd = s.outStartInd;
 	if (s.outStartTraitCell >= 0) outStartTraitCell = s.outStartTraitCell;
@@ -302,8 +292,6 @@ simParams paramSim::getSim(void) {
 	s.simulation = simulation; s.reps = reps; s.years = years;
 	s.outRange = outRange; s.outOccup = outOccup; s.outPop = outPop; s.outInds = outInds;
 	s.outTraitsCells = outTraitsCells; s.outTraitsRows = outTraitsRows; s.outConnect = outConnect;
-	//s.outStartRange =	outStartRange;
-	//s.outStartOcc =	outStartOcc;
 	s.outStartPop = outStartPop; s.outStartInd = outStartInd;
 	s.outStartTraitCell = outStartTraitCell; s.outStartTraitRow = outStartTraitRow;
 	s.outStartConn = outStartConn;

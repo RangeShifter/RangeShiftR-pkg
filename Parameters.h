@@ -149,7 +149,7 @@ typedef enum { KERNEL, SMS, CRW} movement_t;
 //sex types
 typedef enum {
 	FEM = 0, MAL = 1,
-	NA, // not applicable. e.g. fro SNP or genetic load trait
+	NA, // not applicable. e.g. for SNP or genetic load trait
 	INVALID_SEX // error
 } sex_t;
 

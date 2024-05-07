@@ -1,16 +1,17 @@
 #include "GeneticLoad.h"
 
 // ----------------------------------------------------------------------------------------
-// for initialising population
+//  Initialisation constructor
+//  Called when initialising community
+//  Sets up initial values, and immutable attributes (distributions and parameters)
+//	that are defined at the species-level
 // ----------------------------------------------------------------------------------------
-
 GeneticLoad::GeneticLoad(SpeciesTrait* P)
 {
 	pSpeciesTrait = P;
+	ExpressionType expressionType = pSpeciesTrait->getExpressionType();
 
 	initialise();
-
-	ExpressionType expressionType = pSpeciesTrait->getExpressionType();
 
 	_inherit_func_ptr = (pSpeciesTrait->getPloidy() == 1) ? &GeneticLoad::inheritHaploid : &GeneticLoad::inheritDiploid; //this could be changed if we wanted some alternative form of inheritance
 
@@ -21,46 +22,35 @@ GeneticLoad::GeneticLoad(SpeciesTrait* P)
 	case UNIFORM:
 	{
 		if (mutationParameters.count(MAX) != 1)
-			cout << endl << ("Error:: genetic load mutation uniform distribution parameter must contain one max value (e.g. max= ) \n");
-
+			throw logic_error("Error:: genetic load mutation uniform distribution parameter must contain one max value (e.g. max= ) \n");
 		if (mutationParameters.count(MIN) != 1)
-			cout << endl << ("Error:: genetic load mutation uniform distribution parameter must contain one min value (e.g. min= ) \n");
-
+			throw logic_error("Error:: genetic load mutation uniform distribution parameter must contain one min value (e.g. min= ) \n");
 		break;
 	}
 	case NORMAL:
 	{
-
 		if (mutationParameters.count(MEAN) != 1)
-			cout << endl << ("Error:: genetic load mutation distribution set to normal so parameters must contain one mean value (e.g. mean= ) \n");
-
+			throw logic_error("Error:: genetic load mutation distribution set to normal so parameters must contain one mean value (e.g. mean= ) \n");
 		if (mutationParameters.count(SD) != 1)
-			cout << endl << ("Error:: genetic load mutation distribution set to normal so parameters must contain one sdev value (e.g. sdev= ) \n");
-
+			throw logic_error("Error:: genetic load mutation distribution set to normal so parameters must contain one sdev value (e.g. sdev= ) \n");
 		break;
 	}
 	case GAMMA:
 	{
 		if (mutationParameters.count(SHAPE) != 1)
-			cout << endl << ("Error:: genetic load mutation distribution set to gamma so parameters must contain one shape value (e.g. shape= ) \n");
-
+			throw logic_error("Error:: genetic load mutation distribution set to gamma so parameters must contain one shape value (e.g. shape= ) \n");
 		if (mutationParameters.count(SCALE) != 1)
-			cout << endl << ("Error:: genetic load mutation distribution set to gamma so parameters must contain one scale value (e.g. scale= ) \n");
-
+			throw logic_error("Error:: genetic load mutation distribution set to gamma so parameters must contain one scale value (e.g. scale= ) \n");
 		break;
 	}
 	case NEGEXP:
 	{
 		if (mutationParameters.count(MEAN) != 1)
-			cout << endl << ("Error:: genetic load mutation distribution set to negative exponential (negative decay) so parameters must contain one mean value (e.g. mean= ) \n");
-
+			throw logic_error("Error:: genetic load mutation distribution set to negative exponential (negative decay) so parameters must contain one mean value (e.g. mean= ) \n");
 		break;
 	}
-
 	default:
-	{
-		cout << endl << ("Error:: wrong parameter value for genetic load mutation model, must be uniform/normal/gamma/negExp \n");
-	}
+		throw logic_error("Error:: wrong parameter value for genetic load mutation model, must be uniform/normal/gamma/negExp \n");
 	}
 
 	DistributionType dominanceDistribution = pSpeciesTrait->getDominanceDistribution();
@@ -70,44 +60,52 @@ GeneticLoad::GeneticLoad(SpeciesTrait* P)
 	case UNIFORM:
 	{
 		if (dominanceParameters.count(MAX) != 1)
-			cout << endl << ("Error:: genetic load dominance uniform distribution parameter must contain one max value (e.g. max= ) \n");
+			throw logic_error("Error:: genetic load dominance uniform distribution parameter must contain one max value (e.g. max= ) \n");
 		if (dominanceParameters.count(MIN) != 1)
-			cout << endl << ("Error:: genetic load dominance uniform distribution parameter must contain one min value (e.g. min= ) \n");
+			throw logic_error("Error:: genetic load dominance uniform distribution parameter must contain one min value (e.g. min= ) \n");
 		break;
 	}
 	case NORMAL:
 	{
 		if (dominanceParameters.count(MEAN) != 1)
-			cout << endl << ("Error:: genetic load dominance distribution set to normal so parameters must contain one mean value (e.g. mean= ) \n");
+			throw logic_error("Error:: genetic load dominance distribution set to normal so parameters must contain one mean value (e.g. mean= ) \n");
 		if (dominanceParameters.count(SD) != 1)
-			cout << endl << ("Error:: genetic load dominance distribution set to normal so parameters must contain one sdev value (e.g. sdev= ) \n");
+			throw logic_error("Error:: genetic load dominance distribution set to normal so parameters must contain one sdev value (e.g. sdev= ) \n");
 		break;
 	}
 	case GAMMA:
 	{
 		if (dominanceParameters.count(SHAPE) != 1)
-			cout << endl << ("Error:: genetic load dominance distribution set to gamma so parameters must contain one shape value (e.g. shape= ) \n");
+			throw logic_error("Error:: genetic load dominance distribution set to gamma so parameters must contain one shape value (e.g. shape= ) \n");
 		if (dominanceParameters.count(SCALE) != 1)
-			cout << endl << ("Error:: genetic load dominance distribution set to gamma so parameters must contain one scale value (e.g. scale= ) \n");
+			throw logic_error("Error:: genetic load dominance distribution set to gamma so parameters must contain one scale value (e.g. scale= ) \n");
 		break;
 	}
 	case NEGEXP:
 	{
 		if (dominanceParameters.count(MEAN) != 1)
-			cout << endl << ("Error:: genetic load dominance distribution set to negative exponential (negative decay) so parameters must contain mean value (e.g. mean= ) \n");
+			throw logic_error("Error:: genetic load dominance distribution set to negative exponential (negative decay) so parameters must contain mean value (e.g. mean= ) \n");
 		break;
 	}
 	case SCALED:
 	{
-		break;
+		break; // no parameter
 	}
 	default:
 	{
-		cout << endl << ("Error:: wrong parameter value for genetic load dominance model, must be uniform/normal/gamma/negExp/scaled \n");
-		break; //should return false
+		throw logic_error("Error:: wrong parameter value for genetic load dominance model, must be uniform/normal/gamma/negExp/scaled \n");
+		break;
 	}
 	}
 }
+
+// ----------------------------------------------------------------------------------------
+// Inheritance constructor
+// Copies immutable features from a parent trait
+// Only called via clone()
+// ----------------------------------------------------------------------------------------
+GeneticLoad::GeneticLoad(const GeneticLoad& T) : pSpeciesTrait(T.pSpeciesTrait), _inherit_func_ptr(T._inherit_func_ptr)
+{}
 
 void GeneticLoad::initialise() {
 	// All positions start at wild type, mutations accumulate through simulation
@@ -119,16 +117,8 @@ void GeneticLoad::initialise() {
 	}
 }
 
-
 // ----------------------------------------------------------------------------------------
-// for creating new individuals
-// ----------------------------------------------------------------------------------------
-
-GeneticLoad::GeneticLoad(const GeneticLoad& T) : pSpeciesTrait(T.pSpeciesTrait), _inherit_func_ptr(T._inherit_func_ptr)
-{}
-
-// ----------------------------------------------------------------------------------------
-// mutate uniform
+// Mutate uniform
 // ----------------------------------------------------------------------------------------
 void GeneticLoad::mutate()
 {
@@ -136,11 +126,12 @@ void GeneticLoad::mutate()
 	const auto& genePositions = pSpeciesTrait->getGenePositions();
 	const short ploidy = pSpeciesTrait->getPloidy();
 	const float mutationRate = pSpeciesTrait->getMutationRate();
+	float newSelectionCoef;
+	float newDominanceCoef;
 
 	auto rng = pRandom->getRNG();
 
 	for (int p = 0; p < ploidy; p++) {
-
 		// Determine nb of mutations
 		unsigned int NbMut = pRandom->Poisson(positionsSize * mutationRate);
 		if (NbMut > positionsSize) NbMut = positionsSize;
@@ -152,19 +143,15 @@ void GeneticLoad::mutate()
 				NbMut, rng);
 
 			for (int m : mutationPositions) {
-
-				float newSelectionCoef = drawSelectionCoef();
-				float newDominanceCoef = drawDominance(newSelectionCoef);
-
 				auto it = genes.find(m);
-				if (it == genes.end()) {   
-					/*
-					vector<shared_ptr<Allele>> newAllelePair(2);
-					newAllelePair[p] = make_shared<Allele>(newSelectionCoef, newDominanceCoef); //put new mutation value in 
-					genes.insert(make_pair(m, newAllelePair));
-					*/
+				if (it == genes.end())
 					throw runtime_error("Locus sampled for mutation doesn't exist.");
-				}
+				do {
+					newSelectionCoef = drawSelectionCoef();
+				} while (!pSpeciesTrait->isValidTraitVal(newSelectionCoef));
+				do {
+					newDominanceCoef = drawDominance(newSelectionCoef);
+				} while (newDominanceCoef < 0.0);
 				it->second[p] = make_shared<Allele>(newSelectionCoef, newDominanceCoef);
 			}
 		}
@@ -179,8 +166,7 @@ float GeneticLoad::drawDominance(float selCoef) {
 	DistributionType dominanceDistribution = pSpeciesTrait->getDominanceDistribution();
 	map<GenParamType, float> dominanceParameters = pSpeciesTrait->getDominanceParameters();
 
-	float h = 1.0; //default dominance is  1
-
+	float h;
 	switch (dominanceDistribution) {
 	case UNIFORM:
 	{
@@ -219,16 +205,15 @@ float GeneticLoad::drawDominance(float selCoef) {
 
 	default:
 	{
-		cout << endl << ("Error:: wrong parameter value for genetic load dominance model, must be uniform/normal/gamma/negExp/scaled \n");
-		break; //should return false
+		throw logic_error("Error:: wrong parameter value for genetic load dominance model, must be uniform/normal/gamma/negExp/scaled \n");
+		break;
 	}
 	}
-
 	return h;
 }
 
 // ----------------------------------------------------------------------------------------
-// get selection coefficient for new mutation
+// Get selection coefficient for new mutation
 // ----------------------------------------------------------------------------------------
 float GeneticLoad::drawSelectionCoef() {
 
@@ -243,7 +228,6 @@ float GeneticLoad::drawSelectionCoef() {
 		float maxD = mutationParameters.find(MAX)->second;
 		float minD = mutationParameters.find(MIN)->second;
 		s = pRandom->FRandom(minD, maxD);
-
 		break;
 	}
 	case NORMAL:
@@ -251,7 +235,6 @@ float GeneticLoad::drawSelectionCoef() {
 		const float mean = mutationParameters.find(MEAN)->second;
 		const float sd = mutationParameters.find(SD)->second;
 		s = static_cast<float>(pRandom->Normal(mean, sd));
-
 		break;
 	}
 	case GAMMA:
@@ -269,8 +252,8 @@ float GeneticLoad::drawSelectionCoef() {
 	}
 	default:
 	{
-		cout << endl << ("Error:: wrong parameter value for genetic load mutation model, must be uniform/normal/gamma/negExp/scaled \n");
-		break; //should return false
+		throw logic_error("Error:: wrong parameter value for genetic load mutation model, must be uniform/normal/gamma/negExp/scaled \n");
+		break;
 	}
 	}
 	return s;
@@ -278,64 +261,72 @@ float GeneticLoad::drawSelectionCoef() {
 
 
 // ----------------------------------------------------------------------------------------
-// inheritance options
+//  Wrapper to inheritance function
 // ----------------------------------------------------------------------------------------
-
-void GeneticLoad::inherit(const bool& fromMother, TTrait* parentTrait, set<unsigned int> const& recomPositions, int startingChromosome)
+void GeneticLoad::inheritGenes(const bool& fromMother, TTrait* parentTrait, set<unsigned int> const& recomPositions, int startingChromosome)
 {
-	auto parentCast = dynamic_cast<GeneticLoad*> (parentTrait); //horrible
-
+	auto parentCast = dynamic_cast<GeneticLoad*> (parentTrait); // must convert TTrait to GeneticLoadTrait
 	const auto& parent_seq = parentCast->getGenes();
-	if (parent_seq.size() > 0) //else nothing to inherit
-		(this->*_inherit_func_ptr) (fromMother, parent_seq, recomPositions, startingChromosome);
+	(this->*_inherit_func_ptr) (fromMother, parent_seq, recomPositions, startingChromosome);
 }
 
+// ----------------------------------------------------------------------------------------
+// Inheritance for diploid, sexual species
+// Called once for each parent. Given a list of recombinant sites, 
+// populates offspring genes with appropriate parent alleles
+// Assumes mother genes are inherited first
+// ----------------------------------------------------------------------------------------
 void GeneticLoad::inheritDiploid(const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome) {
 
 	auto it = recomPositions.lower_bound(parentGenes.begin()->first);
 	int nextBreakpoint = *it;
 	auto distance = std::distance(recomPositions.begin(), it);
 	if (distance % 2 != 0)
-		parentChromosome = 1 - parentChromosome; // switch to the other one
-		// use 1-parentChromosome, or switch to a sex_t ?
+		parentChromosome = 1 - parentChromosome; // switch chromosome
 
 	for (auto const& [locus, allelePair] : parentGenes) {
+
+		// Switch chromosome if locus is past recombination site
 		while (locus > nextBreakpoint) {
 			std::advance(it, 1);
 			nextBreakpoint = *it;
-			parentChromosome = 1 - parentChromosome; // switch to the other one
+			parentChromosome = 1 - parentChromosome;
 		}
-		if (locus <= nextBreakpoint) {
-			auto& allele = allelePair[parentChromosome];
 
-			auto it = genes.find(locus);
-			if (it == genes.end()) {
-				// locus does not exist yet, initiate it
+		if (locus <= nextBreakpoint) {
+			auto& parentAllele = allelePair[parentChromosome];
+			auto itGene = genes.find(locus);
+			if (itGene == genes.end()) {
+				// locus does not exist yet, create and initialise it
 				if (!fromMother) throw runtime_error("Father-inherited locus does not exist.");
-				vector<shared_ptr<Allele>> newAllelePair(2);
-				newAllelePair[sex_t::FEM] = allele;
+				vector<shared_ptr<Allele>> newAllelePair(2); // always diploid
+				newAllelePair[sex_t::FEM] = parentAllele;
 				genes.insert(make_pair(locus, newAllelePair));
 			} 
 			else { // father, locus already exists
 				if (fromMother) throw runtime_error("Mother-inherited locus already exists.");
-				it->second[sex_t::MAL] = allele;
+				itGene->second[sex_t::MAL] = parentAllele;
 			}
 		}
 	}
 }
 
+// ----------------------------------------------------------------------------------------
+// Inheritance for haploid, asexual species
+// Simply pass down parent genes
+// Arguments are still needed to match overloaded function in base class
+// ----------------------------------------------------------------------------------------
 void GeneticLoad::inheritHaploid(const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome)
 {
 	genes = parentGenes;
 }
 
 // ----------------------------------------------------------------------------------------
-// expression options
+// Expression genetic load
 // ----------------------------------------------------------------------------------------
-
 float GeneticLoad::express() {
 
-	float phenotype = 1.0;
+	float phenotype = 1.0;  // base chance of viability
 	float sA, sB, hA, hB, sumDomCoeffs, hLocus;
 
 	for (auto const& [locus, pAllelePair] : genes)
@@ -361,14 +352,13 @@ float GeneticLoad::express() {
 }
 
 // ----------------------------------------------------------------------------------------
-// check if particular locus is heterozygote
+// Check if specific locus is heterozygote
 // ----------------------------------------------------------------------------------------
 bool GeneticLoad::isHeterozygoteAtLocus(int locus) const {
-
+	// assumes diploidy
 	auto it = genes.find(locus);
-
-	if (it == genes.end()) //not found so must be wildtype homozygous
-		return false;
+	if (it == genes.end())
+		throw runtime_error("Genetic load gene queried for heterozygosity does not exist.");
 	else {
 		shared_ptr<Allele> alleleRight = it->second[0] == 0 ? wildType : it->second[0];
 		shared_ptr<Allele> alleleLeft = it->second[1] == 0 ? wildType : it->second[1];
@@ -377,10 +367,10 @@ bool GeneticLoad::isHeterozygoteAtLocus(int locus) const {
 }
 
 // ----------------------------------------------------------------------------------------
-// count heterozygote loci in genome 
+// Count heterozygote loci in genome 
 // ----------------------------------------------------------------------------------------
 int GeneticLoad::countHeterozygoteLoci() const {
-
+	// assumes diploidy
 	int count = 0;
 	for (auto const& [locus, allelePair] : genes) {
 		shared_ptr<Allele> alleleLeft = allelePair[0] == 0 ? wildType : allelePair[0];
@@ -391,10 +381,8 @@ int GeneticLoad::countHeterozygoteLoci() const {
 }
 
 // ----------------------------------------------------------------------------------------
-// get allele value at loci 
+// Get allele value at locus
 // ----------------------------------------------------------------------------------------
-
-
 float GeneticLoad::getAlleleValueAtLocus(short whichChromosome, int position) const {
 
 	auto it = genes.find(position);

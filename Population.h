@@ -226,7 +226,7 @@ public:
 	int getAlleleTally(int locus, int allele);
 	int getHeteroTally(int locus, int allele);
 	int countHeterozygoteLoci();
-	vector<double> countLociHeterozyotes();
+	vector<int> countNbHeterozygotesEachLocus();
 	double computeHs();
 
 private:
@@ -241,7 +241,7 @@ private:
 	// has been completed
 
 	std::set <Individual*> sampledInds;
-	vector<SNPtable> popSNPtables;
+	vector<SNPCountsTable> popSNPCountTables;
 	void resetPopSNPtables();
 };
 

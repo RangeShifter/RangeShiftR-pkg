@@ -321,15 +321,15 @@ int Population::getNInds(void) { return (int)inds.size(); }
 // reset allele table
 // ----------------------------------------------------------------------------------------
 void Population::resetPopSNPtables() {
-	for (auto& entry : popSNPtables) {
+	for (auto& entry : popSNPCountTables) {
 		entry.reset();
 	}
 }
 
 // ----------------------------------------------------------------------------------------
-//  allele frequency in population of sampled individuals 
+// Populate population-level SNP count tables
+// Update allele occurrence and heterozygosity counts, and allele frequencies
 // ----------------------------------------------------------------------------------------
-
 void Population::updatePopSNPtables() {
 
 	const int nLoci = pSpecies->getNPositionsForTrait(SNP);
@@ -337,112 +337,114 @@ void Population::updatePopSNPtables() {
 	const auto& positions = pSpecies->getSpTrait(SNP)->getGenePositions();
 	const int ploidy = pSpecies->isDiploid() ? 2 : 1;
 
-	if (popSNPtables.size() != 0)
+	// Create /reset empty tables
+	if (popSNPCountTables.size() != 0)
 		resetPopSNPtables();
 	else {
-		popSNPtables.reserve(nLoci);
+		popSNPCountTables.reserve(nLoci);
 
 		for (int l = 0; l < nLoci; l++) {
-			popSNPtables.push_back(SNPtable(nAlleles));
+			popSNPCountTables.push_back(SNPCountsTable(nAlleles));
 		}
 	}
 
+	// Fill tallies for each locus
 	for (Individual* individual : sampledInds) {
 
 		const auto trait = individual->getTrait(SNP);
-
 		int whichLocus = 0;
 		for (auto position : positions) {
 
 			int alleleOnChromA = (int)trait->getAlleleValueAtLocus(0, position);
-			popSNPtables[whichLocus].incrementTally(alleleOnChromA);
+			popSNPCountTables[whichLocus].incrementTally(alleleOnChromA);
 
-			if (ploidy == 2) {
+			if (ploidy == 2) { // second allele and heterozygosity
 				int alleleOnChromB = (int)trait->getAlleleValueAtLocus(1, position);
-				popSNPtables[whichLocus].incrementTally(alleleOnChromB);
+				popSNPCountTables[whichLocus].incrementTally(alleleOnChromB);
 
 				bool isHetero = alleleOnChromA != alleleOnChromB;
 				if (isHetero) {
-					popSNPtables[whichLocus].incrementHeteroTally(alleleOnChromA);
-					popSNPtables[whichLocus].incrementHeteroTally(alleleOnChromB);
+					popSNPCountTables[whichLocus].incrementHeteroTally(alleleOnChromA);
+					popSNPCountTables[whichLocus].incrementHeteroTally(alleleOnChromB);
 				}
 			}
 			whichLocus++;
 		}
 	}
 
+	// Fill frequencies
 	if (sampledInds.size() > 0) {
 		std::for_each(
-			popSNPtables.begin(),
-			popSNPtables.end(),
-			[&](SNPtable& thisLocus) -> void {
+			popSNPCountTables.begin(),
+			popSNPCountTables.end(),
+			[&](SNPCountsTable& thisLocus) -> void {
 				thisLocus.setFrequencies(static_cast<int>(sampledInds.size()) * ploidy);
 			});
 	}
 }
 
 double Population::getAlleleFrequency(int thisLocus, int whichAllele) {
-	return popSNPtables[thisLocus].getFrequency(whichAllele);
+	return popSNPCountTables[thisLocus].getFrequency(whichAllele);
 }
 
 int Population::getAlleleTally(int thisLocus, int whichAllele) {
-	return popSNPtables[thisLocus].getTally(whichAllele);
+	return popSNPCountTables[thisLocus].getTally(whichAllele);
 }
 
 int Population::getHeteroTally(int thisLocus, int whichAllele) {
-	return popSNPtables[thisLocus].getHeteroTally(whichAllele);
+	return popSNPCountTables[thisLocus].getHeteroTally(whichAllele);
 }
 
 // ----------------------------------------------------------------------------------------
 // Count number of heterozygotes loci in sampled individuals
 // ----------------------------------------------------------------------------------------
-
 int Population::countHeterozygoteLoci() {
 	int nbHetero = 0;
-	for (Individual* ind : sampledInds) {
-		const auto trait = ind->getTrait(SNP);
-		nbHetero += trait->countHeterozygoteLoci();
+	if (pSpecies->isDiploid()) {
+		for (Individual* ind : sampledInds) {
+			const auto trait = ind->getTrait(SNP);
+			nbHetero += trait->countHeterozygoteLoci();
+		}
 	}
 	return nbHetero;
 }
 
 // ----------------------------------------------------------------------------------------
-// Count number of heterozygotes per loci loci in sampled individuals
+// Count number of heterozygotes among sampled individuals for each locus
 // ----------------------------------------------------------------------------------------
-
-vector<double> Population::countLociHeterozyotes() {
+vector<int> Population::countNbHeterozygotesEachLocus() {
 	const auto& positions = pSpecies->getSpTrait(SNP)->getGenePositions();
-	vector<double> hetero(positions.size(), 0);
+	vector<int> hetero(positions.size(), 0);
 
-	for (Individual* ind : sampledInds) {
-		const auto trait = ind->getTrait(SNP);
-		int counter = 0;
-		for (auto position : positions) {
-			hetero[counter] += trait->isHeterozygoteAtLocus(position);
-			counter++;
+	if (pSpecies->isDiploid()) {
+		for (Individual* ind : sampledInds) {
+			const auto trait = ind->getTrait(SNP);
+			int counter = 0;
+			for (auto position : positions) {
+				hetero[counter] += trait->isHeterozygoteAtLocus(position);
+				counter++;
+			}
 		}
 	}
 	return hetero;
 }
 
 // ----------------------------------------------------------------------------------------
-//	compute the expected heterozygosity for population
+//	Compute the expected heterozygosity for population
 // ----------------------------------------------------------------------------------------
-
 double Population::computeHs() {
 	int nLoci = pSpecies->getNPositionsForTrait(SNP);
 	int nAlleles = (int)pSpecies->getSpTrait(SNP)->getInitialParameters().find(MAX)->second;
 	double hs = 0;
 	double freq;
-
-	vector<double>locihet(nLoci, 1);
+	vector<double> locihet(nLoci, 1);
 
 	if (sampledInds.size() > 0) {
 		for (int thisLocus = 0; thisLocus < nLoci; ++thisLocus) {
 			for (int allele = 0; allele < nAlleles; ++allele) {
 				freq = getAlleleFrequency(thisLocus, allele);
 				freq *= freq; //squared frequencies (expected _homozygosity)
-				locihet[thisLocus] -= freq; //1 - sum of p2 = expected heterozygosity
+				locihet[thisLocus] -= freq; // 1 - sum of p2 = expected heterozygosity
 			}
 			hs += locihet[thisLocus];
 		}
@@ -1090,31 +1092,11 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 	// each individual takes one step
 	// for dispersal by kernel, this should be the only step taken
 	int ninds = (int)inds.size();
-#if RSDEBUG
-	//DEBUGLOG << "Population::transfer(): 0000: ninds = " << ninds
-	//	<< " ndispersers = " << ndispersers << endl;
-#endif
+
 	for (int i = 0; i < ninds; i++) {
-#if RSDEBUG
-		//DEBUGLOG << "Population::transfer(): 1111: i = " << i << " ID = " << inds[i]->getId()
-		//	<< endl;
-#endif
 		if (trfr.usesMovtProc) {
-#if RSDEBUG
-			//pCell = inds[i]->getLocn(1);
-			//locn loc = pCell->getLocn();
-			//DEBUGLOG << "Population::transfer(): 1112: i = " << i << " ID = " << inds[i]->getId()
-			//	<< " before:" << " x = " << loc.x << " y = " << loc.y
-			//	<< endl;
-#endif
+
 			disperser = inds[i]->moveStep(pLandscape, pSpecies, landIx, sim.absorbing);
-#if RSDEBUG
-			//pCell = inds[i]->getLocn(1);
-			//newloc = pCell->getLocn();
-			//DEBUGLOG << "Population::transfer(): 1113: i = " << i << " ID = " << inds[i]->getId()
-			//	<< " after: " << " x = " << newloc.x << " y = " << newloc.y
-			//	<< endl;
-#endif
 		}
 		else {
 			disperser = inds[i]->moveKernel(pLandscape, pSpecies, reptype, sim.absorbing);
@@ -1135,10 +1117,6 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 			}
 		}
 	}
-#if RSDEBUG
-	//DEBUGLOG << "Population::transfer(): 5555: ninds=" << ninds
-	//	<< " ndispersers=" << ndispersers << endl;
-#endif
 
 	for (int i = 0; i < ninds; i++) {
 		ind = inds[i]->getStats();
@@ -1163,28 +1141,11 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 				ind.status = 6;
 			}
 			else {
-
-#if RSDEBUG
-				//newloc = pCell->getLocn();
-				//DEBUGLOG << "Population::transfer(): 6666: i=" << i << " ID=" << inds[i]->getId()
-				//	<< " sex=" << ind.sex << " status=" << ind.status
-				//	<< " pCell=" << pCell << " x=" << newloc.x << " y=" << newloc.y
-				//	<< " findMate=" << sett.findMate
-				////	<< " wait=" << sett.wait
-				////	<< " go2nbrLocn=" << sett.go2nbrLocn
-				//	<< endl;
-#endif
-
 				mateOK = false;
 				if (sett.findMate) {
 					// determine whether at least one individual of the opposite sex is present in the
 					// new population
 					if (matePresent(pCell, othersex)) mateOK = true;
-#if RSDEBUG
-					//DEBUGLOG << "Population::transfer(): 7777: othersex=" << othersex
-					//	<< " this=" << this << " pNewPopn=" << pNewPopn << " popsize=" << popsize << " mateOK=" << mateOK
-					//	<< endl;
-#endif
 				}
 				else { // no requirement to find a mate
 					mateOK = true;
@@ -1194,10 +1155,6 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 				if (sett.densDep)
 				{
 					patch = pCell->getPatch();
-#if RSDEBUG
-					//DEBUGLOG << "Population::transfer(): 8880: i=" << i << " patch=" << patch
-					//	<< endl;
-#endif
 					if (patch != 0) { // not no-data area
 						pPatch = (Patch*)patch;
 						if (settle.settleStatus == 0
@@ -1205,14 +1162,10 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 							// note: second condition allows for having moved from one patch to another
 							// adjacent one
 						{
-							//						inds[i]->resetPathOut(); // reset steps out of patch to zero
-													// determine whether settlement occurs in the (new) patch
+							// determine whether settlement occurs in the (new) patch
 							localK = (double)pPatch->getK();
 							popn = pPatch->getPopn((intptr)pSpecies);
-#if RSDEBUG
-							//DEBUGLOG << "Population::transfer(): 8881: i=" << i << " patchNum=" << pPatch->getPatchNum()
-							//	<< " localK=" << localK << " popn=" << popn << endl;
-#endif
+
 							if (popn == 0) { // population has not been set up in the new patch
 								popsize = 0.0;
 							}
@@ -1226,13 +1179,6 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 								else settDD = pSpecies->getSettTraits(ind.stage, ind.sex);
 								settprob = settDD.s0 /
 									(1.0 + exp(-(popsize / localK - (double)settDD.beta) * (double)settDD.alpha));
-#if RSDEBUG
-								//DEBUGLOG << "Population::transfer(): 8888: i=" << i << " ind.stage=" << ind.stage
-								//	<< " this=" << this << " pNewPopn=" << pNewPopn << " popsize=" << popsize
-								//	<< " localK=" << localK << " alpha=" << settDD.alpha << " beta=" << settDD.beta
-								//	<< " settprob=" << settprob
-								//	<< endl;
-#endif
 								if (pRandom->Bernoulli(settprob)) { // settlement allowed
 									densdepOK = true;
 									settle.settleStatus = 2;
@@ -1301,11 +1247,6 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 		{
 			// for kernel-based transfer only ...
 			// determine whether recruitment to a neighbouring cell is possible
-#if RSDEBUG
-//DEBUGLOG << "Population::transfer(): neighbour cell search: sett.go2nbrLocn = " << sett.go2nbrLocn
-//	<< " ind.status = " << ind.status
-//	<< endl;
-#endif
 			pCell = inds[i]->getLocn(1);
 			newloc = pCell->getLocn();
 			vector <Cell*> nbrlist;
@@ -1352,12 +1293,6 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 			// else list empty - do nothing - individual retains its current location and status
 		}
 	}
-#if RSDEBUG
-	//DEBUGLOG << "Population::transfer(): 9999: ninds = " << ninds
-	//	<< " ndispersers = " << ndispersers << endl;
-#endif
-
-
 	return ndispersers;
 }
 

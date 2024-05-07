@@ -9,26 +9,12 @@
 #include <set>
 #include <memory>
 
-class Species;
+class Species; // forward declaration to overcome circularity issue
 
+// Species-level traits
+// Features of traits that are shared across all individuals in the same species
 class SpeciesTrait {
-
-private:
-    inline static int ploidy = 0;
-    float mutationRate;
-    sex_t sex;
-    set<int> genePositions;
-    ExpressionType expressionType;
-    DistributionType initialDistribution;
-    map<GenParamType, float> initialParameters;
-    DistributionType dominanceDistribution;
-    map<GenParamType, float> dominanceParameters;
-    bool inherited;
-    DistributionType mutationDistribution;
-    map<GenParamType, float> mutationParameters;
-
 public:
-
     SpeciesTrait(
         const TraitType& traitType,
         const sex_t& sex,
@@ -38,12 +24,14 @@ public:
         const map<GenParamType, float> initParams,
         const DistributionType& dominanceDist,
         const map<GenParamType, float> dominanceParams,
-        bool isInherited, 
+        bool isInherited,
         const float& mutationRate,
         const DistributionType& mutationDist,
         const map<GenParamType, float> mutationParams,
         Species* pSpecies
-        );
+    );
+
+    bool isValidTraitVal(const float& val) const;
 
     // Getters
     sex_t getSex() const { return sex; }
@@ -51,7 +39,8 @@ public:
     short getPloidy() const { return ploidy; }
     set<int>& getGenePositions() { return genePositions; } // returning by reference, make sure receiver is const
     int getPositionsSize() const { return static_cast<int>(genePositions.size()); }
-    bool isInherited() const { return inherited;  }
+    bool isInherited() const { return inherited; }
+
     DistributionType getMutationDistribution() const { return mutationDistribution; };
     map<GenParamType, float> getMutationParameters() const { return mutationParameters; };
     DistributionType getDominanceDistribution() const { return dominanceDistribution; };
@@ -59,5 +48,25 @@ public:
     DistributionType getInitialDistribution() const { return initialDistribution; };
     map<GenParamType, float> getInitialParameters() const { return initialParameters; };
     ExpressionType getExpressionType() const { return expressionType; };
+
+private:
+
+    inline static int ploidy = 0;
+    float mutationRate;
+    TraitType traitType;
+    sex_t sex;
+
+    // Positions in the genome of all genes (loci) pertaining to this trait
+    // The genome itself is not modelled explicitly
+    set<int> genePositions;
+
+    ExpressionType expressionType;
+    DistributionType initialDistribution;
+    map<GenParamType, float> initialParameters;
+    DistributionType dominanceDistribution;
+    map<GenParamType, float> dominanceParameters;
+    bool inherited;
+    DistributionType mutationDistribution;
+    map<GenParamType, float> mutationParameters;
 };
 #endif

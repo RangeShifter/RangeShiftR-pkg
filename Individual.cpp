@@ -111,10 +111,8 @@ set<TraitType> Individual::getTraitTypes() {
 }
 
 //---------------------------------------------------------------------------
-
+// Inheritance for diploid, sexual species
 //---------------------------------------------------------------------------
-
-
 void Individual::inherit(Species* pSpecies, const Individual* mother, const Individual* father) {
 
 	int events = 0;
@@ -127,9 +125,9 @@ void Individual::inherit(Species* pSpecies, const Individual* mother, const Indi
 	set<unsigned int> maternalRecomPositions;
 	set<unsigned int> paternalRecomPositions;
 
-	// Determine at which chromosome ends does the genome break
+	// Determine which parental chromosomes are inherited
 	for (int pos : chromosomeEnds) {
-		if (pRandom->Bernoulli(0.5))
+		if (pRandom->Bernoulli(0.5)) // switch strand for next chromosome
 			maternalRecomPositions.insert(pos);
 		if (pRandom->Bernoulli(0.5))
 			paternalRecomPositions.insert(pos);
@@ -138,7 +136,7 @@ void Individual::inherit(Species* pSpecies, const Individual* mother, const Indi
 	// Draw recombination events for maternal genome
 	if (pSpecies->getRecombinationRate() > 0.0)
 		events = pRandom->Poisson(genomeSize * pSpecies->getRecombinationRate());
-	// if poisson exceeds genomeSize, bound to genomeSize?
+	// if poisson exceeds genomeSize, bound to genomeSize
 	int nbrCrossOvers = events + maternalRecomPositions.size();
 	if (nbrCrossOvers > genomeSize) {
 		nbrCrossOvers = genomeSize;
@@ -163,18 +161,19 @@ void Individual::inherit(Species* pSpecies, const Individual* mother, const Indi
 	maternalRecomPositions.insert(genomeSize - 1);
 	paternalRecomPositions.insert(genomeSize - 1);
 
+	// Inherit genes for each gene
 	const auto& spTraits = pSpecies->getTraitTypes();
-
 	for (auto const& trait : spTraits)
 	{
 		const auto motherTrait = mother->getTrait(trait);
 		const auto fatherTrait = father->getTrait(trait);
-		auto newTrait = motherTrait->clone(); // shallow copy, pointer to proto trait initialised and empty sequence
+		auto newTrait = motherTrait->clone(); // shallow copy pointer to species-level attributes
 
-		newTrait->inherit(true, motherTrait, maternalRecomPositions, maternalStartingChromosome);
+		// Inherit from mother first
+		newTrait->inheritGenes(true, motherTrait, maternalRecomPositions, maternalStartingChromosome);
 		if (newTrait->isInherited()) {
 			// Inherit father trait values
-			newTrait->inherit(false, fatherTrait, paternalRecomPositions, paternalStartingChromosome);
+			newTrait->inheritGenes(false, fatherTrait, paternalRecomPositions, paternalStartingChromosome);
 			if (newTrait->getMutationRate() > 0 && pSpecies->areMutationsOn())
 				newTrait->mutate();
 		}
@@ -186,6 +185,9 @@ void Individual::inherit(Species* pSpecies, const Individual* mother, const Indi
 	}
 }
 
+//---------------------------------------------------------------------------
+// Inheritance for haploid, asexual species
+//---------------------------------------------------------------------------
 void Individual::inherit(Species* pSpecies, const Individual* mother) {
 	set<unsigned int> recomPositions; //not used here cos haploid but need it for inherit function, not ideal 
 	int startingChromosome = 0;
@@ -195,10 +197,9 @@ void Individual::inherit(Species* pSpecies, const Individual* mother) {
 	for (auto const& trait : mumTraits)
 	{
 		const auto motherTrait = mother->getTrait(trait);
+		auto newTrait = motherTrait->clone(); // shallow copy, pointer to species trait initialised and empty sequence
 
-		auto newTrait = motherTrait->clone(); //shallow copy, pointer to proto trait initialised and empty sequence
-
-		newTrait->inherit(true, motherTrait, recomPositions, startingChromosome);
+		newTrait->inheritGenes(true, motherTrait, recomPositions, startingChromosome);
 		if (newTrait->isInherited()) {
 			if (newTrait->getMutationRate() > 0 && pSpecies->areMutationsOn())
 				newTrait->mutate();
@@ -211,13 +212,12 @@ void Individual::inherit(Species* pSpecies, const Individual* mother) {
 	}
 }
 
-// Set genes for individual variation from species initialisation parameters
+// Initialise individual trait genes from species-level traits
 void Individual::setUpGenes(Species* pSpecies, int resol) {
 
 	// this way to keep spp trait table immutable i.e. not able to call getTraitTable, 
 	// could pass it back by value (copy) instead but could be heavy if large map
 	const auto& traitTypes = pSpecies->getTraitTypes();
-
 	for (auto const& traitType : traitTypes)
 	{
 		const auto spTrait = pSpecies->getSpTrait(traitType);
@@ -277,7 +277,7 @@ void Individual::setSettlementTraits(Species* pSpecies, bool sexDep) {
 }
 
 
-// Inherit genome from parent(s)
+// Inherit genome from parent(s), diploid
 void Individual::inheritTraits(Species* pSpecies, Individual* mother, Individual* father, int resol)
 {
 	inherit(pSpecies, mother, father);
@@ -558,17 +558,13 @@ void Individual::setCRWTraits(Species* pSpecies) {
 
 // Get phenotypic transfer by CRW traits
 trfrCRWTraits Individual::getCRWTraits(void) {
+
 	trfrCRWTraits c; c.stepLength = c.rho = 0.0;
-
-
 	if (pTrfrData != 0) {
-
 		auto& pCRW = dynamic_cast<const crwData&>(*pTrfrData);
-
 		c.stepLength = pCRW.stepLength;
 		c.rho = pCRW.rho;
 	}
-
 	return c;
 
 }
@@ -722,7 +718,6 @@ int Individual::moveKernel(Landscape* pLandscape, Species* pSpecies,
 				yrand = (double)loc.y + pRandom->Random() * 0.999;
 
 				r1 = 0.0000001 + pRandom->Random() * (1.0 - 0.0000001);
-				//			dist = (-1.0*meandist)*std::log(r1);
 				dist = (-1.0 * meandist) * log(r1);  // for LINUX_CLUSTER
 
 				rndangle = pRandom->Random() * 2.0 * PI;
