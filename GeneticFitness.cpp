@@ -1,4 +1,4 @@
-#include "GeneticLoad.h"
+#include "GeneticFitness.h"
 
 // ----------------------------------------------------------------------------------------
 //  Initialisation constructor
@@ -6,14 +6,14 @@
 //  Sets up initial values, and immutable attributes (distributions and parameters)
 //	that are defined at the species-level
 // ----------------------------------------------------------------------------------------
-GeneticLoad::GeneticLoad(SpeciesTrait* P)
+GeneticFitness::GeneticFitness(SpeciesTrait* P)
 {
 	pSpeciesTrait = P;
 	ExpressionType expressionType = pSpeciesTrait->getExpressionType();
 
 	initialise();
 
-	_inherit_func_ptr = (pSpeciesTrait->getPloidy() == 1) ? &GeneticLoad::inheritHaploid : &GeneticLoad::inheritDiploid; //this could be changed if we wanted some alternative form of inheritance
+	_inherit_func_ptr = (pSpeciesTrait->getPloidy() == 1) ? &GeneticFitness::inheritHaploid : &GeneticFitness::inheritDiploid; //this could be changed if we wanted some alternative form of inheritance
 
 	DistributionType mutationDistribution = pSpeciesTrait->getMutationDistribution();
 	map<GenParamType, float> mutationParameters = pSpeciesTrait->getMutationParameters();
@@ -104,10 +104,10 @@ GeneticLoad::GeneticLoad(SpeciesTrait* P)
 // Copies immutable features from a parent trait
 // Only called via clone()
 // ----------------------------------------------------------------------------------------
-GeneticLoad::GeneticLoad(const GeneticLoad& T) : pSpeciesTrait(T.pSpeciesTrait), _inherit_func_ptr(T._inherit_func_ptr)
+GeneticFitness::GeneticFitness(const GeneticFitness& T) : pSpeciesTrait(T.pSpeciesTrait), _inherit_func_ptr(T._inherit_func_ptr)
 {}
 
-void GeneticLoad::initialise() {
+void GeneticFitness::initialise() {
 	// All positions start at wild type, mutations accumulate through simulation
 	const set<int> genePositions = pSpeciesTrait->getGenePositions();
 	short ploidy = pSpeciesTrait->getPloidy();
@@ -120,7 +120,7 @@ void GeneticLoad::initialise() {
 // ----------------------------------------------------------------------------------------
 // Mutate uniform
 // ----------------------------------------------------------------------------------------
-void GeneticLoad::mutate()
+void GeneticFitness::mutate()
 {
 	const int positionsSize = pSpeciesTrait->getPositionsSize();
 	const auto& genePositions = pSpeciesTrait->getGenePositions();
@@ -161,7 +161,7 @@ void GeneticLoad::mutate()
 // ----------------------------------------------------------------------------------------
 // get dominance value for new mutation
 // ----------------------------------------------------------------------------------------
-float GeneticLoad::drawDominance(float selCoef) {
+float GeneticFitness::drawDominance(float selCoef) {
 
 	DistributionType dominanceDistribution = pSpeciesTrait->getDominanceDistribution();
 	map<GenParamType, float> dominanceParameters = pSpeciesTrait->getDominanceParameters();
@@ -215,7 +215,7 @@ float GeneticLoad::drawDominance(float selCoef) {
 // ----------------------------------------------------------------------------------------
 // Get selection coefficient for new mutation
 // ----------------------------------------------------------------------------------------
-float GeneticLoad::drawSelectionCoef() {
+float GeneticFitness::drawSelectionCoef() {
 
 	DistributionType mutationDistribution = pSpeciesTrait->getMutationDistribution();
 	map<GenParamType, float> mutationParameters = pSpeciesTrait->getMutationParameters();
@@ -263,9 +263,9 @@ float GeneticLoad::drawSelectionCoef() {
 // ----------------------------------------------------------------------------------------
 //  Wrapper to inheritance function
 // ----------------------------------------------------------------------------------------
-void GeneticLoad::inheritGenes(const bool& fromMother, TTrait* parentTrait, set<unsigned int> const& recomPositions, int startingChromosome)
+void GeneticFitness::inheritGenes(const bool& fromMother, TTrait* parentTrait, set<unsigned int> const& recomPositions, int startingChromosome)
 {
-	auto parentCast = dynamic_cast<GeneticLoad*> (parentTrait); // must convert TTrait to GeneticLoadTrait
+	auto parentCast = dynamic_cast<GeneticFitness*> (parentTrait); // must convert TTrait to GeneticFitness
 	const auto& parent_seq = parentCast->getGenes();
 	(this->*_inherit_func_ptr) (fromMother, parent_seq, recomPositions, startingChromosome);
 }
@@ -276,7 +276,7 @@ void GeneticLoad::inheritGenes(const bool& fromMother, TTrait* parentTrait, set<
 // populates offspring genes with appropriate parent alleles
 // Assumes mother genes are inherited first
 // ----------------------------------------------------------------------------------------
-void GeneticLoad::inheritDiploid(const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome) {
+void GeneticFitness::inheritDiploid(const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome) {
 
 	auto it = recomPositions.lower_bound(parentGenes.begin()->first);
 	int nextBreakpoint = *it;
@@ -316,7 +316,7 @@ void GeneticLoad::inheritDiploid(const bool& fromMother, map<int, vector<shared_
 // Simply pass down parent genes
 // Arguments are still needed to match overloaded function in base class
 // ----------------------------------------------------------------------------------------
-void GeneticLoad::inheritHaploid(const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome)
+void GeneticFitness::inheritHaploid(const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome)
 {
 	genes = parentGenes;
 }
@@ -324,7 +324,7 @@ void GeneticLoad::inheritHaploid(const bool& fromMother, map<int, vector<shared_
 // ----------------------------------------------------------------------------------------
 // Expression genetic load
 // ----------------------------------------------------------------------------------------
-float GeneticLoad::express() {
+float GeneticFitness::express() {
 
 	float phenotype = 1.0; // base chance of viability
 
@@ -350,7 +350,7 @@ float GeneticLoad::express() {
 // ----------------------------------------------------------------------------------------
 // Check if specific locus is heterozygote
 // ----------------------------------------------------------------------------------------
-bool GeneticLoad::isHeterozygoteAtLocus(int locus) const {
+bool GeneticFitness::isHeterozygoteAtLocus(int locus) const {
 	// assumes diploidy
 	auto it = genes.find(locus);
 	if (it == genes.end())
@@ -365,7 +365,7 @@ bool GeneticLoad::isHeterozygoteAtLocus(int locus) const {
 // ----------------------------------------------------------------------------------------
 // Count heterozygote loci in genome 
 // ----------------------------------------------------------------------------------------
-int GeneticLoad::countHeterozygoteLoci() const {
+int GeneticFitness::countHeterozygoteLoci() const {
 	// assumes diploidy
 	int count = 0;
 	for (auto const& [locus, allelePair] : genes) {
@@ -379,7 +379,7 @@ int GeneticLoad::countHeterozygoteLoci() const {
 // ----------------------------------------------------------------------------------------
 // Get allele value at locus
 // ----------------------------------------------------------------------------------------
-float GeneticLoad::getAlleleValueAtLocus(short whichChromosome, int position) const {
+float GeneticFitness::getAlleleValueAtLocus(short whichChromosome, int position) const {
 
 	auto it = genes.find(position);
 	if (it == genes.end())

@@ -489,7 +489,7 @@ private:
 	int genomeSize;
 	bool diploid;
 	bool mutationsOn;
-	int nbGeneticLoadTraits;
+	int nbGeneticFitnessTraits;
 	float recombinationRate;
 	std::set<int> samplePatchList;
 	int nPatchesToSample; //for cell based landscape
