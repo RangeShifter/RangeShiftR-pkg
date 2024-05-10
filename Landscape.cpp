@@ -876,6 +876,7 @@ set<int> Landscape::samplePatches(const string& samplingOption, int nbToSample, 
 
 	// Get list of viable patches where the species is present
 	for (auto p : patches) {
+		if (p->getPatchNum() == 0) continue; // skip patch 0, the matrix
 		if (p->speciesIsPresent(pSpecies)) 
 			occupiedPatches.push_back(p->getPatchNum());
 	}

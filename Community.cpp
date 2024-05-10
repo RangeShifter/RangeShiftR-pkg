@@ -1628,7 +1628,7 @@ void Community::sampleIndividuals(Species* pSpecies) {
 	for (int patchId : patchList) {
 		const auto patch = pLandscape->findPatch(patchId);
 		if (patch == 0) {
-			throw runtime_error("Sampled patch doesn't exist.");
+			throw runtime_error("Can't sample individuals: patch" + to_string(patchId) + "doesn't exist.");
 		}
 		auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
 		if (pPop != 0) {
