@@ -83,6 +83,13 @@ int RunModel(Landscape* pLandscape, int seqsim)
 		else {
 			pLandscape->resetLandLimits();
 		}
+
+		// Random patches are sampled once per landscape
+		if (sim.patchSamplingOption == "random") {
+			int nbToSample = pSpecies->getNbPatchesToSample();
+			auto patchesToSample = pLandscape->samplePatches(sim.patchSamplingOption, nbToSample, pSpecies);
+			pSpecies->setSamplePatchList(patchesToSample);
+		}
 	}
 
 #if RS_RCPP && !R_CMD
@@ -91,6 +98,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 
 	// Loop through replicates
 	for (int rep = 0; rep < sim.reps; rep++) {
+
 #if RS_RCPP && !R_CMD
 		Rcpp::Rcout << endl << "starting replicate " << rep << endl;
 #endif
@@ -137,6 +145,12 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				#else
 				pComm->addSubComm(ppp.pPatch, ppp.patchNum); // SET UP ALL SUB-COMMUNITIES
 				#endif
+			}
+			if (sim.patchSamplingOption == "random") {
+				// Then patches must be resampled for new landscape
+				int nbToSample = pSpecies->getNbPatchesToSample();
+				auto patchesToSample = pLandscape->samplePatches(sim.patchSamplingOption, nbToSample, pSpecies);
+				pSpecies->setSamplePatchList(patchesToSample);
 			}
 		}
 		if (init.seedType == 0 && init.freeType < 2 && init.initFrzYr > 0) {
@@ -478,7 +492,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 					&& yr % sim.outputGeneticInterval == 0) {
 
 					simParams sim = paramsSim->getSim();
-						if (sim.patchSamplingOption != "list") {
+						if (sim.patchSamplingOption != "list" && sim.patchSamplingOption != "random") {
 							// then patches must be re-sampled every gen
 							int nbToSample = pSpecies->getNbPatchesToSample();
 							auto patchesToSample = pLandscape->samplePatches(sim.patchSamplingOption, nbToSample, pSpecies);
