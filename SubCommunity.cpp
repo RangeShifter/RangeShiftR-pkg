@@ -753,7 +753,7 @@ traitsums SubCommunity::outTraits(traitCanvas tcanv,
 		ts.sumStepL[i] = ts.ssqStepL[i] = 0.0; ts.sumRho[i] = ts.ssqRho[i] = 0.0;
 		ts.sumS0[i] = ts.ssqS0[i] = 0.0;
 		ts.sumAlphaS[i] = ts.ssqAlphaS[i] = 0.0; ts.sumBetaS[i] = ts.ssqBetaS[i] = 0.0;
-		ts.sumProbViability[i] = ts.ssqProbViability[i] = 0.0;
+		ts.sumGeneticFitness[i] = ts.ssqGeneticFitness[i] = 0.0;
 	}
 
 	// generate output for each population within the sub-community (patch)
@@ -999,9 +999,9 @@ traitsums SubCommunity::outTraits(traitCanvas tcanv,
 					if (ngenes == 2) popsize = indTraitsSums.ninds[iGene];
 					else popsize = indTraitsSums.ninds[0] + indTraitsSums.ninds[1];
 					if (popsize > 0) {
-						mnProbViable[iGene] = indTraitsSums.sumProbViability[iGene] / (double)popsize;
+						mnProbViable[iGene] = indTraitsSums.sumGeneticFitness[iGene] / (double)popsize;
 						if (popsize > 1) {
-							sdProbViable[iGene] = indTraitsSums.ssqProbViability[iGene] / (double)popsize - mnProbViable[iGene] * mnProbViable[iGene];
+							sdProbViable[iGene] = indTraitsSums.ssqGeneticFitness[iGene] / (double)popsize - mnProbViable[iGene] * mnProbViable[iGene];
 							if (sdProbViable[iGene] > 0.0) sdProbViable[iGene] = sqrt(sdProbViable[iGene]); else sdProbViable[iGene] = 0.0;
 						}
 						else {
@@ -1055,8 +1055,8 @@ traitsums SubCommunity::outTraits(traitCanvas tcanv,
 				ts.ssqAlphaS[iSex] += indTraitsSums.ssqAlphaS[iSex];
 				ts.sumBetaS[iSex] += indTraitsSums.sumBetaS[iSex]; 
 				ts.ssqBetaS[iSex] += indTraitsSums.ssqBetaS[iSex];
-				ts.sumProbViability[iSex] += indTraitsSums.sumProbViability[iSex];  
-				ts.ssqProbViability[iSex] += indTraitsSums.ssqProbViability[iSex];
+				ts.sumGeneticFitness[iSex] += indTraitsSums.sumGeneticFitness[iSex];  
+				ts.ssqGeneticFitness[iSex] += indTraitsSums.ssqGeneticFitness[iSex];
 			}
 		}
 	}

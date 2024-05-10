@@ -224,7 +224,7 @@ traitsums Population::getIndTraitsSums(Species* pSpecies) {
 		ts.sumS0[sex] = ts.ssqS0[sex] = 0.0;
 		ts.sumAlphaS[sex] = ts.ssqAlphaS[sex] = 0.0;
 		ts.sumBetaS[sex] = ts.ssqBetaS[sex] = 0.0;
-		ts.sumProbViability[sex] = ts.ssqProbViability[sex] = 0.0;
+		ts.sumGeneticFitness[sex] = ts.ssqGeneticFitness[sex] = 0.0;
 	}
 
 	emigRules emig = pSpecies->getEmigRules();
@@ -309,8 +309,8 @@ traitsums Population::getIndTraitsSums(Species* pSpecies) {
 
 		if (maxNbSexes > 1) g = sex; 
 		else g = 0;
-		ts.sumProbViability[g] += inds[iInd]->getProbViability();
-		ts.ssqProbViability[g] += inds[iInd]->getProbViability() * inds[iInd]->getProbViability();
+		ts.sumGeneticFitness[g] += inds[iInd]->getGeneticFitness();
+		ts.ssqGeneticFitness[g] += inds[iInd]->getGeneticFitness() * inds[iInd]->getGeneticFitness();
 	}
 	return ts;
 }
@@ -685,7 +685,9 @@ void Population::reproduction(const float localK, const float envval, const int 
 							newJuv->inheritTraits(pSpecies, inds[i], father, resol);
 						}
 
-						if (newJuv->getProbViability() < pRandom->Random()) {
+						float probViability = newJuv->getGeneticFitness();
+						if (probViability > 1.0) probViability = 1.0;
+						if (probViability < pRandom->Random()) {
 							delete newJuv;
 						}
 						else {
@@ -765,7 +767,9 @@ void Population::reproduction(const float localK, const float envval, const int 
 								if (pSpecies->getNTraits() > 0) {
 									newJuv->inheritTraits(pSpecies, inds[i], father, resol);
 								}
-								if (newJuv->getProbViability() < pRandom->Random()) {
+								float probViability = newJuv->getGeneticFitness();
+								if (probViability > 1.0) probViability = 1.0;
+								if (probViability < pRandom->Random()) {
 									delete newJuv;
 								}
 								else {
@@ -1862,7 +1866,7 @@ void Population::outIndividual(Landscape* pLandscape, int rep, int yr, int gen,
 			if (dem.repType != 0) outInds << "\t" << ind.sex;
 			if (dem.stageStruct) outInds << "\t" << ind.age << "\t" << ind.stage;
 
-			if (pSpecies->getNbGenLoadTraits() > 0) outInds << "\t" << inds[i]->getProbViability();
+			if (pSpecies->getNbGenLoadTraits() > 0) outInds << "\t" << inds[i]->getGeneticFitness();
 		
 			if (emig.indVar) {
 				emigTraits e = inds[i]->getEmigTraits();

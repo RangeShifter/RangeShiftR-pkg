@@ -66,8 +66,8 @@ SpeciesTrait::SpeciesTrait(
 		switch (paramType)
 		{
 		case MIN: case MAX: case MEAN:
-			if (paramVal < 0.0 || paramVal > 1.0)
-				throw logic_error("Invalid parameter value: dominance parameter " + to_string(paramType) + " must be between 0 and 1.");
+			if (paramVal < 0.0)
+				throw logic_error("Invalid parameter value: dominance parameter " + to_string(paramType) + " must not be negative.");
 			break;
 		case SD: case SHAPE: case SCALE:
 			if (paramVal <= 0.0)
@@ -90,7 +90,8 @@ bool SpeciesTrait::isValidTraitVal(const float& val) const {
 	// Genetic Load
 	case GENETIC_LOAD: case GENETIC_LOAD1: case GENETIC_LOAD2: case GENETIC_LOAD3: case GENETIC_LOAD4: case GENETIC_LOAD5:
 	{
-		return val >= 0.0 && val <= 1.0; // substracted from a probability
+		return val >= -1.0 // genetic fitness traits can be beneficial
+			&& val <= 1.0;
 		break;
 	}
 	// Quantitative trait loci

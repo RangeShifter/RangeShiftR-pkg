@@ -293,7 +293,7 @@ public:
 	int getId(void);
 	sex_t getSex(void);
 	int getStatus(void);
-	float getProbViability(void);
+	float getGeneticFitness(void);
 	indStats getStats(void);
 	Cell* getLocn( // Return location (as pointer to Cell)
 		const short	// option: 0 = get natal locn, 1 = get current locn
@@ -372,7 +372,7 @@ public:
 
 private:
 	int indId;
-	float probViability;
+	float geneticFitness;
 	short stage;
 	sex_t sex;
 	short age;

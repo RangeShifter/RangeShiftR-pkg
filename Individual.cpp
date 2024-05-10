@@ -35,7 +35,7 @@ Individual::Individual(Cell* pCell, Patch* pPatch, short stg, short a, short rep
 	float probmale, bool movt, short moveType)
 {
 	indId = indCounter; indCounter++; // unique identifier for each individual
-	probViability = 1.0;
+	geneticFitness = 1.0;
 	stage = stg;
 	if (probmale <= 0.0) sex = FEM;
 	else sex = pRandom->Bernoulli(probmale) ? FEM : MAL;
@@ -178,7 +178,7 @@ void Individual::inherit(Species* pSpecies, const Individual* mother, const Indi
 				newTrait->mutate();
 		}
 		if (trait == GENETIC_LOAD1 || trait == GENETIC_LOAD2 || trait == GENETIC_LOAD3 || trait == GENETIC_LOAD4 || trait == GENETIC_LOAD5)
-			probViability *= newTrait->express();
+			geneticFitness *= newTrait->express();
 
 		// Add the inherited trait and genes to the newborn's list
 		spTraitTable.insert(make_pair(trait, move(newTrait)));
@@ -205,7 +205,7 @@ void Individual::inherit(Species* pSpecies, const Individual* mother) {
 				newTrait->mutate();
 		}
 		if (trait == GENETIC_LOAD1 || trait == GENETIC_LOAD2 || trait == GENETIC_LOAD3 || trait == GENETIC_LOAD4 || trait == GENETIC_LOAD5)
-			probViability *= newTrait->express();
+			geneticFitness *= newTrait->express();
 
 		// Add the inherited trait and genes to the newborn's list
 		spTraitTable.insert(make_pair(trait, move(newTrait)));
@@ -309,7 +309,7 @@ sex_t Individual::getSex(void) { return sex; }
 
 int Individual::getStatus(void) { return status; }
 
-float Individual::getProbViability(void) { return probViability; }
+float Individual::getGeneticFitness(void) { return geneticFitness; }
 
 indStats Individual::getStats(void) {
 	indStats s;

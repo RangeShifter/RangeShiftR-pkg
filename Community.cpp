@@ -1205,7 +1205,7 @@ void Community::outTraits(traitCanvas tcanv, Species* pSpecies,
 				ts[y].sumS0[i] = ts[y].ssqS0[i] = 0.0;
 				ts[y].sumAlphaS[i] = ts[y].ssqAlphaS[i] = 0.0;
 				ts[y].sumBetaS[i] = ts[y].ssqBetaS[i] = 0.0;
-				ts[y].sumProbViability[i] = ts[y].ssqProbViability[i] = 0.0;
+				ts[y].sumGeneticFitness[i] = ts[y].ssqGeneticFitness[i] = 0.0;
 			}
 		}
 	}
@@ -1234,7 +1234,7 @@ void Community::outTraits(traitCanvas tcanv, Species* pSpecies,
 					ts[y].sumS0[s] += sctraits.sumS0[s];     ts[y].ssqS0[s] += sctraits.ssqS0[s];
 					ts[y].sumAlphaS[s] += sctraits.sumAlphaS[s]; ts[y].ssqAlphaS[s] += sctraits.ssqAlphaS[s];
 					ts[y].sumBetaS[s] += sctraits.sumBetaS[s];  ts[y].ssqBetaS[s] += sctraits.ssqBetaS[s];
-					ts[y].sumProbViability[s] += sctraits.sumProbViability[s]; ts[y].ssqProbViability[s] += sctraits.ssqProbViability[s];
+					ts[y].sumGeneticFitness[s] += sctraits.sumGeneticFitness[s]; ts[y].ssqGeneticFitness[s] += sctraits.ssqGeneticFitness[s];
 				}
 			}
 		}
@@ -1397,18 +1397,18 @@ void Community::writeTraitsRows(Species* pSpecies, int rep, int yr, int gen, int
 
 	if (pSpecies->getNbGenLoadTraits() > 0) {
 		if (maxNbSexes > 1) {
-			if (ts.ninds[0] > 0) mn = ts.sumProbViability[0] / (double)ts.ninds[0]; else mn = 0.0;
-			if (ts.ninds[0] > 1) sd = ts.ssqProbViability[0] / (double)ts.ninds[0] - mn * mn; else sd = 0.0;
+			if (ts.ninds[0] > 0) mn = ts.sumGeneticFitness[0] / (double)ts.ninds[0]; else mn = 0.0;
+			if (ts.ninds[0] > 1) sd = ts.ssqGeneticFitness[0] / (double)ts.ninds[0] - mn * mn; else sd = 0.0;
 			if (sd > 0.0) sd = sqrt(sd); else sd = 0.0;
 			outtraitsrows << "\t" << mn << "\t" << sd;
-			if (ts.ninds[1] > 0) mn = ts.sumProbViability[1] / (double)ts.ninds[1]; else mn = 0.0;
-			if (ts.ninds[1] > 1) sd = ts.ssqProbViability[1] / (double)ts.ninds[1] - mn * mn; else sd = 0.0;
+			if (ts.ninds[1] > 0) mn = ts.sumGeneticFitness[1] / (double)ts.ninds[1]; else mn = 0.0;
+			if (ts.ninds[1] > 1) sd = ts.ssqGeneticFitness[1] / (double)ts.ninds[1] - mn * mn; else sd = 0.0;
 			if (sd > 0.0) sd = sqrt(sd); else sd = 0.0;
 			outtraitsrows << "\t" << mn << "\t" << sd;
 		}
 		else {
-			if (ts.ninds[0] > 0) mn = ts.sumProbViability[0] / (double)ts.ninds[0]; else mn = 0.0;
-			if (ts.ninds[0] > 1) sd = ts.ssqProbViability[0] / (double)ts.ninds[0] - mn * mn; else sd = 0.0;
+			if (ts.ninds[0] > 0) mn = ts.sumGeneticFitness[0] / (double)ts.ninds[0]; else mn = 0.0;
+			if (ts.ninds[0] > 1) sd = ts.ssqGeneticFitness[0] / (double)ts.ninds[0] - mn * mn; else sd = 0.0;
 			if (sd > 0.0) sd = sqrt(sd); else sd = 0.0;
 			outtraitsrows << "\t" << mn << "\t" << sd;
 		}
