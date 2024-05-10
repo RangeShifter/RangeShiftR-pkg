@@ -868,30 +868,31 @@ Patch* Landscape::findPatch(int num) {
 	return 0;
 }
 
-
 set<int> Landscape::samplePatches(const string& samplingOption, int nbToSample, Species* pSpecies) {
 
 	vector<int> sampledPatches;
-	vector<int> occupiedPatches;
+	vector<int> eligiblePatches;
 
 	// Get list of viable patches where the species is present
 	for (auto p : patches) {
-		if (p->speciesIsPresent(pSpecies)) 
-			occupiedPatches.push_back(p->getPatchNum());
+		if (p->getPatchNum() == 0) continue; // skip patch 0, the matrix
+		if (samplingOption == "random" // then all patches are eligible
+			|| p->speciesIsPresent(pSpecies)) // otherwise only patches with at least 1 ind
+			eligiblePatches.push_back(p->getPatchNum());
 	}
-
+	
 	if (samplingOption == "all") {
-		sampledPatches = occupiedPatches;
+		sampledPatches = eligiblePatches;
 	}
-	else if (samplingOption == "random") {
-		if (nbToSample > occupiedPatches.size())
-			nbToSample = occupiedPatches.size();
+	else if (samplingOption == "random_occupied" || samplingOption == "random") {
+		if (nbToSample > eligiblePatches.size())
+			nbToSample = eligiblePatches.size();
 		auto rng = pRandom->getRNG();
-		sample(occupiedPatches.begin(), occupiedPatches.end(), std::back_inserter(sampledPatches),
+		sample(eligiblePatches.begin(), eligiblePatches.end(), std::back_inserter(sampledPatches),
 			nbToSample, rng);
 	}
 	else {
-		throw logic_error("Sampling option should be random or all when sampling patches.");
+		throw logic_error("Sampling option should be random, rnadom_occupied or all when sampling patches.");
 	}
 
 	set<int> patchIds;

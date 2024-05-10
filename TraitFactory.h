@@ -6,7 +6,7 @@
 #include "SpeciesTrait.h"
 #include "SNPTrait.h"
 #include "QTLTrait.h"
-#include "GeneticLoad.h"
+#include "GeneticFitness.h"
 
 // Create handled pointers to a new trait
 class TraitFactory
@@ -24,7 +24,7 @@ public:
 			|| traitType == GENETIC_LOAD3 
 			|| traitType == GENETIC_LOAD4 
 			|| traitType == GENETIC_LOAD5) {
-			return make_unique<GeneticLoad>(protoTrait);
+			return make_unique<GeneticFitness>(protoTrait);
 		}
 		else {
 			return make_unique<QTLTrait>(protoTrait);

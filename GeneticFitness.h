@@ -1,5 +1,5 @@
-#ifndef GENETICLOADH
-#define GENETICLOADH
+#ifndef GENETICFITNESSH
+#define GENETICFITNESSH
 
 #include <vector>
 #include <string>
@@ -17,22 +17,22 @@ using namespace std;
 // offspring viability. Alleles start with value
 // zero but increase through simulation via mutations.
 // There can be up to five genetic load traits.
-class GeneticLoad : public TTrait {
+class GeneticFitness : public TTrait {
 
 public:
 
     // Initialisation constructor, set initial values and immutable features 
-    GeneticLoad(SpeciesTrait* P);
+    GeneticFitness(SpeciesTrait* P);
 
     // Inheritance constructor, copies pointers to immutable features when cloning from parent
-    GeneticLoad(const GeneticLoad& T);
+    GeneticFitness(const GeneticFitness& T);
 
    // Make a shallow copy to pass to offspring trait
     // Return new pointer to new trait created by inheritance c'tor 
     // This avoids copying shared attributes: distributions and parameters
-    virtual unique_ptr<TTrait> clone() const override { return std::make_unique<GeneticLoad>(*this); }
+    virtual unique_ptr<TTrait> clone() const override { return std::make_unique<GeneticFitness>(*this); }
 
-    virtual ~GeneticLoad() { }
+    virtual ~GeneticFitness() { }
 
     // Getters
     virtual int getNLoci()  const override { return pSpeciesTrait->getPositionsSize(); }
@@ -69,7 +69,7 @@ private:
     //// Species-level trait attributes, invariant across individuals
     SpeciesTrait* pSpeciesTrait;
     //// Species-level trait functions
-    void (GeneticLoad::* _inherit_func_ptr) (const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
+    void (GeneticFitness::* _inherit_func_ptr) (const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
 
     // Possible values for immutable functions
      //// Inheritance
@@ -77,4 +77,4 @@ private:
     void inheritHaploid(const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
 
 };
-#endif // GENETICLOADH
+#endif // GENETICFITNESSH

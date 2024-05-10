@@ -154,7 +154,7 @@ public:
 	Individual* sampleInd() const;
 	void sampleIndsWithoutReplacement(string n, const set<int>& sampleStages);
 	int sampleSize() const;
-	set<Individual*> getIndividualsInStage(int stage);
+	vector<Individual*> getIndividualsInStage(int stage);
 #if RS_RCPP
 	int transfer( // Executed for the Population(s) in the matrix only
 		Landscape*,	// pointer to Landscape
@@ -236,11 +236,11 @@ private:
 	Patch* pPatch;			// pointer to the patch
 	int nInds[maxNbStages][maxNbSexes];		// no. of individuals in each stage/sex
 
-	std::vector <Individual*> inds; // all individuals in population except ...
-	std::vector <Individual*> juvs; // ... juveniles until reproduction of ALL species
+	vector <Individual*> inds; // all individuals in population except ...
+	vector <Individual*> juvs; // ... juveniles until reproduction of ALL species
 	// has been completed
 
-	std::set <Individual*> sampledInds;
+	vector<Individual*> sampledInds;
 	vector<SNPCountsTable> popSNPCountTables;
 	void resetPopSNPtables();
 };

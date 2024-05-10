@@ -378,7 +378,7 @@ bool Species::areMutationsOn(void) {
 
 void Species::resetGeneticParameters() {
 	mutationsOn = true;
-	nbGeneticLoadTraits = 0;
+	nbGeneticFitnessTraits = 0;
 	genomeSize = -9999;
 	recombinationRate = -9999;
 	nPatchesToSample = 0;
@@ -393,13 +393,13 @@ bool Species::isDiploid() const {
 
 int Species::incrNbGenLoadTraits()
 {
-	nbGeneticLoadTraits++;
-	return nbGeneticLoadTraits;
+	nbGeneticFitnessTraits++;
+	return nbGeneticFitnessTraits;
 }
 
 int Species::getNbGenLoadTraits() const
 {
-	return nbGeneticLoadTraits;
+	return nbGeneticFitnessTraits;
 }
 
 void Species::addTrait(TraitType traitType, const SpeciesTrait& trait) {

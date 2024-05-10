@@ -818,14 +818,15 @@ Individual* Population::sampleInd() const {
 
 void Population::sampleIndsWithoutReplacement(string strNbToSample, const set<int>& sampleStages) {
 
-	sampledInds.clear();
+	if (sampledInds.size() > 0) {
+		sampledInds.clear();
+	}
 	auto rng = pRandom->getRNG();
-	set<Individual*> stagedInds;
+	vector<Individual*> stagedInds;
 
 	// Stage individuals in eligible stages
 	for (int stage : sampleStages) {
-		auto sInds = getIndividualsInStage(stage);
-		stagedInds.insert(sInds.begin(), sInds.end());
+		stagedInds = getIndividualsInStage(stage);
 	}
 
 	if (strNbToSample == "all") {
@@ -839,12 +840,11 @@ void Population::sampleIndsWithoutReplacement(string strNbToSample, const set<in
 			sampledInds = stagedInds;
 		}
 		else {
-			vector<Individual*> tempSampledInds;
+			//vector<Individual*> tempSampledInds;
 			// Sample n individuals across selected stages
-			sample(stagedInds.begin(), stagedInds.end(), std::back_inserter(tempSampledInds), nbToSample, rng);
+			sample(stagedInds.begin(), stagedInds.end(), std::back_inserter(sampledInds), nbToSample, rng);
 			// Copy from vector to set
-			std::copy(tempSampledInds.begin(), tempSampledInds.end(), std::inserter(sampledInds, sampledInds.end()));
-			assert(sampledInds.size() == nbToSample);
+			//std::copy(tempSampledInds.begin(), tempSampledInds.end(), std::inserter(sampledInds, sampledInds.end()));
 		}
 #if RSDEBUG
 		assert(sampledInds.size() <= inds.size());
@@ -856,11 +856,11 @@ int Population::sampleSize() const {
 	return static_cast<int>(sampledInds.size());
 }
 
-set<Individual*> Population::getIndividualsInStage(int stage) {
-	set<Individual*> indsInStage;
+vector<Individual*> Population::getIndividualsInStage(int stage) {
+	vector<Individual*> indsInStage;
 	for (auto ind : inds) {
 		if (ind->getStats().stage == stage)
-			indsInStage.insert(ind);
+			indsInStage.push_back(ind);
 	}
 	return indsInStage;
 }
