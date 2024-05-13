@@ -124,12 +124,14 @@ void Chromosome::inherit(const Chromosome* parentChr, const short posn, const sh
 	for (int i = 0; i < nloc; i++) {
 		if (diploid) {
 			pLoci[i].allele[posn] = parentChr->pLoci[i].allele[ix];
+		    if (probcross >1) Rcpp::Rcout << "Crossover probability: " << probcross << std::endl;
 			if (pRandom->Bernoulli(probcross)) { // crossover occurs
 				if (ix == 0) ix = 1; else ix = 0;
 			}
 		}
 		else
 			pLoci[i].allele[posn] = parentChr->pLoci[i].allele[0];
+		if (probmutn >1) Rcpp::Rcout << "Mutation probability: " << probmutn << std::endl;
 		if (pRandom->Bernoulli(probmutn)) { // mutation occurs
 			double intbase = INTBASE;
 #if RSDEBUG

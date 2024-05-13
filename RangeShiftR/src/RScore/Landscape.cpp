@@ -894,6 +894,13 @@ Cell* Landscape::findCell(int x, int y) {
 	else return 0;
 }
 
+bool Landscape::checkDataCell(int x, int y) {
+    Cell* pCell;
+    pCell = findCell(x, y);
+    return true;
+}
+
+
 int Landscape::patchCount(void) {
 	return (int)patches.size();
 }
