@@ -6,7 +6,10 @@
    viewBox="-0.5 -0.5 521 956"
    id="svg270"
    sodipodi:docname="RSflowchart_detail.svg"
-   inkscape:version="1.1.1 (1:1.1+202109281949+c3084ef5ed)"
+   inkscape:version="1.3.2 (091e20e, 2023-11-25, custom)"
+   inkscape:export-filename="RSflowchart_detail.png"
+   inkscape:export-xdpi="600"
+   inkscape:export-ydpi="600"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -36,13 +39,15 @@
      inkscape:snap-midpoints="true"
      inkscape:zoom="2.1649824"
      inkscape:cx="286.37646"
-     inkscape:cy="178.29244"
-     inkscape:window-width="1860"
-     inkscape:window-height="1043"
-     inkscape:window-x="60"
-     inkscape:window-y="0"
+     inkscape:cy="178.06149"
+     inkscape:window-width="3840"
+     inkscape:window-height="2054"
+     inkscape:window-x="-11"
+     inkscape:window-y="-11"
      inkscape:window-maximized="1"
-     inkscape:current-layer="svg270" />
+     inkscape:current-layer="svg270"
+     inkscape:showpageshadow="2"
+     inkscape:deskcolor="#d1d1d1" />
   <defs
      id="defs2">
     <rect
@@ -355,6 +360,7 @@
             <xhtml:div
                style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal;">Movement<xhtml:br />
 
+
 process?</xhtml:div>
           </xhtml:div>
         </xhtml:div>
@@ -502,7 +508,9 @@ process?</xhtml:div>
             <xhtml:div
                style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal;">Stage-structure &amp;<xhtml:br />
 
+
 survival between <xhtml:br />
+
 
 repr. seasons? </xhtml:div>
           </xhtml:div>
@@ -571,6 +579,7 @@ repr. seasons? </xhtml:div>
              style="box-sizing: border-box; font-size: 0px; text-align: center;">
             <xhtml:div
                style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal;">Survival &amp;<xhtml:br />
+
 
 Development</xhtml:div>
           </xhtml:div>
@@ -728,6 +737,7 @@ Development</xhtml:div>
              style="box-sizing: border-box; font-size: 0px; text-align: center;">
             <xhtml:div
                style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal;">Ind. variability /<xhtml:br />
+
 
 traits evolution?</xhtml:div>
           </xhtml:div>
@@ -1056,7 +1066,9 @@ traits evolution?</xhtml:div>
             <xhtml:div
                style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal;">Stage-structure &amp;<xhtml:br />
 
+
 survival between <xhtml:br />
+
 
 repr. seasons? </xhtml:div>
           </xhtml:div>
@@ -1098,6 +1110,7 @@ repr. seasons? </xhtml:div>
              style="box-sizing: border-box; font-size: 0px; text-align: center;">
             <xhtml:div
                style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal;">Survival &amp;<xhtml:br />
+
 
 Development</xhtml:div>
           </xhtml:div>
@@ -1297,6 +1310,7 @@ Development</xhtml:div>
             <xhtml:div
                style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal;">Traits<xhtml:br />
 
+
 inheritance</xhtml:div>
           </xhtml:div>
         </xhtml:div>
@@ -1337,6 +1351,7 @@ inheritance</xhtml:div>
              style="box-sizing: border-box; font-size: 0px; text-align: center;">
             <xhtml:div
                style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal;">Traits<xhtml:br />
+
 
 mutation</xhtml:div>
           </xhtml:div>
