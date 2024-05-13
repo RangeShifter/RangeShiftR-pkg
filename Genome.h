@@ -24,6 +24,7 @@
 
 #include <vector>
 #include <algorithm>
+#include <Rcpp.h>
 
 #include "Parameters.h"
 #include "Species.h"
@@ -55,7 +56,7 @@ public:
 		const int			// position of locus on chromosome
 	);
 	void initialise( // Set up chromosome at simulation initialisation
-		const double,	// normalised phenotypic trait value			
+		const double,	// normalised phenotypic trait value
 		const double,	// s.d. of allelic variance (genetic scale)
 		const bool		// diploid
 	);
@@ -95,13 +96,13 @@ public:
 	void setGene( // Set up new gene at initialisation for 1 chromosome per trait
 		const short,	// chromosome number
 		const short,	// expression type (NOT CURRENTLY USED)
-		const double,	// normalised trait value		
+		const double,	// normalised trait value
 		const double		// s.d. of allelic variance
 	);
 	void setTrait( // Set up trait at initialisation for trait mapping
 		Species*,			// pointer to Species
-		const int,		// trait number			
-		const double,	// normalised trait value		
+		const int,		// trait number
+		const double,	// normalised trait value
 		const double		// s.d. of allelic variance
 	);
 	void setNeutralLoci( // Set up neutral loci at initialisation
