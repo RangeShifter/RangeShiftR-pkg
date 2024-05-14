@@ -130,8 +130,7 @@ void QTLTrait::mutateUniform()
 
 	for (int p = 0; p < ploidy; p++) {
 
-		unsigned int NbMut = pRandom->Poisson(positionsSize * mutationRate);
-		if (NbMut > positionsSize) NbMut = positionsSize;
+		unsigned int NbMut = pRandom->Binomial(positionsSize, mutationRate);
 
 		if (NbMut > 0) {
 			vector<int> mutationPositions;
@@ -173,8 +172,7 @@ void QTLTrait::mutateNormal()
 
 	for (int p = 0; p < ploidy; p++) {
 
-		unsigned int NbMut = pRandom->Poisson(positionsSize * mutationRate);
-		if (NbMut > positionsSize) NbMut = positionsSize;
+		unsigned int NbMut = pRandom->Binomial(positionsSize, mutationRate);
 
 		if (NbMut > 0) {
 			vector<int> mutationPositions;

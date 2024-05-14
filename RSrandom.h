@@ -68,6 +68,7 @@ public:
 	int IRandom(int, int);
 	float FRandom(float, float);
 	int Bernoulli(double);
+	int Binomial(const int& n, const double& p);
 	double Normal(double, double);
 	double Gamma(double, double);
 	double NegExp(double);
@@ -110,6 +111,7 @@ public:
 	int IRandom(int, int);
 	float FRandom(float, float);
 	int Bernoulli(double);
+	int Binomial(const int& n, const double& p);
 	double Normal(double, double);
 	double Gamma(double, double);
 	double NegExp(double);

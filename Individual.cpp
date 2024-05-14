@@ -135,7 +135,7 @@ void Individual::inherit(Species* pSpecies, const Individual* mother, const Indi
 
 	// Draw recombination events for maternal genome
 	if (pSpecies->getRecombinationRate() > 0.0)
-		events = pRandom->Poisson(genomeSize * pSpecies->getRecombinationRate());
+		events = pRandom->Binomial(genomeSize, pSpecies->getRecombinationRate());
 	// if poisson exceeds genomeSize, bound to genomeSize
 	int nbrCrossOvers = events + maternalRecomPositions.size();
 	if (nbrCrossOvers > genomeSize) {
@@ -148,7 +148,7 @@ void Individual::inherit(Species* pSpecies, const Individual* mother, const Indi
 
 	// Draw recombination events for paternal genome
 	if (pSpecies->getRecombinationRate() > 0.0)
-		events = pRandom->Poisson(genomeSize * pSpecies->getRecombinationRate());
+		events = pRandom->Binomial(genomeSize, pSpecies->getRecombinationRate());
 	nbrCrossOvers = events + paternalRecomPositions.size();
 	if (nbrCrossOvers > genomeSize) {
 		nbrCrossOvers = genomeSize;

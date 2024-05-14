@@ -98,8 +98,7 @@ void SNPTrait::mutate_KAM()
 
 	for (int whichChromosome = 0; whichChromosome < ploidy; whichChromosome++) {
 
-		unsigned int NbMut = pRandom->Poisson(positionsSize * mutationRate);
-		if (NbMut > positionsSize) NbMut = positionsSize;
+		unsigned int NbMut = pRandom->Binomial(positionsSize, mutationRate);
 		if (NbMut > 0) {
 			vector<int> mutationPositions;
 			sample(genePositions.begin(), genePositions.end(), std::back_inserter(mutationPositions),
@@ -146,8 +145,7 @@ void SNPTrait::mutate_SSM()
 
 	for (int whichChromosome = 0; whichChromosome < ploidy; whichChromosome++) {
 
-		unsigned int NbMut = pRandom->Poisson(positionsSize * mutationRate);
-		if (NbMut > positionsSize) NbMut = positionsSize;
+		unsigned int NbMut = pRandom->Binomial(positionsSize, mutationRate);
 		if (NbMut > 0) {
 			vector<int> mutationPositions;
 			sample(genePositions.begin(), genePositions.end(), std::back_inserter(mutationPositions),

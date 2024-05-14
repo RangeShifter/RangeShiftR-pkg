@@ -133,8 +133,7 @@ void GeneticFitnessTrait::mutate()
 
 	for (int p = 0; p < ploidy; p++) {
 		// Determine nb of mutations
-		unsigned int NbMut = pRandom->Poisson(positionsSize * mutationRate);
-		if (NbMut > positionsSize) NbMut = positionsSize;
+		unsigned int NbMut = pRandom->Binomial(positionsSize, mutationRate);
 
 		if (NbMut > 0) {
 			vector<int> mutationPositions;

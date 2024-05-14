@@ -103,6 +103,11 @@ int RSrandom::Bernoulli(double p) {
     return Random() < p;
 }
 
+int RSrandom::Binomial(const int& n, const double& p) {
+	binomial_distribution<int> binom(n, p);
+	return binom(*gen);
+}
+
 double RSrandom::Normal(double mean, double sd) {
     return mean + sd * pNormal->operator()(*gen);
 }
@@ -226,6 +231,11 @@ float RSrandom::FRandom(float min, float max) {
 		if (p < 0) throw runtime_error("Bernoulli's p cannot be negative.\n");
 		if (p > 1) throw runtime_error("Bernoulli's p cannot be above 1.\n");
 		return Random() < p;
+	}
+
+	int RSrandom::Binomial(const int& n, const double& p) {
+		binomial_distribution<int> binom(n, p);
+		return binom(*gen);
 	}
 
 double RSrandom::Normal(double mean, double sd) {
