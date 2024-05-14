@@ -32,6 +32,7 @@ public:
     );
 
     bool isValidTraitVal(const float& val) const;
+    TraitType getTraitType() const { return traitType;  }
 
     // Getters
     sex_t getSex() const { return sex; }

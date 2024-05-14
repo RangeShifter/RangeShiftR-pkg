@@ -145,12 +145,8 @@ void GeneticFitnessTrait::mutate()
 				auto it = genes.find(m);
 				if (it == genes.end())
 					throw runtime_error("Locus sampled for mutation doesn't exist.");
-				do {
-					newSelectionCoef = drawSelectionCoef();
-				} while (!pSpeciesTrait->isValidTraitVal(newSelectionCoef));
-				do {
-					newDominanceCoef = drawDominance(newSelectionCoef);
-				} while (newDominanceCoef < 0.0);
+				newSelectionCoef = drawSelectionCoef();
+				newDominanceCoef = drawDominance(newSelectionCoef);
 				it->second[p] = make_shared<Allele>(newSelectionCoef, newDominanceCoef);
 			}
 		}

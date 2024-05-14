@@ -142,9 +142,7 @@ void QTLTrait::mutateUniform()
 				if (it == genes.end())
 					throw runtime_error("Locus sampled for mutation doesn't exist.");
 				float currentAlleleVal = it->second[p].get()->getAlleleValue();//current
-				do {
-					newAlleleVal = pRandom->FRandom(minD, maxD) + currentAlleleVal;
-				} while (!pSpeciesTrait->isValidTraitVal(newAlleleVal));
+				newAlleleVal = pRandom->FRandom(minD, maxD) + currentAlleleVal;
 				it->second[p] = make_shared<Allele>(newAlleleVal, QTLDominanceFactor);
 			}
 		}
@@ -184,9 +182,7 @@ void QTLTrait::mutateNormal()
 				if (it == genes.end())
 					throw runtime_error("Locus sampled for mutation doesn't exist.");
 				float currentAlleleVal = it->second[p].get()->getAlleleValue(); //current
-				do {
-					newAlleleVal = pRandom->Normal(mean, sd) + currentAlleleVal;
-				} while (!pSpeciesTrait->isValidTraitVal(newAlleleVal));
+				newAlleleVal = pRandom->Normal(mean, sd) + currentAlleleVal;
 				it->second[p] = make_shared<Allele>(newAlleleVal, QTLDominanceFactor);
 			}
 		}
@@ -342,6 +338,7 @@ float QTLTrait::expressAdditive() {
 		for (const std::shared_ptr<Allele> m : allelePair)
 			phenotype += m->getAlleleValue();
 	}
+	trimQTLPhenotype(phenotype);
 	return phenotype;
 }
 
@@ -357,7 +354,57 @@ float QTLTrait::expressAverage() {
 			phenotype += m->getAlleleValue();
 	}
 	phenotype /= positionsSize * ploidy;
+	trimQTLPhenotype(phenotype);
 	return phenotype;
+}
+
+void QTLTrait::trimQTLPhenotype(float& val) {
+	const float minPositiveVal = 1e-06;
+	switch (pSpeciesTrait->getTraitType())
+	{
+	// Values bound between 0 and 1
+	case E_D0_F: case E_D0_M: 
+	case S_S0_F: case S_S0_M:
+	case KERNEL_PROBABILITY_F: case KERNEL_PROBABILITY_M:
+	case CRW_STEPCORRELATION:
+	{
+		if (val < 0.0) val = 0;
+		else if (val > 1.0) val = 1.0;
+		break;
+	}
+	// Positive values
+	case KERNEL_MEANDIST_1_F: case KERNEL_MEANDIST_1_M:
+	case KERNEL_MEANDIST_2_F: case KERNEL_MEANDIST_2_M:
+	case CRW_STEPLENGTH:
+	{
+		if (val < 0.0) val = 0;
+		break;
+	}
+	// Strictly positive values
+	case E_ALPHA_F: case E_ALPHA_M: 
+	case S_ALPHA_F: case S_ALPHA_M:
+	case SMS_ALPHADB:
+	{
+		if (val <= 0.0) val = minPositiveVal;
+		break;
+	}
+	// Minimum 1
+	case SMS_DP:
+	case SMS_GB:
+	{
+		if (val <= 1.0) val = 1.0;
+		break;
+	}
+	// Not bound
+	case E_BETA_F: case E_BETA_M:
+	case S_BETA_F: case S_BETA_M:
+	case SMS_BETADB:
+	{
+		break;
+	}
+	default:
+		break;
+	}
 }
 
 // ----------------------------------------------------------------------------------------

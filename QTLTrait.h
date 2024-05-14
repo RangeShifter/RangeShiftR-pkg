@@ -75,6 +75,7 @@ private:
 	//// Mutation
 	void mutateUniform();
 	void mutateNormal();
+	void trimQTLPhenotype(float& phenotype);
 	//// Gene expression
 	float expressAverage();
 	float expressAdditive();
