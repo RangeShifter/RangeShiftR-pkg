@@ -41,7 +41,7 @@ public:
 
     map<int, vector<shared_ptr<Allele>>>& getGenes() { return genes; } // returning reference, reciever must be const
 
-    virtual void  mutate() override;
+    virtual void mutate() override;
     virtual float express();
     virtual void inheritGenes(const bool& fromMother, TTrait* parent, set<unsigned int> const& recomPositions, int startingChromosome) override;
 
@@ -61,6 +61,7 @@ private:
     void initialise();
 
     // Mutation
+    float scaledDomMeanSelCoeff; // s_d, only for scaled dominance distribution
     float drawDominance(float);
     float drawSelectionCoef();
 

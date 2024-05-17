@@ -89,7 +89,28 @@ GeneticFitnessTrait::GeneticFitnessTrait(SpeciesTrait* P)
 	}
 	case SCALED:
 	{
-		break; // no parameter
+		if (dominanceParameters.count(MEAN) != 1)
+			throw logic_error("Error:: genetic load dominance distribution set to scaled, so parameters must contain mean dominance value (e.g. mean= ) \n");
+		
+		// Calculate mean selection coeff s_d for calculation of k
+		switch (mutationDistribution)
+		{
+		case UNIFORM:
+			scaledDomMeanSelCoeff = (mutationParameters.find(MIN)->second + mutationParameters.find(MAX)->second) / 2;
+			break;
+		case NORMAL:
+			scaledDomMeanSelCoeff = mutationParameters.find(MEAN)->second;
+			break;
+		case GAMMA:
+			scaledDomMeanSelCoeff = mutationParameters.find(SHAPE)->second * mutationParameters.find(SCALE)->second;
+			break;
+		case NEGEXP:
+			scaledDomMeanSelCoeff =  1 / mutationParameters.find(MEAN)->second;
+			break;
+		default:
+			break;
+		}
+		break;
 	}
 	default:
 	{
@@ -195,7 +216,9 @@ float GeneticFitnessTrait::drawDominance(float selCoef) {
 	case SCALED:
 	{
 		const float min = 0;
-		const float max = static_cast<float>(exp((-log(2 * 0.36) / 0.05) * selCoef));
+		const float h_d = dominanceParameters.find(MEAN)->second;
+		const float k = -log(2 * h_d) / scaledDomMeanSelCoeff;
+		const float max = static_cast<float>(exp(-k * selCoef));
 		h = static_cast<float>(pRandom->FRandom(min, max));
 		break;
 	}
