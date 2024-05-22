@@ -249,7 +249,7 @@ public:
 
 	void inheritTraits(Species* pSpecies, Individual* mother, int resol); //haploid
 
-	void setQTLPhenotypes(Species* pSpecies, int resol);
+	void setDispersalPhenotypes(Species* pSpecies, int resol);
 
 	TTrait* getTrait(TraitType trait) const;
 

@@ -223,10 +223,10 @@ void Individual::setUpGenes(Species* pSpecies, int resol) {
 		const auto spTrait = pSpecies->getSpTrait(traitType);
 		this->spTraitTable.emplace(traitType, traitFactory.Create(traitType, spTrait));
 	}
-	setQTLPhenotypes(pSpecies, resol);
+	setDispersalPhenotypes(pSpecies, resol);
 }
 
-void Individual::setQTLPhenotypes(Species* pSpecies, int resol) {
+void Individual::setDispersalPhenotypes(Species* pSpecies, int resol) {
 
 	const emigRules emig = pSpecies->getEmigRules();
 	const transferRules trfr = pSpecies->getTransferRules();
@@ -281,14 +281,14 @@ void Individual::setSettlementTraits(Species* pSpecies, bool sexDep) {
 void Individual::inheritTraits(Species* pSpecies, Individual* mother, Individual* father, int resol)
 {
 	inherit(pSpecies, mother, father);
-	setQTLPhenotypes(pSpecies, resol);
+	setDispersalPhenotypes(pSpecies, resol);
 }
 
 // Inherit genome from mother, haploid
 void Individual::inheritTraits(Species* pSpecies, Individual* mother, int resol)
 {
 	inherit(pSpecies, mother);
-	setQTLPhenotypes(pSpecies, resol);
+	setDispersalPhenotypes(pSpecies, resol);
 }
 
 //---------------------------------------------------------------------------

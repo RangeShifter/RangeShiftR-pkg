@@ -5,7 +5,7 @@
 
 #include "SpeciesTrait.h"
 #include "SNPTrait.h"
-#include "QTLTrait.h"
+#include "DispersalTrait.h"
 #include "GeneticFitnessTrait.h"
 
 // Create handled pointers to a new trait
@@ -27,7 +27,7 @@ public:
 			return make_unique<GeneticFitnessTrait>(protoTrait);
 		}
 		else {
-			return make_unique<QTLTrait>(protoTrait);
+			return make_unique<DispersalTrait>(protoTrait);
 		}
 	}
 };

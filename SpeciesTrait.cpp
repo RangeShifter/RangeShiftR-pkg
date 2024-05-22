@@ -94,7 +94,7 @@ bool SpeciesTrait::isValidTraitVal(const float& val) const {
 			&& val <= 1.0;
 		break;
 	}
-	// Quantitative trait loci
+	// Dispersal traits
 	/// Emigration
 	case E_D0_F: case E_D0_M: {
 		return val >= 0.0 && val <= 1.0; // is a probability

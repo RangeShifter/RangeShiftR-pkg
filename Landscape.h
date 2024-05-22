@@ -235,7 +235,7 @@ public:
 	void setCellArray(void);
 	void addPatchNum(int);
 	std::vector<int> getPatchNums() const { return patchnums; }
-	void generatePatches(Species*); 		// create an artificial landscape
+	void generatePatches(); 		// create an artificial landscape
 	void allocatePatches(Species*);	// create patches for a cell-based landscape
 	Patch* newPatch(
 		int		// patch sequential no. (id no. is set to equal sequential no.)
