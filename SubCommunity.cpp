@@ -716,8 +716,7 @@ bool SubCommunity::outTraitsHeaders(Landscape* pLandscape, Species* pSpecies, in
 }
 
 // Write records to traits file and return aggregated sums
-traitsums SubCommunity::outTraits(traitCanvas tcanv,
-	Landscape* pLandscape, int rep, int yr, int gen, bool commlevel)
+traitsums SubCommunity::outTraits(Landscape* pLandscape, int rep, int yr, int gen, bool commlevel)
 {
 	int popsize, ngenes;
 	landParams land = pLandscape->getLandParams();

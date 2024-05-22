@@ -217,17 +217,8 @@ while (iter != patches.end())
 }
 
 if (arena != NULL) {
-#if RSDEBUG
-//DebugGUI(("fractal_landscape(): arena=" + Int2Str((int)arena)
-//	+ " X=" + Int2Str(X) + " Y=" + Int2Str(Y)
-//	).c_str());
-#endif
 	for(ii = 0; ii < X; ii++) {
-#if RSDEBUG
-//DebugGUI(("fractal_landscape(): ii=" + Int2Str(ii)
-//	+ " arena[ii]=" + Int2Str((int)arena[ii])
-//	).c_str());
-#endif
+
 		delete[] arena[ii];
 	}
 	delete[] arena;

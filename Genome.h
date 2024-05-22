@@ -165,7 +165,6 @@ extern RSrandom* pRandom;
 #if RSDEBUG
 extern ofstream DEBUGLOG;
 extern ofstream MUTNLOG;
-extern void DebugGUI(string);
 #endif
 
 //---------------------------------------------------------------------------

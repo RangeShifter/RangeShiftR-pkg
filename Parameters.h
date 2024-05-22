@@ -363,7 +363,6 @@ private:
 	bool ReturnPopRaster;
 	bool CreatePopFile;
 #endif
-	bool drawLoaded;				// draw initial distribution on landscape/population maps?
 	bool saveTraitMaps;			// save summary traits maps?
 	bool viewLand;					// view landscape map on screen?
 	bool viewPatch;					// view map of landscape patches on screen?
@@ -379,7 +378,6 @@ private:
 
 #if RSDEBUG
 extern ofstream DEBUGLOG;
-void DebugGUI(string);
 #endif
 
 //---------------------------------------------------------------------------

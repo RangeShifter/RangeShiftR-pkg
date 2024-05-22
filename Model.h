@@ -96,7 +96,6 @@ void Outputs_Visuals_B(
 	int		// Landscape number
 );
 void RefreshVisualCost(void);
-traitCanvas SetupTraitCanvas(void);
 void SetupVisualOutput(void);
 void ResetVisualOutput(void);
 void DrawPopnGraph(
