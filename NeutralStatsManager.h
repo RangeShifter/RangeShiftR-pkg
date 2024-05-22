@@ -45,12 +45,12 @@ private:
 	vector<double> value;
 };
 
-// Counts of SNP allele occurrences in populations
+// Counts of NEUTRAL allele occurrences in populations
 // for neutral statistics calculations
-struct SNPCountsTable {
+struct NeutralCountsTable {
 
 public:
-	SNPCountsTable(int nAllele) : alleleTallies(nAllele), alleleFrequencies(nAllele), alleleHeterozygoteTallies(nAllele) {};
+	NeutralCountsTable(int nAllele) : alleleTallies(nAllele), alleleFrequencies(nAllele), alleleHeterozygoteTallies(nAllele) {};
 	
 	void reset() {
 		fill(alleleTallies.begin(), alleleTallies.end(), 0); fill(alleleFrequencies.begin(), alleleFrequencies.end(), 0);
@@ -88,8 +88,8 @@ public:
 	NeutralStatsManager(const int& nbSampledPatches, const int nLoci);
 
 	// Count alleles and their frequencies in all pops and community
-	void updateAllSNPTables(Species* pSpecies, Landscape* pLandscape, set<int> const& patchList);
-	void resetCommSNPtables();
+	void updateAllNeutralTables(Species* pSpecies, Landscape* pLandscape, set<int> const& patchList);
+	void resetCommNeutralTables();
 
 	void calcAllelicDiversityMetrics(set<int> const& patchList, const int nInds, Species* pSpecies, Landscape* pLandscape);
 	
@@ -134,7 +134,7 @@ public:
 private:
 
 	int nbExtantPops, totalNbSampledInds;
-	vector<SNPCountsTable> commSNPCountTables; // community-level tallies of allele counts and freqs
+	vector<NeutralCountsTable> commNeutralCountTables; // community-level tallies of allele counts and freqs
 
 	double meanNbAllelesPerLocusPerPatch, meanNbAllelesPerLocus;
 	double meanNbFixedAllelesPerPatch, nbGloballyFixedAlleles;

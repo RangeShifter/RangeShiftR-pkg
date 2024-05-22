@@ -83,7 +83,7 @@ bool SpeciesTrait::isValidTraitVal(const float& val) const {
 	switch (traitType)
 	{
 	// Neutral trait
-	case SNP: // only need to check for input parameters
+	case NEUTRAL: // only need to check for input parameters
 	{
 		return val >= 0.0 && val <= 255.0;
 	}

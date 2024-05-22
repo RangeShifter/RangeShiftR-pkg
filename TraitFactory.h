@@ -4,7 +4,7 @@
 #include <memory>
 
 #include "SpeciesTrait.h"
-#include "SNPTrait.h"
+#include "NeutralTrait.h"
 #include "DispersalTrait.h"
 #include "GeneticFitnessTrait.h"
 
@@ -16,8 +16,8 @@ public:
 
 	unique_ptr<TTrait> Create(const TraitType traitType, SpeciesTrait* protoTrait)
 	{
-		if (traitType == SNP) {
-			return make_unique<SNPTrait>(protoTrait);
+		if (traitType == NEUTRAL) {
+			return make_unique<NeutralTrait>(protoTrait);
 		}
 		else if (traitType == GENETIC_LOAD1 
 			|| traitType == GENETIC_LOAD2 

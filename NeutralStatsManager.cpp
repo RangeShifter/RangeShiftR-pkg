@@ -29,27 +29,27 @@
  // ----------------------------------------------------------------------------------------
 NeutralStatsManager::NeutralStatsManager(const int& nbSampledPatches, const int nLoci) {
 	this->pairwiseFstMatrix = PatchMatrix(nbSampledPatches, nbSampledPatches);
-	commSNPCountTables.reserve(nLoci); //don't have to be pointers, not shared or moved
+	commNeutralCountTables.reserve(nLoci); //don't have to be pointers, not shared or moved
 }
 
 // ----------------------------------------------------------------------------------------
-// Populate population and community-level SNP count tables
+// Populate population and community-level NEUTRAL count tables
 // Update allele occurrence and heterozygosity counts, and allele frequencies
 // ----------------------------------------------------------------------------------------
-void NeutralStatsManager::updateAllSNPTables(Species* pSpecies, Landscape* pLandscape, set<int> const& patchList) {
+void NeutralStatsManager::updateAllNeutralTables(Species* pSpecies, Landscape* pLandscape, set<int> const& patchList) {
 
-	const int nLoci = pSpecies->getNPositionsForTrait(SNP);
-	const int nAlleles = (int)pSpecies->getSpTrait(SNP)->getMutationParameters().find(MAX)->second;
+	const int nLoci = pSpecies->getNPositionsForTrait(NEUTRAL);
+	const int nAlleles = (int)pSpecies->getSpTrait(NEUTRAL)->getMutationParameters().find(MAX)->second;
 	const int ploidy = pSpecies->isDiploid() ? 2 : 1;
 
-	// Create / Update community-level SNP counts table
-	if (!commSNPCountTables.empty()) {
-		resetCommSNPtables();
+	// Create / Update community-level NEUTRAL counts table
+	if (!commNeutralCountTables.empty()) {
+		resetCommNeutralTables();
 	}
 	else { // populate the tables with default values
 		for (int thisLocus = 0; thisLocus < nLoci; thisLocus++) {
-			SNPCountsTable newSNPtbl = SNPCountsTable(nAlleles);
-			commSNPCountTables.push_back(newSNPtbl);
+			NeutralCountsTable newNeutralTbl = NeutralCountsTable(nAlleles);
+			commNeutralCountTables.push_back(newNeutralTbl);
 		}
 	}
 
@@ -61,8 +61,8 @@ void NeutralStatsManager::updateAllSNPTables(Species* pSpecies, Landscape* pLand
 		const auto patch = pLandscape->findPatch(patchId);
 		const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
 		if (pPop != 0) {
-			// Update this population's SNP counts tables
-			pPop->updatePopSNPtables();
+			// Update this population's NEUTRAL counts tables
+			pPop->updatePopNeutralTables();
 			nbSampledInds += pPop->sampleSize();
 		}
 		// Add population-level counts to community-level counts 
@@ -75,24 +75,24 @@ void NeutralStatsManager::updateAllSNPTables(Species* pSpecies, Landscape* pLand
 				else {
 					patchAlleleCount = 0;
 				}
-				commSNPCountTables[thisLocus].incrementTallyBy(patchAlleleCount, allele);
+				commNeutralCountTables[thisLocus].incrementTallyBy(patchAlleleCount, allele);
 			}
 		}
 	}
 
 	// Update community-level frequencies
-	std::for_each(commSNPCountTables.begin(),
-		commSNPCountTables.end(),
-		[&](SNPCountsTable& v) -> void {
+	std::for_each(commNeutralCountTables.begin(),
+		commNeutralCountTables.end(),
+		[&](NeutralCountsTable& v) -> void {
 			v.setFrequencies(nbSampledInds * ploidy);
 		});
 }
 
 // ----------------------------------------------------------------------------------------
-// Reset allele tables in SNPtable structs
+// Reset allele tables in NeutralTable structs
 // ----------------------------------------------------------------------------------------
-void NeutralStatsManager::resetCommSNPtables() {
-	for (auto& entry : commSNPCountTables) {
+void NeutralStatsManager::resetCommNeutralTables() {
+	for (auto& entry : commNeutralCountTables) {
 		entry.reset();
 	}
 }
@@ -103,8 +103,8 @@ void NeutralStatsManager::resetCommSNPtables() {
 void NeutralStatsManager::calcAllelicDiversityMetrics(set<int> const& patchList, const int nInds, Species* pSpecies, Landscape* pLandscape)
 {
 	int i, j;
-	const int nLoci = pSpecies->getNPositionsForTrait(SNP);
-	const int nAlleles = (int)pSpecies->getSpTrait(SNP)->getMutationParameters().find(MAX)->second;
+	const int nLoci = pSpecies->getNPositionsForTrait(NEUTRAL);
+	const int nAlleles = (int)pSpecies->getSpTrait(NEUTRAL)->getMutationParameters().find(MAX)->second;
 	const int ploidy = pSpecies->isDiploid() ? 2 : 1;
 	unsigned int nbPopulatedPatches = 0;
 	int nbAllelesInPatch = 0;
@@ -171,7 +171,7 @@ void NeutralStatsManager::calcAllelicDiversityMetrics(set<int> const& patchList,
 	nbGloballyFixedAlleles = 0;
 	for (i = 0; i < nLoci; ++i)
 		for (j = 0; j < nAlleles; ++j)
-			nbGloballyFixedAlleles += commSNPCountTables[i].getFrequency(j) == 1;
+			nbGloballyFixedAlleles += commNeutralCountTables[i].getFrequency(j) == 1;
 }
 
 // ----------------------------------------------------------------------------------------
@@ -229,7 +229,7 @@ void NeutralStatsManager::calculateHt(Species* pSpecies, Landscape* pLandscape, 
 
 	for (int thisLocus = 0; thisLocus < nLoci; ++thisLocus) {
 		for (int allele = 0; allele < nAlleles; ++allele) {
-			freq = commSNPCountTables[thisLocus].getFrequency(allele);
+			freq = commNeutralCountTables[thisLocus].getFrequency(allele);
 			freq *= freq; //squared frequencies
 			locihet[thisLocus] -= freq;  //1 - sum of p2 = expected heterozygosity
 		}
@@ -318,7 +318,7 @@ void NeutralStatsManager::calculateFstatWC(set<int> const& patchList, const int 
 			for (int allele = 0; allele < nAlleles; ++allele) {
 
 				s2 = hBar = 0;
-				pBar = commSNPCountTables[thisLocus].getFrequency(allele);
+				pBar = commNeutralCountTables[thisLocus].getFrequency(allele);
 
 				for (int patchId : patchList) {
 					const auto patch = pLandscape->findPatch(patchId);
@@ -438,7 +438,7 @@ void NeutralStatsManager::calcPerLocusMeanSquaresFst(set<int> const& patchList, 
 
 					het = pPop->getHeteroTally(locus, allele); // ni * h_i
 					pi = pPop->getAlleleFrequency(locus, allele);
-					pBar = commSNPCountTables[locus].getFrequency(allele);
+					pBar = commNeutralCountTables[locus].getFrequency(allele);
 					var = pi - pBar; //(p_liu - pbar_u)^2
 					var *= var;
 
@@ -535,7 +535,7 @@ void NeutralStatsManager::calcPerLocusMeanSquaresFst(set<int> const& patchList, 
 // ----------------------------------------------------------------------------------------
 void NeutralStatsManager::calcPairwiseWeightedFst(set<int> const& patchList, const int nInds, const int nLoci, Species* pSpecies, Landscape* pLandscape) {
 
-	const int nAlleles = (int)pSpecies->getSpTrait(SNP)->getMutationParameters().find(MAX)->second;
+	const int nAlleles = (int)pSpecies->getSpTrait(NEUTRAL)->getMutationParameters().find(MAX)->second;
 	const int ploidy = pSpecies->isDiploid() ? 2 : 1;
 
 	// Needs to be in vector to iterate over, copy preserves order
@@ -592,7 +592,7 @@ void NeutralStatsManager::calcPairwiseWeightedFst(set<int> const& patchList, con
 				for (int u = 0; u < nAlleles; ++u) {
 					p = pPop->getAlleleFrequency(l, u); //p_liu
 					pq = p * (1 - p);
-					pBar = commSNPCountTables[l].getFrequency(u);
+					pBar = commNeutralCountTables[l].getFrequency(u);
 					sqDist = p - pBar; //(p_liu - pbar_u)^2 
 					sqDist *= sqDist;
 

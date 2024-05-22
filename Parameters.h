@@ -116,7 +116,7 @@ const rgb draw_wheel(int);
 /** Trait types **/
 
 enum TraitType {
-	SNP, 
+	NEUTRAL, 
 	GENETIC_LOAD, GENETIC_LOAD1, GENETIC_LOAD2, GENETIC_LOAD3, GENETIC_LOAD4, GENETIC_LOAD5,
 
 	E_D0, E_ALPHA, E_BETA,
@@ -149,7 +149,7 @@ typedef enum { KERNEL, SMS, CRW} movement_t;
 //sex types
 typedef enum {
 	FEM = 0, MAL = 1,
-	NA, // not applicable. e.g. for SNP or genetic load trait
+	NA, // not applicable. e.g. for NEUTRAL or genetic load trait
 	INVALID_SEX // error
 } sex_t;
 

@@ -221,7 +221,7 @@ public:
 	void outputGeneValues(ofstream& ofsGenes, const int& yr, const int& gen) const;
 	void clean(void); // Remove zero pointers to dead or dispersed individuals
 
-	void updatePopSNPtables();
+	void updatePopNeutralTables();
 	double getAlleleFrequency(int locus, int allele);
 	int getAlleleTally(int locus, int allele);
 	int getHeteroTally(int locus, int allele);
@@ -241,8 +241,8 @@ private:
 	// has been completed
 
 	vector<Individual*> sampledInds;
-	vector<SNPCountsTable> popSNPCountTables;
-	void resetPopSNPtables();
+	vector<NeutralCountsTable> popNeutralCountTables;
+	void resetPopNeutralTables();
 };
 
 //---------------------------------------------------------------------------

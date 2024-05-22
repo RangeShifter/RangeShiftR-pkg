@@ -1766,7 +1766,7 @@ void Community::writeWCFstatFile(int rep, int yr, int gen) {
 
 void Community::writeWCPerLocusFstatFile(Species* pSpecies, const int yr, const int gen, const  int nAlleles, const int nLoci, set<int> const& patchList)
 {
-	const set<int> positions = pSpecies->getSpTrait(SNP)->getGenePositions();
+	const set<int> positions = pSpecies->getSpTrait(NEUTRAL)->getGenePositions();
 
 	int thisLocus = 0;
 	for (int position : positions) {
@@ -1845,8 +1845,8 @@ void Community::writePairwiseFSTFile(Species* pSpecies, const int yr, const int 
 
 void Community::outNeutralGenetics(Species* pSpecies, int rep, int yr, int gen, bool fstat, bool perLocus, bool pairwise) {
 
-	const int nAlleles = (int)(pSpecies->getSpTrait(SNP)->getMutationParameters().find(MAX)->second);
-	const int nLoci = (int)pSpecies->getNPositionsForTrait(SNP);
+	const int nAlleles = (int)(pSpecies->getSpTrait(NEUTRAL)->getMutationParameters().find(MAX)->second);
+	const int nLoci = (int)pSpecies->getNPositionsForTrait(NEUTRAL);
 	const set<int> patchList = pSpecies->getSamplePatches();
 	int nInds = 0;
 
@@ -1864,7 +1864,7 @@ void Community::outNeutralGenetics(Species* pSpecies, int rep, int yr, int gen, 
 	if (pNeutralStatistics == 0)
 		pNeutralStatistics = make_unique<NeutralStatsManager>(patchList.size(), nLoci);
 
-	pNeutralStatistics->updateAllSNPTables(pSpecies, pLandscape, patchList);
+	pNeutralStatistics->updateAllNeutralTables(pSpecies, pLandscape, patchList);
 
 	if (fstat) {
 		pNeutralStatistics->calculateHo(patchList, nInds, nLoci, pSpecies, pLandscape);

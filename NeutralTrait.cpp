@@ -1,4 +1,4 @@
-#include "SNPTrait.h"
+#include "NeutralTrait.h"
 
 // ----------------------------------------------------------------------------------------
 //  Initialisation constructor
@@ -6,7 +6,7 @@
 //  Sets up initial values, and immutable attributes (distributions and parameters)
 //	that are defined at the species-level
 // ----------------------------------------------------------------------------------------
-SNPTrait::SNPTrait(SpeciesTrait* P)
+NeutralTrait::NeutralTrait(SpeciesTrait* P)
 {
 	pSpeciesTrait = P;
 
@@ -15,16 +15,16 @@ SNPTrait::SNPTrait(SpeciesTrait* P)
 
 	// Set default value to user-specified max
 	wildType = (int)mutationParameters.find(MAX)->second - 1;
-	if (wildType > SNPvalUpperBound)
-		throw logic_error("Error:: max number of alleles cannot exceed " + to_string(SNPvalUpperBound) + ".\n");
+	if (wildType > NeutralValUpperBound)
+		throw logic_error("Error:: max number of alleles cannot exceed " + to_string(NeutralValUpperBound) + ".\n");
 
-	_inherit_func_ptr = (pSpeciesTrait->getPloidy() == 1) ? &SNPTrait::inheritHaploid : &SNPTrait::inheritDiploid; //this could be changed if we wanted some alternative form of inheritance
+	_inherit_func_ptr = (pSpeciesTrait->getPloidy() == 1) ? &NeutralTrait::inheritHaploid : &NeutralTrait::inheritDiploid; //this could be changed if we wanted some alternative form of inheritance
 
 	if (mutationDistribution == SSM)
-		_mutate_func_ptr = &SNPTrait::mutate_SSM;
+		_mutate_func_ptr = &NeutralTrait::mutate_SSM;
 
 	if (mutationDistribution == KAM)
-		_mutate_func_ptr = &SNPTrait::mutate_KAM;
+		_mutate_func_ptr = &NeutralTrait::mutate_KAM;
 
 	if (mutationDistribution != SSM && mutationDistribution != KAM)
 		throw logic_error("Error:: wrong mutation distribution for neutral markers, must be KAM or SSM \n");
@@ -42,21 +42,21 @@ SNPTrait::SNPTrait(SpeciesTrait* P)
 	case UNIFORM:
 	{
 		if (initialParameters.count(MAX) != 1)
-			throw logic_error("Error:: initial SNP/Microsat distribution parameter must contain one max value if set to UNIFORM (e.g. max= ), max cannot exceed " + to_string(SNPvalUpperBound) + "\n");
+			throw logic_error("Error:: initial distribution parameter must contain one max value if set to UNIFORM (e.g. max= ), max cannot exceed " + to_string(NeutralValUpperBound) + "\n");
 
-		float maxSNPval = initialParameters.find(MAX)->second;
-		if (maxSNPval > SNPvalUpperBound) {
-			throw logic_error("Warning:: initial SNP/Microsat distribution parameter max cannot exceed " + to_string(SNPvalUpperBound) + ", resetting to " + to_string(SNPvalUpperBound) + "\n");
-			maxSNPval = SNPvalUpperBound; //reserve 255 for wildtype
+		float maxNeutralVal = initialParameters.find(MAX)->second;
+		if (maxNeutralVal > NeutralValUpperBound) {
+			throw logic_error("Warning:: initial distribution parameter max cannot exceed " + to_string(NeutralValUpperBound) + ", resetting to " + to_string(NeutralValUpperBound) + "\n");
+			maxNeutralVal = NeutralValUpperBound; //reserve 255 for wildtype
 		}
-		initialiseUniform(maxSNPval);
+		initialiseUniform(maxNeutralVal);
 		break;
 	}
 	case NONE: 
 		break;
 	default:
 	{
-		throw logic_error("wrong parameter value for parameter \"initialisation of snp/microsat\", must be left as default (#) or uniform \n");
+		throw logic_error("wrong parameter value for parameter \"initialisation of neutral trait\", must be left as default (#) or uniform \n");
 		break; //should return false
 	}
 	}
@@ -67,7 +67,7 @@ SNPTrait::SNPTrait(SpeciesTrait* P)
 // Copies immutable features from a parent trait
 // Only called via clone()
 // ----------------------------------------------------------------------------------------
-SNPTrait::SNPTrait(const SNPTrait& T) :
+NeutralTrait::NeutralTrait(const NeutralTrait& T) :
 	pSpeciesTrait(T.pSpeciesTrait), _mutate_func_ptr(T._mutate_func_ptr), _inherit_func_ptr(T._inherit_func_ptr) {
 }
 
@@ -82,7 +82,7 @@ SNPTrait::SNPTrait(const SNPTrait& T) :
 // that is no new genes are created during simulation
 // KAM = randomly drawn value in 0-MAX, differs from previous value
 // ----------------------------------------------------------------------------------------
-void SNPTrait::mutate_KAM()
+void NeutralTrait::mutate_KAM()
 {
 	const int positionsSize = pSpeciesTrait->getPositionsSize();
 	const auto& genePositions = pSpeciesTrait->getGenePositions();
@@ -93,8 +93,8 @@ void SNPTrait::mutate_KAM()
 
 	map<GenParamType, float> mutationParameters = pSpeciesTrait->getMutationParameters();
 
-	int maxSNPval = (int)mutationParameters.find(MAX)->second;
-	if (maxSNPval > SNPvalUpperBound) maxSNPval = SNPvalUpperBound; //reserve max value for wildtype
+	int maxNeutralVal = (int)mutationParameters.find(MAX)->second;
+	if (maxNeutralVal > NeutralValUpperBound) maxNeutralVal = NeutralValUpperBound; //reserve max value for wildtype
 
 	for (int whichChromosome = 0; whichChromosome < ploidy; whichChromosome++) {
 
@@ -105,14 +105,14 @@ void SNPTrait::mutate_KAM()
 				NbMut, rng); // without replacement
 
 			for (int m : mutationPositions) {
-				mut = (unsigned char)pRandom->IRandom(0, maxSNPval); // draw new mutation, could draw wildtype
+				mut = (unsigned char)pRandom->IRandom(0, maxNeutralVal); // draw new mutation, could draw wildtype
 
 				auto it = genes.find(m);
 				if (it == genes.end())
 					throw runtime_error("Locus selected for mutation doesn't exist.");
 				auto currentChar = it->second[whichChromosome]; // current allele
 				do {
-					mut = (unsigned char)pRandom->IRandom(0, maxSNPval);
+					mut = (unsigned char)pRandom->IRandom(0, maxNeutralVal);
 				} while (mut == currentChar); // new allele value is different
 
 				it->second[whichChromosome] = mut; //overwrite with new value
@@ -130,7 +130,7 @@ void SNPTrait::mutate_KAM()
 // Increment previous value by 1 or -1,
 // unless already 0 (then always +1) or MAX (then always -1)
 // ----------------------------------------------------------------------------------------
-void SNPTrait::mutate_SSM()
+void NeutralTrait::mutate_SSM()
 {
 	const int positionsSize = pSpeciesTrait->getPositionsSize();
 	const auto& genePositions = pSpeciesTrait->getGenePositions();
@@ -140,8 +140,8 @@ void SNPTrait::mutate_SSM()
 
 	map<GenParamType, float> mutationParameters = pSpeciesTrait->getMutationParameters();
 
-	int maxSNPval = (int)mutationParameters.find(MAX)->second;
-	if (maxSNPval > SNPvalUpperBound) maxSNPval = SNPvalUpperBound; //reserved max value for wildtype
+	int maxNeutralVal = (int)mutationParameters.find(MAX)->second;
+	if (maxNeutralVal > NeutralValUpperBound) maxNeutralVal = NeutralValUpperBound; //reserved max value for wildtype
 
 	for (int whichChromosome = 0; whichChromosome < ploidy; whichChromosome++) {
 
@@ -157,7 +157,7 @@ void SNPTrait::mutate_SSM()
 				if (it == genes.end())
 					throw runtime_error("Locus selected for mutation doesn't exist.");
 				auto currentAllele = it->second[whichChromosome];
-				if (mutateUp == 1 && currentAllele < maxSNPval)
+				if (mutateUp == 1 && currentAllele < maxNeutralVal)
 					it->second[whichChromosome] += 1; // one step up
 				else if (currentAllele > 0) // step down or already max
 					it->second[whichChromosome] -= 1; // one step down
@@ -171,9 +171,9 @@ void SNPTrait::mutate_SSM()
 // ----------------------------------------------------------------------------------------
 //  Wrapper to inheritance function
 // ----------------------------------------------------------------------------------------
-void SNPTrait::inheritGenes(const bool& fromMother, TTrait* parent, set<unsigned int> const& recomPositions, int startingChromosome)
+void NeutralTrait::inheritGenes(const bool& fromMother, TTrait* parent, set<unsigned int> const& recomPositions, int startingChromosome)
 {
-	auto parentCast = dynamic_cast<SNPTrait*> (parent); // must convert TTrait to SNPTrait
+	auto parentCast = dynamic_cast<NeutralTrait*> (parent); // must convert TTrait to NeutralTrait
 	const auto& parent_seq = parentCast->getGenes();
 	(this->*_inherit_func_ptr) (fromMother, parent_seq, recomPositions, startingChromosome);
 }
@@ -184,7 +184,7 @@ void SNPTrait::inheritGenes(const bool& fromMother, TTrait* parent, set<unsigned
 // populates offspring genes with appropriate parent alleles
 // Assumes mother genes are inherited first
 // ----------------------------------------------------------------------------------------
-void SNPTrait::inheritDiploid(const bool& fromMother, map<int, vector<unsigned char>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome) {
+void NeutralTrait::inheritDiploid(const bool& fromMother, map<int, vector<unsigned char>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome) {
 
 	auto it = recomPositions.lower_bound(parentGenes.begin()->first);
 	unsigned int nextBreakpoint = *it;
@@ -224,7 +224,7 @@ void SNPTrait::inheritDiploid(const bool& fromMother, map<int, vector<unsigned c
 // Simply pass down parent genes
 // Arguments are still needed to match overloaded function in base class
 // ----------------------------------------------------------------------------------------
-void SNPTrait::inheritHaploid(const bool& fromMother, map<int, vector<unsigned char>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome)
+void NeutralTrait::inheritHaploid(const bool& fromMother, map<int, vector<unsigned char>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome)
 {
 	genes = parentGenes;
 }
@@ -232,7 +232,7 @@ void SNPTrait::inheritHaploid(const bool& fromMother, map<int, vector<unsigned c
 // ----------------------------------------------------------------------------------------
 // Initialise neutral loci
 // ----------------------------------------------------------------------------------------
-void SNPTrait::initialiseUniform(int maxAlleleVal)
+void NeutralTrait::initialiseUniform(int maxAlleleVal)
 {
 	const auto& genePositions = pSpeciesTrait->getGenePositions();
 	short ploidy = pSpeciesTrait->getPloidy();
@@ -253,11 +253,11 @@ void SNPTrait::initialiseUniform(int maxAlleleVal)
 // ----------------------------------------------------------------------------------------
 // Check if particular loci is heterozygote
 // ----------------------------------------------------------------------------------------
-bool SNPTrait::isHeterozygoteAtLocus(int locus) const {
+bool NeutralTrait::isHeterozygoteAtLocus(int locus) const {
 	// assumes diploidy
 	auto it = genes.find(locus);
 	if (it == genes.end()) 
-		throw runtime_error("SNP gene queried for heterozygosity does not exist.");
+		throw runtime_error("Neutral gene queried for heterozygosity does not exist.");
 	else
 		return(it->second[0] != it->second[1]);
 }
@@ -265,7 +265,7 @@ bool SNPTrait::isHeterozygoteAtLocus(int locus) const {
 // ----------------------------------------------------------------------------------------
 // Count heterozygote loci in genome 
 // ----------------------------------------------------------------------------------------
-int SNPTrait::countHeterozygoteLoci() const {
+int NeutralTrait::countHeterozygoteLoci() const {
 	// assumes diploidy
 	int count = 0;
 	for (auto const& [locus, allelePair] : genes) {
@@ -277,7 +277,7 @@ int SNPTrait::countHeterozygoteLoci() const {
 // ----------------------------------------------------------------------------------------
 // Get allele value at loci 
 // ----------------------------------------------------------------------------------------
-float SNPTrait::getAlleleValueAtLocus(short whichChromosome, int position) const {
+float NeutralTrait::getAlleleValueAtLocus(short whichChromosome, int position) const {
 
 	auto it = genes.find(position);
 	if (it == genes.end()) //no mutations there
