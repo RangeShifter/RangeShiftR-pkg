@@ -100,8 +100,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 #endif
 #endif
 
-		MemoLine(("Running replicate " + Int2Str(rep) + "...").c_str());
-
 		if (sim.saveVisits && !ppLand.generated) {
 			pLandscape->resetVisits();
 		}
@@ -125,7 +123,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 			// its corresponding patch upon deletion)
 			if (pComm != 0) delete pComm;
 			// generate new cell-based landscape
-			MemoLine("...generating new landscape...");
 			pLandscape->resetLand();
 #if RSDEBUG
 			DEBUGLOG << "RunModel(): finished resetting landscape" << endl << endl;
@@ -154,7 +151,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				pComm->addSubComm(ppp.pPatch, ppp.patchNum); // SET UP ALL SUB-COMMUNITIES
 #endif
 			}
-			MemoLine("...completed...");
 #if RSDEBUG
 			DEBUGLOG << endl << "RunModel(): finished generating populations" << endl;
 #endif
@@ -173,35 +169,29 @@ int RunModel(Landscape* pLandscape, int seqsim)
 			// open output files
 			if (sim.outRange) { // open Range file
 				if (!pComm->outRangeHeaders(pSpecies, ppLand.landNum)) {
-					MemoLine("UNABLE TO OPEN RANGE FILE");
 					filesOK = false;
 				}
 			}
 			if (sim.outOccup && sim.reps > 1)
 				if (!pComm->outOccupancyHeaders(0)) {
-					MemoLine("UNABLE TO OPEN OCCUPANCY FILE(S)");
 					filesOK = false;
 				}
 			if (sim.outPop) {
 				// open Population file
 				if (!pComm->outPopHeaders(pSpecies, ppLand.landNum)) {
-					MemoLine("UNABLE TO OPEN POPULATION FILE");
 					filesOK = false;
 				}
 			}
 			if (sim.outTraitsCells)
 				if (!pComm->outTraitsHeaders(pSpecies, ppLand.landNum)) {
-					MemoLine("UNABLE TO OPEN TRAITS FILE");
 					filesOK = false;
 				}
 			if (sim.outTraitsRows)
 				if (!pComm->outTraitsRowsHeaders(pSpecies, ppLand.landNum)) {
-					MemoLine("UNABLE TO OPEN TRAITS ROWS FILE");
 					filesOK = false;
 				}
 			if (sim.outConnect && ppLand.patchModel) // open Connectivity file
 				if (!pLandscape->outConnectHeaders(0)) {
-					MemoLine("UNABLE TO OPEN CONNECTIVITY FILE");
 					filesOK = false;
 				}
 		}
@@ -294,7 +284,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 #endif
 
 		// years loop
-		MemoLine("...running...");
 		for (yr = 0; yr < sim.years; yr++) {
 #if RSDEBUG
 			DEBUGLOG << endl << "RunModel(): starting simulation=" << sim.simulation
@@ -716,12 +705,10 @@ int RunModel(Landscape* pLandscape, int seqsim)
 
 	// Occupancy outputs
 	if (sim.outOccup && sim.reps > 1) {
-		MemoLine("Writing final occupancy output...");
 		pComm->outOccupancy();
 		pComm->outOccSuit(v.viewGraph);
 		pComm->deleteOccupancy((sim.years / sim.outIntOcc) + 1);
 		pComm->outOccupancyHeaders(-999);
-		MemoLine("...finished");
 	}
 
 	if (sim.outRange) {
@@ -739,9 +726,8 @@ int RunModel(Landscape* pLandscape, int seqsim)
 	if (sim.outInds) pComm->outInds(0, 0, 0, -999);
 	if (sim.outGenetics) pComm->outGenetics(0, 0, 0, -999);
 
-	MemoLine("Deleting community...");
-	delete pComm; pComm = 0;
-	MemoLine("...finished");
+	delete pComm; 
+	pComm = 0;
 
 #if RS_RCPP && !R_CMD
 	return list_outPop;
@@ -751,7 +737,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 
 }
 
-#if RS_EMBARCADERO || LINUX_CLUSTER || RS_RCPP 
+#if LINUX_CLUSTER || RS_RCPP 
 // Check whether a specified directory path exists
 bool is_directory(const char* pathname) {
 	struct stat info;

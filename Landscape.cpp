@@ -2293,11 +2293,6 @@ costs >> maxXcost >> header >> maxYcost >> header >> minLongCost;
 costs >> header >> minLatCost >> header >> tmpresolCost >> header >> NODATACost;
 resolCost = (int) tmpresolCost;
 
-
-#if !RS_RCPP
-	MemoLine("Loading costs map. Please wait...");
-#endif
-
 	for (int y = maxYcost - 1; y > -1; y--) {
 		for (int x = 0; x < maxXcost; x++) {
 #if RS_RCPP
@@ -2342,8 +2337,6 @@ if (costs.eof()) {
 #endif
 }
 else EOFerrorR(fname);
-#else
-MemoLine("Costs map loaded.");
 #endif
 
 costs.close(); costs.clear();

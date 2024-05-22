@@ -55,7 +55,7 @@ Last updated: 26 October 2021 by Steve Palmer
 #include "SubCommunity.h"
 #include "Species.h"
 
-#if !RS_EMBARCADERO && !LINUX_CLUSTER && !RS_RCPP
+#if !LINUX_CLUSTER && !RS_RCPP
 #include <filesystem>
 using namespace std::filesystem;
 #endif
@@ -89,19 +89,7 @@ void RangePopOutput(
 	int,				// year
 	int					// generation
 );
-void Outputs_Visuals_B(
-	int,	// replicate
-	int,	// year
-	int,	// generation
-	int		// Landscape number
-);
-void RefreshVisualCost(void);
-void SetupVisualOutput(void);
-void ResetVisualOutput(void);
-void DrawPopnGraph(
-	Community*,	// pointer to Community
-	int					// year
-);
+
 void OutParameters(
 	Landscape*	// pointer to Landscape
 );
@@ -122,15 +110,6 @@ extern string distnmapname;	// see Main.cpp (batch)
 extern string costmapname;	// see Main.cpp (batch)
 extern string genfilename;	// see Main.cpp (batch)
 extern RSrandom *pRandom;
-
-// these functions to have different version for GUI and batch applications ...
-#if BATCH
-extern void MemoLine(string);
-#endif
-void GUIsetLandScale(
-	int,	// landscape image height (pixels)
-	int		// landscape image width  (pixels)
-);
 
 #if RS_RCPP
 extern std::uint32_t RS_random_seed;

@@ -62,10 +62,6 @@ vector <string> hfnames;
 Species* pSpecies;
 Community* pComm;
 
-void MemoLine(string msg) {
-	/// nothing
-}
-
 #if LINUX_CLUSTER || RS_RCPP
 int main(int argc, char* argv[])
 #else
