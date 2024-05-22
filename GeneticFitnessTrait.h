@@ -7,7 +7,7 @@
 #include <map>
 #include <algorithm>
 
-#include "TTrait.h"
+#include "QuantitativeTrait.h"
 
 using namespace std;
 
@@ -17,7 +17,7 @@ using namespace std;
 // offspring viability. Alleles start with value
 // zero but increase through simulation via mutations.
 // There can be up to five genetic load traits.
-class GeneticFitnessTrait : public TTrait {
+class GeneticFitnessTrait : public QuantitativeTrait {
 
 public:
 
@@ -30,7 +30,7 @@ public:
    // Make a shallow copy to pass to offspring trait
     // Return new pointer to new trait created by inheritance c'tor 
     // This avoids copying shared attributes: distributions and parameters
-    virtual unique_ptr<TTrait> clone() const override { return std::make_unique<GeneticFitnessTrait>(*this); }
+    virtual unique_ptr<QuantitativeTrait> clone() const override { return std::make_unique<GeneticFitnessTrait>(*this); }
 
     virtual ~GeneticFitnessTrait() { }
 
@@ -43,7 +43,7 @@ public:
 
     virtual void mutate() override;
     virtual float express();
-    virtual void inheritGenes(const bool& fromMother, TTrait* parent, set<unsigned int> const& recomPositions, int startingChromosome) override;
+    virtual void inheritGenes(const bool& fromMother, QuantitativeTrait* parent, set<unsigned int> const& recomPositions, int startingChromosome) override;
 
     virtual float getAlleleValueAtLocus(short chromosome, int position) const override;
     virtual int countHeterozygoteLoci() const;

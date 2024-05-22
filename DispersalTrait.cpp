@@ -192,9 +192,9 @@ void DispersalTrait::mutateNormal()
 // ----------------------------------------------------------------------------------------
 //  Wrapper to inheritance function
 // ----------------------------------------------------------------------------------------
-void DispersalTrait::inheritGenes(const bool& fromMother, TTrait* parentTrait, set<unsigned int> const& recomPositions, int startingChromosome)
+void DispersalTrait::inheritGenes(const bool& fromMother, QuantitativeTrait* parentTrait, set<unsigned int> const& recomPositions, int startingChromosome)
 {
-	auto parentCast = dynamic_cast<DispersalTrait*>(parentTrait); // must convert TTrait to DispersalTrait
+	auto parentCast = dynamic_cast<DispersalTrait*>(parentTrait); // must convert QuantitativeTrait to DispersalTrait
 	const auto& parent_seq = parentCast->getGenes();
 	(this->*_inherit_func_ptr)(fromMother, parent_seq, recomPositions, startingChromosome);
 }

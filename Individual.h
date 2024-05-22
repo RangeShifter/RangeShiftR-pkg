@@ -251,7 +251,7 @@ public:
 
 	void setDispersalPhenotypes(Species* pSpecies, int resol);
 
-	TTrait* getTrait(TraitType trait) const;
+	QuantitativeTrait* getTrait(TraitType trait) const;
 
 	set<TraitType> getTraitTypes();
 
@@ -399,7 +399,7 @@ private:
 	std::unique_ptr <settleTraits> pSettleTraits;		// pointer to settlement traits
 	std::unique_ptr <trfrData> pTrfrData; //can be sms, kernel, crw
 	std::queue <locn> memory;		// memory of last N squares visited for SMS
-	map<TraitType, unique_ptr<TTrait>> spTraitTable;
+	map<TraitType, unique_ptr<QuantitativeTrait>> spTraitTable;
 };
 
 

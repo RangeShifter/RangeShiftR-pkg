@@ -171,9 +171,9 @@ void NeutralTrait::mutate_SSM()
 // ----------------------------------------------------------------------------------------
 //  Wrapper to inheritance function
 // ----------------------------------------------------------------------------------------
-void NeutralTrait::inheritGenes(const bool& fromMother, TTrait* parent, set<unsigned int> const& recomPositions, int startingChromosome)
+void NeutralTrait::inheritGenes(const bool& fromMother, QuantitativeTrait* parent, set<unsigned int> const& recomPositions, int startingChromosome)
 {
-	auto parentCast = dynamic_cast<NeutralTrait*> (parent); // must convert TTrait to NeutralTrait
+	auto parentCast = dynamic_cast<NeutralTrait*> (parent); // must convert QuantitativeTrait to NeutralTrait
 	const auto& parent_seq = parentCast->getGenes();
 	(this->*_inherit_func_ptr) (fromMother, parent_seq, recomPositions, startingChromosome);
 }

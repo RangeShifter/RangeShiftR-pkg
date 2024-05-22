@@ -14,7 +14,7 @@ class TraitFactory
 public:
 	TraitFactory() {};
 
-	unique_ptr<TTrait> Create(const TraitType traitType, SpeciesTrait* protoTrait)
+	unique_ptr<QuantitativeTrait> Create(const TraitType traitType, SpeciesTrait* protoTrait)
 	{
 		if (traitType == NEUTRAL) {
 			return make_unique<NeutralTrait>(protoTrait);

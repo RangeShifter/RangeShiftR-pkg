@@ -52,7 +52,7 @@
 
 #include "Parameters.h"
 #include "SpeciesTrait.h"
-#include "TTrait.h"
+#include "QuantitativeTrait.h"
 
 class SpeciesTrait;
 

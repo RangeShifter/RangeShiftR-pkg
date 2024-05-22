@@ -97,7 +97,7 @@ void Individual::setSettleTraits(const settleTraits& settle) {
 	pSettleTraits = make_unique<settleTraits>(settle);
 }
 
-TTrait* Individual::getTrait(TraitType trait) const {
+QuantitativeTrait* Individual::getTrait(TraitType trait) const {
 	auto p = this->spTraitTable.find(trait);
 	if (p == spTraitTable.end())
 		throw runtime_error("Trait does not exist in trait table.");

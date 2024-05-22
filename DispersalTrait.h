@@ -6,14 +6,14 @@
 #include <memory>
 #include <algorithm>
 
-#include "TTrait.h"
+#include "QuantitativeTrait.h"
 
 using namespace std;
 
 // Dispersal trait
 // 
 // That is, all evolvable that control emigration, transfer and settlement
-class DispersalTrait : public TTrait {
+class DispersalTrait : public QuantitativeTrait {
 
 public:
 	
@@ -26,7 +26,7 @@ public:
 	// Make a shallow copy to pass to offspring trait
 	// Return new pointer to new trait created by inheritance c'tor 
 	// This avoids copying shared attributes: distributions and parameters
-	virtual unique_ptr<TTrait> clone() const override { return std::make_unique<DispersalTrait>(*this); }
+	virtual unique_ptr<QuantitativeTrait> clone() const override { return std::make_unique<DispersalTrait>(*this); }
 
 	virtual ~DispersalTrait() { }
 	
@@ -39,7 +39,7 @@ public:
 	
 	void mutate() override { (this->*_mutate_func_ptr) (); }
 	float express() override { return (this->*_express_func_ptr) (); }
-	void inheritGenes(const bool& fromMother, TTrait* parent, set<unsigned int> const& recomPositions, int startingChromosome) override;
+	void inheritGenes(const bool& fromMother, QuantitativeTrait* parent, set<unsigned int> const& recomPositions, int startingChromosome) override;
 
 	float getAlleleValueAtLocus(short chromosome, int i) const override;
 	int countHeterozygoteLoci() const;
