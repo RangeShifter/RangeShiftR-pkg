@@ -42,7 +42,7 @@ Anyone who whishes to make changes to RangeShifter's code, including regular dev
 
 ![](branches.png)
 
-*Check out the [Git cheatsheet](https://github.com/RangeShifter/RScore/blob/development-guidelines/git_cheatsheet.md) for a reminder on the main git commands*
+*Check out the [Git cheatsheet](https://github.com/RangeShifter/RScore/blob/main/git_cheatsheet.md) for a reminder on the main git commands*
 
 This policy applies to RScore and all three RangeShifter interfaces.
 RangeShifter uses the following branching structure:
@@ -59,12 +59,12 @@ In the meantime, we encourage contributors to work in small and frequent commits
 
 ### Contributing to RangeShifter core code
 
-Any changes regarding the RangeShifter core code should be done in this repository and can afterwards be synced with all interfaces using the git subtree feature (see [Git subtree](https://github.com/RangeShifter/RScore/tree/development-guidelines#usage-git-subtrees) section in the README). 
+Any changes regarding the RangeShifter core code should be done in this repository and can afterwards be synced with all interfaces using the git subtree feature (see [Git subtree](https://github.com/RangeShifter/RScore/tree/main?tab=readme-ov-file#usage-git-subtree) section in the README). 
 
 #### Bugs
 
 To report a bug, please [open an issue](https://github.com/RangeShifter/RangeShiftR-package-dev/issues/new), using the Bug Report template. 
-Please do check if a related issue has already open on one of the other interfaces ([here](https://github.com/RangeShifter/RangeShifter_batch/issues) for the batch interface or [here](https://github.com/RangeShifter/RangeShiftR-package-dev) for the R package interface).
+Please do check if a related issue has already open on one of the other interfaces ([here](https://github.com/RangeShifter/RangeShifter_batch-dev/issues) for the batch interface or [here](https://github.com/RangeShifter/RangeShiftR-package-dev) for the R package interface).
 To propose a bug fix (thank you!!), please create and work on your own branch or fork, from either `main` or `develop` (preferred), and open a pull request when your fix is ready to be merged into the original branch.
 
 Maintainers will review the pull request, possibly request changes, and eventually integrate the bug fix into RScore, and update the subtrees to bring the fix to all interfaces.

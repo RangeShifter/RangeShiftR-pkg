@@ -1,30 +1,30 @@
 /*----------------------------------------------------------------------------
- *	
- *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell 
- *	
+ *
+ *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell
+ *
  *	This file is part of RangeShifter.
- *	
+ *
  *	RangeShifter is free software: you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation, either version 3 of the License, or
  *	(at your option) any later version.
- *	
+ *
  *	RangeShifter is distributed in the hope that it will be useful,
  *	but WITHOUT ANY WARRANTY; without even the implied warranty of
  *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *	GNU General Public License for more details.
- *	
+ *
  *	You should have received a copy of the GNU General Public License
  *	along with RangeShifter. If not, see <https://www.gnu.org/licenses/>.
- *	
+ *
  --------------------------------------------------------------------------*/
- 
+
 
 #include "RSrandom.h"
 
 //--------------- 2.) New version of RSrandom.cpp
 
-#if !RS_RCPP 
+#if !RS_RCPP
 
 #if RSDEBUG
 #include "Parameters.h"
@@ -113,7 +113,7 @@ int RSrandom::Poisson(double mean)
 //--------------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------------
 
-#else // if RS_RCPP 
+#else // if RS_RCPP
 
 //--------------- 3.) R package version of RSrandom.cpp
 
@@ -257,11 +257,11 @@ int RSrandom::Poisson(double mean)
 #endif // RS_RCPP
 
 
-#if RSDEBUG
+#if RSDEBUG && !RS_RCPP
 	void testRSrandom() {
 
 		{
-			// Bernoulli distribution 
+			// Bernoulli distribution
 			// Abuse cases
 			assert_error("Bernoulli's p cannot be negative.\n", []{
 				RSrandom rsr;

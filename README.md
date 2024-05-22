@@ -2,7 +2,7 @@
 
 This repo contains the core simulation code for RangeShifter v2.0 and is not meant to be compiled or run on its own.
 
-<img src="https://github.com/RangeShifter/RScore/blob/development-guidelines/RScore_logo.png" align="right" height = 200/>
+<img src="https://github.com/RangeShifter/RScore/blob/main/RScore_logo.png" align="right" height = 200/>
 
 If you are only interested in using RangeShifter, you can ignore this and head to the repo of one of the interfaces:
 
@@ -46,11 +46,15 @@ git subtree pull --prefix RangeShiftR/src/RScore RScore main
 
 ### Pushing new changes to RScore
 
-We haven't yet found a way to push new changes made in a RScore subfolder back into the RScore repo. This is why we ask that contributions are made directly inside the RScore repo.
+```bash
+git subtree push --prefix <path_to_RScore_subfolder> RScore <branch>
+```
 
-If you know how to do this, please drop us a line!
+e.g., from RangeShifter-batch's `main` to RScore's `main`:
 
-Alternatively, if you have already made changes on the subfolder, you could copy its contents into a new branch in RScore, then open a pull request.
+```bash
+git subtree push --prefix src/RScore RScore main
+```
 
 ### Switching the subfolder to a new branch
 
