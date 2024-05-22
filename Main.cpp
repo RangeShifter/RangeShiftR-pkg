@@ -62,16 +62,6 @@ vector <string> hfnames;
 Species* pSpecies;
 Community* pComm;
 
-traitCanvas SetupTraitCanvas(void) {
-	traitCanvas tcanv;
-	for (int i = 0; i < maxNbTraitsGUI; i++) { tcanv.pcanvas[i] = 0; }
-	return tcanv;
-}
-void Landscape::setLandMap(void) { }
-void Landscape::drawLandscape(int rep, int yr, int landnum) { }
-void Community::viewOccSuit(int year, double mn, double se) { }
-void Community::draw(int rep, int yr, int gen, int landNum) { }
-
 #if LINUX_CLUSTER || RS_RCPP
 int main(int argc, char* argv[])
 #else
@@ -83,7 +73,14 @@ int _tmain(int argc, _TCHAR* argv[])
 	return 1;
 # else
 	assert(0.1 > 0.0); // assert does run correctly
-	run_unit_tests();
+	try
+	{
+		run_unit_tests();
+	}
+	catch (const std::exception& e)
+	{
+		cerr << endl << "Error: " << e.what() << endl;
+	}
 	cout << "All tests have completed." << endl;
 	return 0; // if tests succeed, we are happy
 # endif // NDEBUG

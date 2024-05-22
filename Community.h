@@ -161,12 +161,6 @@ public:
 	void outOccSuit(
 		bool	// TRUE if occupancy graph is to be viewed on screen
 	);
-	void viewOccSuit( // Update the occupancy graph on the screen
-		// NULL for the batch version
-		int,		// year
-		double,	// mean occupancy
-		double	// standard error of occupancy
-	);
 	bool outTraitsHeaders( // Open traits file and write header record
 		Species*,	// pointer to Species
 		int				// Landscape number (-999 to close the file)
@@ -176,11 +170,6 @@ public:
 		int       // Landscape number (-999 to close the file)
 	);
 	void outTraits( // Write records to traits file
-		traitCanvas,// pointers to canvases for drawing variable traits 
-		//		emigCanvas,	// pointers to canvases for drawing emigration traits
-		//		trfrCanvas, // pointers to canvases for drawing emigration traits
-										// see SubCommunity.h
-										// in the batch version, these are replaced by integers set to zero
 		Species*,		// pointer to Species
 		int,				// replicate
 		int,				// year
@@ -193,13 +182,6 @@ public:
 		int,			// generation
 		int,			// row number (Y cell co-ordinate)
 		traitsums	// structure holding sums of trait genes for dispersal (see Population.h)
-	);
-	void draw(	// Draw the Community on the landscape map and optionally save the map
-		// NULL for the batch version
-		int,	// replicate
-		int,	// year
-		int,	// generation
-		int		// Landscape number
 	);
 #if RS_RCPP && !R_CMD
 	Rcpp::IntegerMatrix addYearToPopList(int, int);

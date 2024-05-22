@@ -826,10 +826,7 @@ void Community::outRange(Species* pSpecies, int rep, int yr, int gen)
 	if (emig.indVar || trfr.indVar || sett.indVar) { // output trait means
 		traitsums ts = traitsums();
 		traitsums scts; // sub-community traits
-		traitCanvas tcanv = traitCanvas();
 		int ngenes, popsize;
-
-		tcanv.pcanvas[0] = NULL;
 
 		for (int i = 0; i < maxNbSexes; i++) {
 			ts.ninds[i] = 0;
@@ -848,7 +845,7 @@ void Community::outRange(Species* pSpecies, int rep, int yr, int gen)
 
 		int nsubcomms = (int)subComms.size();
 		for (int i = 0; i < nsubcomms; i++) { // all sub-communities (incl. matrix)
-			scts = subComms[i]->outTraits(tcanv, pLandscape, rep, yr, gen, true);
+			scts = subComms[i]->outTraits(pLandscape, rep, yr, gen, true);
 			for (int j = 0; j < maxNbSexes; j++) {
 				ts.ninds[j] += scts.ninds[j];
 				ts.sumD0[j] += scts.sumD0[j];     ts.ssqD0[j] += scts.ssqD0[j];
@@ -1164,7 +1161,6 @@ void Community::outOccSuit(bool view) {
 		se = sd / sqrt((double)(sim.reps));
 
 		outsuit << i * sim.outIntOcc << "\t" << mean << "\t" << se << endl;
-		if (view) viewOccSuit(i * sim.outIntOcc, mean, se);
 	}
 
 }
@@ -1180,8 +1176,7 @@ only, this function relies on the fact that subcommunities are created in the sa
 sequence as patches, which is in asecending order of x nested within descending
 order of y
 */
-void Community::outTraits(traitCanvas tcanv, Species* pSpecies,
-	int rep, int yr, int gen)
+void Community::outTraits(Species* pSpecies, int rep, int yr, int gen)
 {
 	simParams sim = paramsSim->getSim();
 	simView v = paramsSim->getViews();
@@ -1216,7 +1211,7 @@ void Community::outTraits(traitCanvas tcanv, Species* pSpecies,
 		// generate output for each sub-community (patch) in the community
 		int nsubcomms = (int)subComms.size();
 		for (int i = 1; i < nsubcomms; i++) { // // all except matrix sub-community
-			sctraits = subComms[i]->outTraits(tcanv, pLandscape, rep, yr, gen, false);
+			sctraits = subComms[i]->outTraits(pLandscape, rep, yr, gen, false);
 			locn loc = subComms[i]->getLocn();
 			int y = loc.y;
 			if (sim.outTraitsRows && yr >= sim.outStartTraitRow && yr % sim.outIntTraitRow == 0)

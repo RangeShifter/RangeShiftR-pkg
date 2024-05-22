@@ -2343,7 +2343,6 @@ costs >> maxXcost >> header >> maxYcost >> header >> minLongCost;
 costs >> header >> minLatCost >> header >> tmpresolCost >> header >> NODATACost;
 resolCost = (int) tmpresolCost;
 
-
 	for (int y = maxYcost - 1; y > -1; y--) {
 		for (int x = 0; x < maxXcost; x++) {
 #if RS_RCPP

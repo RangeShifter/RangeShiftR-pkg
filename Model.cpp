@@ -124,11 +124,13 @@ int RunModel(Landscape* pLandscape, int seqsim)
 			if (pComm != 0) delete pComm;
 			// generate new cell-based landscape
 			pLandscape->resetLand();
-			pLandscape->generatePatches(pSpecies);
-			if (v.viewLand || sim.saveMaps) {
-				pLandscape->setLandMap();
-				pLandscape->drawLandscape(rep, 0, ppLand.landNum);
-			}
+#if RSDEBUG
+			DEBUGLOG << "RunModel(): finished resetting landscape" << endl << endl;
+#endif
+			pLandscape->generatePatches();
+#if RSDEBUG
+			DEBUGLOG << endl << "RunModel(): finished generating patches" << endl;
+#endif
 			pComm = new Community(pLandscape); // set up community
 			// set up a sub-community associated with each patch (incl. the matrix)
 			pLandscape->updateCarryingCapacity(pSpecies, 0, 0);
@@ -420,12 +422,20 @@ int RunModel(Landscape* pLandscape, int seqsim)
 
 			for (int gen = 0; gen < dem.repSeasons; gen++) // generation loop
 			{
-				if (v.viewPop || (sim.saveMaps && yr % sim.mapInt == 0)) {
-					if (updateland && gen == 0) {
-						pLandscape->drawLandscape(rep, landIx, ppLand.landNum);
+#if RSDEBUG
+				// TEMPORARY RANDOM STREAM CHECK
+				if (yr % 1 == 0)
+				{
+					DEBUGLOG << endl << "RunModel(): start of gen " << gen << " in year " << yr
+						<< " for rep " << rep << " (";
+					for (int i = 0; i < 5; i++) {
+						int rrrr = pRandom->IRandom(1000, 2000);
+						DEBUGLOG << " " << rrrr;
 					}
-					pComm->draw(rep, yr, gen, ppLand.landNum);
+					DEBUGLOG << " )" << endl;
 				}
+#endif
+
 				// Output and pop. visualisation before reproduction
 				if (v.viewPop || v.viewTraits || sim.outOccup
 					|| sim.outTraitsCells || sim.outTraitsRows || sim.saveMaps)
@@ -541,15 +551,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 
 		} // end of the years loop
 
-		// Final output and popn. visualisation
-#if BATCH
-		if (sim.saveMaps && yr % sim.mapInt == 0) {
-			if (updateland) {
-				pLandscape->drawLandscape(rep, landIx, ppLand.landNum);
-			}
-			pComm->draw(rep, yr, 0, ppLand.landNum);
-		}
-#endif
+		// Final output
 		// produce final summary output
 		if (v.viewPop || v.viewTraits || sim.outOccup
 			|| sim.outTraitsCells || sim.outTraitsRows || sim.saveMaps)
@@ -671,7 +673,8 @@ int RunModel(Landscape* pLandscape, int seqsim)
 	if (sim.outputPerLocusWCFstat) pComm->openWCPerLocusFstatFile(pSpecies, pLandscape, -999, 0);
 	if (sim.outputPairwiseFst) pComm->openPairwiseFSTFile(pSpecies, pLandscape, -999, 0);
 
-	delete pComm; pComm = 0;
+	delete pComm; 
+	pComm = 0;
 
 #if RS_RCPP && !R_CMD
 	return list_outPop;
@@ -731,22 +734,12 @@ void PreReproductionOutput(Landscape* pLand, Community* pComm, int rep, int yr, 
 		<< endl;
 #endif
 
-	traitCanvas tcanv;
-	for (int i = 0; i < maxNbTraitsGUI; i++) {
-		tcanv.pcanvas[i] = 0;
-	}
-
 	// trait outputs and visualisation
-
-	if (v.viewTraits) {
-		tcanv = SetupTraitCanvas();
-	}
-
 	if (v.viewTraits
 		|| ((sim.outTraitsCells && yr >= sim.outStartTraitCell && yr % sim.outIntTraitCell == 0) ||
 			(sim.outTraitsRows && yr >= sim.outStartTraitRow && yr % sim.outIntTraitRow == 0)))
 	{
-		pComm->outTraits(tcanv, pSpecies, rep, yr, gen);
+		pComm->outTraits(pSpecies, rep, yr, gen);
 	}
 	if (sim.outOccup && yr % sim.outIntOcc == 0 && gen == 0)
 		pComm->updateOccupancy(yr / sim.outIntOcc, rep);

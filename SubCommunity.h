@@ -56,10 +56,6 @@ using namespace std;
 
 //---------------------------------------------------------------------------
 
-struct traitCanvas { // canvases for drawing variable traits
-	int* pcanvas[maxNbTraitsGUI]; // dummy variables for batch version
-};
-
 class SubCommunity {
 
 public:
@@ -172,8 +168,6 @@ public:
 		int					// Landscape number (-999 to close the file)
 	);
 	traitsums outTraits( // Write records to traits file and return aggregated sums
-		traitCanvas,	// pointers to canvases for drawing variable traits		
-		// in the batch version, these are replaced by integers set to zero
 		Landscape*, 	// pointer to Landscape
 		int,					// replicate
 		int,					// year

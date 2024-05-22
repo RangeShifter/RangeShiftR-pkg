@@ -450,17 +450,9 @@ public:
 		string	// cost file name (may be NULL)
 	);
 	void listPatches(void);
-	int readCosts(string);	// costs file name
-
-	// the following four functions are implemented for the GUI version only
-	// in the batch version, they are defined, but empty
-	void setLandMap(void);
-	void drawLandscape(
-		int,	// replicate no.
-		int,	// landscape index number (always 0 if landscape is not dynamic)
-		int		// landscape no.
+	int readCosts(
+		string	// costs file name
 	);
-
 	void resetVisits(void);
 	void outVisits(int, int);	// save SMS path visits map to raster text file
 

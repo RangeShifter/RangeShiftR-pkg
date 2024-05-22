@@ -56,7 +56,7 @@
 #include "SubCommunity.h"
 #include "Species.h"
 
-#if !RS_EMBARCADERO && !LINUX_CLUSTER && !RS_RCPP
+#if !LINUX_CLUSTER && !RS_RCPP
 #include <filesystem>
 using namespace std::filesystem;
 #endif
@@ -90,7 +90,7 @@ void RangePopOutput(
 	int,				// year
 	int					// generation
 );
-traitCanvas SetupTraitCanvas(void);
+
 void OutParameters(
 	Landscape*	// pointer to Landscape
 );
