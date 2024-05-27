@@ -96,44 +96,44 @@ bool SpeciesTrait::isValidTraitVal(const float& val) const {
 	}
 	// Dispersal traits
 	/// Emigration
-	case E_D0_F: case E_D0_M: {
+	case E_D0_F: case E_D0_M: case E_D0: {
 		return val >= 0.0 && val <= 1.0; // is a probability
 		break;
 	}
-	case E_ALPHA_F: case E_ALPHA_M:
+	case E_ALPHA_F: case E_ALPHA_M: case E_ALPHA:
 	{
 		return val > 0.0;
 		break;
 	}
-	case E_BETA_F: case E_BETA_M:
+	case E_BETA_F: case E_BETA_M: case E_BETA:
 	{
 		return true; // inflexion point can be any value
 		break;
 	}
 	/// Settlement
-	case S_S0_F: case S_S0_M:
+	case S_S0_F: case S_S0_M: case S_S0:
 	{
 		return val >= 0.0 && val <= 1.0;
 		break;
 	}
-	case S_ALPHA_F: case S_ALPHA_M:
+	case S_ALPHA_F: case S_ALPHA_M: case S_ALPHA:
 	{
 		return val > 0.0;
 		break;
 	}
-	case S_BETA_F: case S_BETA_M:
+	case S_BETA_F: case S_BETA_M: case S_BETA:
 	{
 		return true;
 		break;
 	}
 	/// Transfer - Kernels
-	case KERNEL_MEANDIST_1_F: case KERNEL_MEANDIST_1_M:
-	case KERNEL_MEANDIST_2_F: case KERNEL_MEANDIST_2_M:
+	case KERNEL_MEANDIST_1_F: case KERNEL_MEANDIST_1_M: case KERNEL_MEANDIST_1:
+	case KERNEL_MEANDIST_2_F: case KERNEL_MEANDIST_2_M: case KERNEL_MEANDIST_2:
 	{
 		return val >= 0.0; // is a distance
 		break;
 	}
-	case KERNEL_PROBABILITY_F: case KERNEL_PROBABILITY_M:
+	case KERNEL_PROBABILITY_F: case KERNEL_PROBABILITY_M: case KERNEL_PROBABILITY:
 	{
 		return val >= 0.0 && val <= 1.0;
 		break;

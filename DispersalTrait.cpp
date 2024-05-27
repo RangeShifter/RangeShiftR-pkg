@@ -363,9 +363,9 @@ void DispersalTrait::trimPhenotype(float& val) {
 	switch (pSpeciesTrait->getTraitType())
 	{
 	// Values bound between 0 and 1
-	case E_D0_F: case E_D0_M: 
-	case S_S0_F: case S_S0_M:
-	case KERNEL_PROBABILITY_F: case KERNEL_PROBABILITY_M:
+	case E_D0_F: case E_D0_M: case E_D0:
+	case S_S0_F: case S_S0_M: case S_S0:
+	case KERNEL_PROBABILITY_F: case KERNEL_PROBABILITY_M: case KERNEL_PROBABILITY:
 	case CRW_STEPCORRELATION:
 	{
 		if (val < 0.0) val = 0;
@@ -373,16 +373,16 @@ void DispersalTrait::trimPhenotype(float& val) {
 		break;
 	}
 	// Positive values
-	case KERNEL_MEANDIST_1_F: case KERNEL_MEANDIST_1_M:
-	case KERNEL_MEANDIST_2_F: case KERNEL_MEANDIST_2_M:
+	case KERNEL_MEANDIST_1_F: case KERNEL_MEANDIST_1_M: case KERNEL_MEANDIST_1:
+	case KERNEL_MEANDIST_2_F: case KERNEL_MEANDIST_2_M: case KERNEL_MEANDIST_2:
 	case CRW_STEPLENGTH:
 	{
 		if (val < 0.0) val = 0;
 		break;
 	}
 	// Strictly positive values
-	case E_ALPHA_F: case E_ALPHA_M: 
-	case S_ALPHA_F: case S_ALPHA_M:
+	case E_ALPHA_F: case E_ALPHA_M: case E_ALPHA:
+	case S_ALPHA_F: case S_ALPHA_M: case S_ALPHA:
 	case SMS_ALPHADB:
 	{
 		if (val <= 0.0) val = minPositiveVal;
@@ -396,8 +396,8 @@ void DispersalTrait::trimPhenotype(float& val) {
 		break;
 	}
 	// Not bound
-	case E_BETA_F: case E_BETA_M:
-	case S_BETA_F: case S_BETA_M:
+	case E_BETA_F: case E_BETA_M: case E_BETA:
+	case S_BETA_F: case S_BETA_M: case S_BETA:
 	case SMS_BETADB:
 	{
 		break;
