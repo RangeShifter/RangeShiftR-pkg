@@ -96,19 +96,7 @@ const double SQRT2 = std::sqrt(double(2.0)); // more efficient than calculating 
 //---------------------------------------------------------------------------
 
 // Common declarations
-
 struct locn { int x; int y; };
-struct rgb { // colour scheme for drawing maps
-	int r, g, b;
-};
-
-const string Int2Str(const int);
-#if RS_RCPP
-const string Int2Str(const int, unsigned int);
-#endif
-const string Float2Str(const float);
-const string Double2Str(const double);
-const rgb draw_wheel(int);
 
 //--------------------------------------------------------------------------
 
@@ -155,8 +143,6 @@ typedef enum {
 //---------------------------------------------------------------------------
 
 // Environmental gradient parameters
-
-// SHOULD THIS BE PART OF LANDSCAPE OBJECT OR A SEPARATE OBJECT?????????????
 
 struct envGradParams {
 	bool gradient; bool shifting;
