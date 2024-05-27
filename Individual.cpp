@@ -1384,8 +1384,8 @@ array3x3f Individual::getHabMatrix(Landscape* pLand, Species* pSpecies,
 	Cell* pCell;
 
 	landData land = pLand->getLandData();
-	if (absorbing) nodatacost = absorbingNoDataCost;
-	else nodatacost = noDataCost;
+	if (absorbing) nodatacost = gAbsorbingNoDataCost;
+	else nodatacost = gNoDataCost;
 
 	for (int x2 = -1; x2 < 2; x2++) {   // index of relative move in x direction
 		for (int y2 = -1; y2 < 2; y2++) { // index of relative move in x direction

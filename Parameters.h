@@ -65,13 +65,12 @@ using namespace std;
 
 #include "RSrandom.h"
 
-constexpr int noDataCost = 100000; // cost to use in place of nodata value for SMS;
-constexpr int absorbingNoDataCost = 100; // cost to use in place of nodata value for SMS;
+constexpr int gNoDataCost = 100000; // cost to use in place of nodata value for SMS;
+constexpr int gAbsorbingNoDataCost = 100; // cost to use in place of nodata value for SMS;
 // when boundaries are absorbing
-constexpr int maxNbStages = 10;		// maximum number of stages permitted
-constexpr int maxNbSexes = 2;			// maximum number of sexes permitted
-constexpr int maxNbTraitsGUI = 18;		// maximum number of variable traits which can be displayed
-								// in GUI (VCL version)
+constexpr int gMaxNbStages = 10;		// maximum number of stages permitted
+constexpr int gMaxNbSexes = 2;			// maximum number of sexes permitted
+
 #if RS_RCPP
 typedef intptr_t intptr;
 #else
@@ -305,7 +304,7 @@ private:
 	int nSeedPatches;	 	// no. of cells/patches to initialise
 	int nSpDistPatches;	// no. of species distribution cells to initialise
 	string indsFile;		// no. of species distribution cells to initialise
-	float initProp[maxNbStages];	// initial stage proportions (structured population only)
+	float initProp[gMaxNbStages];	// initial stage proportions (structured population only)
 
 	vector <initInd> initinds;	// individuals to be initialised
 

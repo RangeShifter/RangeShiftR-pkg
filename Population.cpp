@@ -77,14 +77,14 @@ Population::Population(Species* pSp, Patch* pPch, int ninds, int resol)
 	else { nSexes = 2; probmale = dem.propMales; }
 
 	// set up population sub-totals
-	for (int stg = 0; stg < maxNbStages; stg++) {
-		for (int sex = 0; sex < maxNbSexes; sex++) {
+	for (int stg = 0; stg < gMaxNbStages; stg++) {
+		for (int sex = 0; sex < gMaxNbSexes; sex++) {
 			nInds[stg][sex] = 0;
 		}
 	}
 
 	// set up local copy of minimum age table
-	short minAge[maxNbStages][maxNbSexes];
+	short minAge[gMaxNbStages][gMaxNbSexes];
 	for (int stg = 0; stg < nStages; stg++) {
 		for (int sex = 0; sex < nSexes; sex++) {
 			if (dem.stageStruct) {
@@ -207,7 +207,7 @@ Population::~Population(void) {
 traitsums Population::getIndTraitsSums(Species* pSpecies) {
 	int g;
 	traitsums ts = traitsums();
-	for (int sex = 0; sex < maxNbSexes; sex++) {
+	for (int sex = 0; sex < gMaxNbSexes; sex++) {
 		ts.ninds[sex] = 0;
 		ts.sumD0[sex] = ts.ssqD0[sex] = 0.0;
 		ts.sumAlpha[sex] = ts.ssqAlpha[sex] = 0.0; 
@@ -307,7 +307,7 @@ traitsums Population::getIndTraitsSums(Species* pSpecies) {
 		ts.sumBetaS[g] += s.beta;   
 		ts.ssqBetaS[g] += s.beta * s.beta;
 
-		if (maxNbSexes > 1) g = sex; 
+		if (gMaxNbSexes > 1) g = sex; 
 		else g = 0;
 		ts.sumGeneticFitness[g] += inds[iInd]->getGeneticFitness();
 		ts.ssqGeneticFitness[g] += inds[iInd]->getGeneticFitness() * inds[iInd]->getGeneticFitness();
@@ -559,7 +559,7 @@ void Population::reproduction(const float localK, const float envval, const int 
 
 
 // set up local copy of species fecundity table
-	float fec[maxNbStages][maxNbSexes];
+	float fec[gMaxNbStages][gMaxNbSexes];
 	for (int stg = 0; stg < sstruct.nStages; stg++) {
 		for (int sex = 0; sex < nsexes; sex++) {
 			if (dem.stageStruct) {
@@ -873,7 +873,7 @@ vector<Individual*> Population::getIndividualsInStage(int stage) {
 void Population::emigration(float localK)
 {
 	int nsexes;
-	double disp, Pdisp, NK;
+	double disp, pbDisp, NK;
 	demogrParams dem = pSpecies->getDemogrParams();
 	stageParams sstruct = pSpecies->getStageParams();
 	emigRules emig = pSpecies->getEmigRules();
@@ -892,11 +892,11 @@ void Population::emigration(float localK)
 	// NB - IT IS DOUBTFUL THIS CONTRIBUTES ANY SUBSTANTIAL TIME SAVING
 	if (dem.repType == 0) nsexes = 1; 
 	else nsexes = 2;
-	double Pemig[maxNbStages][maxNbSexes];
+	double pbEmig[gMaxNbStages][gMaxNbSexes];
 
 	for (int stg = 0; stg < sstruct.nStages; stg++) {
 		for (int sex = 0; sex < nsexes; sex++) {
-			if (emig.indVar) Pemig[stg][sex] = 0.0;
+			if (emig.indVar) pbEmig[stg][sex] = 0.0;
 			else {
 				if (emig.densDep) {
 					if (emig.sexDep) {
@@ -915,23 +915,23 @@ void Population::emigration(float localK)
 							eparams = pSpecies->getSpEmigTraits(0, 0);
 						}
 					}
-					Pemig[stg][sex] = eparams.d0 / (1.0 + exp(-(NK - eparams.beta) * eparams.alpha));
+					pbEmig[stg][sex] = eparams.d0 / (1.0 + exp(-(NK - eparams.beta) * eparams.alpha));
 				}
 				else { // density-independent
 					if (emig.sexDep) {
 						if (emig.stgDep) {
-							Pemig[stg][sex] = pSpecies->getSpEmigD0(stg, sex);
+							pbEmig[stg][sex] = pSpecies->getSpEmigD0(stg, sex);
 						}
 						else { // !emig.stgDep
-							Pemig[stg][sex] = pSpecies->getSpEmigD0(0, sex);
+							pbEmig[stg][sex] = pSpecies->getSpEmigD0(0, sex);
 						}
 					}
 					else { // !emig.sexDep
 						if (emig.stgDep) {
-							Pemig[stg][sex] = pSpecies->getSpEmigD0(stg, 0);
+							pbEmig[stg][sex] = pSpecies->getSpEmigD0(stg, 0);
 						}
 						else { // !emig.stgDep
-							Pemig[stg][sex] = pSpecies->getSpEmigD0(0, 0);
+							pbEmig[stg][sex] = pSpecies->getSpEmigD0(0, 0);
 						}
 					}
 				}
@@ -945,20 +945,20 @@ void Population::emigration(float localK)
 			if (emig.indVar) { // individual variability in emigration
 				if (dem.stageStruct && ind.stage != emig.emigStage) {
 					// emigration may not occur
-					Pdisp = 0.0;
+					pbDisp = 0.0;
 				}
 				else { // non-structured or individual is in emigration stage
 					eparams = inds[i]->getIndEmigTraits();
 					if (emig.densDep) { // density-dependent
 						NK = (float)totalPop() / localK;
-						Pdisp = eparams.d0 / (1.0 + exp(-(NK - eparams.beta) * eparams.alpha));
+						pbDisp = eparams.d0 / (1.0 + exp(-(NK - eparams.beta) * eparams.alpha));
 					}
 					else { // density-independent
 						if (emig.sexDep) {
-							Pdisp = Pemig[0][ind.sex] + eparams.d0;
+							pbDisp = pbEmig[0][ind.sex] + eparams.d0;
 						}
 						else {
-							Pdisp = Pemig[0][0] + eparams.d0;
+							pbDisp = pbEmig[0][0] + eparams.d0;
 						}
 					}
 				}
@@ -968,42 +968,42 @@ void Population::emigration(float localK)
 				if (emig.densDep) {
 					if (emig.sexDep) {
 						if (emig.stgDep) {
-							Pdisp = Pemig[ind.stage][ind.sex];
+							pbDisp = pbEmig[ind.stage][ind.sex];
 						}
 						else {
-							Pdisp = Pemig[0][ind.sex];
+							pbDisp = pbEmig[0][ind.sex];
 						}
 					}
 					else { // !emig.sexDep
 						if (emig.stgDep) {
-							Pdisp = Pemig[ind.stage][0];
+							pbDisp = pbEmig[ind.stage][0];
 						}
 						else {
-							Pdisp = Pemig[0][0];
+							pbDisp = pbEmig[0][0];
 						}
 					}
 				}
 				else { // density-independent
 					if (emig.sexDep) {
 						if (emig.stgDep) {
-							Pdisp = Pemig[ind.stage][ind.sex];
+							pbDisp = pbEmig[ind.stage][ind.sex];
 						}
 						else { // !emig.stgDep
-							Pdisp = Pemig[0][ind.sex];
+							pbDisp = pbEmig[0][ind.sex];
 						}
 					}
 					else { // !emig.sexDep
 						if (emig.stgDep) {
-							Pdisp = Pemig[ind.stage][0];
+							pbDisp = pbEmig[ind.stage][0];
 						}
 						else { // !emig.stgDep
-							Pdisp = Pemig[0][0];
+							pbDisp = pbEmig[0][0];
 						}
 					}
 				}
 			} // end of no individual variability
 
-			disp = pRandom->Bernoulli(Pdisp);
+			disp = pRandom->Bernoulli(pbDisp);
 
 			if (disp == 1) { // emigrant
 				inds[i]->setStatus(1);
@@ -1359,9 +1359,9 @@ void Population::survival0(float localK, short option0, short option1)
 	// set up local copies of species development and survival tables
 	int nsexes;
 	if (dem.repType == 0) nsexes = 1; else nsexes = 2;
-	float dev[maxNbStages][maxNbSexes];
-	float surv[maxNbStages][maxNbSexes];
-	short minAge[maxNbStages][maxNbSexes];
+	float dev[gMaxNbStages][gMaxNbSexes];
+	float surv[gMaxNbStages][gMaxNbSexes];
+	short minAge[gMaxNbStages][gMaxNbSexes];
 	for (int stg = 0; stg < sstruct.nStages; stg++) {
 		for (int sex = 0; sex < nsexes; sex++) {
 			if (dem.stageStruct) {

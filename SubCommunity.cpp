@@ -716,7 +716,7 @@ bool SubCommunity::outTraitsHeaders(Landscape* pLandscape, Species* pSpecies, in
 		}
 	}
 	if (pSpecies->getNbGenLoadTraits() > 0) {
-		if (maxNbSexes > 1) {
+		if (gMaxNbSexes > 1) {
 			outtraits << "\tF_meanProbViable\tF_stdProbViable\tM_meanProbViable\tM_stdProbViable";
 		}
 		else {
@@ -739,7 +739,7 @@ traitsums SubCommunity::outTraits(Landscape* pLandscape, int rep, int yr, int ge
 	if (sim.outTraitsCells && yr % sim.outIntTraitCell == 0 && !commlevel)
 		writefile = true;
 	traitsums ts, indTraitsSums;
-	for (int i = 0; i < maxNbSexes; i++) {
+	for (int i = 0; i < gMaxNbSexes; i++) {
 		ts.ninds[i] = 0;
 		ts.sumD0[i] = ts.ssqD0[i] = 0.0;
 		ts.sumAlpha[i] = ts.ssqAlpha[i] = 0.0; ts.sumBeta[i] = ts.ssqBeta[i] = 0.0;
@@ -1009,7 +1009,7 @@ traitsums SubCommunity::outTraits(Landscape* pLandscape, int rep, int yr, int ge
 					}
 				}
 				if (writefile) {
-					if (maxNbSexes > 1) {
+					if (gMaxNbSexes > 1) {
 						outtraits << "\t" << mnProbViable[0] << "\t" << sdProbViable[0];
 						outtraits << "\t" << mnProbViable[1] << "\t" << sdProbViable[1];
 					}
@@ -1022,7 +1022,7 @@ traitsums SubCommunity::outTraits(Landscape* pLandscape, int rep, int yr, int ge
 			// CURRENTLY INDIVIDUAL VARIATION CANNOT BE SEX-DEPENDENT
 			if (writefile) outtraits << endl;
 
-			for (int iSex = 0; iSex < maxNbSexes; iSex++) {
+			for (int iSex = 0; iSex < gMaxNbSexes; iSex++) {
 				ts.ninds[iSex] += indTraitsSums.ninds[iSex];
 				ts.sumD0[iSex] += indTraitsSums.sumD0[iSex];     
 				ts.ssqD0[iSex] += indTraitsSums.ssqD0[iSex];
