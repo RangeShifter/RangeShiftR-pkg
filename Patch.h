@@ -154,7 +154,7 @@ private:
 	float localK;		// patch carrying capacity (individuals)
 	bool changed;
 	// NOTE: THE FOLLOWING ARRAY WILL NEED TO BE MADE SPECIES-SPECIFIC...
-	short nTemp[maxNbSexes];						// no. of potential settlers in each sex
+	short nTemp[gMaxNbSexes];						// no. of potential settlers in each sex
 
 	std::vector <Cell*> cells;
 	std::vector <patchPopn> popns;

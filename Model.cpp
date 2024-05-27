@@ -1088,7 +1088,7 @@ void OutParameters(Landscape* pLandscape)
 		}
 
 		int mSize; // index for weights matrices
-		if (dem.repType == 2) mSize = sstruct.nStages * maxNbSexes;
+		if (dem.repType == 2) mSize = sstruct.nStages * gMaxNbSexes;
 		else mSize = sstruct.nStages;
 
 		outPar << "DENSITY-DEPENDENCE IN FECUNDITY:\t";
@@ -1098,8 +1098,8 @@ void OutParameters(Landscape* pLandscape)
 				outPar << "STAGE'S WEIGHTS:" << endl;
 				for (int i = 0; i < mSize; i++) {
 					if (dem.repType == 2) {
-						outPar << "stage " << i / maxNbSexes << " ";
-						if (i % maxNbSexes == 0) outPar << "males  : \t";
+						outPar << "stage " << i / gMaxNbSexes << " ";
+						if (i % gMaxNbSexes == 0) outPar << "males  : \t";
 						else outPar << "females: \t";
 					}
 					else outPar << "stage " << i << ": \t";
@@ -1120,8 +1120,8 @@ void OutParameters(Landscape* pLandscape)
 				outPar << "STAGE'S WEIGHTS:" << endl;
 				for (int i = 0; i < mSize; i++) {
 					if (dem.repType == 2) {
-						outPar << "stage " << i / maxNbSexes << " ";
-						if (i % maxNbSexes == 0) outPar << "males  : \t";
+						outPar << "stage " << i / gMaxNbSexes << " ";
+						if (i % gMaxNbSexes == 0) outPar << "males  : \t";
 						else outPar << "females: \t";
 					}
 					else outPar << "stage " << i << ": \t";
@@ -1140,8 +1140,8 @@ void OutParameters(Landscape* pLandscape)
 				outPar << "STAGE'S WEIGHTS:" << endl;
 				for (int i = 0; i < mSize; i++) {
 					if (dem.repType == 2) {
-						outPar << "stage " << i / maxNbSexes << " ";
-						if (i % maxNbSexes == 0) outPar << "males  : \t";
+						outPar << "stage " << i / gMaxNbSexes << " ";
+						if (i % gMaxNbSexes == 0) outPar << "males  : \t";
 						else outPar << "females: \t";
 					}
 					else outPar << "stage " << i << ": \t";

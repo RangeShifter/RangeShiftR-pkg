@@ -828,7 +828,7 @@ void Community::outRange(Species* pSpecies, int rep, int yr, int gen)
 		traitsums scts; // sub-community traits
 		int ngenes, popsize;
 
-		for (int i = 0; i < maxNbSexes; i++) {
+		for (int i = 0; i < gMaxNbSexes; i++) {
 			ts.ninds[i] = 0;
 			ts.sumD0[i] = ts.ssqD0[i] = 0.0;
 			ts.sumAlpha[i] = ts.ssqAlpha[i] = 0.0; ts.sumBeta[i] = ts.ssqBeta[i] = 0.0;
@@ -846,7 +846,7 @@ void Community::outRange(Species* pSpecies, int rep, int yr, int gen)
 		int nsubcomms = (int)subComms.size();
 		for (int i = 0; i < nsubcomms; i++) { // all sub-communities (incl. matrix)
 			scts = subComms[i]->outTraits(pLandscape, rep, yr, gen, true);
-			for (int j = 0; j < maxNbSexes; j++) {
+			for (int j = 0; j < gMaxNbSexes; j++) {
 				ts.ninds[j] += scts.ninds[j];
 				ts.sumD0[j] += scts.sumD0[j];     ts.ssqD0[j] += scts.ssqD0[j];
 				ts.sumAlpha[j] += scts.sumAlpha[j];  ts.ssqAlpha[j] += scts.ssqAlpha[j];
@@ -1187,7 +1187,7 @@ void Community::outTraits(Species* pSpecies, int rep, int yr, int gen)
 		// create array of traits means, etc., one for each row
 		ts = new traitsums[land.dimY];
 		for (int y = 0; y < land.dimY; y++) {
-			for (int i = 0; i < maxNbSexes; i++) {
+			for (int i = 0; i < gMaxNbSexes; i++) {
 				ts[y].ninds[i] = 0;
 				ts[y].sumD0[i] = ts[y].ssqD0[i] = 0.0;
 				ts[y].sumAlpha[i] = ts[y].ssqAlpha[i] = 0.0;
@@ -1216,7 +1216,7 @@ void Community::outTraits(Species* pSpecies, int rep, int yr, int gen)
 			int y = loc.y;
 			if (sim.outTraitsRows && yr >= sim.outStartTraitRow && yr % sim.outIntTraitRow == 0)
 			{
-				for (int s = 0; s < maxNbSexes; s++) {
+				for (int s = 0; s < gMaxNbSexes; s++) {
 					ts[y].ninds[s] += sctraits.ninds[s];
 					ts[y].sumD0[s] += sctraits.sumD0[s];     ts[y].ssqD0[s] += sctraits.ssqD0[s];
 					ts[y].sumAlpha[s] += sctraits.sumAlpha[s];  ts[y].ssqAlpha[s] += sctraits.ssqAlpha[s];
@@ -1391,7 +1391,7 @@ void Community::writeTraitsRows(Species* pSpecies, int rep, int yr, int gen, int
 	}
 
 	if (pSpecies->getNbGenLoadTraits() > 0) {
-		if (maxNbSexes > 1) {
+		if (gMaxNbSexes > 1) {
 			if (ts.ninds[0] > 0) mn = ts.sumGeneticFitness[0] / (double)ts.ninds[0]; else mn = 0.0;
 			if (ts.ninds[0] > 1) sd = ts.ssqGeneticFitness[0] / (double)ts.ninds[0] - mn * mn; else sd = 0.0;
 			if (sd > 0.0) sd = sqrt(sd); else sd = 0.0;
@@ -1500,7 +1500,7 @@ bool Community::outTraitsRowsHeaders(Species* pSpecies, int landNr) {
 	}
 
 	if (pSpecies->getNbGenLoadTraits() > 0) {
-		if (maxNbSexes > 1) {
+		if (gMaxNbSexes > 1) {
 			outtraitsrows << "\tF_meanProbViable\tF_stdProbViable\tM_meanProbViable\tM_stdProbViable";
 		}
 		else

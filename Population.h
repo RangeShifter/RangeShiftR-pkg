@@ -72,39 +72,39 @@ struct zombie {
 	Individual* pInd;
 };
 struct traitsums { // sums of trait genes for dispersal
-	int ninds[maxNbSexes];				// no. of individuals
-	double sumD0[maxNbSexes];			// sum of maximum emigration probability
-	double ssqD0[maxNbSexes];			// sum of squares of maximum emigration probability
-	double sumAlpha[maxNbSexes];	// sum of slope of emigration dens-dep reaction norm
-	double ssqAlpha[maxNbSexes];	// sum of squares of slope of emigration den-dep reaction norm
-	double sumBeta[maxNbSexes]; 	// sum of inflection point of emigration reaction norm
-	double ssqBeta[maxNbSexes]; 	// sum of squares of inflection point of emigration reaction norm
-	double sumDist1[maxNbSexes]; 	// sum of kernel I mean
-	double ssqDist1[maxNbSexes]; 	// sum of squares of kernel I mean
-	double sumDist2[maxNbSexes]; 	// sum of kernel II mean
-	double ssqDist2[maxNbSexes]; 	// sum of squares of kernel II mean
-	double sumProp1[maxNbSexes]; 	// sum of propn using kernel I
-	double ssqProp1[maxNbSexes]; 	// sum of squares of propn using kernel I
-	double sumDP[maxNbSexes]; 		// sum of SMS directional persistence
-	double ssqDP[maxNbSexes]; 		// sum of squares of SMS directional persistence
-	double sumGB[maxNbSexes]; 		// sum of SMS goal bias
-	double ssqGB[maxNbSexes]; 		// sum of squares of SMS goal bias
-	double sumAlphaDB[maxNbSexes];	// sum of SMS dispersal bias decay rate
-	double ssqAlphaDB[maxNbSexes]; 	// sum of squares of SMS dispersal bias decay rate
-	double sumBetaDB[maxNbSexes];		// sum of SMS dispersal bias decay infl. pt.
-	double ssqBetaDB[maxNbSexes]; 	// sum of squares of SMS dispersal bias decay infl. pt.
-	double sumStepL[maxNbSexes]; 	// sum of CRW step length
-	double ssqStepL[maxNbSexes]; 	// sum of squares of CRW step length
-	double sumRho[maxNbSexes]; 		// sum of CRW correlation coefficient
-	double ssqRho[maxNbSexes]; 		// sum of squares of CRW correlation coefficient
-	double sumS0[maxNbSexes];			// sum of maximum settlement probability
-	double ssqS0[maxNbSexes];			// sum of squares of maximum settlement probability
-	double sumAlphaS[maxNbSexes];	// sum of slope of settlement den-dep reaction norm
-	double ssqAlphaS[maxNbSexes];	// sum of squares of slope of settlement den-dep reaction norm
-	double sumBetaS[maxNbSexes]; 	// sum of inflection point of settlement reaction norm
-	double ssqBetaS[maxNbSexes]; 	// sum of squares of inflection point of settlement reaction norm
-	double sumGeneticFitness[maxNbSexes];
-	double ssqGeneticFitness[maxNbSexes];
+	int ninds[gMaxNbSexes];				// no. of individuals
+	double sumD0[gMaxNbSexes];			// sum of maximum emigration probability
+	double ssqD0[gMaxNbSexes];			// sum of squares of maximum emigration probability
+	double sumAlpha[gMaxNbSexes];	// sum of slope of emigration dens-dep reaction norm
+	double ssqAlpha[gMaxNbSexes];	// sum of squares of slope of emigration den-dep reaction norm
+	double sumBeta[gMaxNbSexes]; 	// sum of inflection point of emigration reaction norm
+	double ssqBeta[gMaxNbSexes]; 	// sum of squares of inflection point of emigration reaction norm
+	double sumDist1[gMaxNbSexes]; 	// sum of kernel I mean
+	double ssqDist1[gMaxNbSexes]; 	// sum of squares of kernel I mean
+	double sumDist2[gMaxNbSexes]; 	// sum of kernel II mean
+	double ssqDist2[gMaxNbSexes]; 	// sum of squares of kernel II mean
+	double sumProp1[gMaxNbSexes]; 	// sum of propn using kernel I
+	double ssqProp1[gMaxNbSexes]; 	// sum of squares of propn using kernel I
+	double sumDP[gMaxNbSexes]; 		// sum of SMS directional persistence
+	double ssqDP[gMaxNbSexes]; 		// sum of squares of SMS directional persistence
+	double sumGB[gMaxNbSexes]; 		// sum of SMS goal bias
+	double ssqGB[gMaxNbSexes]; 		// sum of squares of SMS goal bias
+	double sumAlphaDB[gMaxNbSexes];	// sum of SMS dispersal bias decay rate
+	double ssqAlphaDB[gMaxNbSexes]; 	// sum of squares of SMS dispersal bias decay rate
+	double sumBetaDB[gMaxNbSexes];		// sum of SMS dispersal bias decay infl. pt.
+	double ssqBetaDB[gMaxNbSexes]; 	// sum of squares of SMS dispersal bias decay infl. pt.
+	double sumStepL[gMaxNbSexes]; 	// sum of CRW step length
+	double ssqStepL[gMaxNbSexes]; 	// sum of squares of CRW step length
+	double sumRho[gMaxNbSexes]; 		// sum of CRW correlation coefficient
+	double ssqRho[gMaxNbSexes]; 		// sum of squares of CRW correlation coefficient
+	double sumS0[gMaxNbSexes];			// sum of maximum settlement probability
+	double ssqS0[gMaxNbSexes];			// sum of squares of maximum settlement probability
+	double sumAlphaS[gMaxNbSexes];	// sum of slope of settlement den-dep reaction norm
+	double ssqAlphaS[gMaxNbSexes];	// sum of squares of slope of settlement den-dep reaction norm
+	double sumBetaS[gMaxNbSexes]; 	// sum of inflection point of settlement reaction norm
+	double ssqBetaS[gMaxNbSexes]; 	// sum of squares of inflection point of settlement reaction norm
+	double sumGeneticFitness[gMaxNbSexes];
+	double ssqGeneticFitness[gMaxNbSexes];
 };
 
 class Population {
@@ -234,7 +234,7 @@ private:
 	short nSexes;
 	Species* pSpecies;	// pointer to the species
 	Patch* pPatch;			// pointer to the patch
-	int nInds[maxNbStages][maxNbSexes];		// no. of individuals in each stage/sex
+	int nInds[gMaxNbStages][gMaxNbSexes];		// no. of individuals in each stage/sex
 
 	vector <Individual*> inds; // all individuals in population except ...
 	vector <Individual*> juvs; // ... juveniles until reproduction of ALL species

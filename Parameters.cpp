@@ -128,7 +128,7 @@ paramInit::paramInit(void) {
 	minSeedX = 0; maxSeedX = 99999999; minSeedY = 0; maxSeedY = 99999999;
 	nSeedPatches = 1; nSpDistPatches = 1;
 	indsFile = "NULL";
-	for (int i = 0; i < maxNbStages; i++) {
+	for (int i = 0; i < gMaxNbStages; i++) {
 		initProp[i] = 0.0;
 	}
 }
@@ -176,12 +176,12 @@ initParams paramInit::getInit(void) {
 }
 
 void paramInit::setProp(short stg, float p) {
-	if (stg >= 0 && stg < maxNbStages && p >= 0.0 && p <= 1.0) initProp[stg] = p;
+	if (stg >= 0 && stg < gMaxNbStages && p >= 0.0 && p <= 1.0) initProp[stg] = p;
 }
 
 float paramInit::getProp(short stg) {
 	float p = 0.0;
-	if (stg >= 0 && stg < maxNbStages) p = initProp[stg];
+	if (stg >= 0 && stg < gMaxNbStages) p = initProp[stg];
 	return p;
 }
 
