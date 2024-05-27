@@ -244,13 +244,13 @@ void Individual::setDispersalPhenotypes(Species* pSpecies, int resol) {
 void Individual::setTransferTraits(Species* pSpecies, transferRules trfr, int resol) {
 	if (trfr.usesMovtProc) {
 		if (trfr.moveType == 1) {
-			setSMSTraits(pSpecies);
+			setIndSMSTraits(pSpecies);
 		}
 		else
-			setCRWTraits(pSpecies);
+			setIndCRWTraits(pSpecies);
 	}
 	else
-		setKernelTraits(pSpecies, trfr.sexDep, trfr.twinKern, resol);
+		setIndKernelTraits(pSpecies, trfr.sexDep, trfr.twinKern, resol);
 }
 
 void Individual::setSettlementTraits(Species* pSpecies, bool sexDep) {
@@ -403,14 +403,17 @@ void Individual::setEmigTraits(Species* pSpecies, bool sexDep, bool densityDep) 
 	pEmigTraits->d0 = e.d0;
 	pEmigTraits->alpha = e.alpha;
 	pEmigTraits->beta = e.beta;
+
+	// Below must never trigger, phenotype is bounded in express()
 	if (pEmigTraits->d0 < 0.0) throw runtime_error("d0 value has become negative.");
 	if (pEmigTraits->d0 > 1.0) throw runtime_error("d0 value has exceeded 1.");
 	return;
 }
 
 // Get phenotypic emigration traits
-emigTraits Individual::getEmigTraits(void) {
-	emigTraits e; e.d0 = e.alpha = e.beta = 0.0;
+emigTraits Individual::getIndEmigTraits(void) {
+	emigTraits e; 
+	e.d0 = e.alpha = e.beta = 0.0;
 	if (pEmigTraits != 0) {
 		e.d0 = pEmigTraits->d0;
 		e.alpha = pEmigTraits->alpha;
@@ -419,9 +422,10 @@ emigTraits Individual::getEmigTraits(void) {
 	return e;
 }
 // Set phenotypic transfer by kernel traits
-void Individual::setKernelTraits(Species* pSpecies, bool sexDep, bool twinKernel, int resol) {
+void Individual::setIndKernelTraits(Species* pSpecies, bool sexDep, bool twinKernel, int resol) {
 
-	trfrKernelParams k; k.meanDist1 = k.meanDist2 = k.probKern1 = 0.0;
+	trfrKernelParams k; 
+	k.meanDist1 = k.meanDist2 = k.probKern1 = 0.0;
 
 	if (sexDep) {
 		if (this->sex == MAL) {
@@ -475,7 +479,7 @@ void Individual::setKernelTraits(Species* pSpecies, bool sexDep, bool twinKernel
 
 
 // Get phenotypic emigration traits
-trfrKernelParams Individual::getKernTraits(void) {
+trfrKernelParams Individual::getIndKernTraits(void) {
 	trfrKernelParams k; k.meanDist1 = k.meanDist2 = k.probKern1 = 0.0;
 	if (pTrfrData != 0) {
 
@@ -489,9 +493,9 @@ trfrKernelParams Individual::getKernTraits(void) {
 	return k;
 }
 
-void Individual::setSMSTraits(Species* pSpecies) {
+void Individual::setIndSMSTraits(Species* pSpecies) {
 
-	trfrSMSTraits s = pSpecies->getSMSTraits();
+	trfrSMSTraits s = pSpecies->getSpSMSTraits();
 
 	double dp, gb, alphaDB, betaDB;
 	dp = gb = alphaDB = betaDB = 0.0;
@@ -525,7 +529,7 @@ trfrData* Individual::getTrfrData(void) {
 }
 
 // Get phenotypic transfer by SMS traits
-trfrSMSTraits Individual::getSMSTraits(void) {
+trfrSMSTraits Individual::getIndSMSTraits(void) {
 
 	trfrSMSTraits s; s.dp = s.gb = s.alphaDB = 1.0; s.betaDB = 1;
 	if (pTrfrData != 0) {
@@ -541,7 +545,7 @@ trfrSMSTraits Individual::getSMSTraits(void) {
 
 
 // Set phenotypic transfer by CRW traits
-void Individual::setCRWTraits(Species* pSpecies) {
+void Individual::setIndCRWTraits(Species* pSpecies) {
 	trfrCRWTraits c; c.stepLength = c.rho = 0.0;
 
 	c.stepLength = getTrait(CRW_STEPLENGTH)->express();
@@ -557,7 +561,7 @@ void Individual::setCRWTraits(Species* pSpecies) {
 }
 
 // Get phenotypic transfer by CRW traits
-trfrCRWTraits Individual::getCRWTraits(void) {
+trfrCRWTraits Individual::getIndCRWTraits(void) {
 
 	trfrCRWTraits c; c.stepLength = c.rho = 0.0;
 	if (pTrfrData != 0) {
@@ -570,7 +574,7 @@ trfrCRWTraits Individual::getCRWTraits(void) {
 }
 
 // Get phenotypic settlement traits
-settleTraits Individual::getSettTraits(void) {
+settleTraits Individual::getIndSettTraits(void) {
 	settleTraits s; s.s0 = s.alpha = s.beta = 0.0;
 	if (pSettleTraits != 0) {
 		s.s0 = pSettleTraits->s0;
@@ -667,18 +671,18 @@ int Individual::moveKernel(Landscape* pLandscape, Species* pSpecies,
 	else { // get kernel parameters for the species
 		if (trfr.sexDep) {
 			if (trfr.stgDep) {
-				kern = pSpecies->getKernTraits(stage, sex);
+				kern = pSpecies->getSpKernTraits(stage, sex);
 			}
 			else {
-				kern = pSpecies->getKernTraits(0, sex);
+				kern = pSpecies->getSpKernTraits(0, sex);
 			}
 		}
 		else {
 			if (trfr.stgDep) {
-				kern = pSpecies->getKernTraits(stage, 0);
+				kern = pSpecies->getSpKernTraits(stage, 0);
 			}
 			else {
-				kern = pSpecies->getKernTraits(0, 0);
+				kern = pSpecies->getSpKernTraits(0, 0);
 			}
 		}
 	}
@@ -846,7 +850,7 @@ int Individual::moveStep(Landscape* pLandscape, Species* pSpecies,
 	simParams sim = paramsSim->getSim();
 
 	transferRules trfr = pSpecies->getTransferRules();
-	trfrCRWTraits movt = pSpecies->getCRWTraits();
+	trfrCRWTraits movt = pSpecies->getSpCRWTraits();
 	settleSteps settsteps = pSpecies->getSteps(stage, sex);
 
 	patch = pCurrCell->getPatch();
@@ -1049,7 +1053,7 @@ movedata Individual::smsMove(Landscape* pLand, Species* pSpecies,
 	}
 
 	landData land = pLand->getLandData();
-	trfrSMSTraits movt = pSpecies->getSMSTraits();
+	trfrSMSTraits movt = pSpecies->getSpSMSTraits();
 	current = pCurrCell->getLocn();
 
 	//get weights for directional persistence....

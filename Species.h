@@ -315,16 +315,16 @@ public:
 		const emigRules	// structure holding emigration rules
 	);
 	emigRules getEmigRules(void); // Get emigration rules
-	void setEmigTraits( // Set emigration trait parameters
+	void setSpEmigTraits( // Set emigration trait parameters
 		const short,			// stage
 		const short,			// sex
 		const emigTraits	// structure holding emigration trait parameters
 	);
-	emigTraits getEmigTraits( // Get emigration trait parameters
+	emigTraits getSpEmigTraits( // Get emigration trait parameters
 		short,	// stage
 		short		// sex
 	);
-	float getEmigD0( // Get (maximum) emigration probability
+	float getSpEmigD0( // Get (maximum) emigration probability
 		short,	// stage
 		short		// sex
 	);
@@ -339,13 +339,13 @@ public:
 		bool						// fullKernel value
 	);
 	bool useFullKernel(void);
-	void setKernTraits( // Set transfer by kernel parameters
+	void setSpKernTraits( // Set transfer by kernel parameters
 		const short,					// stage
 		const short,					// sex
 		const trfrKernelParams,	// structure holding transfer by kernel parameters
 		const int							// Landscape resolution
 	);
-	trfrKernelParams getKernTraits( // Get transfer by kernel parameters
+	trfrKernelParams getSpKernTraits( // Get transfer by kernel parameters
 		short,	// stage
 		short		// sex
 	);
@@ -353,12 +353,12 @@ public:
 		const trfrMortParams	// structure holding transfer mortality parameters
 	);
 	trfrMortParams getMortParams(void); // Get transfer mortality parameters
-	void setMovtTraits( // Set transfer movement model parameters
+	void setSpMovtTraits( // Set transfer movement model parameters
 		const trfrMovtParams	// structure holding transfer movement model parameters
 	);
-	trfrMovtParams getMovtTraits(void); // Get transfer movement model traits
-	trfrCRWTraits getCRWTraits(void);		// Get CRW traits
-	trfrSMSTraits getSMSTraits(void);		// Get SMS traits
+	trfrMovtParams getSpMovtTraits(void); // Get transfer movement model traits
+	trfrCRWTraits getSpCRWTraits(void);		// Get CRW traits
+	trfrSMSTraits getSpSMSTraits(void);		// Get SMS traits
 	// Return dimension of habitat-dependent step mortality and costs matrices
 	short getMovtHabDim(void);
 	void createHabCostMort( // Create habitat-dependent costs and mortality matrices
@@ -404,12 +404,12 @@ public:
 		short,	// stage
 		short		// sex
 	);
-	void setSettTraits( // Set settlement density dependence traits
+	void setSpSettTraits( // Set settlement density dependence traits
 		const short,					// stage
 		const short,					// sex
 		const settleTraits	// structure holding density dependence traits
 	);
-	settleTraits getSettTraits( // Get settlement density dependence traits
+	settleTraits getSpSettTraits( // Get settlement density dependence traits
 		short,	// stage
 		short		// sex
 	);

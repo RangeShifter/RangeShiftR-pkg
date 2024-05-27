@@ -264,23 +264,23 @@ public:
 	void setEmigTraits(Species* pSpecies, bool sexDep, bool densityDep);
 	void setTransferTraits(Species* pSpecies, transferRules trfr, int resol);
 
-	emigTraits getEmigTraits(void); // Get phenotypic emigration traits
+	emigTraits getIndEmigTraits(void); // Get phenotypic emigration traits
 
-	void setKernelTraits(Species* pSpecies, bool sexDep, bool twinKernel, int resol);
+	void setIndKernelTraits(Species* pSpecies, bool sexDep, bool twinKernel, int resol);
 
-	trfrKernelParams getKernTraits(void); // Get phenotypic transfer by kernel traits
+	trfrKernelParams getIndKernTraits(void); // Get phenotypic transfer by kernel traits
 
-	void setSMSTraits(Species* pSpecies);
+	void setIndSMSTraits(Species* pSpecies);
 
-	trfrSMSTraits getSMSTraits(void); // Get phenotypic transfer by SMS traits
+	trfrSMSTraits getIndSMSTraits(void); // Get phenotypic transfer by SMS traits
 
-	void setCRWTraits(Species* pSpecies);
+	void setIndCRWTraits(Species* pSpecies);
 
-	trfrCRWTraits getCRWTraits(void); // Get phenotypic transfer by CRW traits
+	trfrCRWTraits getIndCRWTraits(void); // Get phenotypic transfer by CRW traits
 
 	void setSettlementTraits(Species* pSpecies, bool sexDep);
 
-	settleTraits getSettTraits(void); // Get phenotypic settlement traits
+	settleTraits getIndSettTraits(void); // Get phenotypic settlement traits
 
 	trfrData* getTrfrData(void);
 	void setEmigTraits(const emigTraits& emig);

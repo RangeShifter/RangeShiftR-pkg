@@ -501,7 +501,7 @@ emigRules Species::getEmigRules(void) {
 	return e;
 }
 
-void Species::setEmigTraits(const short stg, const short sex, const emigTraits e) {
+void Species::setSpEmigTraits(const short stg, const short sex, const emigTraits e) {
 	if (stg >= 0 && stg < maxNbStages && sex >= 0 && sex < maxNbSexes) {
 		if (e.d0 >= 0.0 && e.d0 <= 1.0) d0[stg][sex] = e.d0;
 		alphaEmig[stg][sex] = e.alpha; 
@@ -509,7 +509,7 @@ void Species::setEmigTraits(const short stg, const short sex, const emigTraits e
 	}
 }
 
-emigTraits Species::getEmigTraits(short stg, short sex) {
+emigTraits Species::getSpEmigTraits(short stg, short sex) {
 	emigTraits e;
 	if (stg >= 0 && stg < maxNbStages && sex >= 0 && sex < maxNbSexes) {
 		e.d0 = d0[stg][sex];
@@ -522,7 +522,7 @@ emigTraits Species::getEmigTraits(short stg, short sex) {
 	return e;
 }
 
-float Species::getEmigD0(short stg, short sex) {
+float Species::getSpEmigD0(short stg, short sex) {
 	if (stg >= 0 && stg < maxNbStages && sex >= 0 && sex < maxNbSexes) {
 		return d0[stg][sex];
 	}
@@ -564,7 +564,7 @@ void Species::setFullKernel(bool k) {
 
 bool Species::useFullKernel(void) { return fullKernel; }
 
-void Species::setKernTraits(const short stg, const short sex,
+void Species::setSpKernTraits(const short stg, const short sex,
 	const trfrKernelParams k, const int resol)
 {
 	if (stg >= 0 && stg < maxNbStages && sex >= 0 && sex < maxNbSexes) {
@@ -574,7 +574,7 @@ void Species::setKernTraits(const short stg, const short sex,
 	}
 }
 
-trfrKernelParams Species::getKernTraits(short stg, short sex) {
+trfrKernelParams Species::getSpKernTraits(short stg, short sex) {
 	trfrKernelParams k;
 	if (stg >= 0 && stg < maxNbStages && sex >= 0 && sex < maxNbSexes) {
 		k.meanDist1 = meanDist1[stg][sex];
@@ -599,7 +599,7 @@ trfrMortParams Species::getMortParams(void) {
 	return m;
 }
 
-void Species::setMovtTraits(const trfrMovtParams m) {
+void Species::setSpMovtTraits(const trfrMovtParams m) {
 	if (m.pr >= 1) pr = m.pr;
 	if (m.prMethod >= 1 && m.prMethod <= 3) prMethod = m.prMethod;
 	if (m.memSize >= 1 && m.memSize <= 14) memSize = m.memSize;
@@ -614,7 +614,7 @@ void Species::setMovtTraits(const trfrMovtParams m) {
 	straightenPath = m.straightenPath;
 }
 
-trfrMovtParams Species::getMovtTraits(void) {
+trfrMovtParams Species::getSpMovtTraits(void) {
 	trfrMovtParams m;
 	m.pr = pr; m.prMethod = prMethod; m.memSize = memSize; m.goalType = goalType;
 	m.dp = dp; m.gb = gb; m.alphaDB = alphaDB;  m.betaDB = betaDB;
@@ -622,14 +622,14 @@ trfrMovtParams Species::getMovtTraits(void) {
 	return m;
 }
 
-trfrCRWTraits Species::getCRWTraits(void) {
+trfrCRWTraits Species::getSpCRWTraits(void) {
 	trfrCRWTraits m;
 	m.stepMort = stepMort; m.stepLength = stepLength; m.rho = rho;
 	m.straightenPath = straightenPath;
 	return m;
 }
 
-trfrSMSTraits Species::getSMSTraits(void) {
+trfrSMSTraits Species::getSpSMSTraits(void) {
 	trfrSMSTraits m;
 	m.pr = pr; m.prMethod = prMethod; m.memSize = memSize; m.goalType = goalType;
 	m.dp = dp; m.gb = gb; m.alphaDB = alphaDB;  m.betaDB = betaDB; m.stepMort = stepMort;
@@ -744,11 +744,20 @@ settleSteps Species::getSteps(short stg, short sex) {
 	return s;
 }
 
-void Species::setSettTraits(const short stg, const short sex, const settleTraits dd) {
+void Species::setSpSettTraits(const short stg, const short sex, const settleTraits dd) {
 	if (stg >= 0 && stg < maxNbStages && sex >= 0 && sex < maxNbSexes) {
 		if (dd.s0 > 0.0 && dd.s0 <= 1.0) s0[stg][sex] = dd.s0;
 		alphaS[stg][sex] = dd.alpha; betaS[stg][sex] = dd.beta;
 	}
+}
+
+settleTraits Species::getSpSettTraits(short stg, short sex) {
+	settleTraits dd;
+	if (stg >= 0 && stg < maxNbStages && sex >= 0 && sex < maxNbSexes) {
+		dd.s0 = s0[stg][sex]; dd.alpha = alphaS[stg][sex]; dd.beta = betaS[stg][sex];
+	}
+	else { dd.s0 = 1.0; dd.alpha = dd.beta = 0.0; }
+	return dd;
 }
 
 void Species::setGeneticParameters(const std::set<int>& chromosomeEnds, const int genomeSize, const float recombinationRate,
@@ -766,15 +775,6 @@ void Species::setGeneticParameters(const std::set<int>& chromosomeEnds, const in
 // only called for cell based landscape
 void Species::setSamplePatchList(const set<int>& samplePatchList) {
 	this->samplePatchList = samplePatchList;
-}
-
-settleTraits Species::getSettTraits(short stg, short sex) {
-	settleTraits dd;
-	if (stg >= 0 && stg < maxNbStages && sex >= 0 && sex < maxNbSexes) {
-		dd.s0 = s0[stg][sex]; dd.alpha = alphaS[stg][sex]; dd.beta = betaS[stg][sex];
-	}
-	else { dd.s0 = 1.0; dd.alpha = dd.beta = 0.0; }
-	return dd;
 }
 
 //---------------------------------------------------------------------------

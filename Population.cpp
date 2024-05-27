@@ -240,7 +240,7 @@ traitsums Population::getIndTraitsSums(Species* pSpecies) {
 		ts.ninds[g] += 1;
 
 		// emigration traits
-		emigTraits e = inds[iInd]->getEmigTraits();
+		emigTraits e = inds[iInd]->getIndEmigTraits();
 		if (emig.sexDep) g = sex; 
 		else g = 0;
 		ts.sumD0[g] += e.d0;    
@@ -257,7 +257,7 @@ traitsums Population::getIndTraitsSums(Species* pSpecies) {
 
 			case 1: // SMS
 			{
-				trfrSMSTraits sms = inds[iInd]->getSMSTraits();
+				trfrSMSTraits sms = inds[iInd]->getIndSMSTraits();
 				g = 0; // CURRENTLY INDIVIDUAL VARIATION CANNOT BE SEX-DEPENDENT
 				ts.sumDP[g] += sms.dp; 
 				ts.ssqDP[g] += sms.dp * sms.dp;
@@ -271,7 +271,7 @@ traitsums Population::getIndTraitsSums(Species* pSpecies) {
 			}
 			case 2:
 			{
-				trfrCRWTraits c = inds[iInd]->getCRWTraits();
+				trfrCRWTraits c = inds[iInd]->getIndCRWTraits();
 				g = 0; // CURRENTLY INDIVIDUAL VARIATION CANNOT BE SEX-DEPENDENT
 				ts.sumStepL[g] += c.stepLength;
 				ts.ssqStepL[g] += c.stepLength * c.stepLength;
@@ -285,7 +285,7 @@ traitsums Population::getIndTraitsSums(Species* pSpecies) {
 			}
 		}
 		else {
-			trfrKernelParams k = inds[iInd]->getKernTraits();
+			trfrKernelParams k = inds[iInd]->getIndKernTraits();
 			if (trfr.sexDep) g = sex; 
 			else g = 0;
 			ts.sumDist1[g] += k.meanDist1; 
@@ -296,7 +296,7 @@ traitsums Population::getIndTraitsSums(Species* pSpecies) {
 			ts.ssqProp1[g] += k.probKern1 * k.probKern1;
 		}
 		// settlement traits
-		settleTraits s = inds[iInd]->getSettTraits();
+		settleTraits s = inds[iInd]->getIndSettTraits();
 		if (sett.sexDep) g = sex; 
 		else g = 0;
 		//	g = 0; // CURRENTLY INDIVIDUAL VARIATION CANNOT BE SEX-DEPENDENT
@@ -901,18 +901,18 @@ void Population::emigration(float localK)
 				if (emig.densDep) {
 					if (emig.sexDep) {
 						if (emig.stgDep) {
-							eparams = pSpecies->getEmigTraits(stg, sex);
+							eparams = pSpecies->getSpEmigTraits(stg, sex);
 						}
 						else {
-							eparams = pSpecies->getEmigTraits(0, sex);
+							eparams = pSpecies->getSpEmigTraits(0, sex);
 						}
 					}
 					else { // !emig.sexDep
 						if (emig.stgDep) {
-							eparams = pSpecies->getEmigTraits(stg, 0);
+							eparams = pSpecies->getSpEmigTraits(stg, 0);
 						}
 						else {
-							eparams = pSpecies->getEmigTraits(0, 0);
+							eparams = pSpecies->getSpEmigTraits(0, 0);
 						}
 					}
 					Pemig[stg][sex] = eparams.d0 / (1.0 + exp(-(NK - eparams.beta) * eparams.alpha));
@@ -920,18 +920,18 @@ void Population::emigration(float localK)
 				else { // density-independent
 					if (emig.sexDep) {
 						if (emig.stgDep) {
-							Pemig[stg][sex] = pSpecies->getEmigD0(stg, sex);
+							Pemig[stg][sex] = pSpecies->getSpEmigD0(stg, sex);
 						}
 						else { // !emig.stgDep
-							Pemig[stg][sex] = pSpecies->getEmigD0(0, sex);
+							Pemig[stg][sex] = pSpecies->getSpEmigD0(0, sex);
 						}
 					}
 					else { // !emig.sexDep
 						if (emig.stgDep) {
-							Pemig[stg][sex] = pSpecies->getEmigD0(stg, 0);
+							Pemig[stg][sex] = pSpecies->getSpEmigD0(stg, 0);
 						}
 						else { // !emig.stgDep
-							Pemig[stg][sex] = pSpecies->getEmigD0(0, 0);
+							Pemig[stg][sex] = pSpecies->getSpEmigD0(0, 0);
 						}
 					}
 				}
@@ -948,7 +948,7 @@ void Population::emigration(float localK)
 					Pdisp = 0.0;
 				}
 				else { // non-structured or individual is in emigration stage
-					eparams = inds[i]->getEmigTraits();
+					eparams = inds[i]->getIndEmigTraits();
 					if (emig.densDep) { // density-dependent
 						NK = (float)totalPop() / localK;
 						Pdisp = eparams.d0 / (1.0 + exp(-(NK - eparams.beta) * eparams.alpha));
@@ -1179,8 +1179,8 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 							}
 							if (localK > 0.0) {
 								// make settlement decision
-								if (settletype.indVar) settDD = inds[i]->getSettTraits();
-								else settDD = pSpecies->getSettTraits(ind.stage, ind.sex);
+								if (settletype.indVar) settDD = inds[i]->getIndSettTraits();
+								else settDD = pSpecies->getSpSettTraits(ind.stage, ind.sex);
 								settprob = settDD.s0 /
 									(1.0 + exp(-(popsize / localK - (double)settDD.beta) * (double)settDD.alpha));
 								if (pRandom->Bernoulli(settprob)) { // settlement allowed
@@ -1869,7 +1869,7 @@ void Population::outIndividual(Landscape* pLandscape, int rep, int yr, int gen,
 			if (pSpecies->getNbGenLoadTraits() > 0) outInds << "\t" << inds[i]->getGeneticFitness();
 		
 			if (emig.indVar) {
-				emigTraits e = inds[i]->getEmigTraits();
+				emigTraits e = inds[i]->getIndEmigTraits();
 				if (emig.densDep) {
 					outInds << "\t" << e.d0 << "\t" << e.alpha << "\t" << e.beta;
 				}
@@ -1880,12 +1880,12 @@ void Population::outIndividual(Landscape* pLandscape, int rep, int yr, int gen,
 			if (trfr.indVar) {
 				if (trfr.usesMovtProc) {
 					if (trfr.moveType == 1) { // SMS
-						trfrSMSTraits s = inds[i]->getSMSTraits();
+						trfrSMSTraits s = inds[i]->getIndSMSTraits();
 						outInds << "\t" << s.dp << "\t" << s.gb;
 						outInds << "\t" << s.alphaDB << "\t" << s.betaDB;
 					} // end of SMS
 					if (trfr.moveType == 2) { // CRW
-						trfrCRWTraits c = inds[i]->getCRWTraits();
+						trfrCRWTraits c = inds[i]->getIndCRWTraits();
 						outInds << "\t" << c.stepLength << "\t" << c.rho;
 #if RSDEBUG
 						//DEBUGLOG << "Population::outIndividual():"
@@ -1896,7 +1896,7 @@ void Population::outIndividual(Landscape* pLandscape, int rep, int yr, int gen,
 					} // end of CRW
 				}
 				else { // kernel
-					trfrKernelParams k = inds[i]->getKernTraits();
+					trfrKernelParams k = inds[i]->getIndKernTraits();
 					if (trfr.twinKern)
 					{
 						outInds << "\t" << k.meanDist1 << "\t" << k.meanDist2 << "\t" << k.probKern1;
@@ -1908,7 +1908,7 @@ void Population::outIndividual(Landscape* pLandscape, int rep, int yr, int gen,
 			}
 
 			if (sett.indVar) {
-				settleTraits s = inds[i]->getSettTraits();
+				settleTraits s = inds[i]->getIndSettTraits();
 				outInds << "\t" << s.s0 << "\t" << s.alpha << "\t" << s.beta;
 			}
 

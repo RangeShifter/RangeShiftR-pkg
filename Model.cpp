@@ -1073,45 +1073,6 @@ void OutParameters(Landscape* pLandscape)
 				outPar << "females " << i << ":\t" << pSpecies->getSurv(i, 0) << endl;
 			}
 		}
-		/*
-		#if RSDEBUG
-			outPar << endl << "TRANSITION MATRIX AS ENTERED:" << endl;
-			if (batchMode) {
-				DEBUGLOG << "outParameters(): matrix = " << matrix
-					<< " matrix[1][1] = " << matrix[1][1]
-					<< endl;
-				if (dem.repType == 2) {
-					nrows = sstruct.nStages*2-1; ncols = sstruct.nStages*2;
-				}
-				else {
-					nrows = sstruct.nStages; ncols = sstruct.nStages;
-				}
-				for (int i = 0; i < nrows; i++) {
-					for (int j = 0; j < ncols; j++) {
-						outPar << matrix[j][i] << "\t";
-					}
-					outPar << endl;
-				}
-			}
-		#if VCL
-			else {
-
-			// NOTE: TO PREVENT COMPILING FOR BATCH MODE, THIS CODE NEEDS TO BE INCLUDED IN COMPILER
-			// CONDITIONAL BLOCK  AS SHOWN
-
-		//	outPar << "Row count: " << frmSpecies->transMatrix->RowCount << endl;
-		//	outPar << "Col count: " << frmSpecies->transMatrix->ColCount << endl;
-				for (int i = 1; i < frmSpecies->transMatrix->RowCount; i++) {
-					for (int j = 1; j < frmSpecies->transMatrix->ColCount; j++) {
-						outPar << frmSpecies->transMatrix->Cells[j][i].ToDouble() << "\t";
-					}
-					outPar << endl;
-				}
-			}
-		#endif
-			outPar << endl;
-		#endif
-		*/
 
 		outPar << "SCHEDULING OF SURVIVAL: ";
 		switch (sstruct.survival) {
@@ -1236,8 +1197,8 @@ void OutParameters(Landscape* pLandscape)
 				outPar << indvar << "no" << endl;
 				for (int i = 0; i < sstruct.nStages; i++) {
 					outPar << "stage " << i << ":" << endl;
-					ep0 = pSpecies->getEmigTraits(i, 0);
-					ep1 = pSpecies->getEmigTraits(i, 1);
+					ep0 = pSpecies->getSpEmigTraits(i, 0);
+					ep1 = pSpecies->getSpEmigTraits(i, 1);
 					outPar << "D0:    females " << ep0.d0 << "  males " << ep1.d0 << endl;
 					outPar << "alpha: females " << ep0.alpha << "  males " << ep1.alpha << endl;
 					outPar << "beta:  females " << ep0.beta << "  males " << ep1.beta << endl;
@@ -1245,8 +1206,8 @@ void OutParameters(Landscape* pLandscape)
 			}
 			else { // !emig.stgDep
 				outPar << stgdept << "no" << endl;
-				ep0 = pSpecies->getEmigTraits(0, 0);
-				ep1 = pSpecies->getEmigTraits(0, 1);
+				ep0 = pSpecies->getSpEmigTraits(0, 0);
+				ep1 = pSpecies->getSpEmigTraits(0, 1);
 				outPar << "D0:    females " << ep0.d0 << "  males " << ep1.d0 << endl;
 				outPar << "alpha: females " << ep0.alpha << "  males " << ep1.alpha << endl;
 				outPar << "beta:  females " << ep0.beta << "  males " << ep1.beta << endl;
@@ -1258,14 +1219,14 @@ void OutParameters(Landscape* pLandscape)
 				outPar << stgdept << "yes" << endl;
 				outPar << indvar << "no" << endl;
 				for (int i = 0; i < sstruct.nStages; i++) {
-					ep0 = pSpecies->getEmigTraits(i, 0);
+					ep0 = pSpecies->getSpEmigTraits(i, 0);
 					outPar << "stage " << i << ": \t" << "D0: " << ep0.d0;
 					outPar << " \talpha: " << ep0.alpha << " \tbeta: " << ep0.beta << endl;
 				}
 			}
 			else { // !emig.stgDep
 				outPar << stgdept << "no" << endl;
-				ep0 = pSpecies->getEmigTraits(0, 0);
+				ep0 = pSpecies->getSpEmigTraits(0, 0);
 				outPar << "D0:    " << ep0.d0 << endl;
 				outPar << "alpha: " << ep0.alpha << endl;
 				outPar << "beta:  " << ep0.beta << endl;
@@ -1289,13 +1250,13 @@ void OutParameters(Landscape* pLandscape)
 				outPar << indvar << "no" << endl;
 				for (int i = 0; i < sstruct.nStages; i++) {
 					outPar << "stage " << i << ": \t" << "EMIGRATION PROB.: \tfemales "
-						<< pSpecies->getEmigD0(i, 0) << " \tmales " << pSpecies->getEmigD0(i, 1) << endl;
+						<< pSpecies->getSpEmigD0(i, 0) << " \tmales " << pSpecies->getSpEmigD0(i, 1) << endl;
 				}
 			}
 			else { // !emig.stgDep
 				outPar << stgdept << "no" << endl;
-				outPar << "EMIGRATION PROB.: \tfemales " << pSpecies->getEmigD0(0, 0)
-					<< "\t males " << pSpecies->getEmigD0(0, 1) << endl;
+				outPar << "EMIGRATION PROB.: \tfemales " << pSpecies->getSpEmigD0(0, 0)
+					<< "\t males " << pSpecies->getSpEmigD0(0, 1) << endl;
 			}
 		}
 		else { // !emig.sexDep
@@ -1305,12 +1266,12 @@ void OutParameters(Landscape* pLandscape)
 				outPar << indvar << "no" << endl;
 				for (int i = 0; i < sstruct.nStages; i++) {
 					outPar << "stage " << i << ": \t" << "EMIGRATION PROB.: "
-						<< pSpecies->getEmigD0(i, 0) << endl;
+						<< pSpecies->getSpEmigD0(i, 0) << endl;
 				}
 			}
 			else { // !emig.stgDep
 				outPar << stgdept << "no" << endl;
-				outPar << "EMIGRATION PROB.:\t" << pSpecies->getEmigD0(0, 0) << endl;
+				outPar << "EMIGRATION PROB.:\t" << pSpecies->getSpEmigD0(0, 0) << endl;
 			}
 		}
 	}
@@ -1322,7 +1283,7 @@ void OutParameters(Landscape* pLandscape)
 	if (trfr.usesMovtProc) {
 		bool straightenPath;
 		if (trfr.moveType == 1) { // SMS
-			trfrSMSTraits move = pSpecies->getSMSTraits();
+			trfrSMSTraits move = pSpecies->getSpSMSTraits();
 			straightenPath = move.straightenPath;
 			if (trfr.costMap) {
 				outPar << "SMS\tcosts from imported cost map" << endl;
@@ -1359,7 +1320,7 @@ void OutParameters(Landscape* pLandscape)
 			outPar << indvar << "no " << endl;
 		}
 		else { // CRW
-			trfrCRWTraits move = pSpecies->getCRWTraits();
+			trfrCRWTraits move = pSpecies->getSpCRWTraits();
 			straightenPath = move.straightenPath;
 			outPar << "CRW" << endl;
 			string lgth = "STEP LENGTH (m) ";
@@ -1387,7 +1348,7 @@ void OutParameters(Landscape* pLandscape)
 		}
 		else
 		{
-			trfrCRWTraits move = pSpecies->getCRWTraits();
+			trfrCRWTraits move = pSpecies->getSpCRWTraits();
 			outPar << "constant " << move.stepMort << endl;
 		}
 	} // end of movement process
@@ -1406,8 +1367,8 @@ void OutParameters(Landscape* pLandscape)
 				outPar << indvar << "no" << endl;
 				for (int i = 0; i < sstruct.nStages; i++) {
 					outPar << "stage " << i << ":" << endl;
-					kern0 = pSpecies->getKernTraits(i, 0);
-					kern1 = pSpecies->getKernTraits(i, 1);
+					kern0 = pSpecies->getSpKernTraits(i, 0);
+					kern1 = pSpecies->getSpKernTraits(i, 1);
 					outPar << meandist << " I: \tfemales " << kern0.meanDist1 << " \tmales " << kern1.meanDist1 << endl;
 					if (trfr.twinKern)
 					{
@@ -1418,8 +1379,8 @@ void OutParameters(Landscape* pLandscape)
 			}
 			else { // !trfr.stgDep
 				outPar << stgdept << "no" << endl;
-				kern0 = pSpecies->getKernTraits(0, 0);
-				kern1 = pSpecies->getKernTraits(0, 1);
+				kern0 = pSpecies->getSpKernTraits(0, 0);
+				kern1 = pSpecies->getSpKernTraits(0, 1);
 				outPar << meandist << " I: \tfemales " << kern0.meanDist1 << " \tmales " << kern1.meanDist1 << endl;
 				if (trfr.twinKern)
 				{
@@ -1434,7 +1395,7 @@ void OutParameters(Landscape* pLandscape)
 				outPar << stgdept << "yes" << endl;
 				outPar << indvar << "no" << endl;
 				for (int i = 0; i < sstruct.nStages; i++) {
-					kern0 = pSpecies->getKernTraits(i, 0);
+					kern0 = pSpecies->getSpKernTraits(i, 0);
 					outPar << "stage " << i << ": \t" << meandist << " I: " << kern0.meanDist1;
 					if (trfr.twinKern)
 					{
@@ -1446,7 +1407,7 @@ void OutParameters(Landscape* pLandscape)
 			}
 			else { // !trfr.stgDep
 				outPar << stgdept << "no" << endl;
-				kern0 = pSpecies->getKernTraits(0, 0);
+				kern0 = pSpecies->getSpKernTraits(0, 0);
 				outPar << meandist << " I: \t" << kern0.meanDist1 << endl;
 				if (trfr.twinKern)
 				{
@@ -1547,7 +1508,7 @@ void OutParameters(Landscape* pLandscape)
 				outPar << "find a suitable cell/patch ";
 				srules = pSpecies->getSettRules(i, sx);
 				if (srules.densDep) {
-					settleDD = pSpecies->getSettTraits(i, sx);
+					settleDD = pSpecies->getSpSettTraits(i, sx);
 					outPar << "+ density dependence ";
 					if (srules.findMate) outPar << plusmating;
 					outPar << endl;
