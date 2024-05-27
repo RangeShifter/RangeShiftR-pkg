@@ -95,25 +95,11 @@ const double SQRT2 = std::sqrt(double(2.0)); // more efficient than calculating 
 //---------------------------------------------------------------------------
 
 // Common declarations
-
 struct locn { int x; int y; };
-struct rgb { // colour scheme for drawing maps
-	int r,g,b;
-};
-
-const string Int2Str(const int);
-#if RS_RCPP
-const string Int2Str(const int, unsigned int);
-#endif
-const string Float2Str(const float);
-const string Double2Str(const double);
-const rgb draw_wheel(int);
 
 //---------------------------------------------------------------------------
 
 // Environmental gradient parameters
-
-// SHOULD THIS BE PART OF LANDSCAPE OBJECT OR A SEPARATE OBJECT?????????????
 
 struct envGradParams {
 	bool gradient; bool shifting;
@@ -273,8 +259,6 @@ private:
 struct simParams {
 	int batchNum;
 	int simulation; int reps; int years;
-//	int outStartRange;
-//	int outStartOcc;
 	int outStartPop; int outStartInd; int outStartGenetic;
 	int outStartTraitCell; int outStartTraitRow; int outStartConn;
 	int outIntRange; int outIntOcc; int outIntPop; int outIntInd; int outIntGenetic;
@@ -321,8 +305,6 @@ private:
 	int simulation;					// simulation no.
 	int reps;								// no. of replicates
 	int years;							// no. of years
-//	int outStartRange;			// output start year for range file
-//	int outStartOcc;				// output start year for occupancy file
 	int outStartPop;				// output start year for population file
 	int outStartInd;				// output start year for individuals file
 	int outStartGenetic; 		// output start year for genetics file
