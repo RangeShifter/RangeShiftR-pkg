@@ -128,7 +128,7 @@ paramInit::paramInit(void) {
 	minSeedX = 0; maxSeedX = 99999999; minSeedY = 0; maxSeedY = 99999999;
 	nSeedPatches = 1; nSpDistPatches = 1;
 	indsFile = "NULL";
-	for (int i = 0; i < NSTAGES; i++) {
+	for (int i = 0; i < gMaxNbStages; i++) {
 		initProp[i] = 0.0;
 	}
 }
@@ -176,12 +176,12 @@ initParams paramInit::getInit(void) {
 }
 
 void paramInit::setProp(short stg, float p) {
-	if (stg >= 0 && stg < NSTAGES && p >= 0.0 && p <= 1.0) initProp[stg] = p;
+	if (stg >= 0 && stg < gMaxNbStages && p >= 0.0 && p <= 1.0) initProp[stg] = p;
 }
 
 float paramInit::getProp(short stg) {
 	float p = 0.0;
-	if (stg >= 0 && stg < NSTAGES) p = initProp[stg];
+	if (stg >= 0 && stg < gMaxNbStages) p = initProp[stg];
 	return p;
 }
 
@@ -214,16 +214,16 @@ paramSim::paramSim(void) {
 	simulation = 0;
 	reps = years = 1;
 	outIntRange = 1;
-	outStartPop = outStartInd = outStartGenetic = 0;
+	outStartPop = outStartInd = 0;
 	outStartTraitCell = outStartTraitRow = outStartConn = 0;
-	outIntOcc = outIntPop = outIntInd = outIntGenetic = 10;
+	outIntOcc = outIntPop = outIntInd = outputGeneticInterval = 10;
 	outIntTraitCell = outIntTraitRow = outIntConn = 10;
 	mapInt = traitInt = 10;
 	slowFactor = 1;
 	batchMode = absorbing = false;
 	outRange = outOccup = outPop = outInds = false;
-	outGenetics = outGenXtab = false; outGenType = 0;
 	outTraitsCells = outTraitsRows = outConnect = false;
+	outputWCFstat = outputPerLocusWCFstat = outputPairwiseFst = false;
 	saveMaps = false; saveTraitMaps = false;
 	saveVisits = false;
 #if RS_RCPP
@@ -247,16 +247,10 @@ void paramSim::setSim(simParams s) {
 	batchMode = s.batchMode; absorbing = s.absorbing;
 	outRange = s.outRange; outOccup = s.outOccup;
 	outPop = s.outPop; outInds = s.outInds;
-	outGenetics = s.outGenetics;
-	if (s.outGenType >= 0 && s.outGenType <= 2) {
-		outGenType = s.outGenType;
-	}
-	outGenXtab = s.outGenXtab;
 	outTraitsCells = s.outTraitsCells; outTraitsRows = s.outTraitsRows;
 	outConnect = s.outConnect;
 	if (s.outStartPop >= 0) outStartPop = s.outStartPop;
 	if (s.outStartInd >= 0) outStartInd = s.outStartInd;
-	if (s.outStartGenetic >= 0) outStartGenetic = s.outStartGenetic;
 	if (s.outStartTraitCell >= 0) outStartTraitCell = s.outStartTraitCell;
 	if (s.outStartTraitRow >= 0) outStartTraitRow = s.outStartTraitRow;
 	if (s.outStartConn >= 0) outStartConn = s.outStartConn;
@@ -264,7 +258,6 @@ void paramSim::setSim(simParams s) {
 	if (s.outIntOcc >= 1) outIntOcc = s.outIntOcc;
 	if (s.outIntPop >= 1) outIntPop = s.outIntPop;
 	if (s.outIntInd >= 1) outIntInd = s.outIntInd;
-	if (s.outIntGenetic >= 1) outIntGenetic = s.outIntGenetic;
 	if (s.outIntTraitCell >= 1) outIntTraitCell = s.outIntTraitCell;
 	if (s.outIntTraitRow >= 1) outIntTraitRow = s.outIntTraitRow;
 	if (s.outIntConn >= 1) outIntConn = s.outIntConn;
@@ -277,6 +270,17 @@ void paramSim::setSim(simParams s) {
 	ReturnPopRaster = s.ReturnPopRaster;
 	CreatePopFile = s.CreatePopFile;
 #endif
+	fixReplicateSeed = s.fixReplicateSeed;
+}
+
+void paramSim::setGeneticSim(string patchSamplingOption, bool outputGeneticValues, bool outputWCFstat, bool outputPerLocusWCFstat, bool outputPairwiseFst, int outputStartGenetics, int outputGeneticInterval) {
+	this->patchSamplingOption = patchSamplingOption;
+	this->outputGenes = outputGeneticValues;
+	this->outputWCFstat = outputWCFstat;
+	this->outputPerLocusWCFstat = outputPerLocusWCFstat;
+	this->outputPairwiseFst = outputPairwiseFst;
+	this->outputStartGenetics = outputGeneticInterval;
+	this->outputGeneticInterval = outputGeneticInterval;
 }
 
 simParams paramSim::getSim(void) {
@@ -284,14 +288,13 @@ simParams paramSim::getSim(void) {
 	s.batchNum = batchNum;
 	s.simulation = simulation; s.reps = reps; s.years = years;
 	s.outRange = outRange; s.outOccup = outOccup; s.outPop = outPop; s.outInds = outInds;
-	s.outGenetics = outGenetics; s.outGenType = outGenType; s.outGenXtab = outGenXtab;
 	s.outTraitsCells = outTraitsCells; s.outTraitsRows = outTraitsRows; s.outConnect = outConnect;
-	s.outStartPop = outStartPop; s.outStartInd = outStartInd; s.outStartGenetic = outStartGenetic;
+	s.outStartPop = outStartPop; s.outStartInd = outStartInd;
 	s.outStartTraitCell = outStartTraitCell; s.outStartTraitRow = outStartTraitRow;
 	s.outStartConn = outStartConn;
 	s.outIntRange = outIntRange;
 	s.outIntOcc = outIntOcc; s.outIntPop = outIntPop;
-	s.outIntInd = outIntInd; s.outIntGenetic = outIntGenetic;
+	s.outIntInd = outIntInd;
 	s.outIntTraitCell = outIntTraitCell;
 	s.outIntTraitRow = outIntTraitRow;
 	s.outIntConn = outIntConn;
@@ -307,6 +310,14 @@ simParams paramSim::getSim(void) {
 	s.ReturnPopRaster = ReturnPopRaster;
 	s.CreatePopFile = CreatePopFile;
 #endif
+	s.patchSamplingOption = patchSamplingOption;
+	s.outputGeneValues = outputGenes;
+	s.outputWCFstat = outputWCFstat;
+	s.outputPerLocusWCFstat = outputPerLocusWCFstat;
+	s.outputPairwiseFst = outputPairwiseFst;
+	s.outStartGenetics = outputStartGenetics;
+	s.outputGeneticInterval = outputGeneticInterval;
+
 	return s;
 }
 

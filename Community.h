@@ -1,56 +1,58 @@
 /*----------------------------------------------------------------------------
- *	
- *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell 
- *	
+ *
+ *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell
+ *
  *	This file is part of RangeShifter.
- *	
+ *
  *	RangeShifter is free software: you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation, either version 3 of the License, or
  *	(at your option) any later version.
- *	
+ *
  *	RangeShifter is distributed in the hope that it will be useful,
  *	but WITHOUT ANY WARRANTY; without even the implied warranty of
  *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *	GNU General Public License for more details.
- *	
+ *
  *	You should have received a copy of the GNU General Public License
  *	along with RangeShifter. If not, see <https://www.gnu.org/licenses/>.
- *	
+ *
  --------------------------------------------------------------------------*/
- 
- 
-/*------------------------------------------------------------------------------
 
-RangeShifter v2.0 Community
 
-Implements the Community class
+ /*------------------------------------------------------------------------------
 
-There is ONLY ONE instance of a Community in an individual replicate simulation.
-It holds a SubCommunity for each Patch in the Landscape (including the matrix),
-and is thus the highest-level entity accessed for most processing concerned with
-simulated populations.
+ RangeShifter v2.0 Community
 
-Optionally, the Community maintains a record of the occupancy of suitable cells
-or patches during the course of simulation of multiple replicates.
+ Implements the Community class
 
-For full details of RangeShifter, please see:
-Bocedi G., Palmer S.C.F., Pe’er G., Heikkinen R.K., Matsinos Y.G., Watts K.
-and Travis J.M.J. (2014). RangeShifter: a platform for modelling spatial
-eco-evolutionary dynamics and species’ responses to environmental changes.
-Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
+ There is ONLY ONE instance of a Community in an individual replicate simulation.
+ It holds a SubCommunity for each Patch in the Landscape (including the matrix),
+ and is thus the highest-level entity accessed for most processing concerned with
+ simulated populations.
 
-Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
+ Optionally, the Community maintains a record of the occupancy of suitable cells
+ or patches during the course of simulation of multiple replicates.
 
-Last updated: 25 June 2021 by Anne-Kathleen Malchow
+ For full details of RangeShifter, please see:
+ Bocedi G., Palmer S.C.F., Pe’er G., Heikkinen R.K., Matsinos Y.G., Watts K.
+ and Travis J.M.J. (2014). RangeShifter: a platform for modelling spatial
+ eco-evolutionary dynamics and species’ responses to environmental changes.
+ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
-------------------------------------------------------------------------------*/
+ Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
+
+ Last updated: 25 June 2021 by Anne-Kathleen Malchow
+
+ ------------------------------------------------------------------------------*/
 
 #ifndef CommunityH
 #define CommunityH
 
 #include <vector>
 #include <algorithm>
+#include <memory>
+#include <ranges>
 using namespace std;
 
 #include "SubCommunity.h"
@@ -58,11 +60,12 @@ using namespace std;
 #include "Patch.h"
 #include "Cell.h"
 #include "Species.h"
+#include "NeutralStatsManager.h"
 
 //---------------------------------------------------------------------------
 struct commStats {
-int ninds,nnonjuvs,suitable,occupied;
-int minX,maxX,minY,maxY;
+	int ninds, nnonjuvs, suitable, occupied;
+	int minX, maxX, minY, maxY;
 };
 
 class Community {
@@ -70,7 +73,7 @@ class Community {
 public:
 	Community(Landscape*);
 	~Community(void);
-	SubCommunity* addSubComm(Patch*,int);
+	SubCommunity* addSubComm(Patch*, int);
 	// functions to manage populations occurring in the community
 	void initialise(
 		Species*,	// pointer to Species
@@ -97,7 +100,7 @@ public:
 
 	void survival(
 		short,	// part:		0 = determine survival & development,
-			//		 			1 = apply survival changes to the population
+		//		 			1 = apply survival changes to the population
 		short,	// option0:	0 = stage 0 (juveniles) only         )
 		//					1 = all stages                       ) used by part 0 only
 		//					2 = stage 1 and above (all non-juvs) )
@@ -150,13 +153,6 @@ public:
 		int		// Landscape number (>= 0 to open the file, -999 to close the file
 					//									 -1 to write data records)
 	);
-	void outGenetics( // Write records to genetics file
-		int,	// replicate
-		int,	// year
-		int,	// generation
-		int		// Landscape number (>= 0 to open the file, -999 to close the file
-					//									 -1 to write data records)
-	);
 	// Open occupancy file, write header record and set up occupancy array
 	bool outOccupancyHeaders(
 		int		// option: -999 to close the file
@@ -188,19 +184,40 @@ public:
 		traitsums	// structure holding sums of trait genes for dispersal (see Population.h)
 	);
 #if RS_RCPP && !R_CMD
-    Rcpp::IntegerMatrix addYearToPopList(int,int);
+	Rcpp::IntegerMatrix addYearToPopList(int, int);
 #endif
 
+	//sample individuals for genetics (or could be used for anything)
+	void sampleIndividuals(Species* pSpecies);
+
+	bool openOutGenesFile(const bool& isDiploid, const int landNr, const int rep);
+	void outputGeneValues(const int& year, const int& gen, Species* pSpecies);
+
+	//control neutral stat output
+	void outNeutralGenetics(Species* pSpecies, int rep, int yr, int gen, bool fstat, bool perLocus, bool pairwise);
+
+	//file openers
+	bool openWCFstatFile(Species* pSpecies, const int landNr);
+	bool openWCPerLocusFstatFile(Species* pSpecies, Landscape* pLandscape, const int landNr, const int rep);
+	bool openPairwiseFSTFile(Species* pSpecies, Landscape* pLandscape, const int landNr, const int rep);
+
+	//file writers
+	void writeWCFstatFile(int rep, int yr, int gen);
+	void writeWCPerLocusFstatFile(Species* pSpecies, const int yr, const int gen, const  int nAlleles, const int nLoci, set<int> const& patchList);
+	void writePairwiseFSTFile(Species* pSpecies, const int yr, const int gen, const  int nAlleles, const int nLoci, set<int> const& patchList);
+
 private:
-	Landscape *pLandscape;
+	Landscape* pLandscape;
 	int indIx;				// index used to apply initial individuals
-	float **occSuit;	// occupancy of suitable cells / patches
+	float** occSuit;	// occupancy of suitable cells / patches
 	std::vector <SubCommunity*> subComms;
 
+	//below won't work for multispecies
+	unique_ptr<NeutralStatsManager> pNeutralStatistics;
 };
 
-extern paramSim *paramsSim;
-extern paramInit *paramsInit;
+extern paramSim* paramsSim;
+extern paramInit* paramsInit;
 
 
 //---------------------------------------------------------------------------

@@ -72,7 +72,7 @@ using namespace std;
 #include "Cell.h"
 #include "Species.h"
 
-//---------------------------------------------------------------------------
+ //---------------------------------------------------------------------------
 
 struct patchLimits {
 	int xMin, xMax, yMin, yMax;
@@ -141,8 +141,7 @@ public:
 		bool					// TRUE if there is a gradient in carrying capacity across the Landscape
 	);
 	float getK(void);
-	// dummy function for batch version
-	void drawCells(float, int, rgb);
+	bool speciesIsPresent(Species* sp);
 
 private:
 	int patchSeqNum;// sequential patch number - patch 0 is reserved for the inter-patch matrix
@@ -155,7 +154,7 @@ private:
 	float localK;		// patch carrying capacity (individuals)
 	bool changed;
 	// NOTE: THE FOLLOWING ARRAY WILL NEED TO BE MADE SPECIES-SPECIFIC...
-	short nTemp[NSEXES];						// no. of potential settlers in each sex
+	short nTemp[gMaxNbSexes];						// no. of potential settlers in each sex
 
 	std::vector <Cell*> cells;
 	std::vector <patchPopn> popns;
