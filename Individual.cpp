@@ -2108,6 +2108,7 @@ void testIndividual() {
 		ls_params.minX = ls_params.minY = 0;
 		ls_params.maxX = ls_params.maxY = ls_params.dimX - 1;
 		ls_params.resol = 1;
+		double cellDiagLength = ls_params.resol * SQRT2;
 
 		Landscape ls;
 		ls.setLandParams(ls_params, true);
@@ -2144,7 +2145,7 @@ void testIndividual() {
 		// Transfer CRW traits
 		trfrMovtTraits m;
 		m.stepMort = 0.0;
-		m.stepLength = ls_params.resol;
+		m.stepLength = cellDiagLength; // guaranteed to move out
 		m.rho = 1.0;
 		m.straigtenPath = false;
 		sp.setMovtTraits(m);
@@ -2201,9 +2202,9 @@ void testIndividual() {
 		// ...
 
 		// Step size
+
 		ls = Landscape();
 		ls.setLandParams(ls_params, true);
-
 		sp.createHabK(2);
 		const int hab_suitable = 0;
 		const int hab_unsuitable = 1;
@@ -2305,7 +2306,7 @@ void testIndividual() {
 		ls.allocatePatches(&sp);
 		ls.updateCarryingCapacity(&sp, 0, 0);
 		// Individual moves by 1 along the diagonal
-		m.stepLength = ls_params.resol * SQRT2; // 1 diagonal cell
+		m.stepLength = cellDiagLength; // 1 diagonal cell
 		m.rho = 1; // angle = previous angle
 		sp.setMovtTraits(m);
 		steps.maxStepsYr = steps.maxSteps = ls_params.dimX;
