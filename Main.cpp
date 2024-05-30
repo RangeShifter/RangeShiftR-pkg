@@ -90,7 +90,7 @@ int _tmain(int argc, _TCHAR* argv[])
 #ifdef NDEBUG
 	cout << "This code is only for running tests and not meant to run in release." << endl;
 	return 1;
-# else
+#else
 
 	// Initialise globals
 	paramsGrad = new paramGrad;
