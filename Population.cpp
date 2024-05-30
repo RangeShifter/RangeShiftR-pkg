@@ -1646,11 +1646,11 @@ bool Population::outPopHeaders(int landNr, bool patchModel) {
 	stageParams sstruct = pSpecies->getStageParams();
 	if (sim.batchMode) {
 		name = paramsSim->getDir(2)
-			+ "Batch" + Int2Str(sim.batchNum) + "_"
-			+ "Sim" + Int2Str(sim.simulation) + "_Land" + Int2Str(landNr) + "_Pop.txt";
+			+ "Batch" + to_string(sim.batchNum) + "_"
+			+ "Sim" + to_string(sim.simulation) + "_Land" + to_string(landNr) + "_Pop.txt";
 	}
 	else {
-		name = paramsSim->getDir(2) + "Sim" + Int2Str(sim.simulation) + "_Pop.txt";
+		name = paramsSim->getDir(2) + "Sim" + to_string(sim.simulation) + "_Pop.txt";
 	}
 	outPop.open(name.c_str());
 	outPop << "Rep\tYear\tRepSeason";
@@ -1761,13 +1761,13 @@ void Population::outIndsHeaders(int rep, int landNr, bool patchModel)
 
 	if (sim.batchMode) {
 		name = paramsSim->getDir(2)
-			+ "Batch" + Int2Str(sim.batchNum) + "_"
-			+ "Sim" + Int2Str(sim.simulation)
-			+ "_Land" + Int2Str(landNr) + "_Rep" + Int2Str(rep) + "_Inds.txt";
+			+ "Batch" + to_string(sim.batchNum) + "_"
+			+ "Sim" + to_string(sim.simulation)
+			+ "_Land" + to_string(landNr) + "_Rep" + to_string(rep) + "_Inds.txt";
 	}
 	else {
-		name = paramsSim->getDir(2) + "Sim" + Int2Str(sim.simulation)
-			+ "_Rep" + Int2Str(rep) + "_Inds.txt";
+		name = paramsSim->getDir(2) + "Sim" + to_string(sim.simulation)
+			+ "_Rep" + to_string(rep) + "_Inds.txt";
 	}
 	outInds.open(name.c_str());
 	outInds << "Rep\tYear\tRepSeason\tSpecies\tIndID\tStatus";

@@ -225,10 +225,6 @@ public:
 	int findHabCode(int);
 	int getHabCode(int);
 	void clearHabitats(void);
-	void addColour(rgb);
-	void changeColour(int, rgb);
-	rgb getColour(int);
-	int colourCount(void);
 
 	// functions to handle patches and cells
 
@@ -494,9 +490,6 @@ private:
 
 	// list of habitat codes
 	std::vector <int> habCodes;
-
-	// list of colours for habitat codes
-	std::vector <rgb> colours;
 
 	// list of dynamic landscape changes
 	std::vector <landChange> landchanges;

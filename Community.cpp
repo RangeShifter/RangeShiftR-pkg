@@ -672,13 +672,13 @@ bool Community::outRangeHeaders(Species* pSpecies, int landNr)
 
 	if (sim.batchMode) {
 		name = paramsSim->getDir(2)
-			+ "Batch" + Int2Str(sim.batchNum) + "_"
-			+ "Sim" + Int2Str(sim.simulation) + "_Land"
-			+ Int2Str(landNr)
+			+ "Batch" + to_string(sim.batchNum) + "_"
+			+ "Sim" + to_string(sim.simulation) + "_Land"
+			+ to_string(landNr)
 			+ "_Range.txt";
 	}
 	else {
-		name = paramsSim->getDir(2) + "Sim" + Int2Str(sim.simulation) + "_Range.txt";
+		name = paramsSim->getDir(2) + "Sim" + to_string(sim.simulation) + "_Range.txt";
 	}
 	outrange.open(name.c_str());
 	outrange << "Rep\tYear\tRepSeason";
@@ -1088,22 +1088,22 @@ bool Community::outOccupancyHeaders(int option)
 
 	name = paramsSim->getDir(2);
 	if (sim.batchMode) {
-		name += "Batch" + Int2Str(sim.batchNum) + "_";
-		name += "Sim" + Int2Str(sim.simulation) + "_Land" + Int2Str(ppLand.landNum);
+		name += "Batch" + to_string(sim.batchNum) + "_";
+		name += "Sim" + to_string(sim.simulation) + "_Land" + to_string(ppLand.landNum);
 	}
 	else
-		name += "Sim" + Int2Str(sim.simulation);
+		name += "Sim" + to_string(sim.simulation);
 	name += "_Occupancy_Stats.txt";
 	outsuit.open(name.c_str());
 	outsuit << "Year\tMean_OccupSuit\tStd_error" << endl;
 
 	name = paramsSim->getDir(2);
 	if (sim.batchMode) {
-		name += "Batch" + Int2Str(sim.batchNum) + "_";
-		name += "Sim" + Int2Str(sim.simulation) + "_Land" + Int2Str(ppLand.landNum);
+		name += "Batch" + to_string(sim.batchNum) + "_";
+		name += "Sim" + to_string(sim.simulation) + "_Land" + to_string(ppLand.landNum);
 	}
 	else
-		name += "Sim" + Int2Str(sim.simulation);
+		name += "Sim" + to_string(sim.simulation);
 	name += "_Occupancy.txt";
 	outoccup.open(name.c_str());
 	if (ppLand.patchModel) {
@@ -1429,11 +1429,11 @@ bool Community::outTraitsRowsHeaders(Species* pSpecies, int landNr) {
 	string DirOut = paramsSim->getDir(2);
 	if (sim.batchMode) {
 		name = DirOut
-			+ "Batch" + Int2Str(sim.batchNum) + "_"
-			+ "Sim" + Int2Str(sim.simulation) + "_Land" + Int2Str(landNr) + "_TraitsXrow.txt";
+			+ "Batch" + to_string(sim.batchNum) + "_"
+			+ "Sim" + to_string(sim.simulation) + "_Land" + to_string(landNr) + "_TraitsXrow.txt";
 	}
 	else {
-		name = DirOut + "Sim" + Int2Str(sim.simulation) + "_TraitsXrow.txt";
+		name = DirOut + "Sim" + to_string(sim.simulation) + "_TraitsXrow.txt";
 	}
 	outtraitsrows.open(name.c_str());
 
@@ -1569,15 +1569,15 @@ bool Community::openOutGenesFile(const bool& isDiploid, const int landNr, const 
 
 	if (sim.batchMode) {
 		name = paramsSim->getDir(2)
-			+ "Batch" + Int2Str(sim.batchNum) + "_"
-			+ "Sim" + Int2Str(sim.simulation) + "_Land"
-			+ Int2Str(landNr) + "_Rep" + Int2Str(rep)
+			+ "Batch" + to_string(sim.batchNum) + "_"
+			+ "Sim" + to_string(sim.simulation) + "_Land"
+			+ to_string(landNr) + "_Rep" + to_string(rep)
 			+ "_geneValues.txt";
 	}
 	else {
 		name = paramsSim->getDir(2) 
-			+ "Sim" + Int2Str(sim.simulation) + "_Land"
-			+ Int2Str(landNr) + "_Rep" + Int2Str(rep) 
+			+ "Sim" + to_string(sim.simulation) + "_Land"
+			+ to_string(landNr) + "_Rep" + to_string(rep) 
 			+ "_geneValues.txt";
 	}
 
@@ -1649,13 +1649,13 @@ bool Community::openWCFstatFile(Species* pSpecies, int landNr)
 
 	if (sim.batchMode) {
 		name = paramsSim->getDir(2)
-			+ "Batch" + Int2Str(sim.batchNum) + "_"
-			+ "Sim" + Int2Str(sim.simulation) + "_Land"
-			+ Int2Str(landNr)
+			+ "Batch" + to_string(sim.batchNum) + "_"
+			+ "Sim" + to_string(sim.simulation) + "_Land"
+			+ to_string(landNr)
 			+ "_neutralGenetics.txt";
 	}
 	else {
-		name = paramsSim->getDir(2) + "Sim" + Int2Str(sim.simulation) + "_neutralGenetics.txt";
+		name = paramsSim->getDir(2) + "Sim" + to_string(sim.simulation) + "_neutralGenetics.txt";
 	}
 	outwcfstat.open(name.c_str());
 	outwcfstat << "Rep\tYear\tRepSeason\tnExtantPatches\tnIndividuals\tfst\tfis\tfit\tmeanAllelePerLocus\tmeanAllelePerLocusPatches\tmeanFixedLoci\tmeanFixedLociPatches\tmeanObHeterozygosity";
@@ -1684,20 +1684,20 @@ bool Community::openWCPerLocusFstatFile(Species* pSpecies, Landscape* pLandscape
 
 	if (sim.batchMode) {
 		name = paramsSim->getDir(2)
-			+ "Batch" + Int2Str(sim.batchNum) + "_"
-			+ "Sim" + Int2Str(sim.simulation) + "_Land"
-			+ Int2Str(landNr) + "_Rep"
-			+ Int2Str(rep)
+			+ "Batch" + to_string(sim.batchNum) + "_"
+			+ "Sim" + to_string(sim.simulation) + "_Land"
+			+ to_string(landNr) + "_Rep"
+			+ to_string(rep)
 			+ "_perLocusNeutralGenetics.txt";
 	}
 	else {
-		name = paramsSim->getDir(2) + "Sim" + Int2Str(sim.simulation) + "_Rep" + Int2Str(rep) + "_perLocusNeutralGenetics.txt";
+		name = paramsSim->getDir(2) + "Sim" + to_string(sim.simulation) + "_Rep" + to_string(rep) + "_perLocusNeutralGenetics.txt";
 	}
 
 	outperlocusfstat.open(name.c_str());
 	outperlocusfstat << "Year\tRepSeason\tlocus\tfst\tfis\tfit\tpopHet";
 	for (int patchId : patchList) {
-		outperlocusfstat << "\tpatch_" + Int2Str(patchId) + "_Het";
+		outperlocusfstat << "\tpatch_" + to_string(patchId) + "_Het";
 	}
 	outperlocusfstat << endl;
 
@@ -1723,14 +1723,14 @@ bool Community::openPairwiseFSTFile(Species* pSpecies, Landscape* pLandscape, co
 
 	if (sim.batchMode) {
 		name = paramsSim->getDir(2)
-			+ "Batch" + Int2Str(sim.batchNum) + "_"
-			+ "Sim" + Int2Str(sim.simulation) + "_Land"
-			+ Int2Str(landNr) + "_Rep"
-			+ Int2Str(rep)
+			+ "Batch" + to_string(sim.batchNum) + "_"
+			+ "Sim" + to_string(sim.simulation) + "_Land"
+			+ to_string(landNr) + "_Rep"
+			+ to_string(rep)
 			+ "_pairwisePatchNeutralGenetics.txt";
 	}
 	else {
-		name = paramsSim->getDir(2) + "Sim" + Int2Str(sim.simulation) + "_Rep" + Int2Str(rep) + "_pairwisePatchNeutralGenetics.txt";
+		name = paramsSim->getDir(2) + "Sim" + to_string(sim.simulation) + "_Rep" + to_string(rep) + "_pairwisePatchNeutralGenetics.txt";
 	}
 	outpairwisefst.open(name.c_str());
 	outpairwisefst << "Year\tRepSeason\tpatchA\tpatchB\tfst";

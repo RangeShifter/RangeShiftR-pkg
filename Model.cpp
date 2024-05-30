@@ -782,11 +782,11 @@ void OutParameters(Landscape* pLandscape)
 	string name;
 	if (sim.batchMode)
 		name = paramsSim->getDir(2)
-		+ "Batch" + Int2Str(sim.batchNum) + "_"
-		+ "Sim" + Int2Str(sim.simulation)
-		+ "_Land" + Int2Str(ppLand.landNum) + "_Parameters.txt";
+		+ "Batch" + to_string(sim.batchNum) + "_"
+		+ "Sim" + to_string(sim.simulation)
+		+ "_Land" + to_string(ppLand.landNum) + "_Parameters.txt";
 	else
-		name = paramsSim->getDir(2) + "Sim" + Int2Str(sim.simulation) + "_Parameters.txt";
+		name = paramsSim->getDir(2) + "Sim" + to_string(sim.simulation) + "_Parameters.txt";
 	outPar.open(name.c_str());
 
 	outPar << "RangeShifter 2.0 ";
