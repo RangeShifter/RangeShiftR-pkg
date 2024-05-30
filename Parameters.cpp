@@ -230,7 +230,6 @@ paramSim::paramSim(void) {
 	outStartPaths = 0; outIntPaths = 0;
 	outPaths = false; ReturnPopRaster = false; CreatePopFile = true;
 #endif
-	drawLoaded = false;
 	viewLand = false; viewPatch = false; viewGrad = false; viewCosts = false;
 	viewPop = false; viewTraits = false; viewPaths = false; viewGraph = false;
 	dir = ' ';
@@ -278,7 +277,6 @@ void paramSim::setSim(simParams s) {
 	ReturnPopRaster = s.ReturnPopRaster;
 	CreatePopFile = s.CreatePopFile;
 #endif
-	drawLoaded = s.drawLoaded;
 }
 
 simParams paramSim::getSim(void) {
@@ -309,7 +307,6 @@ simParams paramSim::getSim(void) {
 	s.ReturnPopRaster = ReturnPopRaster;
 	s.CreatePopFile = CreatePopFile;
 #endif
-	s.drawLoaded = drawLoaded;
 	return s;
 }
 
