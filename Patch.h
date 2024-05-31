@@ -131,7 +131,7 @@ public:
 		Species*, // pointer to the Species
 		int       // sex of the settlers
 	);
-	void calculateKXY( // Calculate total Patch carrying capacity (no. of inds)
+	void setCarryingCapacity( // Calculate total Patch carrying capacity (no. of inds)
 		Species*, 		// pointer to the Species
 		patchLimits,	// current min and max limits of landscape
 		float,				// global stochasticity value (epsilon) for the current year

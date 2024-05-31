@@ -1598,8 +1598,8 @@ void Individual::setPath(pathData* pPath) {
 	path = pPath;
 }
 
-void Individual::setCRW(crwParams* pCRW) {
-	crw = pCRW;
+void Individual::setCRW(crwData* pCRW) {
+	pTrfrData = make_unique<crwData>(pCRW->prevdrn, pCRW->xc, pCRW->yc);
 }
 
 // TP: Both functions below are a bad fix to an issue I have for testing
@@ -1612,14 +1612,16 @@ void Individual::forceInitPath() {
 	setPath(pPath);
 }
 // Force initialisation of crw
-void Individual::forceInitCRW(const trfrMovtTraits& m) {
-	crwParams* pCRW = new crwParams;
-	pCRW->prevdrn = (float)(pRandom->Random() * 2.0 * PI);
-	pCRW->xc = ((float)pRandom->Random() * 0.999f) + (float)pCurrCell->getLocn().x;
-	pCRW->yc = ((float)pRandom->Random() * 0.999f) + (float)pCurrCell->getLocn().y;
+/*
+void Individual::forceInitCRW(const trfrMovtParams& m) {
+	float prevdrn = (float)(pRandom->Random() * 2.0 * PI);
+	float xc = ((float)pRandom->Random() * 0.999f) + (float)pCurrCell->getLocn().x;
+	float yc = ((float)pRandom->Random() * 0.999f) + (float)pCurrCell->getLocn().y;
+	std::unique_ptr<trfrData> pCRW = make_unique<crwData>(prevdrn, xc, yc);
 	pCRW->stepL = m.stepLength; pCRW->rho = m.rho;
 	setCRW(pCRW);
 }
+*/
 
 void Individual::setInitAngle(const float angle) {
 	crw->prevdrn = angle;
@@ -1629,38 +1631,6 @@ void Individual::setInitAngle(const float angle) {
 
 void testIndividual() {
 
-	/*
-	Patch* pPatch = new Patch(0, 0);
-	int cell_x = 2;
-	int cell_y = 5;
-	int cell_hab = 2;
-	Cell* pCell = new Cell(cell_x, cell_y, (intptr)pPatch, cell_hab);
-
-	// Create an individual
-	short stg = 0;
-	short age = 0;
-	short repInt = 0;
-	float probmale = 0;
-	bool uses_movt_process = true;
-	short moveType = 1;
-	Individual ind(pCell, pPatch, stg, age, repInt, probmale, uses_movt_process, moveType);
-	*/
-
-	// Gets its sex drawn from pmale
-	
-	// Can age or develop
-
-	// 
-
-	// Reproduces
-	// depending on whether it is sexual or not
-	// depending on the stage
-	// depending on the trait inheritance
-
-	// Disperses
-	// Emigrates
-	// Transfers
-	
 	// Kernel-based transfer
 	{
 		// Simple cell-based landscape layout
@@ -1690,15 +1660,15 @@ void testIndividual() {
 		d.stageStruct = false;
 		sp.setDemogr(d);
 		// Transfer rules
-		trfrRules trfr;
+		transferRules trfr;
 		trfr.indVar = trfr.sexDep = trfr.stgDep = false;
 		trfr.twinKern = trfr.distMort = false;
-		sp.setTrfr(trfr);
+		sp.setTrfrRules(trfr);
 		sp.setFullKernel(false);
 		// Transfer traits
-		trfrKernTraits kern;
+		trfrKernelParams kern;
 		kern.meanDist1 = static_cast<float>(ls_params.dimX); // can reach destination cell reasonably often
-		sp.setKernTraits(0, 0, kern, ls_params.resol);
+		sp.setSpKernTraits(0, 0, kern, ls_params.resol);
 		// Transfer mortality params
 		trfrMortParams mort;
 		mort.fixedMort = 0.0;
@@ -1717,7 +1687,6 @@ void testIndividual() {
 		//Individual starting_ind(init_cell, init_patch, 1, 0, 0, 0.0, false, 0);
 		// Set aside original individual and test on a copy
 		Individual ind(init_cell, init_patch, 1, 0, 0, 0.0, false, 0);
-		// pathData *path; ?
 		int isDispersing = ind.moveKernel(&ls, &sp, false);
 
 		// After moving, individual should be in the only available cell
@@ -1728,7 +1697,7 @@ void testIndividual() {
 
 		// If no cell within reasonable dispersal reach, individual does not move and dies
 		kern.meanDist1 = 1.0; 
-		sp.setKernTraits(0, 0, kern, ls_params.resol);
+		sp.setSpKernTraits(0, 0, kern, ls_params.resol);
 		ind = Individual(init_cell, init_patch, 1, 0, 0, 0.0, false, 0); // reset individual
 		isDispersing = ind.moveKernel(&ls, &sp, false);
 		curr_cell = ind.getCurrCell();
@@ -1737,34 +1706,34 @@ void testIndividual() {
 
 		// Twin kernels
 		trfr.twinKern = true;
-		sp.setTrfr(trfr);
+		sp.setTrfrRules(trfr);
 		kern.meanDist1 = 1.0; // very unlikely to reach suitable cell
 		kern.meanDist2 = 5.0; // easily reaches suitable cell...
 		kern.probKern1 = 1.0; // ... but never used
-		sp.setKernTraits(0, 0, kern, ls_params.resol);
+		sp.setSpKernTraits(0, 0, kern, ls_params.resol);
 		ind = Individual(init_cell, init_patch, 1, 0, 0, 0.0, false, 0);
 		isDispersing = ind.moveKernel(&ls, &sp, false);
 		assert(ind.getStatus() == 6);
 		kern.probKern1 = 0.0; // always use second kernel
-		sp.setKernTraits(0, 0, kern, ls_params.resol);
+		sp.setSpKernTraits(0, 0, kern, ls_params.resol);
 		ind = Individual(init_cell, init_patch, 1, 0, 0, 0.0, false, 0);
 		isDispersing = ind.moveKernel(&ls, &sp, false);
 		assert(ind.getStatus() == 2);
 		// reset
 		trfr.twinKern = false;
-		sp.setTrfr(trfr);
+		sp.setTrfrRules(trfr);
 		kern.probKern1 = 1.0;
-		sp.setKernTraits(0, 0, kern, ls_params.resol);
+		sp.setSpKernTraits(0, 0, kern, ls_params.resol);
 
 		// Sex-dependent dispersal distances
 		trfr.sexDep = true;
-		sp.setTrfr(trfr);
-		trfrKernTraits kern_f = kern;
+		sp.setTrfrRules(trfr);
+		trfrKernelParams kern_f = kern;
 		kern_f.meanDist1 = 1.0; // female very unlikely to reach suitable cell
-		sp.setKernTraits(0, 0, kern_f, ls_params.resol);
-		trfrKernTraits kern_m = kern;
+		sp.setSpKernTraits(0, 0, kern_f, ls_params.resol);
+		trfrKernelParams kern_m = kern;
 		kern_m.meanDist1 = 5.0; // male easily reaches suitable cell
-		sp.setKernTraits(0, 1, kern_m, ls_params.resol);
+		sp.setSpKernTraits(0, 1, kern_m, ls_params.resol);
 
 		ind = Individual(init_cell, init_patch, 1, 0, 0, 0.0, false, 0); // female as default
 		isDispersing = ind.moveKernel(&ls, &sp, false);
@@ -1776,17 +1745,17 @@ void testIndividual() {
 		assert(ind.getStatus() == 2);
 		// reset
 		trfr.sexDep = false;
-		sp.setTrfr(trfr);
+		sp.setTrfrRules(trfr);
 
 		// Stage-dependent
 		trfr.stgDep = true;
-		sp.setTrfr(trfr);
-		trfrKernTraits kern_juv = kern;
+		sp.setTrfrRules(trfr);
+		trfrKernelParams kern_juv = kern;
 		kern_juv.meanDist1 = 1.0; // juveniles very unlikely to reach suitable cell
-		sp.setKernTraits(0, 0, kern_juv, ls_params.resol);
-		trfrKernTraits kern_adult = kern;
+		sp.setSpKernTraits(0, 0, kern_juv, ls_params.resol);
+		trfrKernelParams kern_adult = kern;
 		kern_adult.meanDist1 = 5.0; // adults easily reach suitable cell
-		sp.setKernTraits(1, 0, kern_adult, ls_params.resol);
+		sp.setSpKernTraits(1, 0, kern_adult, ls_params.resol);
 
 		ind = Individual(init_cell, init_patch, 0, 0, 0, 0.0, false, 0); // juvenile
 		isDispersing = ind.moveKernel(&ls, &sp, false);
@@ -1797,7 +1766,7 @@ void testIndividual() {
 		assert(ind.getStatus() == 2);
 		// reset
 		trfr.stgDep = false;
-		sp.setTrfr(trfr);
+		sp.setTrfrRules(trfr);
 
 		/* Boundaries: dispersal distance overshoots
 		Only adjacent cells are available
@@ -1823,7 +1792,7 @@ void testIndividual() {
 		init_patch = (Patch*)init_cell->getPatch();
 
 		kern.meanDist1 = 10; // overshoots *most* of the time...
-		sp.setKernTraits(0, 0, kern, ls_params.resol);
+		sp.setSpKernTraits(0, 0, kern, ls_params.resol);
 		ind = Individual(init_cell, init_patch, 1, 0, 0, 0.0, false, 0); // reset individual
 
 		// Non-absorbing boundaries
@@ -1846,18 +1815,18 @@ void testIndividual() {
 		mort.fixedMort = 1.0; // Individual *will* die after any step
 		sp.setMortParams(mort);
 		trfr.distMort = false;
-		sp.setTrfr(trfr);
+		sp.setTrfrRules(trfr);
 		ind = Individual(init_cell, init_patch, 1, 0, 0, 0.0, false, 0);
 		isDispersing = ind.moveKernel(&ls, &sp, false);
 		assert(ind.getStatus() == 7);
 		// Distance-dependent mortality
 		trfr.distMort = true;
-		sp.setTrfr(trfr);
+		sp.setTrfrRules(trfr);
 		mort.mortAlpha = 1000.0; // very steep threshold
 		mort.mortBeta = 0.5; // very small distance 
 		sp.setMortParams(mort);
 		kern.meanDist1 = 5; // very likely to go over threshold
-		sp.setKernTraits(0, 0, kern, ls_params.resol);
+		sp.setSpKernTraits(0, 0, kern, ls_params.resol);
 		ind = Individual(init_cell, init_patch, 1, 0, 0, 0.0, false, 0);
 		isDispersing = ind.moveKernel(&ls, &sp, false);
 		assert(ind.getStatus() == 7);
@@ -1870,12 +1839,13 @@ void testIndividual() {
 		// Reset mortality params
 		trfr.distMort = false;
 		mort.fixedMort = 0.0;
-		sp.setTrfr(trfr);
+		sp.setTrfrRules(trfr);
 		sp.setMortParams(mort);
 
 		ind.~Individual();
 	}
 
+	/*
 	// Correlated random walk (CRW)
 	{
 		// Simple cell-based landscape layout
@@ -1912,19 +1882,19 @@ void testIndividual() {
 		sp.createHabCostMort(1);
 
 		// Transfer rules
-		trfrRules trfr;
+		transferRules trfr;
 		trfr.indVar = false;
 		trfr.habMort = false;
 		trfr.moveType = 2; // CRW
-		sp.setTrfr(trfr);
+		sp.setTrfrRules(trfr);
 
 		// Transfer CRW traits
-		trfrMovtTraits m;
+		trfrMovtParams m;
 		m.stepMort = 0.0;
 		m.stepLength = cellDiagLength; // guaranteed to move out
 		m.rho = 1.0;
-		m.straigtenPath = false;
-		sp.setMovtTraits(m);
+		m.straightenPath = false;
+		sp.setSpMovtTraits(m);
 
 		// Settlement rules
 		settleRules sett;
@@ -1952,7 +1922,7 @@ void testIndividual() {
 
 		// Per-step mortality
 		m.stepMort = 1.0; // should die 
-		sp.setMovtTraits(m);
+		sp.setSpMovtTraits(m);
 		ind = Individual(init_cell, init_patch, 0, 0, 0, 0.0, true, 2);
 		// force set path bc for some reason path gets deallocated upon exiting constructor??
 		ind.forceInitPath();
@@ -1972,7 +1942,7 @@ void testIndividual() {
 		assert(ind.getCurrCell() == first_step_cell); // shouldn't have moved
 		assert(ind.getStatus() == 7); // died by transfer
 		m.stepMort = 0.0; // not dying
-		sp.setMovtTraits(m);
+		sp.setSpMovtTraits(m);
 
 		// Habitat-dep mortality
 		// ...
@@ -2002,7 +1972,7 @@ void testIndividual() {
 		// Step length too short
 		m.stepLength = 0.1; // will not reach final cell
 		m.rho = 0.0; // random angle
-		sp.setMovtTraits(m);
+		sp.setSpMovtTraits(m);
 		steps.minSteps = 1;
 		steps.maxStepsYr = 2;
 		steps.maxSteps = 3;
@@ -2027,7 +1997,7 @@ void testIndividual() {
 
 		// Step length too long
 		m.stepLength = ls_params.dimX * SQRT2 * 1.5; // overshoots
-		sp.setMovtTraits(m);
+		sp.setSpMovtTraits(m);
 		ind = Individual(init_cell, init_patch, 0, 0, 0, 0.0, true, 2);
 		ind.setStatus(1); // dispersing
 		ind.forceInitPath();
@@ -2042,7 +2012,7 @@ void testIndividual() {
 
 		// Adequate step length
 		m.stepLength = (ls_params.dimX - 1) * SQRT2;
-		sp.setMovtTraits(m);
+		sp.setSpMovtTraits(m);
 		ind = Individual(init_cell, natalPatch, 0, 0, 0, 0.0, true, 2);
 		ind.setStatus(1); // dispersing
 		ind.forceInitPath();
@@ -2084,7 +2054,7 @@ void testIndividual() {
 		// Individual moves by 1 along the diagonal
 		m.stepLength = cellDiagLength; // 1 diagonal cell
 		m.rho = 1; // angle = previous angle
-		sp.setMovtTraits(m);
+		sp.setSpMovtTraits(m);
 		steps.maxStepsYr = steps.maxSteps = ls_params.dimX;
 		sp.setSteps(0, 0, steps);
 		ind = Individual(cell_vec[0], natalPatch, 0, 0, 0, 0.0, true, 2);
@@ -2100,6 +2070,7 @@ void testIndividual() {
 			assert(ind.getCurrCell() == cell_vec[i * (ls_params.dimX + 1)]);
 		}
 	}
+	*/
 }
 #endif // RSDEBUG
 

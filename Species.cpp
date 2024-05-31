@@ -545,7 +545,6 @@ void Species::setTrfrRules(const transferRules t) {
 	habMort = t.habMort;
 	moveType = t.moveType; 
 	costMap = t.costMap;
-//setGenome();
 }
 
 transferRules Species::getTransferRules(void) {
@@ -611,7 +610,7 @@ void Species::setSpMovtTraits(const trfrMovtParams m) {
 	if (m.stepMort >= 0.0 && m.stepMort <= 1.0) stepMort = m.stepMort;
 	if (m.stepLength > 0.0) stepLength = m.stepLength;
 	if (m.rho > 0.0 && m.rho <= 1.0) rho = m.rho;
-	straigtenPath = m.straigtenPath;
+	straightenPath = m.straightenPath;
 }
 
 trfrMovtParams Species::getSpMovtTraits(void) {
