@@ -279,39 +279,39 @@ void NeutralStatsManager::calculateFstatWC(set<int> const& patchList, const int 
 	double inverseNtotal;
 	double sumWeights = 0;
 	double nBar, nC, inverseNbar;
-	unsigned int nbPopulatedPatches = 0;
+	unsigned int nbPops = 0;
 	const int ploidy = pSpecies->isDiploid() ? 2 : 1;
-	const int totalSampleSize = nbSampledIndsInComm * ploidy;
+	const int globalSampleSize = nbSampledIndsInComm * ploidy; // total nb of alleles
 
 	for (int patchId : patchList) {
 		const auto patch = pLandscape->findPatch(patchId);
 		const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
 		if (pPop != 0) {
-			int sampleSize = pPop->sampleSize() * ploidy;
-			if (sampleSize > 0) {
-				nbPopulatedPatches++;
-				sumWeights += static_cast<double>(sampleSize * sampleSize) / totalSampleSize;
+			int popSampleSize = pPop->sampleSize() * ploidy;
+			if (popSampleSize > 0) {
+				nbPops++;
+				sumWeights += static_cast<double>(popSampleSize * popSampleSize) / globalSampleSize;
 			}
 		}
 	}
 
-	nbExtantPops = nbPopulatedPatches;
-	totalNbSampledInds = nbSampledIndsInComm; // r * nBar
+	nbExtantPops = nbPops;
+	totalNbSampledInds = nbSampledIndsInComm;
 
-	if (nbPopulatedPatches > 1) {
+	if (nbPops > 1) {
 
 		// Calculate F stats
-		nBar = static_cast<double>(totalSampleSize) / nbPopulatedPatches; // average sample size, cannot be less than 1
-		nC = (totalSampleSize - sumWeights) / nbPopulatedPatches - 1;
+		nBar = static_cast<double>(globalSampleSize) / nbPops; // average sample size, cannot be less than 1
+		nC = (globalSampleSize - sumWeights) / nbPops - 1;
 		double nBarMinusOne = (nBar == 1.0) ? 1.0 : nBar - 1.0; // avoid / 0 if exactly 1 ind per pop
 		inverseNbar = 1.0 / nBarMinusOne;
-		inverseNtotal = 1.0 / nbSampledIndsInComm;
+		inverseNtotal = 1.0 / globalSampleSize;
 
 		double var;
 		double s2, pBar, hBar;
-		double s2Denom = 1.0 / ((nbPopulatedPatches - 1) * nBar);
-		double rTerm = static_cast<double>(nbPopulatedPatches - 1) / nbPopulatedPatches;
-		double hBarFactor = (2 * nBarMinusOne) / (4 * nBar);
+		double s2Denom = 1.0 / ((nbPops - 1) * nBar);
+		double rTerm = static_cast<double> (nbPops - 1) / nbPops;
+		double hBarFactor = (2 * nBar - 1) / (4 * nBar);
 
 		double a = 0, b = 0, c = 0, intermediateTerm;
 		for (int thisLocus = 0; thisLocus < nLoci; ++thisLocus) {
@@ -346,8 +346,8 @@ void NeutralStatsManager::calculateFstatWC(set<int> const& patchList, const int 
 		c *= 0.5;
 
 		fst = a / (a + b + c); // theta hat in eq. 1 in WC 1984
-		fis = (a + b) / (a + b + c); // F hat
-		fit = b / (b + c); // f hat
+		fis = b / (b + c); // f hat
+		fit = (a + b) / (a + b + c); // F hat
 	}
 	else { // zero or one sampled pops, cannot compute F stats
 		fst = 0.0;
@@ -621,12 +621,12 @@ void NeutralStatsManager::calcPairwiseWeightedFst(set<int> const& patchList, con
 		double pi, pj;
 		for (int l = 0; l < nLoci; ++l)
 			for (int u = 0; u < nAlleles; ++u)
-				for (int i = 0; i < nPatches - 1; ++i) {
+				for (int i = 0; i < nPatches - 1; ++i) { // nPatches-1 bc bottom row not filled
 					if (popSizes[i] == 0) continue;
 					const auto patch = pLandscape->findPatch(patchVect[i]);
 					const auto pPopI = (Population*)patch->getPopn((intptr)pSpecies);
 
-					for (int j = i + 1; j < nPatches; ++j) {
+					for (int j = i + 1; j < nPatches; ++j) { // fill only upper half of matrix
 						if (popSizes[j] == 0) continue;
 						const auto patch = pLandscape->findPatch(patchVect[j]);
 						const auto pPopJ = (Population*)patch->getPopn((intptr)pSpecies);
