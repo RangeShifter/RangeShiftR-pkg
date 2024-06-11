@@ -1978,13 +1978,13 @@ void Population::outputGeneValues(ofstream& ofsGenes, const int& yr, const int& 
 #if RSDEBUG
 void testPopulation() 
 {
-	/*
 	int resol{ 1 };
 	int nInds{ 10 };
 	Species* pSpecies;
 	Patch* pPatch;
 	Population p;
 	assert(p.getNInds() == 0);
+	/*
 	// disperser disp;
 	// p.extractDisperser
 	short nStages; // 0
@@ -1994,7 +1994,6 @@ void testPopulation()
 	int nInds[NSTAGES][NSEXES]; // undef		// no. of individuals in each stage/sex
 	std::vector <Individual*> inds; // undef // all individuals in population except ...
 	std::vector <Individual*> juvs; // undef
-	cout << "All tests for Population have run." << endl;
 	*/
 }
 #endif // RSDEBUG
