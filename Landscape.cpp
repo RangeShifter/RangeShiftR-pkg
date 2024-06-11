@@ -2668,12 +2668,10 @@ Landscape createLandscapeFromCells(vector<Cell*> cells, const landParams& lp, Sp
 
 void testLandscape() {
 	// test coordinate system
-	/*
 	Landscape ls;
 	landParams ls_params;
 	ls_params.dimX = ls_params.dimY = 100;
-	ls.setLandParams(ls_params, true)
-	*/
+	ls.setLandParams(ls_params, true);
 }
 #endif // RSDEBUG
 
