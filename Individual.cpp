@@ -1606,6 +1606,7 @@ void testIndividual() {
 
 	// Kernel-based transfer
 	{
+		/*
 		// Simple 5*5 cell-based landscape layout
 		landParams ls_params;
 		ls_params.dimX = ls_params.dimY = 5;
@@ -1739,6 +1740,8 @@ void testIndividual() {
 		trfr.stgDep = false;
 		sp.setTrfrRules(trfr);
 
+	
+
 		/* Boundaries: dispersal distance overshoots
 		Only adjacent cells are available
 		-----
@@ -1746,7 +1749,6 @@ void testIndividual() {
 		-oio-
 		-ooo-
 		-----
-		*/
 		ls.setCellArray(); // reset cells
 		vector <Cell*> cells;
 		// Set central cell and all adjacent
@@ -1813,6 +1815,7 @@ void testIndividual() {
 		sp.setTrfrRules(trfr);
 		sp.setMortParams(mort);
 
+		*/
 	}
 
 	// Correlated random walk (CRW)
