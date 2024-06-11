@@ -84,15 +84,6 @@ int _tmain(int argc, _TCHAR* argv[])
 	pRandom = new RSrandom;
 
 	assert(0.1 > 0.0); // assert does run correctly
-	try {
-		run_unit_tests();
-	}
-	catch (const runtime_error& e) {
-		cerr << e.what();
-	}
-	catch (const logic_error& e) {
-		cerr << e.what();
-	}
 	try
 	{
 		run_unit_tests();
