@@ -1881,6 +1881,9 @@ void testIndividual() {
 		ls.updateCarryingCapacity(&sp, 0, 0);
 		Patch* init_patch = (Patch*)init_cell->getPatch();
 
+		ls.printPatches();
+
+
 		// Create and set up individual
 		Individual ind0(init_cell, init_patch, 1, 0, 0, 0.0, true, 2);
 
@@ -1907,6 +1910,7 @@ void testIndividual() {
 			//if (i == 12) assert(cell_vec[i].)
 		}
 
+		cout << endl << "After:" << endl;
 		ls.printPatches();
 
 		assert((Patch*)first_step_cell->getPatch() != init_patch);
