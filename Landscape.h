@@ -455,6 +455,12 @@ public:
 	void resetVisits(void);
 	void outVisits(int, int);	// save SMS path visits map to raster text file
 
+	void printPatches() {
+		for (int x = 0; x < 5; ++x)
+			for (int y = 0; y < 5; ++y)
+				cout << cells[x][y]->getPatch() << endl;
+	}
+
 private:
 	bool generated;				// artificially generated?
 	bool patchModel;			//

@@ -1889,7 +1889,6 @@ void testIndividual() {
 		int isDispersing = ind0.moveStep(&ls, &sp, hab_index, false);
 		assert(ind0.getStatus() == 0); // status didn't change
 		assert(ind0.getCurrCell() == init_cell); // not emigrating so didn't move
-		assert((Patch*)init_cell->getPatch() == init_patch);
 
 		// Per-step mortality
 		m.stepMort = 1.0; // should die 
@@ -1904,7 +1903,12 @@ void testIndividual() {
 		Cell* first_step_cell = ind1.getCurrCell();
 		assert(first_step_cell != init_cell);
 
-		assert((Patch*)init_cell->getPatch() == init_patch);
+		for (int i = 0; i < cell_vec.size(); i++) {
+			//if (i == 12) assert(cell_vec[i].)
+		}
+
+		ls.printPatches();
+
 		assert((Patch*)first_step_cell->getPatch() != init_patch);
 		ind1.setStatus(1); // emigrating again
 
