@@ -1818,7 +1818,7 @@ void testIndividual() {
 
 	// Correlated random walk (CRW)
 	{
-		// Simple cell-based landscape layout
+		// Simple 5*5 cell-based landscape layout
 		landParams ls_params;
 		ls_params.dimX = ls_params.dimY = 5;
 		ls_params.minX = ls_params.minY = 0;
@@ -1846,7 +1846,7 @@ void testIndividual() {
 
 		// Habitat codes
 		sp.createHabK(1);
-		sp.setHabK(hab_index, 100.0); // one habitat with K = 10
+		sp.setHabK(hab_index, 100.0); // one habitat with K = 100
 
 		// Habitat-dependent mortality
 		sp.createHabCostMort(1);
@@ -1889,6 +1889,7 @@ void testIndividual() {
 		int isDispersing = ind0.moveStep(&ls, &sp, hab_index, false);
 		assert(ind0.getStatus() == 0); // status didn't change
 		assert(ind0.getCurrCell() == init_cell); // not emigrating so didn't move
+		assert((Patch*)init_cell->getPatch() == init_patch);
 
 		// Per-step mortality
 		m.stepMort = 1.0; // should die 
@@ -1902,6 +1903,8 @@ void testIndividual() {
 		// Individual should be in a different patch
 		Cell* first_step_cell = ind1.getCurrCell();
 		assert(first_step_cell != init_cell);
+
+		assert((Patch*)init_cell->getPatch() == init_patch);
 		assert((Patch*)first_step_cell->getPatch() != init_patch);
 		ind1.setStatus(1); // emigrating again
 
