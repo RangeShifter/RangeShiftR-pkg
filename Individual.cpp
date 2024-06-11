@@ -38,7 +38,7 @@ Individual::Individual(Cell* pCell, Patch* pPatch, short stg, short a, short rep
 	geneticFitness = 1.0;
 	stage = stg;
 	if (probmale <= 0.0) sex = FEM;
-	else sex = pRandom->Bernoulli(probmale) ? FEM : MAL;
+	else sex = pRandom->Bernoulli(probmale) ? MAL : FEM;
 	age = a;
 	status = 0;
 
@@ -1621,19 +1621,18 @@ void Individual::forceInitCRW(const trfrMovtParams& m) {
 	pCRW->stepL = m.stepLength; pCRW->rho = m.rho;
 	setCRW(pCRW);
 }
-*/
+
 
 void Individual::setInitAngle(const float angle) {
 	crw->prevdrn = angle;
 }
-
-
+*/
 
 void testIndividual() {
 
 	// Kernel-based transfer
 	{
-		// Simple cell-based landscape layout
+		// Simple 5*5 cell-based landscape layout
 		landParams ls_params;
 		ls_params.dimX = ls_params.dimY = 5;
 		ls_params.minX = ls_params.minY = 0;
@@ -1684,24 +1683,22 @@ void testIndividual() {
 		Patch* init_patch = (Patch*)init_cell->getPatch();
 
 		// Create and set up individual
-		//Individual starting_ind(init_cell, init_patch, 1, 0, 0, 0.0, false, 0);
-		// Set aside original individual and test on a copy
-		Individual ind(init_cell, init_patch, 1, 0, 0, 0.0, false, 0);
-		int isDispersing = ind.moveKernel(&ls, &sp, false);
+		Individual ind1(init_cell, init_patch, 1, 0, 0, 0.0, false, 0);
+		int isDispersing = ind1.moveKernel(&ls, &sp, false);
 
 		// After moving, individual should be in the only available cell
-		Cell* curr_cell = ind.getCurrCell();
+		Cell* curr_cell = ind1.getCurrCell();
 		assert(curr_cell != init_cell);
 		assert(curr_cell == final_cell);
-		assert(ind.getStatus() == 2); // potential settler
+		assert(ind1.getStatus() == 2); // potential settler
 
 		// If no cell within reasonable dispersal reach, individual does not move and dies
 		kern.meanDist1 = 1.0; 
 		sp.setSpKernTraits(0, 0, kern, ls_params.resol);
-		ind = Individual(init_cell, init_patch, 1, 0, 0, 0.0, false, 0); // reset individual
-		isDispersing = ind.moveKernel(&ls, &sp, false);
-		curr_cell = ind.getCurrCell();
-		assert(ind.getStatus() == 6); // RIP in peace
+		Individual ind2(init_cell, init_patch, 1, 0, 0, 0.0, false, 0); // reset individual
+		isDispersing = ind2.moveKernel(&ls, &sp, false);
+		curr_cell = ind2.getCurrCell();
+		assert(ind2.getStatus() == 6); // RIP in peace
 		assert(curr_cell == init_cell);
 
 		// Twin kernels
@@ -1711,14 +1708,14 @@ void testIndividual() {
 		kern.meanDist2 = 5.0; // easily reaches suitable cell...
 		kern.probKern1 = 1.0; // ... but never used
 		sp.setSpKernTraits(0, 0, kern, ls_params.resol);
-		ind = Individual(init_cell, init_patch, 1, 0, 0, 0.0, false, 0);
-		isDispersing = ind.moveKernel(&ls, &sp, false);
-		assert(ind.getStatus() == 6);
+		Individual ind3(init_cell, init_patch, 1, 0, 0, 0.0, false, 0);
+		isDispersing = ind3.moveKernel(&ls, &sp, false);
+		assert(ind3.getStatus() == 6); // dead, could not reach destination cell
 		kern.probKern1 = 0.0; // always use second kernel
 		sp.setSpKernTraits(0, 0, kern, ls_params.resol);
-		ind = Individual(init_cell, init_patch, 1, 0, 0, 0.0, false, 0);
-		isDispersing = ind.moveKernel(&ls, &sp, false);
-		assert(ind.getStatus() == 2);
+		Individual ind4(init_cell, init_patch, 1, 0, 0, 0.0, false, 0);
+		isDispersing = ind4.moveKernel(&ls, &sp, false);
+		assert(ind4.getStatus() == 2);
 		// reset
 		trfr.twinKern = false;
 		sp.setTrfrRules(trfr);
@@ -1735,14 +1732,14 @@ void testIndividual() {
 		kern_m.meanDist1 = 5.0; // male easily reaches suitable cell
 		sp.setSpKernTraits(0, 1, kern_m, ls_params.resol);
 
-		ind = Individual(init_cell, init_patch, 1, 0, 0, 0.0, false, 0); // female as default
-		isDispersing = ind.moveKernel(&ls, &sp, false);
-		assert(ind.getStatus() == 6);
+		Individual ind5(init_cell, init_patch, 1, 0, 0, 0.0, false, 0); // female as default
+		isDispersing = ind5.moveKernel(&ls, &sp, false);
+		assert(ind5.getStatus() == 6); // dead, could not reach destination
 
-		ind = Individual(init_cell, init_patch, 1, 0, 0, 1.0, false, 0); // male
-		assert(ind.getSex() == 1);
-		isDispersing = ind.moveKernel(&ls, &sp, false);
-		assert(ind.getStatus() == 2);
+		Individual ind6(init_cell, init_patch, 1, 0, 0, 1.0, false, 0); // male
+		assert(ind6.getSex() == 1);
+		isDispersing = ind6.moveKernel(&ls, &sp, false);
+		assert(ind6.getStatus() == 2);
 		// reset
 		trfr.sexDep = false;
 		sp.setTrfrRules(trfr);
@@ -1757,13 +1754,13 @@ void testIndividual() {
 		kern_adult.meanDist1 = 5.0; // adults easily reach suitable cell
 		sp.setSpKernTraits(1, 0, kern_adult, ls_params.resol);
 
-		ind = Individual(init_cell, init_patch, 0, 0, 0, 0.0, false, 0); // juvenile
-		isDispersing = ind.moveKernel(&ls, &sp, false);
-		assert(ind.getStatus() == 6);
+		Individual ind7(init_cell, init_patch, 0, 0, 0, 0.0, false, 0); // juvenile
+		isDispersing = ind7.moveKernel(&ls, &sp, false);
+		assert(ind7.getStatus() == 6);
 
-		ind = Individual(init_cell, init_patch, 1, 0, 0, 0.0, false, 0); // adult by default
-		isDispersing = ind.moveKernel(&ls, &sp, false);
-		assert(ind.getStatus() == 2);
+		Individual ind8(init_cell, init_patch, 1, 0, 0, 0.0, false, 0); // adult by default
+		isDispersing = ind8.moveKernel(&ls, &sp, false);
+		assert(ind8.getStatus() == 2);
 		// reset
 		trfr.stgDep = false;
 		sp.setTrfrRules(trfr);
@@ -1793,21 +1790,21 @@ void testIndividual() {
 
 		kern.meanDist1 = 10; // overshoots *most* of the time...
 		sp.setSpKernTraits(0, 0, kern, ls_params.resol);
-		ind = Individual(init_cell, init_patch, 1, 0, 0, 0.0, false, 0); // reset individual
+		Individual ind9(init_cell, init_patch, 1, 0, 0, 0.0, false, 0); // reset individual
 
 		// Non-absorbing boundaries
 		bool absorbing_boundaries{ false };
-		isDispersing = ind.moveKernel(&ls, &sp, absorbing_boundaries);
-		curr_cell = ind.getCurrCell();
+		isDispersing = ind9.moveKernel(&ls, &sp, absorbing_boundaries);
+		curr_cell = ind9.getCurrCell();
 		assert(curr_cell != init_cell); // ...should be able to move eventually
-		assert(ind.getStatus() == 2);
+		assert(ind9.getStatus() == 2);
 
 		// Absorbing boundaries
 		absorbing_boundaries = true;
-		ind = Individual(init_cell, init_patch, 1, 0, 0, 0.0, false, 0); // reset individual
-		isDispersing = ind.moveKernel(&ls, &sp, absorbing_boundaries);
-		curr_cell = ind.getCurrCell();
-		assert(ind.getStatus() == 6);
+		Individual ind10(init_cell, init_patch, 1, 0, 0, 0.0, false, 0); // reset individual
+		isDispersing = ind10.moveKernel(&ls, &sp, absorbing_boundaries);
+		curr_cell = ind10.getCurrCell();
+		assert(ind10.getStatus() == 6);
 		assert(curr_cell == 0); // out of the landscape
 
 		// Dispersal-related mortality
@@ -1816,9 +1813,9 @@ void testIndividual() {
 		sp.setMortParams(mort);
 		trfr.distMort = false;
 		sp.setTrfrRules(trfr);
-		ind = Individual(init_cell, init_patch, 1, 0, 0, 0.0, false, 0);
-		isDispersing = ind.moveKernel(&ls, &sp, false);
-		assert(ind.getStatus() == 7);
+		Individual ind11(init_cell, init_patch, 1, 0, 0, 0.0, false, 0);
+		isDispersing = ind11.moveKernel(&ls, &sp, false);
+		assert(ind11.getStatus() == 7);
 		// Distance-dependent mortality
 		trfr.distMort = true;
 		sp.setTrfrRules(trfr);
@@ -1827,14 +1824,14 @@ void testIndividual() {
 		sp.setMortParams(mort);
 		kern.meanDist1 = 5; // very likely to go over threshold
 		sp.setSpKernTraits(0, 0, kern, ls_params.resol);
-		ind = Individual(init_cell, init_patch, 1, 0, 0, 0.0, false, 0);
-		isDispersing = ind.moveKernel(&ls, &sp, false);
-		assert(ind.getStatus() == 7);
+		Individual ind12(init_cell, init_patch, 1, 0, 0, 0.0, false, 0);
+		isDispersing = ind12.moveKernel(&ls, &sp, false);
+		assert(ind12.getStatus() == 7);
 		mort.mortBeta = 30; // very large distance, unlikely to draw
 		sp.setMortParams(mort);
-		ind = Individual(init_cell, init_patch, 1, 0, 0, 0.0, false, 0);
-		isDispersing = ind.moveKernel(&ls, &sp, false);
-		assert(ind.getStatus() != 7);
+		Individual ind13(init_cell, init_patch, 1, 0, 0, 0.0, false, 0);
+		isDispersing = ind13.moveKernel(&ls, &sp, false);
+		assert(ind13.getStatus() != 7);
 
 		// Reset mortality params
 		trfr.distMort = false;
@@ -1842,7 +1839,6 @@ void testIndividual() {
 		sp.setTrfrRules(trfr);
 		sp.setMortParams(mort);
 
-		ind.~Individual();
 	}
 
 	/*
