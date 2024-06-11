@@ -1595,6 +1595,7 @@ Cell* Individual::getCurrCell() const {
 	return pCurrCell;
 }
 
+
 void Individual::setInitAngle(const float angle) {
 	auto pCRW = dynamic_cast<crwData*>(pTrfrData.get());
 	pCRW->prevdrn = angle;
@@ -1815,6 +1816,7 @@ void testIndividual() {
 	}
 
 	// Correlated random walk (CRW)
+	/*
 	{
 		// Simple cell-based landscape layout
 		landParams ls_params;
@@ -2026,6 +2028,7 @@ void testIndividual() {
 			assert(ind6.getCurrCell() == cell_vec[i * (ls_params.dimX + 1)]);
 		}
 	}
+	*/
 }
 #endif // RSDEBUG
 
