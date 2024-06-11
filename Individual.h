@@ -345,10 +345,6 @@ public:
 #if RSDEBUG
 	// Testing utilities
 	Cell* getCurrCell() const;
-	void setPath(pathData* pPath);
-	void setCRW(crwData* pCRW);
-	void forceInitPath();
-	//void forceInitCRW(const trfrMovtTraits&);
 	void setInitAngle(const float angle);
 #endif
 

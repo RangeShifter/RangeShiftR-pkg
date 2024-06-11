@@ -563,7 +563,8 @@ void Individual::setIndCRWTraits(Species* pSpecies) {
 // Get phenotypic transfer by CRW traits
 trfrCRWTraits Individual::getIndCRWTraits(void) {
 
-	trfrCRWTraits c; c.stepLength = c.rho = 0.0;
+	trfrCRWTraits c; 
+	c.stepLength = c.rho = 0.0;
 	if (pTrfrData != 0) {
 		auto& pCRW = dynamic_cast<const crwData&>(*pTrfrData);
 		c.stepLength = pCRW.stepLength;
@@ -1594,39 +1595,11 @@ Cell* Individual::getCurrCell() const {
 	return pCurrCell;
 }
 
-void Individual::setPath(pathData* pPath) {
-	path = pPath;
-}
-
-void Individual::setCRW(crwData* pCRW) {
-	pTrfrData = make_unique<crwData>(pCRW->prevdrn, pCRW->xc, pCRW->yc);
-}
-
-// TP: Both functions below are a bad fix to an issue I have for testing
-// Smh upon exiting individual initialisation path and CRW get deallocated
-// Force initialisation of path
-void Individual::forceInitPath() {
-	pathData* pPath = new pathData;
-	pPath->out = pPath->year = pPath->total = 0;
-	pPath->pSettPatch = 0; pPath->settleStatus = 0;
-	setPath(pPath);
-}
-// Force initialisation of crw
-/*
-void Individual::forceInitCRW(const trfrMovtParams& m) {
-	float prevdrn = (float)(pRandom->Random() * 2.0 * PI);
-	float xc = ((float)pRandom->Random() * 0.999f) + (float)pCurrCell->getLocn().x;
-	float yc = ((float)pRandom->Random() * 0.999f) + (float)pCurrCell->getLocn().y;
-	std::unique_ptr<trfrData> pCRW = make_unique<crwData>(prevdrn, xc, yc);
-	pCRW->stepL = m.stepLength; pCRW->rho = m.rho;
-	setCRW(pCRW);
-}
-
-
 void Individual::setInitAngle(const float angle) {
-	crw->prevdrn = angle;
+	auto pCRW = dynamic_cast<crwData*>(pTrfrData.get());
+	pCRW->prevdrn = angle;
 }
-*/
+
 
 void testIndividual() {
 
@@ -1841,7 +1814,6 @@ void testIndividual() {
 
 	}
 
-	/*
 	// Correlated random walk (CRW)
 	{
 		// Simple cell-based landscape layout
@@ -1908,35 +1880,33 @@ void testIndividual() {
 		Patch* init_patch = (Patch*)init_cell->getPatch();
 
 		// Create and set up individual
-		Individual ind(init_cell, init_patch, 1, 0, 0, 0.0, true, 2);
+		Individual ind0(init_cell, init_patch, 1, 0, 0, 0.0, true, 2);
 
 		// Set status
-		assert(ind.getStatus() == 0); // default status, not emigrating
-		int isDispersing = ind.moveStep(&ls, &sp, hab_index, false);
-		assert(ind.getStatus() == 0); // status didn't change
-		assert(ind.getCurrCell() == init_cell); // not emigrating so didn't move
+		assert(ind0.getStatus() == 0); // default status, not emigrating
+		int isDispersing = ind0.moveStep(&ls, &sp, hab_index, false);
+		assert(ind0.getStatus() == 0); // status didn't change
+		assert(ind0.getCurrCell() == init_cell); // not emigrating so didn't move
 
 		// Per-step mortality
 		m.stepMort = 1.0; // should die 
 		sp.setSpMovtTraits(m);
-		ind = Individual(init_cell, init_patch, 0, 0, 0, 0.0, true, 2);
+		Individual ind1(init_cell, init_patch, 0, 0, 0, 0.0, true, 2);
 		// force set path bc for some reason path gets deallocated upon exiting constructor??
-		ind.forceInitPath();
-		ind.forceInitCRW(m);
-		ind.setStatus(1);
-		isDispersing = ind.moveStep(&ls, &sp, hab_index, false);
+		ind1.setStatus(1);
+		isDispersing = ind1.moveStep(&ls, &sp, hab_index, false);
 		// Individual begins in natal patch so mortality is disabled
-		assert(ind.getStatus() != 7);
+		assert(ind1.getStatus() != 7);
 		// Individual should be in a different patch
-		Cell* first_step_cell = ind.getCurrCell();
+		Cell* first_step_cell = ind1.getCurrCell();
 		assert(first_step_cell != init_cell);
 		assert((Patch*)first_step_cell->getPatch() != init_patch);
-		ind.setStatus(1); // emigrating again
+		ind1.setStatus(1); // emigrating again
 
 		// Individual should die on second step
-		isDispersing = ind.moveStep(&ls, &sp, hab_index, false);
-		assert(ind.getCurrCell() == first_step_cell); // shouldn't have moved
-		assert(ind.getStatus() == 7); // died by transfer
+		isDispersing = ind1.moveStep(&ls, &sp, hab_index, false);
+		assert(ind1.getCurrCell() == first_step_cell); // shouldn't have moved
+		assert(ind1.getStatus() == 7); // died by transfer
 		m.stepMort = 0.0; // not dying
 		sp.setSpMovtTraits(m);
 
@@ -1973,60 +1943,52 @@ void testIndividual() {
 		steps.maxStepsYr = 2;
 		steps.maxSteps = 3;
 		sp.setSteps(0, 0, steps);
-		ind = Individual(init_cell, natalPatch, 0, 0, 0, 0.0, true, 2);
-		ind.setStatus(1); // dispersing
-		ind.forceInitPath();
-		ind.forceInitCRW(m);
+		Individual ind2(init_cell, natalPatch, 0, 0, 0, 0.0, true, 2);
+		ind2.setStatus(1); // dispersing
 		// First step - still in unsuitable cell so still dispersing
-		isDispersing = ind.moveStep(&ls, &sp, hab_index, false);
-		assert(ind.getCurrCell() == init_cell);
-		assert(ind.getStatus() == 1);
+		isDispersing = ind2.moveStep(&ls, &sp, hab_index, false);
+		assert(ind2.getCurrCell() == init_cell);
+		assert(ind2.getStatus() == 1);
 		// Second step - reaching max steps this year, wait next year
-		isDispersing = ind.moveStep(&ls, &sp, hab_index, false);
-		assert(ind.getCurrCell() == init_cell);
-		assert(ind.getStatus() == 3);
-		ind.setStatus(1); // dispersing again
+		isDispersing = ind2.moveStep(&ls, &sp, hab_index, false);
+		assert(ind2.getCurrCell() == init_cell);
+		assert(ind2.getStatus() == 3);
+		ind2.setStatus(1); // dispersing again
 		// Third step - reaching max steps, dies in unsuitable cell
-		isDispersing = ind.moveStep(&ls, &sp, hab_index, false);
-		assert(ind.getCurrCell() == init_cell);
-		assert(ind.getStatus() == 6);
+		isDispersing = ind2.moveStep(&ls, &sp, hab_index, false);
+		assert(ind2.getCurrCell() == init_cell);
+		assert(ind2.getStatus() == 6);
 
 		// Step length too long
 		m.stepLength = ls_params.dimX * SQRT2 * 1.5; // overshoots
 		sp.setSpMovtTraits(m);
-		ind = Individual(init_cell, init_patch, 0, 0, 0, 0.0, true, 2);
-		ind.setStatus(1); // dispersing
-		ind.forceInitPath();
-		ind.forceInitCRW(m);
+		Individual ind3(init_cell, init_patch, 0, 0, 0, 0.0, true, 2);
+		ind3.setStatus(1); // dispersing
 		steps.minSteps = 1;
 		steps.maxStepsYr = 1;
 		steps.maxSteps = 1; // no need to test more than one step this time
 		sp.setSteps(0, 0, steps);
-		isDispersing = ind.moveStep(&ls, &sp, hab_index, false);
-		assert(ind.getCurrCell() == init_cell);
-		assert(ind.getStatus() == 6);
+		isDispersing = ind3.moveStep(&ls, &sp, hab_index, false);
+		assert(ind3.getCurrCell() == init_cell);
+		assert(ind3.getStatus() == 6);
 
 		// Adequate step length
 		m.stepLength = (ls_params.dimX - 1) * SQRT2;
 		sp.setSpMovtTraits(m);
-		ind = Individual(init_cell, natalPatch, 0, 0, 0, 0.0, true, 2);
-		ind.setStatus(1); // dispersing
-		ind.forceInitPath();
-		ind.forceInitCRW(m);
+		Individual ind4(init_cell, natalPatch, 0, 0, 0, 0.0, true, 2);
+		ind4.setStatus(1); // dispersing
 		// Initial angle still random but should eventually reach the suitable cell
-		isDispersing = ind.moveStep(&ls, &sp, hab_index, false);
-		assert(ind.getStatus() == 2);
-		assert(ind.getCurrCell() == final_cell);
+		isDispersing = ind4.moveStep(&ls, &sp, hab_index, false);
+		assert(ind4.getStatus() == 2);
+		assert(ind4.getCurrCell() == final_cell);
 
 		// If boundaries are absorbing however, most likely to die
-		ind = Individual(init_cell, natalPatch, 0, 0, 0, 0.0, true, 2);
-		ind.setStatus(1); // dispersing
-		ind.forceInitPath();
-		ind.forceInitCRW(m);
+		Individual ind5(init_cell, natalPatch, 0, 0, 0, 0.0, true, 2);
+		ind5.setStatus(1); // dispersing
 		bool absorbing_boundaries = true;
-		isDispersing = ind.moveStep(&ls, &sp, hab_index, absorbing_boundaries);
-		assert(ind.getStatus() == 6);
-		assert(ind.getCurrCell() == 0); // deref apparently
+		isDispersing = ind5.moveStep(&ls, &sp, hab_index, absorbing_boundaries);
+		assert(ind5.getStatus() == 6);
+		assert(ind5.getCurrCell() == 0); // deref apparently
 
 		// Correlation parameter
 		// If rho = 1 should move in a straight line
@@ -2053,20 +2015,17 @@ void testIndividual() {
 		sp.setSpMovtTraits(m);
 		steps.maxStepsYr = steps.maxSteps = ls_params.dimX;
 		sp.setSteps(0, 0, steps);
-		ind = Individual(cell_vec[0], natalPatch, 0, 0, 0, 0.0, true, 2);
-		ind.forceInitPath();
-		ind.forceInitCRW(m);
+		Individual ind6(cell_vec[0], natalPatch, 0, 0, 0, 0.0, true, 2);
 		const float diag_angle = PI / 4.0; // 45 degrees
-		ind.setInitAngle(diag_angle);
+		ind6.setInitAngle(diag_angle);
 		// Individual moves only along diagonal cells
 		for (int i = 1; i < ls_params.dimX; ++i) {
-			ind.setStatus(1); // dispersing
-			isDispersing = ind.moveStep(&ls, &sp, hab_index, false);
-			assert(ind.getStatus() == 2);
-			assert(ind.getCurrCell() == cell_vec[i * (ls_params.dimX + 1)]);
+			ind6.setStatus(1); // dispersing
+			isDispersing = ind6.moveStep(&ls, &sp, hab_index, false);
+			assert(ind6.getStatus() == 2);
+			assert(ind6.getCurrCell() == cell_vec[i * (ls_params.dimX + 1)]);
 		}
 	}
-	*/
 }
 #endif // RSDEBUG
 
