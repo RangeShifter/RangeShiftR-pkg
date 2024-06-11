@@ -1606,7 +1606,6 @@ void testIndividual() {
 
 	// Kernel-based transfer
 	{
-		/*
 		// Simple 5*5 cell-based landscape layout
 		landParams ls_params;
 		ls_params.dimX = ls_params.dimY = 5;
@@ -1749,6 +1748,7 @@ void testIndividual() {
 		-oio-
 		-ooo-
 		-----
+		*/
 		ls.setCellArray(); // reset cells
 		vector <Cell*> cells;
 		// Set central cell and all adjacent
@@ -1814,12 +1814,9 @@ void testIndividual() {
 		mort.fixedMort = 0.0;
 		sp.setTrfrRules(trfr);
 		sp.setMortParams(mort);
-
-		*/
 	}
 
 	// Correlated random walk (CRW)
-	/*
 	{
 		// Simple cell-based landscape layout
 		landParams ls_params;
@@ -2031,7 +2028,6 @@ void testIndividual() {
 			assert(ind6.getCurrCell() == cell_vec[i * (ls_params.dimX + 1)]);
 		}
 	}
-	*/
 }
 #endif // RSDEBUG
 
