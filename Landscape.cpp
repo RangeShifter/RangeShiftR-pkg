@@ -645,6 +645,8 @@ void Landscape::allocatePatches(Species* pSpecies, const bool& showMe)
 	Patch* pPatch;
 	Cell* pCell;
 
+	if (showMe) cout << "we are allocating patches.\n";
+
 	// delete all existing patches
 	int npatches = (int)patches.size();
 	for (int i = 0; i < npatches; i++) {
@@ -660,6 +662,7 @@ void Landscape::allocatePatches(Species* pSpecies, const bool& showMe)
 	switch (rasterType) {
 
 	case 0: // habitat codes
+		if (showMe) cout << "we using habitat codes.\n";
 		for (int y = dimY - 1; y >= 0; y--) {
 			for (int x = 0; x < dimX; x++) {
 				if (cells[y][x] != 0) { // not no-data cell
@@ -682,11 +685,15 @@ void Landscape::allocatePatches(Species* pSpecies, const bool& showMe)
 						pPatch = 0;
 					}
 				}
+				else {
+					if (showMe) cout << "this cell is empty\n";
+				}
 				if (showMe) cout << endl;
 			}
 		}
 		break;
 	case 1: // habitat cover
+		if (showMe) cout << "we using habitat cover.\n";
 		for (int y = dimY - 1; y >= 0; y--) {
 			for (int x = 0; x < dimX; x++) {
 				if (cells[y][x] != 0) { // not no-data cell
@@ -711,6 +718,7 @@ void Landscape::allocatePatches(Species* pSpecies, const bool& showMe)
 		}
 		break;
 	case 2: // habitat quality
+		if (showMe) cout << "we using habitat quality.\n";
 		for (int y = dimY - 1; y >= 0; y--) {
 			for (int x = 0; x < dimX; x++) {
 				if (cells[y][x] != 0) { // not no-data cell
