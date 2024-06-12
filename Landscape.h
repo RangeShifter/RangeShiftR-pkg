@@ -232,7 +232,7 @@ public:
 	void addPatchNum(int);
 	std::vector<int> getPatchNums() const { return patchnums; }
 	void generatePatches(); 		// create an artificial landscape
-	void allocatePatches(Species*, const bool& showMe = false);	// create patches for a cell-based landscape
+	void allocatePatches(Species*);	// create patches for a cell-based landscape
 	Patch* newPatch(
 		int		// patch sequential no. (id no. is set to equal sequential no.)
 	);
@@ -455,12 +455,6 @@ public:
 	void resetVisits(void);
 	void outVisits(int, int);	// save SMS path visits map to raster text file
 
-	void printPatches() {
-		for (int x = 0; x < 5; ++x)
-			for (int y = 0; y < 5; ++y)
-				cout << cells[x][y]->getPatch() << endl;
-	}
-
 private:
 	bool generated;				// artificially generated?
 	bool patchModel;			//
@@ -538,6 +532,7 @@ extern RSrandom* pRandom;
 
 #if RSDEBUG
 extern ofstream DEBUGLOG;
+landParams createDefaultLandParams(const int& dim);
 void testLandscape();
 #endif
 

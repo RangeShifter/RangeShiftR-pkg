@@ -1607,11 +1607,8 @@ void testIndividual() {
 	// Kernel-based transfer
 	{
 		// Simple 5*5 cell-based landscape layout
-		landParams ls_params;
-		ls_params.dimX = ls_params.dimY = 5;
-		ls_params.minX = ls_params.minY = 0;
-		ls_params.maxX = ls_params.maxY = ls_params.dimX - 1;
-		ls_params.resol = 1;
+		int lsDim = 5;
+		landParams ls_params = createDefaultLandParams(lsDim);
 
 		Landscape ls;
 		ls.setLandParams(ls_params, true);
@@ -1739,8 +1736,6 @@ void testIndividual() {
 		trfr.stgDep = false;
 		sp.setTrfrRules(trfr);
 
-	
-
 		/* Boundaries: dispersal distance overshoots
 		Only adjacent cells are available
 		-----
@@ -1819,12 +1814,8 @@ void testIndividual() {
 	// Correlated random walk (CRW)
 	{
 		// Simple 5*5 cell-based landscape layout
-		landParams ls_params;
-		ls_params.dimX = ls_params.dimY = 5;
-		ls_params.minX = ls_params.minY = 0;
-		ls_params.maxX = ls_params.maxY = ls_params.dimX - 1;
-		ls_params.resol = 1;
-		ls_params.rasterType = 0;
+		int lsDim = 5;
+		landParams ls_params = createDefaultLandParams(lsDim);
 		double cellDiagLength = ls_params.resol * SQRT2;
 
 		Landscape ls;
@@ -1878,11 +1869,9 @@ void testIndividual() {
 		sp.setSteps(0, 0, steps);
 
 		// Set up patches
-		ls.allocatePatches(&sp, true);
+		ls.allocatePatches(&sp);
 		ls.updateCarryingCapacity(&sp, 0, 0);
 		Patch* init_patch = (Patch*)init_cell->getPatch();
-
-		ls.printPatches();
 
 		// Create and set up individual
 		Individual ind0(init_cell, init_patch, 1, 0, 0, 0.0, true, 2);
@@ -1999,10 +1988,8 @@ void testIndividual() {
 		// Correlation parameter
 		// If rho = 1 should move in a straight line
 		// Many cells, all suitable
-		ls_params.dimX = ls_params.dimY = 10;
-		ls_params.minX = ls_params.minY = 0;
-		ls_params.maxX = ls_params.maxY = ls_params.dimX - 1;
-		ls_params.resol = 1;
+		lsDim = 10;
+		ls_params = createDefaultLandParams(lsDim);
 		ls = Landscape();
 		ls.setLandParams(ls_params, true);
 		cell_vec.clear();

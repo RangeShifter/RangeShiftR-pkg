@@ -639,13 +639,11 @@ void Landscape::generatePatches()
 //---------------------------------------------------------------------------
 /* Create a patch for each suitable cell of a cell-based landscape (all other
 habitat cells are added to the matrix patch) */
-void Landscape::allocatePatches(Species* pSpecies, const bool& showMe)
+void Landscape::allocatePatches(Species* pSpecies)
 {
 	float habK;
 	Patch* pPatch;
 	Cell* pCell;
-
-	if (showMe) cout << "we are allocating patches.\n";
 
 	// delete all existing patches
 	int npatches = (int)patches.size();
@@ -662,7 +660,6 @@ void Landscape::allocatePatches(Species* pSpecies, const bool& showMe)
 	switch (rasterType) {
 
 	case 0: // habitat codes
-		if (showMe) cout << "we using habitat codes.\n";
 		for (int y = dimY - 1; y >= 0; y--) {
 			for (int x = 0; x < dimX; x++) {
 				if (cells[y][x] != 0) { // not no-data cell
@@ -672,28 +669,20 @@ void Landscape::allocatePatches(Species* pSpecies, const bool& showMe)
 					for (int i = 0; i < nhab; i++) {
 						habK += pSpecies->getHabK(pCell->getHabIndex(i));
 					}
-					if (showMe) cout << "K = " << habK << "\t";
 					if (habK > 0.0) { // cell is suitable - create a patch for it
 						patchnums.push_back(patchnum);
 						pPatch = newPatch(patchnum++);
-						if (showMe) cout << "pPatch = " << pPatch << "\t";
 						addCellToPatch(pCell, pPatch);
 					}
 					else { // cell is not suitable - add to the matrix patch
-						if (showMe) cout << "matrixPatch = " << matrixPatch << "\t";
 						addCellToPatch(pCell, matrixPatch);
 						pPatch = 0;
 					}
 				}
-				else {
-					if (showMe) cout << "this cell is empty\n";
-				}
-				if (showMe) cout << endl;
 			}
 		}
 		break;
 	case 1: // habitat cover
-		if (showMe) cout << "we using habitat cover.\n";
 		for (int y = dimY - 1; y >= 0; y--) {
 			for (int x = 0; x < dimX; x++) {
 				if (cells[y][x] != 0) { // not no-data cell
@@ -718,7 +707,6 @@ void Landscape::allocatePatches(Species* pSpecies, const bool& showMe)
 		}
 		break;
 	case 2: // habitat quality
-		if (showMe) cout << "we using habitat quality.\n";
 		for (int y = dimY - 1; y >= 0; y--) {
 			for (int x = 0; x < dimX; x++) {
 				if (cells[y][x] != 0) { // not no-data cell
@@ -2676,6 +2664,24 @@ Landscape createLandscapeFromCells(vector<Cell*> cells, const landParams& lp, Sp
 	}
 	ls.allocatePatches(&sp);
 	return ls;
+}
+
+landParams createDefaultLandParams(const int& dim) {
+
+	landParams ls_params;
+	ls_params.dimX = ls_params.dimY = dim;
+	ls_params.minX = ls_params.minY = 0;
+	ls_params.maxX = ls_params.maxY = ls_params.dimX - 1;
+	ls_params.resol = ls_params.spResol = 1;
+	ls_params.rasterType = 0; // habitat types
+ 
+	ls_params.patchModel = false;
+	ls_params.spDist = false;
+	ls_params.generated = false;
+	ls_params.dynamic = false;
+	ls_params.landNum = 0;
+	ls_params.nHab = ls_params.nHabMax = 0; // irrelevant for habitat codes 
+	return ls_params;
 }
 
 void testLandscape() {
