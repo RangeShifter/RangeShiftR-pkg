@@ -1824,6 +1824,7 @@ void testIndividual() {
 		ls_params.minX = ls_params.minY = 0;
 		ls_params.maxX = ls_params.maxY = ls_params.dimX - 1;
 		ls_params.resol = 1;
+		ls_params.rasterType = 0;
 		double cellDiagLength = ls_params.resol * SQRT2;
 
 		Landscape ls;
