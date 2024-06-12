@@ -1877,12 +1877,11 @@ void testIndividual() {
 		sp.setSteps(0, 0, steps);
 
 		// Set up patches
-		ls.allocatePatches(&sp);
+		ls.allocatePatches(&sp, true);
 		ls.updateCarryingCapacity(&sp, 0, 0);
 		Patch* init_patch = (Patch*)init_cell->getPatch();
 
 		ls.printPatches();
-
 
 		// Create and set up individual
 		Individual ind0(init_cell, init_patch, 1, 0, 0, 0.0, true, 2);
@@ -1905,13 +1904,6 @@ void testIndividual() {
 		// Individual should be in a different patch
 		Cell* first_step_cell = ind1.getCurrCell();
 		assert(first_step_cell != init_cell);
-
-		for (int i = 0; i < cell_vec.size(); i++) {
-			//if (i == 12) assert(cell_vec[i].)
-		}
-
-		cout << endl << "After:" << endl;
-		ls.printPatches();
 
 		assert((Patch*)first_step_cell->getPatch() != init_patch);
 		ind1.setStatus(1); // emigrating again

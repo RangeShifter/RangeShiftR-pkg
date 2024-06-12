@@ -232,7 +232,7 @@ public:
 	void addPatchNum(int);
 	std::vector<int> getPatchNums() const { return patchnums; }
 	void generatePatches(); 		// create an artificial landscape
-	void allocatePatches(Species*);	// create patches for a cell-based landscape
+	void allocatePatches(Species*, const bool& showMe = false);	// create patches for a cell-based landscape
 	Patch* newPatch(
 		int		// patch sequential no. (id no. is set to equal sequential no.)
 	);

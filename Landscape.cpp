@@ -639,7 +639,7 @@ void Landscape::generatePatches()
 //---------------------------------------------------------------------------
 /* Create a patch for each suitable cell of a cell-based landscape (all other
 habitat cells are added to the matrix patch) */
-void Landscape::allocatePatches(Species* pSpecies)
+void Landscape::allocatePatches(Species* pSpecies, const bool& showMe)
 {
 	float habK;
 	Patch* pPatch;
@@ -669,16 +669,20 @@ void Landscape::allocatePatches(Species* pSpecies)
 					for (int i = 0; i < nhab; i++) {
 						habK += pSpecies->getHabK(pCell->getHabIndex(i));
 					}
+					if (showMe) cout << "K = " << habK << "\t";
 					if (habK > 0.0) { // cell is suitable - create a patch for it
 						patchnums.push_back(patchnum);
 						pPatch = newPatch(patchnum++);
+						if (showMe) cout << "pPatch = " << pPatch << "\t";
 						addCellToPatch(pCell, pPatch);
 					}
 					else { // cell is not suitable - add to the matrix patch
+						if (showMe) cout << "matrixPatch = " << matrixPatch << "\t";
 						addCellToPatch(pCell, matrixPatch);
 						pPatch = 0;
 					}
 				}
+				if (showMe) cout << endl;
 			}
 		}
 		break;
