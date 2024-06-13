@@ -9,7 +9,7 @@ SpeciesTrait::SpeciesTrait(
 	const DistributionType& dominanceDist, const map<GenParamType, float> dominanceParams,
 	bool isInherited, const float& mutRate,
 	const DistributionType& mutationDist, const map<GenParamType, float> mutationParams,
-	Species* pSpecies) :
+	const int nPloidy) :
 	traitType{ trType },
 	sex{ sx },
 	genePositions{ pos },
@@ -21,11 +21,9 @@ SpeciesTrait::SpeciesTrait(
 	inherited{ isInherited },
 	mutationDistribution{ mutationDist },
 	mutationParameters{ mutationParams },
-	mutationRate{ mutRate }
+	mutationRate{ mutRate },
+	ploidy{ nPloidy }
 {
-	// Initialise ploidy only once per species
-	if (ploidy == NULL) this->ploidy = pSpecies->isDiploid() ? 2 : 1;
-
 	// Check distribution parameters
 	// Initial distribution
 	for (auto [paramType, paramVal] : initParams) {

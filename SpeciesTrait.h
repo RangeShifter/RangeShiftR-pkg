@@ -28,7 +28,7 @@ public:
         const float& mutationRate,
         const DistributionType& mutationDist,
         const map<GenParamType, float> mutationParams,
-        Species* pSpecies
+        const int ploidy
     );
 
     bool isValidTraitVal(const float& val) const;
@@ -52,7 +52,7 @@ public:
 
 private:
 
-    inline static int ploidy = 0;
+    int ploidy;
     float mutationRate;
     TraitType traitType;
     sex_t sex;
