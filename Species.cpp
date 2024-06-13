@@ -30,12 +30,21 @@ Species::Species(void)
 	// initialise demographic parameters
 	repType = 0; nStages = 2;
 	stageStruct = false;
-	propMales = 0.5; harem = 1.0; bc = 1.0; lambda = 1.5; probRep = 1.0;
+	propMales = 0.5; 
+	harem = 1.0; 
+	bc = 1.0; 
+	lambda = 1.5; 
+	probRep = 1.0;
 	repSeasons = 1;
-	repInterval = 0; maxAge = 1000; survival = 1;
-	fecDens = false; fecStageDens = false;
-	devDens = false; devStageDens = false;
-	survDens = false; survStageDens = false;
+	repInterval = 0; 
+	maxAge = 1000; 
+	survival = 1;
+	fecDens = false; 
+	fecStageDens = false;
+	devDens = false; 
+	devStageDens = false;
+	survDens = false; 
+	survStageDens = false;
 	disperseOnLoss = false;
 	for (int i = 0; i < gMaxNbStages; i++) {
 		for (int j = 0; j < gMaxNbSexes; j++) {
@@ -44,10 +53,12 @@ Species::Species(void)
 		}
 	}
 	devCoeff = survCoeff = 1.0;
-	ddwtFec = ddwtDev = ddwtSurv = 0; ddwtFecDim = ddwtDevDim = ddwtSurvDim = 0;
-	habK = 0; habDimK = 0;
-	minRK = 1.0; maxRK = 2.0;
-
+	ddwtFec = ddwtDev = ddwtSurv = 0; 
+	ddwtFecDim = ddwtDevDim = ddwtSurvDim = 0;
+	habK = 0; 
+	habDimK = 0;
+	minRK = 1.0; 
+	maxRK = 2.0;
 
 	// initialise emigration parameters
 	densDepEmig = false; stgDepEmig = false; sexDepEmig = false; indVarEmig = false;
