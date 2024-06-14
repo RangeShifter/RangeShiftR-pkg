@@ -105,8 +105,11 @@ DispersalTrait::DispersalTrait(SpeciesTrait* P)
 // Copies immutable features from a parent trait
 // Only called via clone()
 // ----------------------------------------------------------------------------------------
-DispersalTrait::DispersalTrait(const DispersalTrait& T) : pSpeciesTrait(T.pSpeciesTrait), _mutate_func_ptr(T._mutate_func_ptr), _inherit_func_ptr(T._inherit_func_ptr), _express_func_ptr(T._express_func_ptr)
-{}
+DispersalTrait::DispersalTrait(const DispersalTrait& T) : 
+	pSpeciesTrait(T.pSpeciesTrait), 
+	_mutate_func_ptr(T._mutate_func_ptr), 
+	_inherit_func_ptr(T._inherit_func_ptr), 
+	_express_func_ptr(T._express_func_ptr) {}
 
 // ----------------------------------------------------------------------------------------
 // Sample and apply mutations from a uniform distribution

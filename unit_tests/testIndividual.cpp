@@ -418,41 +418,39 @@ void testTransferCRW() {
 
 void testGenetics() {
 
-	
-	
 	const int genomeSz = 6; // arbitrary
-	const set<int> pos{}; 
+	set<int> pos;
+	for (int i = 0; i < genomeSz; i++) pos.insert(i);
 
+	const map<GenParamType, float> distParams{
+		pair<GenParamType, float>{GenParamType::MIN, 0.0},
+		pair<GenParamType, float>{GenParamType::MAX, 1.0}
+	};
 
-	SpeciesTrait spTr(
-		TraitType::E_D0,
-		sex_t::NA,
-		
-		)
-
-		SpeciesTrait(
-			const TraitType & traitType,
-			const sex_t & sex,
-			const set<int>&pos,
-			const ExpressionType & expr,
-			const DistributionType & initDist,
-			const map<GenParamType, float> initParams,
-			const DistributionType & dominanceDist,
-			const map<GenParamType, float> dominanceParams,
-			bool isInherited,
-			const float& mutationRate,
-			const DistributionType & mutationDist,
-			const map<GenParamType, float> mutationParams,
-			const int ploidy
+	SpeciesTrait* spTr = new SpeciesTrait(
+			TraitType::E_D0,
+			sex_t::NA,
+			pos,
+			ExpressionType::ADDITIVE,
+			DistributionType::UNIFORM,
+			distParams,
+			DistributionType::NONE,
+			distParams,
+			true, //isInherited
+			0.0,
+			DistributionType::UNIFORM,
+			distParams,
+			2
 		);
+	DispersalTrait dispTrParent(spTr);
+	DispersalTrait dispTrChild(dispTrParent);
 
 	const bool fromMother{ true };
-	const int parentChr{ strandA };
+	const int parentChr{ 0 };
 	const float valA(1.0);
 	const float valB(0.0);
 	const float domCoef(0.0);
 	vector<shared_ptr<Allele>> gene;
-
 	map<int, vector<shared_ptr<Allele>>> parentGenes;
 	for (int i = 0; i < genomeSz; i++) {
 		gene = { make_shared<Allele>(valA, domCoef), make_shared<Allele>(valB, domCoef) };
@@ -460,8 +458,9 @@ void testGenetics() {
 	}
 
 	const set<unsigned int> recomPositions{ 3 };
-	trait.inheritDiploid(fromMother, parentGenes, recomPositions, parentChr);
+	dispTrChild.triggerInherit(fromMother, parentGenes, recomPositions, parentChr);
 }
+
 void testIndividual() {
 
 	// Kernel-based transfer
