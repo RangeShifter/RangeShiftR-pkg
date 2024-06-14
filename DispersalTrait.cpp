@@ -210,6 +210,7 @@ void DispersalTrait::inheritGenes(const bool& fromMother, QuantitativeTrait* par
 // ----------------------------------------------------------------------------------------
 void DispersalTrait::inheritDiploid(const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome) {
 
+	const int lastPosition = parentGenes.rbegin()->first;
 	auto it = recomPositions.lower_bound(parentGenes.begin()->first);
 	int nextBreakpoint = *it;
 	// Is the first parent gene position already recombinant?
@@ -223,7 +224,13 @@ void DispersalTrait::inheritDiploid(const bool& fromMother, map<int, vector<shar
 		while (locus > nextBreakpoint) {
 			parentChromosome = 1 - parentChromosome;
 			std::advance(it, 1); // go to next recombination site
-			nextBreakpoint = *it;
+			if (it == recomPositions.end()) {
+				// no more recombinations
+				nextBreakpoint = lastPosition; 
+			}
+			else {
+				nextBreakpoint = *it;
+			}
 		}
 
 		if (locus <= nextBreakpoint) {
