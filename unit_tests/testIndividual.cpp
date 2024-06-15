@@ -419,59 +419,65 @@ void testTransferCRW() {
 void testGenetics() {
 
 	// Recombination occurs just after recombination site
-	const int genomeSz = 6; // arbitrary
-	set<int> pos;
-	for (int i = 0; i < genomeSz; i++) pos.insert(i);
+	{
 
-	const map<GenParamType, float> distParams{
-		pair<GenParamType, float>{GenParamType::MIN, 0.0},
-		pair<GenParamType, float>{GenParamType::MAX, 1.0}
-	};
+		const int genomeSz = 6;
+		set<int> genePositions; for (int i = 0; i < genomeSz; i++) genePositions.insert(i);
 
-	SpeciesTrait* spTr = new SpeciesTrait(
+		// Create species trait
+		const map<GenParamType, float> distParams{
+			pair<GenParamType, float>{GenParamType::MIN, 0.0},
+			pair<GenParamType, float>{GenParamType::MAX, 1.0}
+		};
+		SpeciesTrait* spTr = new SpeciesTrait(
 			TraitType::E_D0,
 			sex_t::NA,
-			pos,
+			genePositions,
 			ExpressionType::ADDITIVE,
 			DistributionType::UNIFORM,
 			distParams,
-			DistributionType::NONE,
+			DistributionType::NONE, // no dominance
 			distParams,
-			true, //isInherited
+			true, // isInherited
 			0.0,
 			DistributionType::UNIFORM,
 			distParams,
-			2
+			2 // ploidy
 		);
-	DispersalTrait dispTrParent(spTr);
-	DispersalTrait dispTrChild(dispTrParent);
 
-	const int startingChr{ 0 }; // Chromosome A
-	const float valChrA(0.0);
-	const float valChrB(1.0);
-	const float domCoef(0.0); // no dominance for dispersal traits
-	vector<shared_ptr<Allele>> gene;
-	map<int, vector<shared_ptr<Allele>>> motherGenes;
-	for (int i = 0; i < genomeSz; i++) {
-		// Mother genotype is
-		// 000000
-		// 111111
-		gene = { 
-			make_shared<Allele>(valChrA, domCoef), 
-			make_shared<Allele>(valChrB, domCoef) 
-		};
-		motherGenes.emplace(i, gene);
-	}
-	const int recombinationSite{ 3 };
-	// Trigger inheritance from mother
-	dispTrChild.triggerInherit(true, motherGenes, set<unsigned int>{recombinationSite}, startingChr);
-	// for this test we ignore inheritance from father
+		// Create individual trait objects
+		DispersalTrait dispTrParent(spTr); // initialisation constructor
+		DispersalTrait dispTrChild(dispTrParent); // inheritance constructor
 
-	float valMotherChr;
-	for (int i = 0; i < genomeSz; i++) {
-		valMotherChr = dispTrChild.getAlleleValueAtLocus(0, i);
-		assert(valMotherChr == (i <= recombinationSite ? valChrA : valChrB));
-		// don't check other chromosome, empty bc we did not resolve father inheritance 
+		// Fill mother gene sequence
+		const float valChrA(0.0), valChrB(1.0);
+		const float domCoef(0.0); // no dominance for dispersal traits
+		vector<shared_ptr<Allele>> gene;
+		map<int, vector<shared_ptr<Allele>>> motherGenes;
+		for (int i = 0; i < genomeSz; i++) {
+			// Mother genotype:
+			// 000000
+			// 111111
+			gene = {
+				make_shared<Allele>(valChrA, domCoef),
+				make_shared<Allele>(valChrB, domCoef)
+			};
+			motherGenes.emplace(i, gene);
+		}
+
+		// Trigger inheritance from mother
+		const int recombinationSite{3};
+		const int startingChr{0}; // Chromosome A
+		dispTrChild.triggerInherit(true, motherGenes, set<unsigned int>{recombinationSite}, startingChr);
+		// for this test we ignore inheritance from father
+
+		// Mother-inherited alleles should have value of chr A before recombination site, chr B after
+		float valMotherChr;
+		for (int i = 0; i < genomeSz; i++) {
+			valMotherChr = dispTrChild.getAlleleValueAtLocus(0, i);
+			assert(valMotherChr == (i <= recombinationSite ? valChrA : valChrB));
+			// don't check other chromosome, empty bc we did not resolve father inheritance 
+		}
 	}
 }
 
