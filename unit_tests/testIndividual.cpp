@@ -418,6 +418,7 @@ void testTransferCRW() {
 
 void testGenetics() {
 
+	// Recombination occurs just after recombination site
 	const int genomeSz = 6; // arbitrary
 	set<int> pos;
 	for (int i = 0; i < genomeSz; i++) pos.insert(i);
@@ -445,20 +446,33 @@ void testGenetics() {
 	DispersalTrait dispTrParent(spTr);
 	DispersalTrait dispTrChild(dispTrParent);
 
-	const bool fromMother{ true };
-	const int parentChr{ 0 };
-	const float valA(1.0);
-	const float valB(0.0);
-	const float domCoef(0.0);
+	const int startingChr{ 0 }; // Chromosome A
+	const float valChrA(0.0);
+	const float valChrB(1.0);
+	const float domCoef(0.0); // no dominance for dispersal traits
 	vector<shared_ptr<Allele>> gene;
-	map<int, vector<shared_ptr<Allele>>> parentGenes;
+	map<int, vector<shared_ptr<Allele>>> motherGenes;
 	for (int i = 0; i < genomeSz; i++) {
-		gene = { make_shared<Allele>(valA, domCoef), make_shared<Allele>(valB, domCoef) };
-		parentGenes.emplace(i, gene);
+		// Mother genotype is
+		// 000000
+		// 111111
+		gene = { 
+			make_shared<Allele>(valChrA, domCoef), 
+			make_shared<Allele>(valChrB, domCoef) 
+		};
+		motherGenes.emplace(i, gene);
 	}
+	const int recombinationSite{ 3 };
+	// Trigger inheritance from mother
+	dispTrChild.triggerInherit(true, motherGenes, set<unsigned int>{recombinationSite}, startingChr);
+	// for this test we ignore inheritance from father
 
-	const set<unsigned int> recomPositions{ 3 };
-	dispTrChild.triggerInherit(fromMother, parentGenes, recomPositions, parentChr);
+	float valMotherChr;
+	for (int i = 0; i < genomeSz; i++) {
+		valMotherChr = dispTrChild.getAlleleValueAtLocus(0, i);
+		assert(valMotherChr == (i <= recombinationSite ? valChrA : valChrB));
+		// don't check other chromosome, empty bc we did not resolve father inheritance 
+	}
 }
 
 void testIndividual() {
