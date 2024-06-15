@@ -420,7 +420,6 @@ void testGenetics() {
 
 	// Recombination occurs just after recombination site
 	{
-
 		const int genomeSz = 6;
 		set<int> genePositions; for (int i = 0; i < genomeSz; i++) genePositions.insert(i);
 
@@ -466,7 +465,7 @@ void testGenetics() {
 		}
 
 		// Trigger inheritance from mother
-		const int recombinationSite{3};
+		const unsigned int recombinationSite = pRandom->IRandom(0, genomeSz); // should work for any position
 		const int startingChr{0}; // Chromosome A
 		dispTrChild.triggerInherit(true, motherGenes, set<unsigned int>{recombinationSite}, startingChr);
 		// for this test we ignore inheritance from father
