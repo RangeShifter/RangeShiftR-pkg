@@ -420,14 +420,69 @@ void testGenetics() {
 
 	// Individuals inherit alleles from their parents
 	{
-		const int genomeSz = 5;
-		// Diploid case, 2 parents with diff. alleles
-		const bool isDiploid{ true };
-		SpeciesTrait* spTr = createTestSpTrait(createTestGenePositions(genomeSz), isDiploid);
+		// 1 - Diploid case, 2 parents with diff. alleles
+		{
+			const int genomeSz = 5;
+			const bool isDiploid{ true };
+			SpeciesTrait* spTr = createTestSpTrait(createTestGenePositions(genomeSz), isDiploid);
 
+			// Heterozygote parent genotypes
+			const float valAlleleMotherA(1.0), valAlleleMotherB(2.0);
+			const float valAlleleFatherA(3.0), valAlleleFatherB(4.0);
+			auto motherGenotype = createTestEmigTrGenotype(genomeSz, isDiploid, valAlleleMotherA, valAlleleMotherB);
+			auto fatherGenotype = createTestEmigTrGenotype(genomeSz, isDiploid, valAlleleFatherA, valAlleleFatherB);
+			const int startMotherChr = 0; // Strand A
+			const int startFatherChr = 1; // Strand B
 
-		// Haploid case, simply copy parent
+			// Create individual trait objects
+			DispersalTrait dispTrParent(spTr); // initialisation constructor
+			DispersalTrait dispTrChild(dispTrParent); // inheritance constructor
 
+			set<unsigned int> recomSites{}; // no recombination
+			// End of genome always recombines
+			recomSites.insert(genomeSz - 1);
+
+			dispTrChild.triggerInherit(true, motherGenotype, recomSites, startMotherChr);
+			dispTrChild.triggerInherit(false, fatherGenotype, recomSites, startFatherChr);
+
+			// Child should have inherited strand A from mother and strand B from father
+			float valChildAlleleA, valChildAlleleB;
+			for (int i = 0; i < genomeSz; i++) {
+				valChildAlleleA = dispTrChild.getAlleleValueAtLocus(0, i);
+				assert(valChildAlleleA == valAlleleMotherA);
+				valChildAlleleB = dispTrChild.getAlleleValueAtLocus(1, i);
+				assert(valChildAlleleB == valAlleleFatherB);
+			}
+		}
+
+		// 2 - Haploid case, simply copy parent
+		{
+			const int genomeSz = 5;
+			const bool isDiploid{ false };
+			SpeciesTrait* spTr = createTestSpTrait(createTestGenePositions(genomeSz), isDiploid);
+
+			// Heterozygote parent genotypes
+			const float valAlleleMother(5.0);
+			auto motherGenotype = createTestEmigTrGenotype(genomeSz, isDiploid, valAlleleMother);
+			const int startMotherChr = 999; // doesn't matter, not used
+
+			// Create individual trait objects
+			DispersalTrait dispTrParent(spTr); // initialisation constructor
+			DispersalTrait dispTrChild(dispTrParent); // inheritance constructor
+
+			set<unsigned int> recomSites;
+			for (unsigned int i = 0; i < genomeSz; i++)
+				recomSites.insert(i); // recombination should be ignored
+
+			dispTrChild.triggerInherit(true, motherGenotype, recomSites, startMotherChr);
+
+			// Child should have inherited strand B from mother
+			float valChildAllele;
+			for (int i = 0; i < genomeSz; i++) {
+				valChildAllele = dispTrChild.getAlleleValueAtLocus(0, i);
+				assert(valChildAllele == valAlleleMother);
+			}
+		}
 	}
 
 	// Recombination occurs just after recombination site
