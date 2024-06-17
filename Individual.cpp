@@ -157,10 +157,6 @@ void Individual::inherit(Species* pSpecies, const Individual* mother, const Indi
 		paternalRecomPositions.insert(pRandom->IRandom(0, genomeSize));
 	}
 
-	// End of genome always recombines
-	maternalRecomPositions.insert(genomeSize - 1);
-	paternalRecomPositions.insert(genomeSize - 1);
-
 	// Inherit genes for each gene
 	const auto& spTraits = pSpecies->getTraitTypes();
 	for (auto const& trait : spTraits)

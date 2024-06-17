@@ -439,8 +439,6 @@ void testGenetics() {
 			DispersalTrait dispTrChild(dispTrParent); // inheritance constructor
 
 			set<unsigned int> recomSites{}; // no recombination
-			// End of genome always recombines
-			recomSites.insert(genomeSz - 1);
 
 			dispTrChild.triggerInherit(true, motherGenotype, recomSites, startMotherChr);
 			dispTrChild.triggerInherit(false, fatherGenotype, recomSites, startFatherChr);

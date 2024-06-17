@@ -212,7 +212,10 @@ void DispersalTrait::inheritDiploid(const bool& fromMother, map<int, vector<shar
 
 	const int lastPosition = parentGenes.rbegin()->first;
 	auto it = recomPositions.lower_bound(parentGenes.begin()->first);
-	int nextBreakpoint = *it;
+	// If no recombination sites, only breakpoint is last position
+	// i.e., no recombination occurs
+	int nextBreakpoint = it == recomPositions.end() ? lastPosition : *it;
+
 	// Is the first parent gene position already recombinant?
 	auto distance = std::distance(recomPositions.begin(), it);
 	if (distance % 2 != 0) // odd positions = switch, even = switch back
@@ -224,13 +227,7 @@ void DispersalTrait::inheritDiploid(const bool& fromMother, map<int, vector<shar
 		while (locus > nextBreakpoint) {
 			parentChromosome = 1 - parentChromosome;
 			std::advance(it, 1); // go to next recombination site
-			if (it == recomPositions.end()) {
-				// no more recombinations
-				nextBreakpoint = lastPosition; 
-			}
-			else {
-				nextBreakpoint = *it;
-			}
+			int nextBreakpoint = it == recomPositions.end() ? lastPosition : *it;
 		}
 
 		if (locus <= nextBreakpoint) {
