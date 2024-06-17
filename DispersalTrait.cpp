@@ -452,3 +452,28 @@ float DispersalTrait::getAlleleValueAtLocus(short whichChromosome, int position)
 		throw runtime_error("The Dispersal locus queried for its allele value does not exist.");
 	return it->second[whichChromosome].get()->getAlleleValue();
 }
+
+#if RSDEBUG // Testing only
+// Create a default set of alleles for testing
+map<int, vector<shared_ptr<Allele>>> createTestEmigTrGenotype(
+	const int genomeSz, 
+	const bool isDiploid, 
+	const float valAlleleA, 
+	const float valAlleleB
+) {
+	const float domCoef(0.0); // no dominance for dispersal traits
+	vector<shared_ptr<Allele>> gene(isDiploid ? 2 : 1);
+	if (isDiploid) {
+		gene[0] = make_shared<Allele>(valAlleleA, domCoef);
+		gene[1] = make_shared<Allele>(valAlleleB, domCoef);
+	}
+	else {
+		gene[0] = make_shared<Allele>(valAlleleA, domCoef);
+	}
+	map<int, vector<shared_ptr<Allele>>> genotype;
+	for (int i = 0; i < genomeSz; i++) {
+		genotype.emplace(i, gene);
+	}
+	return genotype;
+}
+#endif // RSDEBUG

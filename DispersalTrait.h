@@ -93,4 +93,14 @@ private:
 	float expressAdditive();
 };
 
+#if RSDEBUG
+// Create a default set of alleles for testing
+map<int, vector<shared_ptr<Allele>>> createTestEmigTrGenotype(
+	const int genomeSz,
+	const bool isDiploid,
+	const float valChrA,
+	const float valChrB = -99.9 // allow to not use if haploid
+);
+#endif RSDEBUG
+
 #endif // DISPTRAITH

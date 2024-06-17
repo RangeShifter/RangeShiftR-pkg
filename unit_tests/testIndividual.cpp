@@ -418,63 +418,46 @@ void testTransferCRW() {
 
 void testGenetics() {
 
+	// Individuals inherit alleles from their parents
+	{
+		const int genomeSz = 5;
+		// Diploid case, 2 parents with diff. alleles
+		const bool isDiploid{ true };
+		SpeciesTrait* spTr = createTestSpTrait(createTestGenePositions(genomeSz), isDiploid);
+
+
+		// Haploid case, simply copy parent
+
+	}
+
 	// Recombination occurs just after recombination site
 	{
-		const int genomeSz = 6;
-		set<int> genePositions; for (int i = 0; i < genomeSz; i++) genePositions.insert(i);
-
-		// Create species trait
-		const map<GenParamType, float> distParams{
-			pair<GenParamType, float>{GenParamType::MIN, 0.0},
-			pair<GenParamType, float>{GenParamType::MAX, 1.0}
-		};
-		SpeciesTrait* spTr = new SpeciesTrait(
-			TraitType::E_D0,
-			sex_t::NA,
-			genePositions,
-			ExpressionType::ADDITIVE,
-			DistributionType::UNIFORM,
-			distParams,
-			DistributionType::NONE, // no dominance
-			distParams,
-			true, // isInherited
-			0.0,
-			DistributionType::UNIFORM,
-			distParams,
-			2 // ploidy
-		);
+		const int genomeSz = 5;
+		const bool isDiploid{ true };
+		SpeciesTrait* spTr = createTestSpTrait(createTestGenePositions(genomeSz), isDiploid);
 
 		// Create individual trait objects
 		DispersalTrait dispTrParent(spTr); // initialisation constructor
 		DispersalTrait dispTrChild(dispTrParent); // inheritance constructor
 
 		// Fill mother gene sequence
-		const float valChrA(0.0), valChrB(1.0);
-		const float domCoef(0.0); // no dominance for dispersal traits
-		vector<shared_ptr<Allele>> gene;
-		map<int, vector<shared_ptr<Allele>>> motherGenes;
-		for (int i = 0; i < genomeSz; i++) {
-			// Mother genotype:
-			// 000000
-			// 111111
-			gene = {
-				make_shared<Allele>(valChrA, domCoef),
-				make_shared<Allele>(valChrB, domCoef)
-			};
-			motherGenes.emplace(i, gene);
-		}
+		const float valAlleleA(0.0), valAlleleB(1.0);
+		// Mother genotype:
+		// 000000
+		// 111111
+		auto motherGenotype = createTestEmigTrGenotype(genomeSz, isDiploid, valAlleleA, valAlleleB);
 
 		// Trigger inheritance from mother
 		const unsigned int recombinationSite = pRandom->IRandom(0, genomeSz); // should work for any position
 		const int startingChr{0}; // Chromosome A
-		dispTrChild.triggerInherit(true, motherGenes, set<unsigned int>{recombinationSite}, startingChr);
+		dispTrChild.triggerInherit(true, motherGenotype, set<unsigned int>{recombinationSite}, startingChr);
 		// for this test we ignore inheritance from father
 
 		// Mother-inherited alleles should have value of chr A before recombination site, chr B after
-		float valMotherChr;
+		float valMotherAllele;
 		for (int i = 0; i < genomeSz; i++) {
-			valMotherChr = dispTrChild.getAlleleValueAtLocus(0, i);
-			assert(valMotherChr == (i <= recombinationSite ? valChrA : valChrB));
+			valMotherAllele = dispTrChild.getAlleleValueAtLocus(0, i);
+			assert(valMotherAllele == (i <= recombinationSite ? valAlleleA : valAlleleB));
 			// don't check other chromosome, empty bc we did not resolve father inheritance 
 		}
 	}

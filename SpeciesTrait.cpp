@@ -174,3 +174,37 @@ bool SpeciesTrait::isValidTraitVal(const float& val) const {
 	}
 }
 
+#if RSDEBUG
+// Testing only
+
+// Create a default set of gene positions ranging from zero to genome size
+set<int> createTestGenePositions(const int genomeSz) {
+	set<int> genePositions; 
+	for (int i = 0; i < genomeSz; i++) genePositions.insert(i);
+	return genePositions;
+}
+
+SpeciesTrait* createTestSpTrait(set<int> genePositions, const bool& isDiploid) {
+	// Create species trait
+	const map<GenParamType, float> distParams{
+		pair<GenParamType, float>{GenParamType::MIN, 0.0},
+		pair<GenParamType, float>{GenParamType::MAX, 1.0}
+	};
+	SpeciesTrait* spTr = new SpeciesTrait(
+		TraitType::E_D0,
+		sex_t::NA,
+		genePositions,
+		ExpressionType::ADDITIVE,
+		DistributionType::UNIFORM,
+		distParams,
+		DistributionType::NONE, // no dominance
+		distParams,
+		true, // isInherited
+		0.0, // mutation rate
+		DistributionType::UNIFORM,
+		distParams,
+		isDiploid ? 2 : 1
+	);
+	return spTr;
+}
+#endif // RSDEBUG

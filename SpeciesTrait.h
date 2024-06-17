@@ -70,4 +70,13 @@ private:
     DistributionType mutationDistribution;
     map<GenParamType, float> mutationParameters;
 };
-#endif
+
+#if RSDEBUG // Testing only
+
+// Create a default set of gene positions ranging from zero to genome size
+set<int> createTestGenePositions(const int genomeSz);
+SpeciesTrait* createTestSpTrait(set<int> genePositions, const bool& isDiploid);
+
+#endif // RSDEBUG
+
+#endif // SPECIESTRAITH
