@@ -514,6 +514,49 @@ void testGenetics() {
 			// don't check other chromosome, empty bc we did not resolve father inheritance 
 		}
 	}
+
+	// Genetic linkage does occur
+	{
+		// Should also test for interactions with chromosome breaks?
+		// 
+		// Sample X vectors of recombination sites
+		// Create traits and resolve inheritance for each vector
+		// Count times c1 = A & B; c2 = B & C have same alleles
+		// Assert c1 > c2
+		/*
+		const int genomeSz = 100;
+		// Genes A, B, C with dist(A,B) << dist(B,C);
+		const set<int> genePositions = {0, 1, genomeSz - 1 };
+		const bool isDiploid{ true };
+		SpeciesTrait* spTr = createTestSpTrait(genePositions, isDiploid);
+		// All genes heterozygote with same alleles for each gene
+		const float valAlleleA(0.0), valAlleleB(1.0);
+		const int startingChr{ 0 }; // Chromosome A
+
+		set<unsigned int> recombinationSites;
+		const int nbDraws = 10;
+		
+		for (int i = 0; i < nbDraws; i++) {
+
+			if (i > 0) recombinationSites.clear();
+			drawRecombinantSites(recombinationSites);
+
+			// Create individual trait objects
+			DispersalTrait dispTrParent(spTr); // initialisation constructor
+			DispersalTrait dispTrChild(dispTrParent); // inheritance constructor
+			auto motherGenotype = createTestEmigTrGenotype(genomeSz, isDiploid, valAlleleA, valAlleleB);
+
+			// Trigger inheritance from mother
+			dispTrChild.triggerInherit(true, motherGenotype, recombinationSites, startingChr);
+			// inheritance from father not needed
+
+			// Check linked genes have same alleles more often
+			// ...
+
+		}
+		*/
+		
+	}
 }
 
 void testIndividual() {
@@ -525,6 +568,56 @@ void testIndividual() {
 	testTransferCRW();
 
 	testGenetics();
+
+	// Genetic linkage does occur
+		// Should also test for interactions with chromosome breaks?
+		// 
+		// Sample X vectors of recombination sites
+		// Create traits and resolve inheritance for each vector
+		// Count times c1 = A & B; c2 = B & C have same alleles
+		// Assert c1 > c2
+	{
+
+		Patch* pPatch = new Patch(0, 0);
+		Cell* pCell = new Cell(0, 0, (intptr)pPatch, 0);
+
+		const float recombinationRate = 0.1;
+		const int genomeSz = 10;
+		Species* pSpecies = new Species();
+		
+		pSpecies->setGeneticParameters(
+			set<int>{genomeSz - 1}, // a single chromosome
+			genomeSz,
+			recombinationRate,
+			set<int>{}, "none", set<int>{}, 0 // no output so no sampling
+		);
+		const set<int> genePositions = {0, 1, genomeSz - 1};
+		const bool isDiploid{ true };
+		SpeciesTrait* spTr = createTestSpTrait(genePositions, isDiploid);
+		pSpecies->addTrait(TraitType::E_D0, *spTr);
+		
+		Individual indMother = Individual(pCell, pPatch, 0, 0, 0, 0.0, false, 0);
+		Individual indFather = Individual(pCell, pPatch, 0, 0, 0, 1.0, false, 0);
+
+		DispersalTrait dispTrParent(spTr); // initialisation constructor
+		// All genes heterozygote with same alleles for each gene
+		const float valAlleleA(0.0), valAlleleB(1.0);
+		const float domCoef(0.0); // no dominance for dispersal traits
+		vector<shared_ptr<Allele>> gene(2);
+		gene[0] = make_shared<Allele>(valAlleleA, domCoef);
+		gene[1] = make_shared<Allele>(valAlleleB, domCoef);
+
+		map<int, vector<shared_ptr<Allele>>> genotype;
+		for (int i : genePositions) {
+			genotype.emplace(i, gene);
+		}
+		dispTrParent.overwriteGenes(genotype);
+		indMother.insertIndDispTrait(TraitType::E_D0, dispTrParent);
+		indFather.insertIndDispTrait(TraitType::E_D0, dispTrParent);
+
+		Individual indChild = Individual(pCell, pPatch, 0, 0, 0, 0.0, false, 0);
+		indChild.inheritTraits(pSpecies, &indMother, &indFather, 1.0);
+	}
 }
 
 #endif //RSDEBUG
