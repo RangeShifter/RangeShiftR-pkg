@@ -458,11 +458,11 @@ float DispersalTrait::getAlleleValueAtLocus(short whichChromosome, int position)
 #if RSDEBUG // Testing only
 
 // Get allele ID at locus
-float DispersalTrait::getAlleleIDAtLocus(short whichChromosome, int position) const {
+int DispersalTrait::getAlleleIDAtLocus(short whichChromosome, int position) const {
 	auto it = genes.find(position);
 	if (it == genes.end())
 		throw runtime_error("The Dispersal locus queried for its allele value does not exist.");
-	return it->second[whichChromosome].get()->getAlleleValue();
+	return it->second[whichChromosome].get()->getId();
 }
 
 // Create a default set of alleles for testing

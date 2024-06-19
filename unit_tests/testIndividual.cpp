@@ -563,8 +563,8 @@ void testGenetics() {
 }
 
 bool haveSameEmigD0Allele(const Individual& indA, const Individual& indB, const int& position, short whichHaplo = 0) {
-	return indA.getTrait(E_D0)->getAlleleValueAtLocus(whichHaplo, position)
-		== indB.getTrait(E_D0)->getAlleleValueAtLocus(whichHaplo, position);
+	return indA.getTrait(E_D0)->getAlleleIDAtLocus(whichHaplo, position)
+		== indB.getTrait(E_D0)->getAlleleIDAtLocus(whichHaplo, position);
 }
 
 void testIndividual() {
@@ -588,7 +588,7 @@ void testIndividual() {
 		Patch* pPatch = new Patch(0, 0);
 		Cell* pCell = new Cell(0, 0, (intptr)pPatch, 0);
 
-		const float recombinationRate = 0.1;
+		const float recombinationRate = 0.01;
 		const int genomeSz = 10;
 		Species* pSpecies = new Species();
 		
@@ -607,18 +607,19 @@ void testIndividual() {
 		Individual indFather = Individual(pCell, pPatch, 0, 0, 0, 1.0, false, 0);
 		indMother.setUpGenes(pSpecies, 1.0);
 		indFather.setUpGenes(pSpecies, 1.0);
-		Individual indChild = Individual(pCell, pPatch, 0, 0, 0, 0.0, false, 0);
-
-		indChild.inheritTraits(pSpecies, &indMother, &indFather, 1.0);
 
 		int countRecombineTogetherAB = 0;
 		int countRecombineTogetherAC = 0;
 
-		// for i in ...
+		const int nbTrials = 100;
+		for (int i = 0; i < nbTrials; ++i)
 		{
+			Individual indChild = Individual(pCell, pPatch, 0, 0, 0, 0.0, false, 0);
+			indChild.inheritTraits(pSpecies, &indMother, &indFather, 1.0);
+
 			bool hasInheritedA0 = haveSameEmigD0Allele(indChild, indMother, 0);
 			bool hasInheritedB0 = haveSameEmigD0Allele(indChild, indMother, 1);
-			bool hasInheritedC0 = haveSameEmigD0Allele(indChild, indMother, 2);
+			bool hasInheritedC0 = haveSameEmigD0Allele(indChild, indMother, genomeSz -1);
 
 			countRecombineTogetherAB += (hasInheritedA0 && hasInheritedB0)
 				|| (!hasInheritedA0 && !hasInheritedB0);

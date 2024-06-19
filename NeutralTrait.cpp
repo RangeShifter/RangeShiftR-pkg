@@ -284,3 +284,12 @@ float NeutralTrait::getAlleleValueAtLocus(short whichChromosome, int position) c
 		throw runtime_error("The neutral locus queried for its allele value does not exist.");
 	return it->second[whichChromosome];
 }
+
+#if RSDEBUG // Testing only
+// Get allele ID at locus
+int NeutralTrait::getAlleleIDAtLocus(short whichChromosome, int position) const {
+	// for neutral genes this is the same as the allele value
+	// need this declaration for quanti trait that use an actual ID
+	return getAlleleValueAtLocus(whichChromosome, position);
+}
+#endif // RSDEBUG
