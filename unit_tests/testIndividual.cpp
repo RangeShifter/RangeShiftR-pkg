@@ -562,6 +562,11 @@ void testGenetics() {
 	}
 }
 
+bool haveSameEmigD0Allele(const Individual& indA, const Individual& indB, const int& position, short whichHaplo = 0) {
+	return indA.getTrait(E_D0)->getAlleleValueAtLocus(whichHaplo, position)
+		== indB.getTrait(E_D0)->getAlleleValueAtLocus(whichHaplo, position);
+}
+
 void testIndividual() {
 
 	// Kernel-based transfer
@@ -580,7 +585,6 @@ void testIndividual() {
 		// Count times c1 = A & B; c2 = B & C have same alleles
 		// Assert c1 > c2
 	{
-
 		Patch* pPatch = new Patch(0, 0);
 		Cell* pCell = new Cell(0, 0, (intptr)pPatch, 0);
 
@@ -605,7 +609,23 @@ void testIndividual() {
 		indFather.setUpGenes(pSpecies, 1.0);
 		Individual indChild = Individual(pCell, pPatch, 0, 0, 0, 0.0, false, 0);
 
-		indChild.inheritTraits(pSpecies, &indMother, &indFather, 1.0);		cout << endl;
+		indChild.inheritTraits(pSpecies, &indMother, &indFather, 1.0);
+
+		int countRecombineTogetherAB = 0;
+		int countRecombineTogetherAC = 0;
+
+		// for i in ...
+		{
+			bool hasInheritedA0 = haveSameEmigD0Allele(indChild, indMother, 0);
+			bool hasInheritedB0 = haveSameEmigD0Allele(indChild, indMother, 1);
+			bool hasInheritedC0 = haveSameEmigD0Allele(indChild, indMother, 2);
+
+			countRecombineTogetherAB += (hasInheritedA0 && hasInheritedB0)
+				|| (!hasInheritedA0 && !hasInheritedB0);
+			countRecombineTogetherAC += (hasInheritedA0 && hasInheritedC0)
+				|| (!hasInheritedA0 && !hasInheritedC0);
+		}
+		assert(countRecombineTogetherAB > countRecombineTogetherAC);
 	}
 }
 

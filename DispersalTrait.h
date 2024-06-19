@@ -57,6 +57,7 @@ public:
 		int startChr) {
 		(this->*_inherit_func_ptr)(fromMother, parentGenes, recomPositions, startChr);
 	}
+	float getAlleleIDAtLocus(short whichChromosome, int position) const;
 #endif
 
 private:
