@@ -483,35 +483,38 @@ void testGenetics() {
 		}
 	}
 
-	// Recombination occurs just after recombination site
+	// Recombination occurs just after selected recombination site
 	{
-		const int genomeSz = 5;
+		const int genomeSz = 3;
 		const bool isDiploid{ true };
 		SpeciesTrait* spTr = createTestSpTrait(createTestGenePositions(genomeSz), isDiploid);
 
 		// Create individual trait objects
 		DispersalTrait dispTrParent(spTr); // initialisation constructor
-		DispersalTrait dispTrChild(dispTrParent); // inheritance constructor
 
 		// Fill mother gene sequence
 		const float valAlleleA(0.0), valAlleleB(1.0);
 		// Mother genotype:
-		// 000000
-		// 111111
+		// 000
+		// 111
 		auto motherGenotype = createTestEmigTrGenotype(genomeSz, isDiploid, valAlleleA, valAlleleB);
 
 		// Trigger inheritance from mother
-		const unsigned int recombinationSite = pRandom->IRandom(0, genomeSz); // should work for any position
+		const vector<unsigned int> recombinationSites{0, 1, genomeSz - 1}; // should work for any position
 		const int startingChr{0}; // Chromosome A
-		dispTrChild.triggerInherit(true, motherGenotype, set<unsigned int>{recombinationSite}, startingChr);
-		// for this test we ignore inheritance from father
 
-		// Mother-inherited alleles should have value of chr A before recombination site, chr B after
-		float valMotherAllele;
-		for (int i = 0; i < genomeSz; i++) {
-			valMotherAllele = dispTrChild.getAlleleValueAtLocus(0, i);
-			assert(valMotherAllele == (i <= recombinationSite ? valAlleleA : valAlleleB));
-			// don't check other chromosome, empty bc we did not resolve father inheritance 
+		for (unsigned int site : recombinationSites) {
+			DispersalTrait dispTrChild(dispTrParent); // inheritance constructor
+			dispTrChild.triggerInherit(true, motherGenotype, set<unsigned int>{site}, startingChr);
+			// for this test we ignore inheritance from father
+
+			// Mother-inherited alleles should have value of chr A before recombination site, chr B after
+			float valMotherAllele;
+			for (int i = 0; i < genomeSz; i++) {
+				valMotherAllele = dispTrChild.getAlleleValueAtLocus(0, i);
+				assert(valMotherAllele == (i <= site ? valAlleleA : valAlleleB));
+				// don't check other chromosome, empty bc we did not resolve father inheritance 
+			}
 		}
 	}
 
@@ -598,25 +601,11 @@ void testIndividual() {
 		
 		Individual indMother = Individual(pCell, pPatch, 0, 0, 0, 0.0, false, 0);
 		Individual indFather = Individual(pCell, pPatch, 0, 0, 0, 1.0, false, 0);
-
-		DispersalTrait dispTrParent(spTr); // initialisation constructor
-		// All genes heterozygote with same alleles for each gene
-		const float valAlleleA(0.0), valAlleleB(1.0);
-		const float domCoef(0.0); // no dominance for dispersal traits
-		vector<shared_ptr<Allele>> gene(2);
-		gene[0] = make_shared<Allele>(valAlleleA, domCoef);
-		gene[1] = make_shared<Allele>(valAlleleB, domCoef);
-
-		map<int, vector<shared_ptr<Allele>>> genotype;
-		for (int i : genePositions) {
-			genotype.emplace(i, gene);
-		}
-		dispTrParent.overwriteGenes(genotype);
-		indMother.insertIndDispTrait(TraitType::E_D0, dispTrParent);
-		indFather.insertIndDispTrait(TraitType::E_D0, dispTrParent);
-
+		indMother.setUpGenes(pSpecies, 1.0);
+		indFather.setUpGenes(pSpecies, 1.0);
 		Individual indChild = Individual(pCell, pPatch, 0, 0, 0, 0.0, false, 0);
-		indChild.inheritTraits(pSpecies, &indMother, &indFather, 1.0);
+
+		indChild.inheritTraits(pSpecies, &indMother, &indFather, 1.0);		cout << endl;
 	}
 }
 

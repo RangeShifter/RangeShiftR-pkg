@@ -499,7 +499,6 @@ void Species::setEmigRules(const emigRules e) {
 	sexDepEmig = e.sexDep;
 	indVarEmig = e.indVar;
 	if (e.emigStage >= 0) emigStage = e.emigStage;
-//setGenome();
 }
 
 emigRules Species::getEmigRules(void) {

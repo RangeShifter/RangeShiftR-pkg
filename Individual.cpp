@@ -157,7 +157,7 @@ void Individual::inherit(Species* pSpecies, const Individual* mother, const Indi
 		paternalRecomPositions.insert(pRandom->IRandom(0, genomeSize));
 	}
 
-	// Inherit genes for each gene
+	// Inherit genes for each trait
 	const auto& spTraits = pSpecies->getTraitTypes();
 	for (auto const& trait : spTraits)
 	{
