@@ -75,8 +75,8 @@ private:
 
 // Create a default set of gene positions ranging from zero to genome size
 set<int> createTestGenePositions(const int genomeSz);
-SpeciesTrait* createTestSpTrait(set<int> genePositions, const bool& isDiploid);
-
+SpeciesTrait* createTestEmigSpTrait(set<int> genePositions, const bool& isDiploid);
+SpeciesTrait* createTestNeutralSpTrait(set<int> genePositions, const bool& isDiploid);
 #endif // RSDEBUG
 
 #endif // SPECIESTRAITH

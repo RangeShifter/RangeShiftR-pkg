@@ -4,11 +4,15 @@
 // Species trait constructor
 SpeciesTrait::SpeciesTrait(
 	const TraitType& trType, const sex_t& sx,
-	const set<int>& pos, const ExpressionType& expr,
-	const DistributionType& initDist, const map<GenParamType, float> initParams,
-	const DistributionType& dominanceDist, const map<GenParamType, float> dominanceParams,
+	const set<int>& pos, 
+	const ExpressionType& expr,
+	const DistributionType& initDist, 
+	const map<GenParamType, float> initParams,
+	const DistributionType& dominanceDist, 
+	const map<GenParamType, float> dominanceParams,
 	bool isInherited, const float& mutRate,
-	const DistributionType& mutationDist, const map<GenParamType, float> mutationParams,
+	const DistributionType& mutationDist, 
+	const map<GenParamType, float> mutationParams,
 	const int nPloidy) :
 	traitType{ trType },
 	sex{ sx },
@@ -184,7 +188,7 @@ set<int> createTestGenePositions(const int genomeSz) {
 	return genePositions;
 }
 
-SpeciesTrait* createTestSpTrait(set<int> genePositions, const bool& isDiploid) {
+SpeciesTrait* createTestEmigSpTrait(set<int> genePositions, const bool& isDiploid) {
 	// Create species trait
 	const map<GenParamType, float> distParams{
 		pair<GenParamType, float>{GenParamType::MIN, 0.0},
@@ -207,4 +211,27 @@ SpeciesTrait* createTestSpTrait(set<int> genePositions, const bool& isDiploid) {
 	);
 	return spTr;
 }
+
+SpeciesTrait* createTestNeutralSpTrait(set<int> genePositions, const bool& isDiploid) {
+
+	const map<GenParamType, float> distParams{
+		// Set max allele value
+		pair<GenParamType, float>{GenParamType::MAX, 1.0}
+	};
+	SpeciesTrait* spTr = new SpeciesTrait(
+		TraitType::NEUTRAL,
+		sex_t::NA,
+		genePositions,
+		ExpressionType::NOTEXPR,
+		DistributionType::NONE, map<GenParamType, float>{}, // no initial dist specified. all start at max
+		DistributionType::NONE, map<GenParamType, float>{}, // no dominance
+		true, // isInherited
+		0.0, // mutation rate
+		DistributionType::SSM, 
+		distParams,
+		isDiploid ? 2 : 1
+	);
+	return spTr;
+}
+
 #endif // RSDEBUG

@@ -424,7 +424,7 @@ void testGenetics() {
 		{
 			const int genomeSz = 5;
 			const bool isDiploid{ true };
-			SpeciesTrait* spTr = createTestSpTrait(createTestGenePositions(genomeSz), isDiploid);
+			SpeciesTrait* spTr = createTestEmigSpTrait(createTestGenePositions(genomeSz), isDiploid);
 
 			// Heterozygote parent genotypes
 			const float valAlleleMotherA(1.0), valAlleleMotherB(2.0);
@@ -457,7 +457,7 @@ void testGenetics() {
 		{
 			const int genomeSz = 5;
 			const bool isDiploid{ false };
-			SpeciesTrait* spTr = createTestSpTrait(createTestGenePositions(genomeSz), isDiploid);
+			SpeciesTrait* spTr = createTestEmigSpTrait(createTestGenePositions(genomeSz), isDiploid);
 
 			// Heterozygote parent genotypes
 			const float valAlleleMother(5.0);
@@ -487,7 +487,7 @@ void testGenetics() {
 	{
 		const int genomeSz = 3;
 		const bool isDiploid{ true };
-		SpeciesTrait* spTr = createTestSpTrait(createTestGenePositions(genomeSz), isDiploid);
+		SpeciesTrait* spTr = createTestEmigSpTrait(createTestGenePositions(genomeSz), isDiploid);
 
 		// Create individual trait objects
 		DispersalTrait dispTrParent(spTr); // initialisation constructor
@@ -516,49 +516,6 @@ void testGenetics() {
 				// don't check other chromosome, empty bc we did not resolve father inheritance 
 			}
 		}
-	}
-
-	// Genetic linkage does occur
-	{
-		// Should also test for interactions with chromosome breaks?
-		// 
-		// Sample X vectors of recombination sites
-		// Create traits and resolve inheritance for each vector
-		// Count times c1 = A & B; c2 = B & C have same alleles
-		// Assert c1 > c2
-		/*
-		const int genomeSz = 100;
-		// Genes A, B, C with dist(A,B) << dist(B,C);
-		const set<int> genePositions = {0, 1, genomeSz - 1 };
-		const bool isDiploid{ true };
-		SpeciesTrait* spTr = createTestSpTrait(genePositions, isDiploid);
-		// All genes heterozygote with same alleles for each gene
-		const float valAlleleA(0.0), valAlleleB(1.0);
-		const int startingChr{ 0 }; // Chromosome A
-
-		set<unsigned int> recombinationSites;
-		const int nbDraws = 10;
-		
-		for (int i = 0; i < nbDraws; i++) {
-
-			if (i > 0) recombinationSites.clear();
-			drawRecombinantSites(recombinationSites);
-
-			// Create individual trait objects
-			DispersalTrait dispTrParent(spTr); // initialisation constructor
-			DispersalTrait dispTrChild(dispTrParent); // inheritance constructor
-			auto motherGenotype = createTestEmigTrGenotype(genomeSz, isDiploid, valAlleleA, valAlleleB);
-
-			// Trigger inheritance from mother
-			dispTrChild.triggerInherit(true, motherGenotype, recombinationSites, startingChr);
-			// inheritance from father not needed
-
-			// Check linked genes have same alleles more often
-			// ...
-
-		}
-		*/
-		
 	}
 }
 
@@ -608,7 +565,7 @@ void testIndividual() {
 		int posD = genomeSz - 1;
 		const set<int> genePositions = {posA, posB, posC, posD};
 		const bool isDiploid{ true };
-		SpeciesTrait* spTr = createTestSpTrait(genePositions, isDiploid);
+		SpeciesTrait* spTr = createTestEmigSpTrait(genePositions, isDiploid);
 		pSpecies->addTrait(TraitType::E_D0, *spTr);
 		
 		Individual indMother = Individual(pCell, pPatch, 0, 0, 0, 0.0, false, 0);
@@ -641,6 +598,8 @@ void testIndividual() {
 		assert(countRecombineTogetherAB > countRecombineTogetherAC);
 		assert(35 < countRecombineTogetherCD && countRecombineTogetherCD < 65);
 	}
+
+	testNeutralStats();
 }
 
 #endif //RSDEBUG
