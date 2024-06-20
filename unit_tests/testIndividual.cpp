@@ -577,28 +577,36 @@ void testIndividual() {
 
 	testGenetics();
 
-	// Genetic linkage does occur
-		// Should also test for interactions with chromosome breaks?
-		// 
-		// Sample X vectors of recombination sites
-		// Create traits and resolve inheritance for each vector
-		// Count times c1 = A & B; c2 = B & C have same alleles
-		// Assert c1 > c2
+	// Genetic linkage + Chromosome breaks
+		// Considering diallelic genes A, B, C, D with:
+		// A, B, C sit on chr.1, D sits on chr.2
+		// A, B are adjacent, C sits on the other end of chr.1
+		// C, D have adjacent positions in genome (but are on separate chr.)
+		// AB------------C//D
+	// We simulate 100 inheritance + recombination processes and expect that:
+		// 1. freq(A,B have same alleles) >> freq(A,C have same alleles)
+		// 2. 0.65 > freq(C,D have same alleles) > 0.35 despite being adjacent because of chrom. break
+		// (both freq. have p < 0.001 from a binomial with p 0.5 and 100 trials) 
 	{
 		Patch* pPatch = new Patch(0, 0);
 		Cell* pCell = new Cell(0, 0, (intptr)pPatch, 0);
 
 		const float recombinationRate = 0.01;
 		const int genomeSz = 10;
+
 		Species* pSpecies = new Species();
-		
 		pSpecies->setGeneticParameters(
-			set<int>{genomeSz - 1}, // a single chromosome
+			set<int>{genomeSz-2, genomeSz - 1}, // two chromosomes
 			genomeSz,
 			recombinationRate,
 			set<int>{}, "none", set<int>{}, 0 // no output so no sampling
 		);
-		const set<int> genePositions = {0, 1, genomeSz - 1};
+
+		int posA = 0;
+		int posB = 1;
+		int posC = genomeSz - 2;
+		int posD = genomeSz - 1;
+		const set<int> genePositions = {posA, posB, posC, posD};
 		const bool isDiploid{ true };
 		SpeciesTrait* spTr = createTestSpTrait(genePositions, isDiploid);
 		pSpecies->addTrait(TraitType::E_D0, *spTr);
@@ -610,6 +618,7 @@ void testIndividual() {
 
 		int countRecombineTogetherAB = 0;
 		int countRecombineTogetherAC = 0;
+		int countRecombineTogetherCD = 0;
 
 		const int nbTrials = 100;
 		for (int i = 0; i < nbTrials; ++i)
@@ -617,16 +626,20 @@ void testIndividual() {
 			Individual indChild = Individual(pCell, pPatch, 0, 0, 0, 0.0, false, 0);
 			indChild.inheritTraits(pSpecies, &indMother, &indFather, 1.0);
 
-			bool hasInheritedA0 = haveSameEmigD0Allele(indChild, indMother, 0);
-			bool hasInheritedB0 = haveSameEmigD0Allele(indChild, indMother, 1);
-			bool hasInheritedC0 = haveSameEmigD0Allele(indChild, indMother, genomeSz -1);
+			bool hasInheritedA0 = haveSameEmigD0Allele(indChild, indMother, posA);
+			bool hasInheritedB0 = haveSameEmigD0Allele(indChild, indMother, posB);
+			bool hasInheritedC0 = haveSameEmigD0Allele(indChild, indMother, posC);
+			bool hasInheritedD0 = haveSameEmigD0Allele(indChild, indMother, posD);
 
 			countRecombineTogetherAB += (hasInheritedA0 && hasInheritedB0)
 				|| (!hasInheritedA0 && !hasInheritedB0);
 			countRecombineTogetherAC += (hasInheritedA0 && hasInheritedC0)
 				|| (!hasInheritedA0 && !hasInheritedC0);
+			countRecombineTogetherCD += (hasInheritedC0 && hasInheritedD0)
+				|| (!hasInheritedC0 && !hasInheritedD0);
 		}
 		assert(countRecombineTogetherAB > countRecombineTogetherAC);
+		assert(35 < countRecombineTogetherCD && countRecombineTogetherCD < 65);
 	}
 }
 
