@@ -188,7 +188,7 @@ set<int> createTestGenePositions(const int genomeSz) {
 	return genePositions;
 }
 
-SpeciesTrait* createTestEmigSpTrait(set<int> genePositions, const bool& isDiploid) {
+SpeciesTrait* createTestEmigSpTrait(const set<int>& genePositions, const bool& isDiploid) {
 	// Create species trait
 	const map<GenParamType, float> distParams{
 		pair<GenParamType, float>{GenParamType::MIN, 0.0},
@@ -212,22 +212,25 @@ SpeciesTrait* createTestEmigSpTrait(set<int> genePositions, const bool& isDiploi
 	return spTr;
 }
 
-SpeciesTrait* createTestNeutralSpTrait(set<int> genePositions, const bool& isDiploid) {
+SpeciesTrait* createTestNeutralSpTrait(const float& maxAlleleVal, const set<int>& genePositions, const bool& isDiploid) {
 
 	const map<GenParamType, float> distParams{
 		// Set max allele value
-		pair<GenParamType, float>{GenParamType::MAX, 1.0}
+		pair<GenParamType, float>{GenParamType::MAX, maxAlleleVal}
 	};
 	SpeciesTrait* spTr = new SpeciesTrait(
 		TraitType::NEUTRAL,
 		sex_t::NA,
 		genePositions,
 		ExpressionType::NOTEXPR,
-		DistributionType::NONE, map<GenParamType, float>{}, // no initial dist specified. all start at max
-		DistributionType::NONE, map<GenParamType, float>{}, // no dominance
+		// Sample initial values from uniform(0, max)
+		DistributionType::UNIFORM, distParams,
+		// No dominance
+		DistributionType::NONE, map<GenParamType, float>{}, 
 		true, // isInherited
 		0.0, // mutation rate
-		DistributionType::SSM, 
+		// Mutation sampled from a uniform(0, max)
+		DistributionType::KAM, 
 		distParams,
 		isDiploid ? 2 : 1
 	);

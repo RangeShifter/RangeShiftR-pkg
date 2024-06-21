@@ -41,12 +41,16 @@
 
 using namespace std;
 
+void testIndividual();
+void testNeutralStats();
+
 void run_unit_tests() {
 	cout << "******* Unit test output *******" << endl;
 	testRSrandom();
 	testLandscape();
 	testIndividual();
 	testPopulation();
+	testNeutralStats();
 	cout << endl << "************************" << endl;
 }
 

@@ -400,9 +400,5 @@ extern ofstream DEBUGLOG;
 extern ofstream outMovePaths;
 #endif
 
-#if RSDEBUG
-void testIndividual();
-#endif
-
 //---------------------------------------------------------------------------
 #endif // IndividualH

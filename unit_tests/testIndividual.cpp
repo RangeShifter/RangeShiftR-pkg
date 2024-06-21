@@ -598,8 +598,6 @@ void testIndividual() {
 		assert(countRecombineTogetherAB > countRecombineTogetherAC);
 		assert(35 < countRecombineTogetherCD && countRecombineTogetherCD < 65);
 	}
-
-	testNeutralStats();
 }
 
 #endif //RSDEBUG

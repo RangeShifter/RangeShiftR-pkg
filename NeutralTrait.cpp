@@ -16,7 +16,7 @@ NeutralTrait::NeutralTrait(SpeciesTrait* P)
 	// Set default value to user-specified max
 	wildType = (int)mutationParameters.find(MAX)->second - 1;
 	if (wildType > NeutralValUpperBound)
-		throw logic_error("Error:: max number of alleles cannot exceed " + to_string(NeutralValUpperBound) + ".\n");
+		throw logic_error("max number of alleles cannot exceed " + to_string(NeutralValUpperBound) + ".\n");
 
 	_inherit_func_ptr = (pSpeciesTrait->getPloidy() == 1) ? &NeutralTrait::inheritHaploid : &NeutralTrait::inheritDiploid; //this could be changed if we wanted some alternative form of inheritance
 
@@ -27,26 +27,26 @@ NeutralTrait::NeutralTrait(SpeciesTrait* P)
 		_mutate_func_ptr = &NeutralTrait::mutate_KAM;
 
 	if (mutationDistribution != SSM && mutationDistribution != KAM)
-		throw logic_error("Error:: wrong mutation distribution for neutral markers, must be KAM or SSM \n");
+		throw logic_error("wrong mutation distribution for neutral markers, must be KAM or SSM \n");
 
 	if (mutationParameters.count(MAX) != 1)
-		throw logic_error("Error:: KAM or SSM mutation distribution parameter must contain max value (e.g. max= ), max cannot exceed 256  \n");
+		throw logic_error("KAM or SSM mutation distribution parameter must contain max value (e.g. max= ), max cannot exceed 256  \n");
 
 	DistributionType initialDistribution = pSpeciesTrait->getInitialDistribution();
 	map<GenParamType, float> initialParameters = pSpeciesTrait->getInitialParameters();
 
 	if (mutationDistribution == SSM && initialDistribution != UNIFORM)
-		throw logic_error("Error:: If using SSM mutation model must initialise genome with alleles (microsats) \n");
+		throw logic_error("If using SSM mutation model for neutral trait, must use uniform initial distribution.\n");
 
 	switch (initialDistribution) {
 	case UNIFORM:
 	{
 		if (initialParameters.count(MAX) != 1)
-			throw logic_error("Error:: initial distribution parameter must contain one max value if set to UNIFORM (e.g. max= ), max cannot exceed " + to_string(NeutralValUpperBound) + "\n");
+			throw logic_error("initial distribution parameter must contain one max value if set to UNIFORM (e.g. max= ), max cannot exceed " + to_string(NeutralValUpperBound) + "\n");
 
 		float maxNeutralVal = initialParameters.find(MAX)->second;
 		if (maxNeutralVal > NeutralValUpperBound) {
-			throw logic_error("Warning:: initial distribution parameter max cannot exceed " + to_string(NeutralValUpperBound) + ", resetting to " + to_string(NeutralValUpperBound) + "\n");
+			throw logic_error("initial distribution parameter max cannot exceed " + to_string(NeutralValUpperBound) + ", resetting to " + to_string(NeutralValUpperBound) + "\n");
 			maxNeutralVal = NeutralValUpperBound; //reserve 255 for wildtype
 		}
 		initialiseUniform(maxNeutralVal);
