@@ -121,7 +121,8 @@ short Species::getSpNum(void) { return spNum; }
 
 void Species::setDemogr(const demogrParams d) {
 	if (d.repType >= 0 && d.repType <= 2) repType = d.repType;
-	if (d.repType >= 1) diploid = true;
+	if (d.repType == 1 || d.repType == 2) diploid = true;
+	else diploid = false;
 	if (d.repSeasons >= 1) repSeasons = d.repSeasons;
 	stageStruct = d.stageStruct;
 	if (d.propMales > 0.0 && d.propMales < 1.0) propMales = d.propMales;
