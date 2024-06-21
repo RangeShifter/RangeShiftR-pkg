@@ -174,7 +174,64 @@ void testNeutralStats() {
 	// - per-locus Fst
 	// - pairwise per-patch Fst
 	{
+		// Create two-patches landscape
+		Landscape* pLandscape = new Landscape;
+		const int nbPatches = 2;
+		vector<Patch*> patches(nbPatches);
+		set<int> patchList;
+		for (int i = 0; i < nbPatches; i++) {
+			patches[i] = pLandscape->newPatch(i);
+			Cell* pCell = new Cell(0, 0, (intptr)patches[i], 0);
+			patches[i]->addCell(pCell, 0, 0);
+			patchList.insert(patches[i]->getPatchNum());
+		}
+		const string indSampling = "all";
+		const set<int> stgToSample = { 1 };
 
+		// Create genetic structure
+		const int genomeSz = 4;
+		Species* pSpecies = new Species();
+		pSpecies->setDemogr(createDefltDiploidDemogrParams());
+		pSpecies->setGeneticParameters(
+			set<int>{genomeSz - 1}, // single chromosome
+			genomeSz,
+			0.0, // no recombination
+			patchList,
+			indSampling,
+			stgToSample,
+			1
+		);
+		const set<int> genePositions = { 0, 1, 3 }; // arbitrary
+		const int nbLoci = genePositions.size();
+		const bool isDiploid{ true };
+		const float maxAlleleVal = 255; // highly unlikely that same value sampled twice
+		SpeciesTrait* spTr = createTestNeutralSpTrait(maxAlleleVal, genePositions, isDiploid);
+		pSpecies->addTrait(TraitType::NEUTRAL, *spTr);
+
+		// Initialise populations
+		const int nbIndsPerPop = 2;
+		for (auto p : patches) {
+			Population* pPop = new Population(pSpecies, p, nbIndsPerPop, 1);
+			pPop->sampleIndsWithoutReplacement(indSampling, stgToSample);
+		}
+		
+		// Calculate heterozygosity
+		auto pNeutralStatistics = make_unique<NeutralStatsManager>(nbPatches, nbLoci);
+		pNeutralStatistics->updateAllNeutralTables(
+			pSpecies, 
+			pLandscape, 
+			patchList
+		);
+		const int maxNbNeutralAlleles = static_cast<int>(maxAlleleVal);
+		pNeutralStatistics->calculateFstatWC(
+			patchList,
+			nbIndsPerPop,
+			nbLoci,
+			maxNbNeutralAlleles,
+			pSpecies,
+			pLandscape
+		);
+		assert(pNeutralStatistics->getFstWC() == 1.0);
 	}
 }
 

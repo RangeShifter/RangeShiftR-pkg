@@ -1845,7 +1845,7 @@ void Community::writePairwiseFSTFile(Species* pSpecies, const int yr, const int 
 
 void Community::outNeutralGenetics(Species* pSpecies, int rep, int yr, int gen, bool fstat, bool perLocus, bool pairwise) {
 
-	const int nAlleles = (int)(pSpecies->getSpTrait(NEUTRAL)->getMutationParameters().find(MAX)->second);
+	const int maxNbNeutralAlleles = (int)(pSpecies->getSpTrait(NEUTRAL)->getMutationParameters().find(MAX)->second);
 	const int nLoci = (int)pSpecies->getNPositionsForTrait(NEUTRAL);
 	const set<int> patchList = pSpecies->getSamplePatches();
 	int nInds = 0;
@@ -1869,19 +1869,19 @@ void Community::outNeutralGenetics(Species* pSpecies, int rep, int yr, int gen, 
 	if (fstat) {
 		pNeutralStatistics->calculateHo(patchList, nInds, nLoci, pSpecies, pLandscape);
 		pNeutralStatistics->calcAllelicDiversityMetrics(patchList, nInds, pSpecies, pLandscape);
-		pNeutralStatistics->calculateFstatWC(patchList, nInds, nLoci, nAlleles, pSpecies, pLandscape);
+		pNeutralStatistics->calculateFstatWC(patchList, nInds, nLoci, maxNbNeutralAlleles, pSpecies, pLandscape);
 		writeWCFstatFile(rep, yr, gen);
 	}
 
 	if (perLocus) {
-		pNeutralStatistics->calcPerLocusMeanSquaresFst(patchList, nInds, nLoci, nAlleles, pSpecies, pLandscape);
+		pNeutralStatistics->calcPerLocusMeanSquaresFst(patchList, nInds, nLoci, maxNbNeutralAlleles, pSpecies, pLandscape);
 		pNeutralStatistics->calculatePerLocusHo(patchList, nInds, nLoci, pSpecies, pLandscape);
-		writeWCPerLocusFstatFile(pSpecies, yr, gen, nAlleles, nLoci, patchList);
+		writeWCPerLocusFstatFile(pSpecies, yr, gen, maxNbNeutralAlleles, nLoci, patchList);
 	}
 
 	if (pairwise) {
 		pNeutralStatistics->calcPairwiseWeightedFst(patchList, nInds, nLoci, pSpecies, pLandscape);
-		writePairwiseFSTFile(pSpecies, yr, gen, nAlleles, nLoci, patchList);
+		writePairwiseFSTFile(pSpecies, yr, gen, maxNbNeutralAlleles, nLoci, patchList);
 	}
 }
 

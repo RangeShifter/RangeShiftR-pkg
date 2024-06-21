@@ -39,7 +39,7 @@ NeutralStatsManager::NeutralStatsManager(const int& nbSampledPatches, const int 
 void NeutralStatsManager::updateAllNeutralTables(Species* pSpecies, Landscape* pLandscape, set<int> const& patchList) {
 
 	const int nLoci = pSpecies->getNPositionsForTrait(NEUTRAL);
-	const int nAlleles = (int)pSpecies->getSpTrait(NEUTRAL)->getMutationParameters().find(MAX)->second;
+	const int maxNbNeutralAlleles = (int)pSpecies->getSpTrait(NEUTRAL)->getMutationParameters().find(MAX)->second;
 	const int ploidy = pSpecies->isDiploid() ? 2 : 1;
 
 	// Create / Update community-level NEUTRAL counts table
@@ -48,7 +48,7 @@ void NeutralStatsManager::updateAllNeutralTables(Species* pSpecies, Landscape* p
 	}
 	else { // populate the tables with default values
 		for (int thisLocus = 0; thisLocus < nLoci; thisLocus++) {
-			NeutralCountsTable newNeutralTbl = NeutralCountsTable(nAlleles);
+			NeutralCountsTable newNeutralTbl = NeutralCountsTable(maxNbNeutralAlleles);
 			commNeutralCountTables.push_back(newNeutralTbl);
 		}
 	}
@@ -67,7 +67,7 @@ void NeutralStatsManager::updateAllNeutralTables(Species* pSpecies, Landscape* p
 		}
 		// Add population-level counts to community-level counts 
 		for (int thisLocus = 0; thisLocus < nLoci; thisLocus++) {
-			for (int allele = 0; allele < nAlleles; allele++) {
+			for (int allele = 0; allele < maxNbNeutralAlleles; allele++) {
 
 				if (pPop != 0) {
 					patchAlleleCount = pPop->getAlleleTally(thisLocus, allele);
