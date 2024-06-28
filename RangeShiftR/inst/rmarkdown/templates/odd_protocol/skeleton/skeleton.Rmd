@@ -387,14 +387,11 @@ For more details, see the description of the submodel.
 
 `r if(translocation){"#### Translocation"}else{"Not applicable."}`
 
-`r if(translocation){"Translocation, the intentional capture and following release of animals in new areas, are a common conservation practice. They are used to establish new populations, to increase the size of small populations, to reintroduce species in areas where they have been extirpated, and to increase genetic diversity. Individuals are selected based on the specific purpose: e.g., to secure successful establishment of new populations, individuals are required to be either within a reproductive stage or at least become reproductive within a short time span. Additionally, for sexual reproductive species, it is important that both sexes are present in the new location. On the other hand, translocations can be a tool to improve the genetic diversity in established populations which are very isolated and where gene flow is limited. In this case, it is not necessarily important to translocate individuals from both sexes.
+`r if(translocation){"Translocation, the intentional capture and following release of animals in new areas, is a common conservation practice. They are used to establish new populations, to increase the size of small populations, to reintroduce species in areas where they have been extirpated, and to increase genetic diversity. Individuals are selected based on the specific purpose: e.g., to secure successful establishment of new populations, individuals are required to be either within a reproductive stage or at least become reproductive within a short time span. Additionally, for sexual reproductive species, it is important that both sexes are present in the new location. On the other hand, translocations can be a tool to improve the genetic diversity in established populations which are very isolated and where gene flow is limited. In this case, it is not necessarily important to translocate individuals from both sexes.
 
-The selection of a source population as well as the target location is crucial for reintroducing species in former areas or suitable areas which are too isolated from the species' current range.
+The selection of a suitable source population as well as target location is similar crucial for a successful conservation measure as the selection of the individuals. It needs to be ensured that the source population is healthy and genetically diverse, and that the target location is suitable for the species regarding the resources as well as the size of the patch. The target location should be free of threats that could endanger the new population, and it should be connected to other populations to allow for rang eexpansion in the new region as well as gene flow. 
 
-- how source and target patches are identified?
-https://www.conservationevidence.com/actions/2397
-
-For more details, see the description of the submodel.
+For more details how translocations were implemented in this model, see the description of the submodel.
 "}`
 
 
@@ -864,6 +861,18 @@ Here, $N_{i}$ is the number of individuals of the patch $i$, $b$ represents the 
 ## Aging
 
 Aging occurs at the end of each year.
+
+`r if(management){"## Management
+
+"} 
+`r if(management && translocation){"### Translocation
+
+- There are x translocation events happening in the years xyz
+- in year x, translocated individuals should have the following characterstics...
+- all individuals matching the characteristics in the source patches are collected and randomly x of these are tried to be caught with a catching probability of X
+- individuals which were caught are then translocated to the target patch x
+- add table?
+"}
 
 # Model parameter settings of the specific use case
 
