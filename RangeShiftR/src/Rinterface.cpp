@@ -3256,7 +3256,6 @@ int ReadTranslocationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 
     // activate translocation if translocation_years_R is not empty
     if(translocation_years_R[0] > 0) m.translocation = true;
-    Rcpp::Rcout << "ReadTranslocationR(): m.translocation is here: " << m.translocation << std::endl;
 
     // set and update the management parameters
     pManagement->setManagementParams(m);
@@ -3340,7 +3339,7 @@ int ReadTranslocationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
                 // if cell-based model
                 // check if x and y values are inside boundaries
                 bool data = false;
-                data = pLandscape->checkDataCell(translocation_matrix_R(i,1), translocation_matrix_R(i,2)); // TODO: check why simulation is crashing if checking for cell
+                data = pLandscape->checkDataCell(translocation_matrix_R(i,1), translocation_matrix_R(i,2));
                 if(data == false){ // cell is out of boundary
                     Rcpp::Rcout << "ReadTranslocationR(): source location " << translocation_matrix_R(i,1) << " is outside the landscape." << std::endl;
                     error = 600;
@@ -3387,10 +3386,22 @@ int ReadTranslocationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 
             // push_back the number of individuals to the nb map
             if(paramsLand.patchModel){
-                t.nb[year].push_back((int)translocation_matrix_R(i,3));
+                if((int)translocation_matrix_R(i,3)>0){
+                    t.nb[year].push_back((int)translocation_matrix_R(i,3));
+                }else{
+                    Rcpp::Rcout << "ReadTranslocationR(): number of individuals to be translocated is 0 or a negative value." << std::endl;
+                    error = 600;
+                    return error;
+                }
             } else {
                 // cell-based
-                t.nb[year].push_back((int)translocation_matrix_R(i,5));
+                if((int)translocation_matrix_R(i,5)>0){
+                    t.nb[year].push_back((int)translocation_matrix_R(i,5));
+                }else{
+                    Rcpp::Rcout << "ReadTranslocationR(): number of individuals to be translocated is 0 or a negative value." << std::endl;
+                    error = 600;
+                    return error;
+                }
             }
 
             // only if stage structured
@@ -3399,14 +3410,49 @@ int ReadTranslocationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
                 // the maximal age of the individuals to the max_age map
                 // and the stage of the individuals to the stage map
                 if(paramsLand.patchModel){
-                    t.min_age[year].push_back((int)translocation_matrix_R(i,4));
-                    t.max_age[year].push_back((int)translocation_matrix_R(i,5));
-                    t.stage[year].push_back((int)translocation_matrix_R(i,6));
+                    if ((int)translocation_matrix_R(i,4)>=0 | (int)translocation_matrix_R(i,4)==-9){
+                        t.min_age[year].push_back((int)translocation_matrix_R(i,4));
+                    } else{
+                        Rcpp::Rcout << "ReadTranslocationR(): minimal age of the individuals to be translocated is a negative value which is not -9." << std::endl;
+                        error = 600;
+                        return error;
+                    }
+                    if ((int)translocation_matrix_R(i,5)>0 | (int)translocation_matrix_R(i,5)==-9){
+                        t.max_age[year].push_back((int)translocation_matrix_R(i,5));
+                    } else{
+                        Rcpp::Rcout << "ReadTranslocationR(): maximal age of the individuals to be translocated is 0 or a negative value which is not -9." << std::endl;
+                        error = 600;
+                        return error;
+                    }
+                    if ((int)translocation_matrix_R(i,6)>=0 | (int)translocation_matrix_R(i,6)==-9){
+                        t.stage[year].push_back((int)translocation_matrix_R(i,6));
+                    } else{
+                        Rcpp::Rcout << "ReadTranslocationR(): stage of the individuals to be translocated is a negative value which is not -9." << std::endl;
+                        error = 600;
+                        return error;
+                    }
                 } else {
-                    // cell-based
-                    t.min_age[year].push_back((int)translocation_matrix_R(i,6));
-                    t.max_age[year].push_back((int)translocation_matrix_R(i,7));
-                    t.stage[year].push_back((int)translocation_matrix_R(i,8));
+                    if ((int)translocation_matrix_R(i,6)>=0 | (int)translocation_matrix_R(i,6)==-9){
+                        t.min_age[year].push_back((int)translocation_matrix_R(i,6));
+                    } else{
+                        Rcpp::Rcout << "ReadTranslocationR(): minimal age of the individuals to be translocated is a negative value which is not -9." << std::endl;
+                        error = 600;
+                        return error;
+                    }
+                    if ((int)translocation_matrix_R(i,7)>0 | (int)translocation_matrix_R(i,7)==-9){
+                        t.max_age[year].push_back((int)translocation_matrix_R(i,7));
+                    } else{
+                        Rcpp::Rcout << "ReadTranslocationR(): maximal age of the individuals to be translocated is 0 or a negative value which is not -9." << std::endl;
+                        error = 600;
+                        return error;
+                    }
+                    if ((int)translocation_matrix_R(i,8)>=0 | (int)translocation_matrix_R(i,8)==-9){
+                        t.stage[year].push_back((int)translocation_matrix_R(i,8));
+                    } else{
+                        Rcpp::Rcout << "ReadTranslocationR(): stage of the individuals to be translocated is a negative value which is not -9." << std::endl;
+                        error = 600;
+                        return error;
+                    }
                 }
             } else{
                 t.min_age[year].push_back(-9);
@@ -3417,10 +3463,22 @@ int ReadTranslocationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
             if(dem.repType!=0) {
                 // push_back the sex of the individuals to the sex map
                 if(paramsLand.patchModel){
-                    t.sex[year].push_back((int)translocation_matrix_R(i,7));
+                    if ((int)translocation_matrix_R(i,7) == 0 | (int)translocation_matrix_R(i,7) == 1 | (int)translocation_matrix_R(i,7) == -9){
+                        t.sex[year].push_back((int)translocation_matrix_R(i,7));
+                    } else{
+                        Rcpp::Rcout << "ReadTranslocation(): sex of the individuals to be translocated is not 0, 1 or -9." << std::endl;
+                        error = 600;
+                        return error;
+                    }
                 } else {
                     // cell-based
-                    t.sex[year].push_back((int)translocation_matrix_R(i,9));
+                    if ((int)translocation_matrix_R(i,9) == 0 | (int)translocation_matrix_R(i,9) == 1 | (int)translocation_matrix_R(i,9) == -9){
+                        t.sex[year].push_back((int)translocation_matrix_R(i,9));
+                    } else{
+                        Rcpp::Rcout << "ReadTranslocation(): sex of the individuals to be translocated is not 0, 1 or -9." << std::endl;
+                        error = 600;
+                        return error;
+                    }
                 }
             } else{
                 t.sex[year].push_back(-9);

@@ -130,25 +130,6 @@ setValidity("TranslocationParams", function(object) {
         }
     }
 
-    # Check if TransLocMat has valid entries:
-    # for patch based models:
-    # Check if second column (source patch ID) is numeric and ID exists
-    # check if third column (target patch ID) is numeric and ID exists
-    # check if fourth column (number of individuals) is numeric and greater than 0
-    # check if fifth column (min age) is numeric and equal or greater than 0 or -9
-    # check if sixth column (max age) is numeric and between min age and MaxAge or -9
-    # check if seventh column (stage) is numeric and either between 0 and number of stages or -9
-    # check if eighth column (sex) is numeric and either 0, 1 or -9
-    # for cell based models:
-    # Check if second and fourth column (source and target X cells) is numeric and within X boundaries of the landscape
-    # Check if third and fifth column (source and target Y cells) is numeric and within Y boundaries of the landscape
-    # check if sixth column (number of individuals) is numeric and greater than 0
-    # check if seventh column (min age) is numeric and equal or greater than 0 or -9
-    # check if eighth column (max age) is numeric and between min age and MaxAge or -9
-    # check if nineth column (stage) is numeric and either between 0 and number of stages or -9
-    # check if tenth column (sex) is numeric and either 0, 1 or -9
-
-
     # Check if catching_rate is not NA and is a numeric
     if (is.na(object@catching_rate)) {
         msg <- c(msg, "Catching rate must be defined")
