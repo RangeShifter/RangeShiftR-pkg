@@ -37,7 +37,6 @@ Individual::Individual(Cell* pCell, Patch* pPatch, short stg, short a, short rep
 	indCounter++; // unique identifier for each individual
 
 	stage = stg;
-	if (probmale > 1) Rcpp::Rcout << "probmale = " << probmale << std::endl;
 	if (probmale <= 0.0) sex = 0;
 	else sex = pRandom->Bernoulli(probmale);
 	age = a;
@@ -922,7 +921,6 @@ int Individual::moveKernel(Landscape* pLandscape, Species* pSpecies,
 	// scale the appropriate kernel mean to the cell size
 	if (trfr.twinKern)
 	{
-	    if (kern.probKern1 > 1) Rcpp::Rcout << "probKern1 = " << kern.probKern1<< std::endl;
 		if (pRandom->Bernoulli(kern.probKern1))
 			meandist = kern.meanDist1 / (float)land.resol;
 		else
@@ -1051,7 +1049,6 @@ int Individual::moveKernel(Landscape* pLandscape, Species* pSpecies,
 		else {
 			dispmort = mort.fixedMort;
 		}
-		if(dispmort > 1) Rcpp::Rcout << "dispmort = " << dispmort << std::endl;
 		if (pRandom->Bernoulli(dispmort)) {
 			status = 7; // dies
 			dispersing = 0;
@@ -1113,7 +1110,6 @@ int Individual::moveStep(Landscape* pLandscape, Species* pSpecies,
 	if (pPatch == pNatalPatch && path->out == 0 && path->year == path->total) {
 		mortprob = 0.0;
 	}
-	if (mortprob > 1) Rcpp::Rcout << "mortprob = " << mortprob << std::endl;
 	if (pRandom->Bernoulli(mortprob)) { // individual dies
 		status = 7;
 		dispersing = 0;
