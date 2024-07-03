@@ -1614,7 +1614,7 @@ int ReadStageStructureR(Rcpp::S4 ParMaster)
 				ss = (float)trmatrix(i - 1, i); // survival prob
 			else
 				ss = (float)trmatrix(i, i);
-			if((i + 2) != matrixsize)
+			if((i + 2) != matrixsize && (i + 1) != matrixsize)
 				dd = (float)trmatrix(i + 1, i); // development prob
 			else
 				dd = 0.0;
