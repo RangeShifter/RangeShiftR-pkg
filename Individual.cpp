@@ -62,9 +62,9 @@ Individual::Individual(Cell* pCell, Patch* pPatch, short stg, short a, short rep
 			smsData = new smsdata;
 			smsData->dp = smsData->gb = smsData->alphaDB = 1.0;
 			smsData->betaDB = 1;
-			smsData->prev.x = loc.x; 
+			smsData->prev.x = loc.x;
 			smsData->prev.y = loc.y; // previous location
-			smsData->goal.x = loc.x; 
+			smsData->goal.x = loc.x;
 			smsData->goal.y = loc.y; // goal location - initialised for dispersal bias
 		}
 		else smsData = 0;
@@ -406,7 +406,7 @@ void Individual::setGenes(Species* pSpecies, Individual* mother, Individual* fat
 // if so, return her stage, otherwise return 0
 int Individual::breedingFem(void) {
 	if (sex == 0) {
-		if (status == 0 || status == 4 || status == 5) return stage;
+		if (status == 0 || status == 4 || status == 5 || status == 10) return stage;
 		else return 0;
 	}
 	else return 0;
@@ -818,7 +818,7 @@ settleTraits Individual::getSettTraits(void) {
 
 
 void Individual::setStatus(short s) {
-	if (s >= 0 && s <= 9) status = s;
+	if (s >= 0 && s <= 10) status = s;
 	status = s;
 }
 
@@ -831,7 +831,7 @@ void Individual::develop(void) {
 }
 
 void Individual::ageIncrement(short maxage) {
-	if (status < 6) { // alive
+	if (status < 6 || status == 10) { // alive
 		age++;
 		if (age > maxage) status = 9;			// exceeds max. age - dies
 		else {
@@ -855,7 +855,7 @@ void Individual::moveto(Cell* newCell) {
 	double d = sqrt(((double)currloc.x - (double)newloc.x) * ((double)currloc.x - (double)newloc.x)
 		+ ((double)currloc.y - (double)newloc.y) * ((double)currloc.y - (double)newloc.y));
 	if (d >= 1.0 && d < 1.5) { // ok
-		pCurrCell = newCell; 
+		pCurrCell = newCell;
 		status = 5;
 	}
 }
@@ -1040,7 +1040,7 @@ int Individual::moveKernel(Landscape* pLandscape, Species* pSpecies,
 
 	// apply dispersal-related mortality, which may be distance-dependent
 	dist *= (float)land.resol; // re-scale distance moved to landscape scale
-	if (status < 7) {
+	if (status < 7 || status == 10) {
 		double dispmort;
 		trfrMortParams mort = pSpecies->getMortParams();
 		if (trfr.distMort) {
@@ -1758,7 +1758,7 @@ void Individual::outMovePath(const int year)
 			<< endl;
 	}
 	// if not anymore dispersing...
-	if (status > 1 && status < 10) {
+	if (status > 1 && status <= 10) {
 		prev_loc = pPrevCell->getLocn();
 		// record only if this is the first step as non-disperser
 		if (path->pathoutput) {
@@ -1835,10 +1835,10 @@ void testIndividual() {
 	//ind.moveto();
 
 	// Gets its sex drawn from pmale
-	
+
 	// Can age or develop
 
-	// 
+	//
 
 	// Reproduces
 	// depending on whether it is sexual or not
