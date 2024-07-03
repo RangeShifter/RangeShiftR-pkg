@@ -1233,7 +1233,6 @@ void Population::survival0(float localK, short option0, short option1)
 			if (ind.status < 6 || ind.status == 10) { // not already doomed
 				double probsurv = surv[ind.stage][ind.sex];
 				// does the individual survive?
-				if (probsurv > 1) Rcpp::Rcout << "probsurv at stage: " << ind.stage << " and sex " << ind.sex << " : " << probsurv << std::endl;
 				if (pRandom->Bernoulli(probsurv)) { // survives
 					// does the individual develop?
 					double probdev = dev[ind.stage][ind.sex];
