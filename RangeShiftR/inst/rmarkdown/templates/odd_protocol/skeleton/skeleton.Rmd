@@ -867,9 +867,13 @@ Aging occurs at the end of each year.
 "} 
 `r if(management && translocation){"### Translocation
 
+- Define a translocation event
+
+For each translocation event, all individuals matching the given characteristics in the source patch/location are collected. Only individuals, which have not yet dispersed (status 0), or successfully dispersed (status 4 or 5) are considered for translocation. The given number of these individuals are then randomly sampled and tried to be caught with a catching probability of X. If an individual is caught, it is translocated to the target patch/location of this translocation event. If the individual has not been caught, it remains in the source patch/location. Once translocation of an individual is completed, its status is set to 10 as being a translocated individual. Translocated individuals are not allowed to disperse after the translocation event.
+
 - There are x translocation events happening in the years xyz
 - in year x, translocated individuals should have the following characterstics...
-- all individuals matching the characteristics in the source patches are collected and randomly x of these are tried to be caught with a catching probability of X
+
 - individuals which were caught are then translocated to the target patch x
 - add table?
 "}
