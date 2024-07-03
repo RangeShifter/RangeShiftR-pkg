@@ -43,6 +43,8 @@ int RunModel(Landscape* pLandscape, int seqsim)
 	demogrParams dem = pSpecies->getDemogr();
 	stageParams sstruct = pSpecies->getStage();
 	trfrRules trfr = pSpecies->getTrfr();
+	managementParams manage = pManagement->getManagementParams();
+	translocationParams transloc = pManagement->getTranslocationParams();
 	initParams init = paramsInit->getInit();
 	simParams sim = paramsSim->getSim();
 	simView v = paramsSim->getViews();
@@ -486,6 +488,14 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				}
 #endif
 
+				// TODO move translocation before dispersal?
+				if (manage.translocation && std::find(transloc.translocation_years.begin(), transloc.translocation_years.end(), yr) != transloc.translocation_years.end()) {
+				    pManagement->translocate(yr
+                                     , pLandscape
+                                     , pSpecies
+                                     );
+				}
+
 				if (v.viewPop || (sim.saveMaps && yr % sim.mapInt == 0)) {
 					if (updateland && gen == 0) {
 						pLandscape->drawLandscape(rep, landIx, ppLand.landNum);
@@ -559,6 +569,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				else { // non-structured population
 					pComm->survival(0, 1, 1);
 				}
+
 #if RSDEBUG
 				DEBUGLOG << "RunModel(): yr=" << yr << " gen=" << gen << " completed survival part 0" << endl;
 #endif
@@ -1926,6 +1937,45 @@ void OutParameters(Landscape* pLandscape)
 					outPar << "Genome exhibits pleiotropy" << endl;
 			}
 		}
+	}
+
+	// Management
+	managementParams manage = pManagement->getManagementParams();
+	translocationParams transloc = pManagement->getTranslocationParams();
+	if(manage.translocation){
+	    outPar << endl << "MANAGEMENT - TRANSLOCATION: \t";
+        // loop over translocation_years and print them
+        outPar << endl;
+	    outPar << "Catching rate: " << transloc.catching_rate << endl;
+	    for( int i = 0; i < transloc.translocation_years.size(); i++ ) {
+	        auto yr = transloc.translocation_years[i];
+	        auto it = transloc.nb.find(yr);
+	        auto nb_it = transloc.nb.find(yr);
+	        auto source_it = transloc.source.find(yr);
+	        auto target_it = transloc.target.find(yr);
+	        auto min_age_it = transloc.min_age.find(yr);
+	        auto max_age_it = transloc.max_age.find(yr);
+	        auto stage_it = transloc.stage.find(yr);
+	        auto sex_it = transloc.sex.find(yr);
+	        outPar << "  Translocation events in year: " << yr << endl;
+	        for( int j = 0; j < it->second.size(); j++ ){
+	            outPar << "    Event Nr. " << j+1 << " :" << endl;
+	            // if it is a cell based model
+	            if(ppLand.patchModel){
+	                outPar << "      Source patch ID: " << source_it->second[j].x << endl;
+	                outPar << "      Target patch ID: " << target_it->second[j].x << endl;
+	            } else{
+	                outPar << "      Source cell: X " << source_it->second[j].x << " Y " << source_it->second[j].y << endl;
+	                outPar << "      Target cell: X " << target_it->second[j].x << " Y " << target_it->second[j].y << endl;
+	            }
+	            outPar << "      Min age: " << min_age_it->second[j] << endl;
+	            outPar << "      Max age: " << max_age_it->second[j] << endl;
+	            outPar << "      Stage: " << stage_it->second[j] << endl;
+	            outPar << "      Sex: " << sex_it->second[j] << endl;
+	            outPar << "      Number of individuals: " << nb_it->second[j] << endl;
+
+	        }
+	    }
 	}
 
 	// Initialisation

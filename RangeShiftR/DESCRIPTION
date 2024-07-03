@@ -26,6 +26,7 @@ LinkingTo: Rcpp
 Encoding: UTF-8
 RoxygenNote: 7.3.1
 Collate: 
+    'class_ManagementParams.R'
     'Rfunctions.R'
     'plotProbs.R'
     'class_InitialisationParams.R'

@@ -157,6 +157,18 @@ setMethod("+", signature(e1 = "RSparams", e2 = "GeneticsParams"), function(e1, e
     return(e1)}
 )
 
+setMethod("+", signature(e1 = "RSparams", e2 = "ManagementParams"), function(e1, e2) {
+    validObject(e2)
+    if (class(e2@Translocation)[1] == "TranslocationParams") {
+        e1@control@translocation = TRUE
+    }
+    else {
+        e1@control@translocation = FALSE
+    }
+    e1@management <- e2
+    return(e1)}
+)
+
 setMethod("+", signature(e1 = "RSparams", e2 = "InitialisationParams"), function(e1, e2) {
     validObject(e2)
     e1@init <- e2
