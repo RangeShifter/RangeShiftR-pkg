@@ -302,7 +302,7 @@ void NeutralStatsManager::calculateFstatWC(set<int> const& patchList, const int 
 
 		// Calculate F stats
 		nBar = static_cast<double>(totalSampleSize) / nbPopulatedPatches; // average sample size, cannot be less than 1
-		nC = (totalSampleSize - sumWeights) / nbPopulatedPatches - 1;
+		nC = (totalSampleSize - sumWeights) / (nbPopulatedPatches - 1);
 		double nBarMinusOne = (nBar == 1.0) ? 1.0 : nBar - 1.0; // avoid / 0 if exactly 1 ind per pop
 		inverseNbar = 1.0 / nBarMinusOne;
 		inverseNtotal = 1.0 / nbSampledIndsInComm;
@@ -311,7 +311,7 @@ void NeutralStatsManager::calculateFstatWC(set<int> const& patchList, const int 
 		double s2, pBar, hBar;
 		double s2Denom = 1.0 / ((nbPopulatedPatches - 1) * nBar);
 		double rTerm = static_cast<double>(nbPopulatedPatches - 1) / nbPopulatedPatches;
-		double hBarFactor = (2 * nBarMinusOne) / (4 * nBar);
+		double hBarFactor = (2 * nBar - 1) / (4 * nBar);
 
 		double a = 0, b = 0, c = 0, intermediateTerm;
 		for (int thisLocus = 0; thisLocus < nLoci; ++thisLocus) {
@@ -319,7 +319,6 @@ void NeutralStatsManager::calculateFstatWC(set<int> const& patchList, const int 
 
 				s2 = hBar = 0;
 				pBar = commNeutralCountTables[thisLocus].getFrequency(allele);
-
 				for (int patchId : patchList) {
 					const auto patch = pLandscape->findPatch(patchId);
 					const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
