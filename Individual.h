@@ -349,6 +349,7 @@ public:
 	void insertIndDispTrait(TraitType trType, DispersalTrait tr) {
 		spTraitTable.insert(make_pair(trType, make_unique<DispersalTrait>(tr)));
 	};
+	void triggerMutations();
 #endif
 
 private:

@@ -598,6 +598,89 @@ void testIndividual() {
 		assert(countRecombineTogetherAB > countRecombineTogetherAC);
 		assert(35 < countRecombineTogetherCD && countRecombineTogetherCD < 65);
 	}
+
+	// Traits can be sex-specific
+	{
+		Patch* pPatch = new Patch(0, 0);
+		Cell* pCell = new Cell(0, 0, (intptr)pPatch, 0);
+
+		const int genomeSz = 6;
+		Species* pSpecies = new Species();
+		pSpecies->setGeneticParameters(
+			set<int>{genomeSz - 1}, // one chromosome
+			genomeSz,
+			0.0, // no recombination
+			set<int>{}, "none", set<int>{}, 0 // no output so no sampling
+		);
+		emigRules emig;
+		emig.indVar = true; 
+		emig.sexDep = true;
+		emig.densDep = false;
+		pSpecies->setEmigRules(emig);
+
+		// Create species trait
+		//// Shared params
+		const map<GenParamType, float> initParams{
+			// all values are 1
+			pair<GenParamType, float>{GenParamType::MIN, 1.0},
+			pair<GenParamType, float>{GenParamType::MAX, 1.0}
+		};
+		const map<GenParamType, float> mutationParams{
+			// reduction of emigration probability
+			pair<GenParamType, float>{GenParamType::MIN, -0.5},
+			pair<GenParamType, float>{GenParamType::MAX, -0.25}
+		};
+		const bool isDiploid{ true };
+
+		//// Sex-specific params
+		const set<int> maleGenePositions = { 0, 2, 4 };
+		const set<int> femaleGenePositions = { 1, 3, 5 };
+		const float maleMutationRate = 0.0;
+		const float femaleMutationRate = 1.0;
+
+		SpeciesTrait* spTrM = new SpeciesTrait(
+			TraitType::E_D0_M,
+			sex_t::MAL,
+			maleGenePositions,
+			ExpressionType::AVERAGE,
+			// Set all initial alleles values to 1
+			DistributionType::UNIFORM, initParams,
+			DistributionType::NONE, initParams, // no dominance, params are ignored
+			true, // isInherited
+			maleMutationRate, // does not mutate
+			DistributionType::UNIFORM, mutationParams, // not used
+			isDiploid ? 2 : 1
+		);
+
+		pSpecies->addTrait(TraitType::E_D0_M, *spTrM);
+
+		SpeciesTrait* spTrF = new SpeciesTrait(
+			TraitType::E_D0_F,
+			sex_t::FEM,
+			femaleGenePositions,
+			ExpressionType::AVERAGE,
+			// Set all initial alleles values to 1
+			DistributionType::UNIFORM, initParams,
+			DistributionType::NONE, initParams, // no dominance, params are ignored
+			true, // isInherited
+			femaleMutationRate, // does not mutate
+			DistributionType::UNIFORM, mutationParams, // not used
+			isDiploid ? 2 : 1
+		);
+		pSpecies->addTrait(TraitType::E_D0_F, *spTrF);
+
+		Individual indFemale = Individual(pCell, pPatch, 0, 0, 0, 0.0, false, 0);
+		Individual indMale = Individual(pCell, pPatch, 0, 0, 0, 1.0, false, 0);
+		indFemale.setUpGenes(pSpecies, 1.0);
+		indMale.setUpGenes(pSpecies, 1.0);
+		indFemale.triggerMutations();
+		indMale.triggerMutations();
+
+		emigTraits femaleEmig = indFemale.getIndEmigTraits();
+		emigTraits maleEmig = indMale.getIndEmigTraits();
+		assert(femaleEmig.d0 != 1.0);
+		assert(maleEmig.d0 == 1.0);
+	}
 }
 
 #endif //RSDEBUG

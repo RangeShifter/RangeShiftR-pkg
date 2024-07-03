@@ -51,7 +51,12 @@ SpeciesTrait::SpeciesTrait(
 		switch (paramType)
 		{
 		case MIN: case MAX: case MEAN:
-			if (!isValidTraitVal(paramVal))
+			if (
+				(trType == NEUTRAL || trType == GENETIC_LOAD || trType == GENETIC_LOAD1 ||
+				trType == GENETIC_LOAD2 || trType == GENETIC_LOAD3 || trType == GENETIC_LOAD4 || trType == GENETIC_LOAD5)
+				&& !isValidTraitVal(paramVal)
+				// dispersal traits are cumulative so no value is invalid
+				)
 				throw logic_error("Invalid parameter value: mutation parameter " + to_string(paramType) + " must have a valid value for trait" + to_string(traitType) + ".");
 			break;
 		case SD: case SHAPE: case SCALE:

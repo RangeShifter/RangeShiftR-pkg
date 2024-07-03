@@ -188,9 +188,9 @@ void Individual::inherit(Species* pSpecies, const Individual* mother) {
 	set<unsigned int> recomPositions; //not used here cos haploid but need it for inherit function, not ideal 
 	int startingChromosome = 0;
 
-	const auto& mumTraits = getTraitTypes();
+	const auto& motherTraits = getTraitTypes();
 
-	for (auto const& trait : mumTraits)
+	for (auto const& trait : motherTraits)
 	{
 		const auto motherTrait = mother->getTrait(trait);
 		auto newTrait = motherTrait->clone(); // shallow copy, pointer to species trait initialised and empty sequence
@@ -1591,10 +1591,16 @@ Cell* Individual::getCurrCell() const {
 	return pCurrCell;
 }
 
-
 void Individual::setInitAngle(const float angle) {
 	auto pCRW = dynamic_cast<crwData*>(pTrfrData.get());
 	pCRW->prevdrn = angle;
+}
+
+// Force mutations to trigger for all traits
+void Individual::triggerMutations() {
+	for (auto const& [trType, indTrait] : spTraitTable) {
+		indTrait->mutate();
+	}
 }
 
 #endif // RSDEBUG
