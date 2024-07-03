@@ -475,7 +475,6 @@ void Population::reproduction(const float localK, const float envval, const int 
 					// determine whether she must miss current breeding attempt
 					ind = inds[i]->getStats();
 					if (ind.fallow >= sstruct.repInterval) {
-					    if(sstruct.probRep > 1) Rcpp::Rcout << "probRep: " << sstruct.probRep << std::endl;
 						if (pRandom->Bernoulli(sstruct.probRep)) skipbreeding = false;
 						else skipbreeding = true;
 					}
@@ -540,7 +539,6 @@ void Population::reproduction(const float localK, const float envval, const int 
 						// determine whether she must miss current breeding attempt
 						ind = inds[i]->getStats();
 						if (ind.fallow >= sstruct.repInterval) {
-						    if(sstruct.probRep > 1) Rcpp::Rcout << "probRep: " << sstruct.probRep << std::endl;
 							if (pRandom->Bernoulli(sstruct.probRep)) skipbreeding = false;
 							else skipbreeding = true;
 						}
@@ -757,7 +755,6 @@ void Population::emigration(float localK)
 
 
 			} // end of no individual variability
-			if (disp > 1) Rcpp::Rcout << "disp: " << disp << std::endl;
 			disp = pRandom->Bernoulli(Pdisp);
 
 			if (disp == 1) { // emigrant
@@ -954,8 +951,6 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 #endif //RS_RCPP
 								settprob = settDD.s0 /
 									(1.0 + exp(-(popsize / localK - (double)settDD.beta) * (double)settDD.alpha));
-
-								if (settprob > 1) Rcpp::Rcout << "settprob: " << settprob << std::endl;
 
 								if (pRandom->Bernoulli(settprob)) { // settlement allowed
 									densdepOK = true;
@@ -1244,7 +1239,6 @@ void Population::survival0(float localK, short option0, short option1)
 					double probdev = dev[ind.stage][ind.sex];
 					if (ind.stage < nStages - 1) { // not final stage
 						if (ind.age >= minAge[ind.stage + 1][ind.sex]) { // old enough to enter next stage
-						    if (probdev > 1) Rcpp::Rcout << "probdev: " << probdev << std::endl;
 							if (pRandom->Bernoulli(probdev)) {
 								inds[i]->developing();
 							}
@@ -1832,18 +1826,6 @@ Individual* Population::catchIndividual( // Translocate a set of individuals wit
         return NULL;
     }
 }
-
-// ---------------------------------------------------------------------------
-// // Add a specified individual to the new or current population of a patch
-// void Population::recruitTranslocated(Individual* catched_individual) {
-//     Rcpp::Rcout << "Recruit translocated individual" << endl;
-//     Rcpp::Rcout << "Individual ID: " << catched_individual->getId() << endl;
-//     Rcpp::Rcout << "Size of population" << getNInds() << endl;
-//     inds.push_back(catched_individual);
-//     Rcpp::Rcout << "Size of population after translocation" << getNInds() << endl;
-//     indStats ind = catched_individual->getStats();
-//     nInds[ind.stage][ind.sex]++;
-// }
 
 // ---------------------------------------------------------------------------
 bool Population::getSizeSampledInds(
