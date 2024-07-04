@@ -2409,7 +2409,9 @@ rasterdata CheckRasterFile(string fname)
 			).c_str());
 #endif
 		if (header != "yllcorner" && header != "YLLCORNER") r.errors++;
-		infile >> header >> r.cellsize;
+		double tmpcellsize;
+		infile >> header >> tmpcellsize;
+		r.cellsize = (int) tmpcellsize;
 #if RSDEBUG
 		DebugGUI(("CheckRasterFile(): header=" + header + " r.cellsize=" + Int2Str(r.cellsize)
 			).c_str());
