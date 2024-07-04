@@ -599,11 +599,14 @@ void testIndividual() {
 		assert(35 < countRecombineTogetherCD && countRecombineTogetherCD < 65);
 	}
 
-	// Traits can be sex-specific
+	// Sex-specific traits use the correct genes
+	/// Set up a sex-dependent emigration probability with male and female loci
+	/// Emigration probability is 1 initially, but female trait mutates.
 	{
 		Patch* pPatch = new Patch(0, 0);
 		Cell* pCell = new Cell(0, 0, (intptr)pPatch, 0);
 
+		// Species-level paramters
 		const int genomeSz = 6;
 		Species* pSpecies = new Species();
 		pSpecies->setGeneticParameters(
@@ -651,7 +654,6 @@ void testIndividual() {
 			DistributionType::UNIFORM, mutationParams, // not used
 			isDiploid ? 2 : 1
 		);
-
 		pSpecies->addTrait(TraitType::E_D0_M, *spTrM);
 
 		SpeciesTrait* spTrF = new SpeciesTrait(
@@ -663,19 +665,22 @@ void testIndividual() {
 			DistributionType::UNIFORM, initParams,
 			DistributionType::NONE, initParams, // no dominance, params are ignored
 			true, // isInherited
-			femaleMutationRate, // does not mutate
+			femaleMutationRate, // does mutate
 			DistributionType::UNIFORM, mutationParams, // not used
 			isDiploid ? 2 : 1
 		);
 		pSpecies->addTrait(TraitType::E_D0_F, *spTrF);
 
+		// Set up male and female individuals, trigger mutations
 		Individual indFemale = Individual(pCell, pPatch, 0, 0, 0, 0.0, false, 0);
 		Individual indMale = Individual(pCell, pPatch, 0, 0, 0, 1.0, false, 0);
 		indFemale.setUpGenes(pSpecies, 1.0);
 		indMale.setUpGenes(pSpecies, 1.0);
-		indFemale.triggerMutations();
-		indMale.triggerMutations();
-
+		indFemale.triggerMutations(pSpecies);
+		indMale.triggerMutations(pSpecies);
+		
+		// Male should use male trait, still 1
+		// Female should use female trait, has mutated
 		emigTraits femaleEmig = indFemale.getIndEmigTraits();
 		emigTraits maleEmig = indMale.getIndEmigTraits();
 		assert(femaleEmig.d0 != 1.0);

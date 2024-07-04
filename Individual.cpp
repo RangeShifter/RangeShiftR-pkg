@@ -1597,10 +1597,11 @@ void Individual::setInitAngle(const float angle) {
 }
 
 // Force mutations to trigger for all traits
-void Individual::triggerMutations() {
+void Individual::triggerMutations(Species* pSp) {
 	for (auto const& [trType, indTrait] : spTraitTable) {
 		indTrait->mutate();
 	}
+	this->setDispersalPhenotypes(pSp, 1.0);
 }
 
 #endif // RSDEBUG
