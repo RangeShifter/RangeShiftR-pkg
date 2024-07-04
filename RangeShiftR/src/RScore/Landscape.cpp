@@ -182,10 +182,12 @@ int InitDist::readDistribution(string distfile) {
 #endif
 	if (!dfile.is_open()) return 21;
 
-	// read landscape data from header records of distribution file
-	// NB headers of all files have already been compared
-	dfile >> header >> ncols >> header >> nrows >> header >> minEast >> header >> minNorth
-		>> header >> resol >> header >> nodata;
+// read landscape data from header records of distribution file
+// NB headers of all files have already been compared
+double tmpresol;
+dfile >> header >> ncols >> header >> nrows >> header >> minEast >> header >> minNorth
+	>> header >> tmpresol >> header >> nodata;
+resol = (int) tmpresol;
 #if RS_RCPP
 	if (!dfile.good()) {
 		// corrupt file stream
@@ -1796,10 +1798,12 @@ int Landscape::readLandscape(int fileNum, string habfile, string pchfile, string
 		}
 	}
 
-	// read landscape data from header records of habitat file
-	// NB headers of all files have already been compared
-	hfile >> header >> ncols >> header >> nrows >> header >> minEast >> header >> minNorth
-		>> header >> resol >> header >> habnodata;
+// read landscape data from header records of habitat file
+// NB headers of all files have already been compared
+double tmpresol;
+hfile >> header >> ncols >> header >> nrows >> header >> minEast >> header >> minNorth
+	>> header >> tmpresol >> header >> habnodata;
+resol = (int) tmpresol;
 
 #if RS_RCPP
 	if (!hfile.good()) {
@@ -2387,7 +2391,9 @@ rasterdata CheckRasterFile(string fname)
 		infile >> header >> r.yllcorner;
 
 		if (header != "yllcorner" && header != "YLLCORNER") r.errors++;
-		infile >> header >> r.cellsize;
+		double tmpcellsize;
+		infile >> header >> tmpcellsize;
+		r.cellsize = (int) tmpcellsize;
 
 		if (header != "cellsize" && header != "CELLSIZE") r.errors++;
 		infile >> header >> inint;
