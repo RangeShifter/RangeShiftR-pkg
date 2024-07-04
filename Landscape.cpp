@@ -2391,7 +2391,9 @@ rasterdata CheckRasterFile(string fname)
 		infile >> header >> r.yllcorner;
 
 		if (header != "yllcorner" && header != "YLLCORNER") r.errors++;
-		infile >> header >> r.cellsize;
+		double tmpcellsize;
+		infile >> header >> tmpcellsize;
+		r.cellsize = (int) tmpcellsize;
 
 		if (header != "cellsize" && header != "CELLSIZE") r.errors++;
 		infile >> header >> inint;
