@@ -4081,28 +4081,6 @@ void DebugGUI(string msg)
 }
 #endif
 
-traitCanvas SetupTraitCanvas(void)
-{
-	traitCanvas tcanv;
-	for(int i = 0; i < NTRAITS; i++) {
-		tcanv.pcanvas[i] = 0;
-	}
-	return tcanv;
-}
-
-void Landscape::setLandMap(void)
-{
-}
-void Landscape::drawLandscape(int rep, int yr, int landnum)
-{
-}
-void Community::viewOccSuit(int year, double mn, double se)
-{
-}
-void Community::draw(int rep, int yr, int gen, int landNum)
-{
-}
-
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------

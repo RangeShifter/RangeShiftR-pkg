@@ -127,7 +127,6 @@ void MemoLine(string);
 void DebugGUI(string);
 #endif
 
-traitCanvas SetupTraitCanvas(void);
 
 
 //---------------------------------------------------------------------------
