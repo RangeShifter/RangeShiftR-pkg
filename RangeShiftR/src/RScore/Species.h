@@ -739,10 +739,5 @@ rationale is justified remains to be tested!
 
 //---------------------------------------------------------------------------
 
-#if RSDEBUG
-//extern ofstream DEBUGLOG;
-extern void DebugGUI(string);
-#endif
-
 //---------------------------------------------------------------------------
 #endif

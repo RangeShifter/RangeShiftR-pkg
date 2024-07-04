@@ -451,19 +451,6 @@ public:
 	int readCosts(
 		string	// costs file name
 	);
-	// the following four functions are implemented for the GUI version only
-	// in the batch version, they are defined, but empty
-	void setLandMap(void);
-	void drawLandscape(
-		int,	// replicate no.
-		int,	// landscape index number (always 0 if landscape is not dynamic)
-		int		// landscape no.
-	);
-	void drawGradient(void); // Draw environmental gradient map
-	void drawGlobalStoch(	// Draw environmental stochasticity time-series
-		int		// no. of years
-	);
-
 	void resetVisits(void);
 	void outVisits(int,int);	// save SMS path visits map to raster text file
 
@@ -547,10 +534,7 @@ extern RSrandom *pRandom;
 
 #if RSDEBUG
 extern ofstream DEBUGLOG;
-extern void DebugGUI(string);
 #endif
-
-extern void MemoLine(string);
 
 #if RS_RCPP
 extern rasterdata landraster,patchraster,spdistraster,costsraster;

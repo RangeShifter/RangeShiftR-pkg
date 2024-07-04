@@ -2299,10 +2299,6 @@ costs >> maxXcost >> header >> maxYcost >> header >> minLongCost;
 costs >> header >> minLatCost >> header >> tmpresolCost >> header >> NODATACost;
 resolCost = (int) tmpresolCost;
 
-#if !RS_RCPP
-	MemoLine("Loading costs map. Please wait...");
-#endif
-
 	for (int y = maxYcost - 1; y > -1; y--) {
 		for (int x = 0; x < maxXcost; x++) {
 #if RS_RCPP
@@ -2356,8 +2352,6 @@ if (costs.eof()) {
 #endif
 }
 else EOFerrorR(fname);
-#else
-MemoLine("Costs map loaded.");
 #endif
 
 costs.close(); costs.clear();
@@ -2382,40 +2376,22 @@ rasterdata CheckRasterFile(string fname)
 	infile.open(fname.c_str());
 	if (infile.is_open()) {
 		infile >> header >> r.ncols;
-#if RSDEBUG
-		DebugGUI(("CheckRasterFile(): header=" + header + " r.ncols=" + Int2Str(r.ncols)
-			).c_str());
-#endif
+
 		if (header != "ncols" && header != "NCOLS") r.errors++;
 		infile >> header >> r.nrows;
-#if RSDEBUG
-		DebugGUI(("CheckRasterFile(): header=" + header + " r.nrows=" + Int2Str(r.nrows)
-			).c_str());
-#endif
+
 		if (header != "nrows" && header != "NROWS") r.errors++;
 		infile >> header >> r.xllcorner;
-#if RSDEBUG
-		DebugGUI(("CheckRasterFile(): header=" + header + " r.xllcorner=" + Float2Str(r.xllcorner)
-			).c_str());
-#endif
+
 		if (header != "xllcorner" && header != "XLLCORNER") r.errors++;
 		infile >> header >> r.yllcorner;
-#if RSDEBUG
-		DebugGUI(("CheckRasterFile(): header=" + header + " r.yllcorner=" + Float2Str(r.yllcorner)
-			).c_str());
-#endif
+
 		if (header != "yllcorner" && header != "YLLCORNER") r.errors++;
 		infile >> header >> r.cellsize;
-#if RSDEBUG
-		DebugGUI(("CheckRasterFile(): header=" + header + " r.cellsize=" + Int2Str(r.cellsize)
-			).c_str());
-#endif
+
 		if (header != "cellsize" && header != "CELLSIZE") r.errors++;
 		infile >> header >> inint;
-#if RSDEBUG
-		DebugGUI(("CheckRasterFile(): header=" + header + " inint=" + Int2Str(inint)
-			).c_str());
-#endif
+
 		if (header != "NODATA_value" && header != "NODATA_VALUE") r.errors++;
 		infile.close();
 		infile.clear();
