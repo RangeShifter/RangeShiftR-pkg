@@ -1,6 +1,7 @@
 #if RSDEBUG
 
 #include "../Individual.h"
+#include "../Population.h"
 
 void testTransferKernels() {
 	// Simple 5*5 cell-based landscape layout
@@ -685,6 +686,79 @@ void testIndividual() {
 		emigTraits maleEmig = indMale.getIndEmigTraits();
 		assert(femaleEmig.d0 != 1.0);
 		assert(maleEmig.d0 == 1.0);
+	}
+
+	// Individuals use species-level trait when not individual variable,
+	// and individual-level trait when trait is individual variable
+	{
+		float spEmigProb = 1.0;
+		float indEmigProb = 0.0;
+
+		Patch* pPatch = new Patch(0, 0);
+		Cell* pCell = new Cell(0, 0, (intptr)pPatch, 0);
+
+		// Species-level paramters
+		const int genomeSz = 1;
+		Species* pSpecies = new Species();
+		pSpecies->setGeneticParameters(
+			set<int>{genomeSz - 1}, // one chromosome
+			genomeSz,
+			0.0, // no recombination
+			set<int>{}, "none", set<int>{}, 0 // no output so no sampling
+		);
+		emigRules emig;
+		emig.indVar = false; 
+		emig.stgDep = false; emig.sexDep = false; emig.densDep = false;
+		pSpecies->setEmigRules(emig);
+
+		emigTraits spEmigTraits; spEmigTraits.d0 = spEmigProb;
+		pSpecies->setSpEmigTraits(0, 0, spEmigTraits);
+
+		// Create species trait
+		const map<GenParamType, float> initParams{
+			// Emigration probability is always 0
+			pair<GenParamType, float>{GenParamType::MIN, indEmigProb},
+			pair<GenParamType, float>{GenParamType::MAX, indEmigProb}
+		};
+		const map<GenParamType, float> mutationParams = initParams; // doesn't matter, not used
+		SpeciesTrait* spTr = new SpeciesTrait(
+			TraitType::E_D0,
+			sex_t::NA,
+			set<int>{ 0 }, // only one locus
+			ExpressionType::AVERAGE,
+			// Set all initial alleles values to 1
+			DistributionType::UNIFORM, initParams,
+			DistributionType::NONE, initParams, // no dominance, params are ignored
+			true, // isInherited
+			0.0, // no mutation
+			DistributionType::UNIFORM, mutationParams, // not used
+			2 // diploid
+		);
+		pSpecies->addTrait(TraitType::E_D0, *spTr);
+
+		Individual ind = Individual(pCell, pPatch, 0, 0, 0, 0.0, false, 0);
+		ind.setUpGenes(pSpecies, 1.0);
+
+		// Create population to trigger emigration selection
+		Population pop(pSpecies, pPatch, 0, 1.0);
+		pop.recruit(&ind);
+		assert(ind.getStatus() == 0);
+		pop.emigration(100.0);
+
+		// Individual is using the species-wide emigration prob, 
+		// so should be selected to emigrate (status 1)
+		assert(ind.getStatus() == 1);
+
+		// Change rules to use individual-variable trait
+		ind.setStatus(0);
+		emig.indVar = true;
+		pSpecies->setEmigRules(emig);
+		pop.emigration(100.0);
+
+		// Individual-level emig prob is zero, must not be emigrating;
+		assert(ind.getStatus() == 0);
+
+		pop.clearInds(); // empty inds vector to not deallocate individual twice
 	}
 }
 

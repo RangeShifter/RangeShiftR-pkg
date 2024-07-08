@@ -366,18 +366,18 @@ private:
 		// 4 = completed settlement
 		// 5 = completed settlement in a suitable neighbouring cell
 		// 6 = died during transfer by failing to find a suitable patch
-		//     (includes exceeding maximum number of steps or crossing
-		//		absorbing boundary)
+		//	(includes exceeding maximum number of steps or crossing
+		//	absorbing boundary)
 		// 7 = died during transfer by constant, step-dependent,
-		//     habitat-dependent or distance-dependent mortality
+		//	habitat-dependent or distance-dependent mortality
 		// 8 = failed to survive annual (demographic) mortality
 		// 9 = exceeded maximum age
 	short fallow; // reproductive seasons since last reproduction
 	bool isDeveloping;
-	Cell* pPrevCell;						// pointer to previous Cell
-	Cell* pCurrCell;						// pointer to current Cell
-	Patch* pNatalPatch;					// pointer to natal Patch
-	pathData* path; 						// pointer to path data for movement model
+	Cell* pPrevCell;	// pointer to previous Cell
+	Cell* pCurrCell;	// pointer to current Cell
+	Patch* pNatalPatch;	// pointer to natal Patch
+	pathData* path;		// pointer to path data for movement model
 	std::unique_ptr <emigTraits> pEmigTraits;			// pointer to emigration traits
 	std::unique_ptr <settleTraits> pSettleTraits;		// pointer to settlement traits
 	std::unique_ptr <trfrData> pTrfrData; //can be sms, kernel, crw

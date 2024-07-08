@@ -1043,7 +1043,6 @@ disperser Population::extractDisperser(int ix) {
 disperser Population::extractSettler(int ix) {
 	disperser d = disperser();
 	Cell* pCell;
-//Patch* pPatch;
 
 	indStats ind = inds[ix]->getStats();
 	pCell = inds[ix]->getLocn(1);

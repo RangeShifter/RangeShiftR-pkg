@@ -229,6 +229,11 @@ public:
 	vector<int> countNbHeterozygotesEachLocus();
 	double computeHs();
 
+#if RSDEBUG
+	// Testing only
+	void clearInds() { inds.clear(); } // empty inds vector to avoid deallocating individual is used separately in test
+#endif // RSDEBUG
+
 private:
 	short nStages;
 	short nSexes;
