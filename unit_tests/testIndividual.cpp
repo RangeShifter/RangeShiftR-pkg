@@ -726,7 +726,6 @@ void testIndividual() {
 			sex_t::NA,
 			set<int>{ 0 }, // only one locus
 			ExpressionType::AVERAGE,
-			// Set all initial alleles values to 1
 			DistributionType::UNIFORM, initParams,
 			DistributionType::NONE, initParams, // no dominance, params are ignored
 			true, // isInherited
@@ -791,7 +790,6 @@ void testIndividual() {
 			sex_t::NA,
 			set<int>{ 0 }, // only one locus
 			ExpressionType::MULTIPLICATIVE,
-			// Set all initial alleles values to 1
 			DistributionType::NONE, initParams,
 			DistributionType::UNIFORM, domParams, // no dominance, params are ignored
 			true, // isInherited
@@ -812,6 +810,60 @@ void testIndividual() {
 
 		// Individual now bears a lethal allele
 		assert(ind.getGeneticFitness() == 0.0);
+		assert(!ind.isViable());
+	}
+
+	// A largely dominant alleles overrides the expression of its homologue
+	{
+		Patch* pPatch = new Patch(0, 0);
+		Cell* pCell = new Cell(0, 0, (intptr)pPatch, 0);
+
+		// Species-level paramters
+		const int genomeSz = 1;
+		Species* pSpecies = new Species();
+		pSpecies->setGeneticParameters(
+			set<int>{genomeSz - 1}, // one chromosome
+			genomeSz,
+			0.0, // no recombination
+			set<int>{}, "none", set<int>{}, 0 // no output so no sampling
+		);
+
+		// Create species trait
+		const map<GenParamType, float> distParams{
+			pair<GenParamType, float>{GenParamType::MIN, 0.0},
+			pair<GenParamType, float>{GenParamType::MAX, 0.0}
+		};
+
+		SpeciesTrait* spTr = new SpeciesTrait(
+			TraitType::GENETIC_LOAD1,
+			sex_t::NA,
+			set<int>{ 0 }, // only one locus
+			ExpressionType::MULTIPLICATIVE,
+			DistributionType::NONE, distParams,
+			DistributionType::UNIFORM, distParams, // no dominance, params are ignored
+			true, // isInherited
+			0.0, // no mutation
+			DistributionType::UNIFORM, distParams, // lethal mutation
+			2 // diploid
+		);
+		pSpecies->addTrait(TraitType::GENETIC_LOAD1, *spTr);
+
+		Individual ind = Individual(pCell, pPatch, 0, 0, 0, 0.0, false, 0);
+		ind.setUpGenes(pSpecies, 1.0);
+
+		const float valAlleleA = 1.0; // lethal
+		const float valAlleleB = 0.0; // mild
+		float domCoefA = 0.00001; // highly recessive
+		float domCoefB = 1.0;
+		auto viableGenotype = createTestGenotype(genomeSz, true, valAlleleA, valAlleleB, domCoefA, domCoefB);
+		ind.overrideGenotype(GENETIC_LOAD1, viableGenotype);
+		ind.triggerMutations(pSpecies); // no mutations (rate = 0) but updates genetic fitness
+		assert(ind.isViable());
+
+		domCoefA = 10000.0; // oh gosh now it's lethal AND dominant
+		auto lethalGenotype = createTestGenotype(genomeSz, true, valAlleleA, valAlleleB, domCoefA, domCoefB);
+		ind.overrideGenotype(GENETIC_LOAD1, lethalGenotype);
+		ind.triggerMutations(pSpecies);
 		assert(!ind.isViable());
 	}
 }

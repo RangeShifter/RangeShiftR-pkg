@@ -1615,5 +1615,37 @@ void Individual::triggerMutations(Species* pSp) {
 	this->setDispersalPhenotypes(pSp, 1.0);
 }
 
+// Shorthand function to edit a genotype with custom values
+void Individual::overrideGenotype(TraitType whichTrait, const map<int, vector<shared_ptr<Allele>>>& newGenotype) {
+
+	GeneticFitnessTrait* pGenFitTrait;
+	DispersalTrait* pDispTrait;
+
+	switch (whichTrait)
+	{
+	case GENETIC_LOAD1: case GENETIC_LOAD2: case GENETIC_LOAD3: case GENETIC_LOAD4: case GENETIC_LOAD5: 
+		pGenFitTrait = dynamic_cast<GeneticFitnessTrait*>(this->getTrait(whichTrait));
+		pGenFitTrait->getGenes() = newGenotype;
+		break;
+	case E_D0: case E_ALPHA: case E_BETA:
+	case S_S0: case S_ALPHA: case S_BETA:
+	case E_D0_F: case E_ALPHA_F: case E_BETA_F:
+	case S_S0_F: case S_ALPHA_F: case S_BETA_F: 
+	case E_D0_M: case E_ALPHA_M: case E_BETA_M: 
+	case S_S0_M: case S_ALPHA_M: case S_BETA_M: 
+	case CRW_STEPLENGTH: case CRW_STEPCORRELATION: 
+	case KERNEL_MEANDIST_1: case KERNEL_MEANDIST_2: case KERNEL_PROBABILITY: 
+	case KERNEL_MEANDIST_1_F: case KERNEL_MEANDIST_2_F: case KERNEL_PROBABILITY_F: 
+	case KERNEL_MEANDIST_1_M: case KERNEL_MEANDIST_2_M: case KERNEL_PROBABILITY_M: 
+	case SMS_DP: case SMS_GB: case SMS_ALPHADB: case SMS_BETADB:
+		pDispTrait = dynamic_cast<DispersalTrait*>(this->getTrait(whichTrait));
+		pDispTrait->getGenes() = newGenotype;
+		break;
+	default:
+		throw logic_error("Wrong trait type: please choose a valid dispersal or genetic fitness trait.");
+		break;
+	}
+};
+
 #endif // RSDEBUG
 

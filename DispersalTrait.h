@@ -94,6 +94,9 @@ private:
 	float expressAdditive();
 };
 
+#if RSDEBUG
+// Test utilities
+
 map<int, vector<shared_ptr<Allele>>> createTestGenotype(
 	const int genomeSz, const bool isDiploid,
 	const float valAlleleA,
@@ -101,5 +104,6 @@ map<int, vector<shared_ptr<Allele>>> createTestGenotype(
 	const float domCoeffA = 0.0, // default for dispersal traits
 	const float domCoeffB = 0.0
 );
+#endif //RSDEBUG
 
 #endif // DISPTRAITH

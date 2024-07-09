@@ -351,6 +351,8 @@ public:
 		spTraitTable.insert(make_pair(trType, make_unique<DispersalTrait>(tr)));
 	};
 	void triggerMutations(Species* pSp);
+	// Shorthand function to edit a genotype with custom values
+	void overrideGenotype(TraitType whichTrait, const map<int, vector<shared_ptr<Allele>>>& newGenotype);
 #endif
 
 private:
