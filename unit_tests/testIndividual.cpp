@@ -761,7 +761,8 @@ void testIndividual() {
 		pop.clearInds(); // empty inds vector to not deallocate individual twice
 	}
 
-	// Individuals with genetic fitness phenotype = 1 are unviable
+	// Individuals with genetic fitness = 1 are always viable
+	// Individuals with genetic fitness = 0 are never viable
 	{
 		Patch* pPatch = new Patch(0, 0);
 		Cell* pCell = new Cell(0, 0, (intptr)pPatch, 0);
@@ -778,7 +779,7 @@ void testIndividual() {
 
 		// Create species trait
 		const map<GenParamType, float> mutationParams{
-			// Emigration probability is always 0
+			// Always sample 1 = a lethal mutation
 			pair<GenParamType, float>{GenParamType::MIN, 1.0},
 			pair<GenParamType, float>{GenParamType::MAX, 1.0}
 		};
@@ -786,7 +787,7 @@ void testIndividual() {
 		const map<GenParamType, float> initParams = mutationParams; // doesn't matter, not used
 
 		SpeciesTrait* spTr = new SpeciesTrait(
-			TraitType::GENETIC_LOAD,
+			TraitType::GENETIC_LOAD1,
 			sex_t::NA,
 			set<int>{ 0 }, // only one locus
 			ExpressionType::MULTIPLICATIVE,
@@ -794,17 +795,23 @@ void testIndividual() {
 			DistributionType::NONE, initParams,
 			DistributionType::UNIFORM, domParams, // no dominance, params are ignored
 			true, // isInherited
-			0.0, // no mutation
-			DistributionType::UNIFORM, mutationParams, // not used
+			1.0, // will mutate
+			DistributionType::UNIFORM, mutationParams, // lethal mutation
 			2 // diploid
 		);
-		pSpecies->addTrait(TraitType::GENETIC_LOAD, *spTr);
+		pSpecies->addTrait(TraitType::GENETIC_LOAD1, *spTr);
 
 		Individual ind = Individual(pCell, pPatch, 0, 0, 0, 0.0, false, 0);
 		ind.setUpGenes(pSpecies, 1.0);
+
+		// By default, all loci are initialised at 0 so individual is viable
+		assert(ind.getGeneticFitness() == 1.0);
+		assert(ind.isViable());
+
 		ind.triggerMutations(pSpecies);
 
-		assert(ind.getGeneticFitness() == 1.0);
+		// Individual now bears a lethal allele
+		assert(ind.getGeneticFitness() == 0.0);
 		assert(!ind.isViable());
 	}
 }

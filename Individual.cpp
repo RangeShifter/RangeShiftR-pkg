@@ -308,8 +308,8 @@ int Individual::getStatus(void) { return status; }
 float Individual::getGeneticFitness(void) { return geneticFitness; }
 
 bool Individual::isViable() const {
-	float probViability = geneticFitness <= 1.0 ? geneticFitness : 1.0;
-	return probViability < pRandom->Random();
+	float probViability = geneticFitness > 1.0 ? 1.0 : geneticFitness;
+	return probViability >= pRandom->Random();
 }
 
 indStats Individual::getStats(void) {
@@ -1605,6 +1605,12 @@ void Individual::setInitAngle(const float angle) {
 void Individual::triggerMutations(Species* pSp) {
 	for (auto const& [trType, indTrait] : spTraitTable) {
 		indTrait->mutate();
+		if (trType == GENETIC_LOAD1 
+			|| trType == GENETIC_LOAD2
+			|| trType == GENETIC_LOAD3
+			|| trType == GENETIC_LOAD4
+			|| trType == GENETIC_LOAD5)
+			geneticFitness *= indTrait->express();
 	}
 	this->setDispersalPhenotypes(pSp, 1.0);
 }
