@@ -430,8 +430,8 @@ void testGenetics() {
 			// Heterozygote parent genotypes
 			const float valAlleleMotherA(1.0), valAlleleMotherB(2.0);
 			const float valAlleleFatherA(3.0), valAlleleFatherB(4.0);
-			auto motherGenotype = createTestEmigTrGenotype(genomeSz, isDiploid, valAlleleMotherA, valAlleleMotherB);
-			auto fatherGenotype = createTestEmigTrGenotype(genomeSz, isDiploid, valAlleleFatherA, valAlleleFatherB);
+			auto motherGenotype = createTestGenotype(genomeSz, isDiploid, valAlleleMotherA, valAlleleMotherB);
+			auto fatherGenotype = createTestGenotype(genomeSz, isDiploid, valAlleleFatherA, valAlleleFatherB);
 			const int startMotherChr = 0; // Strand A
 			const int startFatherChr = 1; // Strand B
 
@@ -462,7 +462,7 @@ void testGenetics() {
 
 			// Heterozygote parent genotypes
 			const float valAlleleMother(5.0);
-			auto motherGenotype = createTestEmigTrGenotype(genomeSz, isDiploid, valAlleleMother);
+			auto motherGenotype = createTestGenotype(genomeSz, isDiploid, valAlleleMother);
 			const int startMotherChr = 999; // doesn't matter, not used
 
 			// Create individual trait objects
@@ -498,7 +498,7 @@ void testGenetics() {
 		// Mother genotype:
 		// 000
 		// 111
-		auto motherGenotype = createTestEmigTrGenotype(genomeSz, isDiploid, valAlleleA, valAlleleB);
+		auto motherGenotype = createTestGenotype(genomeSz, isDiploid, valAlleleA, valAlleleB);
 
 		// Trigger inheritance from mother
 		const vector<unsigned int> recombinationSites{0, 1, genomeSz - 1}; // should work for any position
@@ -759,6 +759,51 @@ void testIndividual() {
 		assert(ind.getStatus() == 0);
 
 		pop.clearInds(); // empty inds vector to not deallocate individual twice
+	}
+
+	// Individuals with genetic fitness phenotype = 1 are unviable
+	{
+
+
+		Patch* pPatch = new Patch(0, 0);
+		Cell* pCell = new Cell(0, 0, (intptr)pPatch, 0);
+
+		// Species-level paramters
+		const int genomeSz = 1;
+		Species* pSpecies = new Species();
+		pSpecies->setGeneticParameters(
+			set<int>{genomeSz - 1}, // one chromosome
+			genomeSz,
+			0.0, // no recombination
+			set<int>{}, "none", set<int>{}, 0 // no output so no sampling
+		);
+
+		// Create species trait
+		const map<GenParamType, float> initParams{
+			// Emigration probability is always 0
+			pair<GenParamType, float>{GenParamType::MIN, 0.0},
+			pair<GenParamType, float>{GenParamType::MAX, 0.0}
+		};
+		const map<GenParamType, float> mutationParams = initParams; // doesn't matter, not used
+		SpeciesTrait* spTr = new SpeciesTrait(
+			TraitType::GENETIC_LOAD,
+			sex_t::NA,
+			set<int>{ 0 }, // only one locus
+			ExpressionType::AVERAGE,
+			// Set all initial alleles values to 1
+			DistributionType::UNIFORM, initParams,
+			DistributionType::NONE, initParams, // no dominance, params are ignored
+			true, // isInherited
+			0.0, // no mutation
+			DistributionType::UNIFORM, mutationParams, // not used
+			2 // diploid
+		);
+		pSpecies->addTrait(TraitType::GENETIC_LOAD, *spTr);
+
+		Individual ind = Individual(pCell, pPatch, 0, 0, 0, 0.0, false, 0);
+		ind.setUpGenes(pSpecies, 1.0);
+
+		//assert(!ind.isViable());
 	}
 }
 

@@ -465,21 +465,26 @@ int DispersalTrait::getAlleleIDAtLocus(short whichChromosome, int position) cons
 	return it->second[whichChromosome].get()->getId();
 }
 
+#if RSDEBUG
+
 // Create a default set of alleles for testing
-map<int, vector<shared_ptr<Allele>>> createTestEmigTrGenotype(
-	const int genomeSz, 
-	const bool isDiploid, 
-	const float valAlleleA, 
-	const float valAlleleB
+//
+// Shorthand function to manually set genotypes for dispersal and 
+// genetic fitness traits, instead of having to manipulate mutations.
+map<int, vector<shared_ptr<Allele>>> createTestGenotype(
+	const int genomeSz, const bool isDiploid,
+	const float valAlleleA,
+	const float valAlleleB,
+	const float domCoeffA,
+	const float domCoeffB
 ) {
-	const float domCoef(0.0); // no dominance for dispersal traits
 	vector<shared_ptr<Allele>> gene(isDiploid ? 2 : 1);
 	if (isDiploid) {
-		gene[0] = make_shared<Allele>(valAlleleA, domCoef);
-		gene[1] = make_shared<Allele>(valAlleleB, domCoef);
+		gene[0] = make_shared<Allele>(valAlleleA, domCoeffA);
+		gene[1] = make_shared<Allele>(valAlleleB, domCoeffB);
 	}
 	else {
-		gene[0] = make_shared<Allele>(valAlleleA, domCoef);
+		gene[0] = make_shared<Allele>(valAlleleA, domCoeffA);
 	}
 	map<int, vector<shared_ptr<Allele>>> genotype;
 	for (int i = 0; i < genomeSz; i++) {
@@ -487,4 +492,5 @@ map<int, vector<shared_ptr<Allele>>> createTestEmigTrGenotype(
 	}
 	return genotype;
 }
+#endif RSDEBUG
 #endif // RSDEBUG
