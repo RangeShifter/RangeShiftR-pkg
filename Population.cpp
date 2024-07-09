@@ -686,9 +686,7 @@ void Population::reproduction(const float localK, const float envval, const int 
 							newJuv->inheritTraits(pSpecies, inds[i], father, resol);
 						}
 
-						float probViability = newJuv->getGeneticFitness();
-						if (probViability > 1.0) probViability = 1.0;
-						if (probViability < pRandom->Random()) {
+						if (!newJuv->isViable()) {
 							delete newJuv;
 						}
 						else {
@@ -768,9 +766,8 @@ void Population::reproduction(const float localK, const float envval, const int 
 								if (pSpecies->getNTraits() > 0) {
 									newJuv->inheritTraits(pSpecies, inds[i], father, resol);
 								}
-								float probViability = newJuv->getGeneticFitness();
-								if (probViability > 1.0) probViability = 1.0;
-								if (probViability < pRandom->Random()) {
+
+								if (!newJuv->isViable()) {
 									delete newJuv;
 								}
 								else {

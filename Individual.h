@@ -268,6 +268,7 @@ public:
 	sex_t getSex(void);
 	int getStatus(void);
 	float getGeneticFitness(void);
+	bool isViable() const;
 	indStats getStats(void);
 	Cell* getLocn( // Return location (as pointer to Cell)
 		const short	// option: 0 = get natal locn, 1 = get current locn

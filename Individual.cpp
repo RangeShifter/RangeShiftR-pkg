@@ -307,6 +307,11 @@ int Individual::getStatus(void) { return status; }
 
 float Individual::getGeneticFitness(void) { return geneticFitness; }
 
+bool Individual::isViable() const {
+	float probViability = geneticFitness <= 1.0 ? geneticFitness : 1.0;
+	return probViability < pRandom->Random();
+}
+
 indStats Individual::getStats(void) {
 	indStats s;
 	s.stage = stage; s.sex = sex; s.age = age; s.status = status; s.fallow = fallow;
