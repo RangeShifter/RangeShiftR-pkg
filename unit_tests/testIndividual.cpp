@@ -763,8 +763,6 @@ void testIndividual() {
 
 	// Individuals with genetic fitness phenotype = 1 are unviable
 	{
-
-
 		Patch* pPatch = new Patch(0, 0);
 		Cell* pCell = new Cell(0, 0, (intptr)pPatch, 0);
 
@@ -779,20 +777,22 @@ void testIndividual() {
 		);
 
 		// Create species trait
-		const map<GenParamType, float> initParams{
+		const map<GenParamType, float> mutationParams{
 			// Emigration probability is always 0
-			pair<GenParamType, float>{GenParamType::MIN, 0.0},
-			pair<GenParamType, float>{GenParamType::MAX, 0.0}
+			pair<GenParamType, float>{GenParamType::MIN, 1.0},
+			pair<GenParamType, float>{GenParamType::MAX, 1.0}
 		};
-		const map<GenParamType, float> mutationParams = initParams; // doesn't matter, not used
+		const map<GenParamType, float> domParams = mutationParams; // all dominance parameters are equal
+		const map<GenParamType, float> initParams = mutationParams; // doesn't matter, not used
+
 		SpeciesTrait* spTr = new SpeciesTrait(
 			TraitType::GENETIC_LOAD,
 			sex_t::NA,
 			set<int>{ 0 }, // only one locus
-			ExpressionType::AVERAGE,
+			ExpressionType::MULTIPLICATIVE,
 			// Set all initial alleles values to 1
-			DistributionType::UNIFORM, initParams,
-			DistributionType::NONE, initParams, // no dominance, params are ignored
+			DistributionType::NONE, initParams,
+			DistributionType::UNIFORM, domParams, // no dominance, params are ignored
 			true, // isInherited
 			0.0, // no mutation
 			DistributionType::UNIFORM, mutationParams, // not used
@@ -802,8 +802,10 @@ void testIndividual() {
 
 		Individual ind = Individual(pCell, pPatch, 0, 0, 0, 0.0, false, 0);
 		ind.setUpGenes(pSpecies, 1.0);
+		ind.triggerMutations(pSpecies);
 
-		//assert(!ind.isViable());
+		assert(ind.getGeneticFitness() == 1.0);
+		assert(!ind.isViable());
 	}
 }
 
