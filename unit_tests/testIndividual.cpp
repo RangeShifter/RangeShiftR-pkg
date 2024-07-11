@@ -548,12 +548,13 @@ void testGenetics() {
 			isDiploid ? 2 : 1
 		);
 
-		// Heterozygote parent genotypes
-		auto parentGenotype = createTestGenotype(genomeSz, isDiploid, parentAlleleVal);
-		const int startMotherChr = 999; // doesn't matter, not used
-
 		// Create individual trait objects
 		DispersalTrait dispTrParent(spTr); // initialisation constructor
+		auto parentGenotype = createTestGenotype(genomeSz, isDiploid, parentAlleleVal);
+		const int startMotherChr = 999; // doesn't matter, not used
+		dispTrParent.overwriteGenes(parentGenotype);
+		assert(dispTrParent.getAlleleValueAtLocus(0, 0) == parentAlleleVal);
+
 		DispersalTrait dispTrChild(dispTrParent); // inheritance constructor
 
 		set<unsigned int> recomSites{genomeSz - 1};
