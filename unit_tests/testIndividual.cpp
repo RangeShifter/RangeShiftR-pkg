@@ -518,6 +518,55 @@ void testGenetics() {
 			}
 		}
 	}
+
+	// Traits that are not inherited sample their mutations in initial distribution
+	{
+		const float initialAlleleVal = 0.5;
+		const float parentAlleleVal = 0.8;
+		const bool isInherited = false;
+
+		const int genomeSz = 5;
+		const bool isDiploid{ false };
+
+		// Create species trait
+		const map<GenParamType, float> distParams{
+			// all alleles initialised at a single value
+			pair<GenParamType, float>{GenParamType::MIN, initialAlleleVal},
+			pair<GenParamType, float>{GenParamType::MAX, initialAlleleVal}
+		};
+		SpeciesTrait* spTr = new SpeciesTrait(
+			TraitType::E_D0,
+			sex_t::NA,
+			createTestGenePositions(genomeSz),
+			ExpressionType::ADDITIVE,
+			DistributionType::UNIFORM,
+			distParams,
+			DistributionType::NONE, distParams, // no dominance, not used
+			isInherited,
+			0.0, // no mutations
+			DistributionType::UNIFORM, distParams, // ignored
+			isDiploid ? 2 : 1
+		);
+
+		// Heterozygote parent genotypes
+		auto parentGenotype = createTestGenotype(genomeSz, isDiploid, parentAlleleVal);
+		const int startMotherChr = 999; // doesn't matter, not used
+
+		// Create individual trait objects
+		DispersalTrait dispTrParent(spTr); // initialisation constructor
+		DispersalTrait dispTrChild(dispTrParent); // inheritance constructor
+
+		set<unsigned int> recomSites{genomeSz - 1};
+		dispTrChild.triggerInherit(true, parentGenotype, recomSites, startMotherChr);
+
+		// Child does not inherit from mother,
+		// instead allele value is initial value
+		float valChildAllele;
+		for (int i = 0; i < genomeSz; i++) {
+			valChildAllele = dispTrChild.getAlleleValueAtLocus(0, i);
+			assert(valChildAllele == initialAlleleVal);
+		}
+	}
 }
 
 bool haveSameEmigD0Allele(const Individual& indA, const Individual& indB, const int& position, short whichHaplo = 0) {
@@ -866,6 +915,8 @@ void testIndividual() {
 		ind.triggerMutations(pSpecies);
 		assert(!ind.isViable());
 	}
+
+
 }
 
 #endif //RSDEBUG
