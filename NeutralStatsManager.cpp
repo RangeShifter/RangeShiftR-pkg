@@ -345,8 +345,8 @@ void NeutralStatsManager::calculateFstatWC(set<int> const& patchList, const int 
 		c *= 0.5;
 
 		fst = a / (a + b + c); // theta hat in eq. 1 in WC 1984
-		fis = (a + b) / (a + b + c); // F hat
-		fit = b / (b + c); // f hat
+		fit = (a + b) / (a + b + c); // F hat
+		fis = b / (b + c); // f hat
 	}
 	else { // zero or one sampled pops, cannot compute F stats
 		fst = 0.0;
@@ -499,8 +499,8 @@ void NeutralStatsManager::calcPerLocusMeanSquaresFst(set<int> const& patchList, 
 
 			// Total F-stats
 			fst = SIGA / (SIGA + SIGB + SIGW);
-			fis = (SIGA + SIGB) / (SIGA + SIGB + SIGW);
-			fit = SIGB / (SIGB + SIGW);
+			fit = (SIGA + SIGB) / (SIGA + SIGB + SIGW);
+			fis = SIGB / (SIGB + SIGW);
 		}
 		else { // no variation: only 1 allele (wildtype) at each locus 
 			// so don't calculate to avoid division by zero
