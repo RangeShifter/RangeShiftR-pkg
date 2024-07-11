@@ -568,6 +568,45 @@ void testGenetics() {
 			assert(valChildAllele == initialAlleleVal);
 		}
 	}
+
+	// Genetic fitness mutations are constrained between -1 or 1
+	{
+		// Most likely (~96%) to sample a mutation > 1
+		const float gammaMutShapeParam = 5.0;
+		const float gammaMutScaleParam = 1.0;
+
+		const int genomeSz = 5;
+		const bool isDiploid{ false };
+
+		// Create species trait
+		const map<GenParamType, float> mutationParams{
+			// all alleles initialised at a single value
+			pair<GenParamType, float>{GenParamType::SHAPE, gammaMutShapeParam},
+			pair<GenParamType, float>{GenParamType::SCALE, gammaMutScaleParam}
+		};
+		const map<GenParamType, float> placeholderParams = mutationParams;
+
+		SpeciesTrait* spTr = new SpeciesTrait(
+			TraitType::GENETIC_LOAD1,
+			sex_t::NA,
+			createTestGenePositions(genomeSz),
+			ExpressionType::MULTIPLICATIVE,
+			DistributionType::NONE, placeholderParams, // not used for genetic load
+			DistributionType::GAMMA, placeholderParams, // doesn't matter for this test
+			true,
+			1.0, // every site mutates
+			DistributionType::GAMMA, mutationParams,
+			isDiploid ? 2 : 1
+		);
+
+		// Create individual trait object
+		GeneticFitnessTrait traitInd(spTr); // initialisation constructor
+		traitInd.mutate();
+		for (int i = 0; i < genomeSz; i++) {
+			float valAllele = traitInd.getAlleleValueAtLocus(0, i);
+			assert(valAllele <= 1.0);
+		}
+	}
 }
 
 bool haveSameEmigD0Allele(const Individual& indA, const Individual& indB, const int& position, short whichHaplo = 0) {
