@@ -379,6 +379,94 @@ string paramSim::getDir(int option) {
 	return s;
 }
 
+string to_string(const TraitType& tr) {
+	switch (tr)
+	{
+	case NEUTRAL: return "NEUTRAL";
+	case GENETIC_LOAD: return "GENETIC_LOAD";
+	case GENETIC_LOAD1: return "GENETIC_LOAD1";
+	case GENETIC_LOAD2: return "GENETIC_LOAD2";
+	case GENETIC_LOAD3: return "GENETIC_LOAD3";
+	case GENETIC_LOAD4: return "GENETIC_LOAD4";
+	case GENETIC_LOAD5: return "GENETIC_LOAD5";
+
+	case E_D0: return "E_D0";
+	case E_D0_M: return "E_D0_M";
+	case E_D0_F: return "E_D0_F";
+	case E_ALPHA: return "E_ALPHA";
+	case E_ALPHA_M: return "E_ALPHA_M";
+	case E_ALPHA_F: return "E_ALPHA_F";
+	case E_BETA: return "E_BETA";
+	case E_BETA_M: return "E_BETA_M";
+	case E_BETA_F: return "E_BETA_F";
+
+	case S_S0: return "S_S0";
+	case S_S0_M: return "S_S0_M";
+	case S_S0_F: return "S_S0_F";
+	case S_ALPHA: return "S_ALPHA";
+	case S_ALPHA_M: return "S_ALPHA_M";
+	case S_ALPHA_F: return "S_ALPHA_F";
+	case S_BETA: return "S_BETA";
+	case S_BETA_M: return "S_BETA_M";
+	case S_BETA_F: return "S_BETA_F";
+
+	case CRW_STEPLENGTH: return "CRW_STEPLENGTH";
+	case CRW_STEPCORRELATION: return "CRW_STEPCORRELATION";
+	case KERNEL_MEANDIST_1: return "KERNEL_MEANDIST_1";
+	case KERNEL_MEANDIST_2: return "KERNEL_MEANDIST_2";
+	case KERNEL_MEANDIST_1_F: return "KERNEL_MEANDIST_1_F";
+	case KERNEL_MEANDIST_2_F: return "KERNEL_MEANDIST_2_F";
+	case KERNEL_MEANDIST_1_M: return "KERNEL_MEANDIST_1_M";
+	case KERNEL_MEANDIST_2_M: return "KERNEL_MEANDIST_2_M";
+	case KERNEL_PROBABILITY: return "KERNEL_PROBABILITY";
+	case KERNEL_PROBABILITY_F: return "KERNEL_PROBABILITY_F";
+	case KERNEL_PROBABILITY_M: return "KERNEL_PROBABILITY_M";
+
+	case SMS_DP: return "SMS_DP";
+	case SMS_GB: return "SMS_GB";
+	case SMS_ALPHADB: return "SMS_ALPHADB";
+	case SMS_BETADB: return "SMS_BETADB";
+	case INVALID_TRAIT: return "INVALID_TRAIT";
+	}
+}
+
+string to_string(const GenParamType& param) {
+	switch (param)
+	{
+	case MEAN: return "MEAN";
+	case SD: return "SD";
+	case MIN: return "MIN";
+	case MAX: return "MAX";
+	case SHAPE: return "SHAPE";
+	case SCALE: return "SCALE";
+	case INVALID: return "INVALID";
+	}
+}
+
+string to_string(const DistributionType& dist) {
+	switch (dist)
+	{
+	case UNIFORM: return "UNIFORM";
+	case NORMAL: return "NORMAL";
+	case GAMMA: return "GAMMA";
+	case NEGEXP: return "NEGEXP";
+	case SCALED: return "SCALED";
+	case KAM: return "KAM";
+	case SSM: return "SSM";
+	case NONE: return "NONE";
+	}
+}
+
+string to_string(const ExpressionType& expr) {
+	switch (expr)
+	{
+	case AVERAGE: return "AVERAGE";
+	case ADDITIVE: return "ADDITIVE";
+	case NOTEXPR: return "NOTEXPR";
+	case MULTIPLICATIVE: return "MULTIPLICATIVE";
+	}
+}
+
 #if RS_RCPP
 bool paramSim::getReturnPopRaster(void) { return ReturnPopRaster; }
 bool paramSim::getCreatePopFile(void) { return CreatePopFile; }
