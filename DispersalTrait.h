@@ -101,8 +101,8 @@ map<int, vector<shared_ptr<Allele>>> createTestGenotype(
 	const int genomeSz, const bool isDiploid,
 	const float valAlleleA,
 	const float valAlleleB = -99.9, // allow no value for haploids
-	const float domCoeffA = 0.0, // default for dispersal traits
-	const float domCoeffB = 0.0
+	const float domCoeffA = 1.0, // default for dispersal traits
+	const float domCoeffB = 1.0
 );
 #endif //RSDEBUG
 

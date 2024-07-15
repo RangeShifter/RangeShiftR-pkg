@@ -570,20 +570,27 @@ void testGenetics() {
 	}
 
 	// Genetic fitness mutations are constrained between -1 or 1
+	// + sampled dominance coefficients are always positive
 	{
 		{
 			// Most likely (~96%) to sample a mutation > 1
 			const float gammaMutShapeParam = 5.0;
 			const float gammaMutScaleParam = 1.0;
+			//  Normal centered on 0 : ~50% of sampling negative dominance coefficient 
+			const float dominanceMeanParam = 0.0;
+			const float dominanceSdParam = 1.0;
 
 			const int genomeSz = 5;
 			const bool isDiploid{ false };
 
 			// Create species trait
 			const map<GenParamType, float> mutationParams{
-				// all alleles initialised at a single value
 				pair<GenParamType, float>{GenParamType::SHAPE, gammaMutShapeParam},
 				pair<GenParamType, float>{GenParamType::SCALE, gammaMutScaleParam}
+			};
+			const map<GenParamType, float> dominanceParams{
+				pair<GenParamType, float>{GenParamType::MEAN, dominanceMeanParam},
+				pair<GenParamType, float>{GenParamType::SD, dominanceSdParam}
 			};
 			const map<GenParamType, float> placeholderParams = mutationParams;
 
@@ -593,7 +600,7 @@ void testGenetics() {
 				createTestGenePositions(genomeSz),
 				ExpressionType::MULTIPLICATIVE,
 				DistributionType::NONE, placeholderParams, // not used for genetic load
-				DistributionType::GAMMA, placeholderParams, // doesn't matter for this test
+				DistributionType::NORMAL, dominanceParams,
 				true,
 				1.0, // every site mutates
 				DistributionType::GAMMA, mutationParams,
@@ -606,6 +613,8 @@ void testGenetics() {
 			for (int i = 0; i < genomeSz; i++) {
 				float valAllele = traitInd.getAlleleValueAtLocus(0, i);
 				assert(valAllele <= 1.0);
+				float domCoef = traitInd.getDomCoefAtLocus(0, i);
+				assert(domCoef >= 0.0);
 			}
 		}
 
@@ -997,7 +1006,7 @@ void testIndividual() {
 		assert(!ind.isViable());
 	}
 
-
+	
 }
 
 #endif //RSDEBUG

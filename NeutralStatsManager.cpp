@@ -529,7 +529,7 @@ void NeutralStatsManager::calcPerLocusMeanSquaresFst(set<int> const& patchList, 
 // ----------------------------------------------------------------------------------------
 // Patch pairwise Fst 
 // Computes the weighted within and between patch Fst's as well as the overall Fst (Theta).
-// The method used here is that of Weir& Hill 2002, Ann.Rev.Genet. 36:721 - 750.
+// The method used here is that of Weir & Hill 2002, Ann.Rev.Genet. 36:721 - 750.
 // The weighting is done for samples(patches) of unequal sizes.
 // ----------------------------------------------------------------------------------------
 void NeutralStatsManager::calcPairwiseWeightedFst(set<int> const& patchList, const int nInds, const int nLoci, Species* pSpecies, Landscape* pLandscape) {
