@@ -51,7 +51,7 @@ NULL
 
 # Show start-up message upon loading the package
 .onAttach <- function(libname, pkgname) {
-    packageStartupMessage("RangeshiftR version 1.1.0 (25.06.2024)\n",
+    packageStartupMessage("RangeshiftR version 1.1.1 (05.07.2024)\n",
                           "Copyright (C) 2020-2024 Anne-Kathleen Malchow, Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Jette Reeg, Damaris Zurell\n\n",
                           "This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.\n",
                           "You are welcome to redistribute it and/or modify it under certain conditions;\n",
@@ -69,7 +69,7 @@ NULL
 #' @export
 RangeShiftR_license <- function ()
 {
-    cat("\nRangeshiftR version 1.1.0 (25.06.2024)\n")
+    cat("\nRangeshiftR version 1.1.1 (05.07.2024)\n")
     cat("Copyright (C) 2020-2024 Anne-Kathleen Malchow, Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Jette Reeg, Damaris Zurell\n\n")
     cat("This program is free software: you can redistribute it and/or modify\n")
     cat("it under the terms of the GNU General Public License as published by\n")

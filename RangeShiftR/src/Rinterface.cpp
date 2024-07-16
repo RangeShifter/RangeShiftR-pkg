@@ -1627,7 +1627,7 @@ int ReadStageStructureR(Rcpp::S4 ParMaster)
 				ss = (float)trmatrix(i - 1, i); // survival prob
 			else
 				ss = (float)trmatrix(i, i);
-			if((i + 2) != matrixsize && (i + 1) != matrixsize) // was if((i + 2) != matrixsize); but what happens in the last column (matrixsize -1)? (i+1) would be out of bounds
+			if((i + 2)  != matrixsize && (i + 1) != matrixsize)
 				dd = (float)trmatrix(i + 1, i); // development prob
 			else
 				dd = 0.0;
