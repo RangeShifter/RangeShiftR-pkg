@@ -552,7 +552,9 @@ void Population::reproduction(const float localK, const float envval, const int 
 						inds[i]->resetFallow();
 						// NOTE: FOR COMPLEX SEXUAL MODEL, NO. OF FEMALES *ACTUALLY* BREEDING DOES NOT
 						// NECESSARILY EQUAL THE EXPECTED NO. FROM EQN. 7 IN THE MANUAL...
+#if RS_RCPP
 						if(propBreed > 1) Rcpp::Rcout << "propBreed: " << propBreed << std::endl;
+#endif
 						if (pRandom->Bernoulli(propBreed)) {
 							expected = fec[stage][0]; // breeds
 						}
@@ -1684,8 +1686,9 @@ std::vector <Individual*> Population::getIndsWithCharacteristics( // Select a se
     // get all suitable individuals based on settings
     std::vector <Individual*> filteredInds;
     int ninds = (int)inds.size();
+#if RS_RCPP
     Rcpp::Rcout << "Number individuals in cell: " << ninds << endl;
-
+#endif
     if (ninds > 0) {
         // copy ALL individuals to filteredInds
         for (int i = 0; i < ninds; i++) {
@@ -1737,7 +1740,9 @@ std::vector <Individual*> Population::getIndsWithCharacteristics( // Select a se
             }
         }
     } else {
+#if RS_RCPP
         Rcpp::Rcout << "No individuals in source patch" << endl;
+#endif
         return filteredInds;
         }
     int nfiltered = 0;
@@ -1775,9 +1780,9 @@ int Population::sampleIndividuals( // Select a set of individuals with specified
     // get individuals with the characteristics
     std::vector <Individual*> filtered;
     filtered = getIndsWithCharacteristics(min_age, max_age, stage, sex);
-
+#if RS_RCPP
     Rcpp::Rcout << "Number of individuals with fitting characteristics: " << filtered.size() << endl;
-
+#endif
     if (filtered.size() <= nb)
         // Sample all individuals in selected stages
         sampledInds = filtered;
@@ -1808,7 +1813,9 @@ Individual* Population::catchIndividual( // Translocate a set of individuals wit
     // If individual is part of the sampledInds vector:
     if (std::find(sampledInds.begin(), sampledInds.end(), inds[j]) != std::end(sampledInds)){
         // try to catch individual
+#if RS_RCPP
         if(catching_rate > 1) Rcpp::Rcout << "Catching rate: " << catching_rate << std::endl;
+#endif
         if (pRandom->Bernoulli(catching_rate)){
             indStats indstat = inds[j]->getStats();
             catched = inds[j];
