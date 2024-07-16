@@ -252,7 +252,7 @@ public:
 
 	trfrCRWTraits getIndCRWTraits(void); // Get phenotypic transfer by CRW traits
 
-	void setSettlementTraits(Species* pSpecies, bool sexDep);
+	void setSettlementTraits(Species* pSpecies, bool sexDep, bool densDep);
 
 	settleTraits getIndSettTraits(void); // Get phenotypic settlement traits
 

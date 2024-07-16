@@ -227,6 +227,7 @@ void Individual::setDispersalPhenotypes(Species* pSpecies, int resol) {
 	const emigRules emig = pSpecies->getEmigRules();
 	const transferRules trfr = pSpecies->getTransferRules();
 	const settleType sett = pSpecies->getSettle();
+	const settleRules settRules = pSpecies->getSettRules(stage, sex);
 
 	// record phenotypic traits
 	if (emig.indVar)
@@ -234,7 +235,7 @@ void Individual::setDispersalPhenotypes(Species* pSpecies, int resol) {
 	if (trfr.indVar)
 		this->setTransferTraits(pSpecies, trfr, resol);
 	if (sett.indVar)
-		this->setSettlementTraits(pSpecies, sett.sexDep);
+		this->setSettlementTraits(pSpecies, sett.sexDep, settRules.densDep);
 }
 
 void Individual::setTransferTraits(Species* pSpecies, transferRules trfr, int resol) {
@@ -249,18 +250,34 @@ void Individual::setTransferTraits(Species* pSpecies, transferRules trfr, int re
 		setIndKernelTraits(pSpecies, trfr.sexDep, trfr.twinKern, resol);
 }
 
-void Individual::setSettlementTraits(Species* pSpecies, bool sexDep) {
+void Individual::setSettlementTraits(Species* pSpecies, bool sexDep, bool densDep) {
 
 	settleTraits s; s.s0 = s.alpha = s.beta = 0.0;
-	if (sexDep && this->getSex() == MAL) {
-		s.s0 = getTrait(S_S0_M)->express();
-		s.alpha = getTrait(S_ALPHA_M)->express();
-		s.beta = getTrait(S_BETA_M)->express();
+	if (sexDep) {
+		if (this->getSex() == MAL) {
+			s.s0 = getTrait(S_S0_M)->express();
+			if (densDep) {
+				s.alpha = getTrait(S_ALPHA_M)->express();
+				s.beta = getTrait(S_BETA_M)->express();
+			}
+		}
+		else if (this->getSex() == FEM) {
+			s.s0 = getTrait(S_S0_F)->express();
+			if (densDep) {
+				s.alpha = getTrait(S_ALPHA_F)->express();
+				s.beta = getTrait(S_BETA_F)->express();
+			}
+		}
+		else {
+			throw runtime_error("Attempt to express invalid emigration trait sex.");
+		}
 	}
 	else {
-		s.s0 = getTrait(S_S0_F)->express();
-		s.alpha = getTrait(S_ALPHA_F)->express();
-		s.beta = getTrait(S_BETA_F)->express();
+		s.s0 = getTrait(S_S0)->express();
+		if (densDep) {
+			s.alpha = getTrait(S_ALPHA)->express();
+			s.beta = getTrait(S_BETA)->express();
+		}
 	}
 
 	pSettleTraits = make_unique<settleTraits>();
