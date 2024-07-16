@@ -24,7 +24,9 @@
 
 #include <vector>
 #include <algorithm>
+#if RS_RCPP
 #include <Rcpp.h>
+#endif
 
 #include "Parameters.h"
 #include "Species.h"
