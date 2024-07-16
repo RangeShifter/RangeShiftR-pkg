@@ -656,7 +656,6 @@ void testGenetics() {
 			}
 		}
 	}
-
 }
 
 bool haveSameEmigD0Allele(const Individual& indA, const Individual& indB, const int& position, short whichHaplo = 0) {
@@ -1006,6 +1005,319 @@ void testIndividual() {
 		assert(!ind.isViable());
 	}
 
+	// Dispersal trait alleles can take any value, but
+	// phenotypes are constrained to valid values
+	{
+		// Case 1 - Settlement + Kernel-based transfer
+		{
+			const int genomeSz = 4;
+
+			const bool isDiploid{ true }; // haploid, simpler check
+			const float mutationRate = 0.0; // no mutations
+
+			Patch* pPatch = new Patch(0, 0);
+			Cell* pCell = new Cell(0, 0, (intptr)pPatch, 0);
+
+			// Genome-level settings
+			Species* pSpecies = new Species();
+			pSpecies->setGeneticParameters(
+				set<int>{genomeSz - 1}, // one chromosome
+				genomeSz,
+				0.0, // no recombination
+				set<int>{}, "none", set<int>{}, 0 // no output so no sampling
+			);
+
+			settleType sett;
+			sett.indVar = true;
+			sett.sexDep = false;
+			sett.stgDep = false;
+			pSpecies->setSettle(sett);
+			settleRules settRules;
+			settRules.densDep = true;
+			pSpecies->setSettRules(0, 0, settRules);
+
+			transferRules trfr;
+			trfr.indVar = true;
+			trfr.usesMovtProc = false;
+			trfr.moveType = 0; // kernels
+			trfr.twinKern = false;
+			trfr.sexDep = false;
+			trfr.stgDep = false;
+			pSpecies->setTrfrRules(trfr);
+
+			// Species-level traits
+			const map<GenParamType, float> distParams{
+				// prameters don't matter, allele values are overwritten below
+				pair<GenParamType, float>{GenParamType::MIN, 1.0},
+				pair<GenParamType, float>{GenParamType::MAX, 1.0}
+			};
+			SpeciesTrait* trSettProb = new SpeciesTrait(
+				TraitType::S_S0,
+				sex_t::NA,
+				set<int>{ 0 },
+				ExpressionType::AVERAGE,
+				DistributionType::UNIFORM, distParams,
+				DistributionType::NONE, distParams, // no dominance, params are ignored
+				true, // isInherited
+				mutationRate, // does not mutate
+				DistributionType::UNIFORM, distParams, // not used
+				isDiploid ? 2 : 1
+			);
+			SpeciesTrait* trSettAlpha = new SpeciesTrait(
+				TraitType::S_ALPHA,
+				sex_t::NA,
+				set<int>{ 1 },
+				ExpressionType::AVERAGE,
+				DistributionType::UNIFORM, distParams,
+				DistributionType::NONE, distParams, // no dominance, params are ignored
+				true, // isInherited
+				mutationRate, // does not mutate
+				DistributionType::UNIFORM, distParams, // not used
+				isDiploid ? 2 : 1
+			);
+			SpeciesTrait* trSettBeta = new SpeciesTrait(
+				TraitType::S_BETA,
+				sex_t::NA,
+				set<int>{ 2 },
+				ExpressionType::AVERAGE,
+				DistributionType::UNIFORM, distParams,
+				DistributionType::NONE, distParams, // no dominance, params are ignored
+				true, // isInherited
+				mutationRate, // does not mutate
+				DistributionType::UNIFORM, distParams, // not used
+				isDiploid ? 2 : 1
+			);
+			SpeciesTrait* trMeanKern = new SpeciesTrait(
+				TraitType::KERNEL_MEANDIST_1,
+				sex_t::NA,
+				set<int>{ 3 },
+				ExpressionType::ADDITIVE,
+				DistributionType::UNIFORM, distParams,
+				DistributionType::NONE, distParams, // no dominance, params are ignored
+				true, // isInherited
+				mutationRate, // does not mutate
+				DistributionType::UNIFORM, distParams, // not used
+				isDiploid ? 2 : 1
+			);
+
+			pSpecies->addTrait(TraitType::S_S0, *trSettProb);
+			pSpecies->addTrait(TraitType::S_ALPHA, *trSettAlpha);
+			pSpecies->addTrait(TraitType::S_BETA, *trSettBeta);
+			pSpecies->addTrait(TraitType::KERNEL_MEANDIST_1, *trMeanKern);
+
+			Individual ind = Individual(pCell, pPatch, 0, 0, 0, 0.0, false, 0);
+			ind.setUpGenes(pSpecies, 1.0);
+
+			// Overwrite genotypes with alleles resulting in invalid phenotypes
+			auto sProbGenotype = createTestGenotype(genomeSz, true, 1.1, 1.2);
+			auto sAlphaGenotype = createTestGenotype(genomeSz, true, -1.5, -0.5);
+			auto kernelDistGenotype = createTestGenotype(genomeSz, true, -0.2, -0.4);
+			ind.overrideGenotype(S_S0, sProbGenotype);
+			ind.overrideGenotype(S_ALPHA, sAlphaGenotype);
+			ind.overrideGenotype(KERNEL_MEANDIST_1, kernelDistGenotype);
+			// any value is valid for settlement beta
+
+			ind.triggerMutations(pSpecies); // no mutations, but trigger expression
+
+			settleTraits settTr = ind.getIndSettTraits();
+			assert(settTr.s0 <= 1.0);
+			assert(settTr.alpha > 0.0);
+			kernelData trfrTr = *(static_cast<kernelData*>(ind.getTrfrData()));
+			assert(trfrTr.meanDist1 >= 0.0);
+		}
+
+		// Case 2 - Correlated random walk transfer
+		{
+			const int genomeSz = 2;
+
+			const bool isDiploid{ true }; // haploid, simpler check
+			const float mutationRate = 0.0; // no mutations
+
+			Patch* pPatch = new Patch(0, 0);
+			Cell* pCell = new Cell(0, 0, (intptr)pPatch, 0);
+
+			// Genome-level settings
+			Species* pSpecies = new Species();
+			pSpecies->setGeneticParameters(
+				set<int>{genomeSz - 1}, // one chromosome
+				genomeSz,
+				0.0, // no recombination
+				set<int>{}, "none", set<int>{}, 0 // no output so no sampling
+			);
+
+			settleType sett;
+			sett.indVar = false;
+			pSpecies->setSettle(sett);
+
+			transferRules trfr;
+			trfr.indVar = true;
+			trfr.usesMovtProc = true;
+			trfr.moveType = 2; // CRW
+			pSpecies->setTrfrRules(trfr);
+
+			// Species-level traits
+			const map<GenParamType, float> distParams{
+				// prameters don't matter, allele values are overwritten below
+				pair<GenParamType, float>{GenParamType::MIN, 1.0},
+				pair<GenParamType, float>{GenParamType::MAX, 1.0}
+			};
+			SpeciesTrait* trCRWLen = new SpeciesTrait(
+				TraitType::CRW_STEPLENGTH,
+				sex_t::NA,
+				set<int>{ 0 },
+				ExpressionType::ADDITIVE,
+				DistributionType::UNIFORM, distParams,
+				DistributionType::NONE, distParams, // no dominance, params are ignored
+				true, // isInherited
+				mutationRate, // does not mutate
+				DistributionType::UNIFORM, distParams, // not used
+				isDiploid ? 2 : 1
+			);
+			SpeciesTrait* trCRWCorr = new SpeciesTrait(
+				TraitType::CRW_STEPCORRELATION,
+				sex_t::NA,
+				set<int>{ 1 },
+				ExpressionType::AVERAGE,
+				DistributionType::UNIFORM, distParams,
+				DistributionType::NONE, distParams, // no dominance, params are ignored
+				true, // isInherited
+				mutationRate, // does not mutate
+				DistributionType::UNIFORM, distParams, // not used
+				isDiploid ? 2 : 1
+			);
+
+			pSpecies->addTrait(TraitType::CRW_STEPLENGTH, *trCRWLen);
+			pSpecies->addTrait(TraitType::CRW_STEPCORRELATION, *trCRWCorr);
+
+			bool usesMovtProcess = true;
+			short whichMovtProcess = 2; // CRW
+			Individual ind = Individual(pCell, pPatch, 0, 0, 0, 0.0, usesMovtProcess, whichMovtProcess);
+			ind.setUpGenes(pSpecies, 1.0);
+
+			// Overwrite genotypes with alleles resulting in invalid phenotypes
+			auto crwLenGenotype = createTestGenotype(genomeSz, true, -1.1, -1.2);
+			auto crwCorrGenoType = createTestGenotype(genomeSz, true, 1.5, 2.0);
+			ind.overrideGenotype(CRW_STEPLENGTH, crwLenGenotype);
+			ind.overrideGenotype(CRW_STEPCORRELATION, crwCorrGenoType);
+
+			ind.triggerMutations(pSpecies); // no mutations, but trigger expression
+			
+			crwData trfrTr = *(static_cast<crwData*>(ind.getTrfrData()));
+			assert(trfrTr.stepLength >= 0.0);
+			assert(trfrTr.rho <= 1.0);
+		}
+
+		// Case 3 - Transfer with Sotchastic Movement Simulator
+		{
+			const int genomeSz = 2;
+
+			const bool isDiploid{ true }; // haploid, simpler check
+			const float mutationRate = 0.0; // no mutations
+
+			Patch* pPatch = new Patch(0, 0);
+			Cell* pCell = new Cell(0, 0, (intptr)pPatch, 0);
+
+			// Genome-level settings
+			Species* pSpecies = new Species();
+			pSpecies->setGeneticParameters(
+				set<int>{genomeSz - 1}, // one chromosome
+				genomeSz,
+				0.0, // no recombination
+				set<int>{}, "none", set<int>{}, 0 // no output so no sampling
+			);
+
+			settleType sett;
+			sett.indVar = false;
+			pSpecies->setSettle(sett);
+
+			transferRules trfr;
+			trfr.indVar = true;
+			trfr.usesMovtProc = true;
+			trfr.moveType = 1; // SMS
+			pSpecies->setTrfrRules(trfr);
+
+			// Species-level traits
+			const map<GenParamType, float> distParams{
+				// prameters don't matter, allele values are overwritten below
+				pair<GenParamType, float>{GenParamType::MIN, 1.0},
+				pair<GenParamType, float>{GenParamType::MAX, 1.0}
+			};
+			SpeciesTrait* trSmsDirPers = new SpeciesTrait(
+				TraitType::SMS_DP,
+				sex_t::NA,
+				set<int>{ 0 },
+				ExpressionType::ADDITIVE,
+				DistributionType::UNIFORM, distParams,
+				DistributionType::NONE, distParams, // no dominance, params are ignored
+				true, // isInherited
+				mutationRate, // does not mutate
+				DistributionType::UNIFORM, distParams, // not used
+				isDiploid ? 2 : 1
+			);
+			SpeciesTrait* trSmsGoalBias = new SpeciesTrait(
+				TraitType::SMS_GB,
+				sex_t::NA,
+				set<int>{ 1 },
+				ExpressionType::AVERAGE,
+				DistributionType::UNIFORM, distParams,
+				DistributionType::NONE, distParams, // no dominance, params are ignored
+				true, // isInherited
+				mutationRate, // does not mutate
+				DistributionType::UNIFORM, distParams, // not used
+				isDiploid ? 2 : 1
+			);
+			SpeciesTrait* trSmsAlpha = new SpeciesTrait(
+				TraitType::SMS_ALPHADB,
+				sex_t::NA,
+				set<int>{ 0 },
+				ExpressionType::ADDITIVE,
+				DistributionType::UNIFORM, distParams,
+				DistributionType::NONE, distParams, // no dominance, params are ignored
+				true, // isInherited
+				mutationRate, // does not mutate
+				DistributionType::UNIFORM, distParams, // not used
+				isDiploid ? 2 : 1
+			);
+			SpeciesTrait* trSmsBeta = new SpeciesTrait(
+				TraitType::SMS_BETADB,
+				sex_t::NA,
+				set<int>{ 1 },
+				ExpressionType::AVERAGE,
+				DistributionType::UNIFORM, distParams,
+				DistributionType::NONE, distParams, // no dominance, params are ignored
+				true, // isInherited
+				mutationRate, // does not mutate
+				DistributionType::UNIFORM, distParams, // not used
+				isDiploid ? 2 : 1
+			);
+
+			pSpecies->addTrait(TraitType::SMS_DP, *trSmsDirPers);
+			pSpecies->addTrait(TraitType::SMS_GB, *trSmsGoalBias);
+			pSpecies->addTrait(TraitType::SMS_ALPHADB, *trSmsAlpha);
+			pSpecies->addTrait(TraitType::SMS_BETADB, *trSmsBeta);
+
+			bool usesMovtProcess = true;
+			short whichMovtProcess = 1; // SMS
+			Individual ind = Individual(pCell, pPatch, 0, 0, 0, 0.0, usesMovtProcess, whichMovtProcess);
+			ind.setUpGenes(pSpecies, 1.0);
+
+			// Overwrite genotypes with alleles resulting in invalid phenotypes
+			auto smsDPGenotype = createTestGenotype(genomeSz, true, 0.1, 0.2);
+			auto smsGBGenotype = createTestGenotype(genomeSz, true, 0.5, 0.0);
+			auto smsAlphaGenotype = createTestGenotype(genomeSz, true, 0.0, 0.0);
+			ind.overrideGenotype(SMS_DP, smsDPGenotype);
+			ind.overrideGenotype(SMS_GB, smsGBGenotype);
+			ind.overrideGenotype(SMS_ALPHADB, smsAlphaGenotype);
+			// any value is valid for SMS beta
+
+			ind.triggerMutations(pSpecies); // no mutations, but trigger expression
+
+			smsData trfrTr = *(static_cast<smsData*>(ind.getTrfrData()));
+			assert(trfrTr.dp >= 1.0);
+			assert(trfrTr.gb >= 1.0);
+			assert(trfrTr.alphaDB > 0.0);
+		}
+	}
 	
 }
 
