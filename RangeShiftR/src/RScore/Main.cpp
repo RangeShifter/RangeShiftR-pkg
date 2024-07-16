@@ -37,6 +37,7 @@
 #include "Landscape.h"
 #include "Species.h"
 #include "SubCommunity.h"
+#include "Management.h"
 
 using namespace std;
 
@@ -56,6 +57,7 @@ paramStoch* paramsStoch;
 paramInit* paramsInit;
 paramSim* paramsSim;
 RSrandom* pRandom;
+Management* pManagement; // pointer to management routines
 ofstream DEBUGLOG;
 ofstream MUTNLOG;
 vector <string> hfnames;

@@ -96,7 +96,9 @@ void Management::translocate(int yr
                                  , Landscape* pLandscape
                                  , Species* pSpecies
                                  ){
+#if RS_RCPP
     Rcpp::Rcout << "Start translocation events in year " << yr << endl;
+#endif
     landParams ppLand = pLandscape->getLandParams();
     auto it = nb.find(yr); // the number of translocation events is determined by the number of elements of the maps at year yr
     auto nb_it = nb.find(yr);
