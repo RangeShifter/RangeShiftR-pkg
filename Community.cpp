@@ -701,18 +701,18 @@ bool Community::outRangeHeaders(Species* pSpecies, int landNr)
 	if (sim.batchMode) {
 		name = paramsSim->getDir(2)
 #if RS_RCPP
-			+ "Batch" + Int2Str(sim.batchNum) + "_"
-			+ "Sim" + Int2Str(sim.simulation) + "_Land"
-			+ Int2Str(landNr)
+			+ "Batch" + to_string(sim.batchNum) + "_"
+			+ "Sim" + to_string(sim.simulation) + "_Land"
+			+ to_string(landNr)
 #else
-			+ "Batch" + Int2Str(sim.batchNum) + "_"
-			+ "Sim" + Int2Str(sim.simulation) + "_Land"
-			+ Int2Str(landNr)
+			+ "Batch" + to_string(sim.batchNum) + "_"
+			+ "Sim" + to_string(sim.simulation) + "_Land"
+			+ to_string(landNr)
 #endif
 			+ "_Range.txt";
 	}
 	else {
-		name = paramsSim->getDir(2) + "Sim" + Int2Str(sim.simulation) + "_Range.txt";
+		name = paramsSim->getDir(2) + "Sim" + to_string(sim.simulation) + "_Range.txt";
 	}
 	outrange.open(name.c_str());
 	outrange << "Rep\tYear\tRepSeason";
@@ -1122,22 +1122,22 @@ bool Community::outOccupancyHeaders(int option)
 
 	name = paramsSim->getDir(2);
 	if (sim.batchMode) {
-		name += "Batch" + Int2Str(sim.batchNum) + "_";
-		name += "Sim" + Int2Str(sim.simulation) + "_Land" + Int2Str(ppLand.landNum);
+		name += "Batch" + to_string(sim.batchNum) + "_";
+		name += "Sim" + to_string(sim.simulation) + "_Land" + to_string(ppLand.landNum);
 	}
 	else
-		name += "Sim" + Int2Str(sim.simulation);
+		name += "Sim" + to_string(sim.simulation);
 	name += "_Occupancy_Stats.txt";
 	outsuit.open(name.c_str());
 	outsuit << "Year\tMean_OccupSuit\tStd_error" << endl;
 
 	name = paramsSim->getDir(2);
 	if (sim.batchMode) {
-		name += "Batch" + Int2Str(sim.batchNum) + "_";
-		name += "Sim" + Int2Str(sim.simulation) + "_Land" + Int2Str(ppLand.landNum);
+		name += "Batch" + to_string(sim.batchNum) + "_";
+		name += "Sim" + to_string(sim.simulation) + "_Land" + to_string(ppLand.landNum);
 	}
 	else
-		name += "Sim" + Int2Str(sim.simulation);
+		name += "Sim" + to_string(sim.simulation);
 	name += "_Occupancy.txt";
 	outoccup.open(name.c_str());
 	if (ppLand.patchModel) {
@@ -1442,11 +1442,11 @@ bool Community::outTraitsRowsHeaders(Species* pSpecies, int landNr) {
 	string DirOut = paramsSim->getDir(2);
 	if (sim.batchMode) {
 		name = DirOut
-			+ "Batch" + Int2Str(sim.batchNum) + "_"
-			+ "Sim" + Int2Str(sim.simulation) + "_Land" + Int2Str(landNr) + "_TraitsXrow.txt";
+			+ "Batch" + to_string(sim.batchNum) + "_"
+			+ "Sim" + to_string(sim.simulation) + "_Land" + to_string(landNr) + "_TraitsXrow.txt";
 	}
 	else {
-		name = DirOut + "Sim" + Int2Str(sim.simulation) + "_TraitsXrow.txt";
+		name = DirOut + "Sim" + to_string(sim.simulation) + "_TraitsXrow.txt";
 	}
 	outtraitsrows.open(name.c_str());
 
