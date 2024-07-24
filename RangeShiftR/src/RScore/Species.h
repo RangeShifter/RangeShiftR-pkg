@@ -1144,8 +1144,8 @@ private:
 	bool wait[NSTAGES][NSEXES];				// wait to continue moving next season (stage-structured model only)
 	bool go2nbrLocn[NSTAGES][NSEXES];	// settle in neighbouring cell/patch if available (ditto)
 	bool findMate[NSTAGES][NSEXES];
-	int minSteps;     								// minimum no. of steps
-	int maxSteps;											// maximum total no. of steps
+	int minSteps[NSTAGES][NSEXES];     								// minimum no. of steps
+	int maxSteps[NSTAGES][NSEXES];											// maximum total no. of steps
 	int maxStepsYr[NSTAGES][NSEXES]; 	// maximum no. of steps in any one dispersal period
 	float	s0[NSTAGES][NSEXES];				// maximum settlement probability
 	float alphaS[NSTAGES][NSEXES];		// slope of the settlement reaction norm to density
