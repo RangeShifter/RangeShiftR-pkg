@@ -3269,7 +3269,7 @@ if (trfr.moveModel) {
 				        outPar << "MIN. No. OF STEPS:\t " << ssteps.minSteps << endl;
 				        outPar << "MAX. No. OF STEPS:\t ";
 				        if (ssteps.maxSteps == 99999999) outPar << "not applied" << endl;
-				        else outPar << ssteps.maxSteps << endl
+				        else outPar << ssteps.maxSteps << endl;
 				    }
 				}
 			}
