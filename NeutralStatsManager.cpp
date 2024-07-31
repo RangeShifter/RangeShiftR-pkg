@@ -596,7 +596,7 @@ void NeutralStatsManager::calcPairwiseWeightedFst(set<int> const& patchList, con
 					sqDist = p - pBar; //(p_liu - pbar_u)^2 
 					sqDist *= sqDist;
 
-					num = pq * popSizes[i] / (popSizes[i] - 1);
+					num = pq * popSizes[i] / (popSizes[i] - 1); // eq. 8 Weir & Hill 2002
 					numeratorPairwiseFst[i][i] += num;
 					numeratorWeightedFst += num * popSizes[i]; // see equ. 9, Weir & Hill 2002
 					denominator += popSizes[i] * sqDist + popWeights[i] * pq; //common denominator
