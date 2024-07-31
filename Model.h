@@ -40,7 +40,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 26 October 2021 by Steve Palmer
+ Last updated: 28 July 2021 by Greta Bocedi
 ------------------------------------------------------------------------------*/
 
 #ifndef ModelH
@@ -48,6 +48,7 @@ Last updated: 26 October 2021 by Steve Palmer
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <chrono>
 
 #include "Parameters.h"
 #include "Landscape.h"
@@ -56,7 +57,7 @@ Last updated: 26 October 2021 by Steve Palmer
 #include "Species.h"
 #include "Management.h"
 
-#if !RS_EMBARCADERO && !LINUX_CLUSTER && !RS_RCPP
+#if !LINUX_CLUSTER && !RS_RCPP
 #include <filesystem>
 using namespace std::filesystem;
 #endif
@@ -90,20 +91,7 @@ void RangePopOutput(
 	int,				// year
 	int					// generation
 );
-void Outputs_Visuals_B(
-	int,	// replicate
-	int,	// year
-	int,	// generation
-	int		// Landscape number
-);
-void RefreshVisualCost(void);
-traitCanvas SetupTraitCanvas(void);
-void SetupVisualOutput(void);
-void ResetVisualOutput(void);
-void DrawPopnGraph(
-	Community*,	// pointer to Community
-	int					// year
-);
+
 void OutParameters(
 	Landscape*	// pointer to Landscape
 );
@@ -125,15 +113,6 @@ extern string distnmapname;	// see Main.cpp (batch)
 extern string costmapname;	// see Main.cpp (batch)
 extern string genfilename;	// see Main.cpp (batch)
 extern RSrandom *pRandom;
-
-// these functions to have different version for GUI and batch applications ...
-#if BATCH
-extern void MemoLine(string);
-#endif
-void GUIsetLandScale(
-	int,	// landscape image height (pixels)
-	int		// landscape image width  (pixels)
-);
 
 #if RS_RCPP
 extern std::uint32_t RS_random_seed;

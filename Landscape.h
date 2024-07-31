@@ -65,7 +65,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 2 December 2021 by Steve Palmer
+ Last updated: 28 July 2021 by Greta Bocedi
 ------------------------------------------------------------------------------*/
 
 #ifndef LandscapeH
@@ -225,16 +225,13 @@ public:
 	int findHabCode(int);
 	int getHabCode(int);
 	void clearHabitats(void);
-	void addColour(rgb);
-	void changeColour(int,rgb);
-	rgb getColour(int);
-	int colourCount(void);
 
 	// functions to handle patches and cells
 
 	void setCellArray(void);
 	void addPatchNum(int);
-	void generatePatches(void); 		// create an artificial landscape
+	std::vector<int> getPatchNums() const { return patchnums; }
+	void generatePatches(); 		// create an artificial landscape
 	void allocatePatches(Species*);	// create patches for a cell-based landscape
 	Patch* newPatch(
 		int		// patch sequential no. (id no. is set to equal sequential no.)
@@ -289,6 +286,7 @@ public:
 	Patch* findPatch(
 		int   // Patch id no.
 	);
+	set<int> samplePatches(const string& samplingOption, int nbToSample, Species* pSpecies);
 	int checkTotalCover(void);
 	void resetPatchPopns(void);
 	void updateCarryingCapacity(
@@ -455,19 +453,6 @@ public:
 	int readCosts(
 		string	// costs file name
 	);
-	// the following four functions are implemented for the GUI version only
-	// in the batch version, they are defined, but empty
-	void setLandMap(void);
-	void drawLandscape(
-		int,	// replicate no.
-		int,	// landscape index number (always 0 if landscape is not dynamic)
-		int		// landscape no.
-	);
-	void drawGradient(void); // Draw environmental gradient map
-	void drawGlobalStoch(	// Draw environmental stochasticity time-series
-		int		// no. of years
-	);
-
 	void resetVisits(void);
 	void outVisits(int,int);	// save SMS path visits map to raster text file
 
@@ -510,9 +495,6 @@ private:
 	// list of habitat codes
 	std::vector <int> habCodes;
 
-	// list of colours for habitat codes
-	std::vector <rgb> colours;
-
 	// list of dynamic landscape changes
 	std::vector <landChange> landchanges;
 	std::vector <patchChange> patchchanges;
@@ -529,7 +511,7 @@ private:
 	int **connectMatrix;
 
 	// global environmental stochasticity (epsilon)
-	float *epsGlobal;	// pointer to time-series
+	float* epsGlobal;	// pointer to time-series	
 
 	// patch and costs change matrices (temporary - used when reading dynamic landscape)
 	// indexed by [descending y][x][period]
@@ -551,10 +533,7 @@ extern RSrandom *pRandom;
 
 #if RSDEBUG
 extern ofstream DEBUGLOG;
-extern void DebugGUI(string);
 #endif
-
-extern void MemoLine(string);
 
 #if RS_RCPP
 extern rasterdata landraster,patchraster,spdistraster,costsraster;

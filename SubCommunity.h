@@ -1,47 +1,47 @@
 /*----------------------------------------------------------------------------
- *	
- *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell 
- *	
+ *
+ *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell
+ *
  *	This file is part of RangeShifter.
- *	
+ *
  *	RangeShifter is free software: you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation, either version 3 of the License, or
  *	(at your option) any later version.
- *	
+ *
  *	RangeShifter is distributed in the hope that it will be useful,
  *	but WITHOUT ANY WARRANTY; without even the implied warranty of
  *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *	GNU General Public License for more details.
- *	
+ *
  *	You should have received a copy of the GNU General Public License
  *	along with RangeShifter. If not, see <https://www.gnu.org/licenses/>.
- *	
+ *
  --------------------------------------------------------------------------*/
- 
- 
-/*------------------------------------------------------------------------------
 
-RangeShifter v2.0 SubCommunity
 
-Implements the SubCommunity class
+ /*------------------------------------------------------------------------------
 
-There is ONE instance of a SubCommunity for each Patch in the Landscape
-(including the matrix). The SubCommunity holds a number of Populations, one for
-each Species represented in the simulation.
-CURRENTLY the number of Populations withn a SubCommunity is LIMITED TO ONE.
+ RangeShifter v2.0 SubCommunity
 
-For full details of RangeShifter, please see:
-Bocedi G., Palmer S.C.F., Pe’er G., Heikkinen R.K., Matsinos Y.G., Watts K.
-and Travis J.M.J. (2014). RangeShifter: a platform for modelling spatial
-eco-evolutionary dynamics and species’ responses to environmental changes.
-Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
+ Implements the SubCommunity class
 
-Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
+ There is ONE instance of a SubCommunity for each Patch in the Landscape
+ (including the matrix). The SubCommunity holds a number of Populations, one for
+ each Species represented in the simulation.
+ CURRENTLY the number of Populations withn a SubCommunity is LIMITED TO ONE.
 
-Last updated: 26 October 2021 by Steve Palmer
+ For full details of RangeShifter, please see:
+ Bocedi G., Palmer S.C.F., Pe’er G., Heikkinen R.K., Matsinos Y.G., Watts K.
+ and Travis J.M.J. (2014). RangeShifter: a platform for modelling spatial
+ eco-evolutionary dynamics and species’ responses to environmental changes.
+ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
-------------------------------------------------------------------------------*/
+ Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
+
+ Last updated: 25 June 2021 by Greta Bocedi
+
+ ------------------------------------------------------------------------------*/
 
 #ifndef SubCommunityH
 #define SubCommunityH
@@ -56,14 +56,10 @@ using namespace std;
 
 //---------------------------------------------------------------------------
 
-struct traitCanvas { // canvases for drawing variable traits
-	int *pcanvas[NTRAITS]; // dummy variables for batch version
-};
-
 class SubCommunity {
 
 public:
-	SubCommunity(Patch*,int);
+	SubCommunity(Patch*, int);
 	~SubCommunity(void);
 	intptr getNum(void);
 	Patch* getPatch(void);
@@ -72,8 +68,8 @@ public:
 	// functions to manage populations occurring in the SubCommunity
 	popStats getPopStats(void);
 	void setInitial(bool);
-	void initialise(Landscape*,Species*);
-	void initialInd(Landscape*,Species*,Patch*,Cell*,int);
+	void initialise(Landscape*, Species*);
+	void initialInd(Landscape*, Species*, Patch*, Cell*, int);
 	Population* newPopn( // Create a new population, and return its address
 		Landscape*,	// pointer to Landscape
 		Species*,		// pointer to Species
@@ -98,7 +94,7 @@ public:
 	void initiateDispersal(
 		SubCommunity*	// pointer to matrix SubCommunity
 	);
-// Add an individual into the local population of its species in the patch
+	// Add an individual into the local population of its species in the patch
 	void recruit(
 		Individual*,	// pointer to Individual
 		Species*			// pointer to Species
@@ -123,16 +119,18 @@ public:
 	);
 	void survival(
 		short,	// part:		0 = determine survival & development,
-						//		 			1 = apply survival changes to the population
+		//		 			1 = apply survival changes to the population
 		short,	// option0:	0 = stage 0 (juveniles) only         )
-						//					1 = all stages                       ) used by part 0 only
-						//					2 = stage 1 and above (all non-juvs) )
+		//					1 = all stages                       ) used by part 0 only
+		//					2 = stage 1 and above (all non-juvs) )
 		short 	// option1:	0 - development only (when survival is annual)
 						//	  	 		1 - development and survival
 	);
 	void ageIncrement(void);
+
 	// Find the population of a given species in a given patch
-	Population* findPop(Species*,Patch*);
+	Population* findPop(Species*, Patch*);
+
 	void createOccupancy(
 		int	// no. of rows = (no. of years / interval) + 1
 	);
@@ -164,21 +162,12 @@ public:
 		int					// Landscape number (>= 0 to open the file, -999 to close the file
 								//									 -1 to write data records)
 	);
-	void outGenetics( // Write records to genetics file
-		int,				// replicate
-		int,				// year
-		int,				// generation
-		int					// Landscape number (>= 0 to open the file, -999 to close the file
-								//									 -1 to write data records)
-	);
 	bool outTraitsHeaders( // Open traits file and write header record
 		Landscape*,	// pointer to Landscape
 		Species*,		// pointer to Species
 		int					// Landscape number (-999 to close the file)
 	);
 	traitsums outTraits( // Write records to traits file and return aggregated sums
-		traitCanvas,	// pointers to canvases for drawing variable traits		
-									// in the batch version, these are replaced by integers set to zero
 		Landscape*, 	// pointer to Landscape
 		int,					// replicate
 		int,					// year
@@ -199,9 +188,9 @@ private:
 
 };
 
-extern paramGrad *paramsGrad;
-extern paramStoch *paramsStoch;
-extern paramInit *paramsInit;
+extern paramGrad* paramsGrad;
+extern paramStoch* paramsStoch;
+extern paramInit* paramsInit;
 
 //---------------------------------------------------------------------------
 #endif

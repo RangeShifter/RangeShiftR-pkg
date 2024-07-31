@@ -59,17 +59,17 @@ Last updated: 25 June 2021 by Steve Palmer
 #include <iomanip>
 #include <stdlib.h>
 #include <vector>
-#include <map>
+#include <sstream>
+#include <algorithm>
 using namespace std;
 
 #include "RSrandom.h"
 
-#define NSTAGES 10		// maximum number of stages permitted
-#define NSEXES 2			// maximum number of sexes permitted
-#define PARAMDEBUG 0
-#define NTRAITS 18		// maximum number of variable traits which can be displayed
-											// in GUI (VCL version)
-#define NSD 3.0				// no. of s.d. to use to control range for displaying traits
+constexpr int gNoDataCost = 100000; // cost to use in place of nodata value for SMS;
+constexpr int gAbsorbingNoDataCost = 100; // cost to use in place of nodata value for SMS;
+// when boundaries are absorbing
+constexpr int gMaxNbStages = 10;		// maximum number of stages permitted
+constexpr int gMaxNbSexes = 2;			// maximum number of sexes permitted
 
 #if RS_RCPP
 typedef intptr_t intptr;
@@ -79,7 +79,7 @@ typedef unsigned long long intptr;
 #else
 typedef unsigned int intptr;
 #endif
-#endif
+#endif // RS_RCPP
 
 #if RS_RCPP
     #ifndef R_EXT_CONSTANTS_H_  // the R headers define PI as a macro, so that the 'else' line results in an error
@@ -96,25 +96,53 @@ const double SQRT2 = std::sqrt(double(2.0)); // more efficient than calculating 
 //---------------------------------------------------------------------------
 
 // Common declarations
-
 struct locn { int x; int y; };
-struct rgb { // colour scheme for drawing maps
-	int r,g,b;
+
+//--------------------------------------------------------------------------
+
+/** Trait types **/
+
+enum TraitType {
+	NEUTRAL, 
+	GENETIC_LOAD, GENETIC_LOAD1, GENETIC_LOAD2, GENETIC_LOAD3, GENETIC_LOAD4, GENETIC_LOAD5,
+
+	E_D0, E_ALPHA, E_BETA,
+	S_S0, S_ALPHA, S_BETA,
+
+	E_D0_F, E_ALPHA_F, E_BETA_F,
+	S_S0_F, S_ALPHA_F, S_BETA_F,
+
+	E_D0_M, E_ALPHA_M, E_BETA_M,
+	S_S0_M, S_ALPHA_M, S_BETA_M,
+
+	CRW_STEPLENGTH, CRW_STEPCORRELATION,
+
+	KERNEL_MEANDIST_1, KERNEL_MEANDIST_2, KERNEL_PROBABILITY,
+	KERNEL_MEANDIST_1_F, KERNEL_MEANDIST_2_F, KERNEL_PROBABILITY_F,
+	KERNEL_MEANDIST_1_M, KERNEL_MEANDIST_2_M, KERNEL_PROBABILITY_M,
+
+	SMS_DP, SMS_GB, SMS_ALPHADB, SMS_BETADB,
+
+	INVALID_TRAIT // error
 };
 
-const string Int2Str(const int);
-#if RS_RCPP
-const string Int2Str(const int, unsigned int);
-#endif
-const string Float2Str(const float);
-const string Double2Str(const double);
-const rgb draw_wheel(int);
+enum GenParamType { MEAN, SD, MIN, MAX, SHAPE, SCALE, INVALID };
+enum DistributionType { UNIFORM, NORMAL, GAMMA, NEGEXP, SCALED, KAM, SSM, NONE };
+enum ExpressionType { AVERAGE, ADDITIVE, NOTEXPR, MULTIPLICATIVE };
+
+/** Param's types **/
+typedef enum { KERNEL, SMS, CRW} movement_t;
+
+//sex types
+typedef enum {
+	FEM = 0, MAL = 1,
+	NA, // not applicable. e.g. for NEUTRAL or genetic load trait
+	INVALID_SEX // error
+} sex_t;
 
 //---------------------------------------------------------------------------
 
 // Environmental gradient parameters
-
-// SHOULD THIS BE PART OF LANDSCAPE OBJECT OR A SEPARATE OBJECT?????????????
 
 struct envGradParams {
 	bool gradient; bool shifting;
@@ -206,7 +234,8 @@ struct initParams {
 };
 
 struct initInd {
-	int year,patchID,x,y; short species,sex,age,stage;
+	int year, patchID, x, y; 
+	short species, sex, age, stage;
 };
 
 class paramInit {
@@ -261,7 +290,7 @@ private:
 	int nSeedPatches;	 	// no. of cells/patches to initialise
 	int nSpDistPatches;	// no. of species distribution cells to initialise
 	string indsFile;		// no. of species distribution cells to initialise
-	float initProp[NSTAGES];	// initial stage proportions (structured population only)
+	float initProp[gMaxNbStages];	// initial stage proportions (structured population only)
 
 	vector <initInd> initinds;	// individuals to be initialised
 
@@ -274,16 +303,13 @@ private:
 struct simParams {
 	int batchNum;
 	int simulation; int reps; int years;
-//	int outStartRange;
-//	int outStartOcc;
-	int outStartPop; int outStartInd; int outStartGenetic;
+	int outStartPop; int outStartInd;
 	int outStartTraitCell; int outStartTraitRow; int outStartConn;
-	int outIntRange; int outIntOcc; int outIntPop; int outIntInd; int outIntGenetic;
+	int outIntRange; int outIntOcc; int outIntPop; int outIntInd;
 	int outIntTraitCell; int outIntTraitRow; int outIntConn;
 	int mapInt; int traitInt;
 	bool batchMode; bool absorbing;
 	bool outRange; bool outOccup; bool outPop; bool outInds;
-	bool outGenetics; short outGenType; bool outGenXtab;
 	bool outTraitsCells; bool outTraitsRows; bool outConnect;
 	bool saveMaps;
 	bool drawLoaded; bool saveTraitMaps;
@@ -292,6 +318,11 @@ struct simParams {
 	int outStartPaths; int outIntPaths;
 	bool outPaths;	bool ReturnPopRaster; bool CreatePopFile;
 #endif
+	bool fixReplicateSeed;
+	string patchSamplingOption;
+	bool outputGeneValues;
+	bool outputWCFstat, outputPerLocusWCFstat, outputPairwiseFst;
+	int outputGeneticInterval, outStartGenetics;
 };
 
 struct simView {
@@ -306,6 +337,7 @@ public:
 	paramSim(void);
 	~paramSim(void);
 	void setSim(simParams);
+	void setGeneticSim(string patchSamplingOption, bool outputGeneticValues, bool outputWCFstat, bool outputPerLocusWCFstat, bool outputPairwiseFst, int outputStartGenetics, int outputGeneticInterval);
 	simParams getSim(void);
 	int getSimNum(void);
 	void setViews(simView);
@@ -322,11 +354,8 @@ private:
 	int simulation;					// simulation no.
 	int reps;								// no. of replicates
 	int years;							// no. of years
-//	int outStartRange;			// output start year for range file
-//	int outStartOcc;				// output start year for occupancy file
 	int outStartPop;				// output start year for population file
 	int outStartInd;				// output start year for individuals file
-	int outStartGenetic; 		// output start year for genetics file
 	int outStartTraitCell;	// output start year for traits by cell file
 	int outStartTraitRow;		// output start year for traits by row file
 	int outStartConn;				// output start year for connectivity matrix
@@ -334,7 +363,6 @@ private:
 	int outIntOcc;					// output interval for occupancy file
 	int outIntPop;					// output interval for population file
 	int outIntInd;					// output interval for individuals file
-	int outIntGenetic;			// output interval for genetics file
 	int outIntTraitCell;		// output interval for traits by cell file
 	int outIntTraitRow;			// output interval for traits by row file
 	int outIntConn;					// output interval for connectivity matrix
@@ -342,16 +370,11 @@ private:
 	int traitInt;						// output interval for evolving traits maps
 	int slowFactor;					// to reduce speed of movement paths on screen
 	bool batchMode;					//
-	bool absorbing; 				// landscape boundary and no-data regions are
-													// absorbing boundaries
+	bool absorbing; 				// landscape boundary and no-data regions are absorbing boundaries
 	bool outRange;					// produce output range file?
 	bool outOccup;					// produce output occupancy file?
 	bool outPop;						// produce output population file?
 	bool outInds;						// produce output individuals file?
-	bool outGenetics;				// produce output genetics file?
-	short outGenType;				// produce output genetics for: 0 = juveniles only
-													// 1 = all individuals, 2 = adults (i.e. final stage) only
-	bool outGenXtab;				// produce output genetics as a cross table?
 	bool outTraitsCells;		// produce output summary traits by cell file?
 	bool outTraitsRows;			// produce output summary traits by row (y) file?
 	bool outConnect;				// produce output connectivity file?
@@ -364,7 +387,6 @@ private:
 	bool ReturnPopRaster;
 	bool CreatePopFile;
 #endif
-	bool drawLoaded;				// draw initial distribution on landscape/population maps?
 	bool saveTraitMaps;			// save summary traits maps?
 	bool viewLand;					// view landscape map on screen?
 	bool viewPatch;					// view map of landscape patches on screen?
@@ -376,13 +398,22 @@ private:
 	bool viewGraph;					// view population/occupancy graph on screen?
 	string dir;							// full name of working directory
 
+	bool fixReplicateSeed;
+	string patchSamplingOption;
+	bool outputGenes;
+	bool outputWCFstat;
+	bool outputPerLocusWCFstat;
+	bool outputPairwiseFst;
+	int outputStartGenetics;
+	int outputGeneticInterval;
 };
 
 //---------------------------------------------------------------------------
 #if RSDEBUG
 extern ofstream DEBUGLOG;
-void DebugGUI(string);
 #endif
+
+extern RSrandom* pRandom;
 
 //---------------------------------------------------------------------------
 #endif
