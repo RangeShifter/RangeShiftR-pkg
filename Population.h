@@ -275,7 +275,7 @@ private:
 																	// has been completed
 
 	vector<Individual*> sampledInds;
-	std::vector <Individual*> sampledInds; // individuals with specified characteristics from translocation!!! 
+	//std::vector <Individual*> sampledInds; // individuals with specified characteristics from translocation!!! 
 	vector<NeutralCountsTable> popNeutralCountTables;
 	void resetPopNeutralTables();
 };
