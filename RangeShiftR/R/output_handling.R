@@ -189,11 +189,14 @@ setMethod("ColonisationStats", "data.frame", function(x, y = NULL, years = numer
             #require('raster')
 
             # if(class(y) == "RasterLayer" || class(y) == "RasterStack" ){ # old raster
+            if(class(y) == "RasterLayer" || class(y) == "RasterStack" ){ # if users use raster package, transform to SpatRaster
+                y <- terra::rast(y)
+            }
             if( class(y) == "SpatRaster" ){
                 onelayer = FALSE
                 # if(class(y) == "RasterLayer") onelayer = TRUE
                 # if(class(y) == "RasterStack") if(length(y@layers)==1 ) onelayer = TRUE
-                if(length(y) == 1) onelayer = TRUE
+                if(length(names(y)) == 1) onelayer = TRUE
                 # if(length(y) > 1) if(length(y@layers)==1 ) onelayer = TRUE
 
 
@@ -238,7 +241,7 @@ setMethod("ColonisationStats", "data.frame", function(x, y = NULL, years = numer
                     if(!onelayer){
 
                         N_layers <- length(years)+1
-                        if( length(y) != N_layers ){
+                        if( length(names(y)) != N_layers ){
                             warning("ColonisationStats(): Number of raster layers must be either 1 or number of years plus 1.", call. = FALSE)
                         }
                         else{
