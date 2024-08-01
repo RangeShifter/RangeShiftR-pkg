@@ -1,66 +1,66 @@
 /*----------------------------------------------------------------------------
- *	
- *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell 
- *	
+ *
+ *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell
+ *
  *	This file is part of RangeShifter.
- *	
+ *
  *	RangeShifter is free software: you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation, either version 3 of the License, or
  *	(at your option) any later version.
- *	
+ *
  *	RangeShifter is distributed in the hope that it will be useful,
  *	but WITHOUT ANY WARRANTY; without even the implied warranty of
  *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *	GNU General Public License for more details.
- *	
+ *
  *	You should have received a copy of the GNU General Public License
  *	along with RangeShifter. If not, see <https://www.gnu.org/licenses/>.
- *	
+ *
  --------------------------------------------------------------------------*/
- 
- 
-/*------------------------------------------------------------------------------
 
-RangeShifter v2.0 Patch
 
-Implements the class: Patch
+ /*------------------------------------------------------------------------------
 
-A patch is a collection of one or more Cells in the the gridded Landscape,
-which together provide the area in which a single demographic unit of a Species,
-i.e. a Population, can reproduce. One or more Populations (of different Species)
-form a Sub-community associated with the Patch.
+ RangeShifter v2.0 Patch
 
-There is no requirement that all the Cells be adjacent, although in practice
-that would usually be the case.
+ Implements the class: Patch
 
-Each Patch must have a unique positive integer id number supplied by the user,
-and the matrix, i.e. any part of the landscape which is not a breeding patch,
-is represented by Patch 0. However, as patch numbers need not be sequential,
-an internal sequential number is also applied.
+ A patch is a collection of one or more Cells in the the gridded Landscape,
+ which together provide the area in which a single demographic unit of a Species,
+ i.e. a Population, can reproduce. One or more Populations (of different Species)
+ form a Sub-community associated with the Patch.
 
-For a 'cell-based model', the user supplies no patch numbers, and a separate
-Patch is generated internally for each Cell, i.e. the 'cell-based model' is a
-special case of the 'patch-based model' in which each Patch has a single Cell.
-Moreover, there is also the 'matrix' Patch 0, which has no cells, but which
-holds the disperser population whilst its Individuals are in transit.
+ There is no requirement that all the Cells be adjacent, although in practice
+ that would usually be the case.
 
-In a true patch-based model, each Patch hold a list of its constituent Cells,
-EXCEPT for the matrix Patch 0. This is because that list would be extremely
-long for a very large landscape in which suitable patches are small and/or rare,
-and removing Cells from it if the landscape is dynamic would be inefficient.
+ Each Patch must have a unique positive integer id number supplied by the user,
+ and the matrix, i.e. any part of the landscape which is not a breeding patch,
+ is represented by Patch 0. However, as patch numbers need not be sequential,
+ an internal sequential number is also applied.
 
-For full details of RangeShifter, please see:
-Bocedi G., Palmer S.C.F., Pe’er G., Heikkinen R.K., Matsinos Y.G., Watts K.
-and Travis J.M.J. (2014). RangeShifter: a platform for modelling spatial
-eco-evolutionary dynamics and species’ responses to environmental changes.
-Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
+ For a 'cell-based model', the user supplies no patch numbers, and a separate
+ Patch is generated internally for each Cell, i.e. the 'cell-based model' is a
+ special case of the 'patch-based model' in which each Patch has a single Cell.
+ Moreover, there is also the 'matrix' Patch 0, which has no cells, but which
+ holds the disperser population whilst its Individuals are in transit.
 
-Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
+ In a true patch-based model, each Patch hold a list of its constituent Cells,
+ EXCEPT for the matrix Patch 0. This is because that list would be extremely
+ long for a very large landscape in which suitable patches are small and/or rare,
+ and removing Cells from it if the landscape is dynamic would be inefficient.
 
-Last updated: 25 June 2021 by Steve Palmer
+ For full details of RangeShifter, please see:
+ Bocedi G., Palmer S.C.F., Pe’er G., Heikkinen R.K., Matsinos Y.G., Watts K.
+ and Travis J.M.J. (2014). RangeShifter: a platform for modelling spatial
+ eco-evolutionary dynamics and species’ responses to environmental changes.
+ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
-------------------------------------------------------------------------------*/
+ Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
+
+ Last updated: 25 June 2021 by Steve Palmer
+
+ ------------------------------------------------------------------------------*/
 
 #ifndef PatchH
 #define PatchH
@@ -72,16 +72,16 @@ using namespace std;
 #include "Cell.h"
 #include "Species.h"
 
-//---------------------------------------------------------------------------
+ //---------------------------------------------------------------------------
 
 struct patchLimits {
-	int xMin,xMax,yMin,yMax;
+	int xMin, xMax, yMin, yMax;
 };
 struct patchPopn {
-	intptr pSp,pPop; // pointers to Species and Population cast as integers
+	intptr pSp, pPop; // pointers to Species and Population cast as integers
 };
 
-class Patch{
+class Patch {
 public:
 	Patch(
 		int,	 // internal sequential number
@@ -98,7 +98,7 @@ public:
 	void resetLimits(void); // Reset minimum and maximum co-ordinates of the patch
 	void addCell(
 		Cell*,	// pointer to the Cell to be added to the Patch
-		int,int	// x (column) and y (row) co-ordinates of the Cell
+		int, int	// x (column) and y (row) co-ordinates of the Cell
 	);
 	locn getCellLocn( // Return co-ordinates of a specified cell
 		int			// index no. of the Cell within the vector cells
@@ -141,21 +141,20 @@ public:
 		bool					// TRUE if there is a gradient in carrying capacity across the Landscape
 	);
 	float getK(void);
-	// dummy function for batch version
-	void drawCells(float,int,rgb);
+	bool speciesIsPresent(Species* sp);
 
-	private:
+private:
 	int patchSeqNum;// sequential patch number - patch 0 is reserved for the inter-patch matrix
 	int patchNum; 	// patch number as supplied by the user (not forced to be sequential)
 	int nCells;			// no. of cells in the patch
-	int xMin,xMax,yMin,yMax; 	// min and max cell co-ordinates
-	int x,y;				// centroid co-ordinates (approx.)
+	int xMin, xMax, yMin, yMax; 	// min and max cell co-ordinates
+	int x, y;				// centroid co-ordinates (approx.)
 	intptr subCommPtr; // pointer (cast as integer) to sub-community associated with the patch
 	// NOTE: FOR MULTI-SPECIES MODEL, PATCH WILL NEED TO STORE K FOR EACH SPECIES
 	float localK;		// patch carrying capacity (individuals)
 	bool changed;
-// NOTE: THE FOLLOWING ARRAY WILL NEED TO BE MADE SPECIES-SPECIFIC...
-	short nTemp[NSEXES];						// no. of potential settlers in each sex
+	// NOTE: THE FOLLOWING ARRAY WILL NEED TO BE MADE SPECIES-SPECIFIC...
+	short nTemp[gMaxNbSexes];						// no. of potential settlers in each sex
 
 	std::vector <Cell*> cells;
 	std::vector <patchPopn> popns;
@@ -164,8 +163,8 @@ public:
 
 //---------------------------------------------------------------------------
 
-extern paramStoch *paramsStoch;
-extern RSrandom *pRandom;
+extern paramStoch* paramsStoch;
+extern RSrandom* pRandom;
 
 #if RSDEBUG
 extern ofstream DEBUGLOG;
