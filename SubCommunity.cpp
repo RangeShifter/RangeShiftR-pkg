@@ -65,7 +65,7 @@ void SubCommunity::initialise(Landscape* pLandscape, Species* pSpecies)
 	landParams ppLand = pLandscape->getLandParams();
 	initParams init = paramsInit->getInit();
 
-// determine size of initial population
+	// determine size of initial population
 	int nInds = 0;
 	if (subCommNum == 0 // matrix patch
 		|| !initial)   		// not in initial region or distribution
