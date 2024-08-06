@@ -24,7 +24,7 @@ SpeciesTrait::SpeciesTrait(
 	mutationRate{ mutRate }
 {
 	// Initialise ploidy only once per species
-	if (ploidy == NULL) this->ploidy = pSpecies->isDiploid() ? 2 : 1;
+	if (ploidy == 0) this->ploidy = pSpecies->isDiploid() ? 2 : 1;
 
 	// Check distribution parameters
 	// Initial distribution
