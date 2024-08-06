@@ -279,7 +279,7 @@ void paramSim::setGeneticSim(string patchSamplingOption, bool outputGeneticValue
 	this->outputWCFstat = outputWCFstat;
 	this->outputPerLocusWCFstat = outputPerLocusWCFstat;
 	this->outputPairwiseFst = outputPairwiseFst;
-	this->outputStartGenetics = outputGeneticInterval;
+	this->outputStartGenetics = outputStartGenetics;
 	this->outputGeneticInterval = outputGeneticInterval;
 }
 
