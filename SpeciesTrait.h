@@ -50,6 +50,11 @@ public:
     map<GenParamType, float> getInitialParameters() const { return initialParameters; };
     ExpressionType getExpressionType() const { return expressionType; };
 
+    int getNbNeutralAlleles() const {
+        if (!traitType == NEUTRAL) throw logic_error("getNbNeutralAlleles() should only be called for neutral traits.");
+        else return getInitialParameters().find(MAX)->second + 1; // possible values range from 0 to MAX
+    }
+
 private:
 
     inline static int ploidy = 0;

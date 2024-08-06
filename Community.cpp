@@ -1845,7 +1845,7 @@ void Community::writePairwiseFSTFile(Species* pSpecies, const int yr, const int 
 
 void Community::outNeutralGenetics(Species* pSpecies, int rep, int yr, int gen, bool fstat, bool perLocus, bool pairwise) {
 
-	const int nAlleles = (int)(pSpecies->getSpTrait(NEUTRAL)->getMutationParameters().find(MAX)->second);
+	const int nAlleles = pSpecies->getSpTrait(NEUTRAL)->getNbNeutralAlleles();
 	const int nLoci = (int)pSpecies->getNPositionsForTrait(NEUTRAL);
 	const set<int> patchList = pSpecies->getSamplePatches();
 	int nInds = 0;

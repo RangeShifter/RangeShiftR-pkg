@@ -39,7 +39,7 @@ NeutralStatsManager::NeutralStatsManager(const int& nbSampledPatches, const int 
 void NeutralStatsManager::updateAllNeutralTables(Species* pSpecies, Landscape* pLandscape, set<int> const& patchList) {
 
 	const int nLoci = pSpecies->getNPositionsForTrait(NEUTRAL);
-	const int nAlleles = (int)pSpecies->getSpTrait(NEUTRAL)->getMutationParameters().find(MAX)->second;
+	const int nAlleles = pSpecies->getSpTrait(NEUTRAL)->getNbNeutralAlleles();
 	const int ploidy = pSpecies->isDiploid() ? 2 : 1;
 
 	// Create / Update community-level NEUTRAL counts table
@@ -104,7 +104,7 @@ void NeutralStatsManager::calcAllelicDiversityMetrics(set<int> const& patchList,
 {
 	int i, j;
 	const int nLoci = pSpecies->getNPositionsForTrait(NEUTRAL);
-	const int nAlleles = (int)pSpecies->getSpTrait(NEUTRAL)->getMutationParameters().find(MAX)->second;
+	const int nAlleles = pSpecies->getSpTrait(NEUTRAL)->getNbNeutralAlleles();
 	const int ploidy = pSpecies->isDiploid() ? 2 : 1;
 	unsigned int nbPopulatedPatches = 0;
 	int nbAllelesInPatch = 0;
@@ -535,7 +535,7 @@ void NeutralStatsManager::calcPerLocusMeanSquaresFst(set<int> const& patchList, 
 // ----------------------------------------------------------------------------------------
 void NeutralStatsManager::calcPairwiseWeightedFst(set<int> const& patchList, const int nInds, const int nLoci, Species* pSpecies, Landscape* pLandscape) {
 
-	const int nAlleles = (int)pSpecies->getSpTrait(NEUTRAL)->getMutationParameters().find(MAX)->second;
+	const int nAlleles = (int)pSpecies->getSpTrait(NEUTRAL)->getMutationParameters().find(MAX)->second + 1;
 	const int ploidy = pSpecies->isDiploid() ? 2 : 1;
 
 	// Needs to be in vector to iterate over, copy preserves order

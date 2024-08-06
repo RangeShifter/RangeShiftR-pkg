@@ -14,7 +14,7 @@ NeutralTrait::NeutralTrait(SpeciesTrait* P)
 	map<GenParamType, float> mutationParameters = pSpeciesTrait->getMutationParameters();
 
 	// Set default value to user-specified max
-	wildType = (int)mutationParameters.find(MAX)->second - 1;
+	wildType = (int)mutationParameters.find(MAX)->second;
 	if (wildType > NeutralValUpperBound)
 		throw logic_error("Error:: max number of alleles cannot exceed " + to_string(NeutralValUpperBound) + ".\n");
 

@@ -333,7 +333,7 @@ void Population::resetPopNeutralTables() {
 void Population::updatePopNeutralTables() {
 
 	const int nLoci = pSpecies->getNPositionsForTrait(NEUTRAL);
-	const int nAlleles = (int)pSpecies->getSpTrait(NEUTRAL)->getMutationParameters().find(MAX)->second;
+	const int nAlleles = pSpecies->getSpTrait(NEUTRAL)->getNbNeutralAlleles();
 	const auto& positions = pSpecies->getSpTrait(NEUTRAL)->getGenePositions();
 	const int ploidy = pSpecies->isDiploid() ? 2 : 1;
 
@@ -434,7 +434,7 @@ vector<int> Population::countNbHeterozygotesEachLocus() {
 // ----------------------------------------------------------------------------------------
 double Population::computeHs() {
 	int nLoci = pSpecies->getNPositionsForTrait(NEUTRAL);
-	int nAlleles = (int)pSpecies->getSpTrait(NEUTRAL)->getInitialParameters().find(MAX)->second;
+	int nAlleles = pSpecies->getSpTrait(NEUTRAL)->getNbNeutralAlleles();
 	double hs = 0;
 	double freq;
 	vector<double> locihet(nLoci, 1);
