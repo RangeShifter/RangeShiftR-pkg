@@ -38,7 +38,7 @@ Individual::Individual(Cell* pCell, Patch* pPatch, short stg, short a, short rep
 	geneticFitness = 1.0;
 	stage = stg;
 	if (probmale <= 0.0) sex = FEM;
-	else sex = pRandom->Bernoulli(probmale) ? FEM : MAL;
+	else sex = pRandom->Bernoulli(probmale) ? MAL : FEM;
 	age = a;
 	status = 0;
 
