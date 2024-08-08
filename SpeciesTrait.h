@@ -52,7 +52,7 @@ public:
 
     int getNbNeutralAlleles() const {
         if (!traitType == NEUTRAL) throw logic_error("getNbNeutralAlleles() should only be called for neutral traits.");
-        else return getInitialParameters().find(MAX)->second + 1; // possible values range from 0 to MAX
+        else return getMutationParameters().find(MAX)->second + 1; // possible values range from 0 to MAX
     }
 
 private:
