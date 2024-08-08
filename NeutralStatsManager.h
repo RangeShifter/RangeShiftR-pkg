@@ -110,8 +110,8 @@ public:
 	
 	double getMeanNbAllPerLocusPerPatch() const { return meanNbAllelesPerLocusPerPatch; }
 	double getMeanNbAllPerLocus() const { return meanNbAllelesPerLocus; }
-	double getMeanFixdAllelesPerPatch() const { return meanNbFixedAllelesPerPatch; }
-	double getTotalFixdAlleles() const { return nbGloballyFixedAlleles; }
+	double getMeanFixdAllelesPerPatch() const { return meanNbFixedLociPerPatch; }
+	double getTotalFixdAlleles() const { return meanFixedLoci; }
 	
 	double getHo() const { return ho; }
 	double getHs() const { return hs; }
@@ -137,7 +137,7 @@ private:
 	vector<NeutralCountsTable> commNeutralCountTables; // community-level tallies of allele counts and freqs
 
 	double meanNbAllelesPerLocusPerPatch, meanNbAllelesPerLocus;
-	double meanNbFixedAllelesPerPatch, nbGloballyFixedAlleles;
+	double meanNbFixedLociPerPatch, meanFixedLoci;
 
 	double ho; // observed heterozygosity 
 	double hs; // expected population-level heterozygosity

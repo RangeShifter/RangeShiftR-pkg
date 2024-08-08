@@ -153,7 +153,7 @@ void NeutralStatsManager::calcAllelicDiversityMetrics(set<int> const& patchList,
 
 	// Compute number of fixed loci per patch
 	// mean number of loci that are fixed at pop level per pop
-	meanNbFixedAllelesPerPatch = 0;
+	meanNbFixedLociPerPatch = 0;
 	if (nbPopulatedPatches > 0) {
 		for (int patchId : patchList) {
 			const auto patch = pLandscape->findPatch(patchId);
@@ -161,17 +161,17 @@ void NeutralStatsManager::calcAllelicDiversityMetrics(set<int> const& patchList,
 			if (pPop != 0) {
 				for (i = 0; i < nLoci; ++i)
 					for (j = 0; j < nAlleles; ++j)
-						meanNbFixedAllelesPerPatch += pPop->getAlleleFrequency(i, j) == 1;
+						meanNbFixedLociPerPatch += pPop->getAlleleFrequency(i, j) == 1;
 			}
 		}
-		meanNbFixedAllelesPerPatch /= nbPopulatedPatches;
+		meanNbFixedLociPerPatch /= nbPopulatedPatches;
 	}
 
 	// Compute number of fixed loci
-	nbGloballyFixedAlleles = 0;
+	meanFixedLoci = 0;
 	for (i = 0; i < nLoci; ++i)
 		for (j = 0; j < nAlleles; ++j)
-			nbGloballyFixedAlleles += commNeutralCountTables[i].getFrequency(j) == 1;
+			meanFixedLoci += commNeutralCountTables[i].getFrequency(j) == 1;
 }
 
 // ----------------------------------------------------------------------------------------
