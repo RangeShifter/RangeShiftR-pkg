@@ -186,9 +186,14 @@ void NeutralTrait::inheritGenes(const bool& fromMother, QuantitativeTrait* paren
 // ----------------------------------------------------------------------------------------
 void NeutralTrait::inheritDiploid(const bool& fromMother, map<int, vector<unsigned char>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome) {
 
-	auto it = recomPositions.lower_bound(parentGenes.begin()->first);
-	unsigned int nextBreakpoint = *it;
-	auto distance = std::distance(recomPositions.begin(), it);
+	const int lastPosition = parentGenes.rbegin()->first;
+	auto recomIt = recomPositions.lower_bound(parentGenes.begin()->first);
+	// If no recombination sites, only breakpoint is last position
+	// i.e., no recombination occurs
+	int nextBreakpoint = recomIt == recomPositions.end() ? lastPosition : *recomIt;
+	
+	// Is the first parent gene position already recombinant?
+	auto distance = std::distance(recomPositions.begin(), recomIt);
 	if (distance - 1 % 2 != 0)
 		parentChromosome = 1 - parentChromosome; //switch chromosome
 
@@ -196,24 +201,24 @@ void NeutralTrait::inheritDiploid(const bool& fromMother, map<int, vector<unsign
 
 		// Switch chromosome if locus is past recombination site
 		while (locus > nextBreakpoint) {
-			std::advance(it, 1);
-			nextBreakpoint = *it;
-			parentChromosome = 1 - parentChromosome; //switch chromosome
+			parentChromosome = 1 - parentChromosome;
+			std::advance(recomIt, 1); // go to next recombination site
+			nextBreakpoint = recomIt == recomPositions.end() ? lastPosition : *recomIt;
 		}
 
 		if (locus <= nextBreakpoint) {
-			unsigned char sp = allelePair[parentChromosome];
+			unsigned char parentAllele = allelePair[parentChromosome];
 			auto it = genes.find(locus);
 			if (it == genes.end()) {
 				// locus does not exist yet, create and initialise it
 				if (!fromMother) throw runtime_error("Father-inherited locus does not exist.");
 				vector<unsigned char> newAllelePair(2, wildType);
-				newAllelePair[sex_t::FEM] = sp;
+				newAllelePair[sex_t::FEM] = parentAllele;
 				genes.insert(make_pair(locus, newAllelePair));
 			}
 			else { // father, locus already exists
 				if (fromMother) throw runtime_error("Mother-inherited locus already exists.");
-				it->second[sex_t::MAL] = sp;
+				it->second[sex_t::MAL] = parentAllele;
 			}
 		}
 	}

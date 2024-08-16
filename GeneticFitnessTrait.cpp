@@ -308,9 +308,14 @@ void GeneticFitnessTrait::inheritGenes(const bool& fromMother, QuantitativeTrait
 // ----------------------------------------------------------------------------------------
 void GeneticFitnessTrait::inheritDiploid(const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome) {
 
-	auto it = recomPositions.lower_bound(parentGenes.begin()->first);
-	int nextBreakpoint = *it;
-	auto distance = std::distance(recomPositions.begin(), it);
+	const int lastPosition = parentGenes.rbegin()->first;
+	auto recomIt = recomPositions.lower_bound(parentGenes.begin()->first);
+	// If no recombination sites, only breakpoint is last position
+	// i.e., no recombination occurs
+	int nextBreakpoint = recomIt == recomPositions.end() ? lastPosition : *recomIt;
+
+	// Is the first parent gene position already recombinant?
+	auto distance = std::distance(recomPositions.begin(), recomIt);
 	if (distance % 2 != 0)
 		parentChromosome = 1 - parentChromosome; // switch chromosome
 
@@ -318,9 +323,9 @@ void GeneticFitnessTrait::inheritDiploid(const bool& fromMother, map<int, vector
 
 		// Switch chromosome if locus is past recombination site
 		while (locus > nextBreakpoint) {
-			std::advance(it, 1);
-			nextBreakpoint = *it;
 			parentChromosome = 1 - parentChromosome;
+			std::advance(recomIt, 1); // go to next recombination site
+			nextBreakpoint = recomIt == recomPositions.end() ? lastPosition : *recomIt;
 		}
 
 		if (locus <= nextBreakpoint) {
