@@ -50,7 +50,7 @@ private:
 struct NeutralCountsTable {
 
 public:
-	NeutralCountsTable(int nAllele) : alleleTallies(nAllele), alleleFrequencies(nAllele), alleleHeterozygoteTallies(nAllele) {};
+	NeutralCountsTable(int maxNbNeutralAlleles) : alleleTallies(maxNbNeutralAlleles), alleleFrequencies(maxNbNeutralAlleles), alleleHeterozygoteTallies(maxNbNeutralAlleles) {};
 	
 	void reset() {
 		fill(alleleTallies.begin(), alleleTallies.end(), 0); fill(alleleFrequencies.begin(), alleleFrequencies.end(), 0);

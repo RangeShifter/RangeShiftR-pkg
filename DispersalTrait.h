@@ -45,6 +45,21 @@ public:
 	int countHeterozygoteLoci() const;
 	bool isHeterozygoteAtLocus(int locus) const override;
 
+#if RSDEBUG // for testing only
+	void overwriteGenes(map<int, vector<shared_ptr<Allele>>> genSeq) {
+		genes = genSeq;
+	}
+	void triggerInherit(
+		// inheritGenes requires passing a QuantitativeTrait, unfeasible in tests
+		const bool& fromMother, 
+		map<int, vector<shared_ptr<Allele>>> const& parentGenes, 
+		set<unsigned int> const& recomPositions, 
+		int startChr) {
+		(this->*_inherit_func_ptr)(fromMother, parentGenes, recomPositions, startChr);
+	}
+	int getAlleleIDAtLocus(short whichChromosome, int position) const;
+#endif
+
 private:
 
 	const double dispDominanceFactor = 1.0; // no dominance for Dispersal traits (yet?)
@@ -78,5 +93,17 @@ private:
 	float expressAverage();
 	float expressAdditive();
 };
+
+#if RSDEBUG
+// Test utilities
+
+map<int, vector<shared_ptr<Allele>>> createTestGenotype(
+	const int genomeSz, const bool isDiploid,
+	const float valAlleleA,
+	const float valAlleleB = -99.9, // allow no value for haploids
+	const float domCoeffA = 1.0, // default for dispersal traits
+	const float domCoeffB = 1.0
+);
+#endif //RSDEBUG
 
 #endif // DISPTRAITH

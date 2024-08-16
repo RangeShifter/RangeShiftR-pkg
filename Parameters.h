@@ -130,6 +130,14 @@ enum GenParamType { MEAN, SD, MIN, MAX, SHAPE, SCALE, INVALID };
 enum DistributionType { UNIFORM, NORMAL, GAMMA, NEGEXP, SCALED, KAM, SSM, NONE };
 enum ExpressionType { AVERAGE, ADDITIVE, NOTEXPR, MULTIPLICATIVE };
 
+string to_string(const TraitType& tr);
+
+string to_string(const GenParamType& param);
+
+string to_string(const DistributionType& dist);
+
+string to_string(const ExpressionType& expr);
+
 /** Param's types **/
 typedef enum { KERNEL, SMS, CRW} movement_t;
 

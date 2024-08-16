@@ -4,12 +4,16 @@
 // Species trait constructor
 SpeciesTrait::SpeciesTrait(
 	const TraitType& trType, const sex_t& sx,
-	const set<int>& pos, const ExpressionType& expr,
-	const DistributionType& initDist, const map<GenParamType, float> initParams,
-	const DistributionType& dominanceDist, const map<GenParamType, float> dominanceParams,
+	const set<int>& pos, 
+	const ExpressionType& expr,
+	const DistributionType& initDist, 
+	const map<GenParamType, float> initParams,
+	const DistributionType& dominanceDist, 
+	const map<GenParamType, float> dominanceParams,
 	bool isInherited, const float& mutRate,
-	const DistributionType& mutationDist, const map<GenParamType, float> mutationParams,
-	Species* pSpecies) :
+	const DistributionType& mutationDist, 
+	const map<GenParamType, float> mutationParams,
+	const int nPloidy) :
 	traitType{ trType },
 	sex{ sx },
 	genePositions{ pos },
@@ -21,11 +25,9 @@ SpeciesTrait::SpeciesTrait(
 	inherited{ isInherited },
 	mutationDistribution{ mutationDist },
 	mutationParameters{ mutationParams },
-	mutationRate{ mutRate }
+	mutationRate{ mutRate },
+	ploidy{ nPloidy }
 {
-	// Initialise ploidy only once per species
-	if (ploidy == 0) this->ploidy = pSpecies->isDiploid() ? 2 : 1;
-
 	// Check distribution parameters
 	// Initial distribution
 	for (auto [paramType, paramVal] : initParams) {
@@ -49,7 +51,12 @@ SpeciesTrait::SpeciesTrait(
 		switch (paramType)
 		{
 		case MIN: case MAX: case MEAN:
-			if (!isValidTraitVal(paramVal))
+			if (
+				(trType == NEUTRAL || trType == GENETIC_LOAD || trType == GENETIC_LOAD1 ||
+				trType == GENETIC_LOAD2 || trType == GENETIC_LOAD3 || trType == GENETIC_LOAD4 || trType == GENETIC_LOAD5)
+				&& !isValidTraitVal(paramVal)
+				// dispersal traits are cumulative so no value is invalid
+				)
 				throw logic_error("Invalid parameter value: mutation parameter " + to_string(paramType) + " must have a valid value for trait" + to_string(traitType) + ".");
 			break;
 		case SD: case SHAPE: case SCALE:
@@ -176,3 +183,63 @@ bool SpeciesTrait::isValidTraitVal(const float& val) const {
 	}
 }
 
+#if RSDEBUG
+// Testing only
+
+// Create a default set of gene positions ranging from zero to genome size
+set<int> createTestGenePositions(const int genomeSz) {
+	set<int> genePositions; 
+	for (int i = 0; i < genomeSz; i++) genePositions.insert(i);
+	return genePositions;
+}
+
+SpeciesTrait* createTestEmigSpTrait(const set<int>& genePositions, const bool& isDiploid) {
+	// Create species trait
+	const map<GenParamType, float> distParams{
+		pair<GenParamType, float>{GenParamType::MIN, 0.0},
+		pair<GenParamType, float>{GenParamType::MAX, 1.0}
+	};
+	SpeciesTrait* spTr = new SpeciesTrait(
+		TraitType::E_D0,
+		sex_t::NA,
+		genePositions,
+		ExpressionType::ADDITIVE,
+		DistributionType::UNIFORM,
+		distParams,
+		DistributionType::NONE, // no dominance
+		distParams,
+		true, // isInherited
+		0.0, // mutation rate
+		DistributionType::UNIFORM,
+		distParams,
+		isDiploid ? 2 : 1
+	);
+	return spTr;
+}
+
+SpeciesTrait* createTestNeutralSpTrait(const float& maxAlleleVal, const set<int>& genePositions, const bool& isDiploid) {
+
+	const map<GenParamType, float> distParams{
+		// Set max allele value
+		pair<GenParamType, float>{GenParamType::MAX, maxAlleleVal}
+	};
+	SpeciesTrait* spTr = new SpeciesTrait(
+		TraitType::NEUTRAL,
+		sex_t::NA,
+		genePositions,
+		ExpressionType::NOTEXPR,
+		// Sample initial values from uniform(0, max)
+		DistributionType::UNIFORM, distParams,
+		// No dominance
+		DistributionType::NONE, map<GenParamType, float>{}, 
+		true, // isInherited
+		0.0, // mutation rate
+		// Mutation sampled from a uniform(0, max)
+		DistributionType::KAM, 
+		distParams,
+		isDiploid ? 2 : 1
+	);
+	return spTr;
+}
+
+#endif // RSDEBUG

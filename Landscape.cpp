@@ -40,7 +40,7 @@ ofstream outMovePaths;
 InitDist::InitDist(Species* pSp)
 {
 	pSpecies = pSp;
-	resol = 0;
+	resol = 1;
 	maxX = 0;
 	maxY = 0;
 	minEast = 0.0;
@@ -250,7 +250,7 @@ if (!dfile.eof()) EOFerrorR(distfile);
 Landscape::Landscape(void) {
 	patchModel = false; spDist = false; generated = false; fractal = false; continuous = false;
 	dynamic = false; habIndexed = false;
-	resol = spResol = landNum = 0;
+	resol = spResol = 1; landNum = 0;
 	rasterType = 0;
 	nHab = nHabMax = 0;
 	dimX = dimY = 100;
@@ -332,7 +332,9 @@ void Landscape::resetLand(void) {
 
 void Landscape::setLandParams(landParams ppp, bool batchMode)
 {
-	generated = ppp.generated; patchModel = ppp.patchModel; spDist = ppp.spDist;
+	generated = ppp.generated; 
+	patchModel = ppp.patchModel; 
+	spDist = ppp.spDist;
 	dynamic = ppp.dynamic;
 	landNum = ppp.landNum;
 	if (ppp.resol > 0) resol = ppp.resol;
@@ -765,6 +767,14 @@ void Landscape::addNewCellToLand(int x, int y, int hab) {
 		cells[y][x] = 0;
 	else
 		cells[y][x] = new Cell(x, y, 0, hab);
+}
+
+void Landscape::addCellToLand(Cell* c) {
+	if (cells == 0) throw runtime_error("Landscape cells member is uninitialised.");
+	if (c->getHabIndex(0) < 0.0)
+		throw logic_error("Can't add no-data cell to landscape.");
+	locn l = c->getLocn();
+	cells[l.y][l.x] = c;
 }
 
 void Landscape::addNewCellToPatch(Patch* pPatch, int x, int y, float q) {
@@ -2309,10 +2319,6 @@ int Landscape::readCosts(string fname)
 #else
 	if (header != "ncols" && header != "NCOLS") {
 #endif
-
-//	MessageDlg("The selected file is not a raster.",
-//	MessageDlg("Header problem in import_CostsLand()",
-//				mtError, TMsgDlgButtons() << mbRetry,0);
 	costs.close(); costs.clear();
 	return -1;
 }
@@ -2643,6 +2649,45 @@ void Landscape::outVisits(int rep, int landNr) {
 }
 
 //---------------------------------------------------------------------------
+
+#if RSDEBUG
+// Debug only: shortcut setup utilities
+
+Landscape createLandscapeFromCells(vector<Cell*> cells, const landParams& lp, Species sp) {
+	// Set up landscape
+	Landscape ls;
+	ls.setLandParams(lp, true);
+	// Add cells
+	ls.setCellArray();
+	for (auto c : cells) {
+		ls.addCellToLand(c);
+	}
+	ls.allocatePatches(&sp);
+	return ls;
+}
+
+landParams createDefaultLandParams(const int& dim) {
+
+	landParams ls_params;
+	ls_params.dimX = ls_params.dimY = dim;
+	ls_params.minX = ls_params.minY = 0;
+	ls_params.maxX = ls_params.maxY = ls_params.dimX - 1;
+	ls_params.resol = ls_params.spResol = 1;
+	ls_params.rasterType = 0; // habitat types
+ 
+	ls_params.patchModel = false;
+	ls_params.spDist = false;
+	ls_params.generated = false;
+	ls_params.dynamic = false;
+	ls_params.landNum = 0;
+	ls_params.nHab = ls_params.nHabMax = 0; // irrelevant for habitat codes 
+	return ls_params;
+}
+
+void testLandscape() {
+	// test coordinate system...
+}
+#endif // RSDEBUG
 
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------

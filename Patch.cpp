@@ -189,8 +189,7 @@ void Patch::setCarryingCapacity(Species* pSpecies, patchLimits landlimits,
 		loc = cells[i]->getLocn();
 		xsum += loc.x; ysum += loc.y;
 	}
-
-	// calculate centroid co-ordinates
+// calculate centroid co-ordinates
 	if (ncells > 0) {
 		mean = (double)xsum / (double)ncells;
 		x = (int)(mean + 0.5);
@@ -203,7 +202,6 @@ void Patch::setCarryingCapacity(Species* pSpecies, patchLimits landlimits,
 		float limit;
 		limit = pSpecies->getMinMax(0) * (float)nsuitable;
 		if (localK < limit) localK = limit;
-
 		limit = pSpecies->getMinMax(1) * (float)nsuitable;
 		if (localK > limit) localK = limit;
 	}

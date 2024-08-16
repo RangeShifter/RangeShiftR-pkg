@@ -38,7 +38,7 @@ Individual::Individual(Cell* pCell, Patch* pPatch, short stg, short a, short rep
 	geneticFitness = 1.0;
 	stage = stg;
 	if (probmale <= 0.0) sex = FEM;
-	else sex = pRandom->Bernoulli(probmale) ? FEM : MAL;
+	else sex = pRandom->Bernoulli(probmale) ? MAL : FEM;
 	age = a;
 	status = 0;
 
@@ -157,11 +157,7 @@ void Individual::inherit(Species* pSpecies, const Individual* mother, const Indi
 		paternalRecomPositions.insert(pRandom->IRandom(0, genomeSize));
 	}
 
-	// End of genome always recombines
-	maternalRecomPositions.insert(genomeSize - 1);
-	paternalRecomPositions.insert(genomeSize - 1);
-
-	// Inherit genes for each gene
+	// Inherit genes for each trait
 	const auto& spTraits = pSpecies->getTraitTypes();
 	for (auto const& trait : spTraits)
 	{
@@ -192,9 +188,9 @@ void Individual::inherit(Species* pSpecies, const Individual* mother) {
 	set<unsigned int> recomPositions; //not used here cos haploid but need it for inherit function, not ideal 
 	int startingChromosome = 0;
 
-	const auto& mumTraits = getTraitTypes();
+	const auto& motherTraits = getTraitTypes();
 
-	for (auto const& trait : mumTraits)
+	for (auto const& trait : motherTraits)
 	{
 		const auto motherTrait = mother->getTrait(trait);
 		auto newTrait = motherTrait->clone(); // shallow copy, pointer to species trait initialised and empty sequence
@@ -231,6 +227,7 @@ void Individual::setDispersalPhenotypes(Species* pSpecies, int resol) {
 	const emigRules emig = pSpecies->getEmigRules();
 	const transferRules trfr = pSpecies->getTransferRules();
 	const settleType sett = pSpecies->getSettle();
+	const settleRules settRules = pSpecies->getSettRules(stage, sex);
 
 	// record phenotypic traits
 	if (emig.indVar)
@@ -238,7 +235,7 @@ void Individual::setDispersalPhenotypes(Species* pSpecies, int resol) {
 	if (trfr.indVar)
 		this->setTransferTraits(pSpecies, trfr, resol);
 	if (sett.indVar)
-		this->setSettlementTraits(pSpecies, sett.sexDep);
+		this->setSettlementTraits(pSpecies, sett.sexDep, settRules.densDep);
 }
 
 void Individual::setTransferTraits(Species* pSpecies, transferRules trfr, int resol) {
@@ -253,18 +250,34 @@ void Individual::setTransferTraits(Species* pSpecies, transferRules trfr, int re
 		setIndKernelTraits(pSpecies, trfr.sexDep, trfr.twinKern, resol);
 }
 
-void Individual::setSettlementTraits(Species* pSpecies, bool sexDep) {
+void Individual::setSettlementTraits(Species* pSpecies, bool sexDep, bool densDep) {
 
 	settleTraits s; s.s0 = s.alpha = s.beta = 0.0;
-	if (sexDep && this->getSex() == MAL) {
-		s.s0 = getTrait(S_S0_M)->express();
-		s.alpha = getTrait(S_ALPHA_M)->express();
-		s.beta = getTrait(S_BETA_M)->express();
+	if (sexDep) {
+		if (this->getSex() == MAL) {
+			s.s0 = getTrait(S_S0_M)->express();
+			if (densDep) {
+				s.alpha = getTrait(S_ALPHA_M)->express();
+				s.beta = getTrait(S_BETA_M)->express();
+			}
+		}
+		else if (this->getSex() == FEM) {
+			s.s0 = getTrait(S_S0_F)->express();
+			if (densDep) {
+				s.alpha = getTrait(S_ALPHA_F)->express();
+				s.beta = getTrait(S_BETA_F)->express();
+			}
+		}
+		else {
+			throw runtime_error("Attempt to express invalid emigration trait sex.");
+		}
 	}
 	else {
-		s.s0 = getTrait(S_S0_F)->express();
-		s.alpha = getTrait(S_ALPHA_F)->express();
-		s.beta = getTrait(S_BETA_F)->express();
+		s.s0 = getTrait(S_S0)->express();
+		if (densDep) {
+			s.alpha = getTrait(S_ALPHA)->express();
+			s.beta = getTrait(S_BETA)->express();
+		}
 	}
 
 	pSettleTraits = make_unique<settleTraits>();
@@ -310,6 +323,11 @@ sex_t Individual::getSex(void) { return sex; }
 int Individual::getStatus(void) { return status; }
 
 float Individual::getGeneticFitness(void) { return geneticFitness; }
+
+bool Individual::isViable() const {
+	float probViability = geneticFitness > 1.0 ? 1.0 : geneticFitness;
+	return probViability >= pRandom->Random();
+}
 
 indStats Individual::getStats(void) {
 	indStats s;
@@ -563,7 +581,8 @@ void Individual::setIndCRWTraits(Species* pSpecies) {
 // Get phenotypic transfer by CRW traits
 trfrCRWTraits Individual::getIndCRWTraits(void) {
 
-	trfrCRWTraits c; c.stepLength = c.rho = 0.0;
+	trfrCRWTraits c; 
+	c.stepLength = c.rho = 0.0;
 	if (pTrfrData != 0) {
 		auto& pCRW = dynamic_cast<const crwData&>(*pTrfrData);
 		c.stepLength = pCRW.stepLength;
@@ -632,10 +651,8 @@ void Individual::moveto(Cell* newCell) {
 // Move to a new cell by sampling a dispersal distance from a single or double
 // negative exponential kernel
 // Returns 1 if still dispersing (including having found a potential patch), otherwise 0
-int Individual::moveKernel(Landscape* pLandscape, Species* pSpecies,
-	const short repType, const bool absorbing)
+int Individual::moveKernel(Landscape* pLandscape, Species* pSpecies, const bool absorbing)
 {
-
 	intptr patch;
 	int patchNum = 0;
 	int newX = 0, newY = 0;
@@ -718,11 +735,13 @@ int Individual::moveKernel(Landscape* pLandscape, Species* pSpecies,
 					}
 				}
 				// randomise the position of the individual inside the cell
+				// so x and y are a corner of the cell?
 				xrand = (double)loc.x + pRandom->Random() * 0.999;
 				yrand = (double)loc.y + pRandom->Random() * 0.999;
 
+				// draw factor r1 0 < r1 <= 1
 				r1 = 0.0000001 + pRandom->Random() * (1.0 - 0.0000001);
-				dist = (-1.0 * meandist) * log(r1);  // for LINUX_CLUSTER
+				dist = (-1.0 * meandist) * log(r1);
 
 				rndangle = pRandom->Random() * 2.0 * PI;
 				nx = xrand + dist * sin(rndangle);
@@ -734,6 +753,7 @@ int Individual::moveKernel(Landscape* pLandscape, Species* pSpecies,
 #endif
 				loopsteps++;
 			} while (loopsteps < 1000 &&
+				// keep drawing if out of bounds of landscape or same cell
 				((!absorbing && (newX < land.minX || newX > land.maxX
 					|| newY < land.minY || newY > land.maxY))
 					|| (!usefullkernel && newX == loc.x && newY == loc.y))
@@ -741,6 +761,7 @@ int Individual::moveKernel(Landscape* pLandscape, Species* pSpecies,
 			if (loopsteps < 1000) {
 				if (newX < land.minX || newX > land.maxX
 					|| newY < land.minY || newY > land.maxY) { // beyond absorbing boundary
+					// this cannot be reached if not absorbing?
 					pCell = 0;
 					patch = 0;
 					patchNum = -1;
@@ -764,7 +785,7 @@ int Individual::moveKernel(Landscape* pLandscape, Species* pSpecies,
 					}
 				}
 			}
-			else {
+			else { // exceeded 1000 attempts
 				patch = 0;
 				patchNum = -1;
 			}
@@ -773,6 +794,7 @@ int Individual::moveKernel(Landscape* pLandscape, Species* pSpecies,
 
 	if (loopsteps < 1000) {
 		if (pCell == 0) { // beyond absorbing boundary or in no-data cell
+			// only if absorbing=true and out of bounddaries
 			pCurrCell = 0;
 			status = 6;
 			dispersing = 0;
@@ -785,6 +807,7 @@ int Individual::moveKernel(Landscape* pLandscape, Species* pSpecies,
 				status = 2; // record as potential settler
 			}
 			else {
+				// unsuitable patch
 				dispersing = 0;
 				// can wait in matrix if population is stage structured ...
 				if (pSpecies->stageStructured()) {
@@ -795,12 +818,11 @@ int Individual::moveKernel(Landscape* pLandscape, Species* pSpecies,
 					else // ... it is not
 						status = 6; // dies (unless there is a suitable neighbouring cell)
 				}
-				else
-					status = 6; // dies (unless there is a suitable neighbouring cell)
+				else status = 6; // dies (unless there is a suitable neighbouring cell)
 			}
 		}
 	}
-	else {
+	else { // exceeded 1000 attempts
 		status = 6;
 		dispersing = 0;
 	}
@@ -932,8 +954,8 @@ int Individual::moveStep(Landscape* pLandscape, Species* pSpecies,
 				movt.rho = pCRW.rho;
 			}
 
-			steplen = movt.stepLength; if (steplen < 0.2 * land.resol) steplen = 0.2 * land.resol;
-			rho = movt.rho; if (rho > 0.99) rho = 0.99;
+			steplen = movt.stepLength; 
+			rho = movt.rho;
 			if (pPatch == pNatalPatch) {
 				rho = 0.99; // to promote leaving natal patch
 				path->out = 0;
@@ -1020,7 +1042,6 @@ int Individual::moveStep(Landscape* pLandscape, Species* pSpecies,
 	} // end of single movement step
 
 	return dispersing;
-
 }
 
 //---------------------------------------------------------------------------
@@ -1586,49 +1607,62 @@ double cauchy(double location, double scale) {
 //---------------------------------------------------------------------------
 
 #if RSDEBUG
+// Testing utilities
 
-
-void testIndividual() {
-
-	Patch* pPatch = new Patch(0, 0);
-	int cell_x = 2;
-	int cell_y = 5;
-	int cell_hab = 2;
-	Cell* pCell = new Cell(cell_x, cell_y, (intptr)pPatch, cell_hab);
-
-	// Create an individual
-	short stg = 0;
-	short age = 0;
-	short repInt = 0;
-	float probmale = 0;
-	bool uses_movt_process = true;
-	short moveType = 1;
-	Individual ind(pCell, pPatch, stg, age, repInt, probmale, uses_movt_process, moveType);
-
-	// An individual can move to a neighbouring cell
-	//ind.moveto();
-
-	// Gets its sex drawn from pmale
-	
-	// Can age or develop
-
-	// 
-
-	// Reproduces
-	// depending on whether it is sexual or not
-	// depending on the stage
-	// depending on the trait inheritance
-
-
-	// Disperses
-	// Emigrates
-	// Transfers
-	// Settles
-
-	// Survives
-
-	// Develops
-
+Cell* Individual::getCurrCell() const {
+	return pCurrCell;
 }
+
+void Individual::setInitAngle(const float angle) {
+	auto pCRW = dynamic_cast<crwData*>(pTrfrData.get());
+	pCRW->prevdrn = angle;
+}
+
+// Force mutations to trigger for all traits
+void Individual::triggerMutations(Species* pSp) {
+	for (auto const& [trType, indTrait] : spTraitTable) {
+		indTrait->mutate();
+		if (trType == GENETIC_LOAD1 
+			|| trType == GENETIC_LOAD2
+			|| trType == GENETIC_LOAD3
+			|| trType == GENETIC_LOAD4
+			|| trType == GENETIC_LOAD5)
+			geneticFitness *= indTrait->express();
+	}
+	this->setDispersalPhenotypes(pSp, 1.0);
+}
+
+// Shorthand function to edit a genotype with custom values
+void Individual::overrideGenotype(TraitType whichTrait, const map<int, vector<shared_ptr<Allele>>>& newGenotype) {
+
+	GeneticFitnessTrait* pGenFitTrait;
+	DispersalTrait* pDispTrait;
+
+	switch (whichTrait)
+	{
+	case GENETIC_LOAD1: case GENETIC_LOAD2: case GENETIC_LOAD3: case GENETIC_LOAD4: case GENETIC_LOAD5: 
+		pGenFitTrait = dynamic_cast<GeneticFitnessTrait*>(this->getTrait(whichTrait));
+		pGenFitTrait->getGenes() = newGenotype;
+		break;
+	case E_D0: case E_ALPHA: case E_BETA:
+	case S_S0: case S_ALPHA: case S_BETA:
+	case E_D0_F: case E_ALPHA_F: case E_BETA_F:
+	case S_S0_F: case S_ALPHA_F: case S_BETA_F: 
+	case E_D0_M: case E_ALPHA_M: case E_BETA_M: 
+	case S_S0_M: case S_ALPHA_M: case S_BETA_M: 
+	case CRW_STEPLENGTH: case CRW_STEPCORRELATION: 
+	case KERNEL_MEANDIST_1: case KERNEL_MEANDIST_2: case KERNEL_PROBABILITY: 
+	case KERNEL_MEANDIST_1_F: case KERNEL_MEANDIST_2_F: case KERNEL_PROBABILITY_F: 
+	case KERNEL_MEANDIST_1_M: case KERNEL_MEANDIST_2_M: case KERNEL_PROBABILITY_M: 
+	case SMS_DP: case SMS_GB: case SMS_ALPHADB: case SMS_BETADB:
+		pDispTrait = dynamic_cast<DispersalTrait*>(this->getTrait(whichTrait));
+		pDispTrait->getGenes() = newGenotype;
+		break;
+	default:
+		throw logic_error("Wrong trait type: please choose a valid dispersal or genetic fitness trait.");
+		break;
+	}
+};
+
 #endif // RSDEBUG
 

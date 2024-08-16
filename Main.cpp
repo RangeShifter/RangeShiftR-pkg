@@ -34,16 +34,23 @@
 #include "RSrandom.h"
 #include "Utils.h"
 #include "Parameters.h"
+#include "Population.h"
 #include "Landscape.h"
 #include "Species.h"
 #include "SubCommunity.h"
 
 using namespace std;
 
+void testIndividual();
+void testNeutralStats();
+
 void run_unit_tests() {
 	cout << "******* Unit test output *******" << endl;
 	testRSrandom();
+	testLandscape();
 	testIndividual();
+	testPopulation();
+	testNeutralStats();
 	cout << endl << "************************" << endl;
 }
 
@@ -71,7 +78,15 @@ int _tmain(int argc, _TCHAR* argv[])
 #ifdef NDEBUG
 	cout << "This code is only for running tests and not meant to run in release." << endl;
 	return 1;
-# else
+#else
+
+	// Initialise globals
+	paramsGrad = new paramGrad;
+	paramsStoch = new paramStoch;
+	paramsInit = new paramInit;
+	paramsSim = new paramSim;
+	pRandom = new RSrandom;
+
 	assert(0.1 > 0.0); // assert does run correctly
 	try
 	{

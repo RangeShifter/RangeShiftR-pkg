@@ -57,7 +57,8 @@ Population::Population(Species* pSp, Patch* pPch, int ninds, int resol)
 	pPatch = pPch;
 	// record the new population in the patch
 	patchPopn pp = patchPopn();
-	pp.pSp = (intptr)pSpecies; pp.pPop = (intptr)this;
+	pp.pSp = (intptr)pSpecies; 
+	pp.pPop = (intptr)this;
 	pPatch->addPopn(pp);
 
 	demogrParams dem = pSpecies->getDemogrParams();
@@ -685,9 +686,7 @@ void Population::reproduction(const float localK, const float envval, const int 
 							newJuv->inheritTraits(pSpecies, inds[i], father, resol);
 						}
 
-						float probViability = newJuv->getGeneticFitness();
-						if (probViability > 1.0) probViability = 1.0;
-						if (probViability < pRandom->Random()) {
+						if (!newJuv->isViable()) {
 							delete newJuv;
 						}
 						else {
@@ -767,9 +766,8 @@ void Population::reproduction(const float localK, const float envval, const int 
 								if (pSpecies->getNTraits() > 0) {
 									newJuv->inheritTraits(pSpecies, inds[i], father, resol);
 								}
-								float probViability = newJuv->getGeneticFitness();
-								if (probViability > 1.0) probViability = 1.0;
-								if (probViability < pRandom->Random()) {
+
+								if (!newJuv->isViable()) {
 									delete newJuv;
 								}
 								else {
@@ -1042,7 +1040,6 @@ disperser Population::extractDisperser(int ix) {
 disperser Population::extractSettler(int ix) {
 	disperser d = disperser();
 	Cell* pCell;
-//Patch* pPatch;
 
 	indStats ind = inds[ix]->getStats();
 	pCell = inds[ix]->getLocn(1);
@@ -1103,7 +1100,7 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 			disperser = inds[i]->moveStep(pLandscape, pSpecies, landIx, sim.absorbing);
 		}
 		else {
-			disperser = inds[i]->moveKernel(pLandscape, pSpecies, reptype, sim.absorbing);
+			disperser = inds[i]->moveKernel(pLandscape, pSpecies, sim.absorbing);
 		}
 		ndispersers += disperser;
 		if (disperser) {
@@ -1974,3 +1971,9 @@ void Population::outputGeneValues(ofstream& ofsGenes, const int& yr, const int& 
 //---------------------------------------------------------------------------
 
 
+#if RSDEBUG
+void testPopulation() 
+{
+	// test population...
+}
+#endif // RSDEBUG
