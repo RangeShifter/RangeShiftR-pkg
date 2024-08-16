@@ -14,20 +14,20 @@ class TraitFactory
 public:
 	TraitFactory() {};
 
-	unique_ptr<QuantitativeTrait> Create(const TraitType traitType, SpeciesTrait* protoTrait)
+	unique_ptr<QuantitativeTrait> Create(const TraitType traitType, SpeciesTrait* pSpTrait)
 	{
 		if (traitType == NEUTRAL) {
-			return make_unique<NeutralTrait>(protoTrait);
+			return make_unique<NeutralTrait>(pSpTrait);
 		}
 		else if (traitType == GENETIC_LOAD1 
 			|| traitType == GENETIC_LOAD2 
 			|| traitType == GENETIC_LOAD3 
 			|| traitType == GENETIC_LOAD4 
 			|| traitType == GENETIC_LOAD5) {
-			return make_unique<GeneticFitnessTrait>(protoTrait);
+			return make_unique<GeneticFitnessTrait>(pSpTrait);
 		}
 		else {
-			return make_unique<DispersalTrait>(protoTrait);
+			return make_unique<DispersalTrait>(pSpTrait);
 		}
 	}
 };
