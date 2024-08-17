@@ -35,7 +35,7 @@ SpeciesTrait::SpeciesTrait(
 		{
 		case MIN: case MAX: case MEAN:
 			if (!isValidTraitVal(paramVal))
-				throw logic_error("Invalid parameter value: initial parameter " + to_string(paramType) + " must have a valid value for trait" + to_string(traitType) + ".");
+				throw logic_error("Invalid parameter value: initial parameter " + to_string(paramType) + " must have a valid value for trait " + to_string(traitType) + ".");
 			break;
 		case SD:
 			if (paramVal <= 0.0)
@@ -57,7 +57,7 @@ SpeciesTrait::SpeciesTrait(
 				&& !isValidTraitVal(paramVal)
 				// dispersal traits are cumulative so no value is invalid
 				)
-				throw logic_error("Invalid parameter value: mutation parameter " + to_string(paramType) + " must have a valid value for trait" + to_string(traitType) + ".");
+				throw logic_error("Invalid parameter value: mutation parameter " + to_string(paramType) + " must have a valid value for trait " + to_string(traitType) + ".");
 			break;
 		case SD: case SHAPE: case SCALE:
 			if (paramVal <= 0.0)
