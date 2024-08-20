@@ -455,6 +455,13 @@ float DispersalTrait::getAlleleValueAtLocus(short whichChromosome, int position)
 	return it->second[whichChromosome].get()->getAlleleValue();
 }
 
+float DispersalTrait::getDomCoefAtLocus(short whichChromosome, int position) const {
+	auto it = genes.find(position);
+	if (it == genes.end())
+		throw runtime_error("The genetic load locus queried for its dominance coefficient does not exist.");
+	return it->second[whichChromosome]->getDominanceCoef();
+}
+
 #if RSDEBUG // Testing only
 
 // Get allele ID at locus

@@ -1584,10 +1584,10 @@ bool Community::openOutGenesFile(const bool& isDiploid, const int landNr, const 
 	ofsGenes.open(name.c_str());
 	ofsGenes << "Year\tGeneration\tIndID\ttraitType\tlocusPosition";
 	if (isDiploid) {
-		ofsGenes << "\talleleValueA\talleleValueB";
+		ofsGenes << "\talleleValueA\tdomCoefA\talleleValueBA\tdomCoefB";
 	}
 	else {
-		ofsGenes << "\talleleValue";
+		ofsGenes << "\talleleValueA\tdomCoefA";
 	}
 	ofsGenes << endl;
 	return ofsGenes.is_open();

@@ -42,6 +42,7 @@ public:
 	void inheritGenes(const bool& fromMother, QuantitativeTrait* parent, set<unsigned int> const& recomPositions, int startingChromosome) override;
 
 	float getAlleleValueAtLocus(short chromosome, int i) const override;
+	float getDomCoefAtLocus(short chromosome, int position) const override;
 	int countHeterozygoteLoci() const;
 	bool isHeterozygoteAtLocus(int locus) const override;
 

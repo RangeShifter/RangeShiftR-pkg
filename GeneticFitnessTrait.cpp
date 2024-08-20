@@ -426,6 +426,13 @@ float GeneticFitnessTrait::getAlleleValueAtLocus(short whichChromosome, int posi
 	return it->second[whichChromosome] == 0 ? wildType->getAlleleValue() : it->second[whichChromosome]->getAlleleValue();
 }
 
+float GeneticFitnessTrait::getDomCoefAtLocus(short whichChromosome, int position) const {
+	auto it = genes.find(position);
+	if (it == genes.end())
+		throw runtime_error("The genetic load locus queried for its dominance coefficient does not exist.");
+	return it->second[whichChromosome] == 0 ? wildType->getDominanceCoef() : it->second[whichChromosome]->getDominanceCoef();
+}
+
 #if RSDEBUG // Testing only
 // Get allele ID at locus
 int GeneticFitnessTrait::getAlleleIDAtLocus(short whichChromosome, int position) const {
@@ -433,13 +440,6 @@ int GeneticFitnessTrait::getAlleleIDAtLocus(short whichChromosome, int position)
 	if (it == genes.end())
 		throw runtime_error("The Dispersal locus queried for its allele ID does not exist.");
 	return it->second[whichChromosome].get()->getId();
-}
-
-float GeneticFitnessTrait::getDomCoefAtLocus(short whichChromosome, int position) const {
-	auto it = genes.find(position);
-	if (it == genes.end())
-		throw runtime_error("The genetic load locus queried for its dominance coefficient does not exist.");
-	return it->second[whichChromosome] == 0 ? wildType->getDominanceCoef() : it->second[whichChromosome]->getDominanceCoef();
 }
 
 #endif // RSDEBUG

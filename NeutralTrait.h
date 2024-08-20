@@ -47,6 +47,10 @@ public:
 	}
 
 	virtual float getAlleleValueAtLocus(short chromosome, int position) const override;
+	virtual float getDomCoefAtLocus(short chromosome, int position) const override {
+		return 0.0;
+	}
+
 	virtual int countHeterozygoteLoci() const;
 	virtual bool isHeterozygoteAtLocus(int locus) const override;
 #if RSDEBUG // for testing only

@@ -1938,6 +1938,7 @@ void Population::outputGeneValues(ofstream& ofsGenes, const int& yr, const int& 
 	auto traitTypes = pSpecies->getTraitTypes();
 	int indID;
 	float alleleOnChromA, alleleOnChromB;
+	float domCoefA, domCoefB;
 
 	// Fetch map to positions for each trait
 	// Presumably faster than fetching for every individual
@@ -1955,10 +1956,22 @@ void Population::outputGeneValues(ofstream& ofsGenes, const int& yr, const int& 
 			auto indTrait = ind->getTrait(trType);
 			for (auto pos : positions) {
 				alleleOnChromA = indTrait->getAlleleValueAtLocus(0, pos);
-				ofsGenes << yr << '\t' << gen << '\t' << indID << '\t' << trType << '\t' << pos << '\t' << alleleOnChromA;
+				if (trType == GENETIC_LOAD1 || trType == GENETIC_LOAD2 || trType == GENETIC_LOAD3 || trType == GENETIC_LOAD4 || trType == GENETIC_LOAD5) {
+					domCoefA = indTrait->getDomCoefAtLocus(0, pos);
+				}
+				else {
+					domCoefA = 0.0;
+				}
+				ofsGenes << yr << '\t' << gen << '\t' << indID << '\t' << to_string(trType) << '\t' << pos << '\t' << alleleOnChromA << '\t' << domCoefA;
 				if (isDiploid) {
 					alleleOnChromB = indTrait->getAlleleValueAtLocus(1, pos);
-					ofsGenes << '\t' << alleleOnChromB;
+					if (trType == GENETIC_LOAD1 || trType == GENETIC_LOAD2 || trType == GENETIC_LOAD3 || trType == GENETIC_LOAD4 || trType == GENETIC_LOAD5) {
+						domCoefB = indTrait->getDomCoefAtLocus(1, pos);
+					}
+					else {
+						domCoefB = 0.0;
+					}
+					ofsGenes << '\t' << alleleOnChromB << '\t' << domCoefB;
 				}
 				ofsGenes << endl;
 			}
