@@ -28,11 +28,13 @@ public:
         const float& mutationRate,
         const DistributionType& mutationDist,
         const map<GenParamType, float> mutationParams,
-        const int ploidy
+        const int ploidy,
+        const bool isOutput
     );
 
     bool isValidTraitVal(const float& val) const;
     TraitType getTraitType() const { return traitType;  }
+    bool isOutput() const { return traitIsOutput; }
 
     // Getters
     sex_t getSex() const { return sex; }
@@ -60,6 +62,7 @@ private:
     int ploidy;
     float mutationRate;
     TraitType traitType;
+    bool traitIsOutput;
     sex_t sex;
 
     // Positions in the genome of all genes (loci) pertaining to this trait

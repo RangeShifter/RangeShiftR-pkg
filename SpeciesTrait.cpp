@@ -13,7 +13,8 @@ SpeciesTrait::SpeciesTrait(
 	bool isInherited, const float& mutRate,
 	const DistributionType& mutationDist, 
 	const map<GenParamType, float> mutationParams,
-	const int nPloidy) :
+	const int nPloidy,
+	const bool isOutput) :
 	traitType{ trType },
 	sex{ sx },
 	genePositions{ pos },
@@ -26,7 +27,8 @@ SpeciesTrait::SpeciesTrait(
 	mutationDistribution{ mutationDist },
 	mutationParameters{ mutationParams },
 	mutationRate{ mutRate },
-	ploidy{ nPloidy }
+	ploidy{ nPloidy },
+	traitIsOutput{ isOutput }
 {
 	// Check distribution parameters
 	// Initial distribution
@@ -212,7 +214,8 @@ SpeciesTrait* createTestEmigSpTrait(const set<int>& genePositions, const bool& i
 		0.0, // mutation rate
 		DistributionType::UNIFORM,
 		distParams,
-		isDiploid ? 2 : 1
+		isDiploid ? 2 : 1,
+		false
 	);
 	return spTr;
 }
@@ -237,7 +240,8 @@ SpeciesTrait* createTestNeutralSpTrait(const float& maxAlleleVal, const set<int>
 		// Mutation sampled from a uniform(0, max)
 		DistributionType::KAM, 
 		distParams,
-		isDiploid ? 2 : 1
+		isDiploid ? 2 : 1,
+		false
 	);
 	return spTr;
 }

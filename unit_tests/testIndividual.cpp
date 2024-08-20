@@ -545,7 +545,8 @@ void testGenetics() {
 			isInherited,
 			0.0, // no mutations
 			DistributionType::UNIFORM, distParams, // ignored
-			isDiploid ? 2 : 1
+			isDiploid ? 2 : 1,
+			false
 		);
 
 		// Create individual trait objects
@@ -604,7 +605,8 @@ void testGenetics() {
 				true,
 				1.0, // every site mutates
 				DistributionType::GAMMA, mutationParams,
-				isDiploid ? 2 : 1
+				isDiploid ? 2 : 1,
+				false
 			);
 
 			// Create individual trait object
@@ -644,7 +646,8 @@ void testGenetics() {
 				true,
 				1.0, // every site mutates
 				DistributionType::NORMAL, mutationParams,
-				isDiploid ? 2 : 1
+				isDiploid ? 2 : 1,
+				false
 			);
 
 			// Create individual trait object
@@ -791,7 +794,8 @@ void testIndividual() {
 			true, // isInherited
 			maleMutationRate, // does not mutate
 			DistributionType::UNIFORM, mutationParams, // not used
-			isDiploid ? 2 : 1
+			isDiploid ? 2 : 1,
+			false
 		);
 		pSpecies->addTrait(TraitType::E_D0_M, *spTrM);
 
@@ -806,7 +810,8 @@ void testIndividual() {
 			true, // isInherited
 			femaleMutationRate, // does mutate
 			DistributionType::UNIFORM, mutationParams, // not used
-			isDiploid ? 2 : 1
+			isDiploid ? 2 : 1,
+			false
 		);
 		pSpecies->addTrait(TraitType::E_D0_F, *spTrF);
 
@@ -869,7 +874,8 @@ void testIndividual() {
 			true, // isInherited
 			0.0, // no mutation
 			DistributionType::UNIFORM, mutationParams, // not used
-			2 // diploid
+			2, // diploid
+			false
 		);
 		pSpecies->addTrait(TraitType::E_D0, *spTr);
 
@@ -933,7 +939,8 @@ void testIndividual() {
 			true, // isInherited
 			1.0, // will mutate
 			DistributionType::UNIFORM, mutationParams, // lethal mutation
-			2 // diploid
+			2, // diploid
+			false
 		);
 		pSpecies->addTrait(TraitType::GENETIC_LOAD1, *spTr);
 
@@ -982,7 +989,8 @@ void testIndividual() {
 			true, // isInherited
 			0.0, // no mutation
 			DistributionType::UNIFORM, distParams, // lethal mutation
-			2 // diploid
+			2, // diploid
+			false
 		);
 		pSpecies->addTrait(TraitType::GENETIC_LOAD1, *spTr);
 
@@ -1061,7 +1069,8 @@ void testIndividual() {
 				true, // isInherited
 				mutationRate, // does not mutate
 				DistributionType::UNIFORM, distParams, // not used
-				isDiploid ? 2 : 1
+				isDiploid ? 2 : 1,
+				false
 			);
 			SpeciesTrait* trSettAlpha = new SpeciesTrait(
 				TraitType::S_ALPHA,
@@ -1073,7 +1082,8 @@ void testIndividual() {
 				true, // isInherited
 				mutationRate, // does not mutate
 				DistributionType::UNIFORM, distParams, // not used
-				isDiploid ? 2 : 1
+				isDiploid ? 2 : 1,
+				false
 			);
 			SpeciesTrait* trSettBeta = new SpeciesTrait(
 				TraitType::S_BETA,
@@ -1085,7 +1095,8 @@ void testIndividual() {
 				true, // isInherited
 				mutationRate, // does not mutate
 				DistributionType::UNIFORM, distParams, // not used
-				isDiploid ? 2 : 1
+				isDiploid ? 2 : 1,
+				false
 			);
 			SpeciesTrait* trMeanKern = new SpeciesTrait(
 				TraitType::KERNEL_MEANDIST_1,
@@ -1097,7 +1108,8 @@ void testIndividual() {
 				true, // isInherited
 				mutationRate, // does not mutate
 				DistributionType::UNIFORM, distParams, // not used
-				isDiploid ? 2 : 1
+				isDiploid ? 2 : 1,
+				false
 			);
 
 			pSpecies->addTrait(TraitType::S_S0, *trSettProb);
@@ -1171,7 +1183,8 @@ void testIndividual() {
 				true, // isInherited
 				mutationRate, // does not mutate
 				DistributionType::UNIFORM, distParams, // not used
-				isDiploid ? 2 : 1
+				isDiploid ? 2 : 1,
+				false
 			);
 			SpeciesTrait* trCRWCorr = new SpeciesTrait(
 				TraitType::CRW_STEPCORRELATION,
@@ -1183,7 +1196,8 @@ void testIndividual() {
 				true, // isInherited
 				mutationRate, // does not mutate
 				DistributionType::UNIFORM, distParams, // not used
-				isDiploid ? 2 : 1
+				isDiploid ? 2 : 1,
+				false
 			);
 
 			pSpecies->addTrait(TraitType::CRW_STEPLENGTH, *trCRWLen);
@@ -1252,7 +1266,8 @@ void testIndividual() {
 				true, // isInherited
 				mutationRate, // does not mutate
 				DistributionType::UNIFORM, distParams, // not used
-				isDiploid ? 2 : 1
+				isDiploid ? 2 : 1,
+				false
 			);
 			SpeciesTrait* trSmsGoalBias = new SpeciesTrait(
 				TraitType::SMS_GB,
@@ -1264,7 +1279,8 @@ void testIndividual() {
 				true, // isInherited
 				mutationRate, // does not mutate
 				DistributionType::UNIFORM, distParams, // not used
-				isDiploid ? 2 : 1
+				isDiploid ? 2 : 1,
+				false
 			);
 			SpeciesTrait* trSmsAlpha = new SpeciesTrait(
 				TraitType::SMS_ALPHADB,
@@ -1276,7 +1292,8 @@ void testIndividual() {
 				true, // isInherited
 				mutationRate, // does not mutate
 				DistributionType::UNIFORM, distParams, // not used
-				isDiploid ? 2 : 1
+				isDiploid ? 2 : 1,
+				false
 			);
 			SpeciesTrait* trSmsBeta = new SpeciesTrait(
 				TraitType::SMS_BETADB,
@@ -1288,7 +1305,8 @@ void testIndividual() {
 				true, // isInherited
 				mutationRate, // does not mutate
 				DistributionType::UNIFORM, distParams, // not used
-				isDiploid ? 2 : 1
+				isDiploid ? 2 : 1,
+				false
 			);
 
 			pSpecies->addTrait(TraitType::SMS_DP, *trSmsDirPers);

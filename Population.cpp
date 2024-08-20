@@ -1741,7 +1741,6 @@ void Population::outPopulation(int rep, int yr, int gen, float eps,
 // Open individuals file and write header record
 void Population::outIndsHeaders(int rep, int landNr, bool patchModel)
 {
-
 	if (landNr == -999) { // close file
 		if (outInds.is_open()) {
 			outInds.close(); outInds.clear();
@@ -1884,12 +1883,6 @@ void Population::outIndividual(Landscape* pLandscape, int rep, int yr, int gen,
 					if (trfr.moveType == 2) { // CRW
 						trfrCRWTraits c = inds[i]->getIndCRWTraits();
 						outInds << "\t" << c.stepLength << "\t" << c.rho;
-#if RSDEBUG
-						//DEBUGLOG << "Population::outIndividual():"
-						//	<< " patchNum=" << patchNum << " i=" << i << " ID=" << inds[i]->getId()
-						//	<< " nTrfrGenes=" << nTrfrGenes << " loc[0][0].allele[0]=" << loc[0][0].allele[0]
-						//	<< endl;
-#endif
 					} // end of CRW
 				}
 				else { // kernel
@@ -1935,15 +1928,22 @@ void Population::outIndividual(Landscape* pLandscape, int rep, int yr, int gen,
 void Population::outputGeneValues(ofstream& ofsGenes, const int& yr, const int& gen) const {
 	
 	const bool isDiploid = pSpecies->isDiploid();
-	auto traitTypes = pSpecies->getTraitTypes();
 	int indID;
 	float alleleOnChromA, alleleOnChromB;
 	float domCoefA, domCoefB;
 
+	// Subset traits that are selected to be output
+	set<TraitType> traitTypes = pSpecies->getTraitTypes();
+	set<TraitType> outputTraitTypes;
+	for (auto trType : traitTypes) {
+		if (pSpecies->getSpTrait(trType)->isOutput())
+			outputTraitTypes.insert(trType);
+	}
+
 	// Fetch map to positions for each trait
 	// Presumably faster than fetching for every individual
 	map<TraitType, set<int>> allGenePositions;
-	for (auto trType : traitTypes) {
+	for (auto trType : outputTraitTypes) {
 		set<int> traitPositions = pSpecies->getSpTrait(trType)->getGenePositions();
 		allGenePositions.insert(make_pair(trType, traitPositions));
 	}
@@ -1951,7 +1951,7 @@ void Population::outputGeneValues(ofstream& ofsGenes, const int& yr, const int& 
 	set<int> positions;
 	for (Individual* ind : sampledInds) {
 		indID = ind->getId();
-		for (auto trType : traitTypes) {
+		for (auto trType : outputTraitTypes) {
 			positions = allGenePositions[trType];
 			auto indTrait = ind->getTrait(trType);
 			for (auto pos : positions) {
