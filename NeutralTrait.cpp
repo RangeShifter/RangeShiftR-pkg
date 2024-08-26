@@ -297,4 +297,25 @@ int NeutralTrait::getAlleleIDAtLocus(short whichChromosome, int position) const 
 	// need this declaration for quanti trait that use an actual ID
 	return getAlleleValueAtLocus(whichChromosome, position);
 }
+
+// Create a default set of neutral alleles for testing
+//
+// Shorthand function to manually set genotypes for neutral
+// traits, instead of having to manipulate mutations.
+map<int, vector<unsigned char>> createTestNeutralGenotype(
+	const int genomeSz, const bool isDiploid,
+	const unsigned char valAlleleA,
+	const unsigned char valAlleleB
+) {
+	vector<unsigned char> gene(isDiploid ? 2 : 1);
+	gene[0] = valAlleleA;
+	if (isDiploid) gene[1] = valAlleleB;
+
+	map<int, vector<unsigned char>> genotype;
+	for (int i = 0; i < genomeSz; i++) {
+		genotype.emplace(i, gene);
+	}
+	return genotype;
+}
+
 #endif // RSDEBUG

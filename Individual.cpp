@@ -1664,5 +1664,15 @@ void Individual::overrideGenotype(TraitType whichTrait, const map<int, vector<sh
 	}
 };
 
+void Individual::overrideGenotype(TraitType whichTrait, const map<int, vector<unsigned char>>& newGenotype) {
+
+	if (!whichTrait == NEUTRAL) {
+		throw logic_error("Attempt to override non-neutral trait with neutral trait genotype.\n");
+	}
+	NeutralTrait* pNeutralTrait;
+	pNeutralTrait = dynamic_cast<NeutralTrait*>(this->getTrait(NEUTRAL));
+	pNeutralTrait->getGenes() = newGenotype;
+};
+
 #endif // RSDEBUG
 

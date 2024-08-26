@@ -352,7 +352,8 @@ public:
 	};
 	void triggerMutations(Species* pSp);
 	// Shorthand function to edit a genotype with custom values
-	void overrideGenotype(TraitType whichTrait, const map<int, vector<shared_ptr<Allele>>>& newGenotype);
+	void overrideGenotype(TraitType whichTrait, const map<int, vector<shared_ptr<Allele>>>& newGenotype); // dispersal + gen. fitness
+	void overrideGenotype(TraitType whichTrait, const map<int, vector<unsigned char>>& newGenotype); // neutral
 #endif
 
 private:
