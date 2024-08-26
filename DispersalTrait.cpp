@@ -471,6 +471,7 @@ int DispersalTrait::getAlleleIDAtLocus(short whichChromosome, int position) cons
 		throw runtime_error("The Dispersal locus queried for its allele value does not exist.");
 	return it->second[whichChromosome].get()->getId();
 }
+#endif
 
 #if RSDEBUG
 
@@ -499,5 +500,4 @@ map<int, vector<shared_ptr<Allele>>> createTestGenotype(
 	}
 	return genotype;
 }
-#endif RSDEBUG
 #endif // RSDEBUG
