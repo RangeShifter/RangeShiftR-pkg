@@ -427,6 +427,7 @@ string to_string(const TraitType& tr) {
 	case SMS_ALPHADB: return "SMS_ALPHADB";
 	case SMS_BETADB: return "SMS_BETADB";
 	case INVALID_TRAIT: return "INVALID_TRAIT";
+	default: return "";
 	}
 }
 
@@ -440,6 +441,7 @@ string to_string(const GenParamType& param) {
 	case SHAPE: return "SHAPE";
 	case SCALE: return "SCALE";
 	case INVALID: return "INVALID";
+	default: return "";
 	}
 }
 
@@ -454,6 +456,7 @@ string to_string(const DistributionType& dist) {
 	case KAM: return "KAM";
 	case SSM: return "SSM";
 	case NONE: return "NONE";
+	default: return "";
 	}
 }
 
@@ -464,6 +467,7 @@ string to_string(const ExpressionType& expr) {
 	case ADDITIVE: return "ADDITIVE";
 	case NOTEXPR: return "NOTEXPR";
 	case MULTIPLICATIVE: return "MULTIPLICATIVE";
+	default: return "";
 	}
 }
 
