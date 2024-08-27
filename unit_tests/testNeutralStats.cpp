@@ -169,6 +169,60 @@ void testNeutralStats() {
 		assert(pNeutralStatistics->getHo() == 1.0);
 	}
 
+	// The correct number of individuals is sampled
+	{
+		const int nbIndsPopA = 15;
+		const int nbIndsPopB = 11;
+		const string indSampling = "13";
+		const set<int> stgToSample = { 1 };
+
+		// Patch setup
+		const int nbPatches = 2;
+		// Genetic setup
+		const int genomeSz = 2;
+		const bool isDiploid{ true };
+		const set<int> genePositions = { 0, 1 };
+		const float maxAlleleVal = 1;
+		
+		// Create two-patches landscape
+		Landscape* pLandscape = new Landscape;
+		vector<Patch*> patches(nbPatches);
+		vector<Cell*> cells(nbPatches);
+		set<int> patchList;
+		for (int i = 0; i < nbPatches; i++) {
+			patches[i] = pLandscape->newPatch(i);
+			cells[i] = new Cell(0, 0, (intptr)patches[i], 0);
+			patches[i]->addCell(cells[i], 0, 0);
+			patchList.insert(patches[i]->getPatchNum());
+		}
+		
+		// Create species trait structure
+		Species* pSpecies = new Species();
+		pSpecies->setDemogr(createDefaultDiploidDemogrParams());
+		pSpecies->setGeneticParameters(
+			set<int>{genomeSz - 1}, // single chromosome
+			genomeSz,
+			0.0, // no recombination
+			patchList,
+			indSampling,
+			stgToSample,
+			1
+		);
+		const int nbLoci = genePositions.size();
+		SpeciesTrait* spTr = createTestNeutralSpTrait(maxAlleleVal, genePositions, isDiploid);
+		pSpecies->addTrait(TraitType::NEUTRAL, *spTr);
+
+		// Initialise populations
+		const int indStg = 1;
+		Population* pPopA = new Population(pSpecies, patches[0], nbIndsPopA, 1);
+		Population* pPopB = new Population(pSpecies, patches[1], nbIndsPopB, 1);
+		pPopA->sampleIndsWithoutReplacement(indSampling, { indStg });
+		pPopB->sampleIndsWithoutReplacement(indSampling, { indStg });
+		
+		assert(pPopA->sampleSize() == stoi(indSampling)); // the correct nb of individuals has been sampled
+		assert(pPopB->sampleSize() == nbIndsPopB); // too small; all individuals have been sampled
+	}
+
 	// If the sample is too small, Fst evaluates to zero
 	// More importantly, the neutral stats module still runs without error 
 	{
@@ -711,7 +765,7 @@ void testNeutralStats() {
 		);
 		assert(pNeutralStatistics->getFstWC() == 0.0);
 		assert(pNeutralStatistics->getFisWC() == -1.0);
-		}
+	}
 
 	// Fst calculation is correct for an ordinary sample
 	{
