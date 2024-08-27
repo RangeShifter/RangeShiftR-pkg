@@ -280,22 +280,21 @@ void NeutralStatsManager::calculateFstatWC(set<int> const& patchList, const int 
 	double sumWeights = 0;
 	double nBar, nC, inverseNbar;
 	unsigned int nbPops = 0;
-	const int ploidy = pSpecies->isDiploid() ? 2 : 1;
-	const int totalSampleSize = nbSampledIndsInComm * ploidy; // total nb of alleles
+	const int totalSampleSize = nbSampledIndsInComm; // r * n_bar
 
 	for (int patchId : patchList) {
 		const auto patch = pLandscape->findPatch(patchId);
 		const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
 		if (pPop != 0) {
-			int popSampleSize = pPop->sampleSize() * ploidy;
+			int popSampleSize = pPop->sampleSize(); // n_i
 			if (popSampleSize > 0) {
 				nbPops++;
-				sumWeights += static_cast<double>(popSampleSize * popSampleSize) / totalSampleSize;
+				sumWeights += static_cast<double>(popSampleSize * popSampleSize) / totalSampleSize; // sum(n_i^2/rn_bar)
 			}
 		}
 	}
 
-	nbExtantPops = nbPops;
+	nbExtantPops = nbPops; // r
 	totalNbSampledInds = nbSampledIndsInComm;
 
 	if (nbPops > 1) {
@@ -325,7 +324,7 @@ void NeutralStatsManager::calculateFstatWC(set<int> const& patchList, const int 
 					if (pPop != 0) {
 						var = pPop->getAlleleFrequency(thisLocus, allele) - pBar;
 						var *= var;
-						s2 += var * pPop->sampleSize() * ploidy;
+						s2 += var * pPop->sampleSize();
 						hBar += pPop->getHeteroTally(thisLocus, allele); // n_i * h_i
 					}
 				} //end for pop
