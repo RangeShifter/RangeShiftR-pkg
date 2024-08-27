@@ -230,14 +230,14 @@ void testNeutralStats() {
 			pPop->sampleIndsWithoutReplacement(indSampling, { indStg });
 		}
 		
-		// Compute 
+		// Compute F-stats
 		auto pNeutralStatistics = make_unique<NeutralStatsManager>(nbPatches, nbLoci);
 		pNeutralStatistics->updateAllNeutralTables(
 			pSpecies, 
 			pLandscape, 
 			patchList
 		);
-		const int maxNbNeutralAlleles = static_cast<int>(maxAlleleVal);
+		const int maxNbNeutralAlleles = static_cast<int>(maxAlleleVal) + 1;
 		pNeutralStatistics->calculateFstatWC(
 			patchList,
 			nbIndsPerPop * patchList.size(),
