@@ -345,7 +345,7 @@ void NeutralStatsManager::calculateFstatWC(set<int> const& patchList, const int 
 		c *= 0.5;
 
 		fst = a / (a + b + c); // theta hat in eq. 1 in WC 1984
-		fis = b / (b + c); // f hat
+		fis = (b + c == 0.0) ? 0.0 : b / (b + c); // f hat
 		fit = (a + b) / (a + b + c); // F hat
 	}
 	else { // zero or one sampled pops, cannot compute F stats
@@ -545,8 +545,7 @@ void NeutralStatsManager::calcPairwiseWeightedFst(set<int> const& patchList, con
 	int nbPops = 0;
 
 	// Initialise 
-	if (pairwiseFstMatrix.getNbCells() != nPatches * nPatches)
-		pairwiseFstMatrix = PatchMatrix(nPatches, nPatches);
+	pairwiseFstMatrix = PatchMatrix(nPatches, nPatches);
 
 	// Reset table
 	pairwiseFstMatrix.setAll(0.0); // or nanf("NULL")?

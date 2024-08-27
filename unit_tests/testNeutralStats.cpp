@@ -169,14 +169,24 @@ void testNeutralStats() {
 		assert(pNeutralStatistics->getHo() == 1.0);
 	}
 
-	// If two sampled pops have zero allele in common, Fst is 1
-	// - global Fst
-	// - per-locus Fst
-	// - pairwise per-patch Fst
+	// If two sampled pops are monomorphic for different alleles,
+	// then Fst is 1
 	{
+		// Patch setup
+		const int nbPatches = 2;
+		const int nbIndsPerPop = 2;
+		// Genetic setup
+		const int genomeSz = 2;
+		const bool isDiploid{ true };
+		const set<int> genePositions = { 0, 1 };
+		const float maxAlleleVal = 1;
+		unsigned char alleleValPopA = char(0);
+		unsigned char alleleValPopB = char(1);
+		auto popAGenotype = createTestNeutralGenotype(genomeSz, true, alleleValPopA, alleleValPopA);
+		auto popBGenotype = createTestNeutralGenotype(genomeSz, true, alleleValPopB, alleleValPopB);
+
 		// Create two-patches landscape
 		Landscape* pLandscape = new Landscape;
-		const int nbPatches = 2;
 		vector<Patch*> patches(nbPatches);
 		vector<Cell*> cells(nbPatches);
 		set<int> patchList;
@@ -189,8 +199,7 @@ void testNeutralStats() {
 		const string indSampling = "all";
 		const set<int> stgToSample = { 1 };
 
-		// Create genetic structure
-		const int genomeSz = 2;
+		// Create species trait structure
 		Species* pSpecies = new Species();
 		pSpecies->setDemogr(createDefaultDiploidDemogrParams());
 		pSpecies->setGeneticParameters(
@@ -202,36 +211,26 @@ void testNeutralStats() {
 			stgToSample,
 			1
 		);
-		const set<int> genePositions = { 0, 1 };
 		const int nbLoci = genePositions.size();
-		const bool isDiploid{ true };
-		const float maxAlleleVal = 255; // highly unlikely that same value sampled twice
 		SpeciesTrait* spTr = createTestNeutralSpTrait(maxAlleleVal, genePositions, isDiploid);
 		pSpecies->addTrait(TraitType::NEUTRAL, *spTr);
 
-		const int nbIndsPerPop = 2;
-		unsigned char alleleValPopA = char(0);
-		unsigned char alleleValPopB = char(1);
-		auto popAGenotype = createTestNeutralGenotype(genomeSz, true, alleleValPopA, alleleValPopA);
-		auto popBGenotype = createTestNeutralGenotype(genomeSz, true, alleleValPopB, alleleValPopB);
-		vector<
-			map<int,std::vector<unsigned char>>
-		> genotypes = { popAGenotype, popBGenotype };
-		
 		// Initialise populations
+		vector<map<int, std::vector<unsigned char>>> genotypes = { popAGenotype, popBGenotype };
+		const int indStg = 1;
 		for (int p = 0; p < patches.size(); p++) {
 			Population* pPop = new Population(pSpecies, patches[p], 0, 1);
 			// create individuals and add to pop 
 			for (int i = 0; i < nbIndsPerPop; i++) {
-				Individual ind = Individual(cells[p], patches[p], 0, 0, 0, 0.0, false, 1);
-				ind.setUpGenes(pSpecies, 1.0);
-				ind.overrideGenotype(NEUTRAL, genotypes[p]);
-				pPop->recruit(&ind);
+				Individual* pInd = new Individual(cells[p], patches[p], indStg, 0, 0, 0.0, false, 1);
+				pInd->setUpGenes(pSpecies, 1.0);
+				pInd->overrideGenotype(NEUTRAL, genotypes[p]);
+				pPop->recruit(pInd);
 			}
-			pPop->sampleIndsWithoutReplacement(indSampling, stgToSample);
-		} // do individuals still exist?
+			pPop->sampleIndsWithoutReplacement(indSampling, { indStg });
+		}
 		
-		// Calculate heterozygosity
+		// Compute 
 		auto pNeutralStatistics = make_unique<NeutralStatsManager>(nbPatches, nbLoci);
 		pNeutralStatistics->updateAllNeutralTables(
 			pSpecies, 
@@ -247,7 +246,16 @@ void testNeutralStats() {
 			pSpecies,
 			pLandscape
 		);
-		// assert(pNeutralStatistics->getFstWC() == 0.4);
+		assert(pNeutralStatistics->getFstWC() == 1.0);
+		
+		pNeutralStatistics->calcPairwiseWeightedFst(
+			patchList,
+			nbIndsPerPop* patchList.size(),
+			nbLoci,
+			pSpecies,
+			pLandscape
+		);
+		assert(pNeutralStatistics->getPairwiseFst(0, 1) == 0.0);
 	}
 }
 
