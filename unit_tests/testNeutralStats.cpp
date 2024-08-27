@@ -536,9 +536,9 @@ void testNeutralStats() {
 				maxNbNeutralAlleles,
 				pSpecies,
 				pLandscape
-			);
-			assert(pNeutralStatistics->getFstWC() < 0.0);
-			assert(pNeutralStatistics->getFisWC() == 1.0);
+					);
+					assert(pNeutralStatistics->getFstWC() < 0.0);
+					assert(pNeutralStatistics->getFisWC() == 1.0);
 		}
 
 		// Case 2/2: variation within < between
@@ -561,7 +561,7 @@ void testNeutralStats() {
 				{ // Pop 1: 5 AA, 5 BB (no heterozygotes)
 					genotypeAA, genotypeAA, genotypeAA, genotypeAA, genotypeAA,
 					genotypeBB, genotypeBB, genotypeBB, genotypeBB, genotypeBB
-				}, 
+				},
 				{ // Pop 2: 8 AA, 2 BB (no heterozygotes)
 					genotypeAA, genotypeAA, genotypeAA, genotypeAA, genotypeAA,
 					genotypeAA, genotypeAA, genotypeAA, genotypeBB, genotypeBB
@@ -622,7 +622,7 @@ void testNeutralStats() {
 			const int maxNbNeutralAlleles = static_cast<int>(maxAlleleVal) + 1;
 			pNeutralStatistics->calculateFstatWC(
 				patchList,
-				nbIndsPerPop * patchList.size(),
+				nbIndsPerPop* patchList.size(),
 				nbLoci,
 				maxNbNeutralAlleles,
 				pSpecies,
@@ -632,6 +632,86 @@ void testNeutralStats() {
 			assert(pNeutralStatistics->getFisWC() == 1.0);
 		}
 	}
+
+	// In a strictly heterozygote sample, Fis = -1
+	// + if there is no variation between individuals, Fst = 0
+	{
+		// Patch setup
+		const int nbPatches = 2;
+		const int nbIndsPerPop = 10;
+		// Genetic setup
+		const int genomeSz = 1;
+		const bool isDiploid{ true };
+		const set<int> genePositions = { 0 };
+		const float maxAlleleVal = 1;
+		unsigned char alleleValPopA = char(0);
+		unsigned char alleleValPopB = char(1);
+		const auto genotypeAB = createTestNeutralGenotype(genomeSz, true, alleleValPopA, alleleValPopB);
+		// all individuals have genotype AB
+
+		// Create two-patches landscape
+		Landscape* pLandscape = new Landscape;
+		vector<Patch*> patches(nbPatches);
+		vector<Cell*> cells(nbPatches);
+		set<int> patchList;
+		for (int i = 0; i < nbPatches; i++) {
+			patches[i] = pLandscape->newPatch(i);
+			cells[i] = new Cell(0, 0, (intptr)patches[i], 0);
+			patches[i]->addCell(cells[i], 0, 0);
+			patchList.insert(patches[i]->getPatchNum());
+		}
+		const string indSampling = "all";
+		const set<int> stgToSample = { 1 };
+
+		// Create species trait structure
+		Species* pSpecies = new Species();
+		pSpecies->setDemogr(createDefaultDiploidDemogrParams());
+		pSpecies->setGeneticParameters(
+			set<int>{genomeSz - 1}, // single chromosome
+			genomeSz,
+			0.0, // no recombination
+			patchList,
+			indSampling,
+			stgToSample,
+			1
+		);
+		const int nbLoci = genePositions.size();
+		SpeciesTrait* spTr = createTestNeutralSpTrait(maxAlleleVal, genePositions, isDiploid);
+		pSpecies->addTrait(TraitType::NEUTRAL, *spTr);
+
+		// Initialise populations
+		const int indStg = 1;
+		for (int p = 0; p < patches.size(); p++) {
+			Population* pPop = new Population(pSpecies, patches[p], 0, 1);
+			// create individuals and add to pop 
+			for (int i = 0; i < nbIndsPerPop; i++) {
+				Individual* pInd = new Individual(cells[p], patches[p], indStg, 0, 0, 0.0, false, 1);
+				pInd->setUpGenes(pSpecies, 1.0);
+				pInd->overrideGenotype(NEUTRAL, genotypeAB);
+				pPop->recruit(pInd);
+			}
+			pPop->sampleIndsWithoutReplacement(indSampling, { indStg });
+		}
+
+		// Compute F-stats
+		auto pNeutralStatistics = make_unique<NeutralStatsManager>(nbPatches, nbLoci);
+		pNeutralStatistics->updateAllNeutralTables(
+			pSpecies,
+			pLandscape,
+			patchList
+		);
+		const int maxNbNeutralAlleles = static_cast<int>(maxAlleleVal) + 1;
+		pNeutralStatistics->calculateFstatWC(
+			patchList,
+			nbIndsPerPop* patchList.size(),
+			nbLoci,
+			maxNbNeutralAlleles,
+			pSpecies,
+			pLandscape
+		);
+		assert(pNeutralStatistics->getFstWC() == 0.0);
+		assert(pNeutralStatistics->getFisWC() == -1.0);
+		}
 
 	// Fst calculation is correct for an ordinary sample
 	{
