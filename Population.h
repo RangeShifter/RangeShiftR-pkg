@@ -262,10 +262,6 @@ extern RSrandom* pRandom;
 extern ofstream DEBUGLOG;
 #endif
 
-#if RSDEBUG
-void testPopulation();
-#endif
-
 //---------------------------------------------------------------------------
 #endif
 

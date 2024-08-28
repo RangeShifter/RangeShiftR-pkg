@@ -43,6 +43,7 @@ using namespace std;
 
 void testIndividual();
 void testNeutralStats();
+void testPopulation();
 
 void run_unit_tests() {
 	cout << "******* Unit test output *******" << endl;
