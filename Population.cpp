@@ -683,7 +683,7 @@ void Population::reproduction(const float localK, const float envval, const int 
 #endif
 
 						if (pSpecies->getNTraits() > 0) {
-							newJuv->inheritTraits(pSpecies, inds[i], father, resol);
+							newJuv->inheritTraits(pSpecies, inds[i], resol);
 						}
 
 						if (!newJuv->isViable()) {

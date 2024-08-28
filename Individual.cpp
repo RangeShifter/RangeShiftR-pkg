@@ -188,9 +188,9 @@ void Individual::inherit(Species* pSpecies, const Individual* mother) {
 	set<unsigned int> recomPositions; //not used here cos haploid but need it for inherit function, not ideal 
 	int startingChromosome = 0;
 
-	const auto& motherTraits = getTraitTypes();
+	const auto& spTraits = pSpecies->getTraitTypes();
 
-	for (auto const& trait : motherTraits)
+	for (auto const& trait : spTraits)
 	{
 		const auto motherTrait = mother->getTrait(trait);
 		auto newTrait = motherTrait->clone(); // shallow copy, pointer to species trait initialised and empty sequence
