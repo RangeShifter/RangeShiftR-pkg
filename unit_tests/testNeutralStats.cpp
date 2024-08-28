@@ -2,30 +2,6 @@
 
 #include "../Community.h"
 
-demogrParams createDefltHaploidDemogrParams() {
-	demogrParams d;
-	d.repType = 0;
-	d.repSeasons = 1;
-	d.stageStruct = false;
-	d.propMales = 0.5;
-	d.harem = 1.0;
-	d.bc = 1.0;
-	d.lambda = 1.0;
-	return d;
-}
-
-demogrParams createDefaultDiploidDemogrParams() {
-	demogrParams d;
-	d.repType = 1;
-	d.repSeasons = 1;
-	d.stageStruct = false;
-	d.propMales = 0.5;
-	d.harem = 1.0;
-	d.bc = 1.0;
-	d.lambda = 1.0;
-	return d;
-}
-
 void testNeutralStats() {
 
 	// In haploid settings, Ho is always zero
@@ -42,7 +18,7 @@ void testNeutralStats() {
 		// Create genetic structure
 		const int genomeSz = 4;
 		Species* pSpecies = new Species();
-		pSpecies->setDemogr(createDefltHaploidDemogrParams());
+		pSpecies->setDemogr(createDefaultHaploidDemogrParams());
 		pSpecies->setGeneticParameters(
 			set<int>{genomeSz - 1}, // single chromosome
 			genomeSz,

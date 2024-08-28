@@ -791,3 +791,31 @@ void Species::setSamplePatchList(const set<int>& samplePatchList) {
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 
+#if RSDEBUG
+// For testing purposes only
+
+demogrParams createDefaultHaploidDemogrParams() {
+	demogrParams d;
+	d.repType = 0;
+	d.repSeasons = 1;
+	d.stageStruct = false;
+	d.propMales = 0.0;
+	d.harem = 1.0;
+	d.bc = 1.0;
+	d.lambda = 2.0;
+	return d;
+}
+
+demogrParams createDefaultDiploidDemogrParams() {
+	demogrParams d;
+	d.repType = 1;
+	d.repSeasons = 1;
+	d.stageStruct = false;
+	d.propMales = 0.5;
+	d.harem = 1.0;
+	d.bc = 1.0;
+	d.lambda = 2.0;
+	return d;
+}
+
+#endif // RSDEBUG

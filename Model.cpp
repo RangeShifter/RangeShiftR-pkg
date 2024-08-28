@@ -48,15 +48,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 	simParams sim = paramsSim->getSim();
 	simView v = paramsSim->getViews();
 
-#if RSDEBUG
-	landPix p = pLandscape->getLandPix();
-	DEBUGLOG << "RunModel(): reps=" << sim.reps
-		<< " ppLand.nHab=" << ppLand.nHab
-		<< " p.pix=" << p.pix
-		<< endl;
-	DEBUGLOG << endl;
-#endif
-
 	if (!ppLand.generated) {
 		if (!ppLand.patchModel) { // cell-based landscape
 			// create patches for suitable cells, adding unsuitable cells to the matrix
@@ -124,13 +115,8 @@ int RunModel(Landscape* pLandscape, int seqsim)
 			if (pComm != 0) delete pComm;
 			// generate new cell-based landscape
 			pLandscape->resetLand();
-#if RSDEBUG
-			DEBUGLOG << "RunModel(): finished resetting landscape" << endl << endl;
-#endif
 			pLandscape->generatePatches();
-#if RSDEBUG
-			DEBUGLOG << endl << "RunModel(): finished generating patches" << endl;
-#endif
+
 			pComm = new Community(pLandscape); // set up community
 			// set up a sub-community associated with each patch (incl. the matrix)
 			pLandscape->updateCarryingCapacity(pSpecies, 0, 0);
