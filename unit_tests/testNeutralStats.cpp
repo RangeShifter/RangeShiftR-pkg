@@ -146,7 +146,7 @@ void testNeutralStats() {
 			stgToSample,
 			1
 		);
-		const set<int> genePositions = { 0, 1, 3 }; // arbitrary
+		const set<int> genePositions = { 0, 2 }; // arbitrary
 		const bool isDiploid{ true };
 		const float maxAlleleVal = 255; // highly unlikely that same value sampled twice
 		SpeciesTrait* spTr = createTestNeutralSpTrait(maxAlleleVal, genePositions, isDiploid);
