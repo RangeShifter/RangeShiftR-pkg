@@ -610,7 +610,7 @@ void Individual::setStatus(short s) {
 	status = s;
 }
 
-void Individual::developing(void) {
+void Individual::setToDevelop(void) {
 	isDeveloping = true;
 }
 

@@ -1336,16 +1336,17 @@ bool Population::matePresent(Cell* pCell, short othersex)
 void Population::survival0(float localK, short option0, short option1)
 {
 	// option0:	0 - stage 0 (juveniles) only
-	//					1 - all stages
-	//					2 - stage 1 and above (all non-juveniles)
+	//			1 - all stages
+	//			2 - stage 1 and above (all non-juveniles)
+	// 
 	// option1:	0 - development only (when survival is annual)
-	//	  	 		1 - development and survival
-	//	  	 		2 - survival only (when survival is annual)
+	//	  	 	1 - development and survival
+	//	  	 	2 - survival only (when survival is annual)
 	densDepParams ddparams = pSpecies->getDensDep();
 	demogrParams dem = pSpecies->getDemogrParams();
 	stageParams sstruct = pSpecies->getStageParams();
 
-	// get surrent population size
+	// get current population size
 	int ninds = (int)inds.size();
 	if (ninds == 0) return;
 	// set up local copies of species development and survival tables
@@ -1459,7 +1460,7 @@ void Population::survival0(float localK, short option0, short option1)
 					if (ind.stage < nStages - 1) { // not final stage
 						if (ind.age >= minAge[ind.stage + 1][ind.sex]) { // old enough to enter next stage
 							if (pRandom->Bernoulli(probdev)) {
-								inds[i]->developing();
+								inds[i]->setToDevelop();
 							}
 						}
 					}

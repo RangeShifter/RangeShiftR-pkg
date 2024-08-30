@@ -279,7 +279,7 @@ public:
 	settlePatch getSettPatch(void);
 	void setSettPatch(const settlePatch);
 	void setStatus(short);
-	void developing(void);
+	void setToDevelop(void);
 	void develop(void);
 	void ageIncrement( // Age by one year
 		short	// maximum age - if exceeded, the Individual dies

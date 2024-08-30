@@ -140,6 +140,83 @@ void testPopulation()
 		}
 		assert(emigratingInds[0] < emigratingInds[1] && emigratingInds[1] < emigratingInds[2]);
 	}
+
+	// In the absence of evolutionary forces, neutral gene 
+	// frequencies conform to Hardy-Weinberg principle, i.e.:
+	// 1 - Allele frequencies p and q remain constant through generations
+	// 2 - Genotype frequencies conform to fAA = p^2, fAB = 2pq, fBB = q^2
+	{
+		float mutationRate = 0.0;
+		const float localK = 10000.0;
+		const int initialNbInds = localK;
+		const float initFreqA = 0.7;
+		const float exptdFreqA = initFreqA; // Allelic freqs are constant under HW
+		const float exptdFreqB = 1 - exptdFreqA;
+		const float exptdFreqHeteroZ = 2 * exptdFreqA * exptdFreqB; // according to HW
+		const int nbGens = 10;
+		float obsFreqA = 0.0;
+		float obsFreqB = 0.0;
+		float obsFreqHeteroZ = 0.0;
+		const float tolerance = 0.02; // fairly high tolerance, I expect a bit of drift to act.
+
+		// Simple genetic layout
+		const bool isDiploid{ true }; // HW only applies to diploids
+		const int genomeSz = 1;
+		const set<int> genePositions = { 0 };
+		const float maxAlleleVal = 1;
+		unsigned char alleleA = char(0);
+		unsigned char alleleB = char(1);
+		auto genotypeAA = createTestNeutralGenotype(genomeSz, true, alleleA, alleleA);
+		auto genotypeBB = createTestNeutralGenotype(genomeSz, true, alleleB, alleleB);
+
+		Landscape* pLandscape = new Landscape;
+		Patch* pPatch = pLandscape->newPatch(1);
+		Cell* pCell = new Cell(0, 0, (intptr)pPatch, 0);
+		pPatch->addCell(pCell, 0, 0);
+
+		Species* pSpecies = new Species();
+		pSpecies->setDemogr(createDefaultDiploidDemogrParams());
+		pSpecies->setGeneticParameters(
+			set<int>{genomeSz - 1}, // single chromosome
+			genomeSz,
+			0.0, // no recombination
+			{ }, "none", { }, 0 // no sampling
+		);
+		SpeciesTrait* spTr = createTestNeutralSpTrait(maxAlleleVal, genePositions, isDiploid);
+		pSpecies->addTrait(TraitType::NEUTRAL, *spTr);
+
+		// Initialise population with 
+		Population pop = Population(pSpecies, pPatch, 0, 1);
+		for (int i = 0; i < initialNbInds; i++) {
+			Individual* pInd = new Individual(pCell, pPatch, 1, 0, 0, 0.5, false, 1);
+			pInd->setUpGenes(pSpecies, 1.0);
+			if (i < initialNbInds * initFreqA)
+				pInd->overrideGenotype(NEUTRAL, genotypeAA);
+			else 
+				pInd->overrideGenotype(NEUTRAL, genotypeBB);
+			pop.recruit(pInd);
+		}
+
+		// Check allele frequencies conform to HW through generations
+		for (int yr = 0; yr < nbGens; yr++) {
+			pop.reproduction(localK, 1, 1);
+			pop.fledge(); // replace initial pop with juveniles
+			pop.survival0(localK, 0, 0); // flag juveniles for development
+			pop.survival1(); // develop to stage 1 (breeders)
+
+			// Count allele and heterozygote frequencies
+			pop.sampleIndsWithoutReplacement("all", { 1 });
+			pop.updatePopNeutralTables();
+			obsFreqA = pop.getAlleleFrequency(0, alleleA);
+			obsFreqB = pop.getAlleleFrequency(0, alleleB);
+			float nbHeteroZ = pop.getHeteroTally(0, alleleA);
+			int nbInds = pop.getNInds();
+			obsFreqHeteroZ = nbHeteroZ / nbInds;
+			assert(abs(obsFreqA - exptdFreqA) < tolerance);
+			assert(abs(obsFreqB - exptdFreqB) < tolerance);
+			assert(abs(obsFreqHeteroZ - exptdFreqHeteroZ) < tolerance);
+		}
+	}
 }
 
 #endif //RSDEBUG
