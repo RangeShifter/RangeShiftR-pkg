@@ -675,6 +675,19 @@ void testNeutralStats() {
 			);
 			assert(pNeutralStatistics->getFstWC() > 0.0);
 			assert(pNeutralStatistics->getFisWC() == 1.0);
+
+			// Weir & Hill population-specific estimates average to the (Weir & Hill) global estimator
+			pNeutralStatistics->calcPairwiseWeightedFst(
+				patchList,
+				nbIndsPerPop* patchList.size(),
+				nbLoci,
+				pSpecies,
+				pLandscape
+			);
+			const double pop1Fst = pNeutralStatistics->getPairwiseFst(0, 0);
+			const double pop2Fst = pNeutralStatistics->getPairwiseFst(1, 1);
+			assert((pop1Fst + pop2Fst) / 2.0 == pNeutralStatistics->getWeightedFst());
+
 		}
 	}
 
