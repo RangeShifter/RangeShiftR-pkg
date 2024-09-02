@@ -1221,10 +1221,9 @@ void testIndividual() {
 			assert(trfrTr.rho <= 1.0);
 		}
 
-		// Case 3 - Transfer with Sotchastic Movement Simulator
+		// Case 3 - Transfer with Stochastic Movement Simulator
 		{
 			const int genomeSz = 2;
-
 			const bool isDiploid{ true }; // haploid, simpler check
 			const float mutationRate = 0.0; // no mutations
 

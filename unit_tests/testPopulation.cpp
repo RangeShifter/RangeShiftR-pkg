@@ -217,6 +217,66 @@ void testPopulation()
 			assert(abs(obsFreqHeteroZ - exptdFreqHeteroZ) < tolerance);
 		}
 	}
+
+	// Genetic load meets Hardy-Weinberg expectation
+	// If a lethal (s = 1) recessive (h = 0) allele starts at freq 0.6,
+	// then (if no mutations) the prop. of unviable homozygote offspring should be 0.36
+	{
+		const float initFreqA = 0.6;
+		const float sA = 1.0; // lethal
+		const float hA = 0.0; // fully recessive
+		const float sB = 0.0; // benign
+		const float hB = 1.0; // fully dominant
+		float mutationRate = 0.0;
+		const float localK = 10000.0;
+		const int initialNbInds = localK;
+		const float tolerance = 0.015; // high tolerance, still a lot of stochasticity
+		const float expectedFreqAA = initFreqA * initFreqA;
+
+		// Simple genetic layout
+		const bool isDiploid{ true }; // HW only applies to diploids
+		const int genomeSz = 1;
+		const set<int> genePositions = { 0 };
+		const float maxAlleleVal = 1;
+		unsigned char alleleA = char(0);
+		unsigned char alleleB = char(1);
+		auto genotypeAA = createTestGenotype(genomeSz, true, sA, sA, hA, hA);
+		auto genotypeBB = createTestGenotype(genomeSz, true, sB, sB, hB, hB);
+
+		Landscape* pLandscape = new Landscape;
+		Patch* pPatch = pLandscape->newPatch(1);
+		Cell* pCell = new Cell(0, 0, (intptr)pPatch, 0);
+		pPatch->addCell(pCell, 0, 0);
+
+		Species* pSpecies = new Species();
+		pSpecies->setDemogr(createDefaultDiploidDemogrParams());
+		pSpecies->setGeneticParameters(
+			set<int>{genomeSz - 1}, // single chromosome
+			genomeSz,
+			0.0, // no recombination
+			{ }, "none", { }, 0 // no sampling
+		);
+		SpeciesTrait* spTr = createTestGenLoadTrait(genePositions, isDiploid);
+		pSpecies->addTrait(TraitType::GENETIC_LOAD, *spTr);
+
+		// Initialise population with 
+		Population pop = Population(pSpecies, pPatch, 0, 1);
+		for (int i = 0; i < initialNbInds; i++) {
+			Individual* pInd = new Individual(pCell, pPatch, 1, 0, 0, 0.5, false, 1);
+			pInd->setUpGenes(pSpecies, 1.0);
+			if (i < initialNbInds * initFreqA)
+				pInd->overrideGenotype(GENETIC_LOAD1, genotypeAA);
+			else
+				pInd->overrideGenotype(GENETIC_LOAD1, genotypeBB);
+			pop.recruit(pInd);
+		}
+
+		// Check allele frequencies conform to HW
+		pop.reproduction(localK, 1, 1);
+		pop.fledge(); // replace initial pop with juveniles
+		double obsFreqUnviable = 1 - pop.getNInds() / localK;
+		assert(abs(obsFreqUnviable - expectedFreqAA) < tolerance);
+	}
 }
 
 #endif //RSDEBUG
