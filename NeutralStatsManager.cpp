@@ -534,7 +534,6 @@ void NeutralStatsManager::calcPerLocusMeanSquaresFst(set<int> const& patchList, 
 void NeutralStatsManager::calcPairwiseWeightedFst(set<int> const& patchList, const int nInds, const int nLoci, Species* pSpecies, Landscape* pLandscape) {
 
 	const int nAlleles = (int)pSpecies->getSpTrait(NEUTRAL)->getNbNeutralAlleles();
-	const int ploidy = pSpecies->isDiploid() ? 2 : 1;
 
 	// Needs to be in vector to iterate over, copy preserves order
 	vector<int> patchVect;
@@ -559,14 +558,14 @@ void NeutralStatsManager::calcPairwiseWeightedFst(set<int> const& patchList, con
 	double denominator = 0;
 	double sumWeights = 0;
 
-	totSize = nInds * ploidy;
+	totSize = nInds;
 
 	// Calculate weight (n_ic) terms
 	for (int i = 0; i < nPatches; ++i) {
 		const auto patch = pLandscape->findPatch(patchVect[i]);
 		const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
 		if (pPop != 0) {
-			popSizes[i] = pPop->sampleSize() * ploidy;
+			popSizes[i] = pPop->sampleSize();
 		} // else popSizes[i] remain default init value 0, safe
 		popWeights[i] = popSizes[i] - (popSizes[i] * popSizes[i] / totSize); // n_ic in Weir & Hill 2002
 		sumWeights += popWeights[i];

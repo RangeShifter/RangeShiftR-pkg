@@ -481,11 +481,12 @@ void testNeutralStats() {
 		assert(pNeutralStatistics->getPairwiseFst(0, 1) == 0.0);
 	}
 
-	double refDiploidFst; // for use in haploid test below
+	double refDiploidFst; // for use in further tests below
 
 	// In strictly homozygote samples:
 	// 1. Fis = 1 (maximum inbreeding)
 	// 2. The sign of the Fst depends on the ratio of variation within vs between populations
+	// 3. (if sample sizes are equal) The Weir&Cockerham 1984, Weir&Hill 2002 estimators yield the same values
 	{
 		// Case 1/2: variation within > between
 		// Within: frequencies of allele A and B are quite different
@@ -572,7 +573,17 @@ void testNeutralStats() {
 			assert(pNeutralStatistics->getFstWC() < 0.0);
 			assert(pNeutralStatistics->getFisWC() == 1.0);
 
-			refDiploidFst = pNeutralStatistics->getFstWC(); // for use in haploid test below
+			pNeutralStatistics->calcPairwiseWeightedFst(
+				patchList,
+				nbIndsPerPop * patchList.size(),
+				nbLoci,
+				pSpecies,
+				pLandscape
+			);
+			const double tol = 0.000001;
+			assert(abs(pNeutralStatistics->getWeightedFst() - pNeutralStatistics->getFstWC()) < tol);
+
+			refDiploidFst = pNeutralStatistics->getFstWC(); // for use in further tests below
 		}
 
 		// Case 2/2: variation within < between
@@ -847,7 +858,7 @@ void testNeutralStats() {
 		assert(calcError < 0.0001);
 	}
 
-	// THe Fst is a haploid sample equals that of a diploid sample if:
+	// The Fst is a haploid sample equals that of a diploid sample if:
 	// 1 - allelic frequencies are equal
 	// 2 - the diploid sample has no heterozygotes
 	// (reference diploid Fst has already been calculated above)
