@@ -223,7 +223,7 @@ paramSim::paramSim(void) {
 	batchMode = absorbing = false;
 	outRange = outOccup = outPop = outInds = false;
 	outTraitsCells = outTraitsRows = outConnect = false;
-	outputWCFstat = outputPerLocusWCFstat = outputPairwiseFst = false;
+	outputWeirCockerham = outputWeirHill = false;
 	saveMaps = false; saveTraitMaps = false;
 	saveVisits = false;
 #if RS_RCPP
@@ -273,12 +273,11 @@ void paramSim::setSim(simParams s) {
 	fixReplicateSeed = s.fixReplicateSeed;
 }
 
-void paramSim::setGeneticSim(string patchSamplingOption, bool outputGeneticValues, bool outputWCFstat, bool outputPerLocusWCFstat, bool outputPairwiseFst, int outputStartGenetics, int outputGeneticInterval) {
+void paramSim::setGeneticSim(string patchSamplingOption, bool outputGeneticValues, bool outputWeirCockerham, bool outputWeirHill, int outputStartGenetics, int outputGeneticInterval) {
 	this->patchSamplingOption = patchSamplingOption;
 	this->outputGenes = outputGeneticValues;
-	this->outputWCFstat = outputWCFstat;
-	this->outputPerLocusWCFstat = outputPerLocusWCFstat;
-	this->outputPairwiseFst = outputPairwiseFst;
+	this->outputWeirCockerham = outputWeirCockerham;
+	this->outputWeirHill = outputWeirHill;
 	this->outputStartGenetics = outputStartGenetics;
 	this->outputGeneticInterval = outputGeneticInterval;
 }
@@ -312,9 +311,8 @@ simParams paramSim::getSim(void) {
 #endif
 	s.patchSamplingOption = patchSamplingOption;
 	s.outputGeneValues = outputGenes;
-	s.outputWCFstat = outputWCFstat;
-	s.outputPerLocusWCFstat = outputPerLocusWCFstat;
-	s.outputPairwiseFst = outputPairwiseFst;
+	s.outputWeirCockerham = outputWeirCockerham;
+	s.outputWeirHill = outputWeirHill;
 	s.outStartGenetics = outputStartGenetics;
 	s.outputGeneticInterval = outputGeneticInterval;
 

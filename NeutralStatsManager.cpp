@@ -30,6 +30,8 @@
 NeutralStatsManager::NeutralStatsManager(const int& nbSampledPatches, const int nLoci) {
 	this->pairwiseFstMatrix = PatchMatrix(nbSampledPatches, nbSampledPatches);
 	commNeutralCountTables.reserve(nLoci); //don't have to be pointers, not shared or moved
+
+	perLocusFst = perLocusFis = perLocusFit = vector<double>(nLoci, 0.0);
 }
 
 // ----------------------------------------------------------------------------------------
@@ -282,6 +284,9 @@ void NeutralStatsManager::calculateFstatWC(set<int> const& patchList, const int 
 	unsigned int nbPops = 0;
 	const int totalSampleSize = nbSampledIndsInComm; // r * n_bar
 
+	// Reset per-locus vectors between generations
+	perLocusFst = perLocusFis = perLocusFit = vector<double>(nLoci, 0.0);
+
 	for (int patchId : patchList) {
 		const auto patch = pLandscape->findPatch(patchId);
 		const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
@@ -308,46 +313,63 @@ void NeutralStatsManager::calculateFstatWC(set<int> const& patchList, const int 
 
 		double var;
 		double s2, pBar, hBar;
-		double s2Denom = 1.0 / ((nbPops - 1) * nBar);
+		double s2Denom = (nbPops - 1) * nBar;
 		double rTerm = static_cast<double>(nbPops - 1) / nbPops;
 		double hBarFactor = (2 * nBar - 1) / (4 * nBar);
 
-		double a = 0, b = 0, c = 0, intermediateTerm;
-		for (int thisLocus = 0; thisLocus < nLoci; ++thisLocus) {
-			for (int allele = 0; allele < nAlleles; ++allele) {
+		double numFst = 0.0, numFis = 0.0, numFit = 0.0;
+		double denomFst = 0.0, denomFis = 0.0, denomFit = 0.0;
+
+		double a_l = 0, b_l = 0, c_l = 0, intermediateTerm;
+		for (int l = 0; l < nLoci; ++l) {
+			for (int u = 0; u < nAlleles; ++u) {
 
 				s2 = hBar = 0;
-				pBar = commNeutralCountTables[thisLocus].getFrequency(allele);
+				pBar = commNeutralCountTables[l].getFrequency(u);
 				for (int patchId : patchList) {
 					const auto patch = pLandscape->findPatch(patchId);
 					const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
 					if (pPop != 0) {
-						var = pPop->getAlleleFrequency(thisLocus, allele) - pBar;
+						var = pPop->getAlleleFrequency(l, u) - pBar;
 						var *= var;
 						s2 += var * pPop->sampleSize();
-						hBar += pPop->getHeteroTally(thisLocus, allele); // n_i * h_i
+						hBar += pPop->getHeteroTally(l, u); // n_i * h_i
 					}
 				} //end for pop
 
-				s2 *= s2Denom;
-				hBar *= inverseNtotal; // / (r * n_bar)
+				s2 /= s2Denom;
+				hBar /= static_cast<float>(totalSampleSize); // / (r * n_bar)
 
 				intermediateTerm = pBar * (1 - pBar) - rTerm * s2;
-				a += s2 - inverseNbar * (intermediateTerm - 0.25 * hBar);
-				b += intermediateTerm - hBarFactor * hBar;
-				c += hBar;
+				a_l += s2 - inverseNbar * (intermediateTerm - 0.25 * hBar);
+				b_l += intermediateTerm - hBarFactor * hBar;
+				c_l += hBar;
+
 			} // end for allele 
+
+			a_l *= nBar / nC;
+			b_l *= nBar / nBarMinusOne;
+			c_l *= 0.5;
+
+			perLocusFst[l] = a_l / (a_l + b_l + c_l);
+			perLocusFis[l] = (b_l + c_l) == 0.0 ? 0.0 : b_l / (b_l + c_l);
+			perLocusFit[l] = a_l + b_l / (a_l + b_l + c_l);
+
+			numFst += a_l;
+			numFis += b_l;
+			numFit += a_l + b_l;
+			denomFst += a_l + b_l + c_l;
+			denomFis += b_l + c_l;
+			
 		} // end for locus
 
-		a *= nBar / nC;
-		b *= nBar / nBarMinusOne;
-		c *= 0.5;
+		denomFit = denomFst; // same quantity
 
-		fst = a / (a + b + c); // theta hat in eq. 1 in WC 1984
-		fis = (b + c == 0.0) ? 0.0 : b / (b + c); // f hat
-		fit = (a + b) / (a + b + c); // F hat
+		fst = numFst / denomFst; // theta hat in eq. 1 in WC 1984
+		fis = (denomFis == 0.0) ? 0.0 : numFis / denomFis; // f hat
+		fit = numFit / denomFit; // F hat
 	}
-	else { // zero or one sampled pops, cannot compute F stats
+	else { // zero or one sampled pops, cannot compute F-stats
 		fst = 0.0;
 		fis = 0.0;
 		fit = 0.0;

@@ -125,15 +125,15 @@ int RunModel(Landscape* pLandscape, int seqsim)
 			int npatches = pLandscape->patchCount();
 			for (int i = 0; i < npatches; i++) {
 				ppp = pLandscape->getPatchData(i);
-				#if RSWIN64
-				#if LINUX_CLUSTER
+#if RSWIN64
+#if LINUX_CLUSTER
 				pComm->addSubComm(ppp.pPatch, ppp.patchNum); // SET UP ALL SUB-COMMUNITIES
-				#else
+#else
 				SubCommunity* pSubComm = pComm->addSubComm(ppp.pPatch, ppp.patchNum); // SET UP ALL SUB-COMMUNITIES
-				#endif
-				#else
+#endif
+#else
 				pComm->addSubComm(ppp.pPatch, ppp.patchNum); // SET UP ALL SUB-COMMUNITIES
-				#endif
+#endif
 			}
 			if (sim.patchSamplingOption == "random") {
 				// Then patches must be resampled for new landscape
@@ -181,8 +181,8 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				if (!pLandscape->outConnectHeaders(0)) {
 					filesOK = false;
 				}
-			if (sim.outputWCFstat) { // open neutral genetics file
-				if (!pComm->openWCFstatFile(pSpecies, ppLand.landNum)) {
+			if (sim.outputWeirCockerham) { // open neutral genetics file
+				if (!pComm->openNeutralOutputFile(pSpecies, ppLand.landNum)) {
 					filesOK = false;
 				}
 			}
@@ -203,14 +203,14 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				pComm->outTraitsRowsHeaders(pSpecies, -999);
 			if (sim.outConnect && ppLand.patchModel)
 				pLandscape->outConnectHeaders(-999);
-			if (sim.outputWCFstat) {
-				pComm->openWCFstatFile(pSpecies, -999);
+			if (sim.outputWeirCockerham) {
+				pComm->openNeutralOutputFile(pSpecies, -999);
 			}
-			#if RS_RCPP && !R_CMD
+#if RS_RCPP && !R_CMD
 			return Rcpp::List::create(Rcpp::Named("Errors") = 666);
-			#else
+#else
 			return 666;
-			#endif
+#endif
 		}
 
 		if (env.stoch && !env.local) {
@@ -237,9 +237,9 @@ int RunModel(Landscape* pLandscape, int seqsim)
 		bool updateland = false;
 		int landIx = 0; // landscape change index
 
-		#if BATCH && RS_RCPP && !R_CMD
+#if BATCH && RS_RCPP && !R_CMD
 		Rcpp::Rcout << "RunModel(): completed initialisation " << endl;
-		#endif
+#endif
 
 		// open a new individuals file for each replicate
 		if (sim.outInds)
@@ -251,23 +251,23 @@ int RunModel(Landscape* pLandscape, int seqsim)
 		}
 
 		// open a new genetics file for each replicate for per locus and pairwise stats
-		if (sim.outputPerLocusWCFstat) {
-			pComm->openWCPerLocusFstatFile(pSpecies, pLandscape, ppLand.landNum, rep);
+		if (sim.outputWeirCockerham) {
+			pComm->openPerLocusFstFile(pSpecies, pLandscape, ppLand.landNum, rep);
 		}
-		if (sim.outputPairwiseFst) {
-			pComm->openPairwiseFSTFile(pSpecies, pLandscape, ppLand.landNum, rep);
+		if (sim.outputWeirHill) {
+			pComm->openPairwiseFstFile(pSpecies, pLandscape, ppLand.landNum, rep);
 		}
-		#if RS_RCPP
+#if RS_RCPP
 		// open a new movement paths file for each replicate
 		if (sim.outPaths)
 			pLandscape->outPathsHeaders(rep, 0);
-		#endif
+#endif
 
 		// years loop
 		for (yr = 0; yr < sim.years; yr++) {
-			#if RS_RCPP && !R_CMD
+#if RS_RCPP && !R_CMD
 			Rcpp::checkUserInterrupt();
-			#endif
+#endif
 			bool updateCC = false;
 			if (yr < 4
 				|| (yr < 31 && yr % 10 == 0)
@@ -277,11 +277,11 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				|| (yr < 300001 && yr % 100000 == 0)
 				|| (yr < 3000001 && yr % 1000000 == 0)
 				) {
-				#if RS_RCPP && !R_CMD
+#if RS_RCPP && !R_CMD
 				Rcpp::Rcout << "Starting year " << yr << "..." << endl;
-				#else
+#else
 				cout << "Starting year " << yr << endl;
-				#endif
+#endif
 			}
 			if (init.seedType == 0 && init.freeType < 2) {
 				// apply any range restrictions
@@ -331,7 +331,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 							Cell* pCell;
 							patchchange = pLandscape->getPatchChange(ixpchchg++);
 							while (patchchange.chgnum <= landIx && ixpchchg <= npatchchanges) {
-							// move cell from original patch to new patch
+								// move cell from original patch to new patch
 								pCell = pLandscape->findCell(patchchange.x, patchchange.y);
 								if (patchchange.oldpatch != 0) { // not matrix
 									pPatch = pLandscape->findPatch(patchchange.oldpatch);
@@ -435,9 +435,9 @@ int RunModel(Landscape* pLandscape, int seqsim)
 					list_outPop.push_back(pComm->addYearToPopList(rep, yr), "rep" + std::to_string(rep) + "_year" + std::to_string(yr));
 				}
 #endif
-			// apply local extinction for generation 0 only
-			// CHANGED TO *BEFORE* RANGE & POPN OUTPUT PRODUCTION IN v1.1,
-			// SO THAT NOS. OF JUVENILES BORN CAN BE REPORTED
+				// apply local extinction for generation 0 only
+				// CHANGED TO *BEFORE* RANGE & POPN OUTPUT PRODUCTION IN v1.1,
+				// SO THAT NOS. OF JUVENILES BORN CAN BE REPORTED
 				if (!ppLand.patchModel && gen == 0) {
 					if (env.localExt) pComm->localExtinction(0);
 					if (grad.gradient && grad.gradType == 3) pComm->localExtinction(1);
@@ -484,25 +484,25 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				if (sim.outInds && yr >= sim.outStartInd && yr % sim.outIntInd == 0)
 					pComm->outInds(rep, yr, gen, -1);
 
-				if ((sim.outputGeneValues || sim.outputWCFstat || sim.outputPairwiseFst || sim.outputPerLocusWCFstat)
+				if ((sim.outputGeneValues || sim.outputWeirCockerham || sim.outputWeirHill)
 					&& yr >= sim.outStartGenetics
 					&& yr % sim.outputGeneticInterval == 0) {
 
 					simParams sim = paramsSim->getSim();
-						if (sim.patchSamplingOption != "list" && sim.patchSamplingOption != "random") {
-							// then patches must be re-sampled every gen
-							int nbToSample = pSpecies->getNbPatchesToSample();
-							auto patchesToSample = pLandscape->samplePatches(sim.patchSamplingOption, nbToSample, pSpecies);
-							pSpecies->setSamplePatchList(patchesToSample);
-						}
-						// otherwise always use the user-specified list (even if patches are empty)
+					if (sim.patchSamplingOption != "list" && sim.patchSamplingOption != "random") {
+						// then patches must be re-sampled every gen
+						int nbToSample = pSpecies->getNbPatchesToSample();
+						auto patchesToSample = pLandscape->samplePatches(sim.patchSamplingOption, nbToSample, pSpecies);
+						pSpecies->setSamplePatchList(patchesToSample);
+					}
+					// otherwise always use the user-specified list (even if patches are empty)
 					pComm->sampleIndividuals(pSpecies);
 
 					if (sim.outputGeneValues) {
 						pComm->outputGeneValues(yr, gen, pSpecies);
 					}
-					if (sim.outputWCFstat || sim.outputPairwiseFst || sim.outputPerLocusWCFstat) {
-						pComm->outNeutralGenetics(pSpecies, rep, yr, gen, sim.outputWCFstat, sim.outputPerLocusWCFstat, sim.outputPairwiseFst);
+					if (sim.outputWeirCockerham || sim.outputWeirHill) {
+						pComm->outNeutralGenetics(pSpecies, rep, yr, gen, sim.outputWeirCockerham, sim.outputWeirHill);
 					}
 				}
 				if (dem.stageStruct) {
@@ -548,7 +548,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 
 		pComm->resetPopns();
 
-			//Reset the gradient optimum
+		//Reset the gradient optimum
 		if (grad.gradient) paramsGrad->resetOptY();
 
 		pLandscape->resetLandLimits();
@@ -560,7 +560,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 			Cell* pCell;
 			patchchange = pLandscape->getPatchChange(ixpchchg++);
 			while (patchchange.chgnum <= 666666 && ixpchchg <= npatchchanges) {
-			// move cell from original patch to new patch
+				// move cell from original patch to new patch
 				pCell = pLandscape->findCell(patchchange.x, patchchange.y);
 				if (patchchange.oldpatch != 0) { // not matrix
 					pPatch = pLandscape->findPatch(patchchange.oldpatch);
@@ -612,10 +612,10 @@ int RunModel(Landscape* pLandscape, int seqsim)
 			pComm->openOutGenesFile(false, -999, rep);
 		}
 
-		if (sim.outputPerLocusWCFstat) //close per locus file 
-			pComm->openWCPerLocusFstatFile(pSpecies, pLandscape, -999, rep);
-		if (sim.outputPairwiseFst) //close per locus file 
-			pComm->openPairwiseFSTFile(pSpecies, pLandscape, -999, rep);
+		if (sim.outputWeirCockerham) //close per locus file 
+			pComm->openPerLocusFstFile(pSpecies, pLandscape, -999, rep);
+		if (sim.outputWeirHill) //close per locus file 
+			pComm->openPairwiseFstFile(pSpecies, pLandscape, -999, rep);
 
 		if (sim.saveVisits) {
 			pLandscape->outVisits(rep, ppLand.landNum);
@@ -656,9 +656,13 @@ int RunModel(Landscape* pLandscape, int seqsim)
 	// they can still be open if the simulation was stopped by the user
 	if (sim.outInds) pComm->outInds(0, 0, 0, -999);
 	if (sim.outputGeneValues) pComm->openOutGenesFile(0, -999, 0);
-	if (sim.outputWCFstat) 	pComm->openWCFstatFile(pSpecies, -999);
-	if (sim.outputPerLocusWCFstat) pComm->openWCPerLocusFstatFile(pSpecies, pLandscape, -999, 0);
-	if (sim.outputPairwiseFst) pComm->openPairwiseFSTFile(pSpecies, pLandscape, -999, 0);
+	if (sim.outputWeirCockerham || sim.outputWeirHill) {
+		pComm->openNeutralOutputFile(pSpecies, -999);
+	}
+	if (sim.outputWeirCockerham) {
+		pComm->openPerLocusFstFile(pSpecies, pLandscape, -999, 0);
+	}
+	if (sim.outputWeirHill) pComm->openPairwiseFstFile(pSpecies, pLandscape, -999, 0);
 
 	delete pComm; 
 	pComm = 0;
@@ -1715,11 +1719,11 @@ void OutParameters(Landscape* pLandscape)
 		if (sim.outStartInd > 0) outPar << " starting year " << sim.outStartInd;
 		outPar << endl;
 	}
-	if (sim.outputWCFstat || sim.outputPairwiseFst) {
+	if (sim.outputWeirCockerham || sim.outputWeirHill) {
 		outPar << "Neutral genetics - every " << sim.outputGeneticInterval << " year";
 		if (sim.outputGeneticInterval > 1) outPar << "s";
-		if (sim.outputPairwiseFst) outPar << " outputting pairwise patch fst";
-		if (sim.outputPerLocusWCFstat) outPar << " outputting per locus fst ";
+		if (sim.outputWeirHill) outPar << " outputting pairwise patch fst";
+		if (sim.outputWeirCockerham) outPar << " outputting per locus fst ";
 		outPar << endl;
 	}
 
