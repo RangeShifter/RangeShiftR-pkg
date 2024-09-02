@@ -481,7 +481,7 @@ void testNeutralStats() {
 		assert(pNeutralStatistics->getPairwiseFst(0, 1) == 0.0);
 	}
 
-	double refDiploidFst; // for use in further tests below
+	double refWeirCockerhamDiploidFst; // for use in further tests below
 
 	// In strictly homozygote samples:
 	// 1. Fis = 1 (maximum inbreeding)
@@ -583,7 +583,7 @@ void testNeutralStats() {
 			const double tol = 0.000001;
 			assert(abs(pNeutralStatistics->getWeightedFst() - pNeutralStatistics->getFstWC()) < tol);
 
-			refDiploidFst = pNeutralStatistics->getFstWC(); // for use in further tests below
+			refWeirCockerhamDiploidFst = pNeutralStatistics->getFstWC(); // for use in further tests below
 		}
 
 		// Case 2/2: variation within < between
@@ -678,8 +678,10 @@ void testNeutralStats() {
 		}
 	}
 
-	// In a strictly heterozygote sample, Fis = -1
-	// + if there is no variation between individuals, Fst = 0
+	// In a strictly heterozygote sample, 
+	// 1. Fis = -1
+	// 2. If there is no variation between individuals, Fst = 0
+	// 3. Weir & Cockerham 1984 estimator > Weir & Hill 2002
 	{
 		// Patch setup
 		const int nbPatches = 2;
@@ -756,6 +758,18 @@ void testNeutralStats() {
 		);
 		assert(pNeutralStatistics->getFstWC() == 0.0);
 		assert(pNeutralStatistics->getFisWC() == -1.0);
+
+		pNeutralStatistics->calcPairwiseWeightedFst(
+			patchList,
+			nbIndsPerPop* patchList.size(),
+			nbLoci,
+			pSpecies,
+			pLandscape
+		);
+		assert(pNeutralStatistics->getWeightedFst() < pNeutralStatistics->getFstWC());
+		// Weir and Hill is still equal to Weir and Cockerham full homozygote case
+		const double tol = 0.000001;
+		assert(abs(pNeutralStatistics->getWeightedFst() - refWeirCockerhamDiploidFst) < tol);
 	}
 
 	// Fst calculation is correct for an ordinary sample
@@ -941,7 +955,7 @@ void testNeutralStats() {
 			pSpecies,
 			pLandscape
 		);
-		assert(pNeutralStatistics->getFstWC() == refDiploidFst);
+		assert(pNeutralStatistics->getFstWC() == refWeirCockerhamDiploidFst);
 	}
 }
 
