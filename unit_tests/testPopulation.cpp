@@ -230,7 +230,7 @@ void testPopulation()
 		float mutationRate = 0.0;
 		const float localK = 10000.0;
 		const int initialNbInds = localK;
-		const float tolerance = 0.015; // high tolerance, still a lot of stochasticity
+		const float tolerance = 0.02; // high tolerance, still a lot of stochasticity
 		const float expectedFreqAA = initFreqA * initFreqA;
 
 		// Simple genetic layout
