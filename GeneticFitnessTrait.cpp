@@ -366,12 +366,13 @@ float GeneticFitnessTrait::express() {
 
 	for (auto const& [locus, pAllelePair] : genes)
 	{
-		shared_ptr<Allele> pAlleleA  = pAllelePair[0] == 0 ? wildType : pAllelePair[0];
-		shared_ptr<Allele> pAlleleB = pAllelePair[1] == 0 ? wildType : pAllelePair[1];
+		shared_ptr<Allele> pAlleleA = pAllelePair[0] == 0 ? wildType : pAllelePair[0];
 
 		sA = pAlleleA->getAlleleValue();
 		hA = pAlleleA->getDominanceCoef();
+
 		if (pSpeciesTrait->getPloidy() == 2) {
+			shared_ptr<Allele> pAlleleB = pAllelePair[1] == 0 ? wildType : pAllelePair[1];
 			sB = pAlleleB->getAlleleValue();
 			hB = pAlleleB->getDominanceCoef();
 		}

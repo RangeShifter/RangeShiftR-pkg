@@ -85,4 +85,13 @@ private:
 	void mutate_SSM(); // single-step mutations
 
 };
+
+#if RSDEBUG // for testing purposes only
+map<int, vector<unsigned char>> createTestNeutralGenotype(
+	const int genomeSz, const bool isDiploid,
+	const unsigned char valAlleleA,
+	const unsigned char valAlleleB = -99.9 // if haploid
+);
 #endif
+
+#endif // NeutralTraitH

@@ -188,9 +188,9 @@ void Individual::inherit(Species* pSpecies, const Individual* mother) {
 	set<unsigned int> recomPositions; //not used here cos haploid but need it for inherit function, not ideal 
 	int startingChromosome = 0;
 
-	const auto& motherTraits = getTraitTypes();
+	const auto& spTraits = pSpecies->getTraitTypes();
 
-	for (auto const& trait : motherTraits)
+	for (auto const& trait : spTraits)
 	{
 		const auto motherTrait = mother->getTrait(trait);
 		auto newTrait = motherTrait->clone(); // shallow copy, pointer to species trait initialised and empty sequence
@@ -610,7 +610,7 @@ void Individual::setStatus(short s) {
 	status = s;
 }
 
-void Individual::developing(void) {
+void Individual::setToDevelop(void) {
 	isDeveloping = true;
 }
 
@@ -1662,6 +1662,16 @@ void Individual::overrideGenotype(TraitType whichTrait, const map<int, vector<sh
 		throw logic_error("Wrong trait type: please choose a valid dispersal or genetic fitness trait.");
 		break;
 	}
+};
+
+void Individual::overrideGenotype(TraitType whichTrait, const map<int, vector<unsigned char>>& newGenotype) {
+
+	if (!whichTrait == NEUTRAL) {
+		throw logic_error("Attempt to override non-neutral trait with neutral trait genotype.\n");
+	}
+	NeutralTrait* pNeutralTrait;
+	pNeutralTrait = dynamic_cast<NeutralTrait*>(this->getTrait(NEUTRAL));
+	pNeutralTrait->getGenes() = newGenotype;
 };
 
 #endif // RSDEBUG

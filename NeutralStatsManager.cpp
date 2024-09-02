@@ -280,22 +280,21 @@ void NeutralStatsManager::calculateFstatWC(set<int> const& patchList, const int 
 	double sumWeights = 0;
 	double nBar, nC, inverseNbar;
 	unsigned int nbPops = 0;
-	const int ploidy = pSpecies->isDiploid() ? 2 : 1;
-	const int totalSampleSize = nbSampledIndsInComm * ploidy; // total nb of alleles
+	const int totalSampleSize = nbSampledIndsInComm; // r * n_bar
 
 	for (int patchId : patchList) {
 		const auto patch = pLandscape->findPatch(patchId);
 		const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
 		if (pPop != 0) {
-			int popSampleSize = pPop->sampleSize() * ploidy;
+			int popSampleSize = pPop->sampleSize(); // n_i
 			if (popSampleSize > 0) {
 				nbPops++;
-				sumWeights += static_cast<double>(popSampleSize * popSampleSize) / totalSampleSize;
+				sumWeights += static_cast<double>(popSampleSize * popSampleSize) / totalSampleSize; // sum(n_i^2/rn_bar)
 			}
 		}
 	}
 
-	nbExtantPops = nbPops;
+	nbExtantPops = nbPops; // r
 	totalNbSampledInds = nbSampledIndsInComm;
 
 	if (nbPops > 1) {
@@ -325,7 +324,7 @@ void NeutralStatsManager::calculateFstatWC(set<int> const& patchList, const int 
 					if (pPop != 0) {
 						var = pPop->getAlleleFrequency(thisLocus, allele) - pBar;
 						var *= var;
-						s2 += var * pPop->sampleSize() * ploidy;
+						s2 += var * pPop->sampleSize();
 						hBar += pPop->getHeteroTally(thisLocus, allele); // n_i * h_i
 					}
 				} //end for pop
@@ -345,7 +344,7 @@ void NeutralStatsManager::calculateFstatWC(set<int> const& patchList, const int 
 		c *= 0.5;
 
 		fst = a / (a + b + c); // theta hat in eq. 1 in WC 1984
-		fis = b / (b + c); // f hat
+		fis = (b + c == 0.0) ? 0.0 : b / (b + c); // f hat
 		fit = (a + b) / (a + b + c); // F hat
 	}
 	else { // zero or one sampled pops, cannot compute F stats
@@ -535,7 +534,6 @@ void NeutralStatsManager::calcPerLocusMeanSquaresFst(set<int> const& patchList, 
 void NeutralStatsManager::calcPairwiseWeightedFst(set<int> const& patchList, const int nInds, const int nLoci, Species* pSpecies, Landscape* pLandscape) {
 
 	const int nAlleles = (int)pSpecies->getSpTrait(NEUTRAL)->getNbNeutralAlleles();
-	const int ploidy = pSpecies->isDiploid() ? 2 : 1;
 
 	// Needs to be in vector to iterate over, copy preserves order
 	vector<int> patchVect;
@@ -545,8 +543,7 @@ void NeutralStatsManager::calcPairwiseWeightedFst(set<int> const& patchList, con
 	int nbPops = 0;
 
 	// Initialise 
-	if (pairwiseFstMatrix.getNbCells() != nPatches * nPatches)
-		pairwiseFstMatrix = PatchMatrix(nPatches, nPatches);
+	pairwiseFstMatrix = PatchMatrix(nPatches, nPatches);
 
 	// Reset table
 	pairwiseFstMatrix.setAll(0.0); // or nanf("NULL")?
@@ -561,14 +558,14 @@ void NeutralStatsManager::calcPairwiseWeightedFst(set<int> const& patchList, con
 	double denominator = 0;
 	double sumWeights = 0;
 
-	totSize = nInds * ploidy;
+	totSize = nInds;
 
 	// Calculate weight (n_ic) terms
 	for (int i = 0; i < nPatches; ++i) {
 		const auto patch = pLandscape->findPatch(patchVect[i]);
 		const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
 		if (pPop != 0) {
-			popSizes[i] = pPop->sampleSize() * ploidy;
+			popSizes[i] = pPop->sampleSize();
 		} // else popSizes[i] remain default init value 0, safe
 		popWeights[i] = popSizes[i] - (popSizes[i] * popSizes[i] / totSize); // n_ic in Weir & Hill 2002
 		sumWeights += popWeights[i];

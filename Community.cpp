@@ -317,10 +317,6 @@ void Community::addManuallySelected(void) {
 	landParams ppLand = pLandscape->getLandParams();
 
 	npatches = pLandscape->initCellCount(); // no. of patches/cells specified
-#if RSDEBUG
-	DEBUGLOG << "Community::addManuallySelected(): this = " << this
-		<< " npatches = " << npatches << endl;
-#endif
 	// identify sub-communities to be initialised
 	if (ppLand.patchModel) {
 		for (int i = 0; i < npatches; i++) {
@@ -343,28 +339,12 @@ void Community::addManuallySelected(void) {
 				pCell = pLandscape->findCell(initloc.x, initloc.y);
 				if (pCell != 0) { // not no-data cell
 					patch = pCell->getPatch();
-#if RSDEBUG
-					DEBUGLOG << "Community::initialise(): i = " << i
-						<< " x = " << initloc.x << " y = " << initloc.y
-						<< " pCell = " << pCell << " patch = " << patch
-						<< endl;
-#endif
 					if (patch != 0) {
 						pPatch = (Patch*)patch;
 						subcomm = pPatch->getSubComm();
-#if RSDEBUG
-						DEBUGLOG << "Community::initialise(): i = " << i
-							<< " pPatch = " << pPatch << " subcomm = " << subcomm
-							<< endl;
-#endif
 						if (subcomm != 0) {
 							pSubComm = (SubCommunity*)subcomm;
 							pSubComm->setInitial(true);
-#if RSDEBUG
-							DEBUGLOG << "Community::initialise(): i = " << i
-								<< " pSubComm = " << pSubComm
-								<< endl;
-#endif
 						}
 					}
 				}
@@ -406,10 +386,6 @@ void Community::reproduction(int yr)
 	landParams land = pLandscape->getLandParams();
 	envStochParams env = paramsStoch->getStoch();
 	int nsubcomms = (int)subComms.size();
-#if RSDEBUG
-	DEBUGLOG << "Community::reproduction(): this=" << this
-		<< " nsubcomms=" << nsubcomms << endl;
-#endif
 
 	for (int i = 0; i < nsubcomms; i++) { // all sub-communities
 		if (env.stoch) {
@@ -419,24 +395,14 @@ void Community::reproduction(int yr)
 		}
 		subComms[i]->reproduction(land.resol, eps, land.rasterType, land.patchModel);
 	}
-#if RSDEBUG
-	DEBUGLOG << "Community::reproduction(): finished" << endl;
-#endif
 }
 
 void Community::emigration(void)
 {
 	int nsubcomms = static_cast<int>(subComms.size());
-#if RSDEBUG
-	DEBUGLOG << "Community::emigration(): this=" << this
-		<< " nsubcomms=" << nsubcomms << endl;
-#endif
 	for (int i = 0; i < nsubcomms; i++) { // all sub-communities
 		subComms[i]->emigration();
 	}
-#if RSDEBUG
-	DEBUGLOG << "Community::emigration(): finished" << endl;
-#endif
 }
 
 #if RS_RCPP // included also SEASONAL

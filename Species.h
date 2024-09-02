@@ -573,5 +573,11 @@ private:
 
 //---------------------------------------------------------------------------
 
+#if RSDEBUG
+// For testing purposes only
+demogrParams createDefaultHaploidDemogrParams();
+demogrParams createDefaultDiploidDemogrParams();
+#endif RSDEBUG
+
 //---------------------------------------------------------------------------
 #endif

@@ -283,24 +283,6 @@ void SubCommunity::reproduction(int resol, float epsGlobal, short rasterType, bo
 			popns[i]->fledge();
 		}
 	}
-	/*
-	else { // patch in dynamic landscape has become unsuitable
-		// NB - THIS WILL NEED TO BE MADE SPECIES-SPECIFIC...
-		Species *pSpecies;
-		for (int i = 0; i < npops; i++) { // all populations
-			pSpecies = popns[i]->getSpecies();
-			demogrParams dem = pSpecies->getDemogr();
-			if (dem.stageStruct) {
-				stageParams sstruct = pSpecies->getStage();
-				if (sstruct.disperseOnLoss) popns[i]->allEmigrate();
-				else popns[i]->extirpate();
-			}
-			else { // non-stage-structured species is destroyed
-				popns[i]->extirpate();
-			}
-		}
-	}
-	*/
 }
 
 void SubCommunity::emigration(void)

@@ -220,6 +220,31 @@ SpeciesTrait* createTestEmigSpTrait(const set<int>& genePositions, const bool& i
 	return spTr;
 }
 
+SpeciesTrait* createTestGenLoadTrait(const set<int>& genePositions, const bool& isDiploid) {
+	// Create species trait
+	const map<GenParamType, float> distParams{
+		pair<GenParamType, float>{GenParamType::MIN, 0.0},
+		pair<GenParamType, float>{GenParamType::MAX, 1.0}
+	};
+	SpeciesTrait* spTr = new SpeciesTrait(
+		TraitType::GENETIC_LOAD,
+		sex_t::NA,
+		genePositions,
+		ExpressionType::MULTIPLICATIVE,
+		DistributionType::UNIFORM,
+		distParams,
+		DistributionType::UNIFORM,
+		distParams,
+		true, // isInherited
+		0.0, // mutation rate
+		DistributionType::UNIFORM,
+		distParams,
+		isDiploid ? 2 : 1,
+		false
+	);
+	return spTr;
+}
+
 SpeciesTrait* createTestNeutralSpTrait(const float& maxAlleleVal, const set<int>& genePositions, const bool& isDiploid) {
 
 	const map<GenParamType, float> distParams{

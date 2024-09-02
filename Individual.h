@@ -279,7 +279,7 @@ public:
 	settlePatch getSettPatch(void);
 	void setSettPatch(const settlePatch);
 	void setStatus(short);
-	void developing(void);
+	void setToDevelop(void);
 	void develop(void);
 	void ageIncrement( // Age by one year
 		short	// maximum age - if exceeded, the Individual dies
@@ -352,7 +352,8 @@ public:
 	};
 	void triggerMutations(Species* pSp);
 	// Shorthand function to edit a genotype with custom values
-	void overrideGenotype(TraitType whichTrait, const map<int, vector<shared_ptr<Allele>>>& newGenotype);
+	void overrideGenotype(TraitType whichTrait, const map<int, vector<shared_ptr<Allele>>>& newGenotype); // dispersal + gen. fitness
+	void overrideGenotype(TraitType whichTrait, const map<int, vector<unsigned char>>& newGenotype); // neutral
 #endif
 
 private:

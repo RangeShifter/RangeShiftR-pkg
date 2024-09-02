@@ -683,7 +683,7 @@ void Population::reproduction(const float localK, const float envval, const int 
 #endif
 
 						if (pSpecies->getNTraits() > 0) {
-							newJuv->inheritTraits(pSpecies, inds[i], father, resol);
+							newJuv->inheritTraits(pSpecies, inds[i], resol);
 						}
 
 						if (!newJuv->isViable()) {
@@ -842,15 +842,9 @@ void Population::sampleIndsWithoutReplacement(string strNbToSample, const set<in
 			sampledInds = stagedInds;
 		}
 		else {
-			//vector<Individual*> tempSampledInds;
 			// Sample n individuals across selected stages
 			sample(stagedInds.begin(), stagedInds.end(), std::back_inserter(sampledInds), nbToSample, rng);
-			// Copy from vector to set
-			//std::copy(tempSampledInds.begin(), tempSampledInds.end(), std::inserter(sampledInds, sampledInds.end()));
 		}
-#if RSDEBUG
-		assert(sampledInds.size() <= inds.size());
-#endif
 	}
 }
 
@@ -1023,7 +1017,8 @@ disperser Population::extractDisperser(int ix) {
 	disperser d = disperser();
 	indStats ind = inds[ix]->getStats();
 	if (ind.status == 1) { // emigrant
-		d.pInd = inds[ix]; d.yes = true;
+		d.pInd = inds[ix]; 
+		d.yes = true;
 		inds[ix] = 0;
 		nInds[ind.stage][ind.sex]--;
 	}
@@ -1341,16 +1336,17 @@ bool Population::matePresent(Cell* pCell, short othersex)
 void Population::survival0(float localK, short option0, short option1)
 {
 	// option0:	0 - stage 0 (juveniles) only
-	//					1 - all stages
-	//					2 - stage 1 and above (all non-juveniles)
+	//			1 - all stages
+	//			2 - stage 1 and above (all non-juveniles)
+	// 
 	// option1:	0 - development only (when survival is annual)
-	//	  	 		1 - development and survival
-	//	  	 		2 - survival only (when survival is annual)
+	//	  	 	1 - development and survival
+	//	  	 	2 - survival only (when survival is annual)
 	densDepParams ddparams = pSpecies->getDensDep();
 	demogrParams dem = pSpecies->getDemogrParams();
 	stageParams sstruct = pSpecies->getStageParams();
 
-	// get surrent population size
+	// get current population size
 	int ninds = (int)inds.size();
 	if (ninds == 0) return;
 	// set up local copies of species development and survival tables
@@ -1384,12 +1380,6 @@ void Population::survival0(float localK, short option0, short option1)
 					dev[stg][sex] = 1.0; surv[stg][sex] = 1.0; minAge[stg][sex] = 0;
 				}
 			}
-#if RSDEBUG
-			//DEBUGLOG << "Population::survival0(): 1111 "
-			//	<< " dev[" << stg << "][" << sex << "] = " << dev[stg][sex]
-			//	<< " surv[" << stg << "][" << sex << "] = " << surv[stg][sex]
-			//	<< endl;
-#endif
 		}
 	}
 	if (dem.stageStruct) {
@@ -1414,11 +1404,6 @@ void Population::survival0(float localK, short option0, short option1)
 									weight = pSpecies->getDDwtDev(stg, effstg);
 								}
 								effect += (float)nInds[effstg][effsex] * weight;
-#if RSDEBUG
-								//	DEBUGLOG << " effstg=" << effstg << " effsex=" << effsex;
-								//	DEBUGLOG << " weight=" << weight << " effect=" << effect
-								//		<< endl;
-#endif
 							}
 						}
 					}
@@ -1426,18 +1411,9 @@ void Population::survival0(float localK, short option0, short option1)
 						effect = (float)totalPop();
 					if (localK > 0.0)
 						dev[stg][sex] *= exp(-(ddparams.devCoeff * effect) / localK);
-#if RSDEBUG
-					//DEBUGLOG << "Population::survival0(): 2288 " << " effect=" << effect;
-					//if (localK > 0.0)
-					//	DEBUGLOG << " exp=" << exp(-(ddparams.devCoeff*effect)/localK);
-					//DEBUGLOG << " dev[" << stg << "][" << sex << "] = " << dev[stg][sex]
-					//	<< endl;
-#endif
 				} // end of if (sstruct.devDens && stg > 0)
 				if (option1 != 0 && sstruct.survDens) {
-#if RSDEBUG
-					//	DEBUGLOG << "DD in SURVIVAL for stg=" << stg << " sex=" << sex << endl;
-#endif
+
 					float effect = 0.0;
 					if (sstruct.survStageDens) { // stage-specific density dependence
 						// NOTE: matrix entries represent effect of ROW on COLUMN 
@@ -1455,11 +1431,6 @@ void Population::survival0(float localK, short option0, short option1)
 									weight = pSpecies->getDDwtSurv(stg, effstg);
 								}
 								effect += (float)nInds[effstg][effsex] * weight;
-#if RSDEBUG
-								//	DEBUGLOG << " effstg=" << effstg << " effsex=" << effsex;
-								//	DEBUGLOG << " weight=" << weight << " effect=" << effect
-								//		<< endl;
-#endif
 							}
 						}
 					}
@@ -1467,33 +1438,14 @@ void Population::survival0(float localK, short option0, short option1)
 						effect = (float)totalPop();
 					if (localK > 0.0)
 						surv[stg][sex] *= exp(-(ddparams.survCoeff * effect) / localK);
-#if RSDEBUG
-					//DEBUGLOG << "Population::survival0(): 3333 " << " effect=" << effect;
-					//if (localK > 0.0)
-					//	DEBUGLOG << " exp = " << exp(-(ddparams.survCoeff*effect)/localK);
-					//DEBUGLOG << " surv[" << stg << "][" << sex << "] = " << surv[stg][sex]
-					//	<< endl;
-#endif
 				} // end of if (sstruct.survDens)
 			}
 		}
 	}
 	// identify which individuals die or develop
-#if RSDEBUG
-//DEBUGLOG << "Population::survival0():"  << " ninds " << ninds
-//	<< endl;
-#endif
 	for (int i = 0; i < ninds; i++) {
 		indStats ind = inds[i]->getStats();
-#if RSDEBUG
-		//DEBUGLOG << "Population::survival0():"
-		//	<< " i=" << i << " indId=" << inds[i]->getId()
-		//	<< " stage=" << ind.stage << " status=" << ind.status << " sex=" << ind.sex
-		//#if PARTMIGRN
-		//	<< " migrnstatus=" << inds[i]->getMigrnStatus()
-		//#endif  // PARTMIGRN 
-		//	<< endl;
-#endif
+
 		if ((ind.stage == 0 && option0 < 2) || (ind.stage > 0 && option0 > 0)) {
 			// condition for processing the stage is met...
 			if (ind.status < 6) { // not already doomed
@@ -1506,42 +1458,18 @@ void Population::survival0(float localK, short option0, short option1)
 					// does the individual develop?
 					double probdev = dev[ind.stage][ind.sex];
 					if (ind.stage < nStages - 1) { // not final stage
-#if RSDEBUG
-						//DEBUGLOG << "Population::survival0():"
-						//	<< " i=" << i << " indId=" << inds[i]->getId()
-						//	<< " age=" << ind.age << " minAge[stage+1]=" << minAge[ind.stage+1][ind.sex]
-						//	<< " probdev=" << probdev 
-						//	<< endl;
-#endif
 						if (ind.age >= minAge[ind.stage + 1][ind.sex]) { // old enough to enter next stage
-#if RSDEBUG
-							//DEBUGLOG << "Population::survival0():"
-							//	<< " i=" << i << " indId=" << inds[i]->getId() << " OLD ENOUGH"
-							//	<< endl;
-#endif
 							if (pRandom->Bernoulli(probdev)) {
-								inds[i]->developing();
+								inds[i]->setToDevelop();
 							}
 						}
 					}
 				}
 				else { // doomed to die
-#if RSDEBUG
-					//DEBUGLOG << "Population::survival0():"
-					//	<< " i=" << i << " indId=" << inds[i]->getId() << " DIES"
-					//	<< endl;
-#endif
 					inds[i]->setStatus(8);
 				}
 			}
 		}
-#if RSDEBUG
-		//ind = inds[i]->getStats();
-		//DEBUGLOG << "Population::survival0():"
-		//	<< " i = " << i << " ID = " << inds[i]->getId()
-		//	<< " stage = " << ind.stage << " status = " << ind.status
-		//	<< endl;
-#endif
 	}
 }
 
@@ -1549,19 +1477,10 @@ void Population::survival0(float localK, short option0, short option1)
 void Population::survival1(void)
 {
 	int ninds = (int)inds.size();
-#if RSDEBUG
-	//DEBUGLOG << "Population::survival1(): this=" << this
-	//	<< " patchNum=" << pPatch->getPatchNum() << " ninds=" << ninds
-	//	<< endl;
-#endif
+
 	for (int i = 0; i < ninds; i++) {
 		indStats ind = inds[i]->getStats();
-#if RSDEBUG
-		//DEBUGLOG << "Population::survival1(): i=" << i
-		//	<< " indId=" << inds[i]->getId() << " stage=" << ind.stage << " sex=" << ind.sex
-		//	<< " isDeveloping=" << ind.isDeveloping << " status=" << ind.status
-		//	<< endl;
-#endif
+
 		if (ind.status > 5) { // doomed to die
 			if (ind.status != 10) //not going into cold storage
 				delete inds[i];
@@ -1576,15 +1495,7 @@ void Population::survival1(void)
 			}
 		}
 	}
-#if RSDEBUG
-	//DEBUGLOG << "Population::survival1(): this=" << this
-	//	<< " patchNum=" << pPatch->getPatchNum() << " completed individuals loop"
-	//	<< endl;
-#endif
-
-
 	clean();
-
 }
 
 void Population::ageIncrement(void) {
@@ -1982,11 +1893,3 @@ void Population::outputGeneValues(ofstream& ofsGenes, const int& yr, const int& 
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-
-
-#if RSDEBUG
-void testPopulation() 
-{
-	// test population...
-}
-#endif // RSDEBUG

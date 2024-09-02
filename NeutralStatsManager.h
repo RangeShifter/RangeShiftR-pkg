@@ -11,27 +11,27 @@ using namespace std;
 struct PatchMatrix
 {
 public:
-	PatchMatrix(int rows = 0, int cols = 0) : rows(0), cols(0), nbCells(0), value(0) {
-		nbCells = rows * cols;
+	PatchMatrix(unsigned int nRows = 0, unsigned int nCols = 0) : 
+		rows{ nRows }, 
+		cols{ nCols }, 
+		nbCells{nCols * nRows} {
 		value.resize(nbCells);
-		rows = rows; cols = cols;
 	};
 
 	// Get value at specified position
 	double get(unsigned int i, unsigned int j) {
-		if (!((i + 1) * (j + 1) > nbCells))
-			return value[i * cols + j];
-		else throw runtime_error("Error: PatchMatrix::get() out of range!\n");
-		return 0;
+		if (i >= cols || j >= rows)
+			throw runtime_error("Error: PatchMatrix::get() out of range!\n");
+		else return value[i * cols + j];
 	}
 
 	int getNbCells() { return nbCells; };
 
 	/** Sets element at row i and column j to value val **/
 	void set(unsigned int i, unsigned int j, double val) {
-		if (i * j < nbCells)
-			value[i * cols + j] = val;
-		else throw runtime_error("Error: PatchMatrix::set() out of range!\n");
+		if (i >= cols || j >= rows)
+			throw runtime_error("Error: PatchMatrix::set() out of range!\n");
+		else value[i * cols + j] = val;
 	}
 
 	/** Assigns a value to all elements of the matrix. */
