@@ -970,6 +970,93 @@ void testNeutralStats() {
 		);
 		assert(pNeutralStatistics->getFstWC() == refWeirCockerhamDiploidFst);
 	}
+
+	// Multi-locus case
+	// First locus has no variation between individuals, all heterozygotes (Fst = 0)
+	// Second locus has different fixed alleles between both populations (Fst = 1)
+	{
+		// Patch setup
+		const int nbPatches = 2;
+		const int nbIndsPerPop = 10;
+		// Genetic setup
+		const int genomeSz = 3;
+		const bool isDiploid{ true };
+		const set<int> genePositions = { 0, 2 }; // position 1 is arbitrarily empty
+		const float maxAlleleVal = 1;
+		unsigned char alleleValPopA = char(0);
+		unsigned char alleleValPopB = char(1);
+		map<int, vector<unsigned char>> genotypePop1;
+		map<int, vector<unsigned char>> genotypePop2;
+		// First locus: all heterozygotes, same genotype
+		genotypePop1.emplace(0, vector<unsigned char>{alleleValPopA, alleleValPopB});
+		genotypePop2.emplace(0, vector<unsigned char>{alleleValPopA, alleleValPopB});
+		// Second locus: different fixed alleles
+		genotypePop1.emplace(2, vector<unsigned char>{alleleValPopA, alleleValPopA});
+		genotypePop2.emplace(2, vector<unsigned char>{alleleValPopB, alleleValPopB});
+
+		// Create two-patches landscape
+		Landscape* pLandscape = new Landscape;
+		vector<Patch*> patches(nbPatches);
+		vector<Cell*> cells(nbPatches);
+		set<int> patchList;
+		for (int i = 0; i < nbPatches; i++) {
+			patches[i] = pLandscape->newPatch(i);
+			cells[i] = new Cell(0, 0, (intptr)patches[i], 0);
+			patches[i]->addCell(cells[i], 0, 0);
+			patchList.insert(patches[i]->getPatchNum());
+		}
+		const string indSampling = "all";
+		const set<int> stgToSample = { 1 };
+
+		// Create species trait structure
+		Species* pSpecies = new Species();
+		pSpecies->setDemogr(createDefaultDiploidDemogrParams());
+		pSpecies->setGeneticParameters(
+			set<int>{genomeSz - 1}, // single chromosome
+			genomeSz,
+			0.0, // no recombination
+			patchList,
+			indSampling,
+			stgToSample,
+			1
+		);
+		const int nbLoci = genePositions.size();
+		SpeciesTrait* spTr = createTestNeutralSpTrait(maxAlleleVal, genePositions, isDiploid);
+		pSpecies->addTrait(TraitType::NEUTRAL, *spTr);
+
+		// Initialise populations
+		const int indStg = 1;
+		for (int p = 0; p < patches.size(); p++) {
+			Population* pPop = new Population(pSpecies, patches[p], 0, 1);
+			// create individuals and add to pop 
+			for (int i = 0; i < nbIndsPerPop; i++) {
+				Individual* pInd = new Individual(cells[p], patches[p], indStg, 0, 0, 0.0, false, 1);
+				pInd->setUpGenes(pSpecies, 1.0);
+				pInd->overrideGenotype(NEUTRAL, p == 0 ? genotypePop1 : genotypePop2);
+				pPop->recruit(pInd);
+			}
+			pPop->sampleIndsWithoutReplacement(indSampling, { indStg });
+		}
+
+		// Compute F-stats
+		auto pNeutralStatistics = make_unique<NeutralStatsManager>(nbPatches, nbLoci);
+		pNeutralStatistics->updateAllNeutralTables(
+			pSpecies,
+			pLandscape,
+			patchList
+		);
+		const int maxNbNeutralAlleles = static_cast<int>(maxAlleleVal) + 1;
+		pNeutralStatistics->calculateFstatWC(
+			patchList,
+			nbIndsPerPop * patchList.size(),
+			nbLoci,
+			maxNbNeutralAlleles,
+			pSpecies,
+			pLandscape
+		);
+		assert(pNeutralStatistics->getPerLocusFst(0) == 0.0);
+		assert(pNeutralStatistics->getPerLocusFst(1) == 1.0);
+	}
 }
 
 #endif // RSDEBUG

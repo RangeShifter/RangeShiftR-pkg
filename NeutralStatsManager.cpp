@@ -311,7 +311,7 @@ void NeutralStatsManager::calculateFstatWC(set<int> const& patchList, const int 
 		inverseNbar = 1.0 / nBarMinusOne;
 		inverseNtotal = 1.0 / totalSampleSize;
 
-		double var;
+		double var, intermediateTerm;
 		double s2, pBar, hBar;
 		double s2Denom = (nbPops - 1) * nBar;
 		double rTerm = static_cast<double>(nbPops - 1) / nbPops;
@@ -320,8 +320,11 @@ void NeutralStatsManager::calculateFstatWC(set<int> const& patchList, const int 
 		double numFst = 0.0, numFis = 0.0, numFit = 0.0;
 		double denomFst = 0.0, denomFis = 0.0, denomFit = 0.0;
 
-		double a_l = 0, b_l = 0, c_l = 0, intermediateTerm;
 		for (int l = 0; l < nLoci; ++l) {
+
+			// Sums of a_u, b_u, c_u for all alleles u at locus l
+			double a_l = 0, b_l = 0, c_l = 0;
+
 			for (int u = 0; u < nAlleles; ++u) {
 
 				s2 = hBar = 0;
