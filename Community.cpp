@@ -1661,7 +1661,7 @@ bool Community::openPerLocusFstFile(Species* pSpecies, Landscape* pLandscape, co
 	}
 
 	outperlocusfstat.open(name.c_str());
-	outperlocusfstat << "Year\tRepSeason\tlocus\tFst\tFis\tFit\tpopHet";
+	outperlocusfstat << "Year\tRepSeason\tLocus\tFst\tFis\tFit\tHet";
 	for (int patchId : patchList) {
 		outperlocusfstat << "\tpatch_" + to_string(patchId) + "_Het";
 	}
