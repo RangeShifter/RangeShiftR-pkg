@@ -446,12 +446,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
                                      );
 				}
 
-				if (v.viewPop || (sim.saveMaps && yr % sim.mapInt == 0)) {
-					if (updateland && gen == 0) {
-						pLandscape->drawLandscape(rep, landIx, ppLand.landNum);
-					}
-					pComm->draw(rep, yr, gen, ppLand.landNum);
-				}
 				// Output and pop. visualisation before reproduction
 				if (v.viewPop || v.viewTraits || sim.outOccup
 					|| sim.outTraitsCells || sim.outTraitsRows || sim.saveMaps)
