@@ -11,27 +11,27 @@ using namespace std;
 struct PatchMatrix
 {
 public:
-	PatchMatrix(int rows = 0, int cols = 0) : rows(0), cols(0), nbCells(0), value(0) {
-		nbCells = rows * cols;
+	PatchMatrix(unsigned int nRows = 0, unsigned int nCols = 0) : 
+		rows{ nRows }, 
+		cols{ nCols }, 
+		nbCells{nCols * nRows} {
 		value.resize(nbCells);
-		rows = rows; cols = cols;
 	};
 
 	// Get value at specified position
 	double get(unsigned int i, unsigned int j) {
-		if (!((i + 1) * (j + 1) > nbCells))
-			return value[i * cols + j];
-		else throw runtime_error("Error: PatchMatrix::get() out of range!\n");
-		return 0;
+		if (i >= cols || j >= rows)
+			throw runtime_error("Error: PatchMatrix::get() out of range!\n");
+		else return value[i * cols + j];
 	}
 
 	int getNbCells() { return nbCells; };
 
 	/** Sets element at row i and column j to value val **/
 	void set(unsigned int i, unsigned int j, double val) {
-		if (i * j < nbCells)
-			value[i * cols + j] = val;
-		else throw runtime_error("Error: PatchMatrix::set() out of range!\n");
+		if (i >= cols || j >= rows)
+			throw runtime_error("Error: PatchMatrix::set() out of range!\n");
+		else value[i * cols + j] = val;
 	}
 
 	/** Assigns a value to all elements of the matrix. */
@@ -50,7 +50,7 @@ private:
 struct NeutralCountsTable {
 
 public:
-	NeutralCountsTable(int nAllele) : alleleTallies(nAllele), alleleFrequencies(nAllele), alleleHeterozygoteTallies(nAllele) {};
+	NeutralCountsTable(int maxNbNeutralAlleles) : alleleTallies(maxNbNeutralAlleles), alleleFrequencies(maxNbNeutralAlleles), alleleHeterozygoteTallies(maxNbNeutralAlleles) {};
 	
 	void reset() {
 		fill(alleleTallies.begin(), alleleTallies.end(), 0); fill(alleleFrequencies.begin(), alleleFrequencies.end(), 0);
@@ -101,7 +101,6 @@ public:
 	
 	// F-stats calculations
 	void calculateFstatWC(set<int> const& patchList, const int nInds, const int nLoci, const int nAlleles, Species* pSpecies, Landscape* pLandscape);
-	void calcPerLocusMeanSquaresFst(set<int> const& patchList, const int nInds, const int nLoci, const int nAlleles, Species* pSpecies, Landscape* pLandscape);
 	void calcPairwiseWeightedFst(set<int> const& patchList, const int nInds, const int nLoci, Species* pSpecies, Landscape* pLandscape);
 
 	// Getters
@@ -110,8 +109,8 @@ public:
 	
 	double getMeanNbAllPerLocusPerPatch() const { return meanNbAllelesPerLocusPerPatch; }
 	double getMeanNbAllPerLocus() const { return meanNbAllelesPerLocus; }
-	double getMeanFixdAllelesPerPatch() const { return meanNbFixedAllelesPerPatch; }
-	double getTotalFixdAlleles() const { return nbGloballyFixedAlleles; }
+	double getMeanFixdAllelesPerPatch() const { return meanNbFixedLociPerPatch; }
+	double getTotalFixdAlleles() const { return meanFixedLoci; }
 	
 	double getHo() const { return ho; }
 	double getHs() const { return hs; }
@@ -137,7 +136,7 @@ private:
 	vector<NeutralCountsTable> commNeutralCountTables; // community-level tallies of allele counts and freqs
 
 	double meanNbAllelesPerLocusPerPatch, meanNbAllelesPerLocus;
-	double meanNbFixedAllelesPerPatch, nbGloballyFixedAlleles;
+	double meanNbFixedLociPerPatch, meanFixedLoci;
 
 	double ho; // observed heterozygosity 
 	double hs; // expected population-level heterozygosity

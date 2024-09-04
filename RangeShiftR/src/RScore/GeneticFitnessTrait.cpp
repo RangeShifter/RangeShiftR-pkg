@@ -308,9 +308,14 @@ void GeneticFitnessTrait::inheritGenes(const bool& fromMother, QuantitativeTrait
 // ----------------------------------------------------------------------------------------
 void GeneticFitnessTrait::inheritDiploid(const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome) {
 
-	auto it = recomPositions.lower_bound(parentGenes.begin()->first);
-	int nextBreakpoint = *it;
-	auto distance = std::distance(recomPositions.begin(), it);
+	const int lastPosition = parentGenes.rbegin()->first;
+	auto recomIt = recomPositions.lower_bound(parentGenes.begin()->first);
+	// If no recombination sites, only breakpoint is last position
+	// i.e., no recombination occurs
+	int nextBreakpoint = recomIt == recomPositions.end() ? lastPosition : *recomIt;
+
+	// Is the first parent gene position already recombinant?
+	auto distance = std::distance(recomPositions.begin(), recomIt);
 	if (distance % 2 != 0)
 		parentChromosome = 1 - parentChromosome; // switch chromosome
 
@@ -318,9 +323,9 @@ void GeneticFitnessTrait::inheritDiploid(const bool& fromMother, map<int, vector
 
 		// Switch chromosome if locus is past recombination site
 		while (locus > nextBreakpoint) {
-			std::advance(it, 1);
-			nextBreakpoint = *it;
 			parentChromosome = 1 - parentChromosome;
+			std::advance(recomIt, 1); // go to next recombination site
+			nextBreakpoint = recomIt == recomPositions.end() ? lastPosition : *recomIt;
 		}
 
 		if (locus <= nextBreakpoint) {
@@ -361,12 +366,13 @@ float GeneticFitnessTrait::express() {
 
 	for (auto const& [locus, pAllelePair] : genes)
 	{
-		shared_ptr<Allele> pAlleleA  = pAllelePair[0] == 0 ? wildType : pAllelePair[0];
-		shared_ptr<Allele> pAlleleB = pAllelePair[1] == 0 ? wildType : pAllelePair[1];
+		shared_ptr<Allele> pAlleleA = pAllelePair[0] == 0 ? wildType : pAllelePair[0];
 
 		sA = pAlleleA->getAlleleValue();
 		hA = pAlleleA->getDominanceCoef();
+
 		if (pSpeciesTrait->getPloidy() == 2) {
+			shared_ptr<Allele> pAlleleB = pAllelePair[1] == 0 ? wildType : pAllelePair[1];
 			sB = pAlleleB->getAlleleValue();
 			hB = pAlleleB->getDominanceCoef();
 		}
@@ -420,3 +426,21 @@ float GeneticFitnessTrait::getAlleleValueAtLocus(short whichChromosome, int posi
 		throw runtime_error("The genetic load locus queried for its allele value does not exist.");
 	return it->second[whichChromosome] == 0 ? wildType->getAlleleValue() : it->second[whichChromosome]->getAlleleValue();
 }
+
+float GeneticFitnessTrait::getDomCoefAtLocus(short whichChromosome, int position) const {
+	auto it = genes.find(position);
+	if (it == genes.end())
+		throw runtime_error("The genetic load locus queried for its dominance coefficient does not exist.");
+	return it->second[whichChromosome] == 0 ? wildType->getDominanceCoef() : it->second[whichChromosome]->getDominanceCoef();
+}
+
+#if RSDEBUG // Testing only
+// Get allele ID at locus
+int GeneticFitnessTrait::getAlleleIDAtLocus(short whichChromosome, int position) const {
+	auto it = genes.find(position);
+	if (it == genes.end())
+		throw runtime_error("The Dispersal locus queried for its allele ID does not exist.");
+	return it->second[whichChromosome].get()->getId();
+}
+
+#endif // RSDEBUG

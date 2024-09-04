@@ -28,11 +28,13 @@ public:
         const float& mutationRate,
         const DistributionType& mutationDist,
         const map<GenParamType, float> mutationParams,
-        Species* pSpecies
+        const int ploidy,
+        const bool isOutput
     );
 
     bool isValidTraitVal(const float& val) const;
     TraitType getTraitType() const { return traitType;  }
+    bool isOutput() const { return traitIsOutput; }
 
     // Getters
     sex_t getSex() const { return sex; }
@@ -50,11 +52,17 @@ public:
     map<GenParamType, float> getInitialParameters() const { return initialParameters; };
     ExpressionType getExpressionType() const { return expressionType; };
 
+    int getNbNeutralAlleles() const {
+        if (!traitType == NEUTRAL) throw logic_error("getNbNeutralAlleles() should only be called for neutral traits.");
+        else return getMutationParameters().find(MAX)->second + 1; // possible values range from 0 to MAX
+    }
+
 private:
 
-    inline static int ploidy = 0;
+    int ploidy;
     float mutationRate;
     TraitType traitType;
+    bool traitIsOutput;
     sex_t sex;
 
     // Positions in the genome of all genes (loci) pertaining to this trait
@@ -70,4 +78,14 @@ private:
     DistributionType mutationDistribution;
     map<GenParamType, float> mutationParameters;
 };
-#endif
+
+#if RSDEBUG // Testing only
+
+// Create a default set of gene positions ranging from zero to genome size
+set<int> createTestGenePositions(const int genomeSz);
+SpeciesTrait* createTestEmigSpTrait(const set<int>& genePositions, const bool& isDiploid);
+SpeciesTrait* createTestGenLoadTrait(const set<int>& genePositions, const bool& isDiploid);
+SpeciesTrait* createTestNeutralSpTrait(const float& maxAlleleVal, const set<int>& genePositions, const bool& isDiploid);
+#endif // RSDEBUG
+
+#endif // SPECIESTRAITH

@@ -105,8 +105,11 @@ DispersalTrait::DispersalTrait(SpeciesTrait* P)
 // Copies immutable features from a parent trait
 // Only called via clone()
 // ----------------------------------------------------------------------------------------
-DispersalTrait::DispersalTrait(const DispersalTrait& T) : pSpeciesTrait(T.pSpeciesTrait), _mutate_func_ptr(T._mutate_func_ptr), _inherit_func_ptr(T._inherit_func_ptr), _express_func_ptr(T._express_func_ptr)
-{}
+DispersalTrait::DispersalTrait(const DispersalTrait& T) : 
+	pSpeciesTrait(T.pSpeciesTrait), 
+	_mutate_func_ptr(T._mutate_func_ptr), 
+	_inherit_func_ptr(T._inherit_func_ptr), 
+	_express_func_ptr(T._express_func_ptr) {}
 
 // ----------------------------------------------------------------------------------------
 // Sample and apply mutations from a uniform distribution
@@ -201,16 +204,25 @@ void DispersalTrait::inheritGenes(const bool& fromMother, QuantitativeTrait* par
 
 // ----------------------------------------------------------------------------------------
 // Inheritance for diploid, sexual species
-// Called once for each parent. Given a list of recombinant sites, 
-// populates offspring genes with appropriate parent alleles
-// Assumes mother genes are inherited first
+// Called once for each parent. 
+// Pass the correct parental strand, resolving crossing-overs
+// after each recombinant site e.g. if parent genotype is
+// 0000
+// 1111
+// and position 2 is selected to recombine, then offspring inherits
+// 0001
+// Assumes mother genes are inherited first.
 // ----------------------------------------------------------------------------------------
 void DispersalTrait::inheritDiploid(const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome) {
 
-	auto it = recomPositions.lower_bound(parentGenes.begin()->first);
-	int nextBreakpoint = *it;
+	const int lastPosition = parentGenes.rbegin()->first;
+	auto recomIt = recomPositions.lower_bound(parentGenes.begin()->first);
+	// If no recombination sites, only breakpoint is last position
+	// i.e., no recombination occurs
+	int nextBreakpoint = recomIt == recomPositions.end() ? lastPosition : *recomIt;
+
 	// Is the first parent gene position already recombinant?
-	auto distance = std::distance(recomPositions.begin(), it);
+	auto distance = std::distance(recomPositions.begin(), recomIt);
 	if (distance % 2 != 0) // odd positions = switch, even = switch back
 		parentChromosome = 1 - parentChromosome; //switch chromosome
 
@@ -219,8 +231,8 @@ void DispersalTrait::inheritDiploid(const bool& fromMother, map<int, vector<shar
 		// Switch chromosome if locus is past recombination site
 		while (locus > nextBreakpoint) {
 			parentChromosome = 1 - parentChromosome;
-			std::advance(it, 1); // go to next recombination site
-			nextBreakpoint = *it;
+			std::advance(recomIt, 1); // go to next recombination site
+			nextBreakpoint = recomIt == recomPositions.end() ? lastPosition : *recomIt;
 		}
 
 		if (locus <= nextBreakpoint) {
@@ -442,3 +454,50 @@ float DispersalTrait::getAlleleValueAtLocus(short whichChromosome, int position)
 		throw runtime_error("The Dispersal locus queried for its allele value does not exist.");
 	return it->second[whichChromosome].get()->getAlleleValue();
 }
+
+float DispersalTrait::getDomCoefAtLocus(short whichChromosome, int position) const {
+	auto it = genes.find(position);
+	if (it == genes.end())
+		throw runtime_error("The genetic load locus queried for its dominance coefficient does not exist.");
+	return it->second[whichChromosome]->getDominanceCoef();
+}
+
+#if RSDEBUG // Testing only
+
+// Get allele ID at locus
+int DispersalTrait::getAlleleIDAtLocus(short whichChromosome, int position) const {
+	auto it = genes.find(position);
+	if (it == genes.end())
+		throw runtime_error("The Dispersal locus queried for its allele value does not exist.");
+	return it->second[whichChromosome].get()->getId();
+}
+#endif
+
+#if RSDEBUG
+
+// Create a default set of alleles for testing
+//
+// Shorthand function to manually set genotypes for dispersal and 
+// genetic fitness traits, instead of having to manipulate mutations.
+map<int, vector<shared_ptr<Allele>>> createTestGenotype(
+	const int genomeSz, const bool isDiploid,
+	const float valAlleleA,
+	const float valAlleleB,
+	const float domCoeffA,
+	const float domCoeffB
+) {
+	vector<shared_ptr<Allele>> gene(isDiploid ? 2 : 1);
+	if (isDiploid) {
+		gene[0] = make_shared<Allele>(valAlleleA, domCoeffA);
+		gene[1] = make_shared<Allele>(valAlleleB, domCoeffB);
+	}
+	else {
+		gene[0] = make_shared<Allele>(valAlleleA, domCoeffA);
+	}
+	map<int, vector<shared_ptr<Allele>>> genotype;
+	for (int i = 0; i < genomeSz; i++) {
+		genotype.emplace(i, gene);
+	}
+	return genotype;
+}
+#endif // RSDEBUG

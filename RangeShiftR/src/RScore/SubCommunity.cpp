@@ -65,7 +65,7 @@ void SubCommunity::initialise(Landscape* pLandscape, Species* pSpecies)
 	landParams ppLand = pLandscape->getLandParams();
 	initParams init = paramsInit->getInit();
 
-// determine size of initial population
+	// determine size of initial population
 	int nInds = 0;
 	if (subCommNum == 0 // matrix patch
 		|| !initial)   		// not in initial region or distribution
@@ -283,24 +283,6 @@ void SubCommunity::reproduction(int resol, float epsGlobal, short rasterType, bo
 			popns[i]->fledge();
 		}
 	}
-	/*
-	else { // patch in dynamic landscape has become unsuitable
-		// NB - THIS WILL NEED TO BE MADE SPECIES-SPECIFIC...
-		Species *pSpecies;
-		for (int i = 0; i < npops; i++) { // all populations
-			pSpecies = popns[i]->getSpecies();
-			demogrParams dem = pSpecies->getDemogr();
-			if (dem.stageStruct) {
-				stageParams sstruct = pSpecies->getStage();
-				if (sstruct.disperseOnLoss) popns[i]->allEmigrate();
-				else popns[i]->extirpate();
-			}
-			else { // non-stage-structured species is destroyed
-				popns[i]->extirpate();
-			}
-		}
-	}
-	*/
 }
 
 void SubCommunity::emigration(void)

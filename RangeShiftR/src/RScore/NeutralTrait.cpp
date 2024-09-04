@@ -14,9 +14,9 @@ NeutralTrait::NeutralTrait(SpeciesTrait* P)
 	map<GenParamType, float> mutationParameters = pSpeciesTrait->getMutationParameters();
 
 	// Set default value to user-specified max
-	wildType = (int)mutationParameters.find(MAX)->second - 1;
+	wildType = (int)mutationParameters.find(MAX)->second;
 	if (wildType > NeutralValUpperBound)
-		throw logic_error("Error:: max number of alleles cannot exceed " + to_string(NeutralValUpperBound) + ".\n");
+		throw logic_error("max number of alleles cannot exceed " + to_string(NeutralValUpperBound) + ".\n");
 
 	_inherit_func_ptr = (pSpeciesTrait->getPloidy() == 1) ? &NeutralTrait::inheritHaploid : &NeutralTrait::inheritDiploid; //this could be changed if we wanted some alternative form of inheritance
 
@@ -27,26 +27,26 @@ NeutralTrait::NeutralTrait(SpeciesTrait* P)
 		_mutate_func_ptr = &NeutralTrait::mutate_KAM;
 
 	if (mutationDistribution != SSM && mutationDistribution != KAM)
-		throw logic_error("Error:: wrong mutation distribution for neutral markers, must be KAM or SSM \n");
+		throw logic_error("wrong mutation distribution for neutral markers, must be KAM or SSM \n");
 
 	if (mutationParameters.count(MAX) != 1)
-		throw logic_error("Error:: KAM or SSM mutation distribution parameter must contain max value (e.g. max= ), max cannot exceed 256  \n");
+		throw logic_error("KAM or SSM mutation distribution parameter must contain max value (e.g. max= ), max cannot exceed 256  \n");
 
 	DistributionType initialDistribution = pSpeciesTrait->getInitialDistribution();
 	map<GenParamType, float> initialParameters = pSpeciesTrait->getInitialParameters();
 
 	if (mutationDistribution == SSM && initialDistribution != UNIFORM)
-		throw logic_error("Error:: If using SSM mutation model must initialise genome with alleles (microsats) \n");
+		throw logic_error("If using SSM mutation model for neutral trait, must use uniform initial distribution.\n");
 
 	switch (initialDistribution) {
 	case UNIFORM:
 	{
 		if (initialParameters.count(MAX) != 1)
-			throw logic_error("Error:: initial distribution parameter must contain one max value if set to UNIFORM (e.g. max= ), max cannot exceed " + to_string(NeutralValUpperBound) + "\n");
+			throw logic_error("initial distribution parameter must contain one max value if set to UNIFORM (e.g. max= ), max cannot exceed " + to_string(NeutralValUpperBound) + "\n");
 
 		float maxNeutralVal = initialParameters.find(MAX)->second;
 		if (maxNeutralVal > NeutralValUpperBound) {
-			throw logic_error("Warning:: initial distribution parameter max cannot exceed " + to_string(NeutralValUpperBound) + ", resetting to " + to_string(NeutralValUpperBound) + "\n");
+			throw logic_error("initial distribution parameter max cannot exceed " + to_string(NeutralValUpperBound) + ", resetting to " + to_string(NeutralValUpperBound) + "\n");
 			maxNeutralVal = NeutralValUpperBound; //reserve 255 for wildtype
 		}
 		initialiseUniform(maxNeutralVal);
@@ -186,9 +186,14 @@ void NeutralTrait::inheritGenes(const bool& fromMother, QuantitativeTrait* paren
 // ----------------------------------------------------------------------------------------
 void NeutralTrait::inheritDiploid(const bool& fromMother, map<int, vector<unsigned char>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome) {
 
-	auto it = recomPositions.lower_bound(parentGenes.begin()->first);
-	unsigned int nextBreakpoint = *it;
-	auto distance = std::distance(recomPositions.begin(), it);
+	const int lastPosition = parentGenes.rbegin()->first;
+	auto recomIt = recomPositions.lower_bound(parentGenes.begin()->first);
+	// If no recombination sites, only breakpoint is last position
+	// i.e., no recombination occurs
+	int nextBreakpoint = recomIt == recomPositions.end() ? lastPosition : *recomIt;
+	
+	// Is the first parent gene position already recombinant?
+	auto distance = std::distance(recomPositions.begin(), recomIt);
 	if (distance - 1 % 2 != 0)
 		parentChromosome = 1 - parentChromosome; //switch chromosome
 
@@ -196,24 +201,24 @@ void NeutralTrait::inheritDiploid(const bool& fromMother, map<int, vector<unsign
 
 		// Switch chromosome if locus is past recombination site
 		while (locus > nextBreakpoint) {
-			std::advance(it, 1);
-			nextBreakpoint = *it;
-			parentChromosome = 1 - parentChromosome; //switch chromosome
+			parentChromosome = 1 - parentChromosome;
+			std::advance(recomIt, 1); // go to next recombination site
+			nextBreakpoint = recomIt == recomPositions.end() ? lastPosition : *recomIt;
 		}
 
 		if (locus <= nextBreakpoint) {
-			unsigned char sp = allelePair[parentChromosome];
+			unsigned char parentAllele = allelePair[parentChromosome];
 			auto it = genes.find(locus);
 			if (it == genes.end()) {
 				// locus does not exist yet, create and initialise it
 				if (!fromMother) throw runtime_error("Father-inherited locus does not exist.");
 				vector<unsigned char> newAllelePair(2, wildType);
-				newAllelePair[sex_t::FEM] = sp;
+				newAllelePair[sex_t::FEM] = parentAllele;
 				genes.insert(make_pair(locus, newAllelePair));
 			}
 			else { // father, locus already exists
 				if (fromMother) throw runtime_error("Mother-inherited locus already exists.");
-				it->second[sex_t::MAL] = sp;
+				it->second[sex_t::MAL] = parentAllele;
 			}
 		}
 	}
@@ -284,3 +289,33 @@ float NeutralTrait::getAlleleValueAtLocus(short whichChromosome, int position) c
 		throw runtime_error("The neutral locus queried for its allele value does not exist.");
 	return it->second[whichChromosome];
 }
+
+#if RSDEBUG // Testing only
+// Get allele ID at locus
+int NeutralTrait::getAlleleIDAtLocus(short whichChromosome, int position) const {
+	// for neutral genes this is the same as the allele value
+	// need this declaration for quanti trait that use an actual ID
+	return getAlleleValueAtLocus(whichChromosome, position);
+}
+
+// Create a default set of neutral alleles for testing
+//
+// Shorthand function to manually set genotypes for neutral
+// traits, instead of having to manipulate mutations.
+map<int, vector<unsigned char>> createTestNeutralGenotype(
+	const int genomeSz, const bool isDiploid,
+	const unsigned char valAlleleA,
+	const unsigned char valAlleleB
+) {
+	vector<unsigned char> gene(isDiploid ? 2 : 1);
+	gene[0] = valAlleleA;
+	if (isDiploid) gene[1] = valAlleleB;
+
+	map<int, vector<unsigned char>> genotype;
+	for (int i = 0; i < genomeSz; i++) {
+		genotype.emplace(i, gene);
+	}
+	return genotype;
+}
+
+#endif // RSDEBUG

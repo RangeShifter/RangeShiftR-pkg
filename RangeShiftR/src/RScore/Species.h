@@ -420,8 +420,6 @@ public:
 
 	SpeciesTrait* getSpTrait(TraitType trait) const;
 
-	//map<TraitType, std::unique_ptr<ProtoTrait>>& getTraitTable(void); //return by reference so ensure variable recieving is const
-
 	std::set<TraitType> getTraitTypes();
 
 	int getNTraits() const;
@@ -574,6 +572,12 @@ private:
 
 
 //---------------------------------------------------------------------------
+
+#if RSDEBUG
+// For testing purposes only
+demogrParams createDefaultHaploidDemogrParams();
+demogrParams createDefaultDiploidDemogrParams();
+#endif RSDEBUG
 
 //---------------------------------------------------------------------------
 #endif

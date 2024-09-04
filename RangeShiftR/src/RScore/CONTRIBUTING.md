@@ -72,7 +72,7 @@ Please do check if a related issue has already open on one of the other interfac
 
 To propose a bug fix (thank you!!), please create and work on your own branch or fork, from either `main` or `develop` (preferred), and open a pull request when your fix is ready to be merged into the original branch.
 
-As a prerequisite for merging, please ensure that your version passes status check (that is, RangeShifter batch mode can still build and run as intended).
+As a prerequisite for merging, please ensure that your version passes status check (that is, RScore can still build, and all unit tests are still satisfied). 
 This can be seen in the Actions panel for every commit and at the bottom of the pull request.
 
 Maintainers will review the pull request, possibly request changes, and eventually integrate the bug fix into RScore, and update the subtrees to bring the fix to all interfaces.

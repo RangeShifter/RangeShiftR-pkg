@@ -130,6 +130,14 @@ enum GenParamType { MEAN, SD, MIN, MAX, SHAPE, SCALE, INVALID };
 enum DistributionType { UNIFORM, NORMAL, GAMMA, NEGEXP, SCALED, KAM, SSM, NONE };
 enum ExpressionType { AVERAGE, ADDITIVE, NOTEXPR, MULTIPLICATIVE };
 
+string to_string(const TraitType& tr);
+
+string to_string(const GenParamType& param);
+
+string to_string(const DistributionType& dist);
+
+string to_string(const ExpressionType& expr);
+
 /** Param's types **/
 typedef enum { KERNEL, SMS, CRW} movement_t;
 
@@ -321,7 +329,7 @@ struct simParams {
 	bool fixReplicateSeed;
 	string patchSamplingOption;
 	bool outputGeneValues;
-	bool outputWCFstat, outputPerLocusWCFstat, outputPairwiseFst;
+	bool outputWeirCockerham, outputWeirHill;
 	int outputGeneticInterval, outStartGenetics;
 };
 
@@ -337,7 +345,7 @@ public:
 	paramSim(void);
 	~paramSim(void);
 	void setSim(simParams);
-	void setGeneticSim(string patchSamplingOption, bool outputGeneticValues, bool outputWCFstat, bool outputPerLocusWCFstat, bool outputPairwiseFst, int outputStartGenetics, int outputGeneticInterval);
+	void setGeneticSim(string patchSamplingOption, bool outputGeneticValues, bool outputWeirCockerham, bool outputWeirHill, int outputStartGenetics, int outputGeneticInterval);
 	simParams getSim(void);
 	int getSimNum(void);
 	void setViews(simView);
@@ -401,9 +409,8 @@ private:
 	bool fixReplicateSeed;
 	string patchSamplingOption;
 	bool outputGenes;
-	bool outputWCFstat;
-	bool outputPerLocusWCFstat;
-	bool outputPairwiseFst;
+	bool outputWeirCockerham;
+	bool outputWeirHill;
 	int outputStartGenetics;
 	int outputGeneticInterval;
 };

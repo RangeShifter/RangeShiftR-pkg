@@ -196,17 +196,17 @@ public:
 	void outputGeneValues(const int& year, const int& gen, Species* pSpecies);
 
 	//control neutral stat output
-	void outNeutralGenetics(Species* pSpecies, int rep, int yr, int gen, bool fstat, bool perLocus, bool pairwise);
+	void outNeutralGenetics(Species* pSpecies, int rep, int yr, int gen, bool outWeirCockerham, bool outWeirHill);
 
 	//file openers
-	bool openWCFstatFile(Species* pSpecies, const int landNr);
-	bool openWCPerLocusFstatFile(Species* pSpecies, Landscape* pLandscape, const int landNr, const int rep);
-	bool openPairwiseFSTFile(Species* pSpecies, Landscape* pLandscape, const int landNr, const int rep);
+	bool openNeutralOutputFile(Species* pSpecies, const int landNr);
+	bool openPerLocusFstFile(Species* pSpecies, Landscape* pLandscape, const int landNr, const int rep);
+	bool openPairwiseFstFile(Species* pSpecies, Landscape* pLandscape, const int landNr, const int rep);
 
 	//file writers
-	void writeWCFstatFile(int rep, int yr, int gen);
-	void writeWCPerLocusFstatFile(Species* pSpecies, const int yr, const int gen, const  int nAlleles, const int nLoci, set<int> const& patchList);
-	void writePairwiseFSTFile(Species* pSpecies, const int yr, const int gen, const  int nAlleles, const int nLoci, set<int> const& patchList);
+	void writeNeutralOutputFile(int rep, int yr, int gen, bool outWeirCockerham, bool outWeirHill);
+	void writePerLocusFstatFile(Species* pSpecies, const int yr, const int gen, const  int nAlleles, const int nLoci, set<int> const& patchList);
+	void writePairwiseFstFile(Species* pSpecies, const int yr, const int gen, const  int nAlleles, const int nLoci, set<int> const& patchList);
 
 private:
 	Landscape *pLandscape;
