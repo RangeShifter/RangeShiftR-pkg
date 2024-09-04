@@ -68,9 +68,10 @@ struct pathData { // to hold path data common to SMS and CRW models
 	int year, total, out; // nos. of steps
 	Patch* pSettPatch;		// pointer to most recent patch tested for settlement
 	short settleStatus; 	// whether ind may settle in current patch
-	// 0 = not set, 1 = debarred through density dependence rule
-	// 2 = OK to settle subject to finding a mate
-//	bool leftNatalPatch;	// individual has moved out of its natal patch
+		// 0 = not set, 
+		// 1 = debarred through density dependence rule
+		// 2 = OK to settle subject to finding a mate
+
 #if RS_RCPP
 	short pathoutput;
 #endif
@@ -83,17 +84,11 @@ struct settlePatch {
 };
 
 struct trfrData {
-
 	virtual void addMyself(trfrData& toAdd) = 0;
-
 	virtual void clone(const trfrData& copyFrom) = 0;
-
 	virtual void divideTraitsBy(int) = 0;
-
 	virtual movement_t getType() = 0;
-
 	virtual ~trfrData() {}
-
 };
 
 struct crwData : trfrData { // to hold data for CRW movement model
@@ -102,36 +97,25 @@ struct crwData : trfrData { // to hold data for CRW movement model
 	float xc, yc;		// continuous cell co-ordinates	
 	float rho;			// phenotypic step correlation coefficient
 	float stepLength; // phenotypic step length (m)
-	//static bool straigtenPath; //does not vary between individuals, shared
-	//static float stepMort; //does not vary between individuals, shared
 
 	crwData(float prevdrnA, float xcA, float ycA) : prevdrn(prevdrnA), xc(xcA), yc(ycA), rho(0.0), stepLength(0.0) {}
 	~crwData() {}
 
 	void addMyself(trfrData& toAdd) {
-
 		auto& CRW = dynamic_cast<crwData&>(toAdd);
-
 		CRW.stepLength += stepLength;
 		CRW.rho += rho;
-
-		//stepLength += pCRW.stepLength;
-	//	rho += pCRW.rho;
 	}
 
 	movement_t getType() { return CRW; }
 
 	void clone(const trfrData& copyFrom) {
-
-
 		const crwData& pCopy = dynamic_cast<const crwData&>(copyFrom);
-
 		stepLength = pCopy.stepLength;
 		rho = pCopy.rho;
 	}
 
 	void divideTraitsBy(int i) {
-
 		stepLength /= i;
 		rho /= i;
 	}
@@ -147,17 +131,8 @@ struct smsData : trfrData {
 	float alphaDB;	// dispersal bias decay rate
 	int betaDB;			// dispersal bias decay inflection point (no. of steps)
 
-	//below are shared
-	//static short pr;
-	//static short prMethod;
-	//static short memSize;
-	//static short goalType;
-	//static float stepMort;
-	//static bool straigtenPath;
-
 	smsData(locn prevA, locn goalA) : prev(prevA), goal(goalA), dp(0.0), gb(0.0), alphaDB(0.0), betaDB(0) {}
 	~smsData() {}
-
 
 	void addMyself(trfrData& toAdd) {
 		auto& SMS = dynamic_cast<smsData&>(toAdd);
@@ -178,7 +153,6 @@ struct smsData : trfrData {
 	}
 
 	void divideTraitsBy(int i) {
-
 		dp /= i;
 		gb /= i;
 		alphaDB /= i;
@@ -278,7 +252,7 @@ public:
 
 	trfrCRWTraits getIndCRWTraits(void); // Get phenotypic transfer by CRW traits
 
-	void setSettlementTraits(Species* pSpecies, bool sexDep);
+	void setSettlementTraits(Species* pSpecies, bool sexDep, bool densDep);
 
 	settleTraits getIndSettTraits(void); // Get phenotypic settlement traits
 
@@ -294,6 +268,7 @@ public:
 	sex_t getSex(void);
 	int getStatus(void);
 	float getGeneticFitness(void);
+	bool isViable() const;
 	indStats getStats(void);
 	Cell* getLocn( // Return location (as pointer to Cell)
 		const short	// option: 0 = get natal locn, 1 = get current locn
@@ -304,7 +279,7 @@ public:
 	settlePatch getSettPatch(void);
 	void setSettPatch(const settlePatch);
 	void setStatus(short);
-	void developing(void);
+	void setToDevelop(void);
 	void develop(void);
 	void ageIncrement( // Age by one year
 		short	// maximum age - if exceeded, the Individual dies
@@ -320,7 +295,6 @@ public:
 	int moveKernel(
 		Landscape*,		// pointer to Landscape
 		Species*,			// pointer to Species
-		const short,	// reproduction type (see Species)
 		const bool    // absorbing boundaries?
 	);
 	// Make a single movement step according to a mechanistic movement model
@@ -369,6 +343,18 @@ public:
 		const int		 	// year
 	);
 #endif
+#if RSDEBUG
+	// Testing utilities
+	Cell* getCurrCell() const;
+	void setInitAngle(const float angle);
+	void insertIndDispTrait(TraitType trType, DispersalTrait tr) {
+		spTraitTable.insert(make_pair(trType, make_unique<DispersalTrait>(tr)));
+	};
+	void triggerMutations(Species* pSp);
+	// Shorthand function to edit a genotype with custom values
+	void overrideGenotype(TraitType whichTrait, const map<int, vector<shared_ptr<Allele>>>& newGenotype); // dispersal + gen. fitness
+	void overrideGenotype(TraitType whichTrait, const map<int, vector<unsigned char>>& newGenotype); // neutral
+#endif
 
 private:
 	int indId;
@@ -376,25 +362,26 @@ private:
 	short stage;
 	sex_t sex;
 	short age;
-	short status;	// 0 = initial status in natal patch / philopatric recruit
-	// 1 = disperser
-	// 2 = disperser awaiting settlement in possible suitable patch
-	// 3 = waiting between dispersal events
-	// 4 = completed settlement
-	// 5 = completed settlement in a suitable neighbouring cell
-	// 6 = died during transfer by failing to find a suitable patch
-	//     (includes exceeding maximum number of steps or crossing
-	//			absorbing boundary)
-	// 7 = died during transfer by constant, step-dependent,
-	//     habitat-dependent or distance-dependent mortality
-	// 8 = failed to survive annual (demographic) mortality
-	// 9 = exceeded maximum age
+	short status;	
+		// 0 = initial status in natal patch / philopatric recruit
+		// 1 = disperser
+		// 2 = disperser awaiting settlement in possible suitable patch
+		// 3 = waiting between dispersal events
+		// 4 = completed settlement
+		// 5 = completed settlement in a suitable neighbouring cell
+		// 6 = died during transfer by failing to find a suitable patch
+		//	(includes exceeding maximum number of steps or crossing
+		//	absorbing boundary)
+		// 7 = died during transfer by constant, step-dependent,
+		//	habitat-dependent or distance-dependent mortality
+		// 8 = failed to survive annual (demographic) mortality
+		// 9 = exceeded maximum age
 	short fallow; // reproductive seasons since last reproduction
 	bool isDeveloping;
-	Cell* pPrevCell;						// pointer to previous Cell
-	Cell* pCurrCell;						// pointer to current Cell
-	Patch* pNatalPatch;					// pointer to natal Patch
-	pathData* path; 						// pointer to path data for movement model
+	Cell* pPrevCell;	// pointer to previous Cell
+	Cell* pCurrCell;	// pointer to current Cell
+	Patch* pNatalPatch;	// pointer to natal Patch
+	pathData* path;		// pointer to path data for movement model
 	std::unique_ptr <emigTraits> pEmigTraits;			// pointer to emigration traits
 	std::unique_ptr <settleTraits> pSettleTraits;		// pointer to settlement traits
 	std::unique_ptr <trfrData> pTrfrData; //can be sms, kernel, crw
@@ -416,10 +403,6 @@ extern ofstream DEBUGLOG;
 
 #if RS_RCPP
 extern ofstream outMovePaths;
-#endif
-
-#if RSDEBUG
-void testIndividual();
 #endif
 
 //---------------------------------------------------------------------------

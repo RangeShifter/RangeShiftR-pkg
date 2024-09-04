@@ -126,7 +126,6 @@ void Patch::addCell(Cell* pCell, int x, int y) {
 void Patch::setCarryingCapacity(Species* pSpecies, patchLimits landlimits,
 	float epsGlobal, short nHab, short rasterType, short landIx, bool gradK) {
 	envStochParams env = paramsStoch->getStoch();
-	//Cell *pCell;
 	locn loc;
 	int xsum, ysum;
 	short hx;
@@ -136,23 +135,12 @@ void Patch::setCarryingCapacity(Species* pSpecies, patchLimits landlimits,
 	int nsuitable = 0;
 	double mean;
 
-#if RSDEBUG
-	//DEBUGLOG << "Patch::setCarryingCapacity(): patchNum=" << patchNum
-	//	<< " xMin=" << xMin << " yMin=" << yMin << " xMax=" << xMax << " yMax=" << yMax
-	//	<< endl;
-#endif
-
 	if (xMin > landlimits.xMax || xMax < landlimits.xMin
 		|| yMin > landlimits.yMax || yMax < landlimits.yMin) {
 		// patch lies wholely outwith current landscape limits
 		// NB the next statement is unnecessary, as localK has been set to zero above
 		//    retained only for consistency in standard variant
 		localK = 0.0;
-#if RSDEBUG
-		//DEBUGLOG << "Patch::setCarryingCapacity(): patchNum=" << patchNum
-		//	<< " localK=" << localK
-		//	<< endl;
-#endif
 		return;
 	}
 
@@ -164,8 +152,6 @@ void Patch::setCarryingCapacity(Species* pSpecies, patchLimits landlimits,
 		else envval = 1.0; // no gradient effect
 		if (env.stoch && env.inK) { // environmental stochasticity in K
 			if (env.local) {
-				//			pCell = getRandomCell();
-				//			if (pCell != 0) envval += pCell->getEps();
 				envval += cells[i]->getEps();
 			}
 			else { // global stochasticity
@@ -200,19 +186,9 @@ void Patch::setCarryingCapacity(Species* pSpecies, patchLimits landlimits,
 			}
 			break;
 		}
-#if RSDEBUG
-		//DEBUGLOG << "Patch::setCarryingCapacity(): patchNum=" << patchNum
-		//	<< " i=" << i << " hx=" << hx << " q=" << q << " k=" << k << " localK=" << localK
-		//	<< endl;
-#endif
 		loc = cells[i]->getLocn();
 		xsum += loc.x; ysum += loc.y;
 	}
-#if RSDEBUG
-	//DEBUGLOG << "Patch::setCarryingCapacity(): patchNum=" << patchNum
-	//	<< " epsGlobal=" << epsGlobal << " localK=" << localK
-	//	<< endl;
-#endif
 // calculate centroid co-ordinates
 	if (ncells > 0) {
 		mean = (double)xsum / (double)ncells;
@@ -226,24 +202,9 @@ void Patch::setCarryingCapacity(Species* pSpecies, patchLimits landlimits,
 		float limit;
 		limit = pSpecies->getMinMax(0) * (float)nsuitable;
 		if (localK < limit) localK = limit;
-#if RSDEBUG
-		//DEBUGLOG << "Patch::setCarryingCapacity(): patchNum=" << patchNum
-		//	<< " limit=" << limit << " localK=" << localK
-		//	<< endl;
-#endif
 		limit = pSpecies->getMinMax(1) * (float)nsuitable;
 		if (localK > limit) localK = limit;
-#if RSDEBUG
-		//DEBUGLOG << "Patch::setCarryingCapacity(): patchNum=" << patchNum
-		//	<< " limit=" << limit << " localK=" << localK
-		//	<< endl;
-#endif
 	}
-#if RSDEBUG
-	//DEBUGLOG << "Patch::setCarryingCapacity(): patchNum=" << patchNum
-	//	<< " localK=" << localK
-	//	<< endl;
-#endif
 }
 
 

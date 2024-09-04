@@ -30,12 +30,21 @@ Species::Species(void)
 	// initialise demographic parameters
 	repType = 0; nStages = 2;
 	stageStruct = false;
-	propMales = 0.5; harem = 1.0; bc = 1.0; lambda = 1.5; probRep = 1.0;
+	propMales = 0.5; 
+	harem = 1.0; 
+	bc = 1.0; 
+	lambda = 1.5; 
+	probRep = 1.0;
 	repSeasons = 1;
-	repInterval = 0; maxAge = 1000; survival = 1;
-	fecDens = false; fecStageDens = false;
-	devDens = false; devStageDens = false;
-	survDens = false; survStageDens = false;
+	repInterval = 0; 
+	maxAge = 1000; 
+	survival = 1;
+	fecDens = false; 
+	fecStageDens = false;
+	devDens = false; 
+	devStageDens = false;
+	survDens = false; 
+	survStageDens = false;
 	disperseOnLoss = false;
 	for (int i = 0; i < gMaxNbStages; i++) {
 		for (int j = 0; j < gMaxNbSexes; j++) {
@@ -44,10 +53,12 @@ Species::Species(void)
 		}
 	}
 	devCoeff = survCoeff = 1.0;
-	ddwtFec = ddwtDev = ddwtSurv = 0; ddwtFecDim = ddwtDevDim = ddwtSurvDim = 0;
-	habK = 0; habDimK = 0;
-	minRK = 1.0; maxRK = 2.0;
-
+	ddwtFec = ddwtDev = ddwtSurv = 0; 
+	ddwtFecDim = ddwtDevDim = ddwtSurvDim = 0;
+	habK = 0; 
+	habDimK = 0;
+	minRK = 1.0; 
+	maxRK = 2.0;
 
 	// initialise emigration parameters
 	densDepEmig = false; stgDepEmig = false; sexDepEmig = false; indVarEmig = false;
@@ -110,7 +121,8 @@ short Species::getSpNum(void) { return spNum; }
 
 void Species::setDemogr(const demogrParams d) {
 	if (d.repType >= 0 && d.repType <= 2) repType = d.repType;
-	if (d.repType >= 1) diploid = true;
+	if (d.repType == 1 || d.repType == 2) diploid = true;
+	else diploid = false;
 	if (d.repSeasons >= 1) repSeasons = d.repSeasons;
 	stageStruct = d.stageStruct;
 	if (d.propMales > 0.0 && d.propMales < 1.0) propMales = d.propMales;
@@ -438,7 +450,7 @@ void Species::addTrait(TraitType traitType, const SpeciesTrait& trait) {
 		default:
 		{
 			cout << endl << ("Error:: Too many genetic load traits in Traits file, max = 5 \n");
-			break; //should return false
+			break;
 		}
 		}
 	}
@@ -488,7 +500,6 @@ void Species::setEmigRules(const emigRules e) {
 	sexDepEmig = e.sexDep;
 	indVarEmig = e.indVar;
 	if (e.emigStage >= 0) emigStage = e.emigStage;
-//setGenome();
 }
 
 emigRules Species::getEmigRules(void) {
@@ -545,7 +556,6 @@ void Species::setTrfrRules(const transferRules t) {
 	habMort = t.habMort;
 	moveType = t.moveType; 
 	costMap = t.costMap;
-//setGenome();
 }
 
 transferRules Species::getTransferRules(void) {
@@ -570,7 +580,7 @@ void Species::setSpKernTraits(const short stg, const short sex,
 	if (stg >= 0 && stg < gMaxNbStages && sex >= 0 && sex < gMaxNbSexes) {
 		if (k.meanDist1 > 0.0 && k.meanDist1 >= (float)resol) meanDist1[stg][sex] = k.meanDist1;
 		if (k.meanDist2 >= (float)resol) meanDist2[stg][sex] = k.meanDist2;
-		if (k.probKern1 > 0.0 && k.probKern1 < 1.0) probKern1[stg][sex] = k.probKern1;
+		if (k.probKern1 >= 0.0 && k.probKern1 <= 1.0) probKern1[stg][sex] = k.probKern1;
 	}
 }
 
@@ -588,7 +598,7 @@ trfrKernelParams Species::getSpKernTraits(short stg, short sex) {
 }
 
 void Species::setMortParams(const trfrMortParams m) {
-	if (m.fixedMort >= 0.0 && m.fixedMort < 1.0) fixedMort = m.fixedMort;
+	if (m.fixedMort >= 0.0 && m.fixedMort <= 1.0) fixedMort = m.fixedMort;
 	mortAlpha = m.mortAlpha;
 	mortBeta = m.mortBeta;
 }
@@ -608,9 +618,9 @@ void Species::setSpMovtTraits(const trfrMovtParams m) {
 	if (m.gb >= 1.0) gb = m.gb;
 	if (m.alphaDB > 0.0) alphaDB = m.alphaDB;
 	if (m.betaDB > 0) betaDB = m.betaDB;
-	if (m.stepMort >= 0.0 && m.stepMort < 1.0) stepMort = m.stepMort;
+	if (m.stepMort >= 0.0 && m.stepMort <= 1.0) stepMort = m.stepMort;
 	if (m.stepLength > 0.0) stepLength = m.stepLength;
-	if (m.rho > 0.0 && m.rho < 1.0) rho = m.rho;
+	if (m.rho > 0.0 && m.rho <= 1.0) rho = m.rho;
 	straightenPath = m.straightenPath;
 }
 
@@ -781,3 +791,31 @@ void Species::setSamplePatchList(const set<int>& samplePatchList) {
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 
+#if RSDEBUG
+// For testing purposes only
+
+demogrParams createDefaultHaploidDemogrParams() {
+	demogrParams d;
+	d.repType = 0;
+	d.repSeasons = 1;
+	d.stageStruct = false;
+	d.propMales = 0.0;
+	d.harem = 1.0;
+	d.bc = 1.0;
+	d.lambda = 2.0;
+	return d;
+}
+
+demogrParams createDefaultDiploidDemogrParams() {
+	demogrParams d;
+	d.repType = 1;
+	d.repSeasons = 1;
+	d.stageStruct = false;
+	d.propMales = 0.5;
+	d.harem = 1.0;
+	d.bc = 1.0;
+	d.lambda = 2.0;
+	return d;
+}
+
+#endif // RSDEBUG

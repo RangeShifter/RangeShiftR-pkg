@@ -46,8 +46,12 @@ public:
     virtual void inheritGenes(const bool& fromMother, QuantitativeTrait* parent, set<unsigned int> const& recomPositions, int startingChromosome) override;
 
     virtual float getAlleleValueAtLocus(short chromosome, int position) const override;
+    virtual float getDomCoefAtLocus(short chromosome, int position) const override;
     virtual int countHeterozygoteLoci() const;
     virtual bool isHeterozygoteAtLocus(int locus) const override;
+#if RSDEBUG // for testing only
+    int getAlleleIDAtLocus(short whichChromosome, int position) const;
+#endif
 
 private:
 

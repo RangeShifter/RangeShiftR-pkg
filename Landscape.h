@@ -251,6 +251,9 @@ public:
 		int,    // y co-ordinate
 		int     // habitat class no.
 	);
+	void addCellToLand(
+		Cell* // cell to add to landscape
+	);
 	void addCellToPatch(
 		Cell*,	// pointer to Cell
 		Patch*	// pointer to Patch
@@ -533,6 +536,8 @@ extern RSrandom *pRandom;
 
 #if RSDEBUG
 extern ofstream DEBUGLOG;
+landParams createDefaultLandParams(const int& dim);
+void testLandscape();
 #endif
 
 #if RS_RCPP

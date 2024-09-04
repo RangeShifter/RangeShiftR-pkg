@@ -47,8 +47,15 @@ public:
 	}
 
 	virtual float getAlleleValueAtLocus(short chromosome, int position) const override;
+	virtual float getDomCoefAtLocus(short chromosome, int position) const override {
+		return 0.0;
+	}
+
 	virtual int countHeterozygoteLoci() const;
 	virtual bool isHeterozygoteAtLocus(int locus) const override;
+#if RSDEBUG // for testing only
+	int getAlleleIDAtLocus(short whichChromosome, int position) const;
+#endif
 
 private:
 
@@ -78,4 +85,13 @@ private:
 	void mutate_SSM(); // single-step mutations
 
 };
+
+#if RSDEBUG // for testing purposes only
+map<int, vector<unsigned char>> createTestNeutralGenotype(
+	const int genomeSz, const bool isDiploid,
+	const unsigned char valAlleleA,
+	const unsigned char valAlleleB = -99.9 // if haploid
+);
 #endif
+
+#endif // NeutralTraitH
