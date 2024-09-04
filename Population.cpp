@@ -828,7 +828,8 @@ void Population::sampleIndsWithoutReplacement(string strNbToSample, const set<in
 
 	// Stage individuals in eligible stages
 	for (int stage : sampleStages) {
-		stagedInds = getIndividualsInStage(stage);
+		vector<Individual*> toAdd = getIndividualsInStage(stage);
+		stagedInds.insert(stagedInds.begin(), toAdd.begin(), toAdd.end());
 	}
 
 	if (strNbToSample == "all") {
