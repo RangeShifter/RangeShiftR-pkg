@@ -878,7 +878,7 @@ void Population::emigration(float localK)
 	stageParams sstruct = pSpecies->getStageParams();
 	emigRules emig = pSpecies->getEmigRules();
 	emigTraits eparams;
-	trfrRules trfr = pSpecies->getTrfr();
+	transferRules trfr = pSpecies->getTransferRules();
 	indStats ind;
 
 // to avoid division by zero, assume carrying capacity is at least one individual
