@@ -1637,7 +1637,15 @@ bool Community::openNeutralOutputFile(Species* pSpecies, int landNr)
 
 bool Community::openPerLocusFstFile(Species* pSpecies, Landscape* pLandscape, const int landNr, const int rep)
 {
-	const set<int> patchList = pSpecies->getSamplePatches();
+	set<int> patchList = pSpecies->getSamplePatches();
+	if (patchList.size() == 0) {
+		// list of patches is not known yet and may change every generation,
+		// e.g. for randomOccupied sampling option
+		// instead, header patch numbers range from 1 to nb of sampled patches
+		for (int i = 0; i < pSpecies->getNbPatchesToSample(); i++) {
+			patchList.emplace(i + 1);
+		}
+	}
 
 	if (landNr == -999) { // close the file
 		if (outperlocusfstat.is_open()) outperlocusfstat.close();
