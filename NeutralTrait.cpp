@@ -52,11 +52,9 @@ NeutralTrait::NeutralTrait(SpeciesTrait* P)
 		initialiseUniform(maxNeutralVal);
 		break;
 	}
-	case NONE: 
-		break;
 	default:
 	{
-		throw logic_error("wrong parameter value for parameter \"initialisation of neutral trait\", must be left as default (#) or uniform \n");
+		throw logic_error("wrong parameter value for parameter \"initialisation of neutral trait\", must be left uniform \n");
 		break; //should return false
 	}
 	}

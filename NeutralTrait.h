@@ -66,7 +66,7 @@ private:
 	map<int, vector<unsigned char>> genes;
 
 	// Initialisation
-	void initialiseUniform(int max); //other option is that mutations map is empty until a mutation happens, default when empty is to return a 0 value for wildtype
+	void initialiseUniform(int max);
 
 	// Immutable features, set at initialisation
 	// and passed down to every subsequent trait copy
