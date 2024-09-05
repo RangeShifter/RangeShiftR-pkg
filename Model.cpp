@@ -181,7 +181,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				if (!pLandscape->outConnectHeaders(0)) {
 					filesOK = false;
 				}
-			if (sim.outputWeirCockerham) { // open neutral genetics file
+			if (sim.outputWeirCockerham || sim.outputWeirHill) { // open neutral genetics file
 				if (!pComm->openNeutralOutputFile(pSpecies, ppLand.landNum)) {
 					filesOK = false;
 				}

@@ -1830,7 +1830,7 @@ void Community::outNeutralGenetics(Species* pSpecies, int rep, int yr, int gen, 
 	const int maxNbNeutralAlleles = pSpecies->getSpTrait(NEUTRAL)->getNbNeutralAlleles();
 	const int nLoci = (int)pSpecies->getNPositionsForTrait(NEUTRAL);
 	const set<int> patchList = pSpecies->getSamplePatches();
-	int nInds = 0;
+	int nInds = 0, nbPops = 0;
 
 	for (int patchId : patchList) {
 		const auto patch = pLandscape->findPatch(patchId);
@@ -1840,6 +1840,7 @@ void Community::outNeutralGenetics(Species* pSpecies, int rep, int yr, int gen, 
 		const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
 		if (pPop != 0) { // empty patches do not contribute
 			nInds += pPop->sampleSize();
+			nbPops++;
 		}
 	}
 

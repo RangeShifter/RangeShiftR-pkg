@@ -412,6 +412,7 @@ void NeutralStatsManager::calcPairwiseWeightedFst(set<int> const& patchList, con
 	double denominator = 0;
 	double sumWeights = 0;
 
+	totalNbSampledInds = nInds;
 	totSize = nInds;
 
 	// Calculate weight (n_ic) terms
@@ -429,6 +430,8 @@ void NeutralStatsManager::calcPairwiseWeightedFst(set<int> const& patchList, con
 		for (int j = 0; j < nPatches; j++)
 			numeratorPairwiseFst[i][j] = 0;
 	}
+
+	nbExtantPops = nbPops;
 
 	if (nbPops > 1) {
 		// Calculate Fst numerators and denominators
