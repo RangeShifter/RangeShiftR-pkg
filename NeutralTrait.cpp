@@ -109,10 +109,12 @@ void NeutralTrait::mutate_KAM()
 				if (it == genes.end())
 					throw runtime_error("Locus selected for mutation doesn't exist.");
 				auto currentChar = it->second[whichChromosome]; // current allele
-				do {
-					mut = (unsigned char)pRandom->IRandom(0, maxNeutralVal);
-				} while (mut == currentChar); // new allele value is different
-
+				if (maxNeutralVal > 0) { // dodge the infinite loop
+					do {
+						mut = (unsigned char)pRandom->IRandom(0, maxNeutralVal);
+					} while (mut == currentChar); // new allele value is different
+				}
+				else mut = 0; 
 				it->second[whichChromosome] = mut; //overwrite with new value
 			}
 		}
