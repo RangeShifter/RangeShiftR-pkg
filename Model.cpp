@@ -515,7 +515,11 @@ int RunModel(Landscape* pLandscape, int seqsim)
 			} // end of the generation loop
 
 			totalInds = pComm->totalInds();
-			if (totalInds <= 0) { yr++; break; }
+			if (totalInds <= 0) { 
+				cout << "All populations went extinct." << endl;
+				yr++; 
+				break; 
+			}
 
 			// Connectivity Matrix
 			if (sim.outConnect && ppLand.patchModel
@@ -533,7 +537,12 @@ int RunModel(Landscape* pLandscape, int seqsim)
 					pComm->outInds(rep, yr, -1, -1); // list any individuals dying having reached maximum age
 				pComm->survival(1, 0, 1);					// delete any such individuals
 				totalInds = pComm->totalInds();
-				if (totalInds <= 0) { yr++; break; }
+				if (totalInds <= 0) { 
+					cout << "All populations went extinct." << endl;
+					yr++; 
+					break;
+
+				}
 			}
 
 		} // end of the years loop
