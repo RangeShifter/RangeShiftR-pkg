@@ -508,8 +508,8 @@ void Individual::setIndSMSTraits(Species* pSpecies) {
 	double dp, gb, alphaDB, betaDB;
 	dp = gb = alphaDB = betaDB = 0.0;
 	dp = getTrait(SMS_DP)->express();
-	gb = getTrait(SMS_GB)->express();
 	if (s.goalType == 2) {
+		gb = getTrait(SMS_GB)->express();
 		alphaDB = getTrait(SMS_ALPHADB)->express();
 		betaDB = getTrait(SMS_BETADB)->express();
 	}
