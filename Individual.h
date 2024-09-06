@@ -233,8 +233,6 @@ public:
 
 	void inherit(Species* pSpecies, const Individual* mother); // haploid
 
-	Individual* traitClone(Cell*, Patch*, float, bool, short);
-
 	void setEmigTraits(Species* pSpecies, bool sexDep, bool densityDep);
 	void setTransferTraits(Species* pSpecies, transferRules trfr, int resol);
 

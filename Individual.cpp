@@ -78,17 +78,6 @@ Individual::~Individual(void) {
 	if (path != 0) delete path;
 }
 
-
-Individual* Individual::traitClone(Cell* pCell, Patch* pPatch, float probmale, bool movt, short moveType) {
-
-	Individual* myTraitClone = new Individual(pCell, pPatch, 0, 0, 0, probmale, movt, moveType);
-	myTraitClone->pEmigTraits = make_unique<emigTraits>(*pEmigTraits);
-	myTraitClone->pSettleTraits = make_unique<settleTraits>(*pSettleTraits);
-	myTraitClone->pTrfrData->clone(*pTrfrData);
-
-	return myTraitClone;
-}
-
 void Individual::setEmigTraits(const emigTraits& emig) {
 	pEmigTraits = make_unique<emigTraits>(emig);
 }
@@ -389,7 +378,8 @@ void Individual::setSettPatch(const settlePatch s) {
 }
 
 void Individual::setEmigTraits(Species* pSpecies, bool sexDep, bool densityDep) {
-	emigTraits e; e.d0 = e.alpha = e.beta = 0.0;
+	emigTraits e; 
+	e.d0 = e.alpha = e.beta = 0.0;
 	if (sexDep) {
 		if (this->getSex() == MAL) {
 			e.d0 = this->getTrait(E_D0_M)->express();

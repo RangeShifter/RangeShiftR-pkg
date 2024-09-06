@@ -174,14 +174,10 @@ Population::Population(Species* pSp, Patch* pPch, int ninds, int resol)
 				}
 			}
 			else age = stg;
-#if RSDEBUG
-			// NOTE: CURRENTLY SETTING ALL INDIVIDUALS TO RECORD NO. OF STEPS ...
+
 			inds.push_back(new Individual(pCell, pPatch, stg, age, sstruct.repInterval,
-				probmale, true, trfr.moveType));
-#else
-			inds.push_back(new Individual(pCell, pPatch, stg, age, sstruct.repInterval,
-				probmale, trfr.moveModel, trfr.moveType));
-#endif
+				probmale, trfr.usesMovtProc, trfr.moveType));
+
 			sex = inds[nindivs + i]->getSex();
 			if (pSpecies->getNTraits() > 0) {
 				// individual variation - set up genetics
@@ -757,12 +753,9 @@ void Population::reproduction(const float localK, const float envval, const int 
 							pCell = pPatch->getRandomCell();
 							for (int j = 0; j < njuvs; j++) {
 								Individual* newJuv;
-#if RSDEBUG
-								// NOTE: CURRENTLY SETTING ALL INDIVIDUALS TO RECORD NO. OF STEPS ...
-								newJuv = new Individual(pCell, pPatch, 0, 0, 0, dem.propMales, true, trfr.moveType);
-#else
-								newJuv = new Individual(pCell, pPatch, 0, 0, 0, dem.propMales, trfr.moveModel, trfr.moveType);
-#endif
+
+								newJuv = new Individual(pCell, pPatch, 0, 0, 0, dem.propMales, trfr.usesMovtProc, trfr.moveType);
+
 								if (pSpecies->getNTraits() > 0) {
 									newJuv->inheritTraits(pSpecies, inds[i], father, resol);
 								}
