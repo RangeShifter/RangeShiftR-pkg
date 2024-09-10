@@ -675,7 +675,7 @@ void Population::reproduction(const float localK, const float envval, const int 
 						// NOTE: CURRENTLY SETTING ALL INDIVIDUALS TO RECORD NO. OF STEPS ...
 						newJuv = new Individual(pCell, pPatch, 0, 0, 0, dem.propMales, true, trfr.moveType);
 #else
-						newJuv = new Individual(pCell, pPatch, 0, 0, 0, dem.propMales, trfr.moveModel, trfr.moveType);
+						newJuv = new Individual(pCell, pPatch, 0, 0, 0, dem.propMales, trfr.usesMovtProc, trfr.moveType);
 #endif
 
 						if (pSpecies->getNTraits() > 0) {
@@ -1703,7 +1703,7 @@ void Population::outIndsHeaders(int rep, int landNr, bool patchModel)
 	// ALWAYS WRITE NO. OF STEPS
 	outInds << "\tNsteps";
 #else
-	if (trfr.moveModel) outInds << "\tNsteps";
+	if (trfr.usesMovtProc) outInds << "\tNsteps";
 #endif
 	outInds << endl;
 }
@@ -1819,7 +1819,7 @@ void Population::outIndividual(Landscape* pLandscape, int rep, int yr, int gen,
 			steps = inds[i]->getSteps();
 			outInds << "\t" << steps.year;
 #else
-			if (trfr.moveModel) {
+			if (trfr.usesMovtProc) {
 				steps = inds[i]->getSteps();
 				outInds << "\t" << steps.year;
 			}
