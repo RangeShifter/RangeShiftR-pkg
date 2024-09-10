@@ -113,12 +113,9 @@ void NeutralStatsManager::calcAllelicDiversityMetrics(set<int> const& patchList,
 	double meanAllelicDivInPatch = 0;
 	bool alleleExistsInPop = 0;
 
-	bool** alleleExistsInCommTable;
-	alleleExistsInCommTable = new bool* [nLoci];
+	vector<vector<bool>> alleleExistsInCommTable(nLoci);
 	for (i = 0; i < nLoci; ++i) {
-		alleleExistsInCommTable[i] = new bool[nAlleles];
-		for (j = 0; j < nAlleles; ++j)
-			alleleExistsInCommTable[i][j] = 0;
+		alleleExistsInCommTable[i] = vector<bool>(nAlleles, false);
 	}
 
 	// Compute mean nb alleles per locus per patch
@@ -133,7 +130,7 @@ void NeutralStatsManager::calcAllelicDiversityMetrics(set<int> const& patchList,
 					for (j = 0; j < nAlleles; ++j) {
 						alleleExistsInPop = pPop->getAlleleTally(i, j) != 0;
 						nbAllelesInPatch += alleleExistsInPop;
-						alleleExistsInCommTable[i][j] |= alleleExistsInPop; // OR operator
+						alleleExistsInCommTable[i][j] = alleleExistsInCommTable[i][j] || alleleExistsInPop;
 					}
 				// add mean nb of alleles per locus for Patch k to the pop mean
 				meanAllelicDivInPatch += static_cast<double>(nbAllelesInPatch) / nLoci;
@@ -148,11 +145,7 @@ void NeutralStatsManager::calcAllelicDiversityMetrics(set<int> const& patchList,
 		for (j = 0; j < nAlleles; ++j)
 			meanNbAllelesPerLocus += alleleExistsInCommTable[i][j];
 	meanNbAllelesPerLocus /= nLoci;
-	// Clear table 
-	for (i = 0; i < nLoci; ++i)
-		delete[] alleleExistsInCommTable[i];
-	delete[] alleleExistsInCommTable;
-
+	
 	// Compute number of fixed loci per patch
 	// mean number of loci that are fixed at pop level per pop
 	meanNbFixedLociPerPatch = 0;
@@ -405,8 +398,8 @@ void NeutralStatsManager::calcPairwiseWeightedFst(set<int> const& patchList, con
 	//init
 	vector<double> popWeights(nPatches);
 	vector<double> popSizes(nPatches);
-	double** numeratorPairwiseFst = new double* [nPatches];
-	for (int i = 0; i < nPatches; i++) numeratorPairwiseFst[i] = new double[nPatches];
+	vector<vector<double>> numeratorPairwiseFst(nPatches);
+	for (int i = 0; i < nPatches; i++) numeratorPairwiseFst[i].resize(nPatches);
 	double totSize;
 	double numeratorWeightedFst = 0;
 	double denominator = 0;
@@ -510,10 +503,6 @@ void NeutralStatsManager::calcPairwiseWeightedFst(set<int> const& patchList, con
 		else {
 			weightedFst = 0.0;
 		}
-
-		// Deallocate pairwise Fst matrix
-		for (int i = 0; i < nPatches; i++) delete[] numeratorPairwiseFst[i];
-		delete[] numeratorPairwiseFst;
 	}
 	else { // zero or one pop, cannot calculate Fst
 		// pairwiseFstMatrix keeps default values (0)
