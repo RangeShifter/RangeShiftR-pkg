@@ -128,7 +128,7 @@ double RSrandom::Gamma(double shape, double scale) { //scale  = mean/shape, shap
 
 double RSrandom::NegExp(double mean) {
     double r1 = 0.0000001 + this->Random() * (1.0 - 0.0000001);
-    double x = (-1.0 * mean) * log(r1);  // for LINUX_CLUSTER
+    double x = (-1.0 * mean) * log(r1);
     return x;
 }
 
@@ -181,8 +181,10 @@ RSrandom::RSrandom(std::int64_t seed)
 	}
 
 	RS_random_seed = random_seed[2];
-#if BATCH && RSDEBUG
+#if BATCH 
+#ifndef	NDEBUG
 	DEBUGLOG << RS_random_seed << endl;
+#endif
 #endif
 
 	// set up Mersenne Twister random number generator with seed sequence
@@ -259,7 +261,7 @@ double RSrandom::Gamma(double shape, double scale) { //scale  = mean/shape, shap
 
 double RSrandom::NegExp(double mean) {
 	double r1 = 0.0000001 + this->Random() * (1.0 - 0.0000001);
-	double x = (-1.0 * mean) * log(r1);  // for LINUX_CLUSTER
+	double x = (-1.0 * mean) * log(r1);
 	return x;
 }
 

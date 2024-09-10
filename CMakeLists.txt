@@ -20,10 +20,6 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux" OR CMAKE_SYSTEM_NAME STREQUAL "Darwin")
 	add_compile_definitions("LINUX_CLUSTER")
 endif()
 
-# Debug Mode by default, unless "release" is passed
-if(NOT DEFINED release)
-	add_compile_definitions(RSDEBUG)
-endif()
 
 if(NOT batchmode)
 	target_include_directories(RScore PUBLIC "${PROJECT_BINARY_DIR}")
