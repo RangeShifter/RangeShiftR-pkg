@@ -434,7 +434,7 @@ float GeneticFitnessTrait::getDomCoefAtLocus(short whichChromosome, int position
 	return it->second[whichChromosome] == 0 ? wildType->getDominanceCoef() : it->second[whichChromosome]->getDominanceCoef();
 }
 
-#if RSDEBUG // Testing only
+#ifndef NDEBUG // Testing only
 // Get allele ID at locus
 int GeneticFitnessTrait::getAlleleIDAtLocus(short whichChromosome, int position) const {
 	auto it = genes.find(position);
@@ -443,4 +443,4 @@ int GeneticFitnessTrait::getAlleleIDAtLocus(short whichChromosome, int position)
 	return it->second[whichChromosome].get()->getId();
 }
 
-#endif // RSDEBUG
+#endif // NDEBUG

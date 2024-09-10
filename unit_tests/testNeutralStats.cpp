@@ -1,4 +1,4 @@
-#if RSDEBUG
+#ifndef NDEBUG
 
 #include "../Community.h"
 
@@ -1059,4 +1059,4 @@ void testNeutralStats() {
 	}
 }
 
-#endif // RSDEBUG
+#endif // NDEBUG

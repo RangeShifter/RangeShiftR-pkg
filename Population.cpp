@@ -671,7 +671,7 @@ void Population::reproduction(const float localK, const float envval, const int 
 					for (int j = 0; j < njuvs; j++) {
 
 						Individual* newJuv;
-#if RSDEBUG
+#ifndef NDEBUG
 						// NOTE: CURRENTLY SETTING ALL INDIVIDUALS TO RECORD NO. OF STEPS ...
 						newJuv = new Individual(pCell, pPatch, 0, 0, 0, dem.propMales, true, trfr.moveType);
 #else
@@ -1519,11 +1519,11 @@ void Population::clean(void)
 		shuffle(inds.begin(), inds.end(), pRandom->getRNG());
 #else
 
-#if !RSDEBUG
-		// do not randomise individuals in RSDEBUG mode, as the function uses rand()
+#ifdef NDEBUG
+		// do not randomise individuals in DEBUG mode, as the function uses rand()
 		// and therefore the randomisation will differ between identical runs of RS
 		shuffle(inds.begin(), inds.end(), pRandom->getRNG());
-#endif // !RSDEBUG
+#endif // NDEBUG
 
 #endif // RS_RCPP
 	}
@@ -1699,7 +1699,7 @@ void Population::outIndsHeaders(int rep, int landNr, bool patchModel)
 		outInds << "\tS0\tAlphaS\tBetaS";
 	}
 	outInds << "\tDistMoved";
-#if RSDEBUG
+#ifndef NDEBUG
 	// ALWAYS WRITE NO. OF STEPS
 	outInds << "\tNsteps";
 #else
@@ -1814,7 +1814,7 @@ void Population::outIndividual(Landscape* pLandscape, int rep, int yr, int gen,
 					+ (natalloc.y - loc.y) * (natalloc.y - loc.y)));
 				outInds << "\t" << d;
 			}
-#if RSDEBUG
+#ifndef NDEBUG
 			// ALWAYS WRITE NO. OF STEPS
 			steps = inds[i]->getSteps();
 			outInds << "\t" << steps.year;

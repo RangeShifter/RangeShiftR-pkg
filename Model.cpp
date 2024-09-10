@@ -409,7 +409,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 
 			for (int gen = 0; gen < dem.repSeasons; gen++) // generation loop
 			{
-#if RSDEBUG
+#ifndef NDEBUG
 				// TEMPORARY RANDOM STREAM CHECK
 				if (yr % 1 == 0)
 				{
@@ -718,13 +718,13 @@ bool CheckDirectory(void)
 //For outputs and population visualisations pre-reproduction
 void PreReproductionOutput(Landscape* pLand, Community* pComm, int rep, int yr, int gen)
 {
-#if RSDEBUG
+#ifndef NDEBUG
 	landParams ppLand = pLand->getLandParams();
 #endif
 	simParams sim = paramsSim->getSim();
 	simView v = paramsSim->getViews();
 
-#if RSDEBUG
+#ifndef NDEBUG
 	DEBUGLOG << "PreReproductionOutput(): 11111 rep=" << rep << " yr=" << yr << " gen=" << gen
 		<< " landNum=" << ppLand.landNum << " maxX=" << ppLand.maxX << " maxY=" << ppLand.maxY
 		<< endl;

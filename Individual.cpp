@@ -738,7 +738,7 @@ int Individual::moveKernel(Landscape* pLandscape, Species* pSpecies, const bool 
 				ny = yrand + dist * cos(rndangle);
 				if (nx < 0.0) newX = -1; else newX = (int)nx;
 				if (ny < 0.0) newY = -1; else newY = (int)ny;
-#if RSDEBUG
+#ifndef NDEBUG
 				if (path != 0) (path->year)++;
 #endif
 				loopsteps++;
@@ -1596,7 +1596,7 @@ double cauchy(double location, double scale) {
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 
-#if RSDEBUG
+#ifndef NDEBUG
 // Testing utilities
 
 Cell* Individual::getCurrCell() const {
@@ -1664,5 +1664,5 @@ void Individual::overrideGenotype(TraitType whichTrait, const map<int, vector<un
 	pNeutralTrait->getGenes() = newGenotype;
 };
 
-#endif // RSDEBUG
+#endif // NDEBUG
 

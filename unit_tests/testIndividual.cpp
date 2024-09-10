@@ -1,4 +1,4 @@
-#if RSDEBUG
+#ifndef NDEBUG
 
 #include "../Individual.h"
 #include "../Population.h"
@@ -1338,4 +1338,4 @@ void testIndividual() {
 	
 }
 
-#endif //RSDEBUG
+#endif //NDEBUG

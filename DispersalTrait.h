@@ -46,7 +46,7 @@ public:
 	int countHeterozygoteLoci() const;
 	bool isHeterozygoteAtLocus(int locus) const override;
 
-#if RSDEBUG // for testing only
+#ifndef NDEBUG // for testing only
 	void overwriteGenes(map<int, vector<shared_ptr<Allele>>> genSeq) {
 		genes = genSeq;
 	}
@@ -95,7 +95,7 @@ private:
 	float expressAdditive();
 };
 
-#if RSDEBUG
+#ifndef NDEBUG
 // Test utilities
 
 map<int, vector<shared_ptr<Allele>>> createTestGenotype(
@@ -105,6 +105,6 @@ map<int, vector<shared_ptr<Allele>>> createTestGenotype(
 	const float domCoeffA = 1.0, // default for dispersal traits
 	const float domCoeffB = 1.0
 );
-#endif //RSDEBUG
+#endif // NDEBUG
 
 #endif // DISPTRAITH

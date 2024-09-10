@@ -341,7 +341,7 @@ public:
 		const int		 	// year
 	);
 #endif
-#if RSDEBUG
+#ifndef NDEBUG
 	// Testing utilities
 	Cell* getCurrCell() const;
 	void setInitAngle(const float angle);
@@ -395,7 +395,7 @@ double wrpcauchy(double location, double rho = exp(double(-1)));
 
 extern RSrandom* pRandom;
 
-#if RSDEBUG
+#ifndef NDEBUG
 extern ofstream DEBUGLOG;
 #endif
 

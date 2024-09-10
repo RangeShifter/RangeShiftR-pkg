@@ -1125,7 +1125,7 @@ int Landscape::readLandChange(int filenum, bool costs)
 #endif
 {
 
-#if RSDEBUG
+#ifndef NDEBUG
 	DEBUGLOG << "Landscape::readLandChange(): filenum=" << filenum << " costs=" << int(costs)
 		<< endl;
 #endif
@@ -1600,7 +1600,7 @@ void Landscape::createCostsChgMatrix(void)
 }
 
 void Landscape::recordCostChanges(int landIx) {
-#if RSDEBUG
+#ifndef NDEBUG
 	DEBUGLOG << "Landscape::recordCostChanges(): landIx=" << landIx << endl;
 #endif
 	if (costsChgMatrix == 0) return; // should not occur
@@ -2289,7 +2289,7 @@ int Landscape::readCosts(string fname)
 
 	int maxcost = 0;
 
-#if RSDEBUG
+#ifndef NDEBUG
 #if BATCH
 	DEBUGLOG << "Landscape::readCosts(): fname=" << fname << endl;
 #endif
@@ -2529,7 +2529,7 @@ void Landscape::outPathsHeaders(int rep, int option)
 			outMovePaths << "Year\tIndID\tStep\tx\ty\tStatus" << endl;
 		}
 		else {
-#if RSDEBUG
+#ifndef NDEBUG
 			DEBUGLOG << "RunModel(): UNABLE TO OPEN MOVEMENT PATHS FILE" << endl;
 #endif
 			outMovePaths.clear();
@@ -2650,7 +2650,7 @@ void Landscape::outVisits(int rep, int landNr) {
 
 //---------------------------------------------------------------------------
 
-#if RSDEBUG
+#ifndef NDEBUG
 // Debug only: shortcut setup utilities
 
 Landscape createLandscapeFromCells(vector<Cell*> cells, const landParams& lp, Species sp) {
@@ -2687,7 +2687,7 @@ landParams createDefaultLandParams(const int& dim) {
 void testLandscape() {
 	// test coordinate system...
 }
-#endif // RSDEBUG
+#endif // NDEBUG
 
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------

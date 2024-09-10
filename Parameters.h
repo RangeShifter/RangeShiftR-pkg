@@ -415,7 +415,7 @@ private:
 	int outputGeneticInterval;
 };
 
-#if RSDEBUG
+#ifndef NDEBUG
 extern ofstream DEBUGLOG;
 #endif
 

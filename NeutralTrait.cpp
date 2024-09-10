@@ -290,7 +290,7 @@ float NeutralTrait::getAlleleValueAtLocus(short whichChromosome, int position) c
 	return it->second[whichChromosome];
 }
 
-#if RSDEBUG // Testing only
+#ifndef NDEBUG // Testing only
 // Get allele ID at locus
 int NeutralTrait::getAlleleIDAtLocus(short whichChromosome, int position) const {
 	// for neutral genes this is the same as the allele value
@@ -318,4 +318,4 @@ map<int, vector<unsigned char>> createTestNeutralGenotype(
 	return genotype;
 }
 
-#endif // RSDEBUG
+#endif // NDEBUG
