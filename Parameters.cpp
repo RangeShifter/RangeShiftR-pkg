@@ -223,7 +223,7 @@ paramSim::paramSim(void) {
 	batchMode = absorbing = false;
 	outRange = outOccup = outPop = outInds = false;
 	outTraitsCells = outTraitsRows = outConnect = false;
-	outputWeirCockerham = outputWeirHill = false;
+	outputGenes = outputWeirCockerham = outputWeirHill = false;
 	saveMaps = false; saveTraitMaps = false;
 	saveVisits = false;
 #if RS_RCPP
