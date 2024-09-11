@@ -784,13 +784,6 @@ void OutParameters(Landscape* pLandscape)
 
 	outPar << "RangeShifter 2.0 ";
 
-#if !RS_RCPP
-#if RSWIN64
-	outPar << " - 64 bit implementation";
-#else
-	outPar << " - 32 bit implementation";
-#endif
-#endif
 	outPar << endl;
 
 	outPar << "================ ";

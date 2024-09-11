@@ -171,14 +171,14 @@ int InitDist::readDistribution(string distfile) {
 #endif
 
 	// open distribution file
-#if !RS_RCPP || RSWIN64
-	dfile.open(distfile.c_str());
-#else
+#if RS_RCPP
 	dfile.open(distfile, std::ios::binary);
 	if (spdistraster.utf) {
 		// apply BOM-sensitive UTF-16 facet
 		dfile.imbue(std::locale(dfile.getloc(), new std::codecvt_utf16<wchar_t, 0x10ffff, std::consume_header>));
 	}
+#else
+	dfile.open(distfile.c_str());
 #endif
 	if (!dfile.is_open()) return 21;
 
@@ -1790,26 +1790,26 @@ int Landscape::readLandscape(int fileNum, string habfile, string pchfile, string
 	initParams init = paramsInit->getInit();
 
 	// open habitat file and optionally also patch file
-#if !RS_RCPP || RSWIN64
-	hfile.open(habfile.c_str());
-#else
+#if RS_RCPP
 	hfile.open(habfile, std::ios::binary);
 	if (landraster.utf) {
 		// apply BOM-sensitive UTF-16 facet
 		hfile.imbue(std::locale(hfile.getloc(), new std::codecvt_utf16<wchar_t, 0x10ffff, std::consume_header>));
 	}
+#else
+	hfile.open(habfile.c_str());
 #endif
 	if (!hfile.is_open()) return 11;
 	if (fileNum == 0) {
 		if (patchModel) {
-#if !RS_RCPP || RSWIN64
-			pfile.open(pchfile.c_str());
-#else
+#if RS_RCPP
 			pfile.open(pchfile, std::ios::binary);
 			if (patchraster.utf) {
 				// apply BOM-sensitive UTF-16 facet
 				pfile.imbue(std::locale(pfile.getloc(), new std::codecvt_utf16<wchar_t, 0x10ffff, std::consume_header>));
 			}
+#else
+			pfile.open(pchfile.c_str());
 #endif
 			if (!pfile.is_open()) {
 				hfile.close(); hfile.clear();
@@ -2296,14 +2296,14 @@ int Landscape::readCosts(string fname)
 #endif
 	// open cost file
  // open cost file
-#if !RS_RCPP || RSWIN64
-	costs.open(fname.c_str());
-#else
+#if RS_RCPP
 	costs.open(fname, std::ios::binary);
 	if (costsraster.utf) {
 		// apply BOM-sensitive UTF-16 facet
 		costs.imbue(std::locale(costs.getloc(), new std::codecvt_utf16<wchar_t, 0x10ffff, std::consume_header>));
 	}
+#else
+	costs.open(fname.c_str());
 #endif
 	// read headers and check that they correspond to the landscape ones
 	costs >> header;

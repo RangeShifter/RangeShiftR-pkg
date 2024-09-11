@@ -74,11 +74,7 @@ constexpr int gMaxNbSexes = 2;			// maximum number of sexes permitted
 #if RS_RCPP
 typedef intptr_t intptr;
 #else
-#if RSWIN64
 typedef unsigned long long intptr;
-#else
-typedef unsigned int intptr;
-#endif
 #endif // RS_RCPP
 
 #if RS_RCPP
