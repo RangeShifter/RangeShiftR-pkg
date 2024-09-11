@@ -125,15 +125,8 @@ int RunModel(Landscape* pLandscape, int seqsim)
 			int npatches = pLandscape->patchCount();
 			for (int i = 0; i < npatches; i++) {
 				ppp = pLandscape->getPatchData(i);
-#if RSWIN64
-#if LINUX_CLUSTER
 				pComm->addSubComm(ppp.pPatch, ppp.patchNum); // SET UP ALL SUB-COMMUNITIES
-#else
-				SubCommunity* pSubComm = pComm->addSubComm(ppp.pPatch, ppp.patchNum); // SET UP ALL SUB-COMMUNITIES
-#endif
-#else
 				pComm->addSubComm(ppp.pPatch, ppp.patchNum); // SET UP ALL SUB-COMMUNITIES
-#endif
 			}
 			if (sim.patchSamplingOption == "random") {
 				// Then patches must be resampled for new landscape
