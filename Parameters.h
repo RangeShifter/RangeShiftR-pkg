@@ -48,14 +48,9 @@
 #ifndef ParametersH
 #define ParametersH
 
- //#if LINUX_CLUSTER
- //#include <string.h>
- //#else
 #include <string>
-//#endif
 #include <fstream>
 #include <iostream>
-//#include <io.h>
 #include <iomanip>
 #include <stdlib.h>
 #include <vector>

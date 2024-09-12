@@ -577,7 +577,7 @@ private:
 // For testing purposes only
 demogrParams createDefaultHaploidDemogrParams();
 demogrParams createDefaultDiploidDemogrParams();
-#endif NDEBUG
+#endif // NDEBUG
 
 //---------------------------------------------------------------------------
 #endif

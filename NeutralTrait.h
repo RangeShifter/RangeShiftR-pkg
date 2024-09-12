@@ -90,7 +90,7 @@ private:
 map<int, vector<unsigned char>> createTestNeutralGenotype(
 	const int genomeSz, const bool isDiploid,
 	const unsigned char valAlleleA,
-	const unsigned char valAlleleB = -99.9 // if haploid
+	const unsigned char valAlleleB = char(0) // if haploid
 );
 #endif
 
