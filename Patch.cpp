@@ -294,10 +294,6 @@ void Patch::resetPossSettlers(void) {
 
 // Record the presence of a potential settler within the Patch
 void Patch::incrPossSettler(Species* pSpecies, int sex) {
-#if RSDEBUG
-	//DEBUGLOG << "Patch::incrPossSettler(): 5555: patchNum = " << patchNum
-	//	<< " sex = " << sex << endl;
-#endif
 // NOTE: THE FOLLOWING OPERATION WILL NEED TO BE MADE SPECIES-SPECIFIC...
 	if (sex >= 0 && sex < gMaxNbSexes) {
 		nTemp[sex]++;
@@ -306,10 +302,6 @@ void Patch::incrPossSettler(Species* pSpecies, int sex) {
 
 // Get number of a potential settlers within the Patch
 int Patch::getPossSettlers(Species* pSpecies, int sex) {
-#if RSDEBUG
-	//DEBUGLOG << "Patch::getPossSettlers(): 5555: patchNum = " << patchNum
-	//	<< " sex = " << sex << endl;
-#endif
 // NOTE: THE FOLLOWING OPERATION WILL NEED TO BE MADE SPECIES-SPECIFIC...
 	if (sex >= 0 && sex < gMaxNbSexes) return nTemp[sex];
 	else return 0;

@@ -61,7 +61,7 @@
 using namespace std::filesystem;
 #endif
 
-#if RSDEBUG
+#ifndef NDEBUG
 extern ofstream DEBUGLOG;
 #endif
 

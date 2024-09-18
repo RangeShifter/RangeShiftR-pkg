@@ -43,7 +43,7 @@
 
 using namespace std;
 
-#if RSDEBUG
+#ifndef NDEBUG
 extern ofstream DEBUGLOG;
 #endif
 
@@ -133,9 +133,9 @@ private:
 
 #endif // !RS_RCPP
 
-#if RSDEBUG
+#ifndef NDEBUG
 	void testRSrandom();
-#endif // RSDEBUG
+#endif // NDEBUG
 
 //---------------------------------------------------------------------------
 

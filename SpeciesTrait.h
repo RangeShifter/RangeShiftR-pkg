@@ -85,13 +85,12 @@ private:
     map<GenParamType, float> mutationParameters;
 };
 
-#if RSDEBUG // Testing only
-
+#ifndef NDEBUG // Testing only
 // Create a default set of gene positions ranging from zero to genome size
 set<int> createTestGenePositions(const int genomeSz);
 SpeciesTrait* createTestEmigSpTrait(const set<int>& genePositions, const bool& isDiploid);
 SpeciesTrait* createTestGenLoadTrait(const set<int>& genePositions, const bool& isDiploid);
 SpeciesTrait* createTestNeutralSpTrait(const float& maxAlleleVal, const set<int>& genePositions, const bool& isDiploid);
-#endif // RSDEBUG
+#endif // NDEBUG
 
 #endif // SPECIESTRAITH

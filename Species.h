@@ -573,11 +573,11 @@ private:
 
 //---------------------------------------------------------------------------
 
-#if RSDEBUG
+#ifndef NDEBUG
 // For testing purposes only
 demogrParams createDefaultHaploidDemogrParams();
 demogrParams createDefaultDiploidDemogrParams();
-#endif RSDEBUG
+#endif // NDEBUG
 
 //---------------------------------------------------------------------------
 #endif

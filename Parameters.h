@@ -48,14 +48,9 @@
 #ifndef ParametersH
 #define ParametersH
 
- //#if LINUX_CLUSTER
- //#include <string.h>
- //#else
 #include <string>
-//#endif
 #include <fstream>
 #include <iostream>
-//#include <io.h>
 #include <iomanip>
 #include <stdlib.h>
 #include <vector>
@@ -74,11 +69,7 @@ constexpr int gMaxNbSexes = 2;			// maximum number of sexes permitted
 #if RS_RCPP
 typedef intptr_t intptr;
 #else
-#if RSWIN64
 typedef unsigned long long intptr;
-#else
-typedef unsigned int intptr;
-#endif
 #endif // RS_RCPP
 
 #if RS_RCPP
@@ -415,7 +406,7 @@ private:
 	int outputGeneticInterval;
 };
 
-#if RSDEBUG
+#ifndef NDEBUG
 extern ofstream DEBUGLOG;
 #endif
 

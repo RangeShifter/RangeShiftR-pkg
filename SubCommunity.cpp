@@ -434,10 +434,6 @@ void SubCommunity::ageIncrement(void) {
 
 // Find the population of a given species in a given patch
 Population* SubCommunity::findPop(Species* pSp, Patch* pPch) {
-#if RSDEBUG
-	DEBUGLOG << "SubCommunity::findPop(): this=" << this
-		<< endl;
-#endif
 
 	Population* pPop = 0;
 	popStats pop;

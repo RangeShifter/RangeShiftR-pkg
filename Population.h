@@ -229,10 +229,10 @@ public:
 	vector<int> countNbHeterozygotesEachLocus();
 	double computeHs();
 
-#if RSDEBUG
+#ifndef NDEBUG
 	// Testing only
 	void clearInds() { inds.clear(); } // empty inds vector to avoid deallocating individual is used separately in test
-#endif // RSDEBUG
+#endif // NDEBUG
 
 private:
 	short nStages;
@@ -258,7 +258,7 @@ extern paramInit* paramsInit;
 extern paramSim* paramsSim;
 extern RSrandom* pRandom;
 
-#if RSDEBUG
+#ifndef NDEBUG
 extern ofstream DEBUGLOG;
 #endif
 

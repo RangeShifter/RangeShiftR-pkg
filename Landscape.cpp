@@ -171,14 +171,14 @@ int InitDist::readDistribution(string distfile) {
 #endif
 
 	// open distribution file
-#if !RS_RCPP || RSWIN64
-	dfile.open(distfile.c_str());
-#else
+#if RS_RCPP
 	dfile.open(distfile, std::ios::binary);
 	if (spdistraster.utf) {
 		// apply BOM-sensitive UTF-16 facet
 		dfile.imbue(std::locale(dfile.getloc(), new std::codecvt_utf16<wchar_t, 0x10ffff, std::consume_header>));
 	}
+#else
+	dfile.open(distfile.c_str());
 #endif
 	if (!dfile.is_open()) return 21;
 
@@ -1125,7 +1125,7 @@ int Landscape::readLandChange(int filenum, bool costs)
 #endif
 {
 
-#if RSDEBUG
+#ifndef NDEBUG
 	DEBUGLOG << "Landscape::readLandChange(): filenum=" << filenum << " costs=" << int(costs)
 		<< endl;
 #endif
@@ -1600,7 +1600,7 @@ void Landscape::createCostsChgMatrix(void)
 }
 
 void Landscape::recordCostChanges(int landIx) {
-#if RSDEBUG
+#ifndef NDEBUG
 	DEBUGLOG << "Landscape::recordCostChanges(): landIx=" << landIx << endl;
 #endif
 	if (costsChgMatrix == 0) return; // should not occur
@@ -1790,26 +1790,26 @@ int Landscape::readLandscape(int fileNum, string habfile, string pchfile, string
 	initParams init = paramsInit->getInit();
 
 	// open habitat file and optionally also patch file
-#if !RS_RCPP || RSWIN64
-	hfile.open(habfile.c_str());
-#else
+#if RS_RCPP
 	hfile.open(habfile, std::ios::binary);
 	if (landraster.utf) {
 		// apply BOM-sensitive UTF-16 facet
 		hfile.imbue(std::locale(hfile.getloc(), new std::codecvt_utf16<wchar_t, 0x10ffff, std::consume_header>));
 	}
+#else
+	hfile.open(habfile.c_str());
 #endif
 	if (!hfile.is_open()) return 11;
 	if (fileNum == 0) {
 		if (patchModel) {
-#if !RS_RCPP || RSWIN64
-			pfile.open(pchfile.c_str());
-#else
+#if RS_RCPP
 			pfile.open(pchfile, std::ios::binary);
 			if (patchraster.utf) {
 				// apply BOM-sensitive UTF-16 facet
 				pfile.imbue(std::locale(pfile.getloc(), new std::codecvt_utf16<wchar_t, 0x10ffff, std::consume_header>));
 			}
+#else
+			pfile.open(pchfile.c_str());
 #endif
 			if (!pfile.is_open()) {
 				hfile.close(); hfile.clear();
@@ -2289,21 +2289,21 @@ int Landscape::readCosts(string fname)
 
 	int maxcost = 0;
 
-#if RSDEBUG
+#ifndef NDEBUG
 #if BATCH
 	DEBUGLOG << "Landscape::readCosts(): fname=" << fname << endl;
 #endif
 #endif
 	// open cost file
  // open cost file
-#if !RS_RCPP || RSWIN64
-	costs.open(fname.c_str());
-#else
+#if RS_RCPP
 	costs.open(fname, std::ios::binary);
 	if (costsraster.utf) {
 		// apply BOM-sensitive UTF-16 facet
 		costs.imbue(std::locale(costs.getloc(), new std::codecvt_utf16<wchar_t, 0x10ffff, std::consume_header>));
 	}
+#else
+	costs.open(fname.c_str());
 #endif
 	// read headers and check that they correspond to the landscape ones
 	costs >> header;
@@ -2529,7 +2529,7 @@ void Landscape::outPathsHeaders(int rep, int option)
 			outMovePaths << "Year\tIndID\tStep\tx\ty\tStatus" << endl;
 		}
 		else {
-#if RSDEBUG
+#ifndef NDEBUG
 			DEBUGLOG << "RunModel(): UNABLE TO OPEN MOVEMENT PATHS FILE" << endl;
 #endif
 			outMovePaths.clear();
@@ -2650,7 +2650,7 @@ void Landscape::outVisits(int rep, int landNr) {
 
 //---------------------------------------------------------------------------
 
-#if RSDEBUG
+#ifndef NDEBUG
 // Debug only: shortcut setup utilities
 
 Landscape createLandscapeFromCells(vector<Cell*> cells, const landParams& lp, Species sp) {
@@ -2687,7 +2687,7 @@ landParams createDefaultLandParams(const int& dim) {
 void testLandscape() {
 	// test coordinate system...
 }
-#endif // RSDEBUG
+#endif // NDEBUG
 
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------

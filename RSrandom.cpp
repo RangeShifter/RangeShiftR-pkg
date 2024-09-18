@@ -26,7 +26,7 @@
 
 #if !RS_RCPP
 
-#if RSDEBUG
+#ifndef NDEBUG
 #include "Parameters.h"
 extern paramSim* paramsSim;
 // ofstream RSRANDOMLOG;
@@ -36,8 +36,8 @@ int RS_random_seed = 0;
 
 // C'tor
 RSrandom::RSrandom() {
-#if RSDEBUG
-    // fixed seed
+#ifndef NDEBUG
+	// fixed seed
     RS_random_seed = 666;
 #else
     // random seed
@@ -48,11 +48,11 @@ RSrandom::RSrandom() {
 #else
     RS_random_seed = std::time(NULL);
 #endif
-#endif // RSDEBUG
+#endif // NDEBUG
 
-#if BATCH && RSDEBUG
+#ifndef NDEBUG
     DEBUGLOG << "RSrandom::RSrandom(): RS_random_seed=" << RS_random_seed << endl;
-#endif // RSDEBUG
+#endif
 
     // set up Mersenne Twister RNG
     gen = new mt19937(RS_random_seed);
@@ -128,7 +128,7 @@ double RSrandom::Gamma(double shape, double scale) { //scale  = mean/shape, shap
 
 double RSrandom::NegExp(double mean) {
     double r1 = 0.0000001 + this->Random() * (1.0 - 0.0000001);
-    double x = (-1.0 * mean) * log(r1);  // for LINUX_CLUSTER
+    double x = (-1.0 * mean) * log(r1);
     return x;
 }
 
@@ -143,7 +143,8 @@ void RSrandom::fixNewSeed(int seed) {
 
 //--------------- 3.) R package version of RSrandom.cpp
 
-#if RSDEBUG
+#ifndef NDEBUG
+
 #include "Parameters.h"
 extern paramSim* paramsSim;
 //ofstream RSRANDOMLOG;
@@ -167,21 +168,23 @@ RSrandom::RSrandom(std::int64_t seed)
 		std::random_device device;
 		random_seed[2] = device();
 #endif
-#if BATCH && RSDEBUG
+#ifndef NDEBUG
 		DEBUGLOG << "RSrandom::RSrandom(): Generated random seed = ";
 #endif
 	}
 	else {
 		// fixed seed
 		random_seed[2] = seed;
-#if BATCH && RSDEBUG
+#ifndef NDEBUG
 		DEBUGLOG << "RSrandom::RSrandom(): Use fixed seed = ";
 #endif
 	}
 
 	RS_random_seed = random_seed[2];
-#if BATCH && RSDEBUG
+#if BATCH 
+#ifndef	NDEBUG
 	DEBUGLOG << RS_random_seed << endl;
+#endif
 #endif
 
 	// set up Mersenne Twister random number generator with seed sequence
@@ -258,7 +261,7 @@ double RSrandom::Gamma(double shape, double scale) { //scale  = mean/shape, shap
 
 double RSrandom::NegExp(double mean) {
 	double r1 = 0.0000001 + this->Random() * (1.0 - 0.0000001);
-	double x = (-1.0 * mean) * log(r1);  // for LINUX_CLUSTER
+	double x = (-1.0 * mean) * log(r1);
 	return x;
 }
 
@@ -317,7 +320,8 @@ double RSrandom::Cauchy(double loc, double scale) {
 #endif // RS_RCPP
 
 
-#if RSDEBUG && !RS_RCPP
+#ifndef NDEBUG
+#if !RS_RCPP
 	void testRSrandom() {
 
 		{
@@ -339,5 +343,6 @@ double RSrandom::Cauchy(double loc, double scale) {
 			assert(bern_trial == 0 || bern_trial == 1);
 		}
 	}
-#endif // RSDEBUG
+#endif
+#endif // NDEBUG
 //---------------------------------------------------------------------------

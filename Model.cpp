@@ -125,15 +125,8 @@ int RunModel(Landscape* pLandscape, int seqsim)
 			int npatches = pLandscape->patchCount();
 			for (int i = 0; i < npatches; i++) {
 				ppp = pLandscape->getPatchData(i);
-#if RSWIN64
-#if LINUX_CLUSTER
 				pComm->addSubComm(ppp.pPatch, ppp.patchNum); // SET UP ALL SUB-COMMUNITIES
-#else
-				SubCommunity* pSubComm = pComm->addSubComm(ppp.pPatch, ppp.patchNum); // SET UP ALL SUB-COMMUNITIES
-#endif
-#else
 				pComm->addSubComm(ppp.pPatch, ppp.patchNum); // SET UP ALL SUB-COMMUNITIES
-#endif
 			}
 			if (sim.patchSamplingOption == "random") {
 				// Then patches must be resampled for new landscape
@@ -409,7 +402,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 
 			for (int gen = 0; gen < dem.repSeasons; gen++) // generation loop
 			{
-#if RSDEBUG
+#ifndef NDEBUG
 				// TEMPORARY RANDOM STREAM CHECK
 				if (yr % 1 == 0)
 				{
@@ -718,13 +711,13 @@ bool CheckDirectory(void)
 //For outputs and population visualisations pre-reproduction
 void PreReproductionOutput(Landscape* pLand, Community* pComm, int rep, int yr, int gen)
 {
-#if RSDEBUG
+#ifndef NDEBUG
 	landParams ppLand = pLand->getLandParams();
 #endif
 	simParams sim = paramsSim->getSim();
 	simView v = paramsSim->getViews();
 
-#if RSDEBUG
+#ifndef NDEBUG
 	DEBUGLOG << "PreReproductionOutput(): 11111 rep=" << rep << " yr=" << yr << " gen=" << gen
 		<< " landNum=" << ppLand.landNum << " maxX=" << ppLand.maxX << " maxY=" << ppLand.maxY
 		<< endl;
@@ -791,13 +784,6 @@ void OutParameters(Landscape* pLandscape)
 
 	outPar << "RangeShifter 2.0 ";
 
-#if !RS_RCPP
-#if RSWIN64
-	outPar << " - 64 bit implementation";
-#else
-	outPar << " - 32 bit implementation";
-#endif
-#endif
 	outPar << endl;
 
 	outPar << "================ ";

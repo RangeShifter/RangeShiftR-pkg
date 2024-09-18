@@ -411,7 +411,7 @@ void Community::dispersal(short landIx, short nextseason)
 void Community::dispersal(short landIx)
 #endif // RS_RCPP
 {
-#if RSDEBUG
+#ifndef NDEBUG
 	time_t t0, t1, t2;
 	t0 = time(0);
 #endif
@@ -424,7 +424,7 @@ void Community::dispersal(short landIx)
 	for (int i = 0; i < nsubcomms; i++) { // all populations
 		subComms[i]->initiateDispersal(matrix);
 	}
-#if RSDEBUG
+#ifndef NDEBUG
 	t1 = time(0);
 	DEBUGLOG << "Community::dispersal(): this=" << this
 		<< " nsubcomms=" << nsubcomms << " initiation time=" << t1 - t0 << endl;
@@ -445,7 +445,7 @@ void Community::dispersal(short landIx)
 		matrix->completeDispersal(pLandscape, sim.outConnect);
 	} while (ndispersers > 0);
 
-#if RSDEBUG
+#ifndef NDEBUG
 	DEBUGLOG << "Community::dispersal(): matrix=" << matrix << endl;
 	t2 = time(0);
 	DEBUGLOG << "Community::dispersal(): transfer time=" << t2 - t1 << endl;
@@ -508,7 +508,7 @@ void Community::createOccupancy(int nrows, int reps) {
 
 void Community::updateOccupancy(int row, int rep)
 {
-#if RSDEBUG
+#ifndef NDEBUG
 	DEBUGLOG << "Community::updateOccupancy(): row=" << row << endl;
 #endif
 	int nsubcomms = (int)subComms.size();
@@ -630,7 +630,7 @@ bool Community::outRangeHeaders(Species* pSpecies, int landNr)
 	transferRules trfr = pSpecies->getTransferRules();
 	settleType sett = pSpecies->getSettle();
 
-#if RSDEBUG
+#ifndef NDEBUG
 	DEBUGLOG << "Community::outRangeHeaders(): simulation=" << sim.simulation
 		<< " sim.batchMode=" << sim.batchMode
 		<< " landNr=" << landNr << endl;
@@ -720,7 +720,7 @@ bool Community::outRangeHeaders(Species* pSpecies, int landNr)
 	}
 	outrange << endl;
 
-#if RSDEBUG
+#ifndef NDEBUG
 	DEBUGLOG << "Community::outRangeHeaders(): finished" << endl;
 #endif
 
@@ -730,7 +730,7 @@ bool Community::outRangeHeaders(Species* pSpecies, int landNr)
 // Write record to range file
 void Community::outRange(Species* pSpecies, int rep, int yr, int gen)
 {
-#if RSDEBUG
+#ifndef NDEBUG
 	DEBUGLOG << "Community::outRange(): rep=" << rep
 		<< " yr=" << yr << " gen=" << gen << endl;
 #endif

@@ -53,7 +53,7 @@ public:
 
 	virtual int countHeterozygoteLoci() const;
 	virtual bool isHeterozygoteAtLocus(int locus) const override;
-#if RSDEBUG // for testing only
+#ifndef NDEBUG // for testing only
 	int getAlleleIDAtLocus(short whichChromosome, int position) const;
 #endif
 
@@ -86,11 +86,11 @@ private:
 
 };
 
-#if RSDEBUG // for testing purposes only
+#ifndef NDEBUG // for testing purposes only
 map<int, vector<unsigned char>> createTestNeutralGenotype(
 	const int genomeSz, const bool isDiploid,
 	const unsigned char valAlleleA,
-	const unsigned char valAlleleB = -99.9 // if haploid
+	const unsigned char valAlleleB = char(0) // if haploid
 );
 #endif
 
