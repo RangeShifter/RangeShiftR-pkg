@@ -441,8 +441,9 @@ void NeutralStatsManager::calcPairwiseWeightedFst(set<int> const& patchList, con
 					pBar = commNeutralCountTables[l].getFrequency(u);
 					sqDist = p - pBar; //(p_liu - pbar_u)^2 
 					sqDist *= sqDist;
-
-					num = pq * popSizes[i] / (popSizes[i] - 1); // eq. 8 Weir & Hill 2002
+					
+					num = pq * popSizes[i] ; // eq. 8 Weir & Hill 2002
+					num /= popSizes[i] == 1 ? 1 : popSizes[i] - 1; // avoid division by zero
 					numeratorPairwiseFst[i][i] += num;
 					numeratorWeightedFst += num * popSizes[i]; // see equ. 9, Weir & Hill 2002
 					denominator += popSizes[i] * sqDist + popWeights[i] * pq; //common denominator
@@ -498,7 +499,7 @@ void NeutralStatsManager::calcPairwiseWeightedFst(set<int> const& patchList, con
 
 		// Estimator of global Fst weighted by sample sizes (beta_W in eq. 9 in WH 2002)
 		if (denominator != 0) {
-			weightedFst = 1 - (numeratorWeightedFst * sumWeights) / (denominator * totSize); // beta_w in Eq. 9 in WH 2002
+   			weightedFst = 1 - (numeratorWeightedFst * sumWeights) / (denominator * totSize); // beta_w in Eq. 9 in WH 2002
 		}
 		else {
 			weightedFst = 0.0;
