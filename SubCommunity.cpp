@@ -694,7 +694,7 @@ bool SubCommunity::outTraitsHeaders(Landscape* pLandscape, Species* pSpecies, in
 		}
 	}
 	if (pSpecies->getNbGenLoadTraits() > 0) {
-		if (gMaxNbSexes > 1) {
+		if (pSpecies->getDemogrParams().repType > 0) {
 			outtraits << "\tF_meanGenFitness\tF_stdGenFitness\tM_meanGenFitness\tM_stdGenFitness";
 		}
 		else {
@@ -995,7 +995,7 @@ traitsums SubCommunity::outTraits(Landscape* pLandscape, int rep, int yr, int ge
 				}
 
 				if (writefile) {
-					if (gMaxNbSexes > 1) {
+					if (pSpecies->getDemogrParams().repType > 0) {
 						outtraits << "\t" << mnGenFitness[0] << "\t" << sdGenFitness[0];
 						outtraits << "\t" << mnGenFitness[1] << "\t" << sdGenFitness[1];
 					}

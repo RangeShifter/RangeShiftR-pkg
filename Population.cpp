@@ -306,6 +306,7 @@ traitsums Population::getIndTraitsSums(Species* pSpecies) {
 
 		if (gMaxNbSexes > 1) g = sex; 
 		else g = 0;
+
 		ts.sumGeneticFitness[g] += inds[iInd]->getGeneticFitness();
 		ts.ssqGeneticFitness[g] += inds[iInd]->getGeneticFitness() * inds[iInd]->getGeneticFitness();
 	}
