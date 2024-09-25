@@ -28,9 +28,10 @@
 Species::Species(void)
 {
 	// initialise demographic parameters
-	repType = 0; nStages = 2;
+	repType = 0; 
+	nStages = 2;
 	stageStruct = false;
-	propMales = 0.5; 
+	propMales = 0.0; 
 	harem = 1.0; 
 	bc = 1.0; 
 	lambda = 1.5; 
