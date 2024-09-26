@@ -792,10 +792,9 @@ void OutParameters(Landscape* pLandscape)
 	outPar << endl << endl;
 
 	outPar << "BATCH MODE \t";
-	if (sim.batchMode) outPar << "yes" << endl; else outPar << "no" << endl;
-#if RS_RCPP
-	outPar << "SEED \t" << RS_random_seed << endl;
-#endif
+	if (sim.batchMode) outPar << "yes" << endl; 
+	else outPar << "no" << endl;
+	outPar << "SEED \t" << pRandom->getSeed() << endl;
 	outPar << "REPLICATES \t" << sim.reps << endl;
 	outPar << "YEARS \t" << sim.years << endl;
 	outPar << "REPRODUCTIVE SEASONS / YEAR\t" << dem.repSeasons << endl;
