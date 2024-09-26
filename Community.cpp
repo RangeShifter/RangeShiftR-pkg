@@ -411,11 +411,6 @@ void Community::dispersal(short landIx, short nextseason)
 void Community::dispersal(short landIx)
 #endif // RS_RCPP
 {
-#ifndef NDEBUG
-	time_t t0, t1, t2;
-	t0 = time(0);
-#endif
-
 	simParams sim = paramsSim->getSim();
 
 	int nsubcomms = (int)subComms.size();
@@ -424,11 +419,6 @@ void Community::dispersal(short landIx)
 	for (int i = 0; i < nsubcomms; i++) { // all populations
 		subComms[i]->initiateDispersal(matrix);
 	}
-#ifndef NDEBUG
-	t1 = time(0);
-	DEBUGLOG << "Community::dispersal(): this=" << this
-		<< " nsubcomms=" << nsubcomms << " initiation time=" << t1 - t0 << endl;
-#endif
 
 	// dispersal is undertaken by all individuals now in the matrix patch
 	// (even if not physically in the matrix)
@@ -444,13 +434,6 @@ void Community::dispersal(short landIx)
 #endif // SEASONAL || RS_RCPP
 		matrix->completeDispersal(pLandscape, sim.outConnect);
 	} while (ndispersers > 0);
-
-#ifndef NDEBUG
-	DEBUGLOG << "Community::dispersal(): matrix=" << matrix << endl;
-	t2 = time(0);
-	DEBUGLOG << "Community::dispersal(): transfer time=" << t2 - t1 << endl;
-#endif
-
 }
 
 void Community::survival(short part, short option0, short option1)
@@ -508,17 +491,12 @@ void Community::createOccupancy(int nrows, int reps) {
 
 void Community::updateOccupancy(int row, int rep)
 {
-#ifndef NDEBUG
-	DEBUGLOG << "Community::updateOccupancy(): row=" << row << endl;
-#endif
 	int nsubcomms = (int)subComms.size();
 	for (int i = 0; i < nsubcomms; i++) {
 		subComms[i]->updateOccupancy(row);
 	}
-
 	commStats s = getStats();
 	occSuit[row][rep] = (float)s.occupied / (float)s.suitable;
-
 }
 
 void Community::deleteOccupancy(int nrows) {
@@ -630,12 +608,6 @@ bool Community::outRangeHeaders(Species* pSpecies, int landNr)
 	transferRules trfr = pSpecies->getTransferRules();
 	settleType sett = pSpecies->getSettle();
 
-#ifndef NDEBUG
-	DEBUGLOG << "Community::outRangeHeaders(): simulation=" << sim.simulation
-		<< " sim.batchMode=" << sim.batchMode
-		<< " landNr=" << landNr << endl;
-#endif
-
 	if (sim.batchMode) {
 		name = paramsSim->getDir(2)
 			+ "Batch" + to_string(sim.batchNum) + "_"
@@ -719,22 +691,12 @@ bool Community::outRangeHeaders(Species* pSpecies, int landNr)
 		}
 	}
 	outrange << endl;
-
-#ifndef NDEBUG
-	DEBUGLOG << "Community::outRangeHeaders(): finished" << endl;
-#endif
-
 	return outrange.is_open();
 }
 
 // Write record to range file
 void Community::outRange(Species* pSpecies, int rep, int yr, int gen)
 {
-#ifndef NDEBUG
-	DEBUGLOG << "Community::outRange(): rep=" << rep
-		<< " yr=" << yr << " gen=" << gen << endl;
-#endif
-
 	landParams ppLand = pLandscape->getLandParams();
 	envStochParams env = paramsStoch->getStoch();
 

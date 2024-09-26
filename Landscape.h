@@ -531,7 +531,6 @@ extern paramSim* paramsSim;
 extern RSrandom* pRandom;
 
 #ifndef NDEBUG
-extern ofstream DEBUGLOG;
 landParams createDefaultLandParams(const int& dim);
 void testLandscape();
 #endif

@@ -61,10 +61,6 @@
 using namespace std::filesystem;
 #endif
 
-#ifndef NDEBUG
-extern ofstream DEBUGLOG;
-#endif
-
 #if RS_RCPP && !R_CMD
 Rcpp::List RunModel(
 	Landscape*,	// pointer to Landscape

@@ -406,10 +406,6 @@ private:
 	int outputGeneticInterval;
 };
 
-#ifndef NDEBUG
-extern ofstream DEBUGLOG;
-#endif
-
 extern RSrandom* pRandom;
 
 //---------------------------------------------------------------------------

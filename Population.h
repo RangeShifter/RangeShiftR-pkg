@@ -258,10 +258,6 @@ extern paramInit* paramsInit;
 extern paramSim* paramsSim;
 extern RSrandom* pRandom;
 
-#ifndef NDEBUG
-extern ofstream DEBUGLOG;
-#endif
-
 //---------------------------------------------------------------------------
 #endif
 

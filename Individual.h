@@ -395,10 +395,6 @@ double wrpcauchy(double location, double rho = exp(double(-1)));
 
 extern RSrandom* pRandom;
 
-#ifndef NDEBUG
-extern ofstream DEBUGLOG;
-#endif
-
 #if RS_RCPP
 extern ofstream outMovePaths;
 #endif

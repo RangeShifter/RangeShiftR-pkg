@@ -64,7 +64,6 @@ paramStoch* paramsStoch;
 paramInit* paramsInit;
 paramSim* paramsSim;
 RSrandom* pRandom;
-ofstream DEBUGLOG;
 vector <string> hfnames;
 Species* pSpecies;
 Community* pComm;

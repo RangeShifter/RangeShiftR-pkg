@@ -1125,11 +1125,6 @@ int Landscape::readLandChange(int filenum, bool costs)
 #endif
 {
 
-#ifndef NDEBUG
-	DEBUGLOG << "Landscape::readLandChange(): filenum=" << filenum << " costs=" << int(costs)
-		<< endl;
-#endif
-
 #if RS_RCPP
 	wstring header;
 #else
@@ -1600,9 +1595,7 @@ void Landscape::createCostsChgMatrix(void)
 }
 
 void Landscape::recordCostChanges(int landIx) {
-#ifndef NDEBUG
-	DEBUGLOG << "Landscape::recordCostChanges(): landIx=" << landIx << endl;
-#endif
+
 	if (costsChgMatrix == 0) return; // should not occur
 	costChange chg;
 
@@ -2289,13 +2282,7 @@ int Landscape::readCosts(string fname)
 
 	int maxcost = 0;
 
-#ifndef NDEBUG
-#if BATCH
-	DEBUGLOG << "Landscape::readCosts(): fname=" << fname << endl;
-#endif
-#endif
 	// open cost file
- // open cost file
 #if RS_RCPP
 	costs.open(fname, std::ios::binary);
 	if (costsraster.utf) {
@@ -2529,9 +2516,6 @@ void Landscape::outPathsHeaders(int rep, int option)
 			outMovePaths << "Year\tIndID\tStep\tx\ty\tStatus" << endl;
 		}
 		else {
-#ifndef NDEBUG
-			DEBUGLOG << "RunModel(): UNABLE TO OPEN MOVEMENT PATHS FILE" << endl;
-#endif
 			outMovePaths.clear();
 		}
 	}
