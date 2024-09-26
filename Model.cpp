@@ -42,7 +42,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 	envStochParams env = paramsStoch->getStoch();
 	demogrParams dem = pSpecies->getDemogrParams();
 	stageParams sstruct = pSpecies->getStageParams();
-	//emigRules emig = pSpecies->getEmig();
 	transferRules trfr = pSpecies->getTransferRules();
 	initParams init = paramsInit->getInit();
 	simParams sim = paramsSim->getSim();
@@ -402,20 +401,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 
 			for (int gen = 0; gen < dem.repSeasons; gen++) // generation loop
 			{
-#ifndef NDEBUG
-				// TEMPORARY RANDOM STREAM CHECK
-				if (yr % 1 == 0)
-				{
-					DEBUGLOG << endl << "RunModel(): start of gen " << gen << " in year " << yr
-						<< " for rep " << rep << " (";
-					for (int i = 0; i < 5; i++) {
-						int rrrr = pRandom->IRandom(1000, 2000);
-						DEBUGLOG << " " << rrrr;
-					}
-					DEBUGLOG << " )" << endl;
-				}
-#endif
-
 				// Output and pop. visualisation before reproduction
 				if (v.viewPop || v.viewTraits || sim.outOccup
 					|| sim.outTraitsCells || sim.outTraitsRows || sim.saveMaps)
@@ -711,21 +696,8 @@ bool CheckDirectory(void)
 //For outputs and population visualisations pre-reproduction
 void PreReproductionOutput(Landscape* pLand, Community* pComm, int rep, int yr, int gen)
 {
-#ifndef NDEBUG
-	landParams ppLand = pLand->getLandParams();
-#endif
 	simParams sim = paramsSim->getSim();
 	simView v = paramsSim->getViews();
-
-#ifndef NDEBUG
-	DEBUGLOG << "PreReproductionOutput(): 11111 rep=" << rep << " yr=" << yr << " gen=" << gen
-		<< " landNum=" << ppLand.landNum << " maxX=" << ppLand.maxX << " maxY=" << ppLand.maxY
-		<< endl;
-	DEBUGLOG << "PreReproductionOutput(): 11112 outRange=" << sim.outRange
-		<< " outIntRange=" << sim.outIntRange
-		<< " outPop=" << sim.outPop << " outIntPop=" << sim.outIntPop
-		<< endl;
-#endif
 
 	// trait outputs and visualisation
 	if (v.viewTraits

@@ -65,7 +65,6 @@ paramInit* paramsInit;
 paramSim* paramsSim;
 RSrandom* pRandom;
 ofstream DEBUGLOG;
-ofstream MUTNLOG;
 vector <string> hfnames;
 Species* pSpecies;
 Community* pComm;
