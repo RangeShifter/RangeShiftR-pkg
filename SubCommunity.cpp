@@ -694,11 +694,11 @@ bool SubCommunity::outTraitsHeaders(Landscape* pLandscape, Species* pSpecies, in
 		}
 	}
 	if (pSpecies->getNbGenLoadTraits() > 0) {
-		if (gMaxNbSexes > 1) {
-			outtraits << "\tF_meanProbViable\tF_stdProbViable\tM_meanProbViable\tM_stdProbViable";
+		if (pSpecies->getDemogrParams().repType > 0) {
+			outtraits << "\tF_meanGenFitness\tF_stdGenFitness\tM_meanGenFitness\tM_stdGenFitness";
 		}
 		else {
-			outtraits << "\tmeanProbViable\tstdProbViable";
+			outtraits << "\tmeanGenFitness\tstdGenFitness";
 		}
 	}
 
@@ -710,7 +710,7 @@ bool SubCommunity::outTraitsHeaders(Landscape* pLandscape, Species* pSpecies, in
 // Write records to traits file and return aggregated sums
 traitsums SubCommunity::outTraits(Landscape* pLandscape, int rep, int yr, int gen, bool commlevel)
 {
-	int popsize, ngenes;
+	int popsize, ploidy;
 	landParams land = pLandscape->getLandParams();
 	simParams sim = paramsSim->getSim();
 	bool writefile = false;
@@ -762,37 +762,37 @@ traitsums SubCommunity::outTraits(Landscape* pLandscape, int rep, int yr, int ge
 
 			if (emig.indVar) {
 				if (emig.sexDep) { // must be a sexual species
-					ngenes = 2;
+					ploidy = 2;
 				}
 				else {
 					if (dem.repType == 0) { // asexual reproduction
-						ngenes = 1;
+						ploidy = 1;
 					}
 					else { // sexual reproduction
-						ngenes = 1;
+						ploidy = 1;
 					}
 				}
 				double mnD0[2], mnAlpha[2], mnBeta[2], sdD0[2], sdAlpha[2], sdBeta[2];
-				for (int iGene = 0; iGene < ngenes; iGene++) {
-					mnD0[iGene] = mnAlpha[iGene] = mnBeta[iGene] = sdD0[iGene] = sdAlpha[iGene] = sdBeta[iGene] = 0.0;
+				for (int whichChromosome = 0; whichChromosome < ploidy; whichChromosome++) {
+					mnD0[whichChromosome] = mnAlpha[whichChromosome] = mnBeta[whichChromosome] = sdD0[whichChromosome] = sdAlpha[whichChromosome] = sdBeta[whichChromosome] = 0.0;
 					// individuals may have been counted by sex if there was
 					// sex dependency in another dispersal phase
-					if (ngenes == 2) popsize = indTraitsSums.ninds[iGene];
+					if (ploidy == 2) popsize = indTraitsSums.ninds[whichChromosome];
 					else popsize = indTraitsSums.ninds[0] + indTraitsSums.ninds[1];
 					if (popsize > 0) {
-						mnD0[iGene] = indTraitsSums.sumD0[iGene] / (double)popsize;
-						mnAlpha[iGene] = indTraitsSums.sumAlpha[iGene] / (double)popsize;
-						mnBeta[iGene] = indTraitsSums.sumBeta[iGene] / (double)popsize;
+						mnD0[whichChromosome] = indTraitsSums.sumD0[whichChromosome] / (double)popsize;
+						mnAlpha[whichChromosome] = indTraitsSums.sumAlpha[whichChromosome] / (double)popsize;
+						mnBeta[whichChromosome] = indTraitsSums.sumBeta[whichChromosome] / (double)popsize;
 						if (popsize > 1) {
-							sdD0[iGene] = indTraitsSums.ssqD0[iGene] / (double)popsize - mnD0[iGene] * mnD0[iGene];
-							if (sdD0[iGene] > 0.0) sdD0[iGene] = sqrt(sdD0[iGene]); else sdD0[iGene] = 0.0;
-							sdAlpha[iGene] = indTraitsSums.ssqAlpha[iGene] / (double)popsize - mnAlpha[iGene] * mnAlpha[iGene];
-							if (sdAlpha[iGene] > 0.0) sdAlpha[iGene] = sqrt(sdAlpha[iGene]); else sdAlpha[iGene] = 0.0;
-							sdBeta[iGene] = indTraitsSums.ssqBeta[iGene] / (double)popsize - mnBeta[iGene] * mnBeta[iGene];
-							if (sdBeta[iGene] > 0.0) sdBeta[iGene] = sqrt(sdBeta[iGene]); else sdBeta[iGene] = 0.0;
+							sdD0[whichChromosome] = indTraitsSums.ssqD0[whichChromosome] / (double)popsize - mnD0[whichChromosome] * mnD0[whichChromosome];
+							if (sdD0[whichChromosome] > 0.0) sdD0[whichChromosome] = sqrt(sdD0[whichChromosome]); else sdD0[whichChromosome] = 0.0;
+							sdAlpha[whichChromosome] = indTraitsSums.ssqAlpha[whichChromosome] / (double)popsize - mnAlpha[whichChromosome] * mnAlpha[whichChromosome];
+							if (sdAlpha[whichChromosome] > 0.0) sdAlpha[whichChromosome] = sqrt(sdAlpha[whichChromosome]); else sdAlpha[whichChromosome] = 0.0;
+							sdBeta[whichChromosome] = indTraitsSums.ssqBeta[whichChromosome] / (double)popsize - mnBeta[whichChromosome] * mnBeta[whichChromosome];
+							if (sdBeta[whichChromosome] > 0.0) sdBeta[whichChromosome] = sqrt(sdBeta[whichChromosome]); else sdBeta[whichChromosome] = 0.0;
 						}
 						else {
-							sdD0[iGene] = sdAlpha[iGene] = sdBeta[iGene] = 0.0;
+							sdD0[whichChromosome] = sdAlpha[whichChromosome] = sdBeta[whichChromosome] = 0.0;
 						}
 					}
 				}
@@ -820,58 +820,58 @@ traitsums SubCommunity::outTraits(Landscape* pLandscape, int rep, int yr, int ge
 			if (trfr.indVar) {
 				if (trfr.usesMovtProc) {
 					// CURRENTLY INDIVIDUAL VARIATION CANNOT BE SEX-DEPENDENT
-					ngenes = 1;
+					ploidy = 1;
 				}
 				else {
 					if (trfr.sexDep) { // must be a sexual species
-						ngenes = 2;
+						ploidy = 2;
 					}
 					else {
-						ngenes = 1;
+						ploidy = 1;
 					}
 				}
 				double mnDist1[2], mnDist2[2], mnProp1[2], mnStepL[2], mnRho[2];
 				double sdDist1[2], sdDist2[2], sdProp1[2], sdStepL[2], sdRho[2];
 				double mnDP[2], mnGB[2], mnAlphaDB[2], mnBetaDB[2];
 				double sdDP[2], sdGB[2], sdAlphaDB[2], sdBetaDB[2];
-				for (int iGene = 0; iGene < ngenes; iGene++) {
-					mnDist1[iGene] = mnDist2[iGene] = mnProp1[iGene] = mnStepL[iGene] = mnRho[iGene] = 0.0;
-					sdDist1[iGene] = sdDist2[iGene] = sdProp1[iGene] = sdStepL[iGene] = sdRho[iGene] = 0.0;
-					mnDP[iGene] = mnGB[iGene] = mnAlphaDB[iGene] = mnBetaDB[iGene] = 0.0;
-					sdDP[iGene] = sdGB[iGene] = sdAlphaDB[iGene] = sdBetaDB[iGene] = 0.0;
+				for (int whichChromosome = 0; whichChromosome < ploidy; whichChromosome++) {
+					mnDist1[whichChromosome] = mnDist2[whichChromosome] = mnProp1[whichChromosome] = mnStepL[whichChromosome] = mnRho[whichChromosome] = 0.0;
+					sdDist1[whichChromosome] = sdDist2[whichChromosome] = sdProp1[whichChromosome] = sdStepL[whichChromosome] = sdRho[whichChromosome] = 0.0;
+					mnDP[whichChromosome] = mnGB[whichChromosome] = mnAlphaDB[whichChromosome] = mnBetaDB[whichChromosome] = 0.0;
+					sdDP[whichChromosome] = sdGB[whichChromosome] = sdAlphaDB[whichChromosome] = sdBetaDB[whichChromosome] = 0.0;
 					// individuals may have been counted by sex if there was
 					// sex dependency in another dispersal phase
-					if (ngenes == 2) popsize = indTraitsSums.ninds[iGene];
+					if (ploidy == 2) popsize = indTraitsSums.ninds[whichChromosome];
 					else popsize = indTraitsSums.ninds[0] + indTraitsSums.ninds[1];
 					if (popsize > 0) {
-						mnDist1[iGene] = indTraitsSums.sumDist1[iGene] / (double)popsize;
-						mnDist2[iGene] = indTraitsSums.sumDist2[iGene] / (double)popsize;
-						mnProp1[iGene] = indTraitsSums.sumProp1[iGene] / (double)popsize;
-						mnStepL[iGene] = indTraitsSums.sumStepL[iGene] / (double)popsize;
-						mnRho[iGene] = indTraitsSums.sumRho[iGene] / (double)popsize;
-						mnDP[iGene] = indTraitsSums.sumDP[iGene] / (double)popsize;
-						mnGB[iGene] = indTraitsSums.sumGB[iGene] / (double)popsize;
-						mnAlphaDB[iGene] = indTraitsSums.sumAlphaDB[iGene] / (double)popsize;
-						mnBetaDB[iGene] = indTraitsSums.sumBetaDB[iGene] / (double)popsize;
+						mnDist1[whichChromosome] = indTraitsSums.sumDist1[whichChromosome] / (double)popsize;
+						mnDist2[whichChromosome] = indTraitsSums.sumDist2[whichChromosome] / (double)popsize;
+						mnProp1[whichChromosome] = indTraitsSums.sumProp1[whichChromosome] / (double)popsize;
+						mnStepL[whichChromosome] = indTraitsSums.sumStepL[whichChromosome] / (double)popsize;
+						mnRho[whichChromosome] = indTraitsSums.sumRho[whichChromosome] / (double)popsize;
+						mnDP[whichChromosome] = indTraitsSums.sumDP[whichChromosome] / (double)popsize;
+						mnGB[whichChromosome] = indTraitsSums.sumGB[whichChromosome] / (double)popsize;
+						mnAlphaDB[whichChromosome] = indTraitsSums.sumAlphaDB[whichChromosome] / (double)popsize;
+						mnBetaDB[whichChromosome] = indTraitsSums.sumBetaDB[whichChromosome] / (double)popsize;
 						if (popsize > 1) {
-							sdDist1[iGene] = indTraitsSums.ssqDist1[iGene] / (double)popsize - mnDist1[iGene] * mnDist1[iGene];
-							if (sdDist1[iGene] > 0.0) sdDist1[iGene] = sqrt(sdDist1[iGene]); else sdDist1[iGene] = 0.0;
-							sdDist2[iGene] = indTraitsSums.ssqDist2[iGene] / (double)popsize - mnDist2[iGene] * mnDist2[iGene];
-							if (sdDist2[iGene] > 0.0) sdDist2[iGene] = sqrt(sdDist2[iGene]); else sdDist2[iGene] = 0.0;
-							sdProp1[iGene] = indTraitsSums.ssqProp1[iGene] / (double)popsize - mnProp1[iGene] * mnProp1[iGene];
-							if (sdProp1[iGene] > 0.0) sdProp1[iGene] = sqrt(sdProp1[iGene]); else sdProp1[iGene] = 0.0;
-							sdStepL[iGene] = indTraitsSums.ssqStepL[iGene] / (double)popsize - mnStepL[iGene] * mnStepL[iGene];
-							if (sdStepL[iGene] > 0.0) sdStepL[iGene] = sqrt(sdStepL[iGene]); else sdStepL[iGene] = 0.0;
-							sdRho[iGene] = indTraitsSums.ssqRho[iGene] / (double)popsize - mnRho[iGene] * mnRho[iGene];
-							if (sdRho[iGene] > 0.0) sdRho[iGene] = sqrt(sdRho[iGene]); else sdRho[iGene] = 0.0;
-							sdDP[iGene] = indTraitsSums.ssqDP[iGene] / (double)popsize - mnDP[iGene] * mnDP[iGene];
-							if (sdDP[iGene] > 0.0) sdDP[iGene] = sqrt(sdDP[iGene]); else sdDP[iGene] = 0.0;
-							sdGB[iGene] = indTraitsSums.ssqGB[iGene] / (double)popsize - mnGB[iGene] * mnGB[iGene];
-							if (sdGB[iGene] > 0.0) sdGB[iGene] = sqrt(sdGB[iGene]); else sdGB[iGene] = 0.0;
-							sdAlphaDB[iGene] = indTraitsSums.ssqAlphaDB[iGene] / (double)popsize - mnAlphaDB[iGene] * mnAlphaDB[iGene];
-							if (sdAlphaDB[iGene] > 0.0) sdAlphaDB[iGene] = sqrt(sdAlphaDB[iGene]); else sdAlphaDB[iGene] = 0.0;
-							sdBetaDB[iGene] = indTraitsSums.ssqBetaDB[iGene] / (double)popsize - mnBetaDB[iGene] * mnBetaDB[iGene];
-							if (sdBetaDB[iGene] > 0.0) sdBetaDB[iGene] = sqrt(sdBetaDB[iGene]); else sdBetaDB[iGene] = 0.0;
+							sdDist1[whichChromosome] = indTraitsSums.ssqDist1[whichChromosome] / (double)popsize - mnDist1[whichChromosome] * mnDist1[whichChromosome];
+							if (sdDist1[whichChromosome] > 0.0) sdDist1[whichChromosome] = sqrt(sdDist1[whichChromosome]); else sdDist1[whichChromosome] = 0.0;
+							sdDist2[whichChromosome] = indTraitsSums.ssqDist2[whichChromosome] / (double)popsize - mnDist2[whichChromosome] * mnDist2[whichChromosome];
+							if (sdDist2[whichChromosome] > 0.0) sdDist2[whichChromosome] = sqrt(sdDist2[whichChromosome]); else sdDist2[whichChromosome] = 0.0;
+							sdProp1[whichChromosome] = indTraitsSums.ssqProp1[whichChromosome] / (double)popsize - mnProp1[whichChromosome] * mnProp1[whichChromosome];
+							if (sdProp1[whichChromosome] > 0.0) sdProp1[whichChromosome] = sqrt(sdProp1[whichChromosome]); else sdProp1[whichChromosome] = 0.0;
+							sdStepL[whichChromosome] = indTraitsSums.ssqStepL[whichChromosome] / (double)popsize - mnStepL[whichChromosome] * mnStepL[whichChromosome];
+							if (sdStepL[whichChromosome] > 0.0) sdStepL[whichChromosome] = sqrt(sdStepL[whichChromosome]); else sdStepL[whichChromosome] = 0.0;
+							sdRho[whichChromosome] = indTraitsSums.ssqRho[whichChromosome] / (double)popsize - mnRho[whichChromosome] * mnRho[whichChromosome];
+							if (sdRho[whichChromosome] > 0.0) sdRho[whichChromosome] = sqrt(sdRho[whichChromosome]); else sdRho[whichChromosome] = 0.0;
+							sdDP[whichChromosome] = indTraitsSums.ssqDP[whichChromosome] / (double)popsize - mnDP[whichChromosome] * mnDP[whichChromosome];
+							if (sdDP[whichChromosome] > 0.0) sdDP[whichChromosome] = sqrt(sdDP[whichChromosome]); else sdDP[whichChromosome] = 0.0;
+							sdGB[whichChromosome] = indTraitsSums.ssqGB[whichChromosome] / (double)popsize - mnGB[whichChromosome] * mnGB[whichChromosome];
+							if (sdGB[whichChromosome] > 0.0) sdGB[whichChromosome] = sqrt(sdGB[whichChromosome]); else sdGB[whichChromosome] = 0.0;
+							sdAlphaDB[whichChromosome] = indTraitsSums.ssqAlphaDB[whichChromosome] / (double)popsize - mnAlphaDB[whichChromosome] * mnAlphaDB[whichChromosome];
+							if (sdAlphaDB[whichChromosome] > 0.0) sdAlphaDB[whichChromosome] = sqrt(sdAlphaDB[whichChromosome]); else sdAlphaDB[whichChromosome] = 0.0;
+							sdBetaDB[whichChromosome] = indTraitsSums.ssqBetaDB[whichChromosome] / (double)popsize - mnBetaDB[whichChromosome] * mnBetaDB[whichChromosome];
+							if (sdBetaDB[whichChromosome] > 0.0) sdBetaDB[whichChromosome] = sqrt(sdBetaDB[whichChromosome]); else sdBetaDB[whichChromosome] = 0.0;
 						}
 					}
 				}
@@ -914,39 +914,41 @@ traitsums SubCommunity::outTraits(Landscape* pLandscape, int rep, int yr, int ge
 
 			if (sett.indVar) {
 				if (sett.sexDep) { // must be a sexual species
-					ngenes = 2;
+					ploidy = 2;
 				}
 				else {
 					if (dem.repType == 0) { // asexual reproduction
-						ngenes = 1;
+						ploidy = 1;
 					}
 					else { // sexual reproduction
-						ngenes = 1;
+						ploidy = 1;
 					}
 				}
 				// CURRENTLY INDIVIDUAL VARIATION CANNOT BE SEX-DEPENDENT
-	//			ngenes = 1;
 				double mnS0[2], mnAlpha[2], mnBeta[2], sdS0[2], sdAlpha[2], sdBeta[2];
-				for (int iGene = 0; iGene < ngenes; iGene++) {
-					mnS0[iGene] = mnAlpha[iGene] = mnBeta[iGene] = sdS0[iGene] = sdAlpha[iGene] = sdBeta[iGene] = 0.0;
+				for (int whichChromosome = 0; whichChromosome < ploidy; whichChromosome++) {
+					mnS0[whichChromosome] = mnAlpha[whichChromosome] = mnBeta[whichChromosome] = sdS0[whichChromosome] = sdAlpha[whichChromosome] = sdBeta[whichChromosome] = 0.0;
 					// individuals may have been counted by sex if there was
 					// sex dependency in another dispersal phase
-					if (ngenes == 2) popsize = indTraitsSums.ninds[iGene];
+					if (ploidy == 2) popsize = indTraitsSums.ninds[whichChromosome];
 					else popsize = indTraitsSums.ninds[0] + indTraitsSums.ninds[1];
+					
 					if (popsize > 0) {
-						mnS0[iGene] = indTraitsSums.sumS0[iGene] / (double)popsize;
-						mnAlpha[iGene] = indTraitsSums.sumAlphaS[iGene] / (double)popsize;
-						mnBeta[iGene] = indTraitsSums.sumBetaS[iGene] / (double)popsize;
+						
+						mnS0[whichChromosome] = indTraitsSums.sumS0[whichChromosome] / (double)popsize;
+						mnAlpha[whichChromosome] = indTraitsSums.sumAlphaS[whichChromosome] / (double)popsize;
+						mnBeta[whichChromosome] = indTraitsSums.sumBetaS[whichChromosome] / (double)popsize;
+						
 						if (popsize > 1) {
-							sdS0[iGene] = indTraitsSums.ssqS0[iGene] / (double)popsize - mnS0[iGene] * mnS0[iGene];
-							if (sdS0[iGene] > 0.0) sdS0[iGene] = sqrt(sdS0[iGene]); else sdS0[iGene] = 0.0;
-							sdAlpha[iGene] = indTraitsSums.ssqAlphaS[iGene] / (double)popsize - mnAlpha[iGene] * mnAlpha[iGene];
-							if (sdAlpha[iGene] > 0.0) sdAlpha[iGene] = sqrt(sdAlpha[iGene]); else sdAlpha[iGene] = 0.0;
-							sdBeta[iGene] = indTraitsSums.ssqBetaS[iGene] / (double)popsize - mnBeta[iGene] * mnBeta[iGene];
-							if (sdBeta[iGene] > 0.0) sdBeta[iGene] = sqrt(sdBeta[iGene]); else sdBeta[iGene] = 0.0;
+							sdS0[whichChromosome] = indTraitsSums.ssqS0[whichChromosome] / (double)popsize - mnS0[whichChromosome] * mnS0[whichChromosome];
+							if (sdS0[whichChromosome] > 0.0) sdS0[whichChromosome] = sqrt(sdS0[whichChromosome]); else sdS0[whichChromosome] = 0.0;
+							sdAlpha[whichChromosome] = indTraitsSums.ssqAlphaS[whichChromosome] / (double)popsize - mnAlpha[whichChromosome] * mnAlpha[whichChromosome];
+							if (sdAlpha[whichChromosome] > 0.0) sdAlpha[whichChromosome] = sqrt(sdAlpha[whichChromosome]); else sdAlpha[whichChromosome] = 0.0;
+							sdBeta[whichChromosome] = indTraitsSums.ssqBetaS[whichChromosome] / (double)popsize - mnBeta[whichChromosome] * mnBeta[whichChromosome];
+							if (sdBeta[whichChromosome] > 0.0) sdBeta[whichChromosome] = sqrt(sdBeta[whichChromosome]); else sdBeta[whichChromosome] = 0.0;
 						}
 						else {
-							sdS0[iGene] = sdAlpha[iGene] = sdBeta[iGene] = 0.0;
+							sdS0[whichChromosome] = sdAlpha[whichChromosome] = sdBeta[whichChromosome] = 0.0;
 						}
 					}
 				}
@@ -967,32 +969,38 @@ traitsums SubCommunity::outTraits(Landscape* pLandscape, int rep, int yr, int ge
 				}
 			}
 
+			// Genetic load
 			if (pSpecies->getNbGenLoadTraits() > 0) {
-				ngenes = pSpecies->isDiploid() + 1;
-				double mnProbViable[2], sdProbViable[2];
-				for (int iGene = 0; iGene < ngenes; iGene++) {
-					mnProbViable[iGene] = sdProbViable[iGene] = 0.0;
 
-					if (ngenes == 2) popsize = indTraitsSums.ninds[iGene];
+				ploidy = pSpecies->isDiploid() + 1;
+				double mnGenFitness[2], sdGenFitness[2];
+
+				for (int whichChromosome = 0; whichChromosome < ploidy; whichChromosome++) {
+					mnGenFitness[whichChromosome] = sdGenFitness[whichChromosome] = 0.0;
+
+					if (ploidy == 2) popsize = indTraitsSums.ninds[whichChromosome];
 					else popsize = indTraitsSums.ninds[0] + indTraitsSums.ninds[1];
+
 					if (popsize > 0) {
-						mnProbViable[iGene] = indTraitsSums.sumGeneticFitness[iGene] / (double)popsize;
+
+						mnGenFitness[whichChromosome] = indTraitsSums.sumGeneticFitness[whichChromosome] / (double)popsize;
 						if (popsize > 1) {
-							sdProbViable[iGene] = indTraitsSums.ssqGeneticFitness[iGene] / (double)popsize - mnProbViable[iGene] * mnProbViable[iGene];
-							if (sdProbViable[iGene] > 0.0) sdProbViable[iGene] = sqrt(sdProbViable[iGene]); else sdProbViable[iGene] = 0.0;
+							sdGenFitness[whichChromosome] = indTraitsSums.ssqGeneticFitness[whichChromosome] / (double)popsize - mnGenFitness[whichChromosome] * mnGenFitness[whichChromosome];
+							if (sdGenFitness[whichChromosome] > 0.0) sdGenFitness[whichChromosome] = sqrt(sdGenFitness[whichChromosome]); else sdGenFitness[whichChromosome] = 0.0;
 						}
 						else {
-							sdProbViable[iGene] = 0.0;
+							sdGenFitness[whichChromosome] = 0.0;
 						}
 					}
 				}
+
 				if (writefile) {
-					if (gMaxNbSexes > 1) {
-						outtraits << "\t" << mnProbViable[0] << "\t" << sdProbViable[0];
-						outtraits << "\t" << mnProbViable[1] << "\t" << sdProbViable[1];
+					if (pSpecies->getDemogrParams().repType > 0) {
+						outtraits << "\t" << mnGenFitness[0] << "\t" << sdGenFitness[0];
+						outtraits << "\t" << mnGenFitness[1] << "\t" << sdGenFitness[1];
 					}
 					else { // sex-independent
-						outtraits << "\t" << mnProbViable[0] << "\t" << sdProbViable[0];
+						outtraits << "\t" << mnGenFitness[0] << "\t" << sdGenFitness[0];
 					}
 				}
 			}

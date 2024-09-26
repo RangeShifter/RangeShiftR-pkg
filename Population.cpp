@@ -306,6 +306,7 @@ traitsums Population::getIndTraitsSums(Species* pSpecies) {
 
 		if (gMaxNbSexes > 1) g = sex; 
 		else g = 0;
+
 		ts.sumGeneticFitness[g] += inds[iInd]->getGeneticFitness();
 		ts.ssqGeneticFitness[g] += inds[iInd]->getGeneticFitness() * inds[iInd]->getGeneticFitness();
 	}
@@ -671,12 +672,7 @@ void Population::reproduction(const float localK, const float envval, const int 
 					for (int j = 0; j < njuvs; j++) {
 
 						Individual* newJuv;
-#ifndef NDEBUG
-						// NOTE: CURRENTLY SETTING ALL INDIVIDUALS TO RECORD NO. OF STEPS ...
-						newJuv = new Individual(pCell, pPatch, 0, 0, 0, dem.propMales, true, trfr.moveType);
-#else
 						newJuv = new Individual(pCell, pPatch, 0, 0, 0, dem.propMales, trfr.usesMovtProc, trfr.moveType);
-#endif
 
 						if (pSpecies->getNTraits() > 0) {
 							newJuv->inheritTraits(pSpecies, inds[i], resol);
