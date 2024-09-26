@@ -34,7 +34,7 @@ void testPopulation()
 			Cell* pCell = new Cell(0, 0, (intptr)pPatch, 0);
 			pPatch->addCell(pCell, 0, 0);
 
-			Species* pSpecies = new Species();
+			Species* pSpecies = createDefaultSpecies();
 			pSpecies->setDemogr(createDefaultHaploidDemogrParams());
 			pSpecies->setGeneticParameters(
 				set<int>{genomeSz - 1}, // single chromosome
@@ -93,7 +93,7 @@ void testPopulation()
 			Cell* pCell = new Cell(0, 0, (intptr)pPatch, 0);
 			pPatch->addCell(pCell, 0, 0);
 
-			Species* pSpecies = new Species();
+			Species* pSpecies = createDefaultSpecies();
 			emigRules emig;
 			emig.indVar = true;
 			emig.sexDep = false;

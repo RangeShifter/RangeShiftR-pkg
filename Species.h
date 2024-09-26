@@ -61,28 +61,45 @@ class SpeciesTrait;
 struct demogrParams {
 	short repType;
 	short repSeasons;
-	float propMales; float harem; float bc; float lambda;
+	float propMales; 
+	float harem; 
+	float bc; 
+	float lambda;
 	bool stageStruct;
 };
 struct stageParams {
-	short nStages; short repInterval; short maxAge; short survival;
+	short nStages;
+	short repInterval; 
+	short maxAge;
+	short survival;
 	float probRep;
-	bool fecDens;  bool fecStageDens; bool devDens; bool devStageDens;
-	bool survDens; bool survStageDens; bool disperseOnLoss;
+	bool fecDens;  
+	bool fecStageDens; 
+	bool devDens; 
+	bool devStageDens;
+	bool survDens;
+	bool survStageDens;
+	bool disperseOnLoss;
 };
 struct densDepParams {
-	float devCoeff; float survCoeff;
+	float devCoeff; 
+	float survCoeff;
 };
 
 // structures for emigration parameters
 
 struct emigRules {
-	bool densDep; bool stgDep; bool sexDep; bool indVar;
+	bool densDep;
+	bool stgDep; 
+	bool sexDep; 
+	bool indVar;
 	short emigStage;
 	short emigTrait[2];
 };
 struct emigTraits {
-	float d0; float alpha; float beta;
+	float d0; 
+	float alpha; 
+	float beta;
 
 	emigTraits() : d0(0.0), alpha(0.0), beta(0.0) {};
 
@@ -101,11 +118,15 @@ struct emigTraits {
 // structures for transfer parameters
 
 struct transferRules {
-	bool usesMovtProc; bool stgDep; bool sexDep;
-	bool distMort; bool indVar;
+	bool usesMovtProc; 
+	bool stgDep; 
+	bool sexDep;
+	bool distMort;
+	bool indVar;
 	bool twinKern;
 	bool habMort;
-	short moveType; bool costMap;
+	short moveType;
+	bool costMap;
 	short movtTrait[2];
 };
 struct trfrKernelParams {
@@ -114,40 +135,66 @@ struct trfrKernelParams {
 	float	probKern1;
 };
 struct trfrMortParams {
-	float fixedMort; float mortAlpha; float mortBeta;
+	float fixedMort;
+	float mortAlpha;
+	float mortBeta;
 };
 struct trfrMovtParams {
-	short	pr; short	prMethod; short	memSize; short goalType;
-	float	dp; float	gb; float alphaDB; int betaDB;
-	float	stepMort; float	stepLength; float	rho;
+	short pr;
+	short prMethod; 
+	short memSize; 
+	short goalType;
+	float dp; 
+	float gb;
+	float alphaDB;
+	int betaDB;
+	float stepMort; 
+	float stepLength; 
+	float rho;
 	bool straightenPath;
 };
 struct trfrCRWTraits {
-	float	stepMort;
-	float	stepLength;
-	float	rho;
-	bool	straightenPath;
+	float stepMort;
+	float stepLength;
+	float rho;
+	bool straightenPath;
 };
 struct trfrSMSTraits {
-	short	pr; short	prMethod; short	memSize; short goalType;
-	float	dp; float	gb; float alphaDB; int betaDB; float	stepMort;
+	short	pr;
+	short	prMethod; 
+	short	memSize; 
+	short goalType;
+	float	dp;
+	float	gb;
+	float alphaDB;
+	int betaDB; 
+	float	stepMort;
 	bool straightenPath;
 };
 
 // structures for settlement parameters
 
 struct settleType {
-	bool stgDep; bool sexDep; bool indVar;
+	bool stgDep;
+	bool sexDep; 
+	bool indVar;
 	short settTrait[2];
 };
 struct settleRules {
-	bool densDep; bool wait; bool go2nbrLocn; bool findMate;
+	bool densDep;
+	bool wait; 
+	bool go2nbrLocn; 
+	bool findMate;
 };
 struct settleSteps {
-	int minSteps; int maxSteps; int maxStepsYr;
+	int minSteps;
+	int maxSteps;
+	int maxStepsYr;
 };
 struct settleTraits {
-	float s0; float alpha; float beta;
+	float s0;
+	float alpha; 
+	float beta;
 
 	settleTraits() : s0(0.0), alpha(0.0), beta(0.0) {};
 
@@ -166,7 +213,14 @@ struct settleTraits {
 class Species {
 
 public:
-	Species(void);
+	Species(
+		const short& repro = 0, 
+		const short& nbRepSeasons = 1, 
+		const bool& hasStgStruct = false, 
+		const short& nStg = 2, 
+		const bool& usesMovtProc = false, 
+		const short& movementType = 1
+	);
 	~Species(void);
 	short getSpNum(void);
 
@@ -511,7 +565,7 @@ private:
 
 	// transfer parameters
 
-	bool moveModel;
+	bool usesMovtProcess;
 	bool stgDepTrfr;
 	bool sexDepTrfr;
 	bool distMort;
@@ -575,6 +629,7 @@ private:
 
 #ifndef NDEBUG
 // For testing purposes only
+Species* createDefaultSpecies();
 demogrParams createDefaultHaploidDemogrParams();
 demogrParams createDefaultDiploidDemogrParams();
 #endif // NDEBUG

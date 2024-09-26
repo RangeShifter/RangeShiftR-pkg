@@ -277,7 +277,7 @@ traitsums Population::getIndTraitsSums(Species* pSpecies) {
 				break;
 			}
 			default:
-				throw runtime_error("moveModel enabled but moveType is neither 1 (SMS) or 2 (CRW).");
+				throw runtime_error("usesMoveProcess is ON but moveType is neither 1 (SMS) or 2 (CRW).");
 				break;
 			}
 		}
@@ -1223,7 +1223,7 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 		}
 #if RS_RCPP
 		// write each individuals current movement step and status to paths file
-		if (trfr.moveModel && sim.outPaths) {
+		if (trfr.usesMovtProc && sim.outPaths) {
 			if (nextseason >= sim.outStartPaths && nextseason % sim.outIntPaths == 0) {
 				inds[i]->outMovePath(nextseason);
 			}
