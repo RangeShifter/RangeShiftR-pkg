@@ -342,6 +342,10 @@ public:
 	void setViews(simView);
 	simView getViews(void);
 	string getDir(int);
+	void setBatchNum(const int& batchNb) {
+		batchNum = batchNb;
+		batchMode = true;
+	}
 #if RS_RCPP
 	bool getReturnPopRaster(void);
 	bool getCreatePopFile(void);
