@@ -72,7 +72,9 @@ int RunModel(
 	int					// sequential simulation number
 );
 #endif // RS_RCPP && !R_CMD
-bool CheckDirectory(void);
+
+bool CheckDirectory(const string& pathToProjDir);
+
 void PreReproductionOutput(
 	Landscape*,	// pointer to Landscape
 	Community*, // pointer to Community

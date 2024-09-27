@@ -673,23 +673,33 @@ bool is_directory(const char* pathname) {
 #endif
 
 //---------------------------------------------------------------------------
-bool CheckDirectory(void)
+bool CheckDirectory(const string& pathToProjDir)
 {
 	bool errorfolder = false;
 
 	string subfolder;
 
-	subfolder = paramsSim->getDir(0) + "Inputs";
+	subfolder = pathToProjDir + "Inputs";
 	const char* inputs = subfolder.c_str();
 	if (!is_directory(inputs)) errorfolder = true;
-	subfolder = paramsSim->getDir(0) + "Outputs";
+	subfolder = pathToProjDir + "Outputs";
 	const char* outputs = subfolder.c_str();
 	if (!is_directory(outputs)) errorfolder = true;
-	subfolder = paramsSim->getDir(0) + "Output_Maps";
+	subfolder = pathToProjDir + "Output_Maps";
 	const char* outputmaps = subfolder.c_str();
 	if (!is_directory(outputmaps)) errorfolder = true;
 
-	return errorfolder;
+	if (errorfolder) {
+		cout << endl << "***** Invalid working directory: " << pathToProjDir
+			<< endl << endl;
+		cout << "***** Working directory must contain Inputs, Outputs and Output_Maps folders"
+			<< endl << endl;
+		cout << "*****" << endl;
+		cout << "***** Simulation ABORTED" << endl;
+		cout << "*****" << endl;
+		return false;
+	}
+	else return true;
 }
 
 //---------------------------------------------------------------------------

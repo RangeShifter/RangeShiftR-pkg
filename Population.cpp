@@ -543,7 +543,6 @@ void Population::reproduction(const float localK, const float envval, const int 
 	double expected;
 	bool skipbreeding;
 
-	//envGradParams grad = paramsGrad->getGradient();
 	envStochParams env = paramsStoch->getStoch();
 	demogrParams dem = pSpecies->getDemogrParams();
 	stageParams sstruct = pSpecies->getStageParams();
