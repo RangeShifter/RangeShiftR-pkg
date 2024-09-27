@@ -100,7 +100,6 @@ extern paramSim* paramsSim;
 extern paramInit* paramsInit;
 extern Community* pComm;
 
-const bool batchMode = true;
 extern string landFile;
 extern RSrandom *pRandom;
 

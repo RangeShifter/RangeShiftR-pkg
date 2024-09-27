@@ -1541,14 +1541,11 @@ bool Population::outPopHeaders(int landNr, bool patchModel) {
 	// ATTRIBUTES OF *ALL* SPECIES AS DETECTED AT MODEL LEVEL
 	demogrParams dem = pSpecies->getDemogrParams();
 	stageParams sstruct = pSpecies->getStageParams();
-	if (sim.batchMode) {
-		name = paramsSim->getDir(2)
-			+ "Batch" + to_string(sim.batchNum) + "_"
-			+ "Sim" + to_string(sim.simulation) + "_Land" + to_string(landNr) + "_Pop.txt";
-	}
-	else {
-		name = paramsSim->getDir(2) + "Sim" + to_string(sim.simulation) + "_Pop.txt";
-	}
+	name = paramsSim->getDir(2)
+		+ (sim.batchMode ? "Batch" + to_string(sim.batchNum) + "_" : "")
+		+ "Batch" + to_string(sim.batchNum) + "_"
+		+ "Sim" + to_string(sim.simulation) + "_Land" + to_string(landNr) + "_Pop.txt";
+
 	outPop.open(name.c_str());
 	outPop << "Rep\tYear\tRepSeason";
 	if (patchModel) outPop << "\tPatchID\tNcells";
@@ -1655,16 +1652,11 @@ void Population::outIndsHeaders(int rep, int landNr, bool patchModel)
 	settleType sett = pSpecies->getSettle();
 	simParams sim = paramsSim->getSim();
 
-	if (sim.batchMode) {
-		name = paramsSim->getDir(2)
-			+ "Batch" + to_string(sim.batchNum) + "_"
-			+ "Sim" + to_string(sim.simulation)
-			+ "_Land" + to_string(landNr) + "_Rep" + to_string(rep) + "_Inds.txt";
-	}
-	else {
-		name = paramsSim->getDir(2) + "Sim" + to_string(sim.simulation)
-			+ "_Rep" + to_string(rep) + "_Inds.txt";
-	}
+	name = paramsSim->getDir(2)
+		+ (sim.batchMode ? "Batch" + to_string(sim.batchNum) + "_" : "")
+		+ "Sim" + to_string(sim.simulation)
+		+ "_Land" + to_string(landNr) + "_Rep" + to_string(rep) + "_Inds.txt";
+
 	outInds.open(name.c_str());
 	outInds << "Rep\tYear\tRepSeason\tSpecies\tIndID\tStatus";
 	if (patchModel) outInds << "\tNatal_patch\tPatchID";
