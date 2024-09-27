@@ -210,7 +210,9 @@ int paramInit::numInitInds(void) { return (int)initinds.size(); }
 
 // Simulation parameters
 
-paramSim::paramSim(void) {
+paramSim::paramSim(const string& pathToProjDir) :
+	dir{pathToProjDir}
+{
 	simulation = 0;
 	reps = years = 1;
 	outIntRange = 1;
@@ -232,7 +234,6 @@ paramSim::paramSim(void) {
 #endif
 	viewLand = false; viewPatch = false; viewGrad = false; viewCosts = false;
 	viewPop = false; viewTraits = false; viewPaths = false; viewGraph = false;
-	dir = ' ';
 }
 
 paramSim::~paramSim(void) { }
@@ -337,10 +338,6 @@ simView paramSim::getViews(void) {
 	v.viewPaths = viewPaths; v.viewGraph = viewGraph;
 	v.slowFactor = slowFactor;
 	return v;
-}
-
-void paramSim::setDir(string s) {
-	dir = s;
 }
 
 // return directory name depending on option specified
