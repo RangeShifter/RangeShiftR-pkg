@@ -822,17 +822,6 @@ void OutParameters(Landscape* pLandscape)
 		}
 #else
 		if (sim.batchMode) outPar << " (see batch file) " << landFile << endl;
-		else {
-			outPar << habmapname << endl;
-			if (ppLand.rasterType == 1) { // habitat % cover - list additional layers
-				for (int i = 0; i < ppLand.nHab - 1; i++) {
-					outPar << "           " << hfnames[i] << endl;
-				}
-			}
-			if (ppLand.patchModel) {
-				outPar << "PATCH FILE: " << patchmapname << endl;
-			}
-		}
 #endif
 		outPar << "No. HABITATS:\t" << ppLand.nHab << endl;
 	}
@@ -854,8 +843,6 @@ void OutParameters(Landscape* pLandscape)
 			if (chg.costfile != "none" && chg.costfile != "NULL") {
 				outPar << "Costs    : " << chg.costfile << endl;
 			}
-			//		outPar << "Change no. " << chg.chgnum << " in year " << chg.chgyear
-			//			<< " habitat map: " << chg.habfile << endl;
 		}
 	}
 	outPar << endl << "SPECIES DISTRIBUTION LOADED: \t";
@@ -866,9 +853,6 @@ void OutParameters(Landscape* pLandscape)
 		outPar << "FILE NAME: ";
 #if !RS_RCPP
 		if (sim.batchMode) outPar << " (see batch file) " << landFile << endl;
-		else {
-			outPar << distnmapname << endl;
-		}
 #else
 		outPar << name_sp_dist << endl;
 #endif
@@ -1244,9 +1228,6 @@ void OutParameters(Landscape* pLandscape)
 			straightenPath = move.straightenPath;
 			if (trfr.costMap) {
 				outPar << "SMS\tcosts from imported cost map" << endl;
-#if !RS_RCPP
-				outPar << "FILE NAME: " << costmapname << endl;
-#endif
 			}
 			else {
 				outPar << "SMS\tcosts:" << endl;

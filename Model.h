@@ -100,12 +100,6 @@ extern Community* pComm;
 
 const bool batchMode = true;
 extern string landFile;
-extern vector <string> hfnames;
-extern string habmapname;	// see Main.cpp (batch)
-extern string patchmapname;	// see Main.cpp (batch)
-extern string distnmapname;	// see Main.cpp (batch)
-extern string costmapname;	// see Main.cpp (batch)
-extern string genfilename;	// see Main.cpp (batch)
 extern RSrandom *pRandom;
 
 #if RS_RCPP

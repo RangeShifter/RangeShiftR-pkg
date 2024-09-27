@@ -56,15 +56,12 @@ void run_unit_tests() {
 }
 
 // Global vars
-string habmapname, patchmapname, distnmapname;
-string costmapname, genfilename;
 string landFile;
 paramGrad* paramsGrad;
 paramStoch* paramsStoch;
 paramInit* paramsInit;
 paramSim* paramsSim;
 RSrandom* pRandom;
-vector <string> hfnames;
 Species* pSpecies;
 Community* pComm;
 
@@ -96,6 +93,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		cerr << endl << "Error: " << e.what() << endl;
 	}
 	cout << "All tests have completed." << endl;
+
 	return 0; // if tests succeed, we are happy
 # endif // NDEBUG
 }
