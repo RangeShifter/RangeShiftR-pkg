@@ -333,7 +333,7 @@ struct simView {
 class paramSim {
 
 public:
-	paramSim(const string& pathToProjDir);
+	paramSim(const string& pathToProjDir = "");
 	~paramSim(void);
 	void setSim(simParams);
 	void setGeneticSim(string patchSamplingOption, bool outputGeneticValues, bool outputWeirCockerham, bool outputWeirHill, int outputStartGenetics, int outputGeneticInterval);
