@@ -565,7 +565,6 @@ void SubCommunity::outInds(Landscape* pLandscape, int rep, int yr, int gen, int 
 	if (landNr == -999) { // close the file
 
 		// as all populations may have been deleted, set up a dummy one
-	// species is not necessary
 		pPop = new Population();
 		pPop->outIndsHeaders(rep, -999, ppLand.patchModel);
 		delete pPop;

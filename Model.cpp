@@ -195,7 +195,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				pComm->outTraitsRowsHeaders(pSpecies, -999);
 			if (sim.outConnect && ppLand.patchModel)
 				pLandscape->outConnectHeaders(-999);
-			if (sim.outputWeirCockerham) {
+			if (sim.outputWeirCockerham || sim.outputWeirHill) {
 				pComm->openNeutralOutputFile(pSpecies, -999);
 			}
 #if RS_RCPP && !R_CMD
@@ -238,8 +238,8 @@ int RunModel(Landscape* pLandscape, int seqsim)
 			pComm->outInds(rep, 0, 0, ppLand.landNum);
 
 		if (sim.outputGeneValues) {
-			if (!pComm->openOutGenesFile(pSpecies->isDiploid(), ppLand.landNum, rep))
-				throw logic_error("Output gene value file could not be initialised.");
+			bool geneOutFileHasOpened = pComm->openOutGenesFile(pSpecies->isDiploid(), ppLand.landNum, rep);
+			if (!geneOutFileHasOpened) throw logic_error("Output gene value file could not be initialised.");
 		}
 
 		// open a new genetics file for each replicate for per locus and pairwise stats

@@ -1687,7 +1687,6 @@ void Population::outIndsHeaders(int rep, int landNr, bool patchModel)
 	}
 	outInds << "\tDistMoved";
 #ifndef NDEBUG
-	// ALWAYS WRITE NO. OF STEPS
 	outInds << "\tNsteps";
 #else
 	if (trfr.usesMovtProc) outInds << "\tNsteps";

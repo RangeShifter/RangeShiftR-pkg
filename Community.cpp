@@ -1488,8 +1488,10 @@ Rcpp::IntegerMatrix Community::addYearToPopList(int rep, int yr) {  // TODO: def
 bool Community::openOutGenesFile(const bool& isDiploid, const int landNr, const int rep)
 {
 	if (landNr == -999) { // close the file
-		if (ofsGenes.is_open()) ofsGenes.close();
-		ofsGenes.clear();
+		if (ofsGenes.is_open()) {
+			ofsGenes.close();
+			ofsGenes.clear();
+		}
 		return true;
 	}
 	string name;
@@ -1510,14 +1512,11 @@ bool Community::openOutGenesFile(const bool& isDiploid, const int landNr, const 
 	}
 
 	ofsGenes.open(name.c_str());
-	ofsGenes << "Year\tGeneration\tIndID\ttraitType\tlocusPosition";
-	if (isDiploid) {
-		ofsGenes << "\talleleValueA\tdomCoefA\talleleValueBA\tdomCoefB";
-	}
-	else {
-		ofsGenes << "\talleleValueA\tdomCoefA";
-	}
+	ofsGenes << "Year\tGeneration\tIndID\ttraitType\tlocusPosition"
+			 << "\talleleValueA\tdomCoefA";
+	if (isDiploid) ofsGenes << "\talleleValueB\tdomCoefB";
 	ofsGenes << endl;
+
 	return ofsGenes.is_open();
 }
 
