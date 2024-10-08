@@ -116,7 +116,7 @@ extern RSrandom *pRandom;
 
 #if RS_RCPP
 extern std::uint32_t RS_random_seed;
-extern string name_landscape, name_patch, name_costfile, name_sp_dist;
+extern string name_landscape, name_patch, gNameCostFile, name_sp_dist;
 #endif
 //---------------------------------------------------------------------------
 #endif

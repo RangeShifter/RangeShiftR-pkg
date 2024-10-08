@@ -35,8 +35,9 @@ eco-evolutionary dynamics and species' responses to environmental changes.
 Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Author: Anne-Kathleen Malchow, Humboldt University Berlin
+        Jette Reeg, University of Potsdam
         large parts modified from 'Main.cpp' and 'BatchMode.cpp' created by
-        Steve Palmer, University of Aberdeen
+        Steve Palmer, Roslyn Henry and Théo Pannetier, University of Aberdeen
 
 ------------------------------------------------------------------------------*/
 
@@ -71,40 +72,20 @@ int batchnum;
 int patchmodel, resolution, landtype, maxNhab, speciesdist, distresolution;
 int reproductn;
 int repseasons;
-int stagestruct, stages, transfer;
+int stagestruct, stages, gTransferType;
 int sexesDem;  // no. of explicit sexes for demographic model
-int sexesDisp; // no. of explicit sexes for dispersal model
-int firstsimul;
+int gNbSexesDisp; // no. of explicit sexes for dispersal model
+int gFirstSimulNb;
 int fileNtraits; // no. of traits defined in genetic architecture file
+bool gHasGenetics = true; // instead of static bool anyIndVar;
+DispersalTraitInputOptions gDispTraitOpt;
+vector<int> gNbTraitFileRows;
+
 int translocation;
 rasterdata landraster,patchraster,spdistraster,costsraster;
-// rasterdata landraster;
-// ...including names of the input files
-// string parameterFile;
-// string landFile;
-string name_landscape, name_patch, name_sp_dist, name_costfile;
-//string name_dynland;
-//#if RS_CONTAIN
-// string name_damagefile;
-// string name_managefile;
-//#endif // RS_CONTAIN
-//#if SPATIALMORT
-// string name_mortfile[2];
-//#endif // SPATIALMORT
-//#if SEASONAL
-// string seasonFile;
-//#endif // SEASONAL
-// string stageStructFile,transMatrix;
-// string emigrationFile,transferFile,settleFile,geneticsFile,initialFile;
-//#if VIRTUALECOLOGIST
-// string virtEcolFile;
-//#endif // VIRTUALECOLOGIST
-//#if RS_ABC
-// string abcParamsFile,abcObsFile;
-// int nABCsamples;
-//#endif // RS_ABC
-// string prevInitialIndsFile = " ";
-//
+
+string name_landscape, name_patch, name_sp_dist, gNameCostFile;
+
 string msgnlines = "No. of lines for final Simulation ";
 string msgshldbe = " should be ";
 string msgresol0 = "*** Resolution of ";
@@ -115,176 +96,19 @@ string msghdrs1 = " do not match headers of LandscapeFile";
 string msgpatch = " is required for patch-based model";
 string msgmatch = " must match the specification exactly";
 string msgcase = " case-sensitive parameter names";
-//
-// float **matrix = NULL;	// temporary matrix used in batch mode
-// int matrixsize = 0; 		// size of temporary matrix
-
-//----------------------------
-
-//-------- R interface globals
-// static Rcpp::Environment global = Rcpp::Environment::global_env();
-// static Rcpp::S4 ParMaster;
-// static Landscape *LandParamsR;
-static bool anyIndVar;
-
-//------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
 
 
-/* # // [[Rcpp::export(name = ".run_from_R")]]
-// # // [[Rcpp::export]]
-Rcpp::List run_from_R(Rcpp::S4 ParMaster, Rcpp::String dirpath)
-{
-	return BatchMainR(dirpath, ParMaster);
-}*/
 
-/* this function is for calling the file batch version from R;
- * it is excluded atm since it is not supposed to be used before the GUI can not generate the batch parameter files from the settings made;
- * to include, all file parsing and reading functions have to be included from the BatchMode.h/.cpp (like in the standalone version)
-#if !RS_RCPP
-Rcpp::List BatchMainFile(string dirpath, Rcpp::S4 ParMaster)
-{
-	// int i,t0,t1,Nruns;
-	int i, t0, t1;
-	int nSimuls, nLandscapes; // no. of simulations and landscapes in batch
-
-	t0 = time(0);
-
-	// set up parameter objects
-	paramsGrad = new paramGrad;
-	paramsStoch = new paramStoch;
-	paramsInit = new paramInit;
-	paramsSim = new paramSim;
-
-	// set up working directory and control file name
-
-	paramsSim->setDir(dirpath); // full path name of directory passed as a parameter
-	// NOT IMPLEMENTED: // control file number also passed as a parameter:
-	// int i = atoi(argv[2]);
-	// cname = paramsSim->getDir(0) + "Inputs/CONTROL" + Int2Str(i) + ".txt";
-	cname = paramsSim->getDir(0) + "Inputs/CONTROL.txt";
-
-#if RSDEBUG
-	Rcpp::Rcout << endl << "Working directory: " << paramsSim->getDir(0) << endl;
-	Rcpp::Rcout << endl << "Control file:      " << cname << endl << endl;
-#endif
-
-	bool errorfolder = CheckDirectory();
-	if(errorfolder) {
-		Rcpp::Rcout << endl << "***** Invalid working directory: " << paramsSim->getDir(0) << endl << endl;
-		Rcpp::Rcout << "***** Working directory must contain Inputs, Outputs and Output_Maps folders" << endl << endl;
-		Rcpp::Rcout << "*****" << endl;
-		Rcpp::Rcout << "***** Simulation ABORTED " << endl;
-		Rcpp::Rcout << "*****" << endl;
-		return Rcpp::List::create(666);
-	}
-
-#if RSDEBUG
-	// set up debugging log file
-	string name = paramsSim->getDir(2) + "DebugLog.txt";
-	DEBUGLOG.open(name.c_str());
-	name = paramsSim->getDir(2) + "MutnLog.txt";
-	MUTNLOG.open(name.c_str());
-	// DEBUGLOG << "Main(): paramsSim = " << paramsSim << endl;
-	if(DEBUGLOG.is_open())
-		Rcpp::Rcout << endl << "Main(): DEBUGLOG is open" << endl << endl;
-	else
-		Rcpp::Rcout << endl << "Main(): DEBUGLOG is NOT open" << endl << endl;
-#endif
-
-	// set up species
-	// FOR MULTI-SPECIES MODEL, THERE WILL BE AN ARRAY OF SPECIES POINTERS
-	// OR A COMMUNITY CLASS TO HOLD THE SPECIES
-	pSpecies = new Species;
-	demogrParams dem = pSpecies->getDemogr();
-	stageParams sstruct = pSpecies->getStage();
-	trfrRules trfr = pSpecies->getTrfr();
-
-	batchfiles b;
-	string indir = paramsSim->getDir(1);
-	string outdir = paramsSim->getDir(2);
-	b = ParseControlFile(cname, indir, outdir);
-	if(b.ok) {
-		nSimuls = b.nSimuls;
-		nLandscapes = b.nLandscapes;
-		dem.repType = b.reproductn;
-		dem.repSeasons = b.repseasons;
-		if(b.stagestruct == 0)
-			dem.stageStruct = false;
-		else
-			dem.stageStruct = true;
-		sstruct.nStages = b.stages;
-		if(b.transfer == 0)
-			trfr.moveModel = false;
-		else {
-			trfr.moveModel = true;
-			trfr.moveType = b.transfer;
-		}
-		Rcpp::Rcout << endl << "Batch input files OK" << endl;
-		pSpecies->setDemogr(dem);
-		pSpecies->setStage(sstruct);
-		pSpecies->setTrfr(trfr);
-		simParams sim = paramsSim->getSim();
-		sim.batchMode = true;
-		sim.batchNum = b.batchNum;
-		paramsSim->setSim(sim);
-	} else {
-		Rcpp::Rcout << endl << "Error in parsing batch input files - " << endl;
-	}
-#if RSDEBUG
-	DEBUGLOG << "Main(): dem.repType = " << dem.repType << endl;
-#endif
-
-	clear_outPop();
-
-// set up random number stream
-#if RSDEBUG
-	pRandom = new RSrandom(666);
-#else
-	pRandom = new RSrandom(0);
-#endif
-
-#if RANDOMCHECK
-	randomCheck();
-#else
-	if(b.ok) {
-		RunBatch(nSimuls, nLandscapes);
-	}
-#endif
-
-	delete pRandom;
-
-#if RSDEBUG
-	if(DEBUGLOG.is_open()) {
-		DEBUGLOG.close();
-		DEBUGLOG.clear();
-	}
-	if(MUTNLOG.is_open()) {
-		MUTNLOG.close();
-		MUTNLOG.clear();
-	}
-#endif
-
-	delete paramsGrad;
-	delete paramsStoch;
-	delete paramsInit;
-	delete paramsSim;
-	delete pSpecies;
-
-	t1 = time(0);
-	Rcpp::Rcout << endl << "***** Elapsed time " << t1 - t0 << " seconds" << endl << endl;
-
-	Rcpp::Rcout << "*****" << endl;
-	Rcpp::Rcout << "***** Simulation completed " << endl;
-	Rcpp::Rcout << "***** Outputs folder: " << outdir << endl;
-	Rcpp::Rcout << "*****" << endl;
-
-
-	return Rcpp::List::create(0);
+//---------------------------------------------------------------------------
+// Returns input value less next highest power of 2 (for x > 2)
+int power2check(int x) {
+    if (x < 2) return 0;
+    int r = x % 2;
+    while (r == 0) {
+        x /= 2; r = x % 2;
+    }
+    return x;
 }
-#endif // !RS_RCPP
-*/
-
 
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -438,17 +262,17 @@ Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
 		switch(reproductn) {
 		case 0: {
 			sexesDem = 1;
-			sexesDisp = 1;
+	        gNbSexesDisp = 1;
 			break;
 		}
 		case 1: {
 			sexesDem = 1;
-			sexesDisp = 2;
+		    gNbSexesDisp = 2;
 			break;
 		}
 		case 2: {
 			sexesDem = 2;
-			sexesDisp = 2;
+		    gNbSexesDisp = 2;
 			break;
 		}
 		}
@@ -465,16 +289,16 @@ Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
 	}
 
 	if(stagestruct) {
-		if(stages < 2 || stages > NSTAGES) {
+		if(stages < 2 || stages > gMaxNbStages) {
 			BatchErrorR(filetype, -999, 0, " ");
 			errors++;
-			Rcpp::Rcout << "Stages must be between 2 and " << NSTAGES << endl;
+			Rcpp::Rcout << "Stages must be between 2 and " << gMaxNbStages << endl;
 		}
 	} else { // non-stage-structured model must have 2 stages
 		stages = 2;
 	}
 
-	if(transfer < 0 || transfer > 2) {
+	if( gTransferType < 0 ||  gTransferType > 2) {
 		BatchErrorR(filetype, -999, 2, "Transfer");
 		errors++;
 	}
@@ -492,9 +316,9 @@ Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
 	// FOR MULTI-SPECIES MODEL, THERE WILL BE AN ARRAY OF SPECIES POINTERS
 	// OR A COMMUNITY CLASS TO HOLD THE SPECIES
 	pSpecies = new Species;
-	demogrParams dem = pSpecies->getDemogr();
-	stageParams sstruct = pSpecies->getStage();
-	trfrRules trfr = pSpecies->getTrfr();
+	demogrParams dem = pSpecies->getDemogrParams();
+	stageParams sstruct = pSpecies->getStageParams();
+	transferRules trfr = pSpecies->getTransferRules();
 
 	// create new Management
 	pManagement = new Management;
@@ -510,11 +334,11 @@ Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
 		else
 			dem.stageStruct = true;
 		sstruct.nStages = stages;
-		if(transfer == 0)
-			trfr.moveModel = false;
+		if( gTransferType == 0)
+			trfr.usesMovtProc = false;
 		else {
-			trfr.moveModel = true;
-			trfr.moveType = transfer;
+			trfr.usesMovtProc = true;
+			trfr.moveType =  gTransferType;
 		}
 		if(translocation == 0)
 			m.translocation = false;
@@ -523,7 +347,7 @@ Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
 
 		pSpecies->setDemogr(dem);
 		pSpecies->setStage(sstruct);
-		pSpecies->setTrfr(trfr);
+		pSpecies->setTrfrRules(trfr);
 		pManagement->setManagementParams(m);
 
 		simParams sim = paramsSim->getSim();
@@ -604,7 +428,7 @@ Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
 }
 
 //---------------------------------------------------------------------------
-
+// TODO: Change return value to integer code: error codes as negative values!
 bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 {
 	landParams ppLand = pLandscape->getLandParams();
@@ -670,11 +494,11 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 			costmaps = Rcpp::as<Rcpp::StringVector>(LandParamsR.slot("CostsFile"));
 			name_landscape = habitatmaps(0);
 			name_patch = patchmaps(0);
-			name_costfile = costmaps(0);
+			gNameCostFile = costmaps(0);
 		} else {
 			name_landscape = Rcpp::as<string>(LandParamsR.slot("LandscapeFile"));
 			name_patch = Rcpp::as<string>(LandParamsR.slot("PatchFile"));
-			name_costfile = Rcpp::as<string>(LandParamsR.slot("CostsFile"));
+			gNameCostFile = Rcpp::as<string>(LandParamsR.slot("CostsFile"));
 		}
 		if(!patchmodel && name_patch != "NULL") Rcpp::Rcout << "PatchFile must be NULL in a cell-based model!" << endl;
 
@@ -760,8 +584,8 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 
 		// check cost map filename
 		ftype = "CostMapFile";
-		if (name_costfile == "NULL") {
-			if (transfer == 1) { // SMS
+		if (gNameCostFile == "NULL") {
+			if ( gTransferType == 1) { // SMS
 				if (landtype == 2) { // habitat quality
 					BatchErrorR(filetype, -999, 0, " ");
 					errors++;
@@ -770,8 +594,8 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 			}
 		}
 		else {
-			if (transfer == 1) { // SMS
-				fname = indir + name_costfile;
+			if ( gTransferType == 1) { // SMS
+				fname = indir + gNameCostFile;
 				costsraster = ParseRasterHead(fname);
 				if(costsraster.ok) {
 					// check resolutions match
@@ -843,7 +667,7 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 					Rcpp::Rcout << "Dynamic landscape: Patchmaps must have as many elements as Years and habitat maps." << endl;
 				}
 			}
-			if (name_costfile != "NULL") {
+			if (gNameCostFile != "NULL") {
 				if( dynland_years.size() != costmaps.size() ||
 				    habitatmaps.size()   != costmaps.size() ) {
 					errors++;
@@ -860,7 +684,7 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 					chg.habfile = indir + habitatmaps(i);
 					if(patchmodel) chg.pchfile = indir + patchmaps(i);
 					else chg.pchfile = "NULL";
-					if (name_costfile == "NULL") chg.costfile = "none";
+					if (gNameCostFile == "NULL") chg.costfile = "none";
 					else chg.costfile = indir + costmaps(i);
 					pLandscape->addLandChange(chg);
 				}
@@ -1352,7 +1176,7 @@ int ReadParametersR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 	int error = 0;
 	landParams paramsLand = pLandscape->getLandParams();
 	envStochParams env = paramsStoch->getStoch();
-	demogrParams dem = pSpecies->getDemogr();
+	demogrParams dem = pSpecies->getDemogrParams();
 	simParams sim = paramsSim->getSim();
 
 	sim.simulation = Rcpp::as<int>(ParamParamsR.slot("Simulation"));
@@ -1466,10 +1290,10 @@ int ReadParametersR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 	         << " nHabMax = " << paramsLand.nHabMax << endl;
 #endif
 
+
 	// Output start years
 	sim.outStartPop = Rcpp::as<int>(ParamParamsR.slot("OutStartPop"));
 	sim.outStartInd = Rcpp::as<int>(ParamParamsR.slot("OutStartInd"));
-	sim.outStartGenetic = Rcpp::as<int>(ParamParamsR.slot("OutStartGenetic"));
 	sim.outStartTraitCell = Rcpp::as<int>(ParamParamsR.slot("OutStartTraitCell"));
 	sim.outStartTraitRow = Rcpp::as<int>(ParamParamsR.slot("OutStartTraitRow"));
 	sim.outStartConn = Rcpp::as<int>(ParamParamsR.slot("OutStartConn"));
@@ -1479,7 +1303,6 @@ int ReadParametersR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 	sim.outIntOcc = Rcpp::as<int>(ParamParamsR.slot("OutIntOcc"));
 	sim.outIntPop = Rcpp::as<int>(ParamParamsR.slot("OutIntPop"));
 	sim.outIntInd = Rcpp::as<int>(ParamParamsR.slot("OutIntInd"));
-	sim.outIntGenetic = Rcpp::as<int>(ParamParamsR.slot("OutIntGenetic"));
 
 	if(sim.outIntRange > 0)
 		sim.outRange = true;
@@ -1497,16 +1320,6 @@ int ReadParametersR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 		sim.outInds = true;
 	else
 		sim.outInds = false;
-	if(sim.outIntGenetic > 0)
-		sim.outGenetics = true;
-	else
-		sim.outGenetics = false;
-
-	// Output genetics for: 0 = juveniles only, 1 =  all individuals, 2 = adults only:
-	sim.outGenType = Rcpp::as<int>(ParamParamsR.slot("OutGenType"));
-
-	// Output genetics as a cross table?
-	sim.outGenXtab = Rcpp::as<bool>(ParamParamsR.slot("OutGenCrossTab"));
 
 	sim.outIntTraitCell = Rcpp::as<int>(ParamParamsR.slot("OutIntTraitCell"));
 	sim.outIntTraitRow = Rcpp::as<int>(ParamParamsR.slot("OutIntTraitRow"));
@@ -1567,8 +1380,8 @@ int ReadStageStructureR(Rcpp::S4 ParMaster)
 	Rcpp::S4 StagesParamsR("StagesParams");
 	StagesParamsR = Rcpp::as<Rcpp::S4>(DemogParamsR.slot("StageStruct"));
 
-	demogrParams dem = pSpecies->getDemogr();
-	stageParams sstruct = pSpecies->getStage();
+	demogrParams dem = pSpecies->getDemogrParams();
+	stageParams sstruct = pSpecies->getStageParams();
 	int matrixsize, i, j, stg;
 	float ss, dd, devCoeff, survCoeff;
 	Rcpp::NumericMatrix trmatrix, wtsmatrix;
@@ -1651,7 +1464,7 @@ int ReadStageStructureR(Rcpp::S4 ParMaster)
 	if(dem.repType != 2)
 		matrixsize = sstruct.nStages;
 	else
-		matrixsize = sstruct.nStages * NSEXES;
+		matrixsize = sstruct.nStages * gMaxNbSexes;
 	// Fecundity
 	sstruct.fecDens = Rcpp::as<bool>(StagesParamsR.slot("FecDensDep")); // Density-dependence in reproduction
 	sstruct.fecStageDens =
@@ -1727,12 +1540,12 @@ int ReadEmigrationR(Rcpp::S4 ParMaster)
 	int Nlines, emigstage, stage, sex, offset;
 	Rcpp::NumericMatrix EmigMatrix;
 	Rcpp::NumericVector EmigScalesVec;
-	demogrParams dem = pSpecies->getDemogr();
-	stageParams sstruct = pSpecies->getStage();
-	emigRules emig = pSpecies->getEmig();
-	emigTraits etraits;
-	emigParams eparams;
-	emigScales scale = pSpecies->getEmigScales();
+	demogrParams dem = pSpecies->getDemogrParams();
+	stageParams sstruct = pSpecies->getStageParams();
+	emigRules emig = pSpecies->getEmigRules();
+	emigTraits emigrationTraits;
+	// emigParams eparams;veraltet -> jetzt im TraitsFile
+	// emigScales scale = pSpecies->getEmigScales(); -> Müsste jetzt auch im TraitsFile abgedeckt sein
 
 	// int simulation;
 	// simulation = Rcpp::as<int>(EmigParamsR.slot("Simulation")); // REMOVED in R-interface // Must match simulation
@@ -1753,7 +1566,7 @@ int ReadEmigrationR(Rcpp::S4 ParMaster)
 		emig.emigStage = 0;
 	}
 
-	pSpecies->setEmig(emig);
+	pSpecies->setEmigRules(emig);
 
 	if(!dem.repType && emig.sexDep)
 		error = 301;
@@ -1763,7 +1576,7 @@ int ReadEmigrationR(Rcpp::S4 ParMaster)
 	// no.of lines according to known stage- and sex-dependency and corresponding column offset
 	if(emig.stgDep) {
 		if(emig.sexDep) {
-			Nlines = sstruct.nStages * sexesDisp;
+			Nlines = sstruct.nStages * gNbSexesDisp;
 			offset = 2;
 		} else {
 			Nlines = sstruct.nStages;
@@ -1771,7 +1584,7 @@ int ReadEmigrationR(Rcpp::S4 ParMaster)
 		}
 	} else {
 		if(emig.sexDep) {
-			Nlines = sexesDisp;
+			Nlines = gNbSexesDisp;
 			offset = 1;
 		} else {
 			Nlines = 1;
@@ -1807,54 +1620,54 @@ int ReadEmigrationR(Rcpp::S4 ParMaster)
 		}
 
 		if(emig.densDep) {
-			if(emig.indVar) {
-				eparams.d0Mean = (float)EmigMatrix(line, offset + 0);
-				eparams.d0SD = (float)EmigMatrix(line, offset + 1);
-				eparams.alphaMean = (float)EmigMatrix(line, offset + 2);
-				eparams.alphaSD = (float)EmigMatrix(line, offset + 3);
-				eparams.betaMean = (float)EmigMatrix(line, offset + 4);
-				eparams.betaSD = (float)EmigMatrix(line, offset + 5);
+			// if(emig.indVar) {
+			// 	eparams.d0Mean = (float)EmigMatrix(line, offset + 0);
+			// 	eparams.d0SD = (float)EmigMatrix(line, offset + 1);
+			// 	eparams.alphaMean = (float)EmigMatrix(line, offset + 2);
+			// 	eparams.alphaSD = (float)EmigMatrix(line, offset + 3);
+			// 	eparams.betaMean = (float)EmigMatrix(line, offset + 4);
+			// 	eparams.betaSD = (float)EmigMatrix(line, offset + 5);
+			//
+			// 	pSpecies->setEmigParams(stage, sex, eparams);
+			// } else {
+			    emigrationTraits.d0 = (float)EmigMatrix(line, offset + 0);
+			    emigrationTraits.alpha = (float)EmigMatrix(line, offset + 1);
+			    emigrationTraits.beta = (float)EmigMatrix(line, offset + 2);
 
-				pSpecies->setEmigParams(stage, sex, eparams);
-			} else {
-				etraits.d0 = (float)EmigMatrix(line, offset + 0);
-				etraits.alpha = (float)EmigMatrix(line, offset + 1);
-				etraits.beta = (float)EmigMatrix(line, offset + 2);
-
-				pSpecies->setEmigTraits(stage, sex, etraits);
-			}
+				pSpecies->setSpEmigTraits(stage, sex, emigrationTraits);
+			// }
 		} else { // !emig.densDep
-			if(emig.indVar) {
-				eparams.d0Mean = (float)EmigMatrix(line, offset + 0);
-				eparams.d0SD = (float)EmigMatrix(line, offset + 1);
-				eparams.alphaMean = eparams.betaMean = 0.0;
-				eparams.alphaSD = eparams.betaSD = 0.00000001;
+			// if(emig.indVar) {
+			// 	eparams.d0Mean = (float)EmigMatrix(line, offset + 0);
+			// 	eparams.d0SD = (float)EmigMatrix(line, offset + 1);
+			// 	eparams.alphaMean = eparams.betaMean = 0.0;
+			// 	eparams.alphaSD = eparams.betaSD = 0.00000001;
+			//
+			// 	pSpecies->setSpEmigParams(stage, sex, eparams);
+			// } else {
+			    emigrationTraits.d0 = (float)EmigMatrix(line, offset + 0);
+			    emigrationTraits.alpha = emigrationTraits.beta = 0.0;
 
-				pSpecies->setEmigParams(stage, sex, eparams);
-			} else {
-				etraits.d0 = (float)EmigMatrix(line, offset + 0);
-				etraits.alpha = etraits.beta = 0.0;
-
-				pSpecies->setEmigTraits(stage, sex, etraits);
-			}
+				pSpecies->setSpEmigTraits(stage, sex, emigrationTraits);
+			// }
 		}
 	} // end of Nlines for loop
 
-	EmigScalesVec = Rcpp::as<Rcpp::NumericVector>(EmigParamsR.slot("TraitScaleFactor"));
+	// EmigScalesVec = Rcpp::as<Rcpp::NumericVector>(EmigParamsR.slot("TraitScaleFactor"));
 
-	if(emig.indVar) {
-		if(emig.densDep) {
-			scale.d0Scale = (float)EmigScalesVec(0);
-			scale.alphaScale = (float)EmigScalesVec(1);
-			scale.betaScale = (float)EmigScalesVec(2);
-		} else {
-			scale.d0Scale = (float)EmigScalesVec(0);
-			scale.alphaScale = scale.betaScale = 0.00000001;
-		}
-		pSpecies->setEmigScales(scale);
-	}
+	// if(emig.indVar) {
+	// 	if(emig.densDep) {
+	// 		scale.d0Scale = (float)EmigScalesVec(0);
+	// 		scale.alphaScale = (float)EmigScalesVec(1);
+	// 		scale.betaScale = (float)EmigScalesVec(2);
+	// 	} else {
+	// 		scale.d0Scale = (float)EmigScalesVec(0);
+	// 		scale.alphaScale = scale.betaScale = 0.00000001;
+	// 	}
+	// 	pSpecies->setEmigScales(scale);
+	// }
 
-	if(emig.indVar) anyIndVar = true;
+	if(emig.indVar) gHasGenetics = true;
 
 	return error;
 }
@@ -1870,9 +1683,9 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 	int error = 0;
 
 	landParams paramsLand = pLandscape->getLandParams();
-	demogrParams dem = pSpecies->getDemogr();
-	stageParams sstruct = pSpecies->getStage();
-	trfrRules trfr = pSpecies->getTrfr();
+	demogrParams dem = pSpecies->getDemogrParams();
+	stageParams sstruct = pSpecies->getStageParams();
+	transferRules trfr = pSpecies->getTransferRules();
 
 #if RSDEBUG
 	DEBUGLOG << "ReadTransferR(): TransferType=" << trfr.moveModel
@@ -1884,7 +1697,7 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 #endif
 
 	// Create Costs vector of species
-	if(trfr.moveModel) {
+	if(trfr.usesMovtProc) {
 #if RSDEBUG
 		DEBUGLOG << "ReadTransferR(): creating cost/mortality matrix, dimension=";
 		if(paramsLand.generated)
@@ -1901,19 +1714,19 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 	}
 
 	int TransferType; // new local variable to replace former global variable
-	if(trfr.moveModel)
+	if(trfr.usesMovtProc)
 		TransferType = trfr.moveType;
 	else
 		TransferType = 0;
 
-	trfrKernTraits k;
-	trfrMovtTraits movt;
-	trfrKernParams kparams;
+	// trfrKernTraits k; // andere Implementierung für individuelle Variabilität
+	// trfrMovtTraits movt; // andere Implementierung für individuelle Variabilität
+	trfrKernelParams kparams;
 	trfrMortParams mort;
-	trfrScales scale;
+	// trfrScales scale; // andere Implementierung für individuelle Variabilität
 	string CostsFile;
-	trfrSMSParams smsparams;
-	trfrCRWParams mparams;
+	trfrMovtParams smsparams;
+	trfrMovtParams mparams;
 	Rcpp::NumericVector ReadVec;
 
 	switch(TransferType) {
@@ -1950,7 +1763,7 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 		// set no. of lines according to known stage- and sex-dependency and corresponding column offset
 		if(trfr.stgDep) {
 			if(trfr.sexDep) {
-				Nlines = sstruct.nStages * sexesDisp;
+				Nlines = sstruct.nStages * gNbSexesDisp;
 				offset = 2;
 			} else {
 				Nlines = sstruct.nStages;
@@ -1958,7 +1771,7 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 			}
 		} else {
 			if(trfr.sexDep) {
-				Nlines = sexesDisp;
+				Nlines = gNbSexesDisp;
 				offset = 1;
 			} else {
 				Nlines = 1;
@@ -1989,59 +1802,59 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 			}
 
 			if(trfr.twinKern) {
-				if(trfr.indVar) {
-					kparams.dist1Mean = (float)DispMatrix(line, offset + 0);
-					kparams.dist1SD = (float)DispMatrix(line, offset + 1);
-					kparams.dist2Mean = (float)DispMatrix(line, offset + 2);
-					kparams.dist2SD = (float)DispMatrix(line, offset + 3);
-					kparams.PKern1Mean = (float)DispMatrix(line, offset + 4);
-					kparams.PKern1SD = (float)DispMatrix(line, offset + 5);
+				if(trfr.indVar) { // andere Implementierung im neuen Genetics modul?
+					// kparams.dist1Mean = (float)DispMatrix(line, offset + 0);
+					// kparams.dist1SD = (float)DispMatrix(line, offset + 1);
+					// kparams.dist2Mean = (float)DispMatrix(line, offset + 2);
+					// kparams.dist2SD = (float)DispMatrix(line, offset + 3);
+					// kparams.PKern1Mean = (float)DispMatrix(line, offset + 4);
+					// kparams.PKern1SD = (float)DispMatrix(line, offset + 5);
 					// MAXDist = kparams.maxDist1;
-					pSpecies->setKernParams(stage, sex, kparams, paramsLand.resol);
+					// pSpecies->setKernParams(stage, sex, kparams, paramsLand.resol);
 				} else { // const kernel parameters
-					k.meanDist1 = (float)DispMatrix(line, offset + 0);
-					k.meanDist2 = (float)DispMatrix(line, offset + 1);
-					k.probKern1 = (float)DispMatrix(line, offset + 2);
+					kparams.meanDist1 = (float)DispMatrix(line, offset + 0);
+					kparams.meanDist2 = (float)DispMatrix(line, offset + 1);
+					kparams.probKern1 = (float)DispMatrix(line, offset + 2);
 
-					pSpecies->setKernTraits(stage, sex, k, paramsLand.resol);
+					pSpecies->setSpKernTraits(stage, sex, kparams, paramsLand.resol);
 				}
 			} else { // single kernel
 				if(trfr.indVar) {
-					kparams.dist1Mean = (float)DispMatrix(line, offset + 0);
-					kparams.dist1SD = (float)DispMatrix(line, offset + 1);
-					kparams.dist2Mean = kparams.dist1Mean;
-					kparams.dist2SD = kparams.dist1SD;
-					kparams.PKern1Mean = 0.999;
-					kparams.PKern1SD = 0.001;
-
-					pSpecies->setKernParams(stage, sex, kparams, paramsLand.resol);
+					// kparams.dist1Mean = (float)DispMatrix(line, offset + 0);
+					// kparams.dist1SD = (float)DispMatrix(line, offset + 1);
+					// kparams.dist2Mean = kparams.dist1Mean;
+					// kparams.dist2SD = kparams.dist1SD;
+					// kparams.PKern1Mean = 0.999;
+					// kparams.PKern1SD = 0.001;
+					//
+					// pSpecies->setKernParams(stage, sex, kparams, paramsLand.resol);
 				} else { // const kernel parameters
-					k.meanDist1 = (float)DispMatrix(line, offset + 0);
-					k.meanDist2 = k.meanDist1;
-					k.probKern1 = 1.0;
+					kparams.meanDist1 = (float)DispMatrix(line, offset + 0);
+					kparams.meanDist2 = kparams.meanDist1;
+					kparams.probKern1 = 1.0;
 
-					pSpecies->setKernTraits(stage, sex, k, paramsLand.resol);
+					pSpecies->setSpKernTraits(stage, sex, kparams, paramsLand.resol);
 				}
 			}
 		} // end of Nlines for-loop
 
-		// Mutation scales
-		scale = pSpecies->getTrfrScales();
-		DispScalesVec = Rcpp::as<Rcpp::NumericVector>(TransParamsR.slot("TraitScaleFactor"));
-		if(trfr.indVar) {
-			//	if (!trfr.indVar) error = 411;
-			//	if (dem.stageStruct) error = 412;
-			if(trfr.twinKern) {
-				scale.dist1Scale = (float)DispScalesVec(0);
-				scale.dist2Scale = (float)DispScalesVec(1);
-				scale.PKern1Scale = (float)DispScalesVec(2);
-			} else {
-				scale.dist1Scale = (float)DispScalesVec(0);
-				scale.dist2Scale = scale.dist1Scale;
-				scale.PKern1Scale = 0.00000001;
-			}
-			pSpecies->setTrfrScales(scale);
-		}
+		// Mutation scales // Different Implementation in new genetics
+		// scale = pSpecies->getTrfrScales();
+		// DispScalesVec = Rcpp::as<Rcpp::NumericVector>(TransParamsR.slot("TraitScaleFactor"));
+		// if(trfr.indVar) {
+		// 	//	if (!trfr.indVar) error = 411;
+		// 	//	if (dem.stageStruct) error = 412;
+		// 	if(trfr.twinKern) {
+		// 		scale.dist1Scale = (float)DispScalesVec(0);
+		// 		scale.dist2Scale = (float)DispScalesVec(1);
+		// 		scale.PKern1Scale = (float)DispScalesVec(2);
+		// 	} else {
+		// 		scale.dist1Scale = (float)DispScalesVec(0);
+		// 		scale.dist2Scale = scale.dist1Scale;
+		// 		scale.PKern1Scale = 0.00000001;
+		// 	}
+		// 	pSpecies->setTrfrScales(scale);
+		// }
 
 		// mortality
 		mort.fixedMort = Rcpp::as<float>(TransParamsR.slot("MortProb"));
@@ -2049,7 +1862,7 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 		mort.mortBeta  = Rcpp::as<float>(TransParamsR.slot("InflPoint"));
 		pSpecies->setMortParams(mort);
 
-		pSpecies->setTrfr(trfr);
+		pSpecies->setTrfrRules(trfr);
 
 	}
 	break; // end of dispersal kernel
@@ -2060,76 +1873,76 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 		TransParamsR = Rcpp::as<Rcpp::S4>(DispParamsR.slot("Transfer"));
 
 		// simulation = Rcpp::as<int>(TransParamsR.slot("Simulation")); // REMOVED in R-interface // Must match simulation numbers in ParamParams
-		movt.pr = Rcpp::as<short>(TransParamsR.slot("PR")); // Perceptual range (cells)
-		movt.prMethod = Rcpp::as<short>(TransParamsR.slot("PRMethod")); // Perceptual range method: 1 = arithmetic mean; 2 = harmonic mean; 3 = weighted arithmtic mean
-		movt.memSize = Rcpp::as<short>(TransParamsR.slot("MemSize"));    // No. of previous steps over which to calculate current direction to apply DP [1-14]
-		movt.goalType = Rcpp::as<short>(TransParamsR.slot("GoalType"));   // Goal type: 0 (none) or 2 (dispersal bias)
+		smsparams.pr = Rcpp::as<short>(TransParamsR.slot("PR")); // Perceptual range (cells)
+		smsparams.prMethod = Rcpp::as<short>(TransParamsR.slot("PRMethod")); // Perceptual range method: 1 = arithmetic mean; 2 = harmonic mean; 3 = weighted arithmtic mean
+		smsparams.memSize = Rcpp::as<short>(TransParamsR.slot("MemSize"));    // No. of previous steps over which to calculate current direction to apply DP [1-14]
+		smsparams.goalType = Rcpp::as<short>(TransParamsR.slot("GoalType"));   // Goal type: 0 (none) or 2 (dispersal bias)
 		trfr.indVar = Rcpp::as<bool>(TransParamsR.slot("IndVar"));
 		if(trfr.indVar) {
-			smsparams = pSpecies->getSMSParams(0,0);
-			scale = pSpecies->getTrfrScales();
+			// smsparams = pSpecies->getSMSParams(0,0);
+			// scale = pSpecies->getTrfrScales();
 		}
 		ReadVec = Rcpp::as<Rcpp::NumericVector>(TransParamsR.slot("DP")); // Directional persistence, Must be >= 1.0
 		if(trfr.indVar) {
-			if(ReadVec.size() == 3) {
-				smsparams.dpMean = (float)ReadVec[0]; //  Directional persistence initial mean (m); Required for IndVar = 1
-				smsparams.dpSD   = (float)ReadVec[1]; //  Directional persistence initial SD (m); Required for IndVar = 1
-				scale.dpScale  = (float)ReadVec[2]; //  Directional persistence scaling factor; Required for IndVar = 1
-			} else {
-				error = 435;
-			}
+			// if(ReadVec.size() == 3) {
+			// 	smsparams.dpMean = (float)ReadVec[0]; //  Directional persistence initial mean (m); Required for IndVar = 1
+			// 	smsparams.dpSD   = (float)ReadVec[1]; //  Directional persistence initial SD (m); Required for IndVar = 1
+			// 	scale.dpScale  = (float)ReadVec[2]; //  Directional persistence scaling factor; Required for IndVar = 1
+			// } else {
+			// 	error = 435;
+			// }
 		} else {
 			if(ReadVec.size() == 1) {
-				movt.dp = (float)ReadVec[0];
+			    smsparams.dp = (float)ReadVec[0];
 			} else {
 				error = 436;
 			}
 		}
 		ReadVec = Rcpp::as<Rcpp::NumericVector>(TransParamsR.slot("GoalBias")); // Goal bias strength, Must be >= 1.0
 		if(trfr.indVar) {
-			if(ReadVec.size() == 3) {
-				smsparams.gbMean = (float)ReadVec[0]; //  Goal bias strength initial mean (m); Required for IndVar = 1
-				smsparams.gbSD   = (float)ReadVec[1]; // Goal bias strength initial SD (m); Required for IndVar = 1
-				scale.gbScale  = (float)ReadVec[2]; //  Goal bias strength scaling factor; Required for IndVar = 1
-			} else {
-				error = 435;
-			}
+			// if(ReadVec.size() == 3) {
+			// 	smsparams.gbMean = (float)ReadVec[0]; //  Goal bias strength initial mean (m); Required for IndVar = 1
+			// 	smsparams.gbSD   = (float)ReadVec[1]; // Goal bias strength initial SD (m); Required for IndVar = 1
+			// 	scale.gbScale  = (float)ReadVec[2]; //  Goal bias strength scaling factor; Required for IndVar = 1
+			// } else {
+			// 	error = 435;
+			// }
 		} else {
 			if(ReadVec.size() == 1) {
-				movt.gb = (float)ReadVec[0];
+			    smsparams.gb = (float)ReadVec[0];
 			} else {
 				error = 436;
 			}
 		}
-		if(movt.goalType == 2) {	// dispersal bias
+		if(smsparams.goalType == 2) {	// dispersal bias
 			ReadVec = Rcpp::as<Rcpp::NumericVector>(TransParamsR.slot("AlphaDB")); // Dispersal bias decay rate (> 0)
 			if(trfr.indVar) {
-				if(ReadVec.size() == 3) {
-					smsparams.alphaDBMean = (float)ReadVec[0]; // decay rate initial mean (m); Required for IndVar = 1
-					smsparams.alphaDBSD   = (float)ReadVec[1]; // decay rate initial SD (m); Required for IndVar = 1
-					scale.alphaDBScale    = (float)ReadVec[2]; // decay rate scaling factor; Required for IndVar = 1
-				} else {
-					error = 435;
-				}
+				// if(ReadVec.size() == 3) {
+				// 	smsparams.alphaDBMean = (float)ReadVec[0]; // decay rate initial mean (m); Required for IndVar = 1
+				// 	smsparams.alphaDBSD   = (float)ReadVec[1]; // decay rate initial SD (m); Required for IndVar = 1
+				// 	scale.alphaDBScale    = (float)ReadVec[2]; // decay rate scaling factor; Required for IndVar = 1
+				// } else {
+				// 	error = 435;
+				// }
 			} else {
 				if(ReadVec.size() == 1) {
-					movt.alphaDB = (float)ReadVec[0];
+				    smsparams.alphaDB = (float)ReadVec[0];
 				} else {
 					error = 436;
 				}
 			}
 			ReadVec = Rcpp::as<Rcpp::NumericVector>(TransParamsR.slot("BetaDB")); // Dispersal bias decay inflection point (no. of steps) (> 0)
 			if(trfr.indVar) {
-				if(ReadVec.size() == 3) {
-					smsparams.alphaDBMean = (float)ReadVec[0]; // decay inflection point initial mean (m); Required for IndVar = 1
-					smsparams.alphaDBSD   = (float)ReadVec[1]; // decay inflection point initial SD (m); Required for IndVar = 1
-					scale.alphaDBScale    = (float)ReadVec[2]; // decay inflection point scaling factor; Required for IndVar = 1
-				} else {
-					error = 435;
-				}
+				// if(ReadVec.size() == 3) {
+				// 	smsparams.alphaDBMean = (float)ReadVec[0]; // decay inflection point initial mean (m); Required for IndVar = 1
+				// 	smsparams.alphaDBSD   = (float)ReadVec[1]; // decay inflection point initial SD (m); Required for IndVar = 1
+				// 	scale.alphaDBScale    = (float)ReadVec[2]; // decay inflection point scaling factor; Required for IndVar = 1
+				// } else {
+				// 	error = 435;
+				// }
 			} else {
 				if(ReadVec.size() == 1) {
-					movt.betaDB = (float)ReadVec[0];
+				    smsparams.betaDB = (float)ReadVec[0];
 				} else {
 					error = 436;
 				}
@@ -2157,21 +1970,21 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 		//scale.betaDBScale = Rcpp::as<float>(TransParamsR.slot("BetaDBScale"));
 
 		if (trfr.indVar) {
-			pSpecies->setSMSParams(0,0,smsparams);
-			pSpecies->setTrfrScales(scale);
+			// pSpecies->setSMSParams(0,0,smsparams);
+			// pSpecies->setTrfrScales(scale);
 		}
 
-		movt.straigtenPath = Rcpp::as<bool>(TransParamsR.slot("StraightenPath")); // Straighten path after decision not to settle?
+		smsparams.straightenPath = Rcpp::as<bool>(TransParamsR.slot("StraightenPath")); // Straighten path after decision not to settle?
 
 		// Mortality
 		Rcpp::NumericVector HabMortVec;
 		HabMortVec = Rcpp::as<Rcpp::NumericVector>(TransParamsR.slot("StepMort"));
 		if(HabMortVec.size() == 1) {
 			trfr.habMort = false;                 // Per-step mortality type: 0 = constant
-			movt.stepMort = (float)HabMortVec[0]; // Constant per-step mortality probability
+		    smsparams.stepMort = (float)HabMortVec[0]; // Constant per-step mortality probability
 		} else {
 			trfr.habMort = true; // Per-step mortality type: 1 = habitat-dependent
-			movt.stepMort = -9;
+		    smsparams.stepMort = -9;
 			if(paramsLand.generated) {
 				// values are for habitat (hab=1) then for matrix (hab=0)
 				pSpecies->setHabMort(1, (double)HabMortVec[1]);
@@ -2234,8 +2047,8 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 				pSpecies->setHabCost(0, (int)HabCostVec[0]);
 			}
 		}
-		pSpecies->setTrfr(trfr);
-		pSpecies->setMovtTraits(movt);
+		pSpecies->setTrfrRules(trfr);
+		pSpecies->setSpMovtTraits(smsparams);
 	}
 	break; // end of SMS
 
@@ -2250,16 +2063,16 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 
 		ReadVec = Rcpp::as<Rcpp::NumericVector>(TransParamsR.slot("StepLength")); // Step length params
 		if(trfr.indVar) {
-			if(ReadVec.size() == 3) {
-				mparams.stepLgthMean = (float)ReadVec[0]; // Step length initial mean (m); Required for IndVar = 1
-				mparams.stepLgthSD = (float)ReadVec[1];   // Step length initial SD (m); Required for IndVar = 1
-				scale.stepLScale = (float)ReadVec[2];     // Step length scaling factor; Required for IndVar = 1
-			} else {
-				error = 435;
-			}
+			// if(ReadVec.size() == 3) {
+			// 	mparams.stepLgthMean = (float)ReadVec[0]; // Step length initial mean (m); Required for IndVar = 1
+			// 	mparams.stepLgthSD = (float)ReadVec[1];   // Step length initial SD (m); Required for IndVar = 1
+			// 	scale.stepLScale = (float)ReadVec[2];     // Step length scaling factor; Required for IndVar = 1
+			// } else {
+			// 	error = 435;
+			// }
 		} else {
 			if(ReadVec.size() == 1) {
-				movt.stepLength = (float)ReadVec[0]; // Step length (m); Required for IndVar = 0; must be > 0
+			    mparams.stepLength = (float)ReadVec[0]; // Step length (m); Required for IndVar = 0; must be > 0
 			} else {
 				error = 436;
 			}
@@ -2267,24 +2080,24 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 
 		ReadVec = Rcpp::as<Rcpp::NumericVector>(TransParamsR.slot("Rho")); // Step correlation coefficient params
 		if(trfr.indVar) {
-			if(ReadVec.size() == 3) {
-				mparams.rhoMean = (float)ReadVec[0]; // Step correlation coefficient initial mean (m); Required for IndVar = 1
-				mparams.rhoSD   = (float)ReadVec[1]; // Step correlation coefficient initial SD (m); Required for IndVar = 1
-				scale.rhoScale  = (float)ReadVec[2]; // Step correlation coefficient scaling factor; Required for IndVar = 1
-			} else {
-				error = 435;
-			}
+			// if(ReadVec.size() == 3) {
+			// 	mparams.rhoMean = (float)ReadVec[0]; // Step correlation coefficient initial mean (m); Required for IndVar = 1
+			// 	mparams.rhoSD   = (float)ReadVec[1]; // Step correlation coefficient initial SD (m); Required for IndVar = 1
+			// 	scale.rhoScale  = (float)ReadVec[2]; // Step correlation coefficient scaling factor; Required for IndVar = 1
+			// } else {
+			// 	error = 435;
+			// }
 		} else {
 			if(ReadVec.size() == 1) {
-				movt.rho =
+			    mparams.rho =
 				    (float)ReadVec[0]; // Step correlation coefficient; Required for IndVar = 0; must be > 0.0 and < 1.0
 			} else {
 				error = 436;
 			}
 		}
 
-		movt.straigtenPath = Rcpp::as<bool>(TransParamsR.slot("StraightenPath")); // Straighten path after decision not to settle?
-		pSpecies->setTrfrScales(scale);
+		mparams.straightenPath = Rcpp::as<bool>(TransParamsR.slot("StraightenPath")); // Straighten path after decision not to settle?
+		// pSpecies->setTrfrScales(scale);
 
 #if RSDEBUG
 		DEBUGLOG << "ReadTransferR():"
@@ -2300,10 +2113,10 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 
 		if(HabMortVec.size() == 1) {
 			trfr.habMort = 0;                     // Per-step mortality type: 0 = constant
-			movt.stepMort = (float)HabMortVec[0]; // Constant per-step mortality probability
+			mparams.stepMort = (float)HabMortVec[0]; // Constant per-step mortality probability
 		} else {
 			trfr.habMort = 1; // Per-step mortality type: 1 = habitat-dependent
-			movt.stepMort = -9;
+			mparams.stepMort = -9;
 			if(paramsLand.generated) {
 				// values are for habitat (hab=1) then for matrix (hab=0)
 				pSpecies->setHabMort(1, (double)HabMortVec[1]);
@@ -2333,9 +2146,9 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 		DEBUGLOG << "ReadTransferR(): SMtype=" << trfr.habMort << " SMconst=" << movt.stepMort << endl;
 #endif
 
-		pSpecies->setTrfr(trfr);
-		pSpecies->setMovtTraits(movt);
-		pSpecies->setCRWParams(0, 0, mparams);
+		pSpecies->setTrfrRules(trfr);
+		pSpecies->setSpMovtTraits(mparams);
+		// pSpecies->setCRWParams(0, 0, mparams);
 
 	}
 	break; // end of CRW
@@ -2344,7 +2157,7 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 		error = 440;
 	} // end of switch (TransferType)
 
-	if(trfr.indVar) anyIndVar = true;
+	if(trfr.indVar) gHasGenetics = true;
 
 	return error;
 }
@@ -2365,21 +2178,21 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
 	int error = 0;
 	bool findmate, densdep;
 
-	demogrParams dem = pSpecies->getDemogr();
-	stageParams sstruct = pSpecies->getStage();
-	trfrRules trfr = pSpecies->getTrfr();
+	demogrParams dem = pSpecies->getDemogrParams();
+	stageParams sstruct = pSpecies->getStageParams();
+	transferRules trfr = pSpecies->getTransferRules();
 	settleType sett = pSpecies->getSettle();
 	settleRules srules;
 	settleSteps ssteps = pSpecies->getSteps(0,0);
-	settleTraits settleDD = pSpecies->getSettTraits(0,0);
-	settParams sparams = pSpecies->getSettParams(0,0);
+	settleTraits settleDD; // = pSpecies->getSettTraits(0,0);
+	// settParams sparams = pSpecies->getSettParams(0,0);
 
 	// int simulation;
 	// simulation = Rcpp::as<int>(SettleParamsR.slot("Simulation")); // REMOVED in R-interface  // Must match simulation
 	// numbers in ParamParams
 	sett.stgDep = Rcpp::as<bool>(SettleParamsR.slot("StageDep")); // Stage-dependent settlement.
 	sett.sexDep = Rcpp::as<bool>(SettleParamsR.slot("SexDep"));   // Sex-dependent settlement.
-	if (transfer == 0) {
+	if ( gTransferType == 0) {
 		// dispersal kernel                                         // dispersal kernel
 		sett.indVar = false;
 		if(dem.repType == 0) {
@@ -2407,7 +2220,7 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
 	// no.of lines according to known stage- and sex-dependency and corresponding column offset
 	if(sett.stgDep) {
 		if(sett.sexDep) {
-			Nlines = sstruct.nStages * sexesDisp;
+			Nlines = sstruct.nStages * gNbSexesDisp;
 			offset = 2;
 		} else {
 			Nlines = sstruct.nStages;
@@ -2415,7 +2228,7 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
 		}
 	} else {
 		if(sett.sexDep) {
-			Nlines = sexesDisp;
+			Nlines = gNbSexesDisp;
 			offset = 1;
 		} else {
 			Nlines = 1;
@@ -2474,7 +2287,7 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
 		}
 
 		// read settlement conditions for...
-		if(trfr.moveModel) { // ...movement process            //  /!\ different to ReadSettlement() : all cases are
+		if(trfr.usesMovtProc) { // ...movement process            //  /!\ different to ReadSettlement() : all cases are
 			// covered here (in a way that parameters for IIV (i.e. 'settParams sparams;') are only set
 			// for stage #0,
 			//                                      however on R-level (IndVar && StageDep) is not
@@ -2506,19 +2319,19 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
 			}
 			if(densdep) {
 				if(sett.indVar) {
-					sparams.s0Mean = (float)SettleCondMatrix(
-					                     line, offset + 0); // Required for DensDep = 1 and IndVar = 1. 0.0 < S0 <= 1.0
-					sparams.s0SD = (float)SettleCondMatrix(
-					                   line, offset + 1); // Required for DensDep = 1 and IndVar = 1. 0.0 < S0 <= 1.0
-					sparams.alphaSMean = (float)SettleCondMatrix(line, offset + 2);
-					sparams.alphaSSD = (float)SettleCondMatrix(line, offset + 3);
-					sparams.betaSMean = (float)SettleCondMatrix(line, offset + 4);
-					sparams.betaSSD = (float)SettleCondMatrix(line, offset + 5);
-					if(stage == 0) {
-						sparams.s0Scale = (float)MutationCoeffs(0);
-						sparams.alphaSScale = (float)MutationCoeffs(1);
-						sparams.betaSScale = (float)MutationCoeffs(2);
-					}
+					// sparams.s0Mean = (float)SettleCondMatrix(
+					//                      line, offset + 0); // Required for DensDep = 1 and IndVar = 1. 0.0 < S0 <= 1.0
+					// sparams.s0SD = (float)SettleCondMatrix(
+					//                    line, offset + 1); // Required for DensDep = 1 and IndVar = 1. 0.0 < S0 <= 1.0
+					// sparams.alphaSMean = (float)SettleCondMatrix(line, offset + 2);
+					// sparams.alphaSSD = (float)SettleCondMatrix(line, offset + 3);
+					// sparams.betaSMean = (float)SettleCondMatrix(line, offset + 4);
+					// sparams.betaSSD = (float)SettleCondMatrix(line, offset + 5);
+					// if(stage == 0) {
+					// 	sparams.s0Scale = (float)MutationCoeffs(0);
+					// 	sparams.alphaSScale = (float)MutationCoeffs(1);
+					// 	sparams.betaSScale = (float)MutationCoeffs(2);
+					// }
 				} else {
 					settleDD.s0 = (float)SettleCondMatrix(
 					                  line, offset + 0); // Max. settlement probability for density reaction norm. Required for
@@ -2541,22 +2354,22 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
 				pSpecies->setSettRules(0, 0, srules);
 				pSpecies->setSteps(0, 0, ssteps);
 				if(srules.densDep) {
-					if(sett.indVar)
-						pSpecies->setSettParams(0, 0, sparams);
-					else
-						pSpecies->setSettTraits(0, 0, settleDD);
+					// if(sett.indVar)
+					// 	// pSpecies->setSettParams(0, 0, sparams);
+					// else
+						pSpecies->setSpSettTraits(0, 0, settleDD);
 				}
 				if(dem.stageStruct) { // model is structured - also set parameters for all stages
 					for(int i = 1; i < sstruct.nStages; i++) {
 						pSpecies->setSettRules(i, 0, srules);
 						pSpecies->setSteps(i, 0, ssteps);
 						if(srules.densDep && !sett.indVar)
-							pSpecies->setSettTraits(i, 0, settleDD); //  /!\ different to ReadSettlement()
+							pSpecies->setSpSettTraits(i, 0, settleDD); //  /!\ different to ReadSettlement()
 						if(dem.repType > 0) {                        // model is sexual - also set parameters for males
 							pSpecies->setSettRules(i, 1, srules);
 							pSpecies->setSteps(i, 1, ssteps);
 							if(srules.densDep && !sett.indVar)
-								pSpecies->setSettTraits(i, 1, settleDD);
+								pSpecies->setSpSettTraits(i, 1, settleDD);
 						}
 					}
 				} else {                  // see comment above (at case label)
@@ -2564,10 +2377,10 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
 						pSpecies->setSettRules(0, 1, srules);
 						pSpecies->setSteps(0, 1, ssteps);
 						if(srules.densDep) {
-							if(sett.indVar)
-								pSpecies->setSettParams(0, 1, sparams);
-							else
-								pSpecies->setSettTraits(0, 1, settleDD);
+							// if(sett.indVar)
+							// 	pSpecies->setSettParams(0, 1, sparams);
+							// else
+								pSpecies->setSpSettTraits(0, 1, settleDD);
 						}
 					}
 				}
@@ -2585,17 +2398,17 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
 				         << " ssteps.maxStepsYr =" << ssteps.maxStepsYr << endl;
 #endif
 				if(srules.densDep) {
-					if(sett.indVar)
-						pSpecies->setSettParams(0, sex, sparams);
-					else
-						pSpecies->setSettTraits(0, sex, settleDD);
+					// if(sett.indVar)
+					// 	pSpecies->setSettParams(0, sex, sparams);
+					// else
+						pSpecies->setSpSettTraits(0, sex, settleDD);
 				}
 				if(dem.stageStruct) { // model is structured - also set parameters for all stages
 					for(int i = 1; i < sstruct.nStages; i++) {
 						pSpecies->setSettRules(i, sex, srules);
 						pSpecies->setSteps(i, sex, ssteps);
 						if(srules.densDep && !sett.indVar)
-							pSpecies->setSettTraits(i, sex, settleDD);
+							pSpecies->setSpSettTraits(i, sex, settleDD);
 					}
 				}
 			}
@@ -2609,20 +2422,20 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
 				pSpecies->setSteps(stage, 0, ssteps);
 				if(srules.densDep) {
 					if(sett.indVar) {
-						if(stage == 0)
-							pSpecies->setSettParams(0, 0, sparams);
+						// if(stage == 0)
+						// 	pSpecies->setSettParams(0, 0, sparams);
 					} else
-						pSpecies->setSettTraits(stage, 0, settleDD);
+						pSpecies->setSpSettTraits(stage, 0, settleDD);
 				}
 				if(dem.repType > 0) { // model is sexual - also set parameters for males
 					pSpecies->setSettRules(stage, 1, srules);
 					pSpecies->setSteps(stage, 1, ssteps);
 					if(srules.densDep) {
 						if(sett.indVar) {
-							if(stage == 0)
-								pSpecies->setSettParams(0, 1, sparams);
+							// if(stage == 0)
+							// 	pSpecies->setSettParams(0, 1, sparams);
 						} else
-							pSpecies->setSettTraits(stage, 1, settleDD);
+							pSpecies->setSpSettTraits(stage, 1, settleDD);
 					}
 				}
 			}
@@ -2636,10 +2449,10 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
 				pSpecies->setSteps(stage, sex, ssteps);
 				if(srules.densDep) {
 					if(sett.indVar) {
-						if(stage == 0)
-							pSpecies->setSettParams(0, sex, sparams);
+						// if(stage == 0)
+						// 	pSpecies->setSettParams(0, sex, sparams);
 					} else
-						pSpecies->setSettTraits(stage, sex, settleDD);
+						pSpecies->setSpSettTraits(stage, sex, settleDD);
 				}
 			}
 			break;
@@ -2798,7 +2611,7 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
 
 	} // end of for line loop
 
-	if(sett.indVar) anyIndVar = true;
+	if(sett.indVar) gHasGenetics = true;
 
 	return error;
 }
@@ -2814,8 +2627,8 @@ int ReadInitialisationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 	Rcpp::NumericVector PropStages;
 
 	landParams paramsLand = pLandscape->getLandParams();
-	demogrParams dem = pSpecies->getDemogr();
-	stageParams sstruct = pSpecies->getStage();
+	demogrParams dem = pSpecies->getDemogrParams();
+	stageParams sstruct = pSpecies->getStageParams();
 	initParams init = paramsInit->getInit();
 	string Inputs = paramsSim->getDir(1);
 
@@ -2908,6 +2721,7 @@ int ReadInitialisationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 #if RSDEBUG
 				DEBUGLOG << "ReadInitialisation(): check = " << check << endl;
 #endif
+				throw logic_error("The proportion of initial individuals in each stage doesn not sum to 1.");
 			}
 		}
 	}
@@ -2952,271 +2766,335 @@ int ReadInitialisationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 
 //---------------------------------------------------------------------------
 
-int ReadGeneticsR(Rcpp::S4 GeneParamsR)
+int ReadGeneticsR(Rcpp::S4 GeneParamsR, Landscape* pLandscape)
 {
-	emigRules emig = pSpecies->getEmig();
-	trfrRules trfr = pSpecies->getTrfr();
-	settleType sett = pSpecies->getSettle();
-	demogrParams dem = pSpecies->getDemogr();
+    bool outputGeneValues, outputWeirCockerham, outputWeirHill; // what should be calculated in the output?
+    int outputStartGenetics, outputGeneticInterval; // when should the output be calculated?
+    set<int>patchList; // for which patches should the output be calculated?
 
-	int arch;
-	string archfile;
-	int error = 0;
-	genomeData g;
+    //not ideal to reset these in here
+    pSpecies->resetGeneticParameters();
 
-	arch = Rcpp::as<int>(GeneParamsR.slot("Architecture")); // 0 = One chromosome per trait, 1 = Read from file
-	g.nLoci = Rcpp::as<int>(GeneParamsR.slot("NLoci")); // No. of loci per chromosome, Required for Architecture=0; > 0
-	archfile = Rcpp::as<string>(GeneParamsR.slot("ArchFile")); // Name of the genetic architecture file (*.txt),Required for Architecture=1, otherwise NULL
-	g.probMutn = Rcpp::as<float>(GeneParamsR.slot("ProbMutn")); // Probability of mutation of an individual allele at meiosis, 0 <= prob <= 1
-	g.probCrossover = Rcpp::as<float>(GeneParamsR.slot("ProbCross")); // Probability of crossover at an individual locus at meiosis, 0 <= prob <= 1
-	g.alleleSD = Rcpp::as<float>(GeneParamsR.slot("AlleleSD")); // S.d. of initial allelic values around phenotypic value, > 0
-	g.mutationSD = Rcpp::as<float>(GeneParamsR.slot("MutationSD")); // S.d. of mutation magnitude, > 0
+    int genomeSize = Rcpp::as<int>(GeneParamsR.slot("GenomeSize")); // how many loci are there?
+    set<int> chrEnds;
+    Rcpp::IntegerVector ChromosomeEnds = Rcpp::as<Rcpp::IntegerVector>(GeneParamsR.slot("ChromosomeEnds")); // where do the chromosomes end?
+    for (int i = 0; i < ChromosomeEnds.size(); i++) {
+        chrEnds.insert(ChromosomeEnds[i]);
+    }
+    float recombinationRate = Rcpp::as<int>(GeneParamsR.slot("RecombinationRate"));
 
-	if (dem.repType == 0) g.diploid = false;
-	else g.diploid = true;
+    outputGeneValues = Rcpp::as<bool>(GeneParamsR.slot("OutputGeneValues"));
+    outputWeirCockerham = Rcpp::as<bool>(GeneParamsR.slot("OutputWeirCockerham"));
+    outputWeirHill = Rcpp::as<bool>(GeneParamsR.slot("OutputWeirHill"));
+    outputStartGenetics = Rcpp::as<int>(GeneParamsR.slot("OutputStartGenetics"));
+    outputGeneticInterval = Rcpp::as<int>(GeneParamsR.slot("OutputGeneticInterval"));
 
-#if RSDEBUG
-	DEBUGLOG << "ReadGeneticsR(): arch=" << arch
-	         << " g.nLoci=" << g.nLoci << " archfile=" << archfile
-	         << " g.probMutn=" << g.probMutn << " g.probCrossover=" << g.probCrossover
-	         << " g.alleleSD=" << g.alleleSD << " g.mutationSD=" << g.mutationSD
-	         << endl;
-#endif
+    Rcpp::StringVector inPatches = Rcpp::as<Rcpp::StringVector>(GeneParamsR.slot("PatchList"));
+    string patchSamplingOption;
+    int nPatchesToSample;
+    if (inPatches[0] != "all" && inPatches[0] != "random" && inPatches[0] != "random_occupied") {
+        // then must be a list of indices
+        patchSamplingOption = "list";
+        for (int i = 0; i < inPatches.size(); i++) {
+            patchList.insert(Rcpp::as<int>(inPatches[i]));
+        }
+        if (patchList.contains(0)) throw logic_error("Patch sampling: ID 0 is reserved for the matrix and should not be sampled.");
+    }
+    else {
+        patchSamplingOption = inPatches[0];
+        // patchList remains empty, filled when patches are sampled every gen
+    }
+    const string strNbInds = Rcpp::as<string>(GeneParamsR.slot("nIndividualsToSample"));
+    const int nbStages = pSpecies->getStageParams().nStages;
+    set<int> stagesToSampleFrom;
 
-	g.neutralMarkers = false;
-	if (arch == 0) { // no architecture file
-		g.trait1Chromosome = true;
-		pSpecies->set1ChromPerTrait(g.nLoci);
-	} else { // architecture file
-		g.trait1Chromosome = false;
-		g.nLoci = 0;
-		if (!(emig.indVar || trfr.indVar || sett.indVar)) {
-			g.neutralMarkers = true;
-		}
-		//check architecture file
-		Rcpp::Rcout << "Checking Archiecture file " << archfile << endl;
-		string fname = paramsSim->getDir(1) + archfile;
-		wifstream archFile;
-		//open file
-#if RSWIN64
-		archFile.open(fname.c_str());
-#else
-		archFile.open(fname, std::ios::binary);
-#endif
-		if(!archFile.is_open()) {
-			OpenErrorR("Architecture file", fname);
-#if RSDEBUG
-			DEBUGLOG << "Architecture file failed to open: " << fname << std::endl;
-#endif
-			return -217;
-		} else {
-#if RSDEBUG
-			DEBUGLOG << "Architecture file open to read" << std::endl;
-#endif
-#if !RSWIN64
-			// check BOM for UTF-16
-			if(check_bom(fname) == "utf16")
-				// apply BOM-sensitive UTF-16 facet
-				archFile.imbue(std::locale(archFile.getloc(), new std::codecvt_utf16<wchar_t, 0x10ffff, std::consume_header>));
-#endif
+    Rcpp::StringVector Stages = Rcpp::as<Rcpp::StringVector>(GeneParamsR.slot("Stages"));
 
-			error = ReadArchFileR(archFile);
+    if (Stages[0] == "all") {
+        for (int i = 0; i < nbStages; i++) {
+            stagesToSampleFrom.insert(i);
+        }
+    }
+    else {
+        for (int i = 0; i < Stages.size(); i++) {
+            stagesToSampleFrom.insert(Rcpp::as<int>(Stages[i]));
+        }
+    }
 
-			if (archFile.is_open()) archFile.close();
-			archFile.clear();
-		}
-	}
+    pSpecies->setGeneticParameters(chrEnds, genomeSize, recombinationRate,
+                                   patchList, strNbInds, stagesToSampleFrom, nPatchesToSample);
 
-	pSpecies->setGenomeData(g);
+    paramsSim->setGeneticSim(patchSamplingOption, outputGeneValues, outputWeirCockerham, outputWeirHill, outputStartGenetics, outputGeneticInterval);
 
-	return error;
+    return 0;
+
+//------ OLD Genetics 2.0
+// 	emigRules emig = pSpecies->getEmigRules();
+// 	transferRules trfr = pSpecies->getTransferRules();
+// 	settleType sett = pSpecies->getSettle();
+// 	demogrParams dem = pSpecies->getDemogrParams();
+//
+// 	int arch;
+// 	string archfile;
+// 	int error = 0;
+// 	genomeData g;
+//
+// 	arch = Rcpp::as<int>(GeneParamsR.slot("Architecture")); // 0 = One chromosome per trait, 1 = Read from file
+// 	g.nLoci = Rcpp::as<int>(GeneParamsR.slot("NLoci")); // No. of loci per chromosome, Required for Architecture=0; > 0
+// 	archfile = Rcpp::as<string>(GeneParamsR.slot("ArchFile")); // Name of the genetic architecture file (*.txt),Required for Architecture=1, otherwise NULL
+// 	g.probMutn = Rcpp::as<float>(GeneParamsR.slot("ProbMutn")); // Probability of mutation of an individual allele at meiosis, 0 <= prob <= 1
+// 	g.probCrossover = Rcpp::as<float>(GeneParamsR.slot("ProbCross")); // Probability of crossover at an individual locus at meiosis, 0 <= prob <= 1
+// 	g.alleleSD = Rcpp::as<float>(GeneParamsR.slot("AlleleSD")); // S.d. of initial allelic values around phenotypic value, > 0
+// 	g.mutationSD = Rcpp::as<float>(GeneParamsR.slot("MutationSD")); // S.d. of mutation magnitude, > 0
+//
+// 	if (dem.repType == 0) g.diploid = false;
+// 	else g.diploid = true;
+//
+// #if RSDEBUG
+// 	DEBUGLOG << "ReadGeneticsR(): arch=" << arch
+// 	         << " g.nLoci=" << g.nLoci << " archfile=" << archfile
+// 	         << " g.probMutn=" << g.probMutn << " g.probCrossover=" << g.probCrossover
+// 	         << " g.alleleSD=" << g.alleleSD << " g.mutationSD=" << g.mutationSD
+// 	         << endl;
+// #endif
+//
+// 	g.neutralMarkers = false;
+// 	if (arch == 0) { // no architecture file
+// 		g.trait1Chromosome = true;
+// 		pSpecies->set1ChromPerTrait(g.nLoci);
+// 	} else { // architecture file
+// 		g.trait1Chromosome = false;
+// 		g.nLoci = 0;
+// 		if (!(emig.indVar || trfr.indVar || sett.indVar)) {
+// 			g.neutralMarkers = true;
+// 		}
+// 		//check architecture file
+// 		Rcpp::Rcout << "Checking Archiecture file " << archfile << endl;
+// 		string fname = paramsSim->getDir(1) + archfile;
+// 		wifstream archFile;
+// 		//open file
+// #if RSWIN64
+// 		archFile.open(fname.c_str());
+// #else
+// 		archFile.open(fname, std::ios::binary);
+// #endif
+// 		if(!archFile.is_open()) {
+// 			OpenErrorR("Architecture file", fname);
+// #if RSDEBUG
+// 			DEBUGLOG << "Architecture file failed to open: " << fname << std::endl;
+// #endif
+// 			return -217;
+// 		} else {
+// #if RSDEBUG
+// 			DEBUGLOG << "Architecture file open to read" << std::endl;
+// #endif
+// #if !RSWIN64
+// 			// check BOM for UTF-16
+// 			if(check_bom(fname) == "utf16")
+// 				// apply BOM-sensitive UTF-16 facet
+// 				archFile.imbue(std::locale(archFile.getloc(), new std::codecvt_utf16<wchar_t, 0x10ffff, std::consume_header>));
+// #endif
+//
+// 			error = ReadArchFileR(archFile);
+//
+// 			if (archFile.is_open()) archFile.close();
+// 			archFile.clear();
+// 		}
+// 	}
+//
+// 	pSpecies->setGenomeData(g);
+//
+// 	return error;
+//---- END old genetics
 }
 
 //---------------------------------------------------------------------------
 
-int ReadArchFileR(wifstream& archFile)
+int ReadTraitsR(Rcpp::S4 TraitsParamsR)
 {
-	//int ParseArchFile(void){
-
-	wstring paramname;
-	int traitnum,prevtrait,nchromosomes,chrom,locus,nloci;
-	int errors = 0;
-	int fileNtraits = 0;
-	bool formatError = false;
-	int *chromsize = 0;
-	string filetype = "ArchFile";
-
-// check no. of chromosomes, and terminate if in error
-	archFile >> paramname >> nchromosomes;
-	if (paramname == L"NChromosomes") {
-		if (nchromosomes < 1) {
-			BatchErrorR(filetype,-999,11,"NChromosomes");
-			errors++;
-			return -111;
-		}
-	} else {
-		ArchFormatErrorR();
-		return -111;
-	}
-	chromsize = new int[nchromosomes];
-	for (int i = 0; i < nchromosomes; i++) chromsize[i] = 0;
-
-// check no. of loci on each chromosome, and terminate if in error
-	archFile >> paramname;
-	if (paramname != L"NLoci") formatError = true;
-	int locerrors = 0;
-	for (int i = 0; i < nchromosomes; i++) {
-		nloci = -999;
-		archFile >> nloci;
-		if (archFile.eof()){ // iOS problem: if at end of file: problems clearing the status flags later; therefore: clear it now (eof-flag will also be cleared)
-		    archFile.clear();
-		    }
-		if (nloci < 1) locerrors++;
-		else chromsize[i] = nloci;
-	}
-	if (locerrors) {
-		BatchErrorR(filetype,-999,11,"NLoci");
-		return -111;
-	}
-//if (formatError) batchlog << "formatError is TRUE" << endl;
-//else batchlog << "formatError is FALSE" << endl;
-
-// check unspecified no. of traits
-	fileNtraits = 0;
-	traitnum = prevtrait = -1;
-	bool traitError = false;
-	bool lociError = false;
-	bool chromError = false;
-	bool locusError = false;
-	paramname = L"XXXyyyZZZ";
-//batchlog << "paramname=" << paramname << endl;
-	if (!archFile.eof()) archFile >> paramname; // only read another parameter if not end of file (if clear() was called before, it will try reading in another character, but won't succeed -> not going into while-loop
-//batchlog << "paramname=" << paramname << endl;
-	while (paramname != L"XXXyyyZZZ") {
-		archFile >> traitnum;
-//	batchlog << "traitnum=" << traitnum << endl;
-		if (paramname != L"Trait") formatError = true;
-		if (traitnum == (prevtrait+1)) prevtrait = traitnum;
-		else traitError = true;
-		archFile >> paramname >> nloci;
-//	batchlog << "paramname=" << paramname << " nloci=" << nloci << endl;
-		if (paramname != L"NLoci") formatError = true;
-		if (nloci < 1) lociError = true;
-		for (int i = 0; i < nloci; i++) {
-			chrom = locus = -999999;
-			archFile >> chrom >> locus;
-//		batchlog << "chrom=" << chrom << " locus=" << locus << endl;
-			if (chrom == -999999 || locus == -999999) {
-				BatchErrorR(filetype,-999,0," ");
-				errors++;
-				Rcpp::Rcout << "Too few loci listed for trait " << traitnum << endl;
-			} else {
-				if (chrom >= 0 && chrom < nchromosomes) {
-//				batchlog << "chromsize[" << chrom << "]=" << chromsize[chrom] << endl;
-					if (locus < 0 || locus >= chromsize[chrom]) locusError = true;
-				} else chromError = true;
-			}
-		}
-		fileNtraits++;
-		paramname = L"XXXyyyZZZ";
-		if (archFile.eof()){ // iOS problem: if at end of file: problems clearing the status flags later; therefore: clear it now (eof-flag will also be cleared)
-		    archFile.clear();
-		}
-		if (!archFile.eof()) archFile >> paramname; // only read another parameter if not end of file (if clear() was called before, it will try reading in another character, but won't succeed go out of while loop
-//	batchlog << "paramname=" << paramname << " (end of loop)" << endl;
-	}
-//batchlog << "paramname=" << paramname << " (after loop)" << endl;
-
-	if (traitError) {
-		BatchErrorR(filetype,-999,0," ");
-		errors++;
-		Rcpp::Rcout << "Traits must be sequentially numbered starting at 0 " << endl;
-	}
-	if (lociError) {
-		BatchErrorR(filetype,-999,11,"Trait NLoci");
-		errors++;
-	}
-	if (chromError) {
-		BatchErrorR(filetype,-999,0," ");
-		errors++;
-		Rcpp::Rcout << "Chromosome no. must be from 0 to " << (nchromosomes-1) << endl;
-	}
-	if (locusError) {
-		BatchErrorR(filetype,-999,0," ");
-		errors++;
-		Rcpp::Rcout << "Locus no. must not exceed no. of loci on specified chromosome " << endl;
-	}
-
-	if (chromsize != 0) delete[] chromsize;
-
-// check if parsing was successful before starting to read
-	if (formatError || errors > 0) { // terminate batch error checking
-		if (formatError) ArchFormatErrorR();
-		return -111;
-	} else {
-		// final read should have hit EOF
-		if (!archFile.eof()) {
-			EOFerrorR(filetype);
-		}
-		archFile.clear();
-		archFile.seekg(0);
-		archFile.sync();
-		if(!archFile.good()) {
-			Rcpp::Rcout << "Error re-opening Architecture file with state " << archFile.rdstate() << endl;
-			return -331;
-		}
-		else Rcpp::Rcout << "Architecture file OK" << endl;
-	}
-
-	// READING
-	//int ReadArchFile(string archfile){
-
-	emigRules emig = pSpecies->getEmig();
-	trfrRules trfr = pSpecies->getTrfr();
-	settleType sett = pSpecies->getSettle();
-
-// set no. of chromosomes
-	archFile >> paramname >> nchromosomes;
-	pSpecies->setNChromosomes(nchromosomes);
-	int nchromset = pSpecies->getNChromosomes();
-
-	if (nchromset <= 0) errors = 1;
-	if (emig.indVar || trfr.indVar || sett.indVar) {
-		pSpecies->setTraitData(fileNtraits);
-	} else { // neutral markers only
-		pSpecies->setTraitData(0);
-	}
-// set no. of loci for each chromosome
-	archFile >> paramname;
-	for (int i = 0; i < nchromosomes; i++) {
-		archFile >> nloci;
-		pSpecies->setNLoci(i,nloci);
-	}
-	if (emig.indVar || trfr.indVar || sett.indVar) {
-		// set trait maps
-		paramname = L"XXXyyyZZZ";
-		archFile >> paramname;
-		while (paramname != L"XXXyyyZZZ") {
-			archFile >> traitnum >> paramname >> nloci;
-			pSpecies->setTraitMap(traitnum,nloci);
-			for (int allele = 0; allele < nloci; allele++) {
-				chrom = locus = -999999;
-				archFile >> chrom >> locus;
-				pSpecies->setTraitAllele(traitnum,allele,chrom,locus);
-			}
-			paramname = L"XXXyyyZZZ";
-			archFile >> paramname;
-		};
-	}
-
-// any loci not contributing to a trait are recorded as neutral
-	if (emig.indVar || trfr.indVar || sett.indVar) {
-		pSpecies->setNeutralLoci(false);
-	} else { // model has neutral markers only
-		pSpecies->setNeutralLoci(true);
-	}
-
-	return errors;
+// --- OLD GENETICS 2.0
+// 	//int ParseArchFile(void){
+//
+// 	wstring paramname;
+// 	int traitnum,prevtrait,nchromosomes,chrom,locus,nloci;
+// 	int errors = 0;
+// 	int fileNtraits = 0;
+// 	bool formatError = false;
+// 	int *chromsize = 0;
+// 	string filetype = "ArchFile";
+//
+// // check no. of chromosomes, and terminate if in error
+// 	archFile >> paramname >> nchromosomes;
+// 	if (paramname == L"NChromosomes") {
+// 		if (nchromosomes < 1) {
+// 			BatchErrorR(filetype,-999,11,"NChromosomes");
+// 			errors++;
+// 			return -111;
+// 		}
+// 	} else {
+// 		ArchFormatErrorR();
+// 		return -111;
+// 	}
+// 	chromsize = new int[nchromosomes];
+// 	for (int i = 0; i < nchromosomes; i++) chromsize[i] = 0;
+//
+// // check no. of loci on each chromosome, and terminate if in error
+// 	archFile >> paramname;
+// 	if (paramname != L"NLoci") formatError = true;
+// 	int locerrors = 0;
+// 	for (int i = 0; i < nchromosomes; i++) {
+// 		nloci = -999;
+// 		archFile >> nloci;
+// 		if (archFile.eof()){ // iOS problem: if at end of file: problems clearing the status flags later; therefore: clear it now (eof-flag will also be cleared)
+// 		    archFile.clear();
+// 		    }
+// 		if (nloci < 1) locerrors++;
+// 		else chromsize[i] = nloci;
+// 	}
+// 	if (locerrors) {
+// 		BatchErrorR(filetype,-999,11,"NLoci");
+// 		return -111;
+// 	}
+// //if (formatError) batchlog << "formatError is TRUE" << endl;
+// //else batchlog << "formatError is FALSE" << endl;
+//
+// // check unspecified no. of traits
+// 	fileNtraits = 0;
+// 	traitnum = prevtrait = -1;
+// 	bool traitError = false;
+// 	bool lociError = false;
+// 	bool chromError = false;
+// 	bool locusError = false;
+// 	paramname = L"XXXyyyZZZ";
+// //batchlog << "paramname=" << paramname << endl;
+// 	if (!archFile.eof()) archFile >> paramname; // only read another parameter if not end of file (if clear() was called before, it will try reading in another character, but won't succeed -> not going into while-loop
+// //batchlog << "paramname=" << paramname << endl;
+// 	while (paramname != L"XXXyyyZZZ") {
+// 		archFile >> traitnum;
+// //	batchlog << "traitnum=" << traitnum << endl;
+// 		if (paramname != L"Trait") formatError = true;
+// 		if (traitnum == (prevtrait+1)) prevtrait = traitnum;
+// 		else traitError = true;
+// 		archFile >> paramname >> nloci;
+// //	batchlog << "paramname=" << paramname << " nloci=" << nloci << endl;
+// 		if (paramname != L"NLoci") formatError = true;
+// 		if (nloci < 1) lociError = true;
+// 		for (int i = 0; i < nloci; i++) {
+// 			chrom = locus = -999999;
+// 			archFile >> chrom >> locus;
+// //		batchlog << "chrom=" << chrom << " locus=" << locus << endl;
+// 			if (chrom == -999999 || locus == -999999) {
+// 				BatchErrorR(filetype,-999,0," ");
+// 				errors++;
+// 				Rcpp::Rcout << "Too few loci listed for trait " << traitnum << endl;
+// 			} else {
+// 				if (chrom >= 0 && chrom < nchromosomes) {
+// //				batchlog << "chromsize[" << chrom << "]=" << chromsize[chrom] << endl;
+// 					if (locus < 0 || locus >= chromsize[chrom]) locusError = true;
+// 				} else chromError = true;
+// 			}
+// 		}
+// 		fileNtraits++;
+// 		paramname = L"XXXyyyZZZ";
+// 		if (archFile.eof()){ // iOS problem: if at end of file: problems clearing the status flags later; therefore: clear it now (eof-flag will also be cleared)
+// 		    archFile.clear();
+// 		}
+// 		if (!archFile.eof()) archFile >> paramname; // only read another parameter if not end of file (if clear() was called before, it will try reading in another character, but won't succeed go out of while loop
+// //	batchlog << "paramname=" << paramname << " (end of loop)" << endl;
+// 	}
+// //batchlog << "paramname=" << paramname << " (after loop)" << endl;
+//
+// 	if (traitError) {
+// 		BatchErrorR(filetype,-999,0," ");
+// 		errors++;
+// 		Rcpp::Rcout << "Traits must be sequentially numbered starting at 0 " << endl;
+// 	}
+// 	if (lociError) {
+// 		BatchErrorR(filetype,-999,11,"Trait NLoci");
+// 		errors++;
+// 	}
+// 	if (chromError) {
+// 		BatchErrorR(filetype,-999,0," ");
+// 		errors++;
+// 		Rcpp::Rcout << "Chromosome no. must be from 0 to " << (nchromosomes-1) << endl;
+// 	}
+// 	if (locusError) {
+// 		BatchErrorR(filetype,-999,0," ");
+// 		errors++;
+// 		Rcpp::Rcout << "Locus no. must not exceed no. of loci on specified chromosome " << endl;
+// 	}
+//
+// 	if (chromsize != 0) delete[] chromsize;
+//
+// // check if parsing was successful before starting to read
+// 	if (formatError || errors > 0) { // terminate batch error checking
+// 		if (formatError) ArchFormatErrorR();
+// 		return -111;
+// 	} else {
+// 		// final read should have hit EOF
+// 		if (!archFile.eof()) {
+// 			EOFerrorR(filetype);
+// 		}
+// 		archFile.clear();
+// 		archFile.seekg(0);
+// 		archFile.sync();
+// 		if(!archFile.good()) {
+// 			Rcpp::Rcout << "Error re-opening Architecture file with state " << archFile.rdstate() << endl;
+// 			return -331;
+// 		}
+// 		else Rcpp::Rcout << "Architecture file OK" << endl;
+// 	}
+//
+// 	// READING
+// 	//int ReadArchFile(string archfile){
+//
+// 	emigRules emig = pSpecies->getEmigRules()();
+// 	transferRules trfr = pSpecies->getTransferRules();
+// 	settleType sett = pSpecies->getSettle();
+//
+// // set no. of chromosomes
+// 	archFile >> paramname >> nchromosomes;
+// 	pSpecies->setNChromosomes(nchromosomes);
+// 	int nchromset = pSpecies->getNChromosomes();
+//
+// 	if (nchromset <= 0) errors = 1;
+// 	if (emig.indVar || trfr.indVar || sett.indVar) {
+// 		pSpecies->setTraitData(fileNtraits);
+// 	} else { // neutral markers only
+// 		pSpecies->setTraitData(0);
+// 	}
+// // set no. of loci for each chromosome
+// 	archFile >> paramname;
+// 	for (int i = 0; i < nchromosomes; i++) {
+// 		archFile >> nloci;
+// 		pSpecies->setNLoci(i,nloci);
+// 	}
+// 	if (emig.indVar || trfr.indVar || sett.indVar) {
+// 		// set trait maps
+// 		paramname = L"XXXyyyZZZ";
+// 		archFile >> paramname;
+// 		while (paramname != L"XXXyyyZZZ") {
+// 			archFile >> traitnum >> paramname >> nloci;
+// 			pSpecies->setTraitMap(traitnum,nloci);
+// 			for (int allele = 0; allele < nloci; allele++) {
+// 				chrom = locus = -999999;
+// 				archFile >> chrom >> locus;
+// 				pSpecies->setTraitAllele(traitnum,allele,chrom,locus);
+// 			}
+// 			paramname = L"XXXyyyZZZ";
+// 			archFile >> paramname;
+// 		};
+// 	}
+//
+// // any loci not contributing to a trait are recorded as neutral
+// 	if (emig.indVar || trfr.indVar || sett.indVar) {
+// 		pSpecies->setNeutralLoci(false);
+// 	} else { // model has neutral markers only
+// 		pSpecies->setNeutralLoci(true);
+// 	}
+//
+// 	return errors;
+// --- END old genetics 2.0
 }
 
 //---------------------------------------------------------------------------
@@ -3232,7 +3110,7 @@ int ReadTranslocationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
     // get landscape parameter (to distinguish between patch and cell model)
     landParams paramsLand = pLandscape->getLandParams();
     // get demographic parameter (to distinguish between sexual and asexual reproduction, and stage structured or not)
-    demogrParams dem = pSpecies->getDemogr();
+    demogrParams dem = pSpecies->getDemogrParams();
     // get simulation parameter (to get the number of years)
     simParams sim = paramsSim->getSim();
 
@@ -3590,7 +3468,7 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 
 	// int batch_line = 0;
 
-	string name = paramsSim->getDir(2) + "Batch" + Int2Str(sim.batchNum) + "_RS_log.csv";
+	string name = paramsSim->getDir(2) + "Batch" + to_string(sim.batchNum) + "_RS_log.csv";
 	if(rsLog.is_open()) {
 		rsLog.close();
 		rsLog.clear();
@@ -3627,21 +3505,26 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 
 		landOK = ReadLandParamsR(pLandscape, ParMaster);
 		//land_nr = ReadLandParamsR(pLandscape, ParMaster);
-		land_nr = j; // TODO: ReadLandParamsR() is supposed to return land_nr; this is a temporary replacement
+		land_nr = j; // TODO: ReadLandParamsR() is supposed to return land_nr; this is a temporary replacement; should I adapt this?
 
 		if(!landOK) {
+		    // to get more precise error codes: use return values in ReadLandParamsR() similar to batch version
+		    // then it would be
+		    // if(land_nr<= 0){
+		    //  string msg = "Error code " + to_string(-land_nr)
+		    // + " returned from reading LandFile - aborting batch run";
+		    // cout << endl << msg << endl;
 			rsLog << "Error reading landscape ASCII haeders - aborting" << endl;
 			Rcpp::Rcout << "Error reading landscape ASCII haeders - aborting" << endl;
 		} else {
 
-			MemoLine(("Starting landscape " + Int2Str(land_nr) + "...").c_str());
 
 #if RSDEBUG
 			DEBUGLOG << endl << "RunBatchR(): j=" << j << " land_nr=" << land_nr << " landtype=" << landtype;
 			if(landtype != 9)
 				DEBUGLOG << " name_landscape=" << name_landscape
 				         << " name_patch=" << name_patch
-				         << " name_costfile=" << name_costfile
+				         << " gNameCostFile=" << gNameCostFile
 				         << " name_sp_dist=" << name_sp_dist;
 			DEBUGLOG << endl;
 #endif
@@ -3668,8 +3551,8 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 				string hname = paramsSim->getDir(1) + name_landscape;
 				int landcode;
 				string cname;
-				if (name_costfile == "NULL" || name_costfile == "none") cname = "NULL";
-				else cname = paramsSim->getDir(1) + name_costfile;
+				if (gNameCostFile == "NULL" || gNameCostFile == "none") cname = "NULL";
+				else cname = paramsSim->getDir(1) + gNameCostFile;
 				if(paramsLand.patchModel) {
 					string pname = paramsSim->getDir(1) + name_patch;
 					landcode = pLandscape->readLandscape(0, hname, pname, cname);
@@ -3739,7 +3622,7 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 			for(int i = 0; i < nSimuls; i++) { // this loop is useless at the moment since nSimuls is set to one in R entry function BatchMainR()
 				t00 = time(0);
 				params_ok = true;
-				anyIndVar = false;
+				gHasGenetics = false;
 				read_error = ReadParametersR(pLandscape, ParMaster);
 				simParams sim = paramsSim->getSim();
 				if(read_error) {
@@ -3776,36 +3659,63 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 #if RSDEBUG
 					DebugGUI("RunBatchR(): simulation i=" + Int2Str(i));
 #endif
-					pSpecies->setNChromosomes(0);
-					pSpecies->setTraits();
+					// veraltet
+					// pSpecies->setNChromosomes(0);
+					// pSpecies->setTraits();
 				}
-				Rcpp::S4 GeneParamsR("GeneticsParams");
-				GeneParamsR = Rcpp::as<Rcpp::S4>(ParMaster.slot("gene"));
-				if (anyIndVar || Rcpp::as<int>(GeneParamsR.slot("Architecture")) == 1) {
-					read_error = ReadGeneticsR(GeneParamsR);
-					if(read_error) {
-						rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
-						params_ok = false;
-					}
-				} else {
-					// use default genetics parameters
-					// (by setting illegal values except for diploid)
-					genomeData g;
-					g.nLoci = -1;
-					g.probMutn = g.probCrossover = g.alleleSD = g.mutationSD = -1.0;
-					if(reproductn == 0)
-						g.diploid = false;
-					else
-						g.diploid = true;
-					g.neutralMarkers = g.trait1Chromosome = false;
-
-					pSpecies->setGenomeData(g);
-				}
+				// veraltet
+				// Rcpp::S4 GeneParamsR("GeneticsParams");
+				// GeneParamsR = Rcpp::as<Rcpp::S4>(ParMaster.slot("gene"));
+				// if (anyIndVar || Rcpp::as<int>(GeneParamsR.slot("Architecture")) == 1) {
+				// 	read_error = ReadGeneticsR(GeneParamsR);
+				// 	if(read_error) {
+				// 		rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
+				// 		params_ok = false;
+				// 	}
+				// } else {
+				// 	// use default genetics parameters
+				// 	// (by setting illegal values except for diploid)
+				// 	genomeData g;
+				// 	g.nLoci = -1;
+				// 	g.probMutn = g.probCrossover = g.alleleSD = g.mutationSD = -1.0;
+				// 	if(reproductn == 0)
+				// 		g.diploid = false;
+				// 	else
+				// 		g.diploid = true;
+				// 	g.neutralMarkers = g.trait1Chromosome = false;
+				//
+				// 	pSpecies->setGenomeData(g);
+				// }
 				read_error = ReadInitialisationR(pLandscape, ParMaster);
 				if(read_error) {
 					rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
 					params_ok = false;
 				}
+
+				if (gHasGenetics) { // genetics need to be set and traits file need to be provided
+				    Rcpp::S4 GeneParamsR("GeneticsParams");
+				    GeneParamsR = Rcpp::as<Rcpp::S4>(ParMaster.slot("gene"));
+
+				    read_error = ReadGeneticsR(GeneParamsR, pLandscape);
+#if RSDEBUG
+				    DEBUGLOG << "ReadGeneticsFile()" << endl;
+#endif
+				    if (read_error) {
+				        rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
+				        params_ok = false;
+				    }
+				    Rcpp::S4 TraitsParamsR("TraitsParams");
+				    TraitsParamsR = Rcpp::as<Rcpp::S4>(GeneParamsR.slot("Traits"));
+				    read_error = ReadTraitsR(TraitsParamsR); //, gNbTraitFileRows[i]);
+#if RSDEBUG
+				    DEBUGLOG << "ReadTraitsFile()" << endl;
+#endif
+				    if (read_error) {
+				        rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
+				        params_ok = false;
+				    }
+				}
+
 
 				if(params_ok) {
 					simParams sim = paramsSim->getSim();
@@ -3818,11 +3728,10 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 #endif
 
 					Rcpp::Rcout << endl
-					            << "Running simulation nr. " << Int2Str(sim.simulation)
+					            << "Running simulation nr. " << to_string(sim.simulation)
 					            //<< " on landscape no. " << Int2Str(land_nr)
 					            << endl;
 
-					MemoLine(("Starting simulation " + Int2Str(sim.simulation) + "...").c_str());
 
 					// for batch processing, include landscape number in parameter file name
 					OutParameters(pLandscape);
@@ -3891,9 +3800,8 @@ void setglobalvarsR(Rcpp::S4 control)
 	repseasons = Rcpp::as<int>(control.slot("repseasons"));
 	stagestruct = Rcpp::as<int>(control.slot("stagestruct"));
 	stages = Rcpp::as<int>(control.slot("stages"));
-	transfer = Rcpp::as<int>(control.slot("transfer"));
+	gTransferType = Rcpp::as<int>(control.slot("transfer"));
 	translocation = Rcpp::as<int>(control.slot("translocation"));
-	Rcpp::Rcout << "setglobalvarsR(): translocation: " << translocation << std::endl;
 
 #if RSDEBUG
 	/*
@@ -4056,7 +3964,7 @@ rasterdata ParseRasterHead(string file)
 int ReadInitIndsFileR(int option, Landscape* pLandscape)
 {
 	landParams paramsLand = pLandscape->getLandParams();
-	demogrParams dem = pSpecies->getDemogr();
+	demogrParams dem = pSpecies->getDemogrParams();
 	//stageParams sstruct = pSpecies->getStage();
 	initParams init = paramsInit->getInit();
 
@@ -4436,47 +4344,4 @@ void StreamErrorR(string filename)
 #endif
 }
 
-//---------------------------------------------------------------------------
-
-// Dummy functions corresponding to those used in GUI version
-
-/* Batch mode of v2.0 currently has no facility to save maps (unless initiated from GUI).
- */
-
-void MemoLine(string msg)
-{
-	// dummy function for batch version
-}
-
-#if RSDEBUG
-void DebugGUI(string msg)
-{
-	// dummy function for batch version
-}
-#endif
-
-traitCanvas SetupTraitCanvas(void)
-{
-	traitCanvas tcanv;
-	for(int i = 0; i < NTRAITS; i++) {
-		tcanv.pcanvas[i] = 0;
-	}
-	return tcanv;
-}
-
-void Landscape::setLandMap(void)
-{
-}
-void Landscape::drawLandscape(int rep, int yr, int landnum)
-{
-}
-void Community::viewOccSuit(int year, double mn, double se)
-{
-}
-void Community::draw(int rep, int yr, int gen, int landNum)
-{
-}
-
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
 //---------------------------------------------------------------------------

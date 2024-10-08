@@ -56,7 +56,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 			// NB this is an overhead here, but is necessary in case the identity of
 			// suitable habitats has been changed from one simulation to another (GUI or batch)
 			// substantial time savings may result during simulation in certain landscapes
-			// if using neutral markers, set up patches to sample from 
+			// if using neutral markers, set up patches to sample from
 			pLandscape->allocatePatches(pSpecies);
 		}
 		pComm = new Community(pLandscape); // set up community
@@ -622,9 +622,9 @@ int RunModel(Landscape* pLandscape, int seqsim)
 			pComm->openOutGenesFile(false, -999, rep);
 		}
 
-		if (sim.outputWeirCockerham) //close per locus file 
+		if (sim.outputWeirCockerham) //close per locus file
 			pComm->openPerLocusFstFile(pSpecies, pLandscape, -999, rep);
-		if (sim.outputWeirHill) //close per locus file 
+		if (sim.outputWeirHill) //close per locus file
 			pComm->openPairwiseFstFile(pSpecies, pLandscape, -999, rep);
 
 		if (sim.saveVisits) {
@@ -674,7 +674,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 	}
 	if (sim.outputWeirHill) pComm->openPairwiseFstFile(pSpecies, pLandscape, -999, 0);
 
-	delete pComm; 
+	delete pComm;
 	pComm = 0;
 
 #if RS_RCPP && !R_CMD
@@ -862,7 +862,7 @@ void OutParameters(Landscape* pLandscape)
 			outPar << "PATCH FILE: " << name_patch << endl;
 		}
 		if (trfr.costMap) {
-			outPar << "COSTS FILE: " << name_costfile << endl;
+			outPar << "COSTS FILE: " << gNameCostFile << endl;
 		}
 #else
 		if (sim.batchMode) outPar << " (see batch file) " << landFile << endl;

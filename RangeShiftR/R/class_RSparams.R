@@ -678,8 +678,454 @@ setValidity("RSparams", function(object) {
 
     #GENETICS
     validObject(object@gene)
+    # Dispersal Traits
     if(any(object@dispersal@Emigration@IndVar,object@dispersal@Transfer@IndVar,object@dispersal@Settlement@IndVar)) anyIndVar <- TRUE
     else anyIndVar <- FALSE
+    ## Emigration: if IndVar is set, check if corresponding genetics module is set correctly
+    if (object@dispersal@Emigration@IndVar) {
+        if (class(object@gene@Traits@EmigrationGenes)[1]=="logical") {
+            if (!object@gene@Traits@EmigrationGenes) {
+                msg <- c(msg, 'Traits() and EmigrationGenes(): IndVar is set for Emigration, but EmigrationGenes() module is not set!')
+            } else {
+                msg <- c(msg, "EmigrationGenes must be an object of class \"EmigrationTraitsParams\" !")
+            }
+        } else if (class(object@gene@Traits@EmigrationGenes)[1]=="EmigrationTraitsParams"){
+             # Determine matrix layout for all parameters according to sexdep and densdep
+            if (object@dispersal@Emigration@DensDep) {
+                # it should be 3 columns: E_D0, E_Alpha, E_beta
+                nbcol <- 3
+            } else {
+                nbcol <- 1
+            }
+            if (object@dispersal@Emigration@SexDep) {
+                nbrow <- 2 # it should be two rows
+            } else {
+                nbrow <- 1 # it should be only one row
+            }
+
+            # Positions
+            if(ncol(object@gene@Traits@EmigrationGenes@Positions)!=nbcol){
+                msg <- c(msg, paste0("EmigrationGenes: Positions matrix must have ", nbcol ," columns (with the current settings)!"))
+            }
+            if(nrow(object@gene@Traits@EmigrationGenes@Positions)!=nbrow){
+                msg <- c(msg, paste0("EmigrationGenes: Positions matrix must have ", nbrow ," rows (with the current settings)!"))
+            }
+            # NbOfPositions
+            if(ncol(object@gene@Traits@EmigrationGenes@NbOfPositions)!=nbcol){
+                msg <- c(msg, paste0("EmigrationGenes: NbOfPositions matrix must have ", nbcol ," columns (with the current settings)!"))
+            }
+            if(nrow(object@gene@Traits@EmigrationGenes@NbOfPositions)!=nbrow){
+                msg <- c(msg, paste0("EmigrationGenes: NbOfPositions matrix must have ", nbrow ," rows (with the current settings)!"))
+            }
+            # ExpressionType
+            if(ncol(object@gene@Traits@EmigrationGenes@ExpressionType)!=nbcol){
+                msg <- c(msg, paste0("EmigrationGenes: ExpressionType matrix must have ", nbcol ," columns (with the current settings)!"))
+            }
+            if(nrow(object@gene@Traits@EmigrationGenes@ExpressionType)!=nbrow){
+                msg <- c(msg, paste0("EmigrationGenes: ExpressionType matrix must have ", nbrow ," rows (with the current settings)!"))
+            }
+            # InitialDistribution
+            if(nrow(object@gene@Traits@EmigrationGenes@InitialDistribution)!=nbrow){
+                msg <- c(msg, paste0("EmigrationGenes: InitialDistribution matrix must have ", nbrow ," rows (with the current settings)!"))
+            }
+            # InitialParameters
+            if(ncol(object@gene@Traits@EmigrationGenes@InitialParameters)!=2*nbcol){
+                msg <- c(msg, paste0("EmigrationGenes: InitialParameters matrix must have ", 2*nbcol ," columns (with the current settings)!"))
+            }
+            if(nrow(object@gene@Traits@EmigrationGenes@InitialParameters)!=nbrow){
+                msg <- c(msg, paste0("EmigrationGenes: InitialParameters matrix must have ", nbrow ," rows (with the current settings)!"))
+            }
+            # IsInherited
+            if(ncol(object@gene@Traits@EmigrationGenes@IsInherited)!=nbcol){
+                msg <- c(msg, paste0("EmigrationGenes: IsInherited matrix must have ", nbcol ," columns (with the current settings)!"))
+            }
+            if(nrow(object@gene@Traits@EmigrationGenes@IsInherited)!=nbrow){
+                msg <- c(msg, paste0("EmigrationGenes: IsInherited matrix must have ", nbrow ," rows (with the current settings)!"))
+            }
+            # MutationDistribution
+            if(ncol(object@gene@Traits@EmigrationGenes@MutationDistribution)!=nbcol){
+                msg <- c(msg, paste0("EmigrationGenes: MutationDistribution matrix must have ", nbcol ," columns (with the current settings)!"))
+            }
+            if(nrow(object@gene@Traits@EmigrationGenes@MutationDistribution)!=nbrow){
+                msg <- c(msg, paste0("EmigrationGenes: MutationDistribution matrix must have ", nbrow ," rows (with the current settings)!"))
+            }
+            # MutationParameters
+            if(ncol(object@gene@Traits@EmigrationGenes@MutationParameters)!=2*nbcol){
+                msg <- c(msg, paste0("EmigrationGenes: MutationParameters matrix must have ", 2*nbcol ," columns (with the current settings)!"))
+            }
+            if(nrow(object@gene@Traits@EmigrationGenes@MutationParameters)!=nbrow){
+                msg <- c(msg, paste0("EmigrationGenes: MutationParameters matrix must have ", nbrow ," rows (with the current settings)!"))
+            }
+            # MutationRate
+            if(ncol(object@gene@Traits@EmigrationGenes@MutationRate)!=nbcol){
+                msg <- c(msg, paste0("EmigrationGenes: MutationRate matrix must have ",nbcol ," columns (with the current settings)!"))
+            }
+            if(nrow(object@gene@Traits@EmigrationGenes@MutationRate)!=nbrow){
+                msg <- c(msg, paste0("EmigrationGenes: MutationRate matrix must have ",nbrow ," rows (with the current settings)!"))
+            }
+            # OutputValues
+            if(ncol(object@gene@Traits@EmigrationGenes@OutputValues)!=nbcol){
+                msg <- c(msg, paste0("EmigrationGenes: OutputValues matrix must have ", nbcol ," columns (with the current settings)!"))
+            }
+            if(nrow(object@gene@Traits@EmigrationGenes@OutputValues)!=nbrow){
+                msg <- c(msg, paste0("EmigrationGenes: OutputValues matrix must have ", nbrow ," rows (with the current settings)!"))
+            }
+
+        }
+    }
+    ## Transfer: if IndVar is set, check if corresponding genetics module (CRW, SMS, Kernel) is set correctly
+    if (object@dispersal@Transfer@IndVar) {
+        # check transfer mode
+        if (class(object@dispersal@Transfer)[1] == "CorrRW") {
+            if (class(object@gene@Traits@CRWGenes)[1]=="logical") {
+                if (!object@gene@Traits@CRWGenes) {
+                    msg <- c(msg, 'Traits() and CRWGenes(): IndVar is set for Transfer, but CorrRWGenes() module is not set!')
+                } else {
+                    msg <- c(msg, "CorrRWGenes must be an object of class \"CRWTraitsParams\" !")
+                }
+            } else if (class(object@gene@Traits@CRWGenes)[1]=="CRWTraitsParams") {
+                # Steplength and Rho
+                ncol <- 2
+                nrow <- 1
+                # Positions
+                if(ncol(object@gene@Traits@CRWGenes@Positions)!=nbcol){
+                    msg <- c(msg, paste0("CRWGenes: Positions matrix must have ", nbcol ," columns (with the current settings)!"))
+                }
+                if(nrow(object@gene@Traits@CRWGenes@Positions)!=nbrow){
+                    msg <- c(msg, paste0("CRWGenes: Positions matrix must have ", nbrow ," rows (with the current settings)!"))
+                }
+                # NbOfPositions
+                if(ncol(object@gene@Traits@CRWGenes@NbOfPositions)!=nbcol){
+                    msg <- c(msg, paste0("CRWGenes: NbOfPositions matrix must have ", nbcol ," columns (with the current settings)!"))
+                }
+                if(nrow(object@gene@Traits@CRWGenes@NbOfPositions)!=nbrow){
+                    msg <- c(msg, paste0("CRWGenes: NbOfPositions matrix must have ", nbrow ," rows (with the current settings)!"))
+                }
+                # ExpressionType
+                if(ncol(object@gene@Traits@CRWGenes@ExpressionType)!=nbcol){
+                    msg <- c(msg, paste0("CRWGenes: ExpressionType matrix must have ", nbcol ," columns (with the current settings)!"))
+                }
+                if(nrow(object@gene@Traits@CRWGenes@ExpressionType)!=nbrow){
+                    msg <- c(msg, paste0("CRWGenes: ExpressionType matrix must have ", nbrow ," rows (with the current settings)!"))
+                }
+                # InitialDistribution
+                if(nrow(object@gene@Traits@CRWGenes@InitialDistribution)!=nbrow){
+                    msg <- c(msg, paste0("CRWGenes: InitialDistribution matrix must have ", nbrow ," rows (with the current settings)!"))
+                }
+                # InitialParameters
+                if(ncol(object@gene@Traits@CRWGenes@InitialParameters)!=2*nbcol){
+                    msg <- c(msg, paste0("CRWGenes: InitialParameters matrix must have ", 2*nbcol ," columns (with the current settings)!"))
+                }
+                if(nrow(object@gene@Traits@CRWGenes@InitialParameters)!=nbrow){
+                    msg <- c(msg, paste0("CRWGenes: InitialParameters matrix must have ", nbrow ," rows (with the current settings)!"))
+                }
+                # IsInherited
+                if(ncol(object@gene@Traits@CRWGenes@IsInherited)!=nbcol){
+                    msg <- c(msg, paste0("CRWGenes: IsInherited matrix must have ", nbcol ," columns (with the current settings)!"))
+                }
+                if(nrow(object@gene@Traits@CRWGenes@IsInherited)!=nbrow){
+                    msg <- c(msg, paste0("CRWGenes: IsInherited matrix must have ", nbrow ," rows (with the current settings)!"))
+                }
+                # MutationDistribution
+                if(ncol(object@gene@Traits@CRWGenes@MutationDistribution)!=nbcol){
+                    msg <- c(msg, paste0("CRWGenes: MutationDistribution matrix must have ", nbcol ," columns (with the current settings)!"))
+                }
+                if(nrow(object@gene@Traits@CRWGenes@MutationDistribution)!=nbrow){
+                    msg <- c(msg, paste0("CRWGenes: MutationDistribution matrix must have ", nbrow ," rows (with the current settings)!"))
+                }
+                # MutationParameters
+                if(ncol(object@gene@Traits@CRWGenes@MutationParameters)!=2*nbcol){
+                    msg <- c(msg, paste0("CRWGenes: MutationParameters matrix must have ", 2*nbcol ," columns (with the current settings)!"))
+                }
+                if(nrow(object@gene@Traits@CRWGenes@MutationParameters)!=nbrow){
+                    msg <- c(msg, paste0("CRWGenes: MutationParameters matrix must have ", nbrow ," rows (with the current settings)!"))
+                }
+                # MutationRate
+                if(ncol(object@gene@Traits@CRWGenes@MutationRate)!=nbcol){
+                    msg <- c(msg, paste0("CRWGenes: MutationRate matrix must have ",nbcol ," columns (with the current settings)!"))
+                }
+                if(nrow(object@gene@Traits@CRWGenes@MutationRate)!=nbrow){
+                    msg <- c(msg, paste0("CRWGenes: MutationRate matrix must have ",nbrow ," rows (with the current settings)!"))
+                }
+                # OutputValues
+                if(ncol(object@gene@Traits@CRWGenes@OutputValues)!=nbcol){
+                    msg <- c(msg, paste0("CRWGenes: OutputValues matrix must have ", nbcol ," columns (with the current settings)!"))
+                }
+                if(nrow(object@gene@Traits@CRWGenes@OutputValues)!=nbrow){
+                    msg <- c(msg, paste0("CRWGenes: OutputValues matrix must have ", nbrow ," rows (with the current settings)!"))
+                }
+            }
+        }
+        if (class(object@dispersal@Transfer)[1] == "StochMove") {
+            if (class(object@gene@Traits@SMSGenes)[1]=="logical") {
+                if (!object@gene@Traits@SMSGenes) {
+                    msg <- c(msg, 'Traits() and SMSGenes(): IndVar is set for Transfer, but SMSGenes() module is not set!')
+                } else {
+                    msg <- c(msg, "SMSGenes must be an object of class \"SMSTraitsParams\" !")
+                }
+            } else if (class(object@gene@Traits@SMSGenes)[1]=="SMSTraitsParams") {
+                # DP or (if GoalBias =T) DP + goalBias + alphaDB + betaDB
+                if (object@dispersal@Transfer@GoalType == 2){
+                    nbcols <- 4
+                } else {
+                    nbcols <- 1
+                }
+                # no sex dependency??
+                nrow <- 1
+
+                # Positions
+                if(ncol(object@gene@Traits@SMSGenes@Positions)!=nbcol){
+                    msg <- c(msg, paste0("SMSGenes: Positions matrix must have ", nbcol ," columns (with the current settings)!"))
+                }
+                if(nrow(object@gene@Traits@SMSGenes@Positions)!=nbrow){
+                    msg <- c(msg, paste0("SMSGenes: Positions matrix must have ", nbrow ," rows (with the current settings)!"))
+                }
+                # NbOfPositions
+                if(ncol(object@gene@Traits@SMSGenes@NbOfPositions)!=nbcol){
+                    msg <- c(msg, paste0("SMSGenes: NbOfPositions matrix must have ", nbcol ," columns (with the current settings)!"))
+                }
+                if(nrow(object@gene@Traits@SMSGenes@NbOfPositions)!=nbrow){
+                    msg <- c(msg, paste0("SMSGenes: NbOfPositions matrix must have ", nbrow ," rows (with the current settings)!"))
+                }
+                # ExpressionType
+                if(ncol(object@gene@Traits@SMSGenes@ExpressionType)!=nbcol){
+                    msg <- c(msg, paste0("SMSGenes: ExpressionType matrix must have ", nbcol ," columns (with the current settings)!"))
+                }
+                if(nrow(object@gene@Traits@SMSGenes@ExpressionType)!=nbrow){
+                    msg <- c(msg, paste0("SMSGenes: ExpressionType matrix must have ", nbrow ," rows (with the current settings)!"))
+                }
+                # InitialDistribution
+                if(nrow(object@gene@Traits@SMSGenes@InitialDistribution)!=nbrow){
+                    msg <- c(msg, paste0("SMSGenes: InitialDistribution matrix must have ", nbrow ," rows (with the current settings)!"))
+                }
+                # InitialParameters
+                if(ncol(object@gene@Traits@SMSGenes@InitialParameters)!=2*nbcol){
+                    msg <- c(msg, paste0("SMSGenes: InitialParameters matrix must have ", 2*nbcol ," columns (with the current settings)!"))
+                }
+                if(nrow(object@gene@Traits@SMSGenes@InitialParameters)!=nbrow){
+                    msg <- c(msg, paste0("SMSGenes: InitialParameters matrix must have ", nbrow ," rows (with the current settings)!"))
+                }
+                # IsInherited
+                if(ncol(object@gene@Traits@SMSGenes@IsInherited)!=nbcol){
+                    msg <- c(msg, paste0("SMSGenes: IsInherited matrix must have ", nbcol ," columns (with the current settings)!"))
+                }
+                if(nrow(object@gene@Traits@SMSGenes@IsInherited)!=nbrow){
+                    msg <- c(msg, paste0("SMSGenes: IsInherited matrix must have ", nbrow ," rows (with the current settings)!"))
+                }
+                # MutationDistribution
+                if(ncol(object@gene@Traits@SMSGenes@MutationDistribution)!=nbcol){
+                    msg <- c(msg, paste0("SMSGenes: MutationDistribution matrix must have ", nbcol ," columns (with the current settings)!"))
+                }
+                if(nrow(object@gene@Traits@SMSGenes@MutationDistribution)!=nbrow){
+                    msg <- c(msg, paste0("SMSGenes: MutationDistribution matrix must have ", nbrow ," rows (with the current settings)!"))
+                }
+                # MutationParameters
+                if(ncol(object@gene@Traits@SMSGenes@MutationParameters)!=2*nbcol){
+                    msg <- c(msg, paste0("SMSGenes: MutationParameters matrix must have ", 2*nbcol ," columns (with the current settings)!"))
+                }
+                if(nrow(object@gene@Traits@SMSGenes@MutationParameters)!=nbrow){
+                    msg <- c(msg, paste0("SMSGenes: MutationParameters matrix must have ", nbrow ," rows (with the current settings)!"))
+                }
+                # MutationRate
+                if(ncol(object@gene@Traits@SMSGenes@MutationRate)!=nbcol){
+                    msg <- c(msg, paste0("SMSGenes: MutationRate matrix must have ",nbcol ," columns (with the current settings)!"))
+                }
+                if(nrow(object@gene@Traits@SMSGenes@MutationRate)!=nbrow){
+                    msg <- c(msg, paste0("SMSGenes: MutationRate matrix must have ",nbrow ," rows (with the current settings)!"))
+                }
+                # OutputValues
+                if(ncol(object@gene@Traits@SMSGenes@OutputValues)!=nbcol){
+                    msg <- c(msg, paste0("SMSGenes: OutputValues matrix must have ", nbcol ," columns (with the current settings)!"))
+                }
+                if(nrow(object@gene@Traits@SMSGenes@OutputValues)!=nbrow){
+                    msg <- c(msg, paste0("SMSGenes: OutputValues matrix must have ", nbrow ," rows (with the current settings)!"))
+                }
+
+            }
+        }
+
+        if (class(object@dispersal@Transfer)[1] == "DispersalKernel") {
+            if (class(object@gene@Traits@KernelGenes)[1]=="logical") {
+                if (!object@gene@Traits@KernelGenes) {
+                    msg <- c(msg, 'Traits() and KernelGenes(): IndVar is set for Transfer, but KernelGenes() module is not set!')
+                } else {
+                    msg <- c(msg, "KernelGenes must be an object of class \"KernelTraitsParams\" !")
+                }
+            } else if (class(object@gene@Traits@SMSGenes)[1]=="KernelTraitsParams") {
+                # DoubleKernel: Kernel1 Kernel2 Kernel_probability
+                if (object@dispersal@Transfer@DoubleKernel) {
+                    nbcols <- 3
+                } else {
+                    nbcols <- 1
+                }
+                if (object@dispersal@Transfer@SexDep) {
+                    nbrows <- 2
+                } else {
+                    nbrows <- 1
+                }
+
+                # Positions
+                if(ncol(object@gene@Traits@KernelGenes@Positions)!=nbcol){
+                    msg <- c(msg, paste0("KernelGenes: Positions matrix must have ", nbcol ," columns (with the current settings)!"))
+                }
+                if(nrow(object@gene@Traits@KernelGenes@Positions)!=nbrow){
+                    msg <- c(msg, paste0("KernelGenes: Positions matrix must have ", nbrow ," rows (with the current settings)!"))
+                }
+                # NbOfPositions
+                if(ncol(object@gene@Traits@KernelGenes@NbOfPositions)!=nbcol){
+                    msg <- c(msg, paste0("KernelGenes: NbOfPositions matrix must have ", nbcol ," columns (with the current settings)!"))
+                }
+                if(nrow(object@gene@Traits@KernelGenes@NbOfPositions)!=nbrow){
+                    msg <- c(msg, paste0("KernelGenes: NbOfPositions matrix must have ", nbrow ," rows (with the current settings)!"))
+                }
+                # ExpressionType
+                if(ncol(object@gene@Traits@KernelGenes@ExpressionType)!=nbcol){
+                    msg <- c(msg, paste0("KernelGenes: ExpressionType matrix must have ", nbcol ," columns (with the current settings)!"))
+                }
+                if(nrow(object@gene@Traits@KernelGenes@ExpressionType)!=nbrow){
+                    msg <- c(msg, paste0("KernelGenes: ExpressionType matrix must have ", nbrow ," rows (with the current settings)!"))
+                }
+                # InitialDistribution
+                if(nrow(object@gene@Traits@KernelGenes@InitialDistribution)!=nbrow){
+                    msg <- c(msg, paste0("KernelGenes: InitialDistribution matrix must have ", nbrow ," rows (with the current settings)!"))
+                }
+                # InitialParameters
+                if(ncol(object@gene@Traits@KernelGenes@InitialParameters)!=2*nbcol){
+                    msg <- c(msg, paste0("KernelGenes: InitialParameters matrix must have ", 2*nbcol ," columns (with the current settings)!"))
+                }
+                if(nrow(object@gene@Traits@KernelGenes@InitialParameters)!=nbrow){
+                    msg <- c(msg, paste0("KernelGenes: InitialParameters matrix must have ", nbrow ," rows (with the current settings)!"))
+                }
+                # IsInherited
+                if(ncol(object@gene@Traits@KernelGenes@IsInherited)!=nbcol){
+                    msg <- c(msg, paste0("KernelGenes: IsInherited matrix must have ", nbcol ," columns (with the current settings)!"))
+                }
+                if(nrow(object@gene@Traits@KernelGenes@IsInherited)!=nbrow){
+                    msg <- c(msg, paste0("KernelGenes: IsInherited matrix must have ", nbrow ," rows (with the current settings)!"))
+                }
+                # MutationDistribution
+                if(ncol(object@gene@Traits@KernelGenes@MutationDistribution)!=nbcol){
+                    msg <- c(msg, paste0("KernelGenes: MutationDistribution matrix must have ", nbcol ," columns (with the current settings)!"))
+                }
+                if(nrow(object@gene@Traits@KernelGenes@MutationDistribution)!=nbrow){
+                    msg <- c(msg, paste0("KernelGenes: MutationDistribution matrix must have ", nbrow ," rows (with the current settings)!"))
+                }
+                # MutationParameters
+                if(ncol(object@gene@Traits@KernelGenes@MutationParameters)!=2*nbcol){
+                    msg <- c(msg, paste0("KernelGenes: MutationParameters matrix must have ", 2*nbcol ," columns (with the current settings)!"))
+                }
+                if(nrow(object@gene@Traits@KernelGenes@MutationParameters)!=nbrow){
+                    msg <- c(msg, paste0("KernelGenes: MutationParameters matrix must have ", nbrow ," rows (with the current settings)!"))
+                }
+                # MutationRate
+                if(ncol(object@gene@Traits@KernelGenes@MutationRate)!=nbcol){
+                    msg <- c(msg, paste0("KernelGenes: MutationRate matrix must have ",nbcol ," columns (with the current settings)!"))
+                }
+                if(nrow(object@gene@Traits@KernelGenes@MutationRate)!=nbrow){
+                    msg <- c(msg, paste0("KernelGenes: MutationRate matrix must have ",nbrow ," rows (with the current settings)!"))
+                }
+                # OutputValues
+                if(ncol(object@gene@Traits@KernelGenes@OutputValues)!=nbcol){
+                    msg <- c(msg, paste0("KernelGenes: OutputValues matrix must have ", nbcol ," columns (with the current settings)!"))
+                }
+                if(nrow(object@gene@Traits@KernelGenes@OutputValues)!=nbrow){
+                    msg <- c(msg, paste0("KernelGenes: OutputValues matrix must have ", nbrow ," rows (with the current settings)!"))
+                }
+
+            }
+        }
+
+
+    }
+    ## Settlement: if IndVar is set, check if corresponding genetics module is set correctly
+    if (object@dispersal@Settlement@IndVar) {
+        if (class(object@gene@Traits@SettlementGenes)[1]=="logical") {
+            if (!object@gene@Traits@SettlementGenes) {
+                msg <- c(msg, 'Traits() and SettlementGenes(): IndVar is set for Settlement, but SettlementGenes() module is not set!')
+            } else {
+                msg <- c(msg, "SettlementGenes must be an object of class \"SettlementTraitsParams\" !")
+            }
+        } else if (class(object@gene@Traits@SettlementGenes)[1]=="SettlementTraitsParams") {
+            if (object@dispersal@Settlement@DensDep) {
+                # it should be 3 columns: S0, S_Alpha, S_beta
+                nbcol <- 3
+            } else {
+                msg <- c(msg, "SettlementGenes: Individual variability and thus settlement traits can only be set if DensDep is TRUE!")
+            }
+            if (object@dispersal@Emigration@SexDep) {
+                nbrow <- 2 # it should be two rows
+            } else {
+                nbrow <- 1 # it should be only one row
+            }
+            # Positions
+            if(ncol(object@gene@Traits@SettlementGenes@Positions)!=nbcol){
+                msg <- c(msg, paste0("SettlementGenes: Positions matrix must have ", nbcol ," columns (with the current settings)!"))
+            }
+            if(nrow(object@gene@Traits@SettlementGenes@Positions)!=nbrow){
+                msg <- c(msg, paste0("SettlementGenes: Positions matrix must have ", nbrow ," rows (with the current settings)!"))
+            }
+            # NbOfPositions
+            if(ncol(object@gene@Traits@SettlementGenes@NbOfPositions)!=nbcol){
+                msg <- c(msg, paste0("SettlementGenes: NbOfPositions matrix must have ", nbcol ," columns (with the current settings)!"))
+            }
+            if(nrow(object@gene@Traits@SettlementGenes@NbOfPositions)!=nbrow){
+                msg <- c(msg, paste0("SettlementGenes: NbOfPositions matrix must have ", nbrow ," rows (with the current settings)!"))
+            }
+            # ExpressionType
+            if(ncol(object@gene@Traits@SettlementGenes@ExpressionType)!=nbcol){
+                msg <- c(msg, paste0("SettlementGenes: ExpressionType matrix must have ", nbcol ," columns (with the current settings)!"))
+            }
+            if(nrow(object@gene@Traits@SettlementGenes@ExpressionType)!=nbrow){
+                msg <- c(msg, paste0("SettlementGenes: ExpressionType matrix must have ", nbrow ," rows (with the current settings)!"))
+            }
+            # InitialDistribution
+            if(nrow(object@gene@Traits@SettlementGenes@InitialDistribution)!=nbrow){
+                msg <- c(msg, paste0("SettlementGenes: InitialDistribution matrix must have ", nbrow ," rows (with the current settings)!"))
+            }
+            # InitialParameters
+            if(ncol(object@gene@Traits@SettlementGenes@InitialParameters)!=2*nbcol){
+                msg <- c(msg, paste0("SettlementGenes: InitialParameters matrix must have ", 2*nbcol ," columns (with the current settings)!"))
+            }
+            if(nrow(object@gene@Traits@SettlementGenes@InitialParameters)!=nbrow){
+                msg <- c(msg, paste0("SettlementGenes: InitialParameters matrix must have ", nbrow ," rows (with the current settings)!"))
+            }
+            # IsInherited
+            if(ncol(object@gene@Traits@SettlementGenes@IsInherited)!=nbcol){
+                msg <- c(msg, paste0("SettlementGenes: IsInherited matrix must have ", nbcol ," columns (with the current settings)!"))
+            }
+            if(nrow(object@gene@Traits@SettlementGenes@IsInherited)!=nbrow){
+                msg <- c(msg, paste0("SettlementGenes: IsInherited matrix must have ", nbrow ," rows (with the current settings)!"))
+            }
+            # MutationDistribution
+            if(ncol(object@gene@Traits@SettlementGenes@MutationDistribution)!=nbcol){
+                msg <- c(msg, paste0("SettlementGenes: MutationDistribution matrix must have ", nbcol ," columns (with the current settings)!"))
+            }
+            if(nrow(object@gene@Traits@SettlementGenes@MutationDistribution)!=nbrow){
+                msg <- c(msg, paste0("SettlementGenes: MutationDistribution matrix must have ", nbrow ," rows (with the current settings)!"))
+            }
+            # MutationParameters
+            if(ncol(object@gene@Traits@SettlementGenes@MutationParameters)!=2*nbcol){
+                msg <- c(msg, paste0("SettlementGenes: MutationParameters matrix must have ", 2*nbcol ," columns (with the current settings)!"))
+            }
+            if(nrow(object@gene@Traits@SettlementGenes@MutationParameters)!=nbrow){
+                msg <- c(msg, paste0("SettlementGenes: MutationParameters matrix must have ", nbrow ," rows (with the current settings)!"))
+            }
+            # MutationRate
+            if(ncol(object@gene@Traits@SettlementGenes@MutationRate)!=nbcol){
+                msg <- c(msg, paste0("SettlementGenes: MutationRate matrix must have ",nbcol ," columns (with the current settings)!"))
+            }
+            if(nrow(object@gene@Traits@SettlementGenes@MutationRate)!=nbrow){
+                msg <- c(msg, paste0("SettlementGenes: MutationRate matrix must have ",nbrow ," rows (with the current settings)!"))
+            }
+            # OutputValues
+            if(ncol(object@gene@Traits@SettlementGenes@OutputValues)!=nbcol){
+                msg <- c(msg, paste0("SettlementGenes: OutputValues matrix must have ", nbcol ," columns (with the current settings)!"))
+            }
+            if(nrow(object@gene@Traits@SettlementGenes@OutputValues)!=nbrow){
+                msg <- c(msg, paste0("SettlementGenes: OutputValues matrix must have ", nbrow ," rows (with the current settings)!"))
+            }
+        }
+    }
     # if( ...(object@gene) & !anyIndVar) # TODO: check if genetics module is set but no variable traits -> give warning in this case
 
     #INITIALISATION

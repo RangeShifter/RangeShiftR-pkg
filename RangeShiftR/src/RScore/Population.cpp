@@ -57,7 +57,7 @@ Population::Population(Species* pSp, Patch* pPch, int ninds, int resol)
 	pPatch = pPch;
 	// record the new population in the patch
 	patchPopn pp = patchPopn();
-	pp.pSp = (intptr)pSpecies; 
+	pp.pSp = (intptr)pSpecies;
 	pp.pPop = (intptr)this;
 	pPatch->addPopn(pp);
 
@@ -180,7 +180,7 @@ Population::Population(Species* pSp, Patch* pPch, int ninds, int resol)
 				probmale, true, trfr.moveType));
 #else
 			inds.push_back(new Individual(pCell, pPatch, stg, age, sstruct.repInterval,
-				probmale, trfr.moveModel, trfr.moveType));
+				probmale, trfr.usesMovtProc, trfr.moveType));
 #endif
 			sex = inds[nindivs + i]->getSex();
 			if (pSpecies->getNTraits() > 0) {
@@ -216,7 +216,7 @@ traitsums Population::getIndTraitsSums(Species* pSpecies) {
 	for (int sex = 0; sex < gMaxNbSexes; sex++) {
 		ts.ninds[sex] = 0;
 		ts.sumD0[sex] = ts.ssqD0[sex] = 0.0;
-		ts.sumAlpha[sex] = ts.ssqAlpha[sex] = 0.0; 
+		ts.sumAlpha[sex] = ts.ssqAlpha[sex] = 0.0;
 		ts.sumBeta[sex] = ts.ssqBeta[sex] = 0.0;
 		ts.sumDist1[sex] = ts.ssqDist1[sex] = 0.0;
 		ts.sumDist2[sex] = ts.ssqDist2[sex] = 0.0;
@@ -225,7 +225,7 @@ traitsums Population::getIndTraitsSums(Species* pSpecies) {
 		ts.sumGB[sex] = ts.ssqGB[sex] = 0.0;
 		ts.sumAlphaDB[sex] = ts.ssqAlphaDB[sex] = 0.0;
 		ts.sumBetaDB[sex] = ts.ssqBetaDB[sex] = 0.0;
-		ts.sumStepL[sex] = ts.ssqStepL[sex] = 0.0; 
+		ts.sumStepL[sex] = ts.ssqStepL[sex] = 0.0;
 		ts.sumRho[sex] = ts.ssqRho[sex] = 0.0;
 		ts.sumS0[sex] = ts.ssqS0[sex] = 0.0;
 		ts.sumAlphaS[sex] = ts.ssqAlphaS[sex] = 0.0;
@@ -240,20 +240,20 @@ traitsums Population::getIndTraitsSums(Species* pSpecies) {
 	int ninds = (int)inds.size();
 	for (int iInd = 0; iInd < ninds; iInd++) {
 		int sex = inds[iInd]->getSex();
-		if (emig.sexDep || trfr.sexDep || sett.sexDep) 
-			g = sex; 
+		if (emig.sexDep || trfr.sexDep || sett.sexDep)
+			g = sex;
 		else g = 0;
 		ts.ninds[g] += 1;
 
 		// emigration traits
 		emigTraits e = inds[iInd]->getIndEmigTraits();
-		if (emig.sexDep) g = sex; 
+		if (emig.sexDep) g = sex;
 		else g = 0;
-		ts.sumD0[g] += e.d0;    
+		ts.sumD0[g] += e.d0;
 		ts.ssqD0[g] += e.d0 * e.d0;
-		ts.sumAlpha[g] += e.alpha; 
+		ts.sumAlpha[g] += e.alpha;
 		ts.ssqAlpha[g] += e.alpha * e.alpha;
-		ts.sumBeta[g] += e.beta;  
+		ts.sumBeta[g] += e.beta;
 		ts.ssqBeta[g] += e.beta * e.beta;
 
 		// transfer traits
@@ -265,13 +265,13 @@ traitsums Population::getIndTraitsSums(Species* pSpecies) {
 			{
 				trfrSMSTraits sms = inds[iInd]->getIndSMSTraits();
 		g = 0; // CURRENTLY INDIVIDUAL VARIATION CANNOT BE SEX-DEPENDENT
-				ts.sumDP[g] += sms.dp; 
+				ts.sumDP[g] += sms.dp;
 				ts.ssqDP[g] += sms.dp * sms.dp;
 				ts.sumGB[g] += sms.gb;
 				ts.ssqGB[g] += sms.gb * sms.gb;
 				ts.sumAlphaDB[g] += sms.alphaDB;
 				ts.ssqAlphaDB[g] += sms.alphaDB * sms.alphaDB;
-				ts.sumBetaDB[g] += sms.betaDB; 
+				ts.sumBetaDB[g] += sms.betaDB;
 				ts.ssqBetaDB[g] += sms.betaDB * sms.betaDB;
 				break;
 			}
@@ -281,7 +281,7 @@ traitsums Population::getIndTraitsSums(Species* pSpecies) {
 		g = 0; // CURRENTLY INDIVIDUAL VARIATION CANNOT BE SEX-DEPENDENT
 				ts.sumStepL[g] += c.stepLength;
 				ts.ssqStepL[g] += c.stepLength * c.stepLength;
-				ts.sumRho[g] += c.rho;       
+				ts.sumRho[g] += c.rho;
 				ts.ssqRho[g] += c.rho * c.rho;
 				break;
 			}
@@ -292,28 +292,28 @@ traitsums Population::getIndTraitsSums(Species* pSpecies) {
 		}
 		else {
 			trfrKernelParams k = inds[iInd]->getIndKernTraits();
-			if (trfr.sexDep) g = sex; 
+			if (trfr.sexDep) g = sex;
 			else g = 0;
-			ts.sumDist1[g] += k.meanDist1; 
+			ts.sumDist1[g] += k.meanDist1;
 			ts.ssqDist1[g] += k.meanDist1 * k.meanDist1;
 			ts.sumDist2[g] += k.meanDist2;
 			ts.ssqDist2[g] += k.meanDist2 * k.meanDist2;
-			ts.sumProp1[g] += k.probKern1; 
+			ts.sumProp1[g] += k.probKern1;
 			ts.ssqProp1[g] += k.probKern1 * k.probKern1;
 		}
 		// settlement traits
 		settleTraits s = inds[iInd]->getIndSettTraits();
-		if (sett.sexDep) g = sex; 
+		if (sett.sexDep) g = sex;
 		else g = 0;
 		//	g = 0; // CURRENTLY INDIVIDUAL VARIATION CANNOT BE SEX-DEPENDENT
-		ts.sumS0[g] += s.s0;     
+		ts.sumS0[g] += s.s0;
 		ts.ssqS0[g] += s.s0 * s.s0;
-		ts.sumAlphaS[g] += s.alpha; 
+		ts.sumAlphaS[g] += s.alpha;
 		ts.ssqAlphaS[g] += s.alpha * s.alpha;
-		ts.sumBetaS[g] += s.beta;   
+		ts.sumBetaS[g] += s.beta;
 		ts.ssqBetaS[g] += s.beta * s.beta;
 
-		if (gMaxNbSexes > 1) g = sex; 
+		if (gMaxNbSexes > 1) g = sex;
 		else g = 0;
 		ts.sumGeneticFitness[g] += inds[iInd]->getGeneticFitness();
 		ts.ssqGeneticFitness[g] += inds[iInd]->getGeneticFitness() * inds[iInd]->getGeneticFitness();
@@ -560,7 +560,7 @@ void Population::reproduction(const float localK, const float envval, const int 
 	settleType sett = pSpecies->getSettle();
 
 	if (dem.repType == 0)
-		nsexes = 1; 
+		nsexes = 1;
 	else nsexes = 2;
 
 
@@ -684,7 +684,7 @@ void Population::reproduction(const float localK, const float envval, const int 
 						// NOTE: CURRENTLY SETTING ALL INDIVIDUALS TO RECORD NO. OF STEPS ...
 						newJuv = new Individual(pCell, pPatch, 0, 0, 0, dem.propMales, true, trfr.moveType);
 #else
-						newJuv = new Individual(pCell, pPatch, 0, 0, 0, dem.propMales, trfr.moveModel, trfr.moveType);
+						newJuv = new Individual(pCell, pPatch, 0, 0, 0, dem.propMales, trfr.usesMovtProc, trfr.moveType);
 #endif
 
 						if (pSpecies->getNTraits() > 0) {
@@ -769,7 +769,7 @@ void Population::reproduction(const float localK, const float envval, const int 
 								// NOTE: CURRENTLY SETTING ALL INDIVIDUALS TO RECORD NO. OF STEPS ...
 								newJuv = new Individual(pCell, pPatch, 0, 0, 0, dem.propMales, true, trfr.moveType);
 #else
-								newJuv = new Individual(pCell, pPatch, 0, 0, 0, dem.propMales, trfr.moveModel, trfr.moveType);
+								newJuv = new Individual(pCell, pPatch, 0, 0, 0, dem.propMales, trfr.usesMovtProc, trfr.moveType);
 #endif
 								if (pSpecies->getNTraits() > 0) {
 									newJuv->inheritTraits(pSpecies, inds[i], father, resol);
@@ -891,7 +891,7 @@ void Population::emigration(float localK)
 	// set up local copy of emigration probability table
 	// used when there is no individual variability
 	// NB - IT IS DOUBTFUL THIS CONTRIBUTES ANY SUBSTANTIAL TIME SAVING
-	if (dem.repType == 0) nsexes = 1; 
+	if (dem.repType == 0) nsexes = 1;
 	else nsexes = 2;
 	double pbEmig[gMaxNbStages][gMaxNbSexes];
 
@@ -1026,7 +1026,7 @@ disperser Population::extractDisperser(int ix) {
 	disperser d = disperser();
 	indStats ind = inds[ix]->getStats();
 	if (ind.status == 1) { // emigrant
-		d.pInd = inds[ix]; 
+		d.pInd = inds[ix];
 		d.yes = true;
 		inds[ix] = 0;
 		nInds[ind.stage][ind.sex]--;
@@ -1243,7 +1243,7 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 		}
 #if RS_RCPP
 		// write each individuals current movement step and status to paths file
-		if (trfr.moveModel && sim.outPaths) {
+		if (trfr.usesMovtProc && sim.outPaths) {
 			if (nextseason >= sim.outStartPaths && nextseason % sim.outIntPaths == 0) {
 				inds[i]->outMovePath(nextseason);
 			}
@@ -1348,7 +1348,7 @@ void Population::survival0(float localK, short option0, short option1)
 	// option0:	0 - stage 0 (juveniles) only
 	//					1 - all stages
 	//					2 - stage 1 and above (all non-juveniles)
-	// 
+	//
 	// option1:	0 - development only (when survival is annual)
 	//	  	 		1 - development and survival
 	//	  	 		2 - survival only (when survival is annual)
@@ -1719,7 +1719,7 @@ void Population::outIndsHeaders(int rep, int landNr, bool patchModel)
 	// ALWAYS WRITE NO. OF STEPS
 	outInds << "\tNsteps";
 #else
-	if (trfr.moveModel) outInds << "\tNsteps";
+	if (trfr.usesMovtProc) outInds << "\tNsteps";
 #endif
 	outInds << endl;
 }
@@ -1784,7 +1784,7 @@ void Population::outIndividual(Landscape* pLandscape, int rep, int yr, int gen,
 			if (dem.stageStruct) outInds << "\t" << ind.age << "\t" << ind.stage;
 
 			if (pSpecies->getNbGenLoadTraits() > 0) outInds << "\t" << inds[i]->getGeneticFitness();
-		
+
 			if (emig.indVar) {
 				emigTraits e = inds[i]->getIndEmigTraits();
 				if (emig.densDep) {
@@ -1835,7 +1835,7 @@ void Population::outIndividual(Landscape* pLandscape, int rep, int yr, int gen,
 			steps = inds[i]->getSteps();
 			outInds << "\t" << steps.year;
 #else
-			if (trfr.moveModel) {
+			if (trfr.usesMovtProc) {
 				steps = inds[i]->getSteps();
 				outInds << "\t" << steps.year;
 			}

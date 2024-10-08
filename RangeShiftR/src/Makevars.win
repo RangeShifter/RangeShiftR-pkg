@@ -1,15 +1,16 @@
 # all except RScore/main.cpp
 SOURCES = RScore/Cell.cpp RScore/Community.cpp RScore/FractalGenerator.cpp \
-	RScore/Genome.cpp RScore/Individual.cpp RScore/Landscape.cpp \
+	RScore/Individual.cpp RScore/Landscape.cpp \
 	RScore/Model.cpp RScore/Parameters.cpp RScore/Patch.cpp \
-	RScore/Population.cpp RScore/RandomCheck.cpp RScore/RSrandom.cpp \
+	RScore/Population.cpp RScore/RSrandom.cpp \
 	RScore/Species.cpp RScore/SubCommunity.cpp RScore/Utils.cpp \
-	RScore/Management.cpp
+	RScore/Management.cpp RScore/DispersalTrait.cpp RScore/NeutralStatsManager.cpp \
+	RScore/NeutralTrait.cpp RScore/SpeciesTrait.cpp RScore/GeneticFitnessTrait.cpp
 
 OBJECTS = Rinterface.o RcppExports.o $(SOURCES:.cpp=.o)
 
 
-CXX_STD = CXX17
+CXX_STD = CXX20
 PKG_CXXFLAGS = -DRSWIN64 -DRS_RCPP -DBATCH -w
 #PKG_CXXFLAGS = -DRSDEBUG
 #PKG_CXXFLAGS = -H

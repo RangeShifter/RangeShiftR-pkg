@@ -82,14 +82,34 @@ int ReadTransferR(Landscape*, Rcpp::S4);
 int ReadSettlementR(Rcpp::S4);
 int ReadInitialisationR(Landscape*, Rcpp::S4);
 int ReadGeneticsR(Rcpp::S4);
+int ReadTraitsR(Rcpp::S4);
 int ReadTranslocationR(Landscape*,Rcpp::S4);
 
 int ParseInitIndsFileR(wifstream&);
 int ReadInitIndsFileR(int,Landscape*);
-int ReadArchFileR(wifstream&);
+
 
 Rcpp::List RunBatchR(int, int, Rcpp::S4);
 void setglobalvarsR(Rcpp::S4);
+
+struct DispersalTraitInputOptions {
+    bool isEmigIndVar = false;
+    bool isEmigDensDep = false;
+    bool isEmigSexDep = false;
+
+    bool isSettIndVar = false;
+    bool isSettSexDep = false;
+
+    bool isKernTransfIndVar = false;
+    bool isKernTransfSexDep = false;
+    bool usesTwoKernels = false;
+
+    bool isSMSTransfIndVar = false;
+    bool usesSMSGoalBias = false;
+
+    bool isCRWTransfIndVar = false;
+};
+
 
 
 //---------------------------------------------------------------------------
@@ -112,27 +132,6 @@ void ArchFormatErrorR(void);
 //void FileOK(string,int,int);
 //void FileHeadersOK(string);
 //void SimulnCountError(string);
-
-
-
-//---------------------------------------------------------------------------
-
-// Dummy functions corresponding to those used in GUI version
-
-/* Batch mode of v2.0 currently has no facility to save maps (unless initiated from GUI).
-*/
-
-	// already declared in Parametrers.h:
-//const string Int2Str(const int);
-//const string Int2Str(const int, unsigned int);
-//const string Float2Str(const float);
-//const string Double2Str(const double);
-void MemoLine(string);
-#if RSDEBUG
-void DebugGUI(string);
-#endif
-
-traitCanvas SetupTraitCanvas(void);
 
 
 //---------------------------------------------------------------------------
