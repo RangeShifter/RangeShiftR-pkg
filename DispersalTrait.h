@@ -43,8 +43,6 @@ public:
 
 	float getAlleleValueAtLocus(short chromosome, int i) const override;
 	float getDomCoefAtLocus(short chromosome, int position) const override;
-	int countHeterozygoteLoci() const;
-	bool isHeterozygoteAtLocus(int locus) const override;
 
 #ifndef NDEBUG // for testing only
 	void overwriteGenes(map<int, vector<shared_ptr<Allele>>> genSeq) {
@@ -58,7 +56,6 @@ public:
 		int startChr) {
 		(this->*_inherit_func_ptr)(fromMother, parentGenes, recomPositions, startChr);
 	}
-	int getAlleleIDAtLocus(short whichChromosome, int position) const;
 #endif
 
 private:

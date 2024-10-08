@@ -388,35 +388,6 @@ float GeneticFitnessTrait::express() {
 }
 
 // ----------------------------------------------------------------------------------------
-// Check if specific locus is heterozygote
-// ----------------------------------------------------------------------------------------
-bool GeneticFitnessTrait::isHeterozygoteAtLocus(int locus) const {
-	// assumes diploidy
-	auto it = genes.find(locus);
-	if (it == genes.end())
-		throw runtime_error("Genetic load gene queried for heterozygosity does not exist.");
-	else {
-		shared_ptr<Allele> alleleRight = it->second[0] == 0 ? wildType : it->second[0];
-		shared_ptr<Allele> alleleLeft = it->second[1] == 0 ? wildType : it->second[1];
-		return alleleRight != alleleLeft;
-	}
-}
-
-// ----------------------------------------------------------------------------------------
-// Count heterozygote loci in genome 
-// ----------------------------------------------------------------------------------------
-int GeneticFitnessTrait::countHeterozygoteLoci() const {
-	// assumes diploidy
-	int count = 0;
-	for (auto const& [locus, allelePair] : genes) {
-		shared_ptr<Allele> alleleLeft = allelePair[0] == 0 ? wildType : allelePair[0];
-		shared_ptr<Allele> alleleRight = allelePair[1] == 0 ? wildType : allelePair[1];
-		count += alleleLeft != alleleRight;
-	}
-	return count;
-}
-
-// ----------------------------------------------------------------------------------------
 // Get allele value at locus
 // ----------------------------------------------------------------------------------------
 float GeneticFitnessTrait::getAlleleValueAtLocus(short whichChromosome, int position) const {
@@ -433,14 +404,3 @@ float GeneticFitnessTrait::getDomCoefAtLocus(short whichChromosome, int position
 		throw runtime_error("The genetic load locus queried for its dominance coefficient does not exist.");
 	return it->second[whichChromosome] == 0 ? wildType->getDominanceCoef() : it->second[whichChromosome]->getDominanceCoef();
 }
-
-#ifndef NDEBUG // Testing only
-// Get allele ID at locus
-int GeneticFitnessTrait::getAlleleIDAtLocus(short whichChromosome, int position) const {
-	auto it = genes.find(position);
-	if (it == genes.end())
-		throw runtime_error("The Dispersal locus queried for its allele ID does not exist.");
-	return it->second[whichChromosome].get()->getId();
-}
-
-#endif // NDEBUG

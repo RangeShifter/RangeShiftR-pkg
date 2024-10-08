@@ -291,12 +291,6 @@ float NeutralTrait::getAlleleValueAtLocus(short whichChromosome, int position) c
 }
 
 #ifndef NDEBUG // Testing only
-// Get allele ID at locus
-int NeutralTrait::getAlleleIDAtLocus(short whichChromosome, int position) const {
-	// for neutral genes this is the same as the allele value
-	// need this declaration for quanti trait that use an actual ID
-	return getAlleleValueAtLocus(whichChromosome, position);
-}
 
 // Create a default set of neutral alleles for testing
 //

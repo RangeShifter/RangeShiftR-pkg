@@ -400,7 +400,7 @@ int Population::countHeterozygoteLoci() {
 	int nbHetero = 0;
 	if (pSpecies->isDiploid()) {
 		for (Individual* ind : sampledInds) {
-			const auto trait = ind->getTrait(NEUTRAL);
+			const NeutralTrait* trait = (NeutralTrait*)(ind->getTrait(NEUTRAL));
 			nbHetero += trait->countHeterozygoteLoci();
 		}
 	}
@@ -416,7 +416,7 @@ vector<int> Population::countNbHeterozygotesEachLocus() {
 
 	if (pSpecies->isDiploid()) {
 		for (Individual* ind : sampledInds) {
-			const auto trait = ind->getTrait(NEUTRAL);
+			const NeutralTrait* trait = (NeutralTrait*)ind->getTrait(NEUTRAL);
 			int counter = 0;
 			for (auto position : positions) {
 				hetero[counter] += trait->isHeterozygoteAtLocus(position);

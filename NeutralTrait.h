@@ -51,11 +51,8 @@ public:
 		return 0.0;
 	}
 
-	virtual int countHeterozygoteLoci() const;
-	virtual bool isHeterozygoteAtLocus(int locus) const override;
-#ifndef NDEBUG // for testing only
-	int getAlleleIDAtLocus(short whichChromosome, int position) const;
-#endif
+	int countHeterozygoteLoci() const;
+	bool isHeterozygoteAtLocus(int locus) const;
 
 private:
 
