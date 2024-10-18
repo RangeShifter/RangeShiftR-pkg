@@ -1438,9 +1438,6 @@ void Population::survival0(float localK, short option0, short option1)
 		if ((ind.stage == 0 && option0 < 2) || (ind.stage > 0 && option0 > 0)) {
 			// condition for processing the stage is met...
 			if (ind.status < 6) { // not already doomed
-				if (ind.sex < sex_t::FEM || ind.sex > sex_t::MAL)
-					// ?? MSVC believes it's important to bound check ind.sex
-					throw runtime_error("Individual sex is out of bounds");
 				double probsurv = surv[ind.stage][ind.sex];
 				// does the individual survive?
 				if (pRandom->Bernoulli(probsurv)) { // survives
