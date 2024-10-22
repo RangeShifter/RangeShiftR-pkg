@@ -83,6 +83,20 @@ int ReadSettlementR(Rcpp::S4);
 int ReadInitialisationR(Landscape*, Rcpp::S4);
 int ReadGeneticsR(Rcpp::S4);
 int ReadTraitsR(Rcpp::S4);
+const sex_t intToSex(const int& i);
+TraitType stringToTraitType(const std::string& str);
+TraitType addSexDepToTrait(const TraitType& t, const sex_t& sex);
+GenParamType strToGenParamType(const string& str);
+ExpressionType stringToExpressionType(const std::string& str);
+map<GenParamType, float> NumericToParameterMap(string parameterString, Rcpp::NumericVector parameter);
+set<int> selectRandomLociPositions(int noLoci, const int& genomeSize);
+DistributionType stringToDistributionType(const std::string& str);
+void setUpSpeciesTrait(string TraitTypeR, set<int> positions, string ExpressionTypeR,
+                       string initDistR, Rcpp::NumericVector initParamsR,
+                       string DominanceDistR, Rcpp::NumericVector DominanceParamsR,
+                       bool isInherited, string MutationDistR,
+                       Rcpp::NumericVector MutationParamsR, float MutationRateR,
+                       int sexdep, bool isOutputR);
 int ReadTranslocationR(Landscape*,Rcpp::S4);
 
 int ParseInitIndsFileR(wifstream&);

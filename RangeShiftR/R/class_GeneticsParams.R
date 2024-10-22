@@ -19,6 +19,8 @@
 #
 #----------------------------------------------------------------------------
 
+# define ClassUnion for Positions: vector of integers or "random"
+setClassUnion("character_OR_integer", c("character", "integer"))
 
 ### CLASS GENETICSPARAMS
 
@@ -28,45 +30,67 @@
 
 #' Set genetic traits structure for neutral traits
 #'
+#' @param Positions Loci positions coding for trait within genome. Must be in the
+#' range 0-(GenomeSize-1), specified in Genetics file. Positions can overlap across
+#' traits - there will be no pleiotropy, but this will influence genetic linkage.,
+#' @param NbOfPositions Only specify if above is set to ‘random’, else must be blank (NULL)
+#' @param InitialDistribution Distribution from which to draw initial allele values from.
+#' If \code{uniform}. Initialise with random characters between 0 – max. Can be left blank (NULL)
+#' and assume every individual is the ‘wildtype’ (max value provided in  \code{InitialParameters} ) and new mutations alter that.
+#' @param InitialParameters Maximal value for the uniform distribution.
+#' @param MutationDistribution Distribution for mutations to draw from. Can be either 'KAM' or 'SSM'. KAM (k-alleles model) is randomly
+#' draw a value between 0 and max (see MutationParameters).
+#' SSM (single-step mutation) is to move in a stepwise manner, A to B, B to C.
+#' @param MutationParameters Parameters for the above distribution: maximal value for KAM or SSM (cannot exceed 255)
+#' @param MutationRate Mutation rate applicable to this type of loci. Must be between 0.0 and 1.0
+#' @param OutputValues If OutputGeneValues in \code{\link[RangeShiftR]{Genetics}} is
+#' enabled, should allele values for this gene be written to output? Ignored if OutputGeneValues is set to \code{FALSE}.
+#'
 #' @return a parameter object of class "NeutralTraitsParams"
 #' @author Jette Reeg
 #' @name NeutralTraits
 #' @export NeutralTraits
-NeutralTraits<- setClass("NeutralTraitsParams", slots = c(Positions = "integer_OR_numeric",
-                                                         NbOfPositions = "integer_OR_numeric", # random or list of integer values
+NeutralTraits<- setClass("NeutralTraitsParams", slots = c(Positions = "ANY", # vector of numbers or "random"
+                                                         NbOfPositions = "ANY", # random or list of integer values
                                                          InitialDistribution = "character", # uniform
-                                                         InitialParameters = "character", # max value
+                                                         InitialParameters = "integer_OR_numeric", # max value
                                                          MutationDistribution = "character", # KAM or SSM
-                                                         MutationParameters = "character", # max
-                                                         MutationRate = "numeric", # float
+                                                         MutationParameters = "integer_OR_numeric", # max
+                                                         MutationRate = "integer_OR_numeric", # float
                                                          OutputValues = "logical")
-                   , prototype = list(Positions = NULL, # "random" or list of integer values
+                   , prototype = list(Positions = "random", # "random" or list of integer values
                                       NbOfPositions = NULL, # numeric, only of positions random
                                       InitialDistribution = NULL, # uniform (neutral + dispersal), normal (dispersal), NULL (genetic load)
-                                      InitialParameters = NULL, # neutral traits: only max value; dispersal: two values: either min/max oder mean+sd, not applicable for genetic load
-                                      MutationDistribution = NULL, # neutral: "KAM" or "SSM", genetic load: "gamma", "uniform", "normal", "negExp", dispersal: uniform or normal
-                                      MutationParameters = NULL, # single value or 2 values
-                                      MutationRate = NULL, # numeric
+                                      InitialParameters = 2, # neutral traits: only max value; dispersal: two values: either min/max oder mean+sd, not applicable for genetic load
+                                      MutationDistribution = "KAM", # neutral: "KAM" or "SSM", genetic load: "gamma", "uniform", "normal", "negExp", dispersal: uniform or normal
+                                      MutationParameters = 2, # single value or 2 values
+                                      MutationRate = 0.0, # numeric
                                       OutputValues = FALSE
                    ))
 setValidity("NeutralTraitsParams", function(object) {
     msg <- NULL
-    patternPositions <-  "^\"?(([0-9]+-)?[0-9]+,)*([0-9]+-)?[0-9]+\"?$"
+
     # Check Position and NbOfPositions
-    isMatch <- grepl(patternPositions, object@Positions)
-    if (!isMatch && object@Positions != "random") {
-        msg <- c(msg, "Positions in neutral genetics must be either a comma-separated list of integer ranges, or random.")
+    isNumeric <- class(object@Positions) == "integer"
+    isCharacter <- class(object@Positions) == "character"
+    if (is.null(object@Positions) || (!isNumeric && !isCharacter)) {
+        msg <- c(msg, "Positions must be integer or character.")
     }
-    if (object@Positions == "random") {
-        if (object@NbPositions <= 0) {
+    if (!isNumeric){
+        if(isCharacter && object@Positions != "random") {
+            msg <- c(msg, "Positions in neutral genetics must be either a vector of integers, or random.")
+        }
+    }
+    if (isCharacter && object@Positions == "random") {
+        if (is.null(object@NbOfPositions) && object@NbOfPositions <= 0) {
             msg <- c(msg, "NbrOfPositions must be a strictly positive integrer.")
         }
-    } else if (!is.null(object@NbPositions)) {
-        msg <- c(msg, "If Positions is not random NbrOfPositions must be not be set (NA).")
+    } else if (!is.null(object@NbOfPositions)) {
+        msg <- c(msg, "If Positions is not random, NbrOfPositions must not be set (NULL).")
     }
     # Check InitialDistribution
     if (!is.null(object@InitialDistribution) && object@InitialDistribution != "uniform") {
-        msg <- c(msg,"InitialDistribution must be either uniform or left blank (NA) for the neutral trait.")
+        msg <- c(msg,"InitialDistribution must be either uniform or left blank (NuLL) for the neutral trait.")
     }
     # Check InitialParameters
     if (object@InitialDistribution == "uniform") {
@@ -110,10 +134,24 @@ setValidity("NeutralTraitsParams", function(object) {
     if (is.null(msg)) TRUE else msg}
 )
 setMethod("initialize", "NeutralTraitsParams", function(.Object, ...) {
+    this_func = "NeutralTraits(): "
+    args <- list(...)
+    .Object <- callNextMethod()
+    if ( length(args) == 0 ) {
+        validObject(.Object)
+    }
     .Object
 })
 setMethod("show", "NeutralTraitsParams", function(object){
-
+    cat("   Neutral Genetics: \n")
+    if(is.numeric(object@Positions)) cat("     Loci positions coding for trait: ", object@Positions, "\n")
+    if(!is.numeric(object@Positions) && object@Positions=="random") cat("    Loci positions coding for trait randomly chosen with ", object@NbOfPositions, " positions\n")
+    cat("     Initial distribution: ", object@InitialDistribution, "\n")
+    cat("     Initial parameters: ", object@InitialParameters, "\n")
+    cat("     Mutation distribution: ", object@MutationDistribution, "\n")
+    cat("     Mutation parameters: ", object@MutationParameters, "\n")
+    cat("     Mutation rate: ", object@MutationRate, "\n")
+    if(object@OutputValues) cat("     Allel values for gene is written to output")
 })
 
 
@@ -127,8 +165,8 @@ setMethod("show", "NeutralTraitsParams", function(object){
 #' @export GeneticLoadTraits
 GeneticLoadTraits<- setClass("GeneticLoadParams", slots = c(
     NbGeneticLoads = "integer", # number of genetic loads
-    Positions = "integer_OR_numeric",# "random" or list of integer values
-    NbOfPositions = "integer_OR_numeric", # numeric, only of positions random
+    Positions = "character_OR_integer",# "random" or list of integer values
+    NbOfPositions = "character_OR_integer", # numeric, only of positions random
     ExpressionType = "integer_OR_numeric",# "multiplicative"
     DominanceDistribution = "character", # ‘gamma’, ‘uniform’, ‘normal’, ‘negExp’, ‘scaled’
     DominanceParameters = "character", # 2 values for min/max, mean/sd, shape/scale or one value: mean
@@ -165,7 +203,7 @@ setValidity("GeneticLoadParams", function(object) {
             if (!all(isMatch) && object@Positions[isMatch==FALSE] != "random") {
                 msg <- c(msg, "Positions in genetic loads must be either a comma-separated list of integer ranges, or random.")
             }
-            if (any(is.na(object@NbPositions[object@Positions == "random"])) || object@NbPositions[object@Positions == "random"] <= 0){
+            if (any(is.na(object@NbOfPositions[object@Positions == "random"])) || object@NbOfPositions[object@Positions == "random"] <= 0){
                 msg <- c(msg, "NbrOfPositions must be set to a strictly positive integrer.")
             } else if (!is.na(object@NbOfPositions[object@Positions != "random"])) {
                 msg <- c(msg, "In Genetic loads: if Positions is not random NbrOfPositions must be not be set (NA).")
@@ -185,8 +223,8 @@ setValidity("GeneticLoadParams", function(object) {
     if (!is.null(object@DominanceDistribution)){
         if(length(object@DepressionDistribution) != object@NbGeneticLoads) {
             msg <- c(msg, "For each genetic load you must provide the DominanceDistribution.")
-        } else if (length(object@DominanceParameters) != object@NbGeneticLoads) {
-            msg <- c(msg, "If you have set DominanceDistributions you must provide the DominanceParameters for each genetic load.")
+        } else if (nrow(object@DominanceParameters) != object@NbGeneticLoads) {
+            msg <- c(msg, "If you have set DominanceDistributions you must provide the DominanceParameters for each genetic load. Use one row for each genetic load.")
         } else {
             if (any(object@DominanceDistribution == "normal")) { # if any distribution is normal
                 # two values for mean and sd
@@ -227,8 +265,8 @@ setValidity("GeneticLoadParams", function(object) {
                         !is.numeric(object@DominanceParameters) || # if entries are not numeric
                         !all(is.na(object@DominanceParameters[object@DominanceDistribution=="scaled",2])) || # second column is not NA
                         !all(is.na(object@DominanceParameters[object@DominanceDistribution=="negExp",2])) || # second column is not NA
-                        any(is.na(object@DominanceParameters[object@DominanceDistribution=="scaled",1])) || # first column is NA
-                        any(is.na(object@DominanceParameters[object@DominanceDistribution=="negExp",1]))
+                        any(is.na(object@DominanceParameters[object@DominanceDistribution=="scaled",1])) || # first column is provided
+                        any(is.na(object@DominanceParameters[object@DominanceDistribution=="negExp",1])) # first column is provided
                         ) {
                         msg <- c(msg,"For the scaled or negative exponential dominance distribution, DominanceParameters must provide only one value for mean (first column) and the second column need to be NA if other genetic loads use other dominance distributions.")
                     }
@@ -317,6 +355,12 @@ setValidity("GeneticLoadParams", function(object) {
     if (is.null(msg)) TRUE else msg
 })
 setMethod("initialize", "GeneticLoadParams", function(.Object, ...) {
+    this_func = "GeneticLoad(): "
+    args <- list(...)
+    .Object <- callNextMethod()
+    if ( length(args) == 0 ) {
+        validObject(.Object)
+    }
     .Object
 })
 setMethod("show", "GeneticLoadParams", function(object){
@@ -331,15 +375,15 @@ setMethod("show", "GeneticLoadParams", function(object){
 #' @author Jette Reeg
 #' @name EmigrationTraits
 #' @export EmigrationTraits
-EmigrationTraits<- setClass("EmigrationTraitsParams", slots = c(Positions = "integer_OR_numeric", #
-                                                                NbOfPositions = "integer_OR_numeric", # random or list of integer values
-                                                                ExpressionType = "integer_OR_numeric", # additive or average
+EmigrationTraits<- setClass("EmigrationTraitsParams", slots = c(Positions = "character_OR_integer", #
+                                                                NbOfPositions = "character_OR_integer", # random or list of integer values
+                                                                ExpressionType = "character", # additive or average
                                                                 InitialDistribution = "character", # uniform or normal
-                                                                InitialParameters = "character", # min and max value or mean and sd
+                                                                InitialParameters = "integer_OR_numeric", # min and max value or mean and sd
                                                                 IsInherited = "logical", # T/F
                                                                 MutationDistribution = "character", # uniform or normal
-                                                                MutationParameters = "character", # min mx or mean sd
-                                                                MutationRate = "numeric", # float
+                                                                MutationParameters = "integer_OR_numeric", # min mx or mean sd
+                                                                MutationRate = "integer_OR_numeric", # float
                                                                 OutputValues = "logical")
                                                                 , prototype = list(
                                                                     # ExprSex = FALSE, # is TRUE as soon as Emigration is sexdependent
@@ -365,7 +409,7 @@ setValidity("EmigrationTraitsParams", function(object) {
     if (!all(isMatch) && object@Positions[isMatch==FALSE] != "random") {
         msg <- c(msg, "In EmigrationTraits(): Positions must be either a comma-separated list of integer ranges, or random.")
     }
-    if (any(is.na(object@NbPositions[object@Positions == "random"])) || object@NbPositions[object@Positions == "random"] <= 0){
+    if (any(is.na(object@NbOfPositions[object@Positions == "random"])) || object@NbOfPositions[object@Positions == "random"] <= 0){
         msg <- c(msg, "NbrOfPositions must be set to a strictly positive integrer.")
     } else if (!is.na(object@NbOfPositions[object@Positions != "random"])) {
         msg <- c(msg, "In EmigrationTraits(): if Positions is not random NbrOfPositions must be not be set (NA).")
@@ -424,6 +468,12 @@ setValidity("EmigrationTraitsParams", function(object) {
     if (is.null(msg)) TRUE else msg
 })
 setMethod("initialize", "EmigrationTraitsParams", function(.Object, ...) {
+    this_func = "EmigrationTraits(): "
+    args <- list(...)
+    .Object <- callNextMethod()
+    if ( length(args) == 0 ) {
+        validObject(.Object)
+    }
     .Object
 })
 setMethod("show", "EmigrationTraitsParams", function(object){
@@ -439,15 +489,15 @@ setMethod("show", "EmigrationTraitsParams", function(object){
 #' @author Jette Reeg
 #' @name SettlementTraits
 #' @export SettlementTraits
-SettlementTraits<- setClass("SettlementTraitsParams", slots = c(Positions = "integer_OR_numeric", #
-                                                                 NbOfPositions = "integer_OR_numeric", # random or list of integer values
-                                                                 ExpressionType = "integer_OR_numeric", # additive or average
+SettlementTraits<- setClass("SettlementTraitsParams", slots = c(Positions = "character_OR_integer", #
+                                                                 NbOfPositions = "character_OR_integer", # random or list of integer values
+                                                                 ExpressionType = "character", # additive or average
                                                                  InitialDistribution = "character", # uniform or normal
-                                                                 InitialParameters = "character", # min and max value or mean and sd
+                                                                 InitialParameters = "integer_OR_numeric", # min and max value or mean and sd
                                                                  IsInherited = "logical", # T/F
                                                                  MutationDistribution = "character", # uniform or normal
-                                                                 MutationParameters = "character", # min mx or mean sd
-                                                                 MutationRate = "numeric", # float
+                                                                 MutationParameters = "integer_OR_numeric", # min mx or mean sd
+                                                                 MutationRate = "integer_OR_numeric", # float
                                                                  OutputValues = "logical")
                             , prototype = list(Positions = NULL, # "random" or list of integer values
                                 NbOfPositions = NULL, # numeric, only of positions random
@@ -470,7 +520,7 @@ setValidity("SettlementTraitsParams", function(object) {
     if (!all(isMatch) && object@Positions[isMatch==FALSE] != "random") {
         msg <- c(msg, "In SettlementTraits(): Positions must be either a comma-separated list of integer ranges, or random.")
     }
-    if (any(is.na(object@NbPositions[object@Positions == "random"])) || object@NbPositions[object@Positions == "random"] <= 0){
+    if (any(is.na(object@NbOfPositions[object@Positions == "random"])) || object@NbOfPositions[object@Positions == "random"] <= 0){
         msg <- c(msg, "NbrOfPositions must be set to a strictly positive integrer.")
     } else if (!is.na(object@NbOfPositions[object@Positions != "random"])) {
         msg <- c(msg, "In SettlementTraits(): if Positions is not random NbrOfPositions must be not be set (NA).")
@@ -529,6 +579,12 @@ setValidity("SettlementTraitsParams", function(object) {
      if (is.null(msg)) TRUE else msg
 })
 setMethod("initialize", "SettlementTraitsParams", function(.Object, ...) {
+    this_func = "SettlementTraits(): "
+    args <- list(...)
+    .Object <- callNextMethod()
+    if ( length(args) == 0 ) {
+        validObject(.Object)
+    }
     .Object
 })
 setMethod("show", "SettlementTraitsParams", function(object){
@@ -544,15 +600,15 @@ setMethod("show", "SettlementTraitsParams", function(object){
 #' @author Jette Reeg
 #' @name CRWTraits
 #' @export CRWTraits
-CRWTraits<- setClass("CRWTraitsParams", slots = c(Positions = "integer_OR_numeric", #
-                                                                 NbOfPositions = "integer_OR_numeric", # random or list of integer values
-                                                                 ExpressionType = "integer_OR_numeric", # additive or average
+CRWTraits<- setClass("CRWTraitsParams", slots = c(Positions = "character_OR_integer", #
+                                                                 NbOfPositions = "character_OR_integer", # random or list of integer values
+                                                                 ExpressionType = "character", # additive or average
                                                                  InitialDistribution = "character", # uniform or normal
-                                                                 InitialParameters = "character", # min and max value or mean and sd
+                                                                 InitialParameters = "integer_OR_numeric", # min and max value or mean and sd
                                                                  IsInherited = "logical", # T/F
                                                                  MutationDistribution = "character", # uniform or normal
-                                                                 MutationParameters = "character", # min mx or mean sd
-                                                                 MutationRate = "numeric", # float
+                                                                 MutationParameters = "integer_OR_numeric", # min mx or mean sd
+                                                                 MutationRate = "integer_OR_numeric", # float
                                                                  OutputValues = "logical")
                             , prototype = list(Positions = NULL, # "random" or list of integer values
                                 NbOfPositions = NULL, # numeric, only of positions random
@@ -575,7 +631,7 @@ setValidity("CRWTraitsParams", function(object) {
     if (!all(isMatch) && object@Positions[isMatch==FALSE] != "random") {
         msg <- c(msg, "In CRWTraits(): Positions must be either a comma-separated list of integer ranges, or random.")
     }
-    if (any(is.na(object@NbPositions[object@Positions == "random"])) || object@NbPositions[object@Positions == "random"] <= 0){
+    if (any(is.na(object@NbOfPositions[object@Positions == "random"])) || object@NbOfPositions[object@Positions == "random"] <= 0){
         msg <- c(msg, "NbrOfPositions must be set to a strictly positive integrer.")
     } else if (!is.na(object@NbOfPositions[object@Positions != "random"])) {
         msg <- c(msg, "In CRWTraits(): if Positions is not random NbrOfPositions must be not be set (NA).")
@@ -634,6 +690,12 @@ setValidity("CRWTraitsParams", function(object) {
     if (is.null(msg)) TRUE else msg
 })
 setMethod("initialize", "CRWTraitsParams", function(.Object, ...) {
+    this_func = "CRWTraits(): "
+    args <- list(...)
+    .Object <- callNextMethod()
+    if ( length(args) == 0 ) {
+        validObject(.Object)
+    }
     .Object
 })
 setMethod("show", "CRWTraitsParams", function(object){
@@ -649,15 +711,15 @@ setMethod("show", "CRWTraitsParams", function(object){
 #' @author Jette Reeg
 #' @name KernelTraits
 #' @export KernelTraits
-KernelTraits<- setClass("KernelTraitsParams", slots = c(Positions = "integer_OR_numeric", #
-                                                   NbOfPositions = "integer_OR_numeric", # random or list of integer values
-                                                   ExpressionType = "integer_OR_numeric", # additive or average
+KernelTraits<- setClass("KernelTraitsParams", slots = c(Positions = "character_OR_integer", #
+                                                   NbOfPositions = "character_OR_integer", # random or list of integer values
+                                                   ExpressionType = "character", # additive or average
                                                    InitialDistribution = "character", # uniform or normal
-                                                   InitialParameters = "character", # min and max value or mean and sd
+                                                   InitialParameters = "integer_OR_numeric", # min and max value or mean and sd
                                                    IsInherited = "logical", # T/F
                                                    MutationDistribution = "character", # uniform or normal
-                                                   MutationParameters = "character", # min mx or mean sd
-                                                   MutationRate = "numeric", # float
+                                                   MutationParameters = "integer_OR_numeric", # min mx or mean sd
+                                                   MutationRate = "integer_OR_numeric", # float
                                                    OutputValues = "logical")
                      , prototype = list(Positions = NULL, # "random" or list of integer values
                          NbOfPositions = NULL, # numeric, only of positions random
@@ -680,7 +742,7 @@ setValidity("KernelTraitsParams", function(object) {
     if (!all(isMatch) && object@Positions[isMatch==FALSE] != "random") {
         msg <- c(msg, "In KernelTraits(): Positions must be either a comma-separated list of integer ranges, or random.")
     }
-    if (any(is.na(object@NbPositions[object@Positions == "random"])) || object@NbPositions[object@Positions == "random"] <= 0){
+    if (any(is.na(object@NbOfPositions[object@Positions == "random"])) || object@NbOfPositions[object@Positions == "random"] <= 0){
         msg <- c(msg, "NbrOfPositions must be set to a strictly positive integrer.")
     } else if (!is.na(object@NbOfPositions[object@Positions != "random"])) {
         msg <- c(msg, "In KernelTraits(): if Positions is not random NbrOfPositions must be not be set (NA).")
@@ -739,6 +801,12 @@ setValidity("KernelTraitsParams", function(object) {
     if (is.null(msg)) TRUE else msg
 })
 setMethod("initialize", "KernelTraitsParams", function(.Object, ...) {
+    this_func = "KernelTraits(): "
+    args <- list(...)
+    .Object <- callNextMethod()
+    if ( length(args) == 0 ) {
+        validObject(.Object)
+    }
     .Object
 })
 setMethod("show", "KernelTraitsParams", function(object){
@@ -754,15 +822,15 @@ setMethod("show", "KernelTraitsParams", function(object){
 #' @author Jette Reeg
 #' @name SMSTraits
 #' @export SMSTraits
-SMSTraits<- setClass("SMSTraitsParams", slots = c(Positions = "integer_OR_numeric", #
-                                                         NbOfPositions = "integer_OR_numeric", # random or list of integer values
-                                                         ExpressionType = "integer_OR_numeric", # additive or average
+SMSTraits<- setClass("SMSTraitsParams", slots = c(Positions = "character_OR_integer", #
+                                                         NbOfPositions = "character_OR_integer", # random or list of integer values
+                                                         ExpressionType = "character", # additive or average
                                                          InitialDistribution = "character", # uniform or normal
-                                                         InitialParameters = "character", # min and max value or mean and sd
+                                                         InitialParameters = "integer_OR_numeric", # min and max value or mean and sd
                                                          IsInherited = "logical", # T/F
                                                          MutationDistribution = "character", # uniform or normal
-                                                         MutationParameters = "character", # min mx or mean sd
-                                                         MutationRate = "numeric", # float
+                                                         MutationParameters = "integer_OR_numeric", # min mx or mean sd
+                                                         MutationRate = "integer_OR_numeric", # float
                                                          OutputValues = "logical")
                         , prototype = list(Positions = NULL, # "random" or list of integer values
                             NbOfPositions = NULL, # numeric, only of positions random
@@ -785,7 +853,7 @@ setValidity("SMSTraitsParams", function(object) {
     if (!all(isMatch) && object@Positions[isMatch==FALSE] != "random") {
         msg <- c(msg, "In SMSTraits(): Positions must be either a comma-separated list of integer ranges, or random.")
     }
-    if (any(is.na(object@NbPositions[object@Positions == "random"])) || object@NbPositions[object@Positions == "random"] <= 0){
+    if (any(is.na(object@NbOfPositions[object@Positions == "random"])) || object@NbOfPositions[object@Positions == "random"] <= 0){
         msg <- c(msg, "NbrOfPositions must be set to a strictly positive integrer.")
     } else if (!is.na(object@NbOfPositions[object@Positions != "random"])) {
         msg <- c(msg, "In SMSTraits(): if Positions is not random NbrOfPositions must be not be set (NA).")
@@ -844,6 +912,12 @@ setValidity("SMSTraitsParams", function(object) {
     if (is.null(msg)) TRUE else msg
 })
 setMethod("initialize", "SMSTraitsParams", function(.Object, ...) {
+    this_func = "SMSTraits(): "
+    args <- list(...)
+    .Object <- callNextMethod()
+    if ( length(args) == 0 ) {
+        validObject(.Object)
+    }
     .Object
 })
 setMethod("show", "SMSTraitsParams", function(object){
@@ -859,6 +933,7 @@ setClassUnion("SettlementTraitsSlot", c("logical", "SettlementTraitsParams"))
 setClassUnion("CRWTraitsSlot", c("logical", "CRWTraitsParams"))
 setClassUnion("SMSTraitsSlot", c("logical", "SMSTraitsParams"))
 setClassUnion("KernelTraitsSlot", c("logical", "KernelTraitsParams"))
+
 
 #' Set genetic traits structure
 #'
@@ -890,328 +965,169 @@ setValidity("TraitsParams", function(object) {
         msg <- c(msg, "In Traits(): Neutral must be of class NeutralTraitsParams.")
     }
     # Check GeneticLoad
-    if (!is.logical(object@Neutral) && !is(object@GeneticLoad, "GeneticLoadParams")) {
+    if (!is.logical(object@GeneticLoad) && !is(object@GeneticLoad, "GeneticLoadParams")) {
         msg <- c(msg, "In Traits(): GeneticLoad must be of class GeneticLoadParams.")
     }
     # Check EmigrationGenes
-    if (!is.logical(object@Neutral) && !is(object@EmigrationGenes, "EmigrationTraitsParams")) {
+    if (!is.logical(object@EmigrationGenes) && !is(object@EmigrationGenes, "EmigrationTraitsParams")) {
         msg <- c(msg, "In Traits(): EmigrationGenes must be of class EmigrationTraitsParams.")
     }
     # Check SettlementGenes
-    if (!is.logical(object@Neutral) && !is(object@SettlementGenes, "SettlementTraitsParams")) {
+    if (!is.logical(object@SettlementGenes) && !is(object@SettlementGenes, "SettlementTraitsParams")) {
         msg <- c(msg, "In Traits(): SettlementGenes must be of class SettlementTraitsParams.")
     }
     # Check CRWGenes
-    if (!is.logical(object@Neutral) && !is(object@CRWGenes, "CRWTraitsParams")) {
+    if (!is.logical(object@CRWGenes) && !is(object@CRWGenes, "CRWTraitsParams")) {
         msg <- c(msg, "In Traits(): CRWGenes must be of class CRWTraitsParams.")
     }
     # Check SMSGenes
-    if (!is.logical(object@Neutral) && !is(object@SMSGenes, "SMSTraitsParams")) {
+    if (!is.logical(object@SMSGenes) && !is(object@SMSGenes, "SMSTraitsParams")) {
         msg <- c(msg, "In Traits(): SMSGenes must be of class SMSTraitsParams.")
     }
     # Check KernelGenes
-    if (!is.logical(object@Neutral) && !is(object@KernelGenes, "KernelTraitsParams")) {
+    if (!is.logical(object@KernelGenes) && !is(object@KernelGenes, "KernelTraitsParams")) {
         msg <- c(msg, "In Traits(): KernelGenes must be of class KernelTraitsParams.")
     }
     if (is.null(msg)) TRUE else msg
 })
 setMethod("initialize", "TraitsParams", function(.Object, ...) {
+    this_func = "Traits(): "
+    args <- list(...)
+    .Object <- callNextMethod()
+    if ( length(args) == 0 ) {
+        validObject(.Object)
+    }
     .Object
 })
 setMethod("show", "TraitsParams", function(object){
+    if(class(object@Neutral) == "NeutralTraitsParams") print(object@Neutral)
+    if(class(object@GeneticLoad) == "GeneticLoadParams") print(object@GeneticLoad)
+    if(class(object@EmigrationGenes) == "EmigrationTraitsParams") print(object@EmigrationGenes)
+    if(class(object@SettlementGenes) == "SettlementTraitsParams") print(object@SettlementGenes)
+    if(class(object@CRWGenes) == "CRWTraitsParams") print(object@CRWGenes)
+    if(class(object@SMSGenes) == "SMSTraitsParams") print(object@SMSGenes)
+    if(class(object@KernelGenes) == "KernelTraitsParams") print(object@KernelGenes)
 })
 
 
 #' Set Genetics parameters
 #'
-#' @description Set genetics parameters and architecture.\cr
+#' @description Set genetics parameters\cr
 #'
 #' Controls heritability and evolution of traits (if inter-individual variability is enabled (\code{IndVar=TRUE}) for at least one (dispersal) trait).
-#' Provides control over the number of chromosomes, the number of loci on each, the recombination rate (if the species is diploid) and a
+#' Provides control over the genome size, the number of loci, the recombination rate (if the species is diploid) and a
 #' flexible mapping of traits to chromosomes, allowing linkage, pleiotropy and neutral alleles to be incorporated. It is also possible to model
 #' neutral alleles when no adaptive traits are present.
 #'
-#' @usage Genetics(Architecture = 0,
-#'          NLoci = 1, ArchFile = "NULL",
-#'          ProbMutn = 0.0, MutationSD = 0.1,
-#'          ProbCross = 0.0,
-#'          AlleleSD = 0.1)
-#' @param Architecture Genetic Architecture: \cr 0 = One chromosome per trait (default), \cr 1 = Read from file (set \code{ArchFile}).
-#' @param NLoci Required if \code{Architecture=0}: Number of loci per chromosome, defaults to \eqn{1} (integer).
-#' @param ArchFile Required if \code{Architecture=1}: Name of the genetic architecture file.
-#' @param ProbMutn Probability of mutation of each individual allele at meiosis, defaults to \eqn{0.0}.\cr
-#' @param MutationSD Standard deviation of mutation magnitude, defaults to \eqn{0.1}.\cr Must be \eqn{> 0}.
-#' Must be \eqn{0 \le}\code{ProbMutn} \eqn{\le 1}.
-#' @param ProbCross Probability of crossover at each individual locus at meiosis, defaults to \eqn{0.0}.\cr
-#' Must be \eqn{0 \le}\code{ProbCross} \eqn{\le 1}.
-#' @param AlleleSD Standard deviation of initial allelic values around phenotypic value, defaults to \eqn{0.1}.\cr Must be \eqn{> 0}.
-#' @details When inter-individual variability in at least one trait (at present limited to dispersal traits)
-#' is enabled (\code{IndVar=TRUE}), each individual carries a genome coding for the varying trait values.\cr
-#' If the reproductive model is \emph{asexual/female-only} (\code{ReproductionType} \eqn{=0}), the species is assumed to be haploid and chromosomes
-#' hold a single allele at each locus. In this case, changes in the genotype, and hence also in the phenotype, can occur only through mutation (see below). \cr
-#' In the case of \emph{sexual} models(\code{ReproductionType} \eqn{={1,2}}), the species is assumed to be diploid and chromosomes
-#' hold two alleles at each locus. New-born offspring inherit one set of chromosomes from each of its parents.
-#' Note that we use the term \emph{chromosome} here to represent both the single chromosomes of a haploid species and
-#' the chromosome pair of a diploid species.\cr
+#' @usage Genetics(GenomeSize = 10,
+#'          ChromosomeEnds = 1, RecombinationRate = 0.0,
+#'          OutputGeneValues = FALSE, OutputNeutralStatistics = FALSE,
+#'          OutputFstatsWeirCockerham = FALSE, OutputFstatsWeirHill = FALSE,
+#'          OutputStartGenetics = NULL, OutputInterval = NULL,
+#'          PatchList = NULL, NbrPatchToSample = NULL,
+#'          nIndividualsToSample = NULL, Stages = NULL, Traits = Traits()
+#'          )
 #'
-#' \emph{Simple genetic architecture}\cr
-#' A simple type of architecture may be used by choosing the \emph{one chromosome per trait}
-#' option (\code{Architecture} \eqn{=0}) and setting the number of loci per chromosome;
-#' all chromosomes will carry the same number of loci.\cr
-#'
-#' In the 1.x versions of \emph{RangeShifter}, the trait value was held by the individual directly
-#' as a ‘pseudo-gene’ (for diploid species, the mean of two such alleles controlled the phenotype),
-#' but this did not allow for representation of more complex genetic phenomena, such as linkage
-#' between traits. This simple type of implementation may still be represented approximately by
-#' choosing the ‘one chromosome per trait’ option, and setting one locus per chromosome.
-#'
-#' \emph{Flexible genetic architecture}\cr
-#' For a more realistic representation of heritable traits, an explicit genetic architecture
-#' may be defined, which must be read from a text file (\code{Architecture} \eqn{=1}).
-#' The file specifies how many chromosomes
-#' each individual will have, the number of loci on each chromosome and which loci contribute
-#' to the phenotypic value of each trait. Thus, for example, it is possible to model a species
-#' exhibiting a single variable trait (e.g. the mean of a negative exponential dispersal kernel)
-#' dependent on loci spreads across three chromosomes or a species exhibiting three trait (e.g.
-#' density-dependent emigration) all of which are governed by loci located on a single chromosome.
-#' In practice, most genetic architectures are likely to fall somewhere between these extremes,
-#' i.e. there will be several chromosomes and traits will be mapped across them. In contrast to
-#' \emph{RangeShifter} v1, whenever there are variable traits in a model, evolution is assumed, although
-#' it can if desired be effectively eliminated for a haploid species by setting a very low mutation
-#' probability (\code{ProbMutn}).\cr
-#'
-#' Care must be taken to specify the architecture file in the required format. This is an example
-#' architecture file content:\cr\cr
-#' NChromosomes	4\cr
-#' NLoci	5 6 10 2\cr
-#' Trait 0 NLoci 4 0 0 0 1 0 2 1 5\cr
-#' Trait 1 NLoci 8 0 4 2 0 2 1 2 2 2 3 2 4 2 9 3 0\cr
-#' Trait 2 NLoci 2 1 4 3 1 \cr
-#'
-#' The first line contains the keyword \code{NChromosomes} followed by an integer \eqn{n_C} that
-#' specifies the number of chromosomes.\cr
-#' The second line contains the keyword \code{NLoci} followed by \eqn{n_C} integers which specify
-#' the number of loci on each chromosome.\cr
-#' Then follows one line for each heritable trait, in the order they are defined in the model
-#' (emigration / movement / settlement).
-#' They begin with the keyword \code{Trait} followed by an consecutive (starting with zero) integer
-#' trait ID. On the same line follows the keyword \code{NLoci} and an integer \eqn{n_Ti} that
-#' specifies the number of loci the corresponding trait is mapped to. After this follow \eqn{n_Ti}
-#' integer pairs specifying the respective chromosome and locus. (Note that numbering starts at \eqn{0}.)\cr
-#'
-#' Any loci which do not contribute to at least one trait are treated as neutral loci (see below).
-#' Neutral loci may also be specified for a model in which there are no adaptive traits:
-#' Specifying a genetic architecture file for a model having no adaptive traits will result in neutral
-#' genetics being set up for the species.\cr
-#'
-#' \emph{From genotype to phenotype}\cr
-#' All alleles are represented by integer values (positive or negative),
-#' and the sum of alleles at all loci contributing to a trait (both alleles at each locus of a diploid
-#' species) controls the phenotype. However, as phenotypic traits exist on several widely different
-#' scales (e.g. emigration probability between \eqn{0} and \eqn{1}, dispersal kernel mean typically
-#' many hundreds or thousands of metres), it is necessary to specify how the allelic scale relates
-#' to the phenotypic scale. A scaling factor is specified for each trait (the parameter
-#' \code{TraitScaleFactor} in each dispersal sub-module), which governs how large a
-#' change of \eqn{100} units (which is the ‘integer base’ of the genome) on the allele scale will be on the
-#' phenotypic scale. For example, if the scaling factor for density-independent emigration probability
-#' is \eqn{0.1}, and a juvenile’s sum of all alleles contributing to that trait is \eqn{150} less than
-#' its parent’s equivalent sum, then the juvenile’s emigration probability phenotype will be \eqn{0.15}
-#' lower than its parent’s phenotype (but subject in this case to the constraint that it may not be
-#' less than zero).\cr
-#'
-#' \emph{Mutation and Linkage}\cr
-#' Mutation can occur when an individual allele is inherited by a new-born individual from its parent.
-#' It is governed by two genome-level parameters: the mutation probability \code{ProbMutn}
-#' that a mutation takes place, and standard deviation \code{MutationSD} which sets the typical magnitude.
-#' Both are applied in a standard way at the level of the individual locus (unlike in version 1, in
-#' which separate probabilities and magnitudes were applied for separate traits). When a mutation occurs
-#' at a locus, a random number is drawn from a normal distribution having zero mean and the mutation standard
-#' deviation. This number is multiplied by the integer base to yield an integer value which is added to the
-#' allele before it is copied to the juvenile’s chromosome. The default mutation standard deviation of \eqn{0.1}
-#' will therefore give mutations which mostly range between \eqn{-30} and \eqn{+30} at the allele scale.\cr
-#'
-#' In a diploid species, traits may be linked if their coding loci are on the same chromosomes; or they can
-#' evolve independently, if their coding loci are on different chromosomes.
-#' The degree of linkage, however, also depends on the crossover probability \code{ProbCross} specified for
-#' the genome. If it is high, the degree of linkage is reduced, and the linked traits tend to evolve more
-#' independently. \cr
-#'
-#' The crossover probability denoted the probability that,
-#' when copying a multi-locus chromosome from a parent’s to the offspring’s genome, there will
-#' be a change at the current locus from copying the parent’s maternally-inherited alleles to the
-#' parent’s paternally-inherited alleles or vice versa.\cr
-#' The crossover probability parameter is applied at the scale of the locus, i.e. during meiosis.
-#' As a parent’s chromosomes are being inherited by its offspring, a crossover occurs at each locus with the
-#' specified probability \code{ProbCross}. If the crossover probability is high, the degree of linkage is reduced, and two linked
-#' traits tend to evolve more independently.\cr
-#'
-#' \emph{Pleiotropy and Neutral loci}\cr
-#' It is possible that a particular locus can be specified more than once for a particular trait; this
-#' increases its weighting relative to other loci contributing to the trait. A locus may also code for
-#' more than one trait, i.e. it is pleiotropic. Large positive allele values at that locus will tend to
-#' lead to larger than average values of both traits (but subject to any other loci coding separately
-#' for the two traits). Thus the two traits are forced (to some extent) to be positively correlated. It
-#' is not possible to specify inverse correlation between two traits in this way.\cr
-#'
-#' A locus which does not code for any trait is neutral, and therefore not subject directly to
-#' selection, although the distribution across the population of allele values at that locus may vary
-#' over time owing to genetic drift and/or linkage to loci which are under selection. Such neutral
-#' loci may be used as markers for estimating relatedness at the individual or population level.\cr
-#'
-#' \emph{Genome initialisation}\cr
-#' At model initialisation, individuals are assigned phenotypic traits drawn from a normal
-#' distribution controlled by a specified mean phenotype and standard deviation, but also subject
-#' to any phenotypic constraints (e.g. a probability must lie between \eqn{0} and \eqn{1}, step length
-#' must be positive, etc.). The values for the traits initial mean and standard deviation are set in the appropriate
-#' sub-modules, where they replace the constant values used when \code{IndVar = FALSE}.
-#' The standard deviation for a trait may not be greater than the corresponding
-#' scaling factor (\code{TraitScaleFactor}), but it may be substantially less if an initial population which is highly homogeneous
-#' for a particular trait is required. \cr
-#'
-#' The genome actually controls individual variation relative to the
-#' initial population mean value of a trait; thus if the sum of an individual’s alleles is negative, its
-#' phenotype will be less than the initial mean value, and if its sum is positive, its phenotype will be
-#' greater than the mean value. However, to prevent all alleles for a multi-loci trait being identical in
-#' initial individuals, further random variation is applied at the allele scale (i.e. common to all traits),
-#' which is drawn from a normal distribution having zero mean and a standard deviation specified in \code{AlleleSD}.
-#' Note that therefore the observed variance in a trait value across the initial population may not match
-#' exactly the specified variance for the trait.
-#'
-#' Side note: This differs from the implementation in version 1.x, which used a uniform distribution; hence
-#' an initial population cannot be set up in v2.0 to have exactly the same properties as in v1, but a similar
-#' equilibrium population should arise after a period of sufficiently strong selection for one or more traits.
+#' @param GenomeSize Maximum size of genome (number of loci)
+#' @param ChromosomeEnds Where the genome is split into chromosomes, if empty
+#' assumed one chromosome is equal to GenomeSize. These areas recombine with a
+#' probability of 0.5.
+#' @param RecombinationRate Recombination rate (through chromosomal crossover)
+#' across the whole genome (in addition to the chromosomeEnds above).
+#' @param OutputGeneValues Output the values of all alleles for all genes of all
+#' sampled individuals. Does not output the resulting trait values: mean and SD
+#' of dispersal and genetic fitness traits are output in the TraitsXPatch,
+#' TraitsXCell and/or TraitsXrow output files. Enables the geneValues output
+#' files.
+#' @param OutputFstatsWeirCockerham Calculate F-statistics (including global and
+#' per-locus estimates) according to Weir & Cockerham (1984)'s method-of-moments
+#' approach. Enables the neutralGenetics and perLocusNeutralGenetics output files.
+#' @param OutputFstatsWeirHill Calculate F-statistics calculated according to the
+#' estimators of Weir & Hill (2002), including global estimates corrected for
+#' unequal sample sizes, population- (i.e. patch-) specific estimates, and pairwise
+#' estimates. Enables the neutralGenetics and pairwisePatchNeutralGenetics output files.
+#' @param OutputStartGenetics Which year should RangeShifter start to produce the output files listed above?
+#' @param OutputInterval How frequently to output genetic output, including gene values and neutral statistics.
+#' @param PatchList Which patches are to be sampled for output.  Patches can be
+#' specified according to their patch number, as per the patch layer in a patch-based
+#' model. Or sampled randomly or all patches can be chosen. In a cell-based landscape
+#' random is the only option with number of patches (=cells) specified.
+#' @param NbrPatchToSample If PatchList=random or random_occupied then this specifies
+#' the number of patches to sample randomly. Random: The chosen sample patches remain
+#' the same throughout the simulation, i.e. do not vary between years or replicates
+#' unless artificially generated landscape that is generated afresh between replicates.
+#' Random_occupied: patches are re-sampled every generation among all patches containing at least 1 individual.
+#' @param nIndividualsToSample The number of individuals to sample in a patch. If nInds < nIndividualsToSample then sampled individuals = nInds
+#' @param Stages The age stages to sample from.
+#' @param Traits The genetic traits to be modelled.
+
+#' @details TBD
+
 #'
 #'
 # #' @references \insertAllCited{}
 #' @return a parameter object of class "GeneticsParams"
-#' @author Anne-Kathleen Malchow
+#' @author Jette Reeg
 #' @name Genetics
 #' @export Genetics
 Genetics <- setClass("GeneticsParams", slots = c(GenomeSize = "integer_OR_numeric",
                                                  ChromosomeEnds = "integer_OR_numeric", # NULL or vector
                                                  RecombinationRate = "integer_OR_numeric", # NULL or numeric
                                                  OutputGeneValues = "logical",
-                                                 OutputNeutralStatistics = "logical",
                                                  OutputFstatsWeirCockerham = "logical",
                                                  OutputFstatsWeirHill = "logical",
                                                  OutputStartGenetics = "integer_OR_numeric", # positive integer if any output is TRUE or NULL
                                                  OutputInterval = "integer_OR_numeric",
-                                                 PatchList = "integer_OR_numeric", # vector or string
+                                                 PatchList = "character_OR_integer", # vector of integers or a string
                                                  NbrPatchToSample = "integer_OR_numeric", # NULL or integer
-                                                 nIndividualsToSample = "character", # NULL or integer
-                                                 Stages = "integer_OR_numeric", # vector
+                                                 nIndividualsToSample = "character_OR_integer", # character or integer
+                                                 Stages = "character_OR_integer", # vector
                                                  Traits = "TraitsParams")
                                      , prototype = list(GenomeSize = 0L,
                                                         ChromosomeEnds = 0L, # NULL or vector
-                                                        RecombinationRate = NULL, # NULL or numeric
+                                                        RecombinationRate = 0.0, # NULL or numeric
                                                         OutputGeneValues = FALSE,
-                                                        OutputNeutralStatistics = FALSE,
                                                         OutputFstatsWeirCockerham = FALSE,
                                                         OutputFstatsWeirHill = FALSE,
-                                                        OutputStartGenetics = NULL, # positive integer if any output is TRUE or NULL
-                                                        OutputInterval = NULL,
-                                                        PatchList = NULL, # vector or string
-                                                        NbrPatchToSample = NULL, # NULL or integer
-                                                        nIndividualsToSample = NULL, # NULL or integer
-                                                        Stages = NULL, # vector
+                                                        OutputStartGenetics = 0L, # positive integer if any output is TRUE or NULL
+                                                        OutputInterval = 0L,
+                                                        PatchList = "all", # vector or string
+                                                        NbrPatchToSample = 0L, # NULL or integer
+                                                        nIndividualsToSample = "all", # NULL or integer
+                                                        Stages = "all", # vector
                                                         Traits = Traits())
 
 )
 setValidity('GeneticsParams', function(object){
-    # msg <- NULL
-    # if(anyNA(object@Architecture) || length(object@Architecture)!=1) {
-    #     msg <- c(msg, "Architecture must be set!")
-    # }
-    # else {
-    #     if(object@Architecture %in% c(0,1)) {
-    #         if(object@Architecture == 0) {
-    #             if(anyNA(object@NLoci) || length(object@NLoci)!=1) {
-    #                 msg <- c(msg, "NLoci must be set if Architecture = 0 (one chromosome per trait)!")
-    #             }
-    #             else {
-    #                 if(object@NLoci < 1) {
-    #                     msg <- c(msg, "NLoci must be greater than 0!")
-    #                 }
-    #             }
-    #         }
-    #         if(object@Architecture == 1) {
-    #             if (object@ArchFile == "NULL"){
-    #                 msg <- c(msg, 'ArchFile is required if Architecture = 1 (load architecture file).')
-    #             }
-    #         }
-    #     }else{
-    #         msg <- c(msg, "Architecture must be either 0 or 1!")
-    #     }
-    # }
-    # if(anyNA(object@ProbMutn) || length(object@ProbMutn)!=1) {
-    #     msg <- c(msg, "ProbMutn must be set!")
-    # }
-    # else {
-    #     if(object@ProbMutn < 0.0 || object@ProbMutn > 1.0) {
-    #         msg <- c(msg, "ProbMutn must be within the closed interval [0,1]!")
-    #     }
-    # }
-    # if(anyNA(object@ProbCross) || length(object@ProbCross)!=1) {
-    #     msg <- c(msg, "ProbCross must be set!")
-    # }
-    # else {
-    #     if(object@ProbCross < 0.0 || object@ProbCross > 1.0) {
-    #         msg <- c(msg, "ProbCross must be within the closed interval [0,1]!")
-    #     }
-    # }
-    # if(anyNA(object@AlleleSD) || length(object@AlleleSD)!=1) {
-    #     msg <- c(msg, "AlleleSD must be set!")
-    # }
-    # else {
-    #     if(object@AlleleSD <= 0.0) {
-    #         msg <- c(msg, "AlleleSD must be strictly positive!")
-    #     }
-    # }
-    # if(anyNA(object@MutationSD) || length(object@MutationSD)!=1) {
-    #     msg <- c(msg, "MutationSD must be set!")
-    # }
-    # else {
-    #     if(object@MutationSD <= 0.0) {
-    #         msg <- c(msg, "MutationSD must be strictly positive!")
-    #     }
-    # }
-    # if (is.null(msg)) TRUE else msg
-    }
-)
+    msg <- NULL
+    if (is.null(msg)) TRUE else msg
+})
 setMethod('initialize', 'GeneticsParams', function(.Object, ...) {
-    # this_func = "Genetics(): "
-    # args <- list(...)
-    # .Object <- callNextMethod()
-    # if(.Object@Architecture == 0) {
-    #     if (!is.null(args$ArchFile)) {
-    #         warning(this_func, "ArchFile", warn_msg_ignored, "since Architecture = 0 (one chromosome per trait).", call. = FALSE)
-    #     }
-    # }
-    # if(.Object@Architecture == 1) {
-    #     if (!is.null(args$NLoci)) {
-    #         warning(this_func, "NLoci", warn_msg_ignored, "since Architecture = 1 (load architecture file).", call. = FALSE)
-    #     }
-    # }
-    # .Object
+    this_func = "Genetics(): "
+    args <- list(...)
+    .Object <- callNextMethod()
+    if ( length(args) == 0 ) {
+        validObject(.Object)
     }
-)
+    .Object
+    })
 setMethod("show", "GeneticsParams", function(object){
-    # cat(" Genetics: \n")
-    # cat("   Architecture =", object@Architecture, ": ")
-    # if (object@Architecture == 0) {
-    #     cat("One chromosome per trait \n")
-    #     cat("   with", object@NLoci)
-    #     if (object@NLoci==1) cat(" locus")
-    #     else cat(" loci")
-    #     cat(" per chromosome.")
-    # }
-    # if (object@Architecture == 1) {
-    #     cat("loaded from architecture file:\n")
-    #     cat("   ", object@ArchFile)
-    # }
-    # cat("\n")
-    # cat("   ProbMutn   =", object@ProbMutn, "\n")
-    # cat("   ProbCross  =", object@ProbCross, "\n")
-    # cat("   AlleleSD   =", object@AlleleSD, "\n")
-    # cat("   MutationSD =", object@MutationSD, "\n")
+    cat(" Genetics: \n")
+    cat("   Genome size =", object@GenomeSize, "\n ")
+    if(length(object@ChromosomeEnds) > 0){
+        cat("   Genome is slitted into chromosomes at =", object@ChromosomeEnds, "\n ")
+    } else cat( "   Genome is not slitted into chromosomes \n")
+
+    cat("   Recombination rate: ", object@RecombinationRate, "\n")
+    cat("   Output genetic values: ", object@OutputGeneValues, "\n")
+    cat("   Output Fstats after Weir Cockerham: ", object@OutputFstatsWeirCockerham, "\n")
+    cat("   Output Fstats after Weir Hill: ", object@OutputFstatsWeirHill, "\n")
+    cat("   Start genetic output at year: ", object@OutputStartGenetics, "and output every ",object@OutputInterval ," year \n")
+    cat("   Patches to sample: ", object@PatchList, "\n")
+    if(object@PatchList=="random" || object@PatchList=="random_occupied"){
+        cat("   Number of patches to sample: ", object@NbrPatchToSample, "\n")
+    }
+    cat("   Number of individuals to sample: ", object@nIndividualsToSample, "\n")
+    cat("   Stages to sample: ", object@Stages, "\n")
+    print(object@Traits)
 })

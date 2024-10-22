@@ -154,6 +154,19 @@ setMethod("+", signature(e1 = "DispersalParams", e2 = "SettlementParams"), funct
 setMethod("+", signature(e1 = "RSparams", e2 = "GeneticsParams"), function(e1, e2) {
     validObject(e2)
     e1@gene <- e2
+    if (class(e2@Traits@Neutral)[1] == "NeutralTraitsParams") { # dispersal traits are checked later
+        e1@control@neutralgenetics = TRUE
+    }
+    else {
+        e1@control@neutralgenetics = FALSE
+    }
+    if (class(e2@Traits@GeneticLoad)[1] == "GeneticLoadParams") { # dispersal traits are checked later
+        e1@control@geneticload = TRUE
+    }
+    else {
+        e1@control@geneticload = FALSE
+    }
+
     return(e1)}
 )
 

@@ -1214,7 +1214,9 @@ setMethod("show", "RSparams", function(object){
     print(object@dispersal)
     cat("\n")
     if(any(object@dispersal@Emigration@IndVar,object@dispersal@Transfer@IndVar,object@dispersal@Settlement@IndVar)
-       || object@gene@Architecture == 1 ){
+       || any(class(object@gene@Traits@Neutral) != "logical",class(object@gene@Traits@EmigrationGenes) != "logical",
+              class(object@gene@Traits@CRWGenes) != "logical",class(object@gene@Traits@SMSGenes) != "logical",
+              class(object@gene@Traits@KernelGenes) != "logical",class(object@gene@Traits@SettlementGenes) != "logical")){
         print(object@gene)
         cat("\n")
     }

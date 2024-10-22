@@ -41,6 +41,8 @@ ControlParams <- setClass("ControlParams", slots = c(
                                    stages = "integer_OR_numeric",           # set via +Demography@StageStruct
                                    transfer = "integer_OR_numeric",         # set via +Dispersal     Transfer method: 0 = dispersal kernels, 1 = SMS, 2 = CRW)
                                    translocation = "logical",                # set via +Management
+                                   neutralgenetics = "logical",                    # set via +Genetics
+                                   geneticload = "logical",                        # set via +Genetics
                                    seed = "integer_OR_numeric")
                          ,prototype = list(#nSimuls = 1L,
                                   #nLandscapes = 1L,
@@ -57,6 +59,8 @@ ControlParams <- setClass("ControlParams", slots = c(
                                   stages = NA_integer_,
                                   transfer = 0L,
                                   translocation = FALSE,
+                                  neutralgenetics = FALSE,
+                                  geneticload = FALSE,
                                   seed = 0L)
 )
 setValidity("ControlParams", function(object){

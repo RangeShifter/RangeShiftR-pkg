@@ -40,11 +40,10 @@
 #'            OutIntRange = 1, OutIntOcc = 0,
 #'            OutIntPop = 1, OutIntInd = 0,
 #'            OutIntTraitCell = 0, OutIntTraitRow = 0,
-#'            OutIntConn = 0, OutIntPaths = 0, OutIntGenetic = 0,
-#'            OutGenType = 0, OutGenCrossTab = FALSE,
+#'            OutIntConn = 0, OutIntPaths = 0,
 #'            OutStartPop = 0, OutStartInd = 0,
 #'            OutStartTraitCell = 0, OutStartTraitRow = 0,
-#'            OutStartConn = 0, OutStartPaths = 0, OutStartGenetic = 0,
+#'            OutStartConn = 0, OutStartPaths = 0,
 # #'            SaveMaps = FALSE, MapsInterval, DrawLoadedSp = FALSE,,
 # #'            ReturnPopRaster = FALSE, CreatePopFile = TRUE
 #'            SMSHeatMap = FALSE)
@@ -90,8 +89,8 @@
 #' @param ac Required if \code{EnvStoch} \ifelse{html}{\out{&ne; 0}}{\eqn{> 0}}: temporal autocorrelation coefficient. Must be \eqn{\ge 0.0} and \eqn{<1.0}.
 #' @param minR,maxR Required if \code{EnvStochType}\eqn{=0}: minimum and maximum growth rates.
 #' @param minK,maxK Required if \code{EnvStochType}\eqn{=1}: minimum and maximum value of \eqn{K} or \eqn{1/b}, respectively.
-#' @param OutIntRange,OutIntOcc,OutIntPop,OutIntInd,OutIntGenetic,OutIntTraitCell,OutIntTraitRow,OutIntConn,OutIntPaths Control the various types
-#' of Output files, i.e. range, occupancy, populations, individuals, traits (by cell or by row), connectivity, SMS paths and genetics:\cr
+#' @param OutIntRange,OutIntOcc,OutIntPop,OutIntInd,OutIntTraitCell,OutIntTraitRow,OutIntConn,OutIntPaths Control the various types
+#' of Output files, i.e. range, occupancy, populations, individuals, traits (by cell or by row), connectivity and SMS paths:\cr
 #'  \eqn{=0 }: Output disabled.\cr
 #'  \eqn{>0 }: Output enabled; sets interval (in years) in which output is generated.\cr
 #' If the output is enabled, start values are required. By default, only the output of Range and Population are enabled.\cr
@@ -99,13 +98,12 @@
 #' Traits output is only applicable for a cell-based model with inter-individual variability.
 #' Connectivity output is only applicable for a patch-based model.
 #' SMS paths is only applicable for a model with SMS transfer method.
-#' @param OutStartPop,OutStartInd,OutStartGenetic,OutStartTraitCell,OutStartTraitRow,OutStartConn,OutStartPaths
+#'
+#' Please note that with RangeShiftR version 2.0, the output of genetic data is no longer controlled within this function.
+#' Instead, genetic data output is controlled within the \code{\link[RangeShiftR]{Genetics}}.
+#'
+#' @param OutStartPop,OutStartInd,OutStartTraitCell,OutStartTraitRow,OutStartConn,OutStartPaths
 #' Starting years for output generation. Note that the first year is year \eqn{0}. Defaults to \eqn{0} for all output types. (integer)
-#' @param OutGenType Required if \code{OutIntGenetic}\eqn{>0}: Genetics output will be generated for:\cr
-#' \eqn{0} = juveniles only (default), \eqn{1} =  all individuals, \eqn{2} = adults only.
-#' @param OutGenCrossTab Required if \code{OutIntGenetic}\eqn{>0}:\cr
-#' If \code{FALSE} (default), Genetics output will be written to several files.
-#' \cr If \code{TRUE} Genetics output is generated as a cross table.
 # #' @param SaveMaps If \code{FALSE} (default), no maps will be created.\cr If \code{TRUE}, maps will be generated.
 # #' beginning in the first year in accordance to \code{MapsInterval}.
 # #' @param MapsInterval Required if \code{SaveMaps=TRUE}: save maps every \eqn{n} reproductive seasons. (integer)
@@ -237,16 +235,8 @@
 #' (in case of overlapping generations), Stage (in case of stage structure), Emigration traits, Transfer traits (depending on
 #' transfer method).
 #'
-#' - \emph{Genetics} (\code{Sim0_Rep0_Genetics.txt}) \cr
-#' lists the full genome of each individual selected for output (i.e. all individuals if the population is not structured) during the reporting year
-#' (or present in the initial population at year \eqn{0}) for the current replicate. This file can therefore be \emph{extremely large}, and should be
-#' produced only for temporally short simulations, small populations or at infrequent reporting time intervals. It comprises:\cr
-#'     - Replicate number (Rep), Year, Species ID (always \eqn{0}), Individual ID (IndID), \cr
-#' and then \emph{either} one or more lines listing:
-#'     - Chromosome number (starting from 0), Locus on this chromosome (starting from 0), value of the only allele at the locus for a
-#'     haploid species (Allele0) or the values of both alleles at the locus for a diploid species (Allele0,Allele1) \cr
-#' \emph{or} a single line of:
-#'     - a set of columns having compound headings of the form \code{Chr0Loc0Allele0} derived from each chromosome, locus and allele (as above).
+#' - \emph{Genetics} \cr
+#' From RangeShiftR 2.0, the output of the genetic data is controlled within \code{\link[RangeShiftR]{Genetics}}. You can find a detailed describtion of available oputput files there.
 #'
 #' - \emph{Traits} \cr
 #' In the case of inter-individual variability and evolution of the dispersal traits, it is possible to output the mean traits of
@@ -335,16 +325,12 @@ Simulation <- setClass("SimulationParams", slots = c(Simulation = "integer_OR_nu
                                                  OutIntOcc = "integer_OR_numeric",
                                                  OutIntPop = "integer_OR_numeric",
                                                  OutIntInd = "integer_OR_numeric",
-                                                 OutIntGenetic = "integer_OR_numeric",
-                                                 OutGenType = "integer_OR_numeric",  #Output genetics for: 0 = juveniles only, 1 =  all individuals, 2 = adults only
-                                                 OutGenCrossTab = "logical",
                                                  OutIntTraitCell = "integer_OR_numeric",
                                                  OutIntTraitRow = "integer_OR_numeric",
                                                  OutIntConn = "integer_OR_numeric",
                                                  OutIntPaths = "integer_OR_numeric",
                                                  OutStartPop = "integer_OR_numeric",
                                                  OutStartInd = "integer_OR_numeric",
-                                                 OutStartGenetic = "integer_OR_numeric",
                                                  OutStartTraitCell = "integer_OR_numeric",
                                                  OutStartTraitRow = "integer_OR_numeric",
                                                  OutStartConn = "integer_OR_numeric",
@@ -388,16 +374,12 @@ Simulation <- setClass("SimulationParams", slots = c(Simulation = "integer_OR_nu
                                           OutIntOcc = 0L,
                                           OutIntPop = 1L,
                                           OutIntInd = 0L,
-                                          OutIntGenetic = 0L,
-                                          OutGenType = 0L,
-                                          OutGenCrossTab = FALSE,
                                           OutIntTraitCell = 0L,
                                           OutIntTraitRow = 0L,
                                           OutIntConn = 0L,
                                           OutIntPaths = 0L,
                                           OutStartPop = 0L,
                                           OutStartInd = 0L,
-                                          OutStartGenetic = 0L,
                                           OutStartTraitCell = 0L,
                                           OutStartTraitRow = 0L,
                                           OutStartConn = 0L,
@@ -701,38 +683,7 @@ setValidity('SimulationParams', function(object){
             }
         }
     }
-    # Genetics
-    if (anyNA(object@OutIntGenetic) || length(object@OutIntGenetic)!=1 ){
-        msg <- c(msg, 'Output interval of genetics (OutIntGenetic) has to be set.')
-    }
-    else {
-        if (object@OutIntGenetic > 0){
-            if (anyNA(object@OutStartGenetic) || length(object@OutStartGenetic)!=1 ){
-                msg <- c(msg, 'Start year of genetics output (OutStartGenetic) has to be set.')
-            }
-            else{
-                if (object@OutStartGenetic < 0 || object@OutStartGenetic > object@Years){
-                    msg <- c(msg, 'Invalid value of output parameter OutStartGenetic: Value has to be positive and less than simulated Years')
-                }
-            }
-            if (anyNA(object@OutGenType) || length(object@OutGenType)!=1 ){
-                msg <- c(msg, 'Type of genetics output (OutGenType) has to be specified.')
-            }
-            else{
-                if (object@OutGenType != 0 && object@OutGenType != 1 && object@OutGenType != 2) {
-                    msg <- c(msg, 'OutGenType has to be 0 (juveniles only), 1 (all individuals) or 2 (adults only).')
-                }
-            }
-            if (anyNA(object@OutGenCrossTab) || length(object@OutGenCrossTab)!=1 ){
-                msg <- c(msg, 'OutGenCrossTab has to be set')
-            }
-        }
-        else {
-            if (object@OutIntGenetic){
-                msg <- c(msg, 'Output interval of genetics (OutIntGenetic) must be positive or zero.')
-            }
-        }
-    }
+
     # TraitCell
     if (anyNA(object@OutIntTraitCell) || length(object@OutIntTraitCell)!=1 ){
         msg <- c(msg, 'Output interval of traits per cell (OutIntTraitCell) has to be set.')
@@ -984,20 +935,7 @@ setMethod("initialize", "SimulationParams", function(.Object, ...) {
             warning(this_func, 'OutStartPaths', warn_msg_ignored, 'since OutIntPaths is zero (output disabled).', call. = FALSE)
         }
     }
-    if (!.Object@OutIntGenetic){
-        .Object@OutStartGenetic = 0L
-        if(!is.null(args$OutStartGenetic)){
-            warning(this_func, 'OutStartGenetic', warn_msg_ignored, 'since OutIntGenetic is zero (output disabled)', call. = FALSE)
-        }
-        .Object@OutGenType = 0L
-        if(!is.null(args$OutGenType)){
-            warning(this_func, 'OutGenType', warn_msg_ignored, 'since OutIntGenetic is zero (output disabled)', call. = FALSE)
-        }
-        .Object@OutGenCrossTab = FALSE
-        if(!is.null(args$OutGenCrossTab)){
-            warning(this_func, 'OutGenCrossTab', warn_msg_ignored, 'since OutIntGenetic is zero (output disabled)', call. = FALSE)
-        }
-    }
+
     if (!.Object@SaveMaps){
         .Object@MapsInterval = -9L
         if(!is.null(args$MapsInterval)){
@@ -1068,14 +1006,6 @@ setMethod("show", "SimulationParams", function(object) {
     }
     if (object@OutIntPaths) {
         cat("   SMS paths,  every", object@OutIntPaths, "years, starting year", object@OutStartPaths, "\n")
-    }
-    if (object@OutIntGenetic) {
-        cat("   Genetics")
-        if (object@OutGenCrossTab) cat(" cross table")
-        if (object@OutGenType==0) cat(" of juveniles")
-        if (object@OutGenType==1) cat(" of all individuals")
-        if (object@OutGenType==2) cat(" of adults")
-        cat(",    every", object@OutIntGenetic, "years, starting year", object@OutStartGenetic, "\n")
     }
     if (object@SMSHeatMap) {
         cat("   SMS heat map\n")

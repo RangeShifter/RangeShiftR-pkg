@@ -13,11 +13,10 @@ Simulation(Simulation = 1, Replicates = 2, Years = 50, Absorbing = FALSE,
            OutIntRange = 1, OutIntOcc = 0,
            OutIntPop = 1, OutIntInd = 0,
            OutIntTraitCell = 0, OutIntTraitRow = 0,
-           OutIntConn = 0, OutIntPaths = 0, OutIntGenetic = 0,
-           OutGenType = 0, OutGenCrossTab = FALSE,
+           OutIntConn = 0, OutIntPaths = 0,
            OutStartPop = 0, OutStartInd = 0,
            OutStartTraitCell = 0, OutStartTraitRow = 0,
-           OutStartConn = 0, OutStartPaths = 0, OutStartGenetic = 0,
+           OutStartConn = 0, OutStartPaths = 0,
            SMSHeatMap = FALSE)
 }
 \arguments{
@@ -84,24 +83,20 @@ Environmental stochasticity is always applied on a yearly basis.}
 
 \item{minK, maxK}{Required if \code{EnvStochType}\eqn{=1}: minimum and maximum value of \eqn{K} or \eqn{1/b}, respectively.}
 
-\item{OutIntRange, OutIntOcc, OutIntPop, OutIntInd, OutIntGenetic, OutIntTraitCell, OutIntTraitRow, OutIntConn, OutIntPaths}{Control the various types
-of Output files, i.e. range, occupancy, populations, individuals, traits (by cell or by row), connectivity, SMS paths and genetics:\cr
+\item{OutIntRange, OutIntOcc, OutIntPop, OutIntInd, OutIntTraitCell, OutIntTraitRow, OutIntConn, OutIntPaths}{Control the various types
+of Output files, i.e. range, occupancy, populations, individuals, traits (by cell or by row), connectivity and SMS paths:\cr
  \eqn{=0 }: Output disabled.\cr
  \eqn{>0 }: Output enabled; sets interval (in years) in which output is generated.\cr
 If the output is enabled, start values are required. By default, only the output of Range and Population are enabled.\cr
 Occupancy output is only applicable if \code{Replicates>1}.
 Traits output is only applicable for a cell-based model with inter-individual variability.
 Connectivity output is only applicable for a patch-based model.
-SMS paths is only applicable for a model with SMS transfer method.}
+SMS paths is only applicable for a model with SMS transfer method.
 
-\item{OutStartPop, OutStartInd, OutStartGenetic, OutStartTraitCell, OutStartTraitRow, OutStartConn, OutStartPaths}{Starting years for output generation. Note that the first year is year \eqn{0}. Defaults to \eqn{0} for all output types. (integer)}
+Please note that with RangeShiftR version 2.0, the output of genetic data is no longer controlled within this function.
+Instead, genetic data output is controlled within the \code{\link[RangeShiftR]{Genetics}}.}
 
-\item{OutGenType}{Required if \code{OutIntGenetic}\eqn{>0}: Genetics output will be generated for:\cr
-\eqn{0} = juveniles only (default), \eqn{1} =  all individuals, \eqn{2} = adults only.}
-
-\item{OutGenCrossTab}{Required if \code{OutIntGenetic}\eqn{>0}:\cr
-If \code{FALSE} (default), Genetics output will be written to several files.
-\cr If \code{TRUE} Genetics output is generated as a cross table.}
+\item{OutStartPop, OutStartInd, OutStartTraitCell, OutStartTraitRow, OutStartConn, OutStartPaths}{Starting years for output generation. Note that the first year is year \eqn{0}. Defaults to \eqn{0} for all output types. (integer)}
 
 \item{SMSHeatMap}{Produce SMS heat map raster as output? Defaults to \code{FALSE}.}
 }
@@ -234,16 +229,8 @@ Individual ID (IndID), the individual’s Status (Status), Natal cell (Natal_X a
 (in case of overlapping generations), Stage (in case of stage structure), Emigration traits, Transfer traits (depending on
 transfer method).
 
-- \emph{Genetics} (\code{Sim0_Rep0_Genetics.txt}) \cr
-lists the full genome of each individual selected for output (i.e. all individuals if the population is not structured) during the reporting year
-(or present in the initial population at year \eqn{0}) for the current replicate. This file can therefore be \emph{extremely large}, and should be
-produced only for temporally short simulations, small populations or at infrequent reporting time intervals. It comprises:\cr
-    - Replicate number (Rep), Year, Species ID (always \eqn{0}), Individual ID (IndID), \cr
-and then \emph{either} one or more lines listing:
-    - Chromosome number (starting from 0), Locus on this chromosome (starting from 0), value of the only allele at the locus for a
-    haploid species (Allele0) or the values of both alleles at the locus for a diploid species (Allele0,Allele1) \cr
-\emph{or} a single line of:
-    - a set of columns having compound headings of the form \code{Chr0Loc0Allele0} derived from each chromosome, locus and allele (as above).
+- \emph{Genetics} \cr
+From RangeShiftR 2.0, the output of the genetic data is controlled within \code{\link[RangeShiftR]{Genetics}}. You can find a detailed describtion of available oputput files there.
 
 - \emph{Traits} \cr
 In the case of inter-individual variability and evolution of the dispersal traits, it is possible to output the mean traits of
