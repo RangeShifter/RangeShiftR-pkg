@@ -375,14 +375,14 @@ float GeneticFitnessTrait::express() {
 			shared_ptr<Allele> pAlleleB = pAllelePair[1] == 0 ? wildType : pAllelePair[1];
 			sB = pAlleleB->getAlleleValue();
 			hB = pAlleleB->getDominanceCoef();
+
+			sumDomCoeffs = hA + hB;
+			hLocus = sumDomCoeffs == 0.0 ? 0.5 : hA / sumDomCoeffs;
+			phenotype *= 1 - hLocus * sA - (1 - hLocus) * sB;
 		}
 		else {
-			sB = 0.0;
-			hB = 0.0;
+			phenotype *= 1 - sA;
 		}
-		sumDomCoeffs = hA + hB;
-		hLocus = sumDomCoeffs == 0.0 ? 0.0 : hA / sumDomCoeffs;
-		phenotype *= 1 - hLocus * sA - (1 - hLocus) * sB;
 	}
 	return phenotype;
 }
