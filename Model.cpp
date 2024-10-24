@@ -786,6 +786,8 @@ void OutParameters(Landscape* pLandscape)
 	outPar << "BATCH MODE \t";
 	if (sim.batchMode) outPar << "yes" << endl; 
 	else outPar << "no" << endl;
+#if RS_RCPP
+	outPar << "SEED \t" << RS_random_seed << endl;
 #else
 	outPar << "SEED \t" << pRandom->getSeed() << endl;
 #endif
