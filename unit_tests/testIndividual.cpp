@@ -1,4 +1,4 @@
-#if RSDEBUG
+#ifndef NDEBUG
 
 #include "../Individual.h"
 #include "../Population.h"
@@ -662,8 +662,8 @@ void testGenetics() {
 }
 
 bool haveSameEmigD0Allele(const Individual& indA, const Individual& indB, const int& position, short whichHaplo = 0) {
-	return indA.getTrait(E_D0)->getAlleleIDAtLocus(whichHaplo, position)
-		== indB.getTrait(E_D0)->getAlleleIDAtLocus(whichHaplo, position);
+	return indA.getTrait(E_D0)->getAlleleValueAtLocus(whichHaplo, position)
+		== indB.getTrait(E_D0)->getAlleleValueAtLocus(whichHaplo, position);
 }
 
 void testIndividual() {
@@ -678,7 +678,7 @@ void testIndividual() {
 
 	// Genetic linkage + Chromosome breaks
 		// Considering diallelic genes A, B, C, D with:
-		// A, B, C sit on chr.1, D sits on chr.2
+		// A, B, C are on chr.1, D is on chr.2
 		// A, B are adjacent, C sits on the other end of chr.1
 		// C, D have adjacent positions in genome (but are on separate chr.)
 		// AB------------C//D
@@ -693,7 +693,7 @@ void testIndividual() {
 		const float recombinationRate = 0.01;
 		const int genomeSz = 10;
 
-		Species* pSpecies = new Species();
+		Species* pSpecies = createDefaultSpecies();
 		pSpecies->setGeneticParameters(
 			set<int>{genomeSz-2, genomeSz - 1}, // two chromosomes
 			genomeSz,
@@ -750,7 +750,7 @@ void testIndividual() {
 
 		// Species-level paramters
 		const int genomeSz = 6;
-		Species* pSpecies = new Species();
+		Species* pSpecies = createDefaultSpecies();
 		pSpecies->setGeneticParameters(
 			set<int>{genomeSz - 1}, // one chromosome
 			genomeSz,
@@ -842,7 +842,7 @@ void testIndividual() {
 
 		// Species-level paramters
 		const int genomeSz = 1;
-		Species* pSpecies = new Species();
+		Species* pSpecies = createDefaultSpecies();
 		pSpecies->setGeneticParameters(
 			set<int>{genomeSz - 1}, // one chromosome
 			genomeSz,
@@ -912,7 +912,7 @@ void testIndividual() {
 
 		// Species-level paramters
 		const int genomeSz = 1;
-		Species* pSpecies = new Species();
+		Species* pSpecies = createDefaultSpecies();
 		pSpecies->setGeneticParameters(
 			set<int>{genomeSz - 1}, // one chromosome
 			genomeSz,
@@ -965,7 +965,7 @@ void testIndividual() {
 
 		// Species-level paramters
 		const int genomeSz = 1;
-		Species* pSpecies = new Species();
+		Species* pSpecies = createDefaultSpecies();
 		pSpecies->setGeneticParameters(
 			set<int>{genomeSz - 1}, // one chromosome
 			genomeSz,
@@ -1027,7 +1027,7 @@ void testIndividual() {
 			Cell* pCell = new Cell(0, 0, (intptr)pPatch, 0);
 
 			// Genome-level settings
-			Species* pSpecies = new Species();
+			Species* pSpecies = createDefaultSpecies();
 			pSpecies->setGeneticParameters(
 				set<int>{genomeSz - 1}, // one chromosome
 				genomeSz,
@@ -1149,7 +1149,7 @@ void testIndividual() {
 			Cell* pCell = new Cell(0, 0, (intptr)pPatch, 0);
 
 			// Genome-level settings
-			Species* pSpecies = new Species();
+			Species* pSpecies = createDefaultSpecies();
 			pSpecies->setGeneticParameters(
 				set<int>{genomeSz - 1}, // one chromosome
 				genomeSz,
@@ -1231,7 +1231,7 @@ void testIndividual() {
 			Cell* pCell = new Cell(0, 0, (intptr)pPatch, 0);
 
 			// Genome-level settings
-			Species* pSpecies = new Species();
+			Species* pSpecies = createDefaultSpecies();
 			pSpecies->setGeneticParameters(
 				set<int>{genomeSz - 1}, // one chromosome
 				genomeSz,
@@ -1338,4 +1338,4 @@ void testIndividual() {
 	
 }
 
-#endif //RSDEBUG
+#endif //NDEBUG

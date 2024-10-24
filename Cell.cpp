@@ -182,7 +182,9 @@ unsigned long int Cell::getVisits(void) { return visits; }
 // Initial species distribution cell functions
 
 DistCell::DistCell(int xx,int yy) {
-	x = xx; y = yy; initialise = false;
+	x = xx; 
+	y = yy; 
+	initialise = false;
 }
 
 DistCell::~DistCell() {
@@ -201,7 +203,10 @@ bool DistCell::toInitialise(locn loc) {
 bool DistCell::selected(void) { return initialise; }
 
 locn DistCell::getLocn(void) {
-locn loc; loc.x = x; loc.y = y; return loc;
+	locn loc; 
+	loc.x = x; 
+	loc.y = y; 
+	return loc;
 }
 
 //---------------------------------------------------------------------------

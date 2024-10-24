@@ -48,14 +48,9 @@ Last updated: 25 June 2021 by Steve Palmer
 #ifndef ParametersH
 #define ParametersH
 
-//#if LINUX_CLUSTER
-//#include <string.h>
-//#else
 #include <string>
-//#endif
 #include <fstream>
 #include <iostream>
-//#include <io.h>
 #include <iomanip>
 #include <stdlib.h>
 #include <vector>
@@ -74,11 +69,7 @@ constexpr int gMaxNbSexes = 2;			// maximum number of sexes permitted
 #if RS_RCPP
 typedef intptr_t intptr;
 #else
-#if RSWIN64
 typedef unsigned long long intptr;
-#else
-typedef unsigned int intptr;
-#endif
 #endif // RS_RCPP
 
 #if RS_RCPP
@@ -342,7 +333,7 @@ struct simView {
 class paramSim {
 
 public:
-	paramSim(void);
+	paramSim(const string& pathToProjDir = "");
 	~paramSim(void);
 	void setSim(simParams);
 	void setGeneticSim(string patchSamplingOption, bool outputGeneticValues, bool outputWeirCockerham, bool outputWeirHill, int outputStartGenetics, int outputGeneticInterval);
@@ -350,8 +341,11 @@ public:
 	int getSimNum(void);
 	void setViews(simView);
 	simView getViews(void);
-	void setDir(string);
 	string getDir(int);
+	void setBatchNum(const int& batchNb) {
+		batchNum = batchNb;
+		batchMode = true;
+	}
 #if RS_RCPP
 	bool getReturnPopRaster(void);
 	bool getCreatePopFile(void);
@@ -414,11 +408,6 @@ private:
 	int outputStartGenetics;
 	int outputGeneticInterval;
 };
-
-//---------------------------------------------------------------------------
-#if RSDEBUG
-extern ofstream DEBUGLOG;
-#endif
 
 extern RSrandom* pRandom;
 

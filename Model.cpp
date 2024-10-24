@@ -42,7 +42,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 	envStochParams env = paramsStoch->getStoch();
 	demogrParams dem = pSpecies->getDemogrParams();
 	stageParams sstruct = pSpecies->getStageParams();
-	//emigRules emig = pSpecies->getEmig();
 	transferRules trfr = pSpecies->getTransferRules();
 	managementParams manage = pManagement->getManagementParams();
 	translocationParams transloc = pManagement->getTranslocationParams();
@@ -127,15 +126,8 @@ int RunModel(Landscape* pLandscape, int seqsim)
 			int npatches = pLandscape->patchCount();
 			for (int i = 0; i < npatches; i++) {
 				ppp = pLandscape->getPatchData(i);
-#if RSWIN64
-#if LINUX_CLUSTER
 				pComm->addSubComm(ppp.pPatch, ppp.patchNum); // SET UP ALL SUB-COMMUNITIES
-#else
-				SubCommunity* pSubComm = pComm->addSubComm(ppp.pPatch, ppp.patchNum); // SET UP ALL SUB-COMMUNITIES
-#endif
-#else
 				pComm->addSubComm(ppp.pPatch, ppp.patchNum); // SET UP ALL SUB-COMMUNITIES
-#endif
 			}
 			if (sim.patchSamplingOption == "random") {
 				// Then patches must be resampled for new landscape
@@ -183,7 +175,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				if (!pLandscape->outConnectHeaders(0)) {
 					filesOK = false;
 				}
-			if (sim.outputWeirCockerham) { // open neutral genetics file
+			if (sim.outputWeirCockerham || sim.outputWeirHill) { // open neutral genetics file
 				if (!pComm->openNeutralOutputFile(pSpecies, ppLand.landNum)) {
 					filesOK = false;
 		}
@@ -205,7 +197,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				pComm->outTraitsRowsHeaders(pSpecies, -999);
 			if (sim.outConnect && ppLand.patchModel)
 				pLandscape->outConnectHeaders(-999);
-			if (sim.outputWeirCockerham) {
+			if (sim.outputWeirCockerham || sim.outputWeirHill) {
 				pComm->openNeutralOutputFile(pSpecies, -999);
 			}
 #if RS_RCPP && !R_CMD
@@ -248,8 +240,8 @@ int RunModel(Landscape* pLandscape, int seqsim)
 			pComm->outInds(rep, 0, 0, ppLand.landNum);
 
 		if (sim.outputGeneValues) {
-			if (!pComm->openOutGenesFile(pSpecies->isDiploid(), ppLand.landNum, rep))
-				throw logic_error("Output gene value file could not be initialised.");
+			bool geneOutFileHasOpened = pComm->openOutGenesFile(pSpecies->isDiploid(), ppLand.landNum, rep);
+			if (!geneOutFileHasOpened) throw logic_error("Output gene value file could not be initialised.");
 			}
 
 		// open a new genetics file for each replicate for per locus and pairwise stats
@@ -411,20 +403,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 
 			for (int gen = 0; gen < dem.repSeasons; gen++) // generation loop
 			{
-#if RSDEBUG
-				// TEMPORARY RANDOM STREAM CHECK
-				if (yr % 1 == 0)
-				{
-					DEBUGLOG << endl << "RunModel(): start of gen " << gen << " in year " << yr
-						<< " for rep " << rep << " (";
-					for (int i = 0; i < 5; i++) {
-						int rrrr = pRandom->IRandom(1000, 2000);
-						DEBUGLOG << " " << rrrr;
-					}
-					DEBUGLOG << " )" << endl;
-				}
-#endif
-
 				// TODO move translocation before dispersal?
 				if (manage.translocation && std::find(transloc.translocation_years.begin(), transloc.translocation_years.end(), yr) != transloc.translocation_years.end()) {
 				    pManagement->translocate(yr
@@ -525,7 +503,11 @@ int RunModel(Landscape* pLandscape, int seqsim)
 			} // end of the generation loop
 
 			totalInds = pComm->totalInds();
-			if (totalInds <= 0) { yr++; break; }
+			if (totalInds <= 0) { 
+				cout << "All populations went extinct." << endl;
+				yr++; 
+				break; 
+			}
 
 			// Connectivity Matrix
 			if (sim.outConnect && ppLand.patchModel
@@ -543,7 +525,12 @@ int RunModel(Landscape* pLandscape, int seqsim)
 					pComm->outInds(rep, yr, -1, -1); // list any individuals dying having reached maximum age
 				pComm->survival(1, 0, 1);						// delete any such individuals
 				totalInds = pComm->totalInds();
-				if (totalInds <= 0) { yr++; break; }
+				if (totalInds <= 0) { 
+					cout << "All populations went extinct." << endl;
+					yr++; 
+					break;
+
+			}
 			}
 
 		} // end of the years loop
@@ -696,44 +683,41 @@ bool is_directory(const char* pathname) {
 #endif
 
 //---------------------------------------------------------------------------
-bool CheckDirectory(void)
+bool CheckDirectory(const string& pathToProjDir)
 {
 	bool errorfolder = false;
 
 	string subfolder;
 
-	subfolder = paramsSim->getDir(0) + "Inputs";
+	subfolder = pathToProjDir + "Inputs";
 	const char* inputs = subfolder.c_str();
 	if (!is_directory(inputs)) errorfolder = true;
-	subfolder = paramsSim->getDir(0) + "Outputs";
+	subfolder = pathToProjDir + "Outputs";
 	const char* outputs = subfolder.c_str();
 	if (!is_directory(outputs)) errorfolder = true;
-	subfolder = paramsSim->getDir(0) + "Output_Maps";
+	subfolder = pathToProjDir + "Output_Maps";
 	const char* outputmaps = subfolder.c_str();
 	if (!is_directory(outputmaps)) errorfolder = true;
 
-	return errorfolder;
+	if (errorfolder) {
+		cout << endl << "***** Invalid working directory: " << pathToProjDir
+			<< endl << endl;
+		cout << "***** Working directory must contain Inputs, Outputs and Output_Maps folders"
+			<< endl << endl;
+		cout << "*****" << endl;
+		cout << "***** Simulation ABORTED" << endl;
+		cout << "*****" << endl;
+		return false;
+}
+	else return true;
 }
 
 //---------------------------------------------------------------------------
 //For outputs and population visualisations pre-reproduction
 void PreReproductionOutput(Landscape* pLand, Community* pComm, int rep, int yr, int gen)
 {
-#if RSDEBUG
-	landParams ppLand = pLand->getLandParams();
-#endif
 	simParams sim = paramsSim->getSim();
 	simView v = paramsSim->getViews();
-
-#if RSDEBUG
-	DEBUGLOG << "PreReproductionOutput(): 11111 rep=" << rep << " yr=" << yr << " gen=" << gen
-		<< " landNum=" << ppLand.landNum << " maxX=" << ppLand.maxX << " maxY=" << ppLand.maxY
-		<< endl;
-	DEBUGLOG << "PreReproductionOutput(): 11112 outRange=" << sim.outRange
-		<< " outIntRange=" << sim.outIntRange
-		<< " outPop=" << sim.outPop << " outIntPop=" << sim.outIntPop
-		<< endl;
-#endif
 
 	// trait outputs and visualisation
 	if (v.viewTraits
@@ -792,13 +776,6 @@ void OutParameters(Landscape* pLandscape)
 
 	outPar << "RangeShifter 2.0 ";
 
-#if !RS_RCPP
-#if RSWIN64
-	outPar << " - 64 bit implementation";
-#else
-	outPar << " - 32 bit implementation";
-#endif
-#endif
 	outPar << endl;
 
 	outPar << "================ ";
@@ -807,9 +784,10 @@ void OutParameters(Landscape* pLandscape)
 	outPar << endl << endl;
 
 	outPar << "BATCH MODE \t";
-	if (sim.batchMode) outPar << "yes" << endl; else outPar << "no" << endl;
-#if RS_RCPP
-	outPar << "SEED \t" << RS_random_seed << endl;
+	if (sim.batchMode) outPar << "yes" << endl; 
+	else outPar << "no" << endl;
+#else
+	outPar << "SEED \t" << pRandom->getSeed() << endl;
 #endif
 	outPar << "REPLICATES \t" << sim.reps << endl;
 	outPar << "YEARS \t" << sim.years << endl;
@@ -866,17 +844,6 @@ void OutParameters(Landscape* pLandscape)
 		}
 #else
 		if (sim.batchMode) outPar << " (see batch file) " << landFile << endl;
-		else {
-			outPar << habmapname << endl;
-			if (ppLand.rasterType == 1) { // habitat % cover - list additional layers
-				for (int i = 0; i < ppLand.nHab - 1; i++) {
-					outPar << "           " << hfnames[i] << endl;
-				}
-			}
-			if (ppLand.patchModel) {
-				outPar << "PATCH FILE: " << patchmapname << endl;
-			}
-		}
 #endif
 		outPar << "No. HABITATS:\t" << ppLand.nHab << endl;
 	}
@@ -898,8 +865,6 @@ void OutParameters(Landscape* pLandscape)
 			if (chg.costfile != "none" && chg.costfile != "NULL") {
 				outPar << "Costs    : " << chg.costfile << endl;
 			}
-			//		outPar << "Change no. " << chg.chgnum << " in year " << chg.chgyear
-			//			<< " habitat map: " << chg.habfile << endl;
 		}
 	}
 	outPar << endl << "SPECIES DISTRIBUTION LOADED: \t";
@@ -910,9 +875,6 @@ void OutParameters(Landscape* pLandscape)
 		outPar << "FILE NAME: ";
 #if !RS_RCPP
 		if (sim.batchMode) outPar << " (see batch file) " << landFile << endl;
-		else {
-			outPar << distnmapname << endl;
-		}
 #else
 		outPar << name_sp_dist << endl;
 #endif
@@ -1288,9 +1250,6 @@ void OutParameters(Landscape* pLandscape)
 			straightenPath = move.straightenPath;
 			if (trfr.costMap) {
 				outPar << "SMS\tcosts from imported cost map" << endl;
-#if !RS_RCPP
-				outPar << "FILE NAME: " << costmapname << endl;
-#endif
 			}
 			else {
 				outPar << "SMS\tcosts:" << endl;

@@ -113,12 +113,9 @@ void NeutralStatsManager::calcAllelicDiversityMetrics(set<int> const& patchList,
 	double meanAllelicDivInPatch = 0;
 	bool alleleExistsInPop = 0;
 
-	bool** alleleExistsInCommTable;
-	alleleExistsInCommTable = new bool* [nLoci];
+	vector<vector<bool>> alleleExistsInCommTable(nLoci);
 	for (i = 0; i < nLoci; ++i) {
-		alleleExistsInCommTable[i] = new bool[nAlleles];
-		for (j = 0; j < nAlleles; ++j)
-			alleleExistsInCommTable[i][j] = 0;
+		alleleExistsInCommTable[i] = vector<bool>(nAlleles, false);
 	}
 
 	// Compute mean nb alleles per locus per patch
@@ -133,7 +130,7 @@ void NeutralStatsManager::calcAllelicDiversityMetrics(set<int> const& patchList,
 					for (j = 0; j < nAlleles; ++j) {
 						alleleExistsInPop = pPop->getAlleleTally(i, j) != 0;
 						nbAllelesInPatch += alleleExistsInPop;
-						alleleExistsInCommTable[i][j] |= alleleExistsInPop; // OR operator
+						alleleExistsInCommTable[i][j] = alleleExistsInCommTable[i][j] || alleleExistsInPop;
 					}
 				// add mean nb of alleles per locus for Patch k to the pop mean
 				meanAllelicDivInPatch += static_cast<double>(nbAllelesInPatch) / nLoci;
@@ -148,11 +145,7 @@ void NeutralStatsManager::calcAllelicDiversityMetrics(set<int> const& patchList,
 		for (j = 0; j < nAlleles; ++j)
 			meanNbAllelesPerLocus += alleleExistsInCommTable[i][j];
 	meanNbAllelesPerLocus /= nLoci;
-	// Clear table 
-	for (i = 0; i < nLoci; ++i)
-		delete[] alleleExistsInCommTable[i];
-	delete[] alleleExistsInCommTable;
-
+	
 	// Compute number of fixed loci per patch
 	// mean number of loci that are fixed at pop level per pop
 	meanNbFixedLociPerPatch = 0;
@@ -405,13 +398,14 @@ void NeutralStatsManager::calcPairwiseWeightedFst(set<int> const& patchList, con
 	//init
 	vector<double> popWeights(nPatches);
 	vector<double> popSizes(nPatches);
-	double** numeratorPairwiseFst = new double* [nPatches];
-	for (int i = 0; i < nPatches; i++) numeratorPairwiseFst[i] = new double[nPatches];
+	vector<vector<double>> numeratorPairwiseFst(nPatches);
+	for (int i = 0; i < nPatches; i++) numeratorPairwiseFst[i].resize(nPatches);
 	double totSize;
 	double numeratorWeightedFst = 0;
 	double denominator = 0;
 	double sumWeights = 0;
 
+	totalNbSampledInds = nInds;
 	totSize = nInds;
 
 	// Calculate weight (n_ic) terms
@@ -430,6 +424,8 @@ void NeutralStatsManager::calcPairwiseWeightedFst(set<int> const& patchList, con
 			numeratorPairwiseFst[i][j] = 0;
 	}
 
+	nbExtantPops = nbPops;
+
 	if (nbPops > 1) {
 		// Calculate Fst numerators and denominators
 		double p, pq, pBar, sqDist, num;
@@ -445,8 +441,9 @@ void NeutralStatsManager::calcPairwiseWeightedFst(set<int> const& patchList, con
 					pBar = commNeutralCountTables[l].getFrequency(u);
 					sqDist = p - pBar; //(p_liu - pbar_u)^2 
 					sqDist *= sqDist;
-
-					num = pq * popSizes[i] / (popSizes[i] - 1); // eq. 8 Weir & Hill 2002
+					
+					num = pq * popSizes[i] ; // eq. 8 Weir & Hill 2002
+					num /= popSizes[i] == 1 ? 1 : popSizes[i] - 1; // avoid division by zero
 					numeratorPairwiseFst[i][i] += num;
 					numeratorWeightedFst += num * popSizes[i]; // see equ. 9, Weir & Hill 2002
 					denominator += popSizes[i] * sqDist + popWeights[i] * pq; //common denominator
@@ -502,15 +499,11 @@ void NeutralStatsManager::calcPairwiseWeightedFst(set<int> const& patchList, con
 
 		// Estimator of global Fst weighted by sample sizes (beta_W in eq. 9 in WH 2002)
 		if (denominator != 0) {
-			weightedFst = 1 - (numeratorWeightedFst * sumWeights) / (denominator * totSize); // beta_w in Eq. 9 in WH 2002
+   			weightedFst = 1 - (numeratorWeightedFst * sumWeights) / (denominator * totSize); // beta_w in Eq. 9 in WH 2002
 		}
 		else {
 			weightedFst = 0.0;
 		}
-
-		// Deallocate pairwise Fst matrix
-		for (int i = 0; i < nPatches; i++) delete[] numeratorPairwiseFst[i];
-		delete[] numeratorPairwiseFst;
 	}
 	else { // zero or one pop, cannot calculate Fst
 		// pairwiseFstMatrix keeps default values (0)

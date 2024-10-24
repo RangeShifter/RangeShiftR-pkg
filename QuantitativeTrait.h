@@ -22,13 +22,8 @@ public:
     virtual bool isInherited() const = 0;
     virtual float getAlleleValueAtLocus(short chromosome, int i) const = 0;
     virtual float getDomCoefAtLocus(short whichChromosome, int position) const = 0;
-    virtual int countHeterozygoteLoci() const = 0;
-    virtual bool isHeterozygoteAtLocus(int loci) const = 0;
     virtual float express() = 0;
     virtual ~QuantitativeTrait() { }
-#if RSDEBUG // for testing only
-	virtual int getAlleleIDAtLocus(short whichChromosome, int position) const = 0;
-#endif
 };
 
 extern RSrandom* pRandom;

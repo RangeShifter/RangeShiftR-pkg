@@ -411,11 +411,6 @@ void Community::dispersal(short landIx, short nextseason)
 void Community::dispersal(short landIx)
 #endif // RS_RCPP
 {
-#if RSDEBUG
-	time_t t0, t1, t2;
-	t0 = time(0);
-#endif
-
 	simParams sim = paramsSim->getSim();
 
 	int nsubcomms = (int)subComms.size();
@@ -424,11 +419,6 @@ void Community::dispersal(short landIx)
 	for (int i = 0; i < nsubcomms; i++) { // all populations
 		subComms[i]->initiateDispersal(matrix);
 	}
-#if RSDEBUG
-	t1 = time(0);
-	DEBUGLOG << "Community::dispersal(): this=" << this
-		<< " nsubcomms=" << nsubcomms << " initiation time=" << t1 - t0 << endl;
-#endif
 
 	// dispersal is undertaken by all individuals now in the matrix patch
 	// (even if not physically in the matrix)
@@ -444,13 +434,6 @@ void Community::dispersal(short landIx)
 #endif // SEASONAL || RS_RCPP
 		matrix->completeDispersal(pLandscape, sim.outConnect);
 	} while (ndispersers > 0);
-
-#if RSDEBUG
-	DEBUGLOG << "Community::dispersal(): matrix=" << matrix << endl;
-	t2 = time(0);
-	DEBUGLOG << "Community::dispersal(): transfer time=" << t2 - t1 << endl;
-#endif
-
 }
 
 void Community::survival(short part, short option0, short option1)
@@ -508,17 +491,12 @@ void Community::createOccupancy(int nrows, int reps) {
 
 void Community::updateOccupancy(int row, int rep)
 {
-#if RSDEBUG
-	DEBUGLOG << "Community::updateOccupancy(): row=" << row << endl;
-#endif
 	int nsubcomms = (int)subComms.size();
 	for (int i = 0; i < nsubcomms; i++) {
 		subComms[i]->updateOccupancy(row);
 	}
-
 	commStats s = getStats();
 	occSuit[row][rep] = (float)s.occupied / (float)s.suitable;
-
 }
 
 void Community::deleteOccupancy(int nrows) {
@@ -630,12 +608,6 @@ bool Community::outRangeHeaders(Species* pSpecies, int landNr)
 	transferRules trfr = pSpecies->getTransferRules();
 	settleType sett = pSpecies->getSettle();
 
-#if RSDEBUG
-	DEBUGLOG << "Community::outRangeHeaders(): simulation=" << sim.simulation
-		<< " sim.batchMode=" << sim.batchMode
-		<< " landNr=" << landNr << endl;
-#endif
-
 	if (sim.batchMode) {
 		name = paramsSim->getDir(2)
 			+ "Batch" + to_string(sim.batchNum) + "_"
@@ -719,22 +691,12 @@ bool Community::outRangeHeaders(Species* pSpecies, int landNr)
 		}
 	}
 	outrange << endl;
-
-#if RSDEBUG
-	DEBUGLOG << "Community::outRangeHeaders(): finished" << endl;
-#endif
-
 	return outrange.is_open();
 }
 
 // Write record to range file
 void Community::outRange(Species* pSpecies, int rep, int yr, int gen)
 {
-#if RSDEBUG
-	DEBUGLOG << "Community::outRange(): rep=" << rep
-		<< " yr=" << yr << " gen=" << gen << endl;
-#endif
-
 	landParams ppLand = pLandscape->getLandParams();
 	envStochParams env = paramsStoch->getStoch();
 
@@ -1525,8 +1487,10 @@ Rcpp::IntegerMatrix Community::addYearToPopList(int rep, int yr) {  // TODO: def
 bool Community::openOutGenesFile(const bool& isDiploid, const int landNr, const int rep)
 {
 	if (landNr == -999) { // close the file
-		if (ofsGenes.is_open()) ofsGenes.close();
-		ofsGenes.clear();
+		if (ofsGenes.is_open()) {
+			ofsGenes.close();
+			ofsGenes.clear();
+		}
 		return true;
 	}
 	string name;
@@ -1547,14 +1511,11 @@ bool Community::openOutGenesFile(const bool& isDiploid, const int landNr, const 
 	}
 
 	ofsGenes.open(name.c_str());
-	ofsGenes << "Year\tGeneration\tIndID\ttraitType\tlocusPosition";
-	if (isDiploid) {
-		ofsGenes << "\talleleValueA\tdomCoefA\talleleValueBA\tdomCoefB";
-	}
-	else {
-		ofsGenes << "\talleleValueA\tdomCoefA";
-	}
+	ofsGenes << "Year\tGeneration\tIndID\ttraitType\tlocusPosition"
+			 << "\talleleValueA\tdomCoefA";
+	if (isDiploid) ofsGenes << "\talleleValueB\tdomCoefB";
 	ofsGenes << endl;
+
 	return ofsGenes.is_open();
 }
 
@@ -1636,7 +1597,15 @@ bool Community::openNeutralOutputFile(Species* pSpecies, int landNr)
 
 bool Community::openPerLocusFstFile(Species* pSpecies, Landscape* pLandscape, const int landNr, const int rep)
 {
-	const set<int> patchList = pSpecies->getSamplePatches();
+	set<int> patchList = pSpecies->getSamplePatches();
+	if (patchList.size() == 0) {
+		// list of patches is not known yet and may change every generation,
+		// e.g. for randomOccupied sampling option
+		// instead, header patch numbers range from 1 to nb of sampled patches
+		for (int i = 0; i < pSpecies->getNbPatchesToSample(); i++) {
+			patchList.emplace(i + 1);
+		}
+	}
 
 	if (landNr == -999) { // close the file
 		if (outperlocusfstat.is_open()) outperlocusfstat.close();
@@ -1660,7 +1629,7 @@ bool Community::openPerLocusFstFile(Species* pSpecies, Landscape* pLandscape, co
 	}
 
 	outperlocusfstat.open(name.c_str());
-	outperlocusfstat << "Year\tRepSeason\tlocus\tFst\tFis\tFit\tpopHet";
+	outperlocusfstat << "Year\tRepSeason\tLocus\tFst\tFis\tFit\tHet";
 	for (int patchId : patchList) {
 		outperlocusfstat << "\tpatch_" + to_string(patchId) + "_Het";
 	}
@@ -1821,7 +1790,7 @@ void Community::outNeutralGenetics(Species* pSpecies, int rep, int yr, int gen, 
 	const int maxNbNeutralAlleles = pSpecies->getSpTrait(NEUTRAL)->getNbNeutralAlleles();
 	const int nLoci = (int)pSpecies->getNPositionsForTrait(NEUTRAL);
 	const set<int> patchList = pSpecies->getSamplePatches();
-	int nInds = 0;
+	int nInds = 0, nbPops = 0;
 
 	for (int patchId : patchList) {
 		const auto patch = pLandscape->findPatch(patchId);
@@ -1831,6 +1800,7 @@ void Community::outNeutralGenetics(Species* pSpecies, int rep, int yr, int gen, 
 		const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
 		if (pPop != 0) { // empty patches do not contribute
 			nInds += pPop->sampleSize();
+			nbPops++;
 		}
 	}
 

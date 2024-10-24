@@ -233,8 +233,6 @@ public:
 
 	void inherit(Species* pSpecies, const Individual* mother); // haploid
 
-	Individual* traitClone(Cell*, Patch*, float, bool, short);
-
 	void setEmigTraits(Species* pSpecies, bool sexDep, bool densityDep);
 	void setTransferTraits(Species* pSpecies, transferRules trfr, int resol);
 
@@ -343,7 +341,7 @@ public:
 		const int		 	// year
 	);
 #endif
-#if RSDEBUG
+#ifndef NDEBUG
 	// Testing utilities
 	Cell* getCurrCell() const;
 	void setInitAngle(const float angle);
@@ -396,10 +394,6 @@ double cauchy(double location, double scale);
 double wrpcauchy(double location, double rho = exp(double(-1)));
 
 extern RSrandom* pRandom;
-
-#if RSDEBUG
-extern ofstream DEBUGLOG;
-#endif
 
 #if RS_RCPP
 extern ofstream outMovePaths;

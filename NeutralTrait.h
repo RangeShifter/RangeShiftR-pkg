@@ -51,11 +51,8 @@ public:
 		return 0.0;
 	}
 
-	virtual int countHeterozygoteLoci() const;
-	virtual bool isHeterozygoteAtLocus(int locus) const override;
-#if RSDEBUG // for testing only
-	int getAlleleIDAtLocus(short whichChromosome, int position) const;
-#endif
+	int countHeterozygoteLoci() const;
+	bool isHeterozygoteAtLocus(int locus) const;
 
 private:
 
@@ -66,7 +63,7 @@ private:
 	map<int, vector<unsigned char>> genes;
 
 	// Initialisation
-	void initialiseUniform(int max); //other option is that mutations map is empty until a mutation happens, default when empty is to return a 0 value for wildtype
+	void initialiseUniform(int max);
 
 	// Immutable features, set at initialisation
 	// and passed down to every subsequent trait copy
@@ -86,11 +83,11 @@ private:
 
 };
 
-#if RSDEBUG // for testing purposes only
+#ifndef NDEBUG // for testing purposes only
 map<int, vector<unsigned char>> createTestNeutralGenotype(
 	const int genomeSz, const bool isDiploid,
 	const unsigned char valAlleleA,
-	const unsigned char valAlleleB = -99.9 // if haploid
+	const unsigned char valAlleleB = char(0) // if haploid
 );
 #endif
 
