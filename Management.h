@@ -38,14 +38,9 @@
 #ifndef ManagementH
 #define ManagementH
 
-//#if LINUX_CLUSTER
-//#include <string.h>
-//#else
 #include <string>
-//#endif
 #include <fstream>
 #include <iostream>
-//#include <io.h>
 #include <iomanip>
 #include <stdlib.h>
 #include <vector>
@@ -66,12 +61,8 @@ using namespace std;
 #if RS_RCPP
 typedef intptr_t intptr;
 #else
-#if RSWIN64
 typedef unsigned long long intptr;
-#else
-typedef unsigned int intptr;
-#endif
-#endif
+#endif // RS_RCPP
 
 
 
