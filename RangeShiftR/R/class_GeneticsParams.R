@@ -157,78 +157,105 @@ setMethod("show", "NeutralTraitsParams", function(object){
 
 ### SUBCLASS GENETICLOADTRAITS
 
-#' Set genetic traits structure for genetic fitness
+#' Set genetic structure for genetic fitness traits
+#'
+#' @usage GeneticLoadTraits(NbGeneticLoads = 1, Positions = list("random"), NbOfPositions = 10,
+#' DominanceDistribution = "normal", DominanceParameters = matrix(c(0.5,0.1), nrow=1),
+#' MutationDistribution = "normal", MutationParameters = matrix(c(0.5,0.2), nrow=1),
+#' MutationRate = 0.0001, OutputValues = FALSE)
+#'
+#' @param NbGeneticLoads Number of genetic loads
+#' @param Positions Loci positions coding for that trait within genome. Should be provided as a list of strings (if random) and/or vectors of integers (if not random)
+#' @param NbOfPositions Only specify when the \code{Positions} of a genetic load trait are set to ‘random’, else must be blank (NULL)
+#' @param DominanceDistribution Distribution of dominance values. Can be \code{gamma}, \code{uniform}, \code{normal}, \code{negExp}, \code{scaled}. Should be provided as a vector of strings if \code{NbGeneticLoads} > 1
+#' @param DominanceParameters Parameters for the dominance distribution: You must provide two colums for \code{uniform}, \code{normal} and \code{gamma} distributions: min and max (uniform), mean and sd (normal) or shape and scale (gamma) or one column for \code{negExp}, \code{scaled}: mean
+#' If genetic loads have different \code{DominanceDistribution} and one require two columns you need to set the second value to NA in case of \code{negExp} or \code{scaled} distribution.
+#' Each row in the matrix corresponds to a genetic load trait.
+#' @param MutationDistribution Distribution for mutations to draw from. Can be \code{gamma}, \code{uniform}, \code{normal}, \code{negExp}. Should be provided as a vector of strings if \code{NbGeneticLoads} > 1
+#' @param MutationParameters Parameters for the mutation distribution: You must provide two colums for \code{uniform}, \code{normal} and \code{gamma} distributions: min and max (uniform), mean and sd (normal) or shape and scale (gamma) or one column for \code{negExp}: mean
+#' If genetic loads have different \code{DominanceDistribution} and one require two columns you need to set the second value to NA in case of \code{negExp} distribution.
+#' @param MutationRate Mutation rate applicable to this type of loci. Must be between 0.0 and 1.0. Should be provided as a vector if multiple genetic loads are specified.
+#' @param OutputValues If OutputGeneValues in GeneticsFile is enabled, should allele values for this gene be written to output? Ignored if OutputGeneValues is set to FALSE. Should be provided as a vector if multiple genetic loads are specified.
+#'
+#' The expression type of genetic load traits is always multiplicative.
 #'
 #' @return a parameter object of class "GeneticLoadParams"
 #' @author Jette Reeg
 #' @name GeneticLoadTraits
 #' @export GeneticLoadTraits
 GeneticLoadTraits<- setClass("GeneticLoadParams", slots = c(
-    NbGeneticLoads = "integer", # number of genetic loads
-    Positions = "character_OR_integer",# "random" or list of integer values
-    NbOfPositions = "character_OR_integer", # numeric, only of positions random
-    ExpressionType = "integer_OR_numeric",# "multiplicative"
+    NbGeneticLoads = "integer_OR_numeric", # number of genetic loads
+    Positions = "list",# "random" or list of integer values
+    NbOfPositions = "ANY", # numeric, only where positions are random; otherwise NA
     DominanceDistribution = "character", # ‘gamma’, ‘uniform’, ‘normal’, ‘negExp’, ‘scaled’
-    DominanceParameters = "character", # 2 values for min/max, mean/sd, shape/scale or one value: mean
+    DominanceParameters = "matrix", # 2 values for min/max, mean/sd, shape/scale or one value: mean
     MutationDistribution = "character", # ‘gamma’, ‘uniform’, ‘normal’,‘negExp’
-    MutationParameters = "character", #  2 values for min/max, mean/sd, shape/scale or one value: mean
+    MutationParameters = "matrix", #  2 values for min/max, mean/sd, shape/scale or one value: mean
     MutationRate = "numeric", # float
     OutputValues = "logical")
     , prototype = list(
         NbGeneticLoads = 1L,
-        Positions = NULL,
-        NbOfPositions = NULL,
-        ExpressionType = "multiplicative",
-        DominanceDistribution = NULL,
-        DominanceParameters = NULL,
-        MutationDistribution = NULL,
-        MutationParameters = NULL,
-        MutationRate = NULL,
+        Positions = list("random"),
+        NbOfPositions = 2L,
+        DominanceDistribution = "normal",
+        DominanceParameters = matrix(c(0.5,0.1), nrow=1),
+        MutationDistribution = "normal",
+        MutationParameters = matrix(c(0.5,0.2), nrow=1),
+        MutationRate = 0.001,
         OutputValues = FALSE
     ))
 setValidity("GeneticLoadParams", function(object) {
     msg <- NULL
-    patternPositions <-  "^\"?(([0-9]+-)?[0-9]+,)*([0-9]+-)?[0-9]+\"?$"
     # only 5 GeneticLoads are allowed
     if (object@NbGeneticLoads < 1 || object@NbGeneticLoads > 5) {
         msg <- c(msg, "Number of genetic loads must be between 1 and 5.")
     }
     # Check Position and NbOfPositions
+    # Positions must be of type list?
+    if(class(object@Positions) != "list") {
+        msg <- c(msg, "GeneticLoad(): Positions must be provided as a list.")
+    }
+    # NbOfPositions must be either numeric, integer or NULL
+    if (!is.null(object@NbOfPositions) && class(object@NbOfPositions) != "numeric" && class(object@NbOfPositions) != "integer") {
+        msg <- c(msg, "GeneticLoad(): NbrOfPositions must be either NULL (if all positions are given) or numeric (if at least one genetic load has random positions).")
+    }
+
     if (length(object@Positions) != object@NbGeneticLoads) {
         msg <- c(msg, "For each genetic load you must provide the positions.")
-    } else if (all(object@Positions == "random") && length(object@NbOfPositions) != object@NbGeneticLoads ) {
-        msg <- c(msg, "For each genetic load you must provide the number of positions.")
-        } else{
-            isMatch <- grepl(patternPositions, object@Positions)
-            if (!all(isMatch) && object@Positions[isMatch==FALSE] != "random") {
-                msg <- c(msg, "Positions in genetic loads must be either a comma-separated list of integer ranges, or random.")
+    } else if (all(object@Positions == "random")){ # if all positions are random
+        if(length(object@NbOfPositions[!is.na(object@NbOfPositions)]) != object@NbGeneticLoads ) {
+            msg <- c(msg, "GeneticLoad(): For each genetic load with random positions you must provide the number of positions.")
             }
-            if (any(is.na(object@NbOfPositions[object@Positions == "random"])) || object@NbOfPositions[object@Positions == "random"] <= 0){
-                msg <- c(msg, "NbrOfPositions must be set to a strictly positive integrer.")
-            } else if (!is.na(object@NbOfPositions[object@Positions != "random"])) {
-                msg <- c(msg, "In Genetic loads: if Positions is not random NbrOfPositions must be not be set (NA).")
+        } else{ # if NOT all positions are random
+            isNumeric <- sapply(Positions, is.numeric)
+            if (!all(isNumeric)) { # if not all are numeric,
+                if(object@Positions[isNumeric==FALSE] != "random"){ # then those not numeric must be random
+                    msg <- c(msg, "GeneticLoad(): Positions in genetic loads must be either a vector of integers or random.")
+                }
+                if (any(is.na(object@NbOfPositions[object@Positions == "random"])) || any(object@NbOfPositions[object@Positions == "random"] <= 0)){ # if number of positions are NA or smaller than 0
+                    msg <- c(msg, "GeneticLoad(): NbrOfPositions must be set to a strictly positive integer for random positions.")
+                }
+                if (any(!is.na(object@NbOfPositions[object@Positions != "random"]))) { # if there are NbOfPositions supplied for non-random positions
+                    msg <- c(msg, "GeneticLoad(): if Positions is not random NbrOfPositions must be not be set (NA).")
+                }
+            }
+            else { # if all positions are not random
+               if (!is.null(object@NbOfPositions)) {
+                    msg <- c(msg, "GeneticLoad(): If positions are not random, you must not specify the number of positions (NbOfPositions).")
+                }
             }
         }
-
-    # Check ExpressionType
-    if (length(object@ExpressionType)!=object@NbGeneticLoads){
-        msg <- c(msg, "For each genetic load you must provide the ExpressionType.")
-    } else {
-        if (any(object@ExpressionType != "multiplicative")) {
-        msg <- c(msg, "ExpressionType must be \"multiplicative\" for genetic load traits.")
-        }
-    }
 
     # Check DominanceDistribution
     if (!is.null(object@DominanceDistribution)){
-        if(length(object@DepressionDistribution) != object@NbGeneticLoads) {
+        if(length(object@DominanceDistribution) != object@NbGeneticLoads) {
             msg <- c(msg, "For each genetic load you must provide the DominanceDistribution.")
         } else if (nrow(object@DominanceParameters) != object@NbGeneticLoads) {
             msg <- c(msg, "If you have set DominanceDistributions you must provide the DominanceParameters for each genetic load. Use one row for each genetic load.")
         } else {
             if (any(object@DominanceDistribution == "normal")) { # if any distribution is normal
                 # two values for mean and sd
-                if (ncol(object@DominanceParameters[object@DominanceDistribution=="normal"]) !=2 || # if DominanceParameters has not 2 columns OR
+                if (ncol(object@DominanceParameters) !=2 || # if DominanceParameters has not 2 columns OR
                     any(!is.numeric(object@DominanceParameters[object@DominanceDistribution=="normal"])) || # if entries are not numeric
                     any(is.na(object@DominanceParameters[object@DominanceDistribution=="normal"]))) { # if entries are NA
                     msg <- c(msg,"For a normal dominance distribution, DominanceParams must provide two values for mean (first column) and sd (second column)")
@@ -236,7 +263,7 @@ setValidity("GeneticLoadParams", function(object) {
             }
             if (any(object@DominanceDistribution == "gamma")) {
                 # two values for shape and scale
-                if (ncol(object@DominanceParameters[object@DominanceDistribution=="gamma"]) !=2 || # if DominanceParameters has not 2 columns OR
+                if (ncol(object@DominanceParameters) !=2 || # if DominanceParameters has not 2 columns OR
                     any(!is.numeric(object@DominanceParameters[object@DominanceDistribution=="gamma"])) || # if entries are not numeric
                     any(is.na(object@DominanceParameters[object@DominanceDistribution=="gamma"]))) { # if entries are NA
                     msg <- c(msg,"For a gamma dominance distribution, DominanceParams must provide two values for shape (first column) and scale (second column)")
@@ -244,7 +271,7 @@ setValidity("GeneticLoadParams", function(object) {
             }
             if (any(object@DominanceDistribution == "uniform")) {
                 # two values for min and max
-                if (ncol(object@DominanceParameters[object@DominanceDistribution=="uniform"]) !=2 || # if DominanceParameters has not 2 columns OR
+                if (ncol(object@DominanceParameters) !=2 || # if DominanceParameters has not 2 columns OR
                     any(!is.numeric(object@DominanceParameters[object@DominanceDistribution=="uniform"])) || # if entries are not numeric
                     any(is.na(object@DominanceParameters[object@DominanceDistribution=="uniform"]))) { # if entries are NA
                     msg <- c(msg,"For a uniform dominance distribution, DominanceParams must provide two values for min (first column) and max (second column)")
@@ -265,8 +292,8 @@ setValidity("GeneticLoadParams", function(object) {
                         !is.numeric(object@DominanceParameters) || # if entries are not numeric
                         !all(is.na(object@DominanceParameters[object@DominanceDistribution=="scaled",2])) || # second column is not NA
                         !all(is.na(object@DominanceParameters[object@DominanceDistribution=="negExp",2])) || # second column is not NA
-                        any(is.na(object@DominanceParameters[object@DominanceDistribution=="scaled",1])) || # first column is provided
-                        any(is.na(object@DominanceParameters[object@DominanceDistribution=="negExp",1])) # first column is provided
+                        any(is.na(object@DominanceParameters[object@DominanceDistribution=="scaled",1])) || # first column is NA
+                        any(is.na(object@DominanceParameters[object@DominanceDistribution=="negExp",1])) # first column is NA
                         ) {
                         msg <- c(msg,"For the scaled or negative exponential dominance distribution, DominanceParameters must provide only one value for mean (first column) and the second column need to be NA if other genetic loads use other dominance distributions.")
                     }
@@ -291,31 +318,33 @@ setValidity("GeneticLoadParams", function(object) {
 
     # Check MutationDistribution and MutationParameters
     if (!is.null(object@MutationDistribution)){
-        if (nrow(object@MutationDistribution) != object@NbGeneticLoads){
+        if (length(object@MutationDistribution) != object@NbGeneticLoads){
             msg <- c(msg, "For each genetic load you must provide the MutationDistribution.")
         } else if (nrow(object@MutationParameters) != object@NbGeneticLoads) {
             msg <- c(msg, "For each genetic load you must provide the MutationParameters.")
         } else {
+            if (any(object@MutationDistribution == "uniform", object@MutationDistribution == "normal", object@MutationDistribution == "gamma")){
+                if (ncol(object@MutationParameters) !=2){
+                    msg <- c(msg,"MutationParams must provide two values for uniform/normal/gamma distribution: min/mean/shape (first column) and max/sd/scale (second column)")
+                }
+            }
             if (any(object@MutationDistribution == "uniform")) {
                 # two values for min and max
-                if (ncol(object@MutationParameters[object@MutationDistribution=="uniform"]) !=2 ||
-                    any(!is.numeric(object@MutationParameters[object@MutationDistribution=="uniform"])) ||
+                if (any(!is.numeric(object@MutationParameters[object@MutationDistribution=="uniform"])) ||
                     any(is.na(object@MutationParameters[object@MutationDistribution=="uniform"]))) {
                     msg <- c(msg,"For a uniform mutation distribution, MutationParams must provide two values for min (first column) and max (second column)")
                 }
             }
             if (any(object@MutationDistribution == "normal")) {
                 # two values for meand and sd
-                if (ncol(object@MutationParameters[object@MutationDistribution=="normal"]) !=2 ||
-                    any(!is.numeric(object@MutationParameters[object@MutationDistribution=="normal"])) ||
+                if (any(!is.numeric(object@MutationParameters[object@MutationDistribution=="normal"])) ||
                     any(is.na(object@MutationParameters[object@MutationDistribution=="normal"]))) {
                     msg <- c(msg,"For a normal mutation distribution, MutationParams must provide two values for mean (first column) and sd (second column)")
                 }
             }
             if (any(object@MutationDistribution == "gamma")) {
                 # two values for shape and scale
-                if (ncol(object@MutationParameters[object@MutationDistribution=="gamma"]) !=2 ||
-                    any(!is.numeric(object@MutationParameters[object@MutationDistribution=="gamma"])) ||
+                if (any(!is.numeric(object@MutationParameters[object@MutationDistribution=="gamma"])) ||
                     any(is.na(object@MutationParameters[object@MutationDistribution=="gamma"]))) {
                     msg <- c(msg,"For a gamma mutation distribution, MutationParams must provide two values for shape (first column) and scale (second column)")
                 }

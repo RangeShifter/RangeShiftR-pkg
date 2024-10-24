@@ -3,12 +3,41 @@
 \docType{class}
 \name{GeneticLoadTraits}
 \alias{GeneticLoadTraits}
-\title{Set genetic traits structure for genetic fitness}
+\title{Set genetic structure for genetic fitness traits}
+\usage{
+GeneticLoadTraits(NbGeneticLoads = 1, Positions = list("random"), NbOfPositions = 10,
+DominanceDistribution = "normal", DominanceParameters = matrix(c(0.5,0.1), nrow=1),
+MutationDistribution = "normal", MutationParameters = matrix(c(0.5,0.2), nrow=1), MutationRate = 0.0001, OutputValues = FALSE)
+}
+\arguments{
+\item{NbGeneticLoads}{Number of genetic loads}
+
+\item{Positions}{Loci positions coding for that trait within genome. Should be provided as a list of strings (if random) and/or vectors of integers (if not random)}
+
+\item{NbOfPositions}{Only specify when the \code{Positions} of a genetic load trait are set to ‘random’, else must be blank (NULL)}
+
+\item{DominanceDistribution}{Distribution of dominance values. Can be \code{gamma}, \code{uniform}, \code{normal}, \code{negExp}, \code{scaled}. Should be provided as a vector of strings if \code{NbGeneticLoads} > 1}
+
+\item{DominanceParameters}{Parameters for the dominance distribution: You must provide two colums for \code{uniform}, \code{normal} and \code{gamma} distributions: min and max (uniform), mean and sd (normal) or shape and scale (gamma) or one column for \code{negExp}, \code{scaled}: mean
+If genetic loads have different \code{DominanceDistribution} and one require two columns you need to set the second value to NA in case of \code{negExp} or \code{scaled} distribution.
+Each row in the matrix corresponds to a genetic load trait.}
+
+\item{MutationDistribution}{Distribution for mutations to draw from. Can be \code{gamma}, \code{uniform}, \code{normal}, \code{negExp}. Should be provided as a vector of strings if \code{NbGeneticLoads} > 1}
+
+\item{MutationParameters}{Parameters for the mutation distribution: You must provide two colums for \code{uniform}, \code{normal} and \code{gamma} distributions: min and max (uniform), mean and sd (normal) or shape and scale (gamma) or one column for \code{negExp}: mean
+If genetic loads have different \code{DominanceDistribution} and one require two columns you need to set the second value to NA in case of \code{negExp} distribution.}
+
+\item{MutationRate}{Mutation rate applicable to this type of loci. Must be between 0.0 and 1.0. Should be provided as a vector if multiple genetic loads are specified.}
+
+\item{OutputValues}{If OutputGeneValues in GeneticsFile is enabled, should allele values for this gene be written to output? Ignored if OutputGeneValues is set to FALSE. Should be provided as a vector if multiple genetic loads are specified.
+
+The expression type of genetic load traits is always multiplicative.}
+}
 \value{
 a parameter object of class "GeneticLoadParams"
 }
 \description{
-Set genetic traits structure for genetic fitness
+Set genetic structure for genetic fitness traits
 }
 \author{
 Jette Reeg

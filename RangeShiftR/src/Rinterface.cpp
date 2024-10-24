@@ -2830,7 +2830,6 @@ int ReadGeneticsR(Rcpp::S4 GeneParamsR, Landscape* pLandscape)
                                    patchList, strNbInds, stagesToSampleFrom, nPatchesToSample);
 
     paramsSim->setGeneticSim(patchSamplingOption, outputGeneValues, outputWeirCockerham, outputWeirHill, outputStartGenetics, outputGeneticInterval);
-    Rcpp::Rcout << "Genetic parameters set." << endl;
     return 0;
 }
 
@@ -2857,7 +2856,7 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
 
     string TraitTypeStr;
 
-    // if(gHasNeutralGenetics){
+    if(gHasNeutralGenetics){
         Rcpp::S4 NeutralTraitsParamsR("NeutralTraitsParams");
         NeutralTraitsParamsR = Rcpp::as<Rcpp::S4>(TraitsParamsR.slot("Neutral"));
 
@@ -2866,18 +2865,18 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
 
         // Positions and number of Positions
         set<int> positions;
-        // int NbOfPositionsR = -9;
-        // if(Rf_isString(NeutralTraitsParamsR.slot("Positions"))){
-        //     string PositionsR = Rcpp::as<string>(NeutralTraitsParamsR.slot("Positions"));
-        //         if(PositionsR == "random"){
-        //             NbOfPositionsR = Rcpp::as<int>(NeutralTraitsParamsR.slot("NbOfPositions"));
-        //             if(NbOfPositionsR > 0){
-        //                 positions = selectRandomLociPositions(NbOfPositionsR, genomeSize);
-        //             }
-        //         }
-        //         else throw logic_error("If positions are random you must provide the number of positions (>0).");
-        // }
-        // else {
+        int NbOfPositionsR = -9;
+        if(Rf_isString(NeutralTraitsParamsR.slot("Positions"))){
+            string PositionsR = Rcpp::as<string>(NeutralTraitsParamsR.slot("Positions"));
+                if(PositionsR == "random"){
+                    NbOfPositionsR = Rcpp::as<int>(NeutralTraitsParamsR.slot("NbOfPositions"));
+                    if(NbOfPositionsR > 0){
+                        positions = selectRandomLociPositions(NbOfPositionsR, genomeSize);
+                    }
+                }
+                else throw logic_error("If positions are random you must provide the number of positions (>0).");
+        }
+        else {
             Rcpp::NumericVector PositionsR = Rcpp::as<Rcpp::NumericVector>(NeutralTraitsParamsR.slot("Positions")); // Positions are provided as numeric vector
             // use a for loop to insert the values at PositionsR into the set positions
             for (int i = 0; i < PositionsR.size(); i++) {
@@ -2886,7 +2885,7 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
                 }
                 else throw logic_error("Loci positions must be smaller than genome size");
             }
-        // }
+        }
 
 
         // Expression type
@@ -2920,7 +2919,100 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
                           isInherited, MutationDistR,
                           MutationParamsR, MutationRateR,
                           sexdep, isOutputR);
-    // }
+    }
+
+    if(gHasGeneticLoad){
+        Rcpp::S4 GeneticLoadParamsR("GeneticLoadParams");
+        GeneticLoadParamsR = Rcpp::as<Rcpp::S4>(TraitsParamsR.slot("GeneticLoad"));
+
+        // TraitType
+        string TraitTypeR = "genetic_load";// each column corresponds to one genetic load
+
+        // nb of loads
+        int nbLoads = Rcpp::as<int>(GeneticLoadParamsR.slot("NbGeneticLoads"));
+
+        // Positions and number of Positions
+        Rcpp::List PositionsRList = Rcpp::as<Rcpp::List>(GeneticLoadParamsR.slot("Positions"));
+        Rcpp::NumericVector NbOfPositionsRvec;
+        if (GeneticLoadParamsR.slot("NbOfPositions")!= R_NilValue){
+            NbOfPositionsRvec = Rcpp::as<Rcpp::NumericVector> (GeneticLoadParamsR.slot("NbOfPositions"));
+        }
+
+        // Expression type
+        string ExpressionTypeR = "multiplicative"; // not applicable for genetic loads
+
+        // Initial distribution parameters
+        string initDistR = "#"; // not applicable for genetic load
+        Rcpp::NumericVector initParamsR = {0,0}; // not applicable for genetic load; will not be used because initDistR is #
+
+        // Dominance distribution parameters
+        Rcpp::StringVector DominanceDistRvec = Rcpp::as<Rcpp::StringVector>(GeneticLoadParamsR.slot("DominanceDistribution")); // check if values are NA -> then '#'
+        Rcpp::NumericMatrix DominanceParamsRmat = Rcpp::as<Rcpp::NumericMatrix>(GeneticLoadParamsR.slot("DominanceParameters")); // as a matrix: columns for parameter, rows for load nb
+
+        // Mutation parameters
+        bool isInherited = true;
+        Rcpp::StringVector MutationDistRvec = Rcpp::as<Rcpp::StringVector>(GeneticLoadParamsR.slot("MutationDistribution"));
+        Rcpp::NumericMatrix MutationParamsRmat = Rcpp::as<Rcpp::NumericMatrix>(GeneticLoadParamsR.slot("MutationParameters"));
+        Rcpp::NumericVector MutationRateRvec = Rcpp::as<Rcpp::NumericVector>(GeneticLoadParamsR.slot("MutationRate"));
+
+        // sex dependency
+        int sexdep = 2; // NA = 2, FEM = 0 , MAL = 1; depending on row
+
+        // Output values
+        Rcpp::LogicalVector isOutputRvec = Rcpp::as<Rcpp::LogicalVector>(GeneticLoadParamsR.slot("OutputValues"));
+
+        Rcpp::Rcout << "Genetic load(): all input values read." << endl;
+
+        for (int l = 0; l < nbLoads; l++){
+            set<int> positions;
+            int NbOfPositionsR = -9;
+            // check if PositionsR[l] is a string
+            if(Rf_isString(PositionsRList[l])){
+                string pos = Rcpp::as<string>(PositionsRList[l]);
+                if(pos == "random"){
+                    NbOfPositionsR = (int)NbOfPositionsRvec[l]; // here is the error message
+                    if(NbOfPositionsR > 0){
+                        positions = selectRandomLociPositions(NbOfPositionsR, genomeSize);
+                        Rcpp::Rcout << "GeneticLoad(): " << NbOfPositionsR << " random positions selected." << endl;
+                        for (auto pos : positions) {
+                            std::cout << pos << " ";
+                        }
+                    }
+                }
+                else throw logic_error("GeneticLoad(): If positions are random you must provide the number of positions (>0).");
+            }
+            else {
+                Rcpp::NumericVector PositionsR = Rcpp::as<Rcpp::NumericVector>(PositionsRList[l]); // Positions are provided as numeric vector
+                // use a for loop to insert the values at PositionsR into the set positions
+                for (int i = 0; i < PositionsR.size(); i++) {
+                    if (static_cast<int>(PositionsR[i]) <= genomeSize) {
+                        positions.insert(static_cast<int>(PositionsR[i]));
+                    }
+                    else throw logic_error("GeneticLoad(): Loci positions must be smaller than genome size");
+                }
+            }
+
+            string DominanceDistR = (string)DominanceDistRvec[l]; // it is checked beforehand whether the correct distributions are provided
+            Rcpp::NumericVector DominanceParamsR = DominanceParamsRmat.row(l);
+            string MutationDistR =  (string)MutationDistRvec[l];
+            Rcpp::NumericVector MutationParamsR = MutationParamsRmat.row(l);
+            float MutationRateR = (float) MutationRateRvec[l];
+            bool isOutputR = isOutputRvec[l] == 1;
+            setUpSpeciesTrait(TraitTypeR,
+                              positions,
+                              ExpressionTypeR,
+                          initDistR,
+                          initParamsR,
+                          DominanceDistR,
+                              DominanceParamsR,
+                          isInherited,
+                              MutationDistR,
+                          MutationParamsR,
+                          MutationRateR,
+                          sexdep,
+                          isOutputR);
+        }
+    }
 
     return 0;
 
@@ -3049,6 +3141,7 @@ set<int> selectRandomLociPositions(int nbLoci, const int& genomeSize) {
         do {
             rndLocus = pRandom->IRandom(0, genomeSize - 1);
         } while (positions.contains(rndLocus));
+        Rcpp::Rcout << "random position: " << rndLocus << endl;
         positions.insert(rndLocus);
     }
     return positions;
@@ -3121,8 +3214,91 @@ void setUpSpeciesTrait(string TraitTypeR, set<int> positions, string ExpressionT
         ploidy,
         isOutput
     );
-    Rcpp::Rcout << "trait is defined" << endl;
+
+    Rcpp::Rcout << "TraitTypeR: " << TraitTypeR << std::endl;
+
+    Rcpp::Rcout << "Positions: ";
+    for (auto pos : positions) {
+        std::cout << pos << " ";
+    }
+    Rcpp::Rcout << std::endl;
+
+    Rcpp::Rcout << "ExpressionTypeR: " << ExpressionTypeR << std::endl;
+    Rcpp::Rcout << "initDistR: " << initDistR << std::endl;
+
+    Rcpp::Rcout << "initParamsR: ";
+    for (int i = 0; i < initParamsR.size(); ++i) {
+        Rcpp::Rcout << initParamsR[i] << " ";
+    }
+    Rcpp::Rcout << std::endl;
+
+    Rcpp::Rcout << "DominanceDistR: " << DominanceDistR << std::endl;
+
+    Rcpp::Rcout << "DominanceParamsR: ";
+    for (int i = 0; i < DominanceParamsR.size(); ++i) {
+        Rcpp::Rcout << DominanceParamsR[i] << " ";
+    }
+    Rcpp::Rcout << std::endl;
+
+    Rcpp::Rcout << "isInherited: " << (isInherited ? "true" : "false") << std::endl;
+    Rcpp::Rcout << "MutationDistR: " << MutationDistR << std::endl;
+
+    Rcpp::Rcout << "MutationParamsR: ";
+    for (int i = 0; i < MutationParamsR.size(); ++i) {
+        Rcpp::Rcout << MutationParamsR[i] << " ";
+    }
+    Rcpp::Rcout << std::endl;
+
+    Rcpp::Rcout << "MutationRateR: " << MutationRateR << std::endl;
+    Rcpp::Rcout << "sexdep: " << sexdep << std::endl;
+    Rcpp::Rcout << "isOutputR: " << (isOutputR ? "true" : "false") << std::endl;
     pSpecies->addTrait(traitType, *trait);
+    // get the values and print them:
+    // Getters
+    sex_t s = pSpecies->getSpTrait(GENETIC_LOAD1)->getSex();
+    float mut = pSpecies->getSpTrait(GENETIC_LOAD1)->getMutationRate();
+    short pl = pSpecies->getSpTrait(GENETIC_LOAD1)->getPloidy();
+    const set<int> pos = pSpecies->getSpTrait(GENETIC_LOAD1)->getGenePositions();
+    int si = pSpecies->getSpTrait(GENETIC_LOAD1)->getPositionsSize();
+    bool inher = pSpecies->getSpTrait(GENETIC_LOAD1)->isInherited();
+
+    Rcpp::Rcout << "sex: " << s << std::endl;
+    Rcpp::Rcout << "mutationrate: " << mut <<endl;
+    Rcpp::Rcout << "ploidy: " << pl << endl;
+    Rcpp::Rcout << "positions: ";
+    for (auto pos : positions) Rcpp::Rcout << pos << " ";
+    Rcpp::Rcout << std::endl;
+    Rcpp::Rcout << "genome size: " << si << std::endl;
+    Rcpp::Rcout << "is inherited" << inher << endl;
+
+    DistributionType mutdist = pSpecies->getSpTrait(GENETIC_LOAD1)->getMutationDistribution();
+    map<GenParamType, float> mutpara =  pSpecies->getSpTrait(GENETIC_LOAD1)->getMutationParameters();
+    DistributionType domdist = pSpecies->getSpTrait(GENETIC_LOAD1)->getDominanceDistribution();
+    map<GenParamType, float>  dompara = pSpecies->getSpTrait(GENETIC_LOAD1)->getDominanceParameters();
+    DistributionType initdist = pSpecies->getSpTrait(GENETIC_LOAD1)->getInitialDistribution();
+    map<GenParamType, float> initpara =  pSpecies->getSpTrait(GENETIC_LOAD1)->getInitialParameters();
+    ExpressionType exprtype = pSpecies->getSpTrait(GENETIC_LOAD1)->getExpressionType();
+
+    Rcpp::Rcout << "Mutation Distribution: " << to_string(mutdist) << std::endl;
+    Rcpp::Rcout << "Dominance distribution: " << to_string(domdist) << endl;
+    Rcpp::Rcout << "initial distribution: " << to_string(initdist) << endl;
+
+    Rcpp::Rcout << "Mutation Parameters: ";
+    for (const auto& pair : mutpara) Rcpp::Rcout << to_string(pair.first) << " " << pair.second << " ";
+    Rcpp::Rcout << endl;
+
+    Rcpp::Rcout << "Dominance Parameters: ";
+    for (const auto& pair : dompara) Rcpp::Rcout << to_string(pair.first) << " " << pair.second << " ";
+    Rcpp::Rcout << endl;
+
+    Rcpp::Rcout << "Initial Parameters: ";
+    for (const auto& pair : initpara) Rcpp::Rcout << to_string(pair.first) << " " << pair.second << " ";
+    Rcpp::Rcout << endl;
+
+    Rcpp::Rcout << "Expression type" << to_string(exprtype) << endl;
+
+
+
 };
 //---------------------------------------------------------------------------
 
