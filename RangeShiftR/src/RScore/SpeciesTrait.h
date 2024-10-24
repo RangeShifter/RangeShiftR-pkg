@@ -54,7 +54,13 @@ public:
 
     int getNbNeutralAlleles() const {
         if (!traitType == NEUTRAL) throw logic_error("getNbNeutralAlleles() should only be called for neutral traits.");
-        else return getMutationParameters().find(MAX)->second + 1; // possible values range from 0 to MAX
+        else {
+            int maxAlleleVal = max(
+                getMutationParameters().find(MAX)->second + 1,
+                getInitialParameters().find(MAX)->second + 1
+            ); // possible values range from 0 to MAX
+            return maxAlleleVal;
+        }
     }
 
 private:
@@ -79,13 +85,12 @@ private:
     map<GenParamType, float> mutationParameters;
 };
 
-#if RSDEBUG // Testing only
-
+#ifndef NDEBUG // Testing only
 // Create a default set of gene positions ranging from zero to genome size
 set<int> createTestGenePositions(const int genomeSz);
 SpeciesTrait* createTestEmigSpTrait(const set<int>& genePositions, const bool& isDiploid);
 SpeciesTrait* createTestGenLoadTrait(const set<int>& genePositions, const bool& isDiploid);
 SpeciesTrait* createTestNeutralSpTrait(const float& maxAlleleVal, const set<int>& genePositions, const bool& isDiploid);
-#endif // RSDEBUG
+#endif // NDEBUG
 
 #endif // SPECIESTRAITH

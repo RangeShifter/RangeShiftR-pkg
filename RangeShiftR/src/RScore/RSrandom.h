@@ -39,74 +39,32 @@
 #include <stdlib.h>
 #include <fstream>
 #include <cassert>
-#include "Utils.h"
-
-using namespace std;
-
-#if RSDEBUG
-extern ofstream DEBUGLOG;
-#endif
-
-#if !RS_RCPP
-//--------------- 2.) New version of RSrandom.cpp
-
-
 #include <cmath>
 #include <random>
+#include <set>
+#include "Utils.h"
 #if !LINUX_CLUSTER
 #include <ctime>
 #endif
-#include <set>
+
+using namespace std;
+
+#if RS_RCPP
+typedef uint32_t seed_t;
+#else
+typedef int seed_t;
+#endif
 
 class RSrandom
 {
 
 public:
+#if !RS_RCPP
 	RSrandom(void);
-	~RSrandom(void);
-	double Random(void);
-	int IRandom(int, int);
-	float FRandom(float, float);
-	int Bernoulli(double);
-	int Binomial(const int& n, const double& p);
-	double Normal(double, double);
-	double Gamma(double, double);
-	double NegExp(double);
-	int Poisson(double);
-	mt19937 getRNG(void);
-	void fixNewSeed(int);
-
-private:
-	mt19937* gen;
-	std::uniform_real_distribution<>* pRandom01;
-	std::normal_distribution<>* pNormal;
-};
-
-
-//--------------------------------------------------------------------------------------------------
-//--------------------------------------------------------------------------------------------------
-
-
-
-//--------------- 3.) R package version of RSrandom.cpp
-
-
-#else // if RS_RCPP 
-
-
-#include <cmath>
-#include <random>
-#if RSWIN64
-#include <ctime>
-#endif
-#include <set>
-
-class RSrandom {
-
-public:
+#else
 	RSrandom(std::int64_t);       // if int is negative, a random seed will be generated, else it is used as seed
+#endif
 	~RSrandom(void);
-	mt19937 getRNG(void);
 	double Random(void);
 	int IRandom(int, int);
 	float FRandom(float, float);
@@ -116,26 +74,20 @@ public:
 	double Gamma(double, double);
 	double NegExp(double);
 	int Poisson(double);
+	mt19937 getRNG(void);
 	void fixNewSeed(int);
-	/* ADDITIONAL DISTRIBUTIONS
-		double Beta(double,double);
-		double Gamma(double,double); // !! make sure correct definition is used: using shape and scale (as defined here) OR using shape/alpha and rate/beta (=1/scale)
-		double Cauchy(double,double);
-	*/
+	seed_t getSeed() const { return RS_random_seed; };
 
 private:
+	seed_t RS_random_seed;
 	mt19937* gen;
 	std::uniform_real_distribution<>* pRandom01;
 	std::normal_distribution<>* pNormal;
 };
 
-
-
-#endif // !RS_RCPP
-
-#if RSDEBUG
+#ifndef NDEBUG
 	void testRSrandom();
-#endif // RSDEBUG
+#endif // NDEBUG
 
 //---------------------------------------------------------------------------
 

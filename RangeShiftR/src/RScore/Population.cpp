@@ -174,14 +174,10 @@ Population::Population(Species* pSp, Patch* pPch, int ninds, int resol)
 				}
 			}
 			else age = stg;
-#if RSDEBUG
-			// NOTE: CURRENTLY SETTING ALL INDIVIDUALS TO RECORD NO. OF STEPS ...
-			inds.push_back(new Individual(pCell, pPatch, stg, age, sstruct.repInterval,
-				probmale, true, trfr.moveType));
-#else
+
 			inds.push_back(new Individual(pCell, pPatch, stg, age, sstruct.repInterval,
 				probmale, trfr.usesMovtProc, trfr.moveType));
-#endif
+
 			sex = inds[nindivs + i]->getSex();
 			if (pSpecies->getNTraits() > 0) {
 				// individual variation - set up genetics
@@ -286,7 +282,7 @@ traitsums Population::getIndTraitsSums(Species* pSpecies) {
 				break;
 			}
 			default:
-				throw runtime_error("moveModel enabled but moveType is neither 1 (SMS) or 2 (CRW).");
+				throw runtime_error("usesMoveProcess is ON but moveType is neither 1 (SMS) or 2 (CRW).");
 				break;
 			}
 		}
@@ -315,6 +311,7 @@ traitsums Population::getIndTraitsSums(Species* pSpecies) {
 
 		if (gMaxNbSexes > 1) g = sex;
 		else g = 0;
+
 		ts.sumGeneticFitness[g] += inds[iInd]->getGeneticFitness();
 		ts.ssqGeneticFitness[g] += inds[iInd]->getGeneticFitness() * inds[iInd]->getGeneticFitness();
 	}
@@ -408,7 +405,7 @@ int Population::countHeterozygoteLoci() {
 	int nbHetero = 0;
 	if (pSpecies->isDiploid()) {
 		for (Individual* ind : sampledInds) {
-			const auto trait = ind->getTrait(NEUTRAL);
+			const NeutralTrait* trait = (NeutralTrait*)(ind->getTrait(NEUTRAL));
 			nbHetero += trait->countHeterozygoteLoci();
 		}
 	}
@@ -424,7 +421,7 @@ vector<int> Population::countNbHeterozygotesEachLocus() {
 
 	if (pSpecies->isDiploid()) {
 		for (Individual* ind : sampledInds) {
-			const auto trait = ind->getTrait(NEUTRAL);
+			const NeutralTrait* trait = (NeutralTrait*)ind->getTrait(NEUTRAL);
 			int counter = 0;
 			for (auto position : positions) {
 				hetero[counter] += trait->isHeterozygoteAtLocus(position);
@@ -551,7 +548,6 @@ void Population::reproduction(const float localK, const float envval, const int 
 	double expected;
 	bool skipbreeding;
 
-	//envGradParams grad = paramsGrad->getGradient();
 	envStochParams env = paramsStoch->getStoch();
 	demogrParams dem = pSpecies->getDemogrParams();
 	stageParams sstruct = pSpecies->getStageParams();
@@ -680,12 +676,7 @@ void Population::reproduction(const float localK, const float envval, const int 
 					for (int j = 0; j < njuvs; j++) {
 
 						Individual* newJuv;
-#if RSDEBUG
-						// NOTE: CURRENTLY SETTING ALL INDIVIDUALS TO RECORD NO. OF STEPS ...
-						newJuv = new Individual(pCell, pPatch, 0, 0, 0, dem.propMales, true, trfr.moveType);
-#else
 						newJuv = new Individual(pCell, pPatch, 0, 0, 0, dem.propMales, trfr.usesMovtProc, trfr.moveType);
-#endif
 
 						if (pSpecies->getNTraits() > 0) {
 							newJuv->inheritTraits(pSpecies, inds[i], resol);
@@ -745,9 +736,6 @@ void Population::reproduction(const float localK, const float envval, const int 
 						inds[i]->resetFallow();
 						// NOTE: FOR COMPLEX SEXUAL MODEL, NO. OF FEMALES *ACTUALLY* BREEDING DOES NOT
 						// NECESSARILY EQUAL THE EXPECTED NO. FROM EQN. 7 IN THE MANUAL...
-#if RS_RCPP
-						if(propBreed > 1) Rcpp::Rcout << "propBreed: " << propBreed << std::endl;
-#endif
 						if (pRandom->Bernoulli(propBreed)) {
 							expected = fec[stage][0]; // breeds
 						}
@@ -765,12 +753,9 @@ void Population::reproduction(const float localK, const float envval, const int 
 							pCell = pPatch->getRandomCell();
 							for (int j = 0; j < njuvs; j++) {
 								Individual* newJuv;
-#if RSDEBUG
-								// NOTE: CURRENTLY SETTING ALL INDIVIDUALS TO RECORD NO. OF STEPS ...
-								newJuv = new Individual(pCell, pPatch, 0, 0, 0, dem.propMales, true, trfr.moveType);
-#else
+
 								newJuv = new Individual(pCell, pPatch, 0, 0, 0, dem.propMales, trfr.usesMovtProc, trfr.moveType);
-#endif
+
 								if (pSpecies->getNTraits() > 0) {
 									newJuv->inheritTraits(pSpecies, inds[i], father, resol);
 								}
@@ -836,7 +821,8 @@ void Population::sampleIndsWithoutReplacement(string strNbToSample, const set<in
 
 	// Stage individuals in eligible stages
 	for (int stage : sampleStages) {
-		stagedInds = getIndividualsInStage(stage);
+		vector<Individual*> toAdd = getIndividualsInStage(stage);
+		stagedInds.insert(stagedInds.begin(), toAdd.begin(), toAdd.end());
 	}
 
 	if (strNbToSample == "all") {
@@ -1535,11 +1521,11 @@ void Population::clean(void)
 		shuffle(inds.begin(), inds.end(), pRandom->getRNG());
 #else
 
-#if !RSDEBUG
-		// do not randomise individuals in RSDEBUG mode, as the function uses rand()
+#ifdef NDEBUG
+		// do not randomise individuals in DEBUG mode, as the function uses rand()
 		// and therefore the randomisation will differ between identical runs of RS
 		shuffle(inds.begin(), inds.end(), pRandom->getRNG());
-#endif // !RSDEBUG
+#endif // NDEBUG
 
 #endif // RS_RCPP
 	}
@@ -1562,14 +1548,11 @@ bool Population::outPopHeaders(int landNr, bool patchModel) {
 	// ATTRIBUTES OF *ALL* SPECIES AS DETECTED AT MODEL LEVEL
 	demogrParams dem = pSpecies->getDemogrParams();
 	stageParams sstruct = pSpecies->getStageParams();
-	if (sim.batchMode) {
 		name = paramsSim->getDir(2)
+		+ (sim.batchMode ? "Batch" + to_string(sim.batchNum) + "_" : "")
 			+ "Batch" + to_string(sim.batchNum) + "_"
 			+ "Sim" + to_string(sim.simulation) + "_Land" + to_string(landNr) + "_Pop.txt";
-	}
-	else {
-		name = paramsSim->getDir(2) + "Sim" + to_string(sim.simulation) + "_Pop.txt";
-	}
+
 	outPop.open(name.c_str());
 	outPop << "Rep\tYear\tRepSeason";
 	if (patchModel) outPop << "\tPatchID\tNcells";
@@ -1676,16 +1659,11 @@ void Population::outIndsHeaders(int rep, int landNr, bool patchModel)
 	settleType sett = pSpecies->getSettle();
 	simParams sim = paramsSim->getSim();
 
-	if (sim.batchMode) {
 		name = paramsSim->getDir(2)
-			+ "Batch" + to_string(sim.batchNum) + "_"
+		+ (sim.batchMode ? "Batch" + to_string(sim.batchNum) + "_" : "")
 			+ "Sim" + to_string(sim.simulation)
 			+ "_Land" + to_string(landNr) + "_Rep" + to_string(rep) + "_Inds.txt";
-	}
-	else {
-		name = paramsSim->getDir(2) + "Sim" + to_string(sim.simulation)
-			+ "_Rep" + to_string(rep) + "_Inds.txt";
-	}
+
 	outInds.open(name.c_str());
 	outInds << "Rep\tYear\tRepSeason\tSpecies\tIndID\tStatus";
 	if (patchModel) outInds << "\tNatal_patch\tPatchID";
@@ -1715,8 +1693,7 @@ void Population::outIndsHeaders(int rep, int landNr, bool patchModel)
 		outInds << "\tS0\tAlphaS\tBetaS";
 	}
 	outInds << "\tDistMoved";
-#if RSDEBUG
-	// ALWAYS WRITE NO. OF STEPS
+#ifndef NDEBUG
 	outInds << "\tNsteps";
 #else
 	if (trfr.usesMovtProc) outInds << "\tNsteps";
@@ -1830,7 +1807,7 @@ void Population::outIndividual(Landscape* pLandscape, int rep, int yr, int gen,
 					+ (natalloc.y - loc.y) * (natalloc.y - loc.y)));
 				outInds << "\t" << d;
 			}
-#if RSDEBUG
+#ifndef NDEBUG
 			// ALWAYS WRITE NO. OF STEPS
 			steps = inds[i]->getSteps();
 			outInds << "\t" << steps.year;

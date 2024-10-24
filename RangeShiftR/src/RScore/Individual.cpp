@@ -81,17 +81,6 @@ Individual::~Individual(void) {
 	if (path != 0) delete path;
 }
 
-
-Individual* Individual::traitClone(Cell* pCell, Patch* pPatch, float probmale, bool movt, short moveType) {
-
-	Individual* myTraitClone = new Individual(pCell, pPatch, 0, 0, 0, probmale, movt, moveType);
-	myTraitClone->pEmigTraits = make_unique<emigTraits>(*pEmigTraits);
-	myTraitClone->pSettleTraits = make_unique<settleTraits>(*pSettleTraits);
-	myTraitClone->pTrfrData->clone(*pTrfrData);
-
-	return myTraitClone;
-	}
-
 void Individual::setEmigTraits(const emigTraits& emig) {
 	pEmigTraits = make_unique<emigTraits>(emig);
 	}
@@ -392,7 +381,8 @@ void Individual::setSettPatch(const settlePatch s) {
 }
 
 void Individual::setEmigTraits(Species* pSpecies, bool sexDep, bool densityDep) {
-	emigTraits e; e.d0 = e.alpha = e.beta = 0.0;
+	emigTraits e; 
+	e.d0 = e.alpha = e.beta = 0.0;
 	if (sexDep) {
 		if (this->getSex() == MAL) {
 			e.d0 = this->getTrait(E_D0_M)->express();
@@ -521,8 +511,8 @@ void Individual::setIndSMSTraits(Species* pSpecies) {
 	double dp, gb, alphaDB, betaDB;
 	dp = gb = alphaDB = betaDB = 0.0;
 	dp = getTrait(SMS_DP)->express();
-	gb = getTrait(SMS_GB)->express();
 	if (s.goalType == 2) {
+	gb = getTrait(SMS_GB)->express();
 		alphaDB = getTrait(SMS_ALPHADB)->express();
 		betaDB = getTrait(SMS_BETADB)->express();
 				}
@@ -751,7 +741,7 @@ int Individual::moveKernel(Landscape* pLandscape, Species* pSpecies, const bool 
 				ny = yrand + dist * cos(rndangle);
 				if (nx < 0.0) newX = -1; else newX = (int)nx;
 				if (ny < 0.0) newY = -1; else newY = (int)ny;
-#if RSDEBUG
+#ifndef NDEBUG
 				if (path != 0) (path->year)++;
 #endif
 				loopsteps++;
@@ -1609,7 +1599,7 @@ double cauchy(double location, double scale) {
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 
-#if RSDEBUG
+#ifndef NDEBUG
 // Testing utilities
 
 Cell* Individual::getCurrCell() const {
@@ -1677,5 +1667,5 @@ void Individual::overrideGenotype(TraitType whichTrait, const map<int, vector<un
 	pNeutralTrait->getGenes() = newGenotype;
 };
 
-#endif // RSDEBUG
+#endif // NDEBUG
 

@@ -166,8 +166,4 @@ private:
 extern paramStoch* paramsStoch;
 extern RSrandom* pRandom;
 
-#if RSDEBUG
-extern ofstream DEBUGLOG;
-#endif
-
 #endif

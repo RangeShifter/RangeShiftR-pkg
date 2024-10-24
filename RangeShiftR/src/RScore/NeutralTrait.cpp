@@ -52,11 +52,9 @@ NeutralTrait::NeutralTrait(SpeciesTrait* P)
 		initialiseUniform(maxNeutralVal);
 		break;
 	}
-	case NONE: 
-		break;
 	default:
 	{
-		throw logic_error("wrong parameter value for parameter \"initialisation of neutral trait\", must be left as default (#) or uniform \n");
+		throw logic_error("wrong parameter value for parameter \"initialisation of neutral trait\", must be left uniform \n");
 		break; //should return false
 	}
 	}
@@ -111,10 +109,12 @@ void NeutralTrait::mutate_KAM()
 				if (it == genes.end())
 					throw runtime_error("Locus selected for mutation doesn't exist.");
 				auto currentChar = it->second[whichChromosome]; // current allele
-				do {
-					mut = (unsigned char)pRandom->IRandom(0, maxNeutralVal);
-				} while (mut == currentChar); // new allele value is different
-
+				if (maxNeutralVal > 0) { // dodge the infinite loop
+					do {
+						mut = (unsigned char)pRandom->IRandom(0, maxNeutralVal);
+					} while (mut == currentChar); // new allele value is different
+				}
+				else mut = 0; 
 				it->second[whichChromosome] = mut; //overwrite with new value
 			}
 		}
@@ -290,13 +290,7 @@ float NeutralTrait::getAlleleValueAtLocus(short whichChromosome, int position) c
 	return it->second[whichChromosome];
 }
 
-#if RSDEBUG // Testing only
-// Get allele ID at locus
-int NeutralTrait::getAlleleIDAtLocus(short whichChromosome, int position) const {
-	// for neutral genes this is the same as the allele value
-	// need this declaration for quanti trait that use an actual ID
-	return getAlleleValueAtLocus(whichChromosome, position);
-}
+#ifndef NDEBUG // Testing only
 
 // Create a default set of neutral alleles for testing
 //
@@ -318,4 +312,4 @@ map<int, vector<unsigned char>> createTestNeutralGenotype(
 	return genotype;
 }
 
-#endif // RSDEBUG
+#endif // NDEBUG

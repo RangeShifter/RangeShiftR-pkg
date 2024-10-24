@@ -420,31 +420,6 @@ void DispersalTrait::trimPhenotype(float& val) {
 }
 
 // ----------------------------------------------------------------------------------------
-// Check if specific locus is heterozygote
-// ----------------------------------------------------------------------------------------
-bool DispersalTrait::isHeterozygoteAtLocus(int locus) const {
-	// assumes diploidy
-	auto it = genes.find(locus);
-	if (it == genes.end()) //not found
-		throw runtime_error("Dispersal gene queried for heterozygosity does not exist.");
-	else
-		return(it->second[0].get()->getId() != it->second[1].get()->getId());
-}
-
-// ----------------------------------------------------------------------------------------
-// Count heterozygote loci in genome 
-// ----------------------------------------------------------------------------------------
-int DispersalTrait::countHeterozygoteLoci() const {
-	// assumes diploidy
-	int count = 0;
-	for (auto const& [locus, allelePair] : genes) {
-		if (allelePair.size() == 2)
-			count += (allelePair[0].get()->getId() != allelePair[1].get()->getId());
-	}
-	return count;
-}
-
-// ----------------------------------------------------------------------------------------
 // Get allele value at locus
 // ----------------------------------------------------------------------------------------
 float DispersalTrait::getAlleleValueAtLocus(short whichChromosome, int position) const {
@@ -462,18 +437,7 @@ float DispersalTrait::getDomCoefAtLocus(short whichChromosome, int position) con
 	return it->second[whichChromosome]->getDominanceCoef();
 }
 
-#if RSDEBUG // Testing only
-
-// Get allele ID at locus
-int DispersalTrait::getAlleleIDAtLocus(short whichChromosome, int position) const {
-	auto it = genes.find(position);
-	if (it == genes.end())
-		throw runtime_error("The Dispersal locus queried for its allele value does not exist.");
-	return it->second[whichChromosome].get()->getId();
-}
-#endif
-
-#if RSDEBUG
+#ifndef NDEBUG
 
 // Create a default set of alleles for testing
 //
@@ -500,4 +464,4 @@ map<int, vector<shared_ptr<Allele>>> createTestGenotype(
 	}
 	return genotype;
 }
-#endif // RSDEBUG
+#endif // NDEBUG
