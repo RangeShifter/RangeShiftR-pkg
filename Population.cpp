@@ -1336,14 +1336,15 @@ void Population::survival0(float localK, short option0, short option1)
 	stageParams sstruct = pSpecies->getStageParams();
 
 	// get current population size
-	int ninds = (int)inds.size();
+	int ninds = inds.size();
 	if (ninds == 0) return;
+
 	// set up local copies of species development and survival tables
-	int nsexes;
-	if (dem.repType == 0) nsexes = 1; else nsexes = 2;
+	int nsexes = dem.repType == 0 ? 1 : 2;
 	float dev[gMaxNbStages][gMaxNbSexes];
 	float surv[gMaxNbStages][gMaxNbSexes];
 	short minAge[gMaxNbStages][gMaxNbSexes];
+
 	for (int stg = 0; stg < sstruct.nStages; stg++) {
 		for (int sex = 0; sex < nsexes; sex++) {
 			if (dem.stageStruct) {

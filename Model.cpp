@@ -483,12 +483,9 @@ int RunModel(Landscape* pLandscape, int seqsim)
 						pComm->outNeutralGenetics(pSpecies, rep, yr, gen, sim.outputWeirCockerham, sim.outputWeirHill);
 					}
 				}
-				if (dem.stageStruct) {
-					pComm->survival(1, 0, 1);
-				}
-				else { // non-structured population
-					pComm->survival(1, 0, 1);
-				}
+
+				// Resolve survival and devlpt
+				pComm->survival(1, 0, 1);
 
 			} // end of the generation loop
 
@@ -519,7 +516,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 					cout << "All populations went extinct." << endl;
 					yr++; 
 					break;
-
 				}
 			}
 
