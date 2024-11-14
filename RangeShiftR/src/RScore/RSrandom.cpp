@@ -25,6 +25,12 @@
 extern paramSim* paramsSim;
 #endif
 
+#if RS_RCPP
+std::uint32_t RS_random_seed = 0;
+#else
+int RS_random_seed = 0;
+#endif
+
 // C'tor
 #if RS_RCPP
 // if parameter seed is negative, a random seed will be generated, else it is used as seed
