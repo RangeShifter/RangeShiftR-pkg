@@ -265,19 +265,19 @@ setValidity("RSparams", function(object) {
                 else {
                     cols = 1
                 }
-                if (object@dispersal@Transfer@IndVar) {
-                    cols = 2*cols
-                }
-                if (dim(object@dispersal@Transfer@Distances)[1]!=rows) {
-                    dim_ok = FALSE
-                    msg <- c(msg, paste0("Matrix of dispersal kernel traits (Distances) must have ", rows ," rows (with the current settings)!"))
-                }
-                if (dim(object@dispersal@Transfer@Distances)[2]!=(offset+cols)) {
-                    dim_ok = FALSE
-                    msg <- c(msg, paste0("Matrix of dispersal kernel traits (Distances) must have ", (offset+cols) ," columns (with the current settings)!"))
+                if (!object@dispersal@Transfer@IndVar) {
+                    if (dim(object@dispersal@Transfer@Distances)[1]!=rows) {
+                        dim_ok = FALSE
+                        msg <- c(msg, paste0("Matrix of dispersal kernel traits (Distances) must have ", rows ," rows (with the current settings)!"))
+                    }
+                    if (dim(object@dispersal@Transfer@Distances)[2]!=(offset+cols)) {
+                        dim_ok = FALSE
+                        msg <- c(msg, paste0("Matrix of dispersal kernel traits (Distances) must have ", (offset+cols) ," columns (with the current settings)!"))
+                    }
                 }
             }
-            if (dim_ok) {
+            if(!object@dispersal@Transfer@IndVar){
+                if (dim_ok) {
                 # check stage column of Distances matrix
                 if (object@dispersal@Transfer@StageDep) {
                     if(any(object@dispersal@Transfer@Distances[,1]%%1!=0)){
@@ -321,7 +321,7 @@ setValidity("RSparams", function(object) {
                     }
                 }
             }
-            if (dim_ok) {
+                if (dim_ok) {
                 # check value columns of Distances matrix
                 if (object@dispersal@Emigration@UseFullKern) {
                     resol = 0.0000000000001
@@ -329,71 +329,20 @@ setValidity("RSparams", function(object) {
                 else {
                     resol = object@control@resolution
                 }
-                if (object@dispersal@Transfer@IndVar) {
-                    if (object@dispersal@Transfer@DoubleKernel) {
-                        if(any(object@dispersal@Transfer@Distances[,(offset+1)]<resol)){
-                            msg <- c(msg, paste0("Column ", (offset+1), " of dispersal kernel traits (Distances) matrix must contain the mean of the mean distance of Kernel 1, mean(δ1), with values >= ", (resol), " (=landscape resolution (unless UseFullKernel=TRUE)) !"))
-                        }
-                        if(any(object@dispersal@Transfer@Distances[,(offset+2)]<=0.0)){
-                            msg <- c(msg, paste0("Column ", (offset+2), " of dispersal kernel traits (Distances) matrix must contain the std. dev. of the mean distance of Kernel 1, sd(δ1), with strictly positive values!"))
-                        }
-                        else {
-                            if(any(object@dispersal@Transfer@Distances[,(offset+2)] > object@dispersal@Transfer@TraitScaleFactor[1])) {
-                                msg <- c(msg, paste0("Column ", (offset+2), " of dispersal kernel traits (Distances) matrix must contain sd(δ1), with values less than or equal to TraitScaleFactor μ(δ1)!"))
-                            }
-                        }
-                        if(any(object@dispersal@Transfer@Distances[,(offset+3)]<resol)){
-                            msg <- c(msg, paste0("Column ", (offset+3), " of dispersal kernel traits (Distances) matrix must contain the mean of the mean distance of Kernel 2, mean(δ2), with values >= ", (resol), " (=landscape resolution (unless UseFullKernel=TRUE)) !"))
-                        }
-                        if(any(object@dispersal@Transfer@Distances[,(offset+4)]<=0.0)){
-                            msg <- c(msg, paste0("Column ", (offset+4), " of dispersal kernel traits (Distances) matrix must contain the std. dev. of the mean distance of Kernel 2, sd(δ2), with strictly positive values!"))
-                        }
-                        else {
-                            if(any(object@dispersal@Transfer@Distances[,(offset+4)] > object@dispersal@Transfer@TraitScaleFactor[2])) {
-                                msg <- c(msg, paste0("Column ", (offset+4), " of dispersal kernel traits (Distances) matrix must contain sd(δ2), with values less than or equal to TraitScaleFactor μ(δ2)!"))
-                            }
-                        }
-                        if(any(object@dispersal@Transfer@Distances[,(offset+5)]<=0.0 | object@dispersal@Transfer@Distances[,(offset+5)]>=1.0)){
-                            msg <- c(msg, paste0("Column ", (offset+5), " of dispersal kernel traits (Distances) matrix must contain the mean of the probability of using Kernel 1, mean(p), with values in the open interval (0,1) !"))
-                        }
-                        if(any(object@dispersal@Transfer@Distances[,(offset+6)]<=0.0)){
-                            msg <- c(msg, paste0("Column ", (offset+6), " of dispersal kernel traits (Distances) matrix must contain the std. dev. of the probability of using Kernel 1, sd(p), with strictly positive values!"))
-                        }
-                        else {
-                            if(any(object@dispersal@Transfer@Distances[,(offset+6)] > object@dispersal@Transfer@TraitScaleFactor[3])) {
-                                msg <- c(msg, paste0("Column ", (offset+6), " of dispersal kernel traits (Distances) matrix must contain sd(p), with values less than or equal to TraitScaleFactor μ(p)!"))
-                            }
-                        }
+                if (object@dispersal@Transfer@DoubleKernel) {
+                    if(any(object@dispersal@Transfer@Distances[,(offset+1):(offset+2)]<resol)){
+                        msg <- c(msg, paste0("Columns ", (offset+1), " and ", (offset+2), " of dispersal kernel traits (Distances) matrix must contain the two mean distance δ1 and δ2, with values >= ", (resol), " (=landscape resolution (unless UseFullKernel=TRUE)) !"))
                     }
-                    else { # !DoubleKernel
-                        if(any(object@dispersal@Transfer@Distances[,(offset+1)]<resol)){
-                            msg <- c(msg, paste0("Column ", (offset+1), " of dispersal kernel traits (Distances) matrix must contain the mean of the mean distance, mean(δ), with values >= ", (resol), " (=landscape resolution (unless UseFullKernel=TRUE)) !"))
-                        }
-                        if(any(object@dispersal@Transfer@Distances[,(offset+2)]<=0.0)){
-                            msg <- c(msg, paste0("Column ", (offset+2), " of dispersal kernel traits (Distances) matrix must contain the std. dev. of the mean distance, sd(δ), with strictly positive values!"))
-                        }
-                        else {
-                            if(any(object@dispersal@Transfer@Distances[,(offset+2)] > object@dispersal@Transfer@TraitScaleFactor[1])) {
-                                msg <- c(msg, paste0("Column ", (offset+2), " of dispersal kernel traits (Distances) matrix must contain sd(δ), with values less than or equal to TraitScaleFactor μ(δ)!"))
-                            }
-                        }
+                    if(any(object@dispersal@Transfer@Distances[,(offset+3)]<=0 | object@dispersal@Transfer@Distances[,(offset+3)]>=1)) {
+                        msg <- c(msg, paste0("Column ", (offset+3), " of dispersal kernel traits (Distances) matrix must contain the probability p of using kernel 1, with values in the open interval (0,1) !"))
                     }
                 }
-                else { # !IndVar
-                    if (object@dispersal@Transfer@DoubleKernel) {
-                        if(any(object@dispersal@Transfer@Distances[,(offset+1):(offset+2)]<resol)){
-                            msg <- c(msg, paste0("Columns ", (offset+1), " and ", (offset+2), " of dispersal kernel traits (Distances) matrix must contain the two mean distance δ1 and δ2, with values >= ", (resol), " (=landscape resolution (unless UseFullKernel=TRUE)) !"))
-                        }
-                        if(any(object@dispersal@Transfer@Distances[,(offset+3)]<=0 | object@dispersal@Transfer@Distances[,(offset+3)]>=1)) {
-                            msg <- c(msg, paste0("Column ", (offset+3), " of dispersal kernel traits (Distances) matrix must contain the probability p of using kernel 1, with values in the open interval (0,1) !"))
-                        }
-                    }
-                    else{
-                        if(any(object@dispersal@Transfer@Distances[,(offset+1)]<resol)){
-                            msg <- c(msg, paste0("Column ", (offset+1), " of dispersal kernel traits (Distances) matrix must contain the mean distance δ, with values >= ", (resol), " (=landscape resolution (unless UseFullKernel=TRUE)) !"))
-                        }
+                else{
+                    if(any(object@dispersal@Transfer@Distances[,(offset+1)]<resol)){
+                        msg <- c(msg, paste0("Column ", (offset+1), " of dispersal kernel traits (Distances) matrix must contain the mean distance δ, with values >= ", (resol), " (=landscape resolution (unless UseFullKernel=TRUE)) !"))
                     }
                 }
+            }
             }
         }
     }
