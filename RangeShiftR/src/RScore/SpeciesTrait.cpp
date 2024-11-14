@@ -110,13 +110,9 @@ bool SpeciesTrait::isValidTraitVal(const float& val) const {
 		break;
 	}
 	case E_ALPHA_F: case E_ALPHA_M: case E_ALPHA:
-	{
-		return val > 0.0;
-		break;
-	}
 	case E_BETA_F: case E_BETA_M: case E_BETA:
 	{
-		return true; // inflexion point can be any value
+		return true; // slope and inflexion point can be any value
 		break;
 	}
 	/// Settlement
@@ -126,13 +122,9 @@ bool SpeciesTrait::isValidTraitVal(const float& val) const {
 		break;
 	}
 	case S_ALPHA_F: case S_ALPHA_M: case S_ALPHA:
-	{
-		return val > 0.0;
-		break;
-	}
 	case S_BETA_F: case S_BETA_M: case S_BETA:
 	{
-		return true;
+		return true; // slope and inflection point can be any value
 		break;
 	}
 	/// Transfer - Kernels

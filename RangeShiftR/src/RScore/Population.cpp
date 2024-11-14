@@ -1343,14 +1343,15 @@ void Population::survival0(float localK, short option0, short option1)
 	stageParams sstruct = pSpecies->getStageParams();
 
 	// get current population size
-	int ninds = (int)inds.size();
+	int ninds = inds.size();
 	if (ninds == 0) return;
+
 	// set up local copies of species development and survival tables
-	int nsexes;
-	if (dem.repType == 0) nsexes = 1; else nsexes = 2;
+	int nsexes = dem.repType == 0 ? 1 : 2;
 	float dev[gMaxNbStages][gMaxNbSexes];
 	float surv[gMaxNbStages][gMaxNbSexes];
 	short minAge[gMaxNbStages][gMaxNbSexes];
+
 	for (int stg = 0; stg < sstruct.nStages; stg++) {
 		for (int sex = 0; sex < nsexes; sex++) {
 			if (dem.stageStruct) {
@@ -1445,9 +1446,6 @@ void Population::survival0(float localK, short option0, short option1)
 		if ((ind.stage == 0 && option0 < 2) || (ind.stage > 0 && option0 > 0)) {
 			// condition for processing the stage is met...
 			if (ind.status < 6 || ind.status == 10) { // not already doomed
-				if (ind.sex < sex_t::FEM || ind.sex > sex_t::MAL)
-					// ?? MSVC believes it's important to bound check ind.sex
-					throw runtime_error("Individual sex is out of bounds");
 				double probsurv = surv[ind.stage][ind.sex];
 				// does the individual survive?
 				if (pRandom->Bernoulli(probsurv)) { // survives

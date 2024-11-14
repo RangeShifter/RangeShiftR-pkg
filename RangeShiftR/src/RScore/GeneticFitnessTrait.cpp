@@ -125,8 +125,13 @@ GeneticFitnessTrait::GeneticFitnessTrait(SpeciesTrait* P)
 // Copies immutable features from a parent trait
 // Only called via clone()
 // ----------------------------------------------------------------------------------------
-GeneticFitnessTrait::GeneticFitnessTrait(const GeneticFitnessTrait& T) : pSpeciesTrait(T.pSpeciesTrait), _inherit_func_ptr(T._inherit_func_ptr)
-{}
+GeneticFitnessTrait::GeneticFitnessTrait(const GeneticFitnessTrait& T) : 
+	pSpeciesTrait(T.pSpeciesTrait), 
+	_inherit_func_ptr(T._inherit_func_ptr),
+	scaledDomMeanSelCoeff(T.scaledDomMeanSelCoeff)
+{
+	// nothing
+}
 
 void GeneticFitnessTrait::initialise() {
 	// All positions start at wild type, mutations accumulate through simulation
@@ -215,11 +220,10 @@ float GeneticFitnessTrait::drawDominance(float selCoef) {
 	}
 	case SCALED:
 	{
-		const float min = 0;
 		const float h_d = dominanceParameters.find(MEAN)->second;
 		const float k = -log(2 * h_d) / scaledDomMeanSelCoeff;
-		const float max = static_cast<float>(exp(-k * selCoef));
-		h = static_cast<float>(pRandom->FRandom(min, max));
+		const float max = exp(-k * selCoef);
+		h = pRandom->FRandom(0, max);
 		break;
 	}
 
@@ -375,14 +379,14 @@ float GeneticFitnessTrait::express() {
 			shared_ptr<Allele> pAlleleB = pAllelePair[1] == 0 ? wildType : pAllelePair[1];
 			sB = pAlleleB->getAlleleValue();
 			hB = pAlleleB->getDominanceCoef();
+
+			sumDomCoeffs = hA + hB;
+			hLocus = sumDomCoeffs == 0.0 ? 0.5 : hA / sumDomCoeffs;
+			phenotype *= 1 - hLocus * sA - (1 - hLocus) * sB;
 		}
 		else {
-			sB = 0.0;
-			hB = 0.0;
+			phenotype *= 1 - sA;
 		}
-		sumDomCoeffs = hA + hB;
-		hLocus = sumDomCoeffs == 0.0 ? 0.0 : hA / sumDomCoeffs;
-		phenotype *= 1 - hLocus * sA - (1 - hLocus) * sB;
 	}
 	return phenotype;
 }
