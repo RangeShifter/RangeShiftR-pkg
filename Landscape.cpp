@@ -171,15 +171,15 @@ int InitDist::readDistribution(string distfile) {
 #endif
 
 	// open distribution file
-#if RS_RCPP
-	dfile.open(distfile, std::ios::binary);
-	if (spdistraster.utf) {
-		// apply BOM-sensitive UTF-16 facet
-		dfile.imbue(std::locale(dfile.getloc(), new std::codecvt_utf16<wchar_t, 0x10ffff, std::consume_header>));
-	}
-#else
+// #if RS_RCPP
+// 	dfile.open(distfile, std::ios::binary);
+// 	if (spdistraster.utf) {
+// 		// apply BOM-sensitive UTF-16 facet
+// 		dfile.imbue(std::locale(dfile.getloc(), new std::codecvt_utf16<wchar_t, 0x10ffff, std::consume_header>));
+// 	}
+// #else
 	dfile.open(distfile.c_str());
-#endif
+// #endif
 	if (!dfile.is_open()) return 21;
 
 // read landscape data from header records of distribution file
@@ -334,8 +334,8 @@ void Landscape::resetLand(void) {
 
 void Landscape::setLandParams(landParams ppp, bool batchMode)
 {
-	generated = ppp.generated; 
-	patchModel = ppp.patchModel; 
+	generated = ppp.generated;
+	patchModel = ppp.patchModel;
 	spDist = ppp.spDist;
 	dynamic = ppp.dynamic;
 	landNum = ppp.landNum;
@@ -870,7 +870,7 @@ set<int> Landscape::samplePatches(const string& samplingOption, int nbToSample, 
 			|| p->speciesIsPresent(pSpecies)) // otherwise only patches with at least 1 ind
 			eligiblePatches.push_back(p->getPatchNum());
 	}
-	
+
 	if (samplingOption == "all") {
 		sampledPatches = eligiblePatches;
 	}
@@ -1558,10 +1558,10 @@ void Landscape::recordPatchChanges(int landIx) {
 int Landscape::numPatchChanges(void) { return (int)patchchanges.size(); }
 
 patchChange Landscape::getPatchChange(int i) {
-	patchChange c; 
-	c.chgnum = 99999999; 
+	patchChange c;
+	c.chgnum = 99999999;
 	c.x = c.y = c.oldpatch = c.newpatch = -1;
-	if (i >= 0 && i < (int)patchchanges.size()) 
+	if (i >= 0 && i < (int)patchchanges.size())
 		c = patchchanges[i];
 	return c;
 }
@@ -1792,27 +1792,27 @@ int Landscape::readLandscape(int fileNum, string habfile, string pchfile, string
 	initParams init = paramsInit->getInit();
 
 	// open habitat file and optionally also patch file
-#if RS_RCPP
-	hfile.open(habfile, std::ios::binary);
-	if (landraster.utf) {
-		// apply BOM-sensitive UTF-16 facet
-		hfile.imbue(std::locale(hfile.getloc(), new std::codecvt_utf16<wchar_t, 0x10ffff, std::consume_header>));
-	}
-#else
+// #if RS_RCPP
+// 	hfile.open(habfile, std::ios::binary);
+// 	if (landraster.utf) {
+// 		// apply BOM-sensitive UTF-16 facet
+// 		hfile.imbue(std::locale(hfile.getloc(), new std::codecvt_utf16<wchar_t, 0x10ffff, std::consume_header>));
+// 	}
+// #else
 	hfile.open(habfile.c_str());
-#endif
+// #endif
 	if (!hfile.is_open()) return 11;
 	if (fileNum == 0) {
 		if (patchModel) {
-#if RS_RCPP
-			pfile.open(pchfile, std::ios::binary);
-			if (patchraster.utf) {
-				// apply BOM-sensitive UTF-16 facet
-				pfile.imbue(std::locale(pfile.getloc(), new std::codecvt_utf16<wchar_t, 0x10ffff, std::consume_header>));
-			}
-#else
+// #if RS_RCPP
+// 			pfile.open(pchfile, std::ios::binary);
+// 			if (patchraster.utf) {
+// 				// apply BOM-sensitive UTF-16 facet
+// 				pfile.imbue(std::locale(pfile.getloc(), new std::codecvt_utf16<wchar_t, 0x10ffff, std::consume_header>));
+// 			}
+// #else
 			pfile.open(pchfile.c_str());
-#endif
+// #endif
 			if (!pfile.is_open()) {
 				hfile.close(); hfile.clear();
 				return 12;
@@ -1841,23 +1841,23 @@ resol = (int) tmpresol;
 	}
 #endif
 
-	dimX = ncols; 
-	dimY = nrows; 
-	minX = maxY = 0; 
+	dimX = ncols;
+	dimY = nrows;
+	minX = maxY = 0;
 	maxX = dimX - 1;
 	maxY = dimY - 1;
 
 	if (fileNum == 0) {
 		// set initialisation limits to landscape limits
 		init.minSeedX = init.minSeedY = 0;
-		init.maxSeedX = maxX; 
+		init.maxSeedX = maxX;
 		init.maxSeedY = maxY;
 		paramsInit->setInit(init);
 	}
 
 	if (fileNum == 0) {
 		if (patchModel) {
-			for (int i = 0; i < 5; i++) 
+			for (int i = 0; i < 5; i++)
 				pfile >> header >> pfloat;
 			pfile >> header >> pchnodata;
 		}
@@ -2294,15 +2294,15 @@ int Landscape::readCosts(string fname)
 	int maxcost = 0;
 
  // open cost file
-#if RS_RCPP
-	costs.open(fname, std::ios::binary);
-	if (costsraster.utf) {
-		// apply BOM-sensitive UTF-16 facet
-		costs.imbue(std::locale(costs.getloc(), new std::codecvt_utf16<wchar_t, 0x10ffff, std::consume_header>));
-	}
-#else
+// #if RS_RCPP
+// 	costs.open(fname, std::ios::binary);
+// 	if (costsraster.utf) {
+// 		// apply BOM-sensitive UTF-16 facet
+// 		costs.imbue(std::locale(costs.getloc(), new std::codecvt_utf16<wchar_t, 0x10ffff, std::consume_header>));
+// 	}
+// #else
 	costs.open(fname.c_str());
-#endif
+// #endif
 	// read headers and check that they correspond to the landscape ones
 	costs >> header;
 #if RS_RCPP
@@ -2671,13 +2671,13 @@ landParams createDefaultLandParams(const int& dim) {
 	ls_params.maxX = ls_params.maxY = ls_params.dimX - 1;
 	ls_params.resol = ls_params.spResol = 1;
 	ls_params.rasterType = 0; // habitat types
- 
+
 	ls_params.patchModel = false;
 	ls_params.spDist = false;
 	ls_params.generated = false;
 	ls_params.dynamic = false;
 	ls_params.landNum = 0;
-	ls_params.nHab = ls_params.nHabMax = 0; // irrelevant for habitat codes 
+	ls_params.nHab = ls_params.nHabMax = 0; // irrelevant for habitat codes
 	return ls_params;
 }
 
