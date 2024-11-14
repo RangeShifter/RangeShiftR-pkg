@@ -33,7 +33,7 @@ public:
     );
 
     bool isValidTraitVal(const float& val) const;
-    TraitType getTraitType() const { return traitType;  }
+    TraitType getTraitType() const { return traitType; }
     bool isOutput() const { return traitIsOutput; }
 
     // Getters

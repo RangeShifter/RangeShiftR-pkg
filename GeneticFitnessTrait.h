@@ -60,7 +60,7 @@ private:
     void initialise();
 
     // Mutation
-    float scaledDomMeanSelCoeff; // s_d, only for scaled dominance distribution
+    float scaledDomMeanSelCoeff = 0; // s_d, only for scaled dominance distribution
     float drawDominance(float);
     float drawSelectionCoef();
 
