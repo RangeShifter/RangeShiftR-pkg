@@ -16,7 +16,7 @@ Settlement(StageDep = FALSE, SexDep = FALSE,
 
 \item{SexDep}{Sex-dependent settlement requirements? (default: \code{FALSE})}
 
-\item{Settle}{Settlement codes (for \code{DispersalKernel}) or settlement probability parameters (for \emph{Movement process}) for all
+\item{Settle}{Settlement codes (for \code{DispersalKernel}) or settlement probability parameters (for \emph{Movement process} if \code{IndVar=TRUE}) for all
 stages/sexes, defaults to \eqn{0} (i.e. 'die when unsuitable' for \emph{DispersalKernel} and
 'always settle when suitable' for \emph{Movement process}). See the Details below.}
 
@@ -25,10 +25,7 @@ stages/sexes, defaults to \eqn{0} (i.e. 'die when unsuitable' for \emph{Dispersa
 \item{DensDep}{Movement process only: Density-dependent settlement probability? (default: \code{FALSE})}
 
 \item{IndVar}{Movement process only: Individual variability in settlement probability traits? Must be \code{FALSE} (default),
-if \code{DensDep=FALSE} or \code{StageDep=TRUE}.}
-
-\item{TraitScaleFactor}{Movement process only, required if \code{IndVar=TRUE}: Scaling factors for the three traits of density-dependent settlement,
-a numeric of length \eqn{3}.}
+if \code{DensDep=FALSE} or \code{StageDep=TRUE}. If \code{TRUE} settlement traits are defined in \code{\link[RangeShiftR]{SettlementTraits}}.}
 
 \item{MinSteps}{Movement process only: Minimum number of steps. Defaults to \eqn{0}.}
 
@@ -95,7 +92,7 @@ If individuals are dispersing by one of the two movement processes implemented (
 \code{\link[RangeShiftR]{CorrRW}}), at each step (made simultaneously) they each evaluate their current cell or patch for the
 possibility of settling. This allows for the implementation of more complex settlement rules. The simplest one is that the individual
 decides to stop if there is suitable habitat; this is in any case a necessary condition (set \code{DensDep=FALSE}).\cr
-If a Settlement module with a constant \eqn{S_0=0} (the default) is used in a model with \emph{movement process},
+If a Settlement module with a constant \eqn{S_0=0} (the default) is used in a model with \emph{movement process} and \code{IndVar=FALSE},
 it gets converted to \eqn{S_0=1.0}, i.e. 'always settle when habitat is suitable'. \cr
 \cr
 Furthermore, the settlement decision can be density-dependent (set \code{DensDep=TRUE}). In this case, the individual has a probability \ifelse{html}{\out{p<sub>S</sub>}}{\eqn{p_S}}
@@ -116,20 +113,18 @@ Further, \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}} is the maximum settlement
 
 Inter-individual variability \code{IndVar=TRUE} and thus evolution is implemented only for the three traits determining density-dependent settlement
 (\code{DensDep=TRUE}), and if so, it may not be stage-dependent (\code{StageDep=FALSE}).
-For each trait the initial distribution in the population (as mean and standard variation) must be set in \code{Settle} (instead of only one constant value),
-as well as their scaling factors in \code{TraitScaleFactor} (see \code{\link[RangeShiftR]{Genetics}}).
+Settlement traits must be set in \code{\link[RangeShiftR]{SettlementTraits}} and \code{Settle} must be 0. For details see also \code{\link[RangeShiftR]{Genetics}} and \code{\link[RangeShiftR]{Traits}}
 
 The parameters that determine the settlement probabilities have to be provided via the parameter \code{Settle}, which generally takes a numeric matrix, or - if only a single constant probability is
-used (i.e. \code{DensDep, IndVar, StageDep, SexDep = FALSE}) - a single numeric.
-The format of the matrix is defined as follows: The number of columns depend on the options \code{DensDep} and \code{IndVar}. If \code{DensDep=FALSE}, the
+used (i.e. \code{DensDep, IndVar, StageDep, SexDep = FALSE}) - a single numeric. If individual variability is enabled, \code{Settle} must be \code{0}.
+The format of the matrix is defined as follows: The number of required parameter depend on the option \code{DensDep}. If \code{DensDep=FALSE}, the
 density-independent probability \ifelse{html}{\out{p<sub>S</sub>}}{\eqn{p_S}} must be specified. If \code{DensDep=TRUE}, the functional parameters \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}},
 \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{α_S}} and \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}} (cf. equation above) must be specified.
-Additionally, if \code{IndVar=FALSE}, these traits are fixed, but if \code{IndVar=TRUE} each of them is replaced by two parameters: their respective initial mean and
-standard deviation. They are used to normally distribute the traits values among the individuals of the initial population. Additionally, the \code{TraitScaleFactor} of
-these traits have to be set.
 
 All parameters have to be given for each stage/sex if the respective dependency is enabled. If \code{StageDep=TRUE}, state the corresponding stage in the first column.
 If \code{SexDep=TRUE}, state the corresponding stage in the next (i.e. first/second) column, with \eqn{0} for \emph{female} and \eqn{1} for \emph{male}.
+
+
 The following table lists the required columns and their correct order for different settings:
 
 \tabular{ccccc}{DensDep \tab IndVar \tab StageDep \tab SexDep \tab columns \cr
@@ -140,8 +135,6 @@ The following table lists the required columns and their correct order for diffe
  T \tab F \tab F \tab F \tab \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}}, \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{α_S}}, \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}} \cr
  \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \cr
  T \tab F \tab T \tab T \tab stage, sex, \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}}, \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{α_S}}, \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}} \cr
- T \tab T \tab F \tab F \tab mean\ifelse{html}{\out{(S<sub>0</sub>)}}{\eqn{(S_0)}}, sd\ifelse{html}{\out{(S<sub>0</sub>)}}{\eqn{(S_0)}}, mean\ifelse{html}{\out{(&alpha;<sub>S</sub>)}}{(\eqn{α_S})}, sd\ifelse{html}{\out{(&alpha;<sub>S</sub>)}}{(\eqn{α_S})}, mean\ifelse{html}{\out{(&beta;<sub>S</sub>)}}{(\eqn{β_S})}, sd\ifelse{html}{\out{(&beta;<sub>S</sub>)}}{(\eqn{β_S})} \cr
- T \tab T \tab F \tab T \tab sex, mean\ifelse{html}{\out{(S<sub>0</sub>)}}{\eqn{(S_0)}}, sd\ifelse{html}{\out{(S<sub>0</sub>)}}{\eqn{(S_0)}}, mean\ifelse{html}{\out{(&alpha;<sub>S</sub>)}}{(\eqn{α_S})}, sd\ifelse{html}{\out{(&alpha;<sub>S</sub>)}}{(\eqn{α_S})}, mean\ifelse{html}{\out{(&beta;<sub>S</sub>)}}{(\eqn{β_S})}, sd\ifelse{html}{\out{(&beta;<sub>S</sub>)}}{(\eqn{β_S})}
  }
 
 The column headings need not be included, only the numeric matrix is required. The rows require no particular order, but there must be exactly one row for each stage/sex combination.
@@ -166,13 +159,29 @@ An additional rule that can be set constitutes a minimum number of steps (\code{
 place. This is useful for simulating situations where animals, in a ‘dispersal mode’, will keep moving and not consider settling even
 if suitable conditions are available \insertCite{@e.g. @barton2012risky}{RangeShiftR}.
 
+Each of the three parameters \code{MinSteps, MaxSteps, MaxStepsYr} need to be provided as single integer (if \code{StageDep=FALSE} and \code{SexDep=FALSE}) or numeric matrix, providing the stage (if \code{StageDep=TRUE}) and sex (if \code{SexDep=TRUE}).
+The rows require no particular order, but there must be exactly one row for each stage/sex combination.
+
+\tabular{ccccc}{StageDep \tab SexDep \tab columns \cr
+F \tab F \tab - not applicable only provide single numeric value - \cr
+T \tab F \tab stage, \code{MinSteps/MaxSteps/MaxStepsYr} \cr
+F \tab T \tab sex, \code{MinSteps/MaxSteps/MaxStepsYr}\cr
+T \tab T \tab stage, sex, \code{MinSteps/MaxSteps/MaxStepsYr} \cr
+ }
+
 \emph{Mating requirements}\cr
 Sexual species may be required to find a mate, i.e. there has to be at least one individual of the opposite sex present for the cell/patch to be considered suitable for settlement.
 Density-dependence and mating requirements can also be combined together to determine the settlement decision.
 
 The application of this mating condition can be switched on or off using the parameter \code{FindMate}, which takes either a single
-logical if \code{StageDep=FALSE} and \code{SexDep=FALSE} or, otherwise, a logical vector of same length as the number rows in
-\code{Settle}, using same order.
+logical if \code{StageDep=FALSE} and \code{SexDep=FALSE} or, otherwise, a matrix of the similar structure as for \code{MinSteps, MaxSteps} and \code{MaxStepsYr}.
+
+#' \tabular{ccccc}{StageDep \tab SexDep \tab columns \cr
+F \tab F \tab - not applicable only provide single logical value - \cr
+T \tab F \tab stage, \code{FindMate} as logical value \cr
+F \tab T \tab sex, \code{FindMate} as logical value\cr
+T \tab T \tab stage, sex, \code{FindMate} as logical value \cr
+ }
 }
 \references{
 \insertAllCited{}

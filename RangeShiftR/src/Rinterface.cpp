@@ -132,24 +132,24 @@ Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
     paramsGrad = new paramGrad;
     paramsStoch = new paramStoch;
     paramsInit = new paramInit;
-    paramsSim = new paramSim;
+    paramsSim = new paramSim(dirpath);
 
     // set up working directory and log file names
-    paramsSim->setDir(dirpath);
+    // paramsSim->setDir(dirpath);
 
 #if RSDEBUG
     Rcpp::Rcout << endl << "Working directory: " << paramsSim->getDir(0) << endl;
 #endif
 
-    bool errorfolder = CheckDirectory();
-    if(errorfolder) {
-        Rcpp::Rcout << endl << "***** Invalid working directory: " << paramsSim->getDir(0) << endl << endl;
-        Rcpp::Rcout << "***** Working directory must contain Inputs, Outputs and Output_Maps folders" << endl << endl;
-        Rcpp::Rcout << "*****" << endl;
-        Rcpp::Rcout << "***** Simulation ABORTED " << endl;
-        Rcpp::Rcout << "*****" << endl;
-        return Rcpp::List::create(Rcpp::Named("Errors") = 666);
-    }
+    bool errorfolder = CheckDirectory(dirpath);
+    // if(errorfolder) {
+    //     Rcpp::Rcout << endl << "***** Invalid working directory: " << paramsSim->getDir(0) << endl << endl;
+    //     Rcpp::Rcout << "***** Working directory must contain Inputs, Outputs and Output_Maps folders" << endl << endl;
+    //     Rcpp::Rcout << "*****" << endl;
+    //     Rcpp::Rcout << "***** Simulation ABORTED " << endl;
+    //     Rcpp::Rcout << "*****" << endl;
+    //     return Rcpp::List::create(Rcpp::Named("Errors") = 666);
+    // }
 
 #if RSDEBUG
     // set up debugging log file
@@ -1546,12 +1546,7 @@ int ReadEmigrationR(Rcpp::S4 ParMaster)
     stageParams sstruct = pSpecies->getStageParams();
     emigRules emig = pSpecies->getEmigRules();
     emigTraits emigrationTraits;
-    // emigParams eparams;veraltet -> jetzt im TraitsFile
-    // emigScales scale = pSpecies->getEmigScales(); -> Müsste jetzt auch im TraitsFile abgedeckt sein
 
-    // int simulation;
-    // simulation = Rcpp::as<int>(EmigParamsR.slot("Simulation")); // REMOVED in R-interface // Must match simulation
-    // numbers in ParamParams
     emig.densDep = Rcpp::as<bool>(EmigParamsR.slot("DensDep"));
     pSpecies->setFullKernel(Rcpp::as<bool>(EmigParamsR.slot("UseFullKern"))); // Emigration rate derived from kernel. Only for kernel-based transfer and DensDep = 0
     emig.stgDep = Rcpp::as<bool>(EmigParamsR.slot("StageDep")); // Stage-dependent emigration. Must be 0 if IndVar is 1
@@ -1599,9 +1594,10 @@ int ReadEmigrationR(Rcpp::S4 ParMaster)
              << " emig.indVar = " << emig.indVar << " sexesDisp = " << sexesDisp << endl;
 #endif
 
-    EmigMatrix = Rcpp::as<Rcpp::NumericMatrix>(EmigParamsR.slot("EmigProb"));
+    if (!emig.indVar){
+        EmigMatrix = Rcpp::as<Rcpp::NumericMatrix>(EmigParamsR.slot("EmigProb"));
 
-    for(int line = 0; line < Nlines; line++) {
+        for(int line = 0; line < Nlines; line++) {
 
         if(emig.stgDep) {
             if(emig.sexDep) {
@@ -1622,54 +1618,82 @@ int ReadEmigrationR(Rcpp::S4 ParMaster)
         }
 
         if(emig.densDep) {
-            // if(emig.indVar) {
-            // 	eparams.d0Mean = (float)EmigMatrix(line, offset + 0);
-            // 	eparams.d0SD = (float)EmigMatrix(line, offset + 1);
-            // 	eparams.alphaMean = (float)EmigMatrix(line, offset + 2);
-            // 	eparams.alphaSD = (float)EmigMatrix(line, offset + 3);
-            // 	eparams.betaMean = (float)EmigMatrix(line, offset + 4);
-            // 	eparams.betaSD = (float)EmigMatrix(line, offset + 5);
-            //
-            // 	pSpecies->setEmigParams(stage, sex, eparams);
-            // } else {
             emigrationTraits.d0 = (float)EmigMatrix(line, offset + 0);
             emigrationTraits.alpha = (float)EmigMatrix(line, offset + 1);
             emigrationTraits.beta = (float)EmigMatrix(line, offset + 2);
 
             pSpecies->setSpEmigTraits(stage, sex, emigrationTraits);
-            // }
-        } else { // !emig.densDep
-            // if(emig.indVar) {
-            // 	eparams.d0Mean = (float)EmigMatrix(line, offset + 0);
-            // 	eparams.d0SD = (float)EmigMatrix(line, offset + 1);
-            // 	eparams.alphaMean = eparams.betaMean = 0.0;
-            // 	eparams.alphaSD = eparams.betaSD = 0.00000001;
-            //
-            // 	pSpecies->setSpEmigParams(stage, sex, eparams);
-            // } else {
+        } else {
             emigrationTraits.d0 = (float)EmigMatrix(line, offset + 0);
             emigrationTraits.alpha = emigrationTraits.beta = 0.0;
 
             pSpecies->setSpEmigTraits(stage, sex, emigrationTraits);
-            // }
+            }
+        } // end of Nlines for loop
+
+    } else{
+        gHasGenetics = true;
+
+        // set the emigration probability parameters to -9
+        if(emig.stgDep) { // it should not go in here because it cannot be stage dependent for individual variability
+            if(emig.sexDep) {
+                for (int i = 0; i < sstruct.nStages; i++) {
+                    for (int j = 0; j < gNbSexesDisp; j++) {
+                        if(emig.densDep){
+                            emigrationTraits.d0 = -9.0;
+                            emigrationTraits.alpha = -9.0;
+                            emigrationTraits.beta = -9.0;
+                            pSpecies->setSpEmigTraits(i, j, emigrationTraits);
+                        } else{
+                            emigrationTraits.d0 = -9.0;
+                            emigrationTraits.alpha = emigrationTraits.beta = 0.0;
+                            pSpecies->setSpEmigTraits(i, j, emigrationTraits);
+                        }
+                    }
+                }
+            } else {
+                for (int i = 0; i < sstruct.nStages; i++) {
+                    if(emig.densDep){
+                        emigrationTraits.d0 = -9.0;
+                        emigrationTraits.alpha = -9.0;
+                        emigrationTraits.beta = -9.0;
+                        pSpecies->setSpEmigTraits(i, 0, emigrationTraits);
+                    } else{
+                        emigrationTraits.d0 = -9.0;
+                        emigrationTraits.alpha = emigrationTraits.beta = 0.0;
+                        pSpecies->setSpEmigTraits(i, 0, emigrationTraits);
+                    }
+
+                }
+            }
+        } else {
+            if(emig.sexDep) {
+                for (int j = 0; j < gNbSexesDisp; j++) {
+                    if(emig.densDep){
+                        emigrationTraits.d0 = -9.0;
+                        emigrationTraits.alpha = -9.0;
+                        emigrationTraits.beta = -9.0;
+                        pSpecies->setSpEmigTraits(0, j, emigrationTraits);
+                    } else{
+                        emigrationTraits.d0 = -9.0;
+                        emigrationTraits.alpha = emigrationTraits.beta = 0.0;
+                        pSpecies->setSpEmigTraits(0, j, emigrationTraits);
+                    }
+                }
+            } else {
+                    if(emig.densDep){
+                        emigrationTraits.d0 = -9.0;
+                        emigrationTraits.alpha = -9.0;
+                        emigrationTraits.beta = -9.0;
+                        pSpecies->setSpEmigTraits(0, 0, emigrationTraits);
+                    } else{
+                        emigrationTraits.d0 = -9.0;
+                        emigrationTraits.alpha = emigrationTraits.beta = 0.0;
+                        pSpecies->setSpEmigTraits(0, 0, emigrationTraits);
+                    }
+            }
         }
-    } // end of Nlines for loop
-
-    // EmigScalesVec = Rcpp::as<Rcpp::NumericVector>(EmigParamsR.slot("TraitScaleFactor"));
-
-    // if(emig.indVar) {
-    // 	if(emig.densDep) {
-    // 		scale.d0Scale = (float)EmigScalesVec(0);
-    // 		scale.alphaScale = (float)EmigScalesVec(1);
-    // 		scale.betaScale = (float)EmigScalesVec(2);
-    // 	} else {
-    // 		scale.d0Scale = (float)EmigScalesVec(0);
-    // 		scale.alphaScale = scale.betaScale = 0.00000001;
-    // 	}
-    // 	pSpecies->setEmigScales(scale);
-    // }
-
-    if(emig.indVar) gHasGenetics = true;
+    } // if indVar
 
     return error;
 }
@@ -1738,7 +1762,7 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
         TransParamsR = Rcpp::as<Rcpp::S4>(DispParamsR.slot("Transfer"));
 
         Rcpp::NumericMatrix DispMatrix;
-        Rcpp::NumericVector DispScalesVec;
+        // Rcpp::NumericVector DispScalesVec;
 
         // simulation = Rcpp::as<int>(TransParamsR.slot("Simulation")); // REMOVED in R-interface //Must match
         // simulation numbers in ParamParams
@@ -1781,82 +1805,57 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
             }
         }
 
-        DispMatrix = Rcpp::as<Rcpp::NumericMatrix>(TransParamsR.slot("Distances"));
-
-        for(int line = 0; line < Nlines; line++) {
-
-            if(trfr.stgDep) {
-                if(trfr.sexDep) {
-                    stage = (int)DispMatrix(line, 0);
-                    sex = (int)DispMatrix(line, 1);
-                } else {
-                    stage = (int)DispMatrix(line, 0);
-                    sex = 0;
+        if(trfr.indVar){
+            // parameters for individual variability are set in ReadTraits()
+            stage = 0;
+            kparams.meanDist1 = -9;
+            kparams.meanDist2 = -9;
+            kparams.probKern1 = -9;
+            if(trfr.sexDep) {
+                for (sex=0; sex<gNbSexesDisp; sex++) {
+                    pSpecies->setSpKernTraits(stage, sex, kparams, paramsLand.resol);
                 }
             } else {
-                if(trfr.sexDep) {
-                    stage = 0;
-                    sex = (int)DispMatrix(line, 0);
+                pSpecies->setSpKernTraits(stage, 0, kparams, paramsLand.resol);
+            }
+        }
+        else {
+            DispMatrix = Rcpp::as<Rcpp::NumericMatrix>(TransParamsR.slot("Distances")); // only if not indVar
+
+            for(int line = 0; line < Nlines; line++) {
+                if(trfr.stgDep) {
+                    if(trfr.sexDep) {
+                        stage = (int)DispMatrix(line, 0);
+                        sex = (int)DispMatrix(line, 1);
+                    } else {
+                        stage = (int)DispMatrix(line, 0);
+                        sex = 0;
+                    }
                 } else {
-                    stage = 0;
-                    sex = 0;
+                    if(trfr.sexDep) {
+                        stage = 0;
+                        sex = (int)DispMatrix(line, 0);
+                    } else {
+                        stage = 0;
+                        sex = 0;
+                    }
                 }
-            }
 
-            if(trfr.twinKern) {
-                if(trfr.indVar) { // andere Implementierung im neuen Genetics modul?
-                    // kparams.dist1Mean = (float)DispMatrix(line, offset + 0);
-                    // kparams.dist1SD = (float)DispMatrix(line, offset + 1);
-                    // kparams.dist2Mean = (float)DispMatrix(line, offset + 2);
-                    // kparams.dist2SD = (float)DispMatrix(line, offset + 3);
-                    // kparams.PKern1Mean = (float)DispMatrix(line, offset + 4);
-                    // kparams.PKern1SD = (float)DispMatrix(line, offset + 5);
-                    // MAXDist = kparams.maxDist1;
-                    // pSpecies->setKernParams(stage, sex, kparams, paramsLand.resol);
-                } else { // const kernel parameters
-                    kparams.meanDist1 = (float)DispMatrix(line, offset + 0);
-                    kparams.meanDist2 = (float)DispMatrix(line, offset + 1);
-                    kparams.probKern1 = (float)DispMatrix(line, offset + 2);
+                if(trfr.twinKern) {
+                        kparams.meanDist1 = (float)DispMatrix(line, offset + 0);
+                        kparams.meanDist2 = (float)DispMatrix(line, offset + 1);
+                        kparams.probKern1 = (float)DispMatrix(line, offset + 2);
 
-                    pSpecies->setSpKernTraits(stage, sex, kparams, paramsLand.resol);
+                        pSpecies->setSpKernTraits(stage, sex, kparams, paramsLand.resol);
+                } else { // single kernel
+                        kparams.meanDist1 = (float)DispMatrix(line, offset + 0);
+                        kparams.meanDist2 = kparams.meanDist1;
+                        kparams.probKern1 = 1.0;
+
+                        pSpecies->setSpKernTraits(stage, sex, kparams, paramsLand.resol);
                 }
-            } else { // single kernel
-                if(trfr.indVar) {
-                    // kparams.dist1Mean = (float)DispMatrix(line, offset + 0);
-                    // kparams.dist1SD = (float)DispMatrix(line, offset + 1);
-                    // kparams.dist2Mean = kparams.dist1Mean;
-                    // kparams.dist2SD = kparams.dist1SD;
-                    // kparams.PKern1Mean = 0.999;
-                    // kparams.PKern1SD = 0.001;
-                    //
-                    // pSpecies->setKernParams(stage, sex, kparams, paramsLand.resol);
-                } else { // const kernel parameters
-                    kparams.meanDist1 = (float)DispMatrix(line, offset + 0);
-                    kparams.meanDist2 = kparams.meanDist1;
-                    kparams.probKern1 = 1.0;
-
-                    pSpecies->setSpKernTraits(stage, sex, kparams, paramsLand.resol);
-                }
-            }
-        } // end of Nlines for-loop
-
-        // Mutation scales // Different Implementation in new genetics
-        // scale = pSpecies->getTrfrScales();
-        // DispScalesVec = Rcpp::as<Rcpp::NumericVector>(TransParamsR.slot("TraitScaleFactor"));
-        // if(trfr.indVar) {
-        // 	//	if (!trfr.indVar) error = 411;
-        // 	//	if (dem.stageStruct) error = 412;
-        // 	if(trfr.twinKern) {
-        // 		scale.dist1Scale = (float)DispScalesVec(0);
-        // 		scale.dist2Scale = (float)DispScalesVec(1);
-        // 		scale.PKern1Scale = (float)DispScalesVec(2);
-        // 	} else {
-        // 		scale.dist1Scale = (float)DispScalesVec(0);
-        // 		scale.dist2Scale = scale.dist1Scale;
-        // 		scale.PKern1Scale = 0.00000001;
-        // 	}
-        // 	pSpecies->setTrfrScales(scale);
-        // }
+            } // end of Nlines for-loop
+        }
 
         // mortality
         mort.fixedMort = Rcpp::as<float>(TransParamsR.slot("MortProb"));
@@ -1880,36 +1879,21 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
         smsparams.memSize = Rcpp::as<short>(TransParamsR.slot("MemSize"));    // No. of previous steps over which to calculate current direction to apply DP [1-14]
         smsparams.goalType = Rcpp::as<short>(TransParamsR.slot("GoalType"));   // Goal type: 0 (none) or 2 (dispersal bias)
         trfr.indVar = Rcpp::as<bool>(TransParamsR.slot("IndVar"));
+
         if(trfr.indVar) {
-            // smsparams = pSpecies->getSMSParams(0,0);
-            // scale = pSpecies->getTrfrScales();
-        }
-        ReadVec = Rcpp::as<Rcpp::NumericVector>(TransParamsR.slot("DP")); // Directional persistence, Must be >= 1.0
-        if(trfr.indVar) {
-            // if(ReadVec.size() == 3) {
-            // 	smsparams.dpMean = (float)ReadVec[0]; //  Directional persistence initial mean (m); Required for IndVar = 1
-            // 	smsparams.dpSD   = (float)ReadVec[1]; //  Directional persistence initial SD (m); Required for IndVar = 1
-            // 	scale.dpScale  = (float)ReadVec[2]; //  Directional persistence scaling factor; Required for IndVar = 1
-            // } else {
-            // 	error = 435;
-            // }
+            smsparams.dp = -9;
         } else {
+            ReadVec = Rcpp::as<Rcpp::NumericVector>(TransParamsR.slot("DP")); // Directional persistence, Must be >= 1.0
             if(ReadVec.size() == 1) {
                 smsparams.dp = (float)ReadVec[0];
             } else {
                 error = 436;
             }
         }
-        ReadVec = Rcpp::as<Rcpp::NumericVector>(TransParamsR.slot("GoalBias")); // Goal bias strength, Must be >= 1.0
         if(trfr.indVar) {
-            // if(ReadVec.size() == 3) {
-            // 	smsparams.gbMean = (float)ReadVec[0]; //  Goal bias strength initial mean (m); Required for IndVar = 1
-            // 	smsparams.gbSD   = (float)ReadVec[1]; // Goal bias strength initial SD (m); Required for IndVar = 1
-            // 	scale.gbScale  = (float)ReadVec[2]; //  Goal bias strength scaling factor; Required for IndVar = 1
-            // } else {
-            // 	error = 435;
-            // }
+            smsparams.gb = -9;
         } else {
+            ReadVec = Rcpp::as<Rcpp::NumericVector>(TransParamsR.slot("GoalBias")); // Goal bias strength, Must be >= 1.0
             if(ReadVec.size() == 1) {
                 smsparams.gb = (float)ReadVec[0];
             } else {
@@ -1917,32 +1901,20 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
             }
         }
         if(smsparams.goalType == 2) {	// dispersal bias
-            ReadVec = Rcpp::as<Rcpp::NumericVector>(TransParamsR.slot("AlphaDB")); // Dispersal bias decay rate (> 0)
             if(trfr.indVar) {
-                // if(ReadVec.size() == 3) {
-                // 	smsparams.alphaDBMean = (float)ReadVec[0]; // decay rate initial mean (m); Required for IndVar = 1
-                // 	smsparams.alphaDBSD   = (float)ReadVec[1]; // decay rate initial SD (m); Required for IndVar = 1
-                // 	scale.alphaDBScale    = (float)ReadVec[2]; // decay rate scaling factor; Required for IndVar = 1
-                // } else {
-                // 	error = 435;
-                // }
+                smsparams.alphaDB = -9;
             } else {
+                ReadVec = Rcpp::as<Rcpp::NumericVector>(TransParamsR.slot("AlphaDB")); // Dispersal bias decay rate (> 0)
                 if(ReadVec.size() == 1) {
                     smsparams.alphaDB = (float)ReadVec[0];
                 } else {
                     error = 436;
                 }
             }
-            ReadVec = Rcpp::as<Rcpp::NumericVector>(TransParamsR.slot("BetaDB")); // Dispersal bias decay inflection point (no. of steps) (> 0)
             if(trfr.indVar) {
-                // if(ReadVec.size() == 3) {
-                // 	smsparams.alphaDBMean = (float)ReadVec[0]; // decay inflection point initial mean (m); Required for IndVar = 1
-                // 	smsparams.alphaDBSD   = (float)ReadVec[1]; // decay inflection point initial SD (m); Required for IndVar = 1
-                // 	scale.alphaDBScale    = (float)ReadVec[2]; // decay inflection point scaling factor; Required for IndVar = 1
-                // } else {
-                // 	error = 435;
-                // }
+                smsparams.betaDB = -9;
             } else {
+                ReadVec = Rcpp::as<Rcpp::NumericVector>(TransParamsR.slot("BetaDB")); // Dispersal bias decay inflection point (no. of steps) (> 0)
                 if(ReadVec.size() == 1) {
                     smsparams.betaDB = (float)ReadVec[0];
                 } else {
@@ -1956,25 +1928,6 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
         DEBUGLOG << "ReadTransferR(): dp=" << movt.dp << " MemSize=" << movt.memSize << " gb=" << movt.gb
                  << " goaltype=" << movt.goalType << endl;
 #endif
-
-        //smsparams.dpMean = Rcpp::as<float>(TransParamsR.slot("DPMean"));
-        //smsparams.dpSD = Rcpp::as<float>(TransParamsR.slot("DPSD"));
-        //smsparams.gbMean = Rcpp::as<float>(TransParamsR.slot("GBMean"));
-        //smsparams.gbSD = Rcpp::as<float>(TransParamsR.slot("GBSD"));
-        //smsparams.alphaDBMean = Rcpp::as<float>(TransParamsR.slot("AlphaDBMean"));
-        //smsparams.alphaDBSD = Rcpp::as<float>(TransParamsR.slot("AlphaDBSD"));
-        //smsparams.betaDBMean = Rcpp::as<float>(TransParamsR.slot("BetaDBMean"));
-        //smsparams.betaDBSD = Rcpp::as<float>(TransParamsR.slot("BetaDBSD"));
-
-        //scale.dpScale = Rcpp::as<float>(TransParamsR.slot("DPScale"));
-        //scale.gbScale = Rcpp::as<float>(TransParamsR.slot("GBScale"));
-        //scale.alphaDBScale = Rcpp::as<float>(TransParamsR.slot("AlphaDBScale"));
-        //scale.betaDBScale = Rcpp::as<float>(TransParamsR.slot("BetaDBScale"));
-
-        if (trfr.indVar) {
-            // pSpecies->setSMSParams(0,0,smsparams);
-            // pSpecies->setTrfrScales(scale);
-        }
 
         smsparams.straightenPath = Rcpp::as<bool>(TransParamsR.slot("StraightenPath")); // Straighten path after decision not to settle?
 
@@ -2063,16 +2016,10 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
         // simulation numbers in ParamParams
         trfr.indVar = Rcpp::as<bool>(TransParamsR.slot("IndVar"));
 
-        ReadVec = Rcpp::as<Rcpp::NumericVector>(TransParamsR.slot("StepLength")); // Step length params
         if(trfr.indVar) {
-            // if(ReadVec.size() == 3) {
-            // 	mparams.stepLgthMean = (float)ReadVec[0]; // Step length initial mean (m); Required for IndVar = 1
-            // 	mparams.stepLgthSD = (float)ReadVec[1];   // Step length initial SD (m); Required for IndVar = 1
-            // 	scale.stepLScale = (float)ReadVec[2];     // Step length scaling factor; Required for IndVar = 1
-            // } else {
-            // 	error = 435;
-            // }
+        	mparams.stepLength = -9; // Step length initial mean (m); Required for IndVar = 1
         } else {
+            ReadVec = Rcpp::as<Rcpp::NumericVector>(TransParamsR.slot("StepLength")); // Step length params
             if(ReadVec.size() == 1) {
                 mparams.stepLength = (float)ReadVec[0]; // Step length (m); Required for IndVar = 0; must be > 0
             } else {
@@ -2080,16 +2027,10 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
             }
         }
 
-        ReadVec = Rcpp::as<Rcpp::NumericVector>(TransParamsR.slot("Rho")); // Step correlation coefficient params
         if(trfr.indVar) {
-            // if(ReadVec.size() == 3) {
-            // 	mparams.rhoMean = (float)ReadVec[0]; // Step correlation coefficient initial mean (m); Required for IndVar = 1
-            // 	mparams.rhoSD   = (float)ReadVec[1]; // Step correlation coefficient initial SD (m); Required for IndVar = 1
-            // 	scale.rhoScale  = (float)ReadVec[2]; // Step correlation coefficient scaling factor; Required for IndVar = 1
-            // } else {
-            // 	error = 435;
-            // }
+        	mparams.rho = -9; // Step correlation coefficient initial mean (m); Required for IndVar = 1
         } else {
+            ReadVec = Rcpp::as<Rcpp::NumericVector>(TransParamsR.slot("Rho")); // Step correlation coefficient params
             if(ReadVec.size() == 1) {
                 mparams.rho =
                     (float)ReadVec[0]; // Step correlation coefficient; Required for IndVar = 0; must be > 0.0 and < 1.0
@@ -2150,7 +2091,6 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 
         pSpecies->setTrfrRules(trfr);
         pSpecies->setSpMovtTraits(mparams);
-        // pSpecies->setCRWParams(0, 0, mparams);
 
     }
         break; // end of CRW
@@ -2187,11 +2127,6 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
     settleRules srules;
     settleSteps ssteps = pSpecies->getSteps(0,0);
     settleTraits settleDD; // = pSpecies->getSettTraits(0,0);
-    // settParams sparams = pSpecies->getSettParams(0,0);
-
-    // int simulation;
-    // simulation = Rcpp::as<int>(SettleParamsR.slot("Simulation")); // REMOVED in R-interface  // Must match simulation
-    // numbers in ParamParams
     sett.stgDep = Rcpp::as<bool>(SettleParamsR.slot("StageDep")); // Stage-dependent settlement.
     sett.sexDep = Rcpp::as<bool>(SettleParamsR.slot("SexDep"));   // Sex-dependent settlement.
     if ( gTransferType == 0) {
@@ -2242,151 +2177,83 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
              << ", sett.indVar = " << sett.indVar << endl;
 #endif
 
-    Rcpp::NumericMatrix SettleCondMatrix = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("Settle"));
-    Rcpp::LogicalVector FindMate = Rcpp::as<Rcpp::LogicalVector>(SettleParamsR.slot("FindMate"));
+    Rcpp::NumericMatrix FindMate = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("FindMate"));
     bool constFindMate = false;
-    if(FindMate.length() == 1) {
+    if(FindMate.nrow() == 1) {
         constFindMate = true;
     }
-    Rcpp::NumericVector MutationCoeffs = Rcpp::as<Rcpp::NumericVector>(SettleParamsR.slot("TraitScaleFactor"));
-    Rcpp::IntegerVector MinSteps = Rcpp::as<Rcpp::IntegerVector>(SettleParamsR.slot("MinSteps"));
+    Rcpp::NumericMatrix MinSteps = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("MinSteps"));
     bool constMinSteps = false;
-    if(MinSteps.length() == 1) {
+    if(MinSteps.nrow() == 1) {
         constMinSteps = true;
     }
-    Rcpp::IntegerVector MaxSteps = Rcpp::as<Rcpp::IntegerVector>(SettleParamsR.slot("MaxSteps"));
+    Rcpp::NumericMatrix MaxSteps = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("MaxSteps"));
     bool constMaxSteps = false;
-    if(MaxSteps.length() == 1) {
+    if(MaxSteps.nrow() == 1) {
         constMaxSteps = true;
     }
-    Rcpp::IntegerVector MaxStepsYr = Rcpp::as<Rcpp::IntegerVector>(SettleParamsR.slot("MaxStepsYear"));
+    Rcpp::NumericMatrix MaxStepsYr = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("MaxStepsYear"));
     bool constMaxStepsYr = false;
-    if(MaxStepsYr.length() == 1) {
+    if(MaxStepsYr.nrow() == 1) {
         constMaxStepsYr = true;
     }
 
     sexSettle = 2 * sett.stgDep + sett.sexDep;
 
-    for(int line = 0; line < Nlines; line++) {
+    Rcpp::NumericMatrix SettleCondMatrix = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("Settle"));
 
+
+    for(int line = 0; line < Nlines; line++) {
+        // FindMate
         // determine stage and sex of this line
         if(sett.stgDep) {
             if(sett.sexDep) {
-                stage = (int)SettleCondMatrix(line, 0);
-                sex = (int)SettleCondMatrix(line, 1);
+                stage = (int)FindMate(line, 0);
+                sex = (int)FindMate(line, 1);
             } else {
-                stage = (int)SettleCondMatrix(line, 0);
+                stage = (int)FindMate(line, 0);
                 sex = 0;
             }
         } else {
             if(sett.sexDep) {
                 stage = 0;
-                sex = (int)SettleCondMatrix(line, 0);
+                sex = (int)FindMate(line, 0);
             } else {
                 stage = 0;
                 sex = 0;
             }
         }
 
-        // read settlement conditions for...
-        if(trfr.usesMovtProc) { // ...movement process            //  /!\ different to ReadSettlement() : all cases are
-            // covered here (in a way that parameters for IIV (i.e. 'settParams sparams;') are only set
-            // for stage #0,
-            //                                      however on R-level (IndVar && StageDep) is not
-            //                                      admissible
-
-            // densdep = (bool)SettleCondMatrix(line, offset+0);
+        if(trfr.usesMovtProc) { // ...movement process
             if(constFindMate) {
-                findmate = (bool)FindMate(0);
+                findmate = (bool)FindMate(0, 0);
             } else {
-                findmate = (bool)FindMate(line);
+                findmate = (bool)FindMate(line, offset);
             }
             if(findmate && dem.repType == 0)
                 error = 504;
 
-            if(constMinSteps) {
-                ssteps.minSteps = (int)MinSteps(0);
-            } else {
-                ssteps.minSteps = (int)MinSteps(line);
-            }
-            if(constMaxSteps) {
-                ssteps.maxSteps = (int)MaxSteps(0);
-            } else {
-                ssteps.maxSteps = (int)MaxSteps(line);
-            }
-            if(constMaxStepsYr) {
-                ssteps.maxStepsYr = (int)MaxStepsYr(0);
-            } else {
-                ssteps.maxStepsYr = (int)MaxStepsYr(line);
-            }
-            if(densdep) {
-                if(sett.indVar) {
-                    // sparams.s0Mean = (float)SettleCondMatrix(
-                    //                      line, offset + 0); // Required for DensDep = 1 and IndVar = 1. 0.0 < S0 <= 1.0
-                    // sparams.s0SD = (float)SettleCondMatrix(
-                    //                    line, offset + 1); // Required for DensDep = 1 and IndVar = 1. 0.0 < S0 <= 1.0
-                    // sparams.alphaSMean = (float)SettleCondMatrix(line, offset + 2);
-                    // sparams.alphaSSD = (float)SettleCondMatrix(line, offset + 3);
-                    // sparams.betaSMean = (float)SettleCondMatrix(line, offset + 4);
-                    // sparams.betaSSD = (float)SettleCondMatrix(line, offset + 5);
-                    // if(stage == 0) {
-                    // 	sparams.s0Scale = (float)MutationCoeffs(0);
-                    // 	sparams.alphaSScale = (float)MutationCoeffs(1);
-                    // 	sparams.betaSScale = (float)MutationCoeffs(2);
-                    // }
-                } else {
-                    settleDD.s0 = (float)SettleCondMatrix(
-                        line, offset + 0); // Max. settlement probability for density reaction norm. Required for
-                    // DensDep = 1 and IndVar = 0; 0.0 < S0 <= 1.0
-                    settleDD.alpha =
-                        (float)SettleCondMatrix(line, offset + 1); // Required for DensDep = 1 and IndVar = 0
-                    settleDD.beta =
-                        (float)SettleCondMatrix(line, offset + 2); // Required for DensDep = 1 and IndVar = 0
-                }
-            }
-
             switch(sexSettle) {
 
-            case 0: { // no sex- / stage-dependence     // why do the parameters for stage=0, sex=1 not get set if
-                // (dem.stageStruct) ??? (remove the else?? ) and why the different rules for the sexes regarding
-                // setSettTraits() for stages>0
-                srules = pSpecies->getSettRules(0, 0);
-                srules.densDep = densdep;
-                srules.findMate = findmate;
-                pSpecies->setSettRules(0, 0, srules);
-                pSpecies->setSteps(0, 0, ssteps);
-                if(srules.densDep) {
-                    // if(sett.indVar)
-                    // 	// pSpecies->setSettParams(0, 0, sparams);
-                    // else
-                    pSpecies->setSpSettTraits(0, 0, settleDD);
-                }
-                if(dem.stageStruct) { // model is structured - also set parameters for all stages
-                    for(int i = 1; i < sstruct.nStages; i++) {
-                        pSpecies->setSettRules(i, 0, srules);
-                        pSpecies->setSteps(i, 0, ssteps);
-                        if(srules.densDep && !sett.indVar)
-                            pSpecies->setSpSettTraits(i, 0, settleDD); //  /!\ different to ReadSettlement()
-                        if(dem.repType > 0) {                        // model is sexual - also set parameters for males
-                            pSpecies->setSettRules(i, 1, srules);
-                            pSpecies->setSteps(i, 1, ssteps);
-                            if(srules.densDep && !sett.indVar)
-                                pSpecies->setSpSettTraits(i, 1, settleDD);
+            case 0: { // no sex- / stage-dependence
+                    srules = pSpecies->getSettRules(0, 0);
+                    srules.densDep = densdep;
+                    srules.findMate = findmate;
+                    pSpecies->setSettRules(0, 0, srules);
+
+                    if(dem.stageStruct) { // model is structured - also set parameters for all stages
+                        for(int i = 1; i < sstruct.nStages; i++) {
+                            pSpecies->setSettRules(i, 0, srules);
+                            if(dem.repType > 0) {                        // model is sexual - also set parameters for males
+                                pSpecies->setSettRules(i, 1, srules);
+                            }
                         }
-                    }
-                } else {                  // see comment above (at case label)
-                    if(dem.repType > 0) { // model is sexual - also set parameters for males
-                        pSpecies->setSettRules(0, 1, srules);
-                        pSpecies->setSteps(0, 1, ssteps);
-                        if(srules.densDep) {
-                            // if(sett.indVar)
-                            // 	pSpecies->setSettParams(0, 1, sparams);
-                            // else
-                            pSpecies->setSpSettTraits(0, 1, settleDD);
+                    } else {                  // see comment above (at case label)
+                        if(dem.repType > 0) { // model is sexual - also set parameters for males
+                            pSpecies->setSettRules(0, 1, srules);
                         }
                     }
                 }
-            }
                 break;
 
             case 1: { // sex-dependent
@@ -2394,23 +2261,9 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
                 srules.densDep = densdep;
                 srules.findMate = findmate;
                 pSpecies->setSettRules(0, sex, srules);
-                pSpecies->setSteps(0, sex, ssteps);
-#if RSDEBUG
-                DEBUGLOG << "ReadSettlementR(): stage=" << stage << " sex=" << sex
-                         << " ssteps.maxStepsYr =" << ssteps.maxStepsYr << endl;
-#endif
-                if(srules.densDep) {
-                    // if(sett.indVar)
-                    // 	pSpecies->setSettParams(0, sex, sparams);
-                    // else
-                    pSpecies->setSpSettTraits(0, sex, settleDD);
-                }
                 if(dem.stageStruct) { // model is structured - also set parameters for all stages
                     for(int i = 1; i < sstruct.nStages; i++) {
                         pSpecies->setSettRules(i, sex, srules);
-                        pSpecies->setSteps(i, sex, ssteps);
-                        if(srules.densDep && !sett.indVar)
-                            pSpecies->setSpSettTraits(i, sex, settleDD);
                     }
                 }
             }
@@ -2421,24 +2274,8 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
                 srules.densDep = densdep;
                 srules.findMate = findmate;
                 pSpecies->setSettRules(stage, 0, srules);
-                pSpecies->setSteps(stage, 0, ssteps);
-                if(srules.densDep) {
-                    if(sett.indVar) {
-                        // if(stage == 0)
-                        // 	pSpecies->setSettParams(0, 0, sparams);
-                    } else
-                        pSpecies->setSpSettTraits(stage, 0, settleDD);
-                }
                 if(dem.repType > 0) { // model is sexual - also set parameters for males
                     pSpecies->setSettRules(stage, 1, srules);
-                    pSpecies->setSteps(stage, 1, ssteps);
-                    if(srules.densDep) {
-                        if(sett.indVar) {
-                            // if(stage == 0)
-                            // 	pSpecies->setSettParams(0, 1, sparams);
-                        } else
-                            pSpecies->setSpSettTraits(stage, 1, settleDD);
-                    }
                 }
             }
                 break;
@@ -2448,61 +2285,27 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
                 srules.densDep = densdep;
                 srules.findMate = findmate;
                 pSpecies->setSettRules(stage, sex, srules);
-                pSpecies->setSteps(stage, sex, ssteps);
-                if(srules.densDep) {
-                    if(sett.indVar) {
-                        // if(stage == 0)
-                        // 	pSpecies->setSettParams(0, sex, sparams);
-                    } else
-                        pSpecies->setSpSettTraits(stage, sex, settleDD);
-                }
             }
                 break;
-            } // end sexSettle
+            } // end sexSettle for FindMate
 
-        } // end of movement model
-
-        // read settlement conditions for...
+        }
+        // read find mate conditions for...
         else { // ...dispersal kernel
-
-            settType = (int)SettleCondMatrix(line,
-                        offset); // Settlement rule if the arrival cell/patch is unsuitable: 0 = die, 1 = wait, 2 = randomly
-            // choose a suitable cell/patch or die, 3 = randomly choose a suitable cell/patch or wait.
-            // Options 1 and 3 may be chosen for a stage-structured population only
             if(constFindMate) {
-                findmate = (bool)FindMate(0);
+                findmate = (bool)FindMate(0, 0);
             } // Mating requirements to settle, required for a sexual population only
             else {
-                findmate = (bool)FindMate(line);
+                findmate = (bool)FindMate(line, offset);
             }
             if(findmate && dem.repType == 0)
                 error = 504;
 
             switch(sexSettle) {
             case 0: { // no sex / stage dependence
-                    if((settType == 1 || settType == 3) && !dem.stageStruct)
-                        error = 503;
                     if(findmate && dem.repType == 0)
                         error = 504;
                     srules = pSpecies->getSettRules(0, 0);
-                    switch(settType) {
-                    case 0:
-                        srules.wait = false;
-                        srules.go2nbrLocn = false;
-                        break;
-                    case 1:
-                        srules.wait = true;
-                        srules.go2nbrLocn = false;
-                        break;
-                    case 2:
-                        srules.wait = false;
-                        srules.go2nbrLocn = true;
-                        break;
-                    case 3:
-                        srules.wait = true;
-                        srules.go2nbrLocn = true;
-                        break;
-                    }
                     srules.findMate = findmate;
                     if(dem.stageStruct) { // model is structured - also set parameters for all stages
                         for(int i = 0; i < sstruct.nStages; i++) {
@@ -2518,6 +2321,434 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
                         }
                     }
                 }
+                break;
+
+            case 1: { // sex dependent
+                srules = pSpecies->getSettRules(0, sex);
+                srules.findMate = findmate;
+                pSpecies->setSettRules(0, sex, srules);
+                if(dem.stageStruct) { // model is structured - also set parameters for all stages
+                    for(int i = 1; i < sstruct.nStages; i++) {
+                        pSpecies->setSettRules(i, sex, srules);
+                    }
+                }
+            }
+                break;
+
+            case 2: { // stage dependent
+                if(findmate && dem.repType == 0)
+                    error = 507;
+                srules = pSpecies->getSettRules(stage, 0);
+                srules.findMate = findmate;
+                pSpecies->setSettRules(stage, 0, srules);
+                if(dem.repType > 0) { // model is sexual - also set parameters for males
+                    pSpecies->setSettRules(stage, 1, srules);
+                }
+            }
+                break;
+
+            case 3: { // sex & stage dependent
+                srules = pSpecies->getSettRules(stage, sex);
+                srules.findMate = findmate;
+                pSpecies->setSettRules(stage, sex, srules);
+            }
+                break;
+
+            } // end of switch (sexSettle)
+
+        } // end of dispersal kernel
+
+        // MinSteps
+        // determine stage and sex of this line
+        if(sett.stgDep) {
+            if(sett.sexDep) {
+                stage = (int)MinSteps(line, 0);
+                sex = (int)MinSteps(line, 1);
+            } else {
+                stage = (int)MinSteps(line, 0);
+                sex = 0;
+            }
+        } else {
+            if(sett.sexDep) {
+                stage = 0;
+                sex = (int)MinSteps(line, 0);
+            } else {
+                stage = 0;
+                sex = 0;
+            }
+        }
+
+        if(trfr.usesMovtProc) { // ...movement process
+            if(constMinSteps) {
+                ssteps.minSteps = (int)MinSteps(0, 0);
+            } else {
+                ssteps.minSteps = (int)MinSteps(line, offset);
+            }
+
+            switch(sexSettle) {
+
+            case 0: { // no sex- / stage-dependence
+                srules = pSpecies->getSettRules(0, 0);
+                pSpecies->setSteps(0, 0, ssteps);
+
+                if(dem.stageStruct) { // model is structured - also set parameters for all stages
+                    for(int i = 1; i < sstruct.nStages; i++) {
+                        pSpecies->setSteps(i, 0, ssteps);
+                        if(dem.repType > 0) {                        // model is sexual - also set parameters for males
+                            pSpecies->setSteps(i, 1, ssteps);
+                        }
+                    }
+                } else {                  // see comment above (at case label)
+                    if(dem.repType > 0) { // model is sexual - also set parameters for males
+                        pSpecies->setSteps(0, 1, ssteps);
+                    }
+                }
+            }
+                break;
+
+            case 1: { // sex-dependent
+                srules = pSpecies->getSettRules(0, sex);
+                pSpecies->setSteps(0, sex, ssteps);
+                if(dem.stageStruct) { // model is structured - also set parameters for all stages
+                    for(int i = 1; i < sstruct.nStages; i++) {
+                        pSpecies->setSteps(i, sex, ssteps);
+                    }
+                }
+
+
+            }
+                break;
+
+            case 2: { // stage-dependent
+                srules = pSpecies->getSettRules(stage, 0);
+                pSpecies->setSteps(stage, 0, ssteps);
+                if(dem.repType > 0) { // model is sexual - also set parameters for males
+                    pSpecies->setSteps(stage, 1, ssteps);
+                }
+            }
+                break;
+
+            case 3: { // sex- & stage-dependent
+                srules = pSpecies->getSettRules(stage, sex);
+                pSpecies->setSteps(stage, sex, ssteps);
+            }
+                break;
+            } // end sexSettle
+        } // end if MovementModel for MinSteps
+
+        // MaxSteps
+        // determine stage and sex of this line
+        if(sett.stgDep) {
+            if(sett.sexDep) {
+                stage = (int)MaxSteps(line, 0);
+                sex = (int)MaxSteps(line, 1);
+            } else {
+                stage = (int)MaxSteps(line, 0);
+                sex = 0;
+            }
+        } else {
+            if(sett.sexDep) {
+                stage = 0;
+                sex = (int)MaxSteps(line, 0);
+            } else {
+                stage = 0;
+                sex = 0;
+            }
+        }
+
+        if(trfr.usesMovtProc) { // ...movement process
+            if(constMaxSteps) {
+                ssteps.maxSteps = (int)MaxSteps(0, 0);
+            } else {
+                ssteps.maxSteps = (int)MaxSteps(line, offset);
+            }
+
+            switch(sexSettle) {
+
+            case 0: { // no sex- / stage-dependence
+                srules = pSpecies->getSettRules(0, 0);
+                pSpecies->setSteps(0, 0, ssteps);
+
+                if(dem.stageStruct) { // model is structured - also set parameters for all stages
+                    for(int i = 1; i < sstruct.nStages; i++) {
+                        pSpecies->setSteps(i, 0, ssteps);
+                        if(dem.repType > 0) {                        // model is sexual - also set parameters for males
+                            pSpecies->setSteps(i, 1, ssteps);
+                        }
+                    }
+                } else {                  // see comment above (at case label)
+                    if(dem.repType > 0) { // model is sexual - also set parameters for males
+                        pSpecies->setSteps(0, 1, ssteps);
+                    }
+                }
+            }
+                break;
+
+            case 1: { // sex-dependent
+                srules = pSpecies->getSettRules(0, sex);
+                pSpecies->setSteps(0, sex, ssteps);
+                if(dem.stageStruct) { // model is structured - also set parameters for all stages
+                    for(int i = 1; i < sstruct.nStages; i++) {
+                        pSpecies->setSteps(i, sex, ssteps);
+                    }
+                }
+
+
+            }
+                break;
+
+            case 2: { // stage-dependent
+                srules = pSpecies->getSettRules(stage, 0);
+                pSpecies->setSteps(stage, 0, ssteps);
+                if(dem.repType > 0) { // model is sexual - also set parameters for males
+                    pSpecies->setSteps(stage, 1, ssteps);
+                }
+            }
+                break;
+
+            case 3: { // sex- & stage-dependent
+                srules = pSpecies->getSettRules(stage, sex);
+                pSpecies->setSteps(stage, sex, ssteps);
+            }
+                break;
+            } // end sexSettle
+
+        } // End Movement model for MaxSteps
+
+        // MaxStepsYr
+        // determine stage and sex of this line
+        if(sett.stgDep) {
+            if(sett.sexDep) {
+                stage = (int)MaxStepsYr(line, 0);
+                sex = (int)MaxStepsYr(line, 1);
+            } else {
+                stage = (int)MaxStepsYr(line, 0);
+                sex = 0;
+            }
+        } else {
+            if(sett.sexDep) {
+                stage = 0;
+                sex = (int)MaxStepsYr(line, 0);
+            } else {
+                stage = 0;
+                sex = 0;
+            }
+        }
+
+        if(trfr.usesMovtProc) { // ...movement process
+            if(constMaxStepsYr) {
+                ssteps.maxStepsYr = (int)MaxStepsYr(0, 0);
+            } else {
+                ssteps.maxStepsYr = (int)MaxStepsYr(line, offset);
+            }
+
+            switch(sexSettle) {
+
+            case 0: { // no sex- / stage-dependence
+                srules = pSpecies->getSettRules(0, 0);
+                pSpecies->setSteps(0, 0, ssteps);
+
+                if(dem.stageStruct) { // model is structured - also set parameters for all stages
+                    for(int i = 1; i < sstruct.nStages; i++) {
+                        pSpecies->setSteps(i, 0, ssteps);
+                        if(dem.repType > 0) {                        // model is sexual - also set parameters for males
+                            pSpecies->setSteps(i, 1, ssteps);
+                        }
+                    }
+                } else {                  // see comment above (at case label)
+                    if(dem.repType > 0) { // model is sexual - also set parameters for males
+                        pSpecies->setSteps(0, 1, ssteps);
+                    }
+                }
+            }
+                break;
+
+            case 1: { // sex-dependent
+                srules = pSpecies->getSettRules(0, sex);
+                pSpecies->setSteps(0, sex, ssteps);
+                if(dem.stageStruct) { // model is structured - also set parameters for all stages
+                    for(int i = 1; i < sstruct.nStages; i++) {
+                        pSpecies->setSteps(i, sex, ssteps);
+                    }
+                }
+            }
+                break;
+
+            case 2: { // stage-dependent
+                srules = pSpecies->getSettRules(stage, 0);
+                pSpecies->setSteps(stage, 0, ssteps);
+                if(dem.repType > 0) { // model is sexual - also set parameters for males
+                    pSpecies->setSteps(stage, 1, ssteps);
+                }
+            }
+                break;
+
+            case 3: { // sex- & stage-dependent
+                srules = pSpecies->getSettRules(stage, sex);
+                pSpecies->setSteps(stage, sex, ssteps);
+            }
+                break;
+            } // end sexSettle
+
+        } // End Movement model
+
+        // Settle
+        // determine stage and sex of this line
+        if(!sett.indVar){
+            if(sett.stgDep) {
+                if(sett.sexDep) {
+                    stage = (int)SettleCondMatrix(line, 0);
+                    sex = (int)SettleCondMatrix(line, 1);
+                } else {
+                    stage = (int)SettleCondMatrix(line, 0);
+                    sex = 0;
+                }
+            } else {
+                if(sett.sexDep) {
+                    stage = 0;
+                    sex = (int)SettleCondMatrix(line, 0);
+                } else {
+                    stage = 0;
+                    sex = 0;
+                }
+            }
+        }
+
+        if(trfr.usesMovtProc) { // ...movement process
+            if(densdep) {
+                if (sett.indVar) {
+                    gHasGenetics = true;
+                    settleDD.s0 = -9;
+                    settleDD.alpha = -9;
+                    settleDD.beta = -9;
+                } else{
+                    settleDD.s0 = (float)SettleCondMatrix(
+                        line, offset + 0); // Max. settlement probability for density reaction norm. Required for
+                    // DensDep = 1 and IndVar = 0; 0.0 < S0 <= 1.0
+                    settleDD.alpha =
+                        (float)SettleCondMatrix(line, offset + 1); // Required for DensDep = 1 and IndVar = 0
+                    settleDD.beta =
+                        (float)SettleCondMatrix(line, offset + 2); // Required for DensDep = 1 and IndVar = 0
+                }
+            }
+
+            switch(sexSettle) {
+
+            case 0: { // no sex- / stage-dependence
+                srules = pSpecies->getSettRules(0, 0);
+                // Loops vereinfachen indem ich direkt zu Anfang die densDep Bedingung überprüfe?
+                if(srules.densDep) {
+                    pSpecies->setSpSettTraits(0, 0, settleDD);
+                    if(dem.stageStruct) { // model is structured - also set parameters for all stages
+                        for(int i = 1; i < sstruct.nStages; i++) {
+                            pSpecies->setSpSettTraits(i, 0, settleDD); //  /!\ different to ReadSettlement()
+                            if(dem.repType > 0) {                        // model is sexual - also set parameters for males
+                                pSpecies->setSpSettTraits(i, 1, settleDD);
+                            }
+                        }
+                    } else {                  // see comment above (at case label)
+                        if(dem.repType > 0) { // model is sexual - also set parameters for males
+                            pSpecies->setSpSettTraits(0, 1, settleDD);
+                        }
+                    }
+                }
+            }
+                break;
+
+            case 1: { // sex-dependent
+
+                if(sett.indVar){
+                    for (int s = 0; s < gNbSexesDisp; s++){
+                        pSpecies->setSpSettTraits(0, s, settleDD);
+                        if(dem.stageStruct) { // model is structured - also set parameters for all stages
+                            for(int i = 1; i < sstruct.nStages; i++) {
+                                pSpecies->setSpSettTraits(i, s, settleDD);
+                            }
+                        }
+                    }
+                } else {
+                    srules = pSpecies->getSettRules(0, sex);
+                    // s. Kommentar oben
+                    if(srules.densDep) {
+                        pSpecies->setSpSettTraits(0, sex, settleDD);
+                        if(dem.stageStruct) { // model is structured - also set parameters for all stages
+                            for(int i = 1; i < sstruct.nStages; i++) {
+                                pSpecies->setSpSettTraits(i, sex, settleDD);
+                            }
+                        }
+                    }
+                }
+
+            }
+                break;
+
+            case 2: { // stage-dependent (cannot include individual variablility, so no need to account for that)
+                srules = pSpecies->getSettRules(stage, 0);
+                if(srules.densDep) {
+                    pSpecies->setSpSettTraits(stage, 0, settleDD);
+                    if(dem.repType > 0) { // model is sexual - also set parameters for males
+                        pSpecies->setSpSettTraits(stage, 1, settleDD);
+                    }
+                }
+            }
+                break;
+
+            case 3: { // sex- & stage-dependent (cannot include individual variablility, so no need to account for that)
+                srules = pSpecies->getSettRules(stage, sex);
+                if(srules.densDep) {
+                    pSpecies->setSpSettTraits(stage, sex, settleDD);
+                }
+            }
+                break;
+            } // end sexSettle
+
+        } // end of movement model for SettleCondMatrix
+
+        // read settlement conditions for...
+        else { // ...dispersal kernel
+
+            settType = (int)SettleCondMatrix(line,
+                        offset); // Settlement rule if the arrival cell/patch is unsuitable: 0 = die, 1 = wait, 2 = randomly
+            // choose a suitable cell/patch or die, 3 = randomly choose a suitable cell/patch or wait.
+            // Options 1 and 3 may be chosen for a stage-structured population only
+
+            switch(sexSettle) {
+            case 0: { // no sex / stage dependence
+                if((settType == 1 || settType == 3) && !dem.stageStruct)
+                    error = 503;
+                srules = pSpecies->getSettRules(0, 0);
+                switch(settType) {
+                case 0:
+                    srules.wait = false;
+                    srules.go2nbrLocn = false;
+                    break;
+                case 1:
+                    srules.wait = true;
+                    srules.go2nbrLocn = false;
+                    break;
+                case 2:
+                    srules.wait = false;
+                    srules.go2nbrLocn = true;
+                    break;
+                case 3:
+                    srules.wait = true;
+                    srules.go2nbrLocn = true;
+                    break;
+                }
+                if(dem.stageStruct) { // model is structured - also set parameters for all stages
+                    for(int i = 0; i < sstruct.nStages; i++) {
+                        pSpecies->setSettRules(i, 0, srules);
+                        if(dem.repType > 0) { // model is sexual - also set parameters for males
+                            pSpecies->setSettRules(i, 1, srules);
+                        }
+                    }
+                } else {
+                    pSpecies->setSettRules(0, 0, srules);
+                    if(dem.repType > 0) { // model is sexual - also set parameters for males
+                        pSpecies->setSettRules(0, 1, srules);
+                    }
+                }
+            }
                 break;
 
             case 1: { // sex dependent
@@ -2542,7 +2773,6 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
                     srules.go2nbrLocn = true;
                     break;
                 }
-                srules.findMate = findmate;
                 pSpecies->setSettRules(0, sex, srules);
                 if(dem.stageStruct) { // model is structured - also set parameters for all stages
                     for(int i = 1; i < sstruct.nStages; i++) {
@@ -2553,8 +2783,6 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
                 break;
 
             case 2: { // stage dependent
-                if(findmate && dem.repType == 0)
-                    error = 507;
                 srules = pSpecies->getSettRules(stage, 0);
                 switch(settType) {
                 case 0:
@@ -2602,7 +2830,6 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
                     srules.go2nbrLocn = true;
                     break;
                 }
-                srules.findMate = findmate;
                 pSpecies->setSettRules(stage, sex, srules);
             }
                 break;
@@ -2613,10 +2840,9 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
 
     } // end of for line loop
 
-    if(sett.indVar) gHasGenetics = true;
-
     return error;
 }
+
 
 //---------------------------------------------------------------------------
 
@@ -2780,56 +3006,101 @@ int ReadGeneticsR(Rcpp::S4 GeneParamsR, Landscape* pLandscape)
     int genomeSize = Rcpp::as<int>(GeneParamsR.slot("GenomeSize")); // how many loci are there?
 
     set<int> chrEnds;
-    Rcpp::IntegerVector ChromosomeEnds = Rcpp::as<Rcpp::IntegerVector>(GeneParamsR.slot("ChromosomeEnds")); // where do the chromosomes end?
-    for (int i = 0; i < ChromosomeEnds.size(); i++) {
-        chrEnds.insert(ChromosomeEnds[i]);
+
+    if(GeneParamsR.slot("ChromosomeEnds") != R_NilValue){
+        Rcpp::IntegerVector ChromosomeEnds = Rcpp::as<Rcpp::IntegerVector>(GeneParamsR.slot("ChromosomeEnds")); // where do the chromosomes end?
+        for (int i = 0; i < ChromosomeEnds.size(); i++) {
+            chrEnds.insert(ChromosomeEnds[i]);
+        }
+    }
+    else {
+        chrEnds.insert(genomeSize - 1);
     }
 
-    float recombinationRate = Rcpp::as<int>(GeneParamsR.slot("RecombinationRate"));
+
+    float recombinationRate = Rcpp::as<float>(GeneParamsR.slot("RecombinationRate"));
 
     outputGeneValues = Rcpp::as<bool>(GeneParamsR.slot("OutputGeneValues"));
     outputWeirCockerham = Rcpp::as<bool>(GeneParamsR.slot("OutputFstatsWeirCockerham"));
     outputWeirHill = Rcpp::as<bool>(GeneParamsR.slot("OutputFstatsWeirHill"));
-    outputStartGenetics = Rcpp::as<int>(GeneParamsR.slot("OutputStartGenetics"));
-    outputGeneticInterval = Rcpp::as<int>(GeneParamsR.slot("OutputInterval"));
 
-    Rcpp::StringVector inPatches = Rcpp::as<Rcpp::StringVector>(GeneParamsR.slot("PatchList"));
+
+    if(GeneParamsR.slot("OutputStartGenetics") != R_NilValue){
+        outputStartGenetics = Rcpp::as<int>(GeneParamsR.slot("OutputStartGenetics"));
+    } else {
+        outputStartGenetics = -9;
+    }
+    if(GeneParamsR.slot("OutputInterval") != R_NilValue){
+        outputGeneticInterval = Rcpp::as<int>(GeneParamsR.slot("OutputInterval"));
+    } else {
+        outputGeneticInterval = -9;
+    }
+
+    Rcpp::StringVector inPatches;
     string patchSamplingOption;
-    int nPatchesToSample = Rcpp::as<int>(GeneParamsR.slot("NbrPatchToSample"));
-    if (inPatches[0] != "all" && inPatches[0] != "random" && inPatches[0] != "random_occupied") {
-        // then must be a list of indices
-        patchSamplingOption = "list";
-        for (int i = 0; i < inPatches.size(); i++) {
-            patchList.insert(Rcpp::as<int>(inPatches[i]));
+    int nPatchesToSample = 0;
+
+    if(GeneParamsR.slot("PatchList") != R_NilValue){
+
+        inPatches = Rcpp::as<Rcpp::StringVector>(GeneParamsR.slot("PatchList"));
+
+        if (inPatches[0] != "all" && inPatches[0] != "random" && inPatches[0] != "random_occupied") {
+            // then must be a list of indices
+            patchSamplingOption = "list";
+            for (int i = 0; i < inPatches.size(); i++) {
+                patchList.insert(Rcpp::as<int>(inPatches[i]));
+            }
+            if (patchList.contains(0)) throw logic_error("Patch sampling: ID 0 is reserved for the matrix and should not be sampled.");
         }
-        if (patchList.contains(0)) throw logic_error("Patch sampling: ID 0 is reserved for the matrix and should not be sampled.");
-    }
-    else {
-        patchSamplingOption = inPatches[0];
-        // patchList remains empty, filled when patches are sampled every gen
+        else  {
+            patchSamplingOption = inPatches[0];
+            if (inPatches[0] == "random" || inPatches[0] == "random_occupied"){
+                if(GeneParamsR.slot("NbrPatchToSample") != R_NilValue)
+                    nPatchesToSample = Rcpp::as<int>(GeneParamsR.slot("NbrPatchToSample"));
+                else throw logic_error("You must provide the number of patches to sample if PatchList is random or random_occupied.");
+                // patchList remains empty, filled when patches are sampled every gen
+            }
+
+        }
     }
 
-    const string strNbInds = Rcpp::as<string>(GeneParamsR.slot("nIndividualsToSample"));
+    string NbInds;
+    if (GeneParamsR.slot("nIndividualsToSample") != R_NilValue){
+        if (Rf_isInteger(GeneParamsR.slot("nIndividualsToSample"))){
+            int NbIndsInt = Rcpp::as<int>(GeneParamsR.slot("nIndividualsToSample"));
+            NbInds = to_string(NbIndsInt);
+        }
+        else {
+            NbInds = Rcpp::as<string>(GeneParamsR.slot("nIndividualsToSample"));
+        }
+    }
+    const string strNbInds = NbInds;
+
     const int nbStages = pSpecies->getStageParams().nStages;
     set<int> stagesToSampleFrom;
+    Rcpp::StringVector Stages;
 
-    Rcpp::StringVector Stages = Rcpp::as<Rcpp::StringVector>(GeneParamsR.slot("Stages"));
-
-    if (Stages[0] == "all") {
-        for (int i = 0; i < nbStages; i++) {
-            stagesToSampleFrom.insert(i);
+    if (GeneParamsR.slot("Stages") != R_NilValue) {
+        Stages = Rcpp::as<Rcpp::StringVector>(GeneParamsR.slot("Stages"));
+        if (Stages[0] == "all") {
+            for (int i = 0; i < nbStages; i++) {
+                stagesToSampleFrom.insert(i);
+            }
+        }
+        else {
+            for (int i = 0; i < Stages.size(); i++) {
+                stagesToSampleFrom.insert(Rcpp::as<int>(Stages[i]));
+            }
         }
     }
-    else {
-        for (int i = 0; i < Stages.size(); i++) {
-            stagesToSampleFrom.insert(Rcpp::as<int>(Stages[i]));
-        }
-    }
+    Rcpp::Rcout << "Genetic parameters loaded." << endl;
+
 
     pSpecies->setGeneticParameters(chrEnds, genomeSize, recombinationRate,
                                    patchList, strNbInds, stagesToSampleFrom, nPatchesToSample);
 
     paramsSim->setGeneticSim(patchSamplingOption, outputGeneValues, outputWeirCockerham, outputWeirHill, outputStartGenetics, outputGeneticInterval);
+    Rcpp::Rcout << "Genetic parameters set." << endl;
     return 0;
 }
 
@@ -2838,11 +3109,13 @@ int ReadGeneticsR(Rcpp::S4 GeneParamsR, Landscape* pLandscape)
 int ReadTraitsR(Rcpp::S4 TraitsParamsR)
 {
 
+    Rcpp::Rcout << "ReadTraitsR(): " << endl;
+
 
     Rcpp::S4 GeneticLoadParamsR("GeneticLoadParams");
     Rcpp::S4 EmigrationTraitsParamsR("EmigrationTraitsParams");
     Rcpp::S4 KernelTraitsParamsR("KernelTraitsParams");
-    Rcpp::S4 CRWTraitsParamsR("CRWTraitsParams");
+    Rcpp::S4 CorrRWTraitsParamsR("CorrRWTraitsParams");
     Rcpp::S4 SMSTraitsParamsR("SMSTraitsParams");
     Rcpp::S4 SettlementTraitsParamsR("SettlementTraitsParams");
 
@@ -2866,6 +3139,7 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
         // Positions and number of Positions
         set<int> positions;
         int NbOfPositionsR = -9;
+
         if(Rf_isString(NeutralTraitsParamsR.slot("Positions"))){
             string PositionsR = Rcpp::as<string>(NeutralTraitsParamsR.slot("Positions"));
                 if(PositionsR == "random"){
@@ -2874,7 +3148,7 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
                         positions = selectRandomLociPositions(NbOfPositionsR, genomeSize);
                     }
                 }
-                else throw logic_error("If positions are random you must provide the number of positions (>0).");
+                else throw logic_error("NeutralTraits(): If positions are random you must provide the number of positions (>0).");
         }
         else {
             Rcpp::NumericVector PositionsR = Rcpp::as<Rcpp::NumericVector>(NeutralTraitsParamsR.slot("Positions")); // Positions are provided as numeric vector
@@ -2883,19 +3157,18 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
                 if (static_cast<int>(PositionsR[i]) <= genomeSize) {
                     positions.insert(static_cast<int>(PositionsR[i]));
                 }
-                else throw logic_error("Loci positions must be smaller than genome size");
+                else throw logic_error("NeutralTraits(): Loci positions must be smaller than genome size");
             }
         }
-
 
         // Expression type
         string ExpressionTypeR = "#";
 
         // Initial distribution parameters
-        string initDistR = Rcpp::as<string>(NeutralTraitsParamsR.slot("InitialDistribution"));
+        string initDistR = "uniform"; // Rcpp::as<string>(NeutralTraitsParamsR.slot("InitialDistribution"));
         if(initDistR != "uniform") initDistR == "#";
 
-        Rcpp::NumericVector initParamsR = {0,Rcpp::as<int>(NeutralTraitsParamsR.slot("InitialParameters"))};
+        Rcpp::NumericVector initParamsR = {0,10}; // {0,Rcpp::as<int>(NeutralTraitsParamsR.slot("InitialParameters"))};
 
         // Dominance distribution parameters not applicable for neutral traits
         string DominanceDistR = "#";
@@ -2903,15 +3176,15 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
 
         // Mutation parameters
         bool isInherited = true;
-        string MutationDistR = Rcpp::as<string>(NeutralTraitsParamsR.slot("MutationDistribution"));
-        Rcpp::NumericVector MutationParamsR = Rcpp::as<Rcpp::NumericVector>(NeutralTraitsParamsR.slot("MutationParameters"));
-        float MutationRateR = Rcpp::as<float>(NeutralTraitsParamsR.slot("MutationRate"));
+        string MutationDistR = "KAM"; // Rcpp::as<string>(NeutralTraitsParamsR.slot("MutationDistribution"));
+        Rcpp::NumericVector MutationParamsR = {2}; // Rcpp::as<Rcpp::NumericVector>(NeutralTraitsParamsR.slot("MutationParameters"));
+        float MutationRateR =  0.0001; //Rcpp::as<float>(NeutralTraitsParamsR.slot("MutationRate"));
 
         // sex dependency
         int sexdep = 2; // NA = 2, FEM = 0 , MAL = 1; depending on row
 
         // Output values
-        bool isOutputR = Rcpp::as<bool>(NeutralTraitsParamsR.slot("OutputValues"));
+        bool isOutputR = true; // Rcpp::as<bool>(NeutralTraitsParamsR.slot("OutputValues"));
 
         setUpSpeciesTrait(TraitTypeR, positions, ExpressionTypeR,
                           initDistR, initParamsR,
@@ -2960,8 +3233,6 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
 
         // Output values
         Rcpp::LogicalVector isOutputRvec = Rcpp::as<Rcpp::LogicalVector>(GeneticLoadParamsR.slot("OutputValues"));
-
-        Rcpp::Rcout << "Genetic load(): all input values read." << endl;
 
         for (int l = 0; l < nbLoads; l++){
             set<int> positions;
@@ -3013,6 +3284,632 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
                           isOutputR);
         }
     }
+
+    // Dispersal traits
+    // emigration traits
+    if(emig.indVar){
+        EmigrationTraitsParamsR = Rcpp::as<Rcpp::S4>(TraitsParamsR.slot("EmigrationGenes"));
+
+        // number of expected trait types
+        int nbTraits;
+        if (emig.densDep) nbTraits = 3; // emigration_d0, emigration_alpha, emigration_beta
+        else nbTraits = 1; // emigration_d0
+
+        if (emig.sexDep) nbTraits *= 2; // each sex has a different trait
+        else nbTraits *= 1; // only one trait for both sexes
+
+        // Positions and number of Positions
+        Rcpp::List PositionsRList = Rcpp::as<Rcpp::List>(EmigrationTraitsParamsR.slot("Positions"));
+        Rcpp::NumericVector NbOfPositionsRvec;
+        if (EmigrationTraitsParamsR.slot("NbOfPositions")!= R_NilValue){
+            NbOfPositionsRvec = Rcpp::as<Rcpp::NumericVector> (EmigrationTraitsParamsR.slot("NbOfPositions"));
+        }
+
+        // Expression type
+        Rcpp::StringVector ExpressionTypeRvec = Rcpp::as<Rcpp::StringVector> (EmigrationTraitsParamsR.slot("ExpressionType")); // not applicable for genetic loads
+
+        // Initial distribution
+        Rcpp::StringVector InitialDistRvec = Rcpp::as<Rcpp::StringVector>(EmigrationTraitsParamsR.slot("InitialDistribution"));
+        Rcpp::NumericMatrix InitialParamsRmat = Rcpp::as<Rcpp::NumericMatrix>(EmigrationTraitsParamsR.slot("InitialParameters")); // as a matrix: columns for parameter, rows for emigration trait
+
+        Rcpp::LogicalVector isInheritedRvec = Rcpp::as<Rcpp::LogicalVector>(EmigrationTraitsParamsR.slot("IsInherited"));
+
+        // Dominance distribution
+        string DominanceDistR = "#"; // not applicable for dispersal traits
+        Rcpp::NumericVector DominanceParamsR = {0,0}; // not applicable for dispersal traits
+
+        // Mutation parameters
+        Rcpp::StringVector MutationDistRvec = Rcpp::as<Rcpp::StringVector>(EmigrationTraitsParamsR.slot("MutationDistribution"));
+        Rcpp::NumericMatrix MutationParamsRmat = Rcpp::as<Rcpp::NumericMatrix>(EmigrationTraitsParamsR.slot("MutationParameters"));
+        Rcpp::NumericVector MutationRateRvec = Rcpp::as<Rcpp::NumericVector>(EmigrationTraitsParamsR.slot("MutationRate"));
+
+        // Output values
+        Rcpp::LogicalVector isOutputRvec = Rcpp::as<Rcpp::LogicalVector>(EmigrationTraitsParamsR.slot("OutputValues"));
+
+        string TraitTypeR;
+        int sexdep;
+
+        for (int l = 0; l < nbTraits; l++){
+            if (emig.densDep){
+                if (emig.sexDep){
+                    // expecting emigration_d0, emigration_alpha, emigration_beta
+                    if (l == 0 || l == 1) TraitTypeR = "emigration_d0";
+                    else if (l == 2 || l == 3) TraitTypeR = "emigration_alpha";
+                    else if (l == 4 || l == 5) TraitTypeR = "emigration_beta";
+                    //if l is even -> female; sexdep=0
+                    if(l % 2 == 0) sexdep = 0; // FEM
+                    //if l is odd -> male; sexdep=1
+                    else sexdep = 1; // MAL
+                }
+                else {
+                    // expecting emigration_d0, emigration_alpha, emigration_beta
+                    if (l == 0) TraitTypeR = "emigration_d0";
+                    else if (l == 1) TraitTypeR = "emigration_alpha";
+                    else if (l == 2) TraitTypeR = "emigration_beta";
+                    sexdep=2;
+                }
+
+            }
+            else {
+                // expecting only emigration_d0
+                TraitTypeR = "emigration_d0";
+                if (emig.sexDep){
+                    if(l % 2 == 0) sexdep = 0; // FEM
+                    else sexdep = 1; // MAL
+                }
+                else {
+                    sexdep=2;
+                }
+            }
+
+            set<int> positions;
+            int NbOfPositionsR = -9;
+            // check if PositionsR[l] is a string
+            if(Rf_isString(PositionsRList[l])){
+                string pos = Rcpp::as<string>(PositionsRList[l]);
+                if(pos == "random"){
+                    NbOfPositionsR = (int)NbOfPositionsRvec[l]; // here is the error message
+                    if(NbOfPositionsR > 0){
+                        positions = selectRandomLociPositions(NbOfPositionsR, genomeSize);
+                        Rcpp::Rcout << "EmigrationGEnes(): " << NbOfPositionsR << " random positions selected." << endl;
+                        for (auto pos : positions) {
+                            std::cout << pos << " ";
+                        }
+                    }
+                }
+                else throw logic_error("EmigrationGenes(): If positions are random you must provide the number of positions (>0).");
+            }
+            else {
+                Rcpp::NumericVector PositionsR = Rcpp::as<Rcpp::NumericVector>(PositionsRList[l]); // Positions are provided as numeric vector
+                // use a for loop to insert the values at PositionsR into the set positions
+                for (int i = 0; i < PositionsR.size(); i++) {
+                    if (static_cast<int>(PositionsR[i]) <= genomeSize) {
+                        positions.insert(static_cast<int>(PositionsR[i]));
+                    }
+                    else throw logic_error("EmigrationGenes(): Loci positions must be smaller than genome size");
+                }
+            }
+
+            string ExpressionTypeR = (string)ExpressionTypeRvec[l];
+
+            string initDistR = (string)InitialDistRvec[l]; // it is checked beforehand whether the correct distributions are provided
+            Rcpp::NumericVector initParamsR = InitialParamsRmat.row(l);
+
+            bool isInherited = isInheritedRvec[l] == 1;
+
+            string MutationDistR =  (string)MutationDistRvec[l];
+            Rcpp::NumericVector MutationParamsR = MutationParamsRmat.row(l);
+
+            float MutationRateR = (float) MutationRateRvec[l];
+            bool isOutputR = isOutputRvec[l] == 1;
+
+            setUpSpeciesTrait(TraitTypeR,
+                              positions,
+                              ExpressionTypeR,
+                              initDistR,
+                              initParamsR,
+                              DominanceDistR,
+                              DominanceParamsR,
+                              isInherited,
+                              MutationDistR,
+                              MutationParamsR,
+                              MutationRateR,
+                              sexdep,
+                              isOutputR);
+        }
+
+    }
+
+    // settlement traits
+    if(sett.indVar){
+        SettlementTraitsParamsR = Rcpp::as<Rcpp::S4>(TraitsParamsR.slot("SettlementGenes"));
+
+        // number of expected trait types
+        int nbTraits = 3;
+
+        if (sett.sexDep) nbTraits *= 2; // each sex has a different trait
+
+        // Positions and number of Positions
+        Rcpp::List PositionsRList = Rcpp::as<Rcpp::List>(SettlementTraitsParamsR.slot("Positions"));
+        Rcpp::NumericVector NbOfPositionsRvec;
+        if (SettlementTraitsParamsR.slot("NbOfPositions")!= R_NilValue){
+            NbOfPositionsRvec = Rcpp::as<Rcpp::NumericVector> (SettlementTraitsParamsR.slot("NbOfPositions"));
+        }
+
+        // Expression type
+        Rcpp::StringVector ExpressionTypeRvec = Rcpp::as<Rcpp::StringVector> (SettlementTraitsParamsR.slot("ExpressionType")); // not applicable for genetic loads
+
+        // Initial distribution
+        Rcpp::StringVector InitialDistRvec = Rcpp::as<Rcpp::StringVector>(SettlementTraitsParamsR.slot("InitialDistribution"));
+        Rcpp::NumericMatrix InitialParamsRmat = Rcpp::as<Rcpp::NumericMatrix>(SettlementTraitsParamsR.slot("InitialParameters")); // as a matrix: columns for parameter, rows for Settlement trait
+
+        Rcpp::LogicalVector isInheritedRvec = Rcpp::as<Rcpp::LogicalVector>(SettlementTraitsParamsR.slot("IsInherited"));
+
+        // Dominance distribution
+        string DominanceDistR = "#"; // not applicable for dispersal traits
+        Rcpp::NumericVector DominanceParamsR = {0,0}; // not applicable for dispersal traits
+
+        // Mutation parameters
+        Rcpp::StringVector MutationDistRvec = Rcpp::as<Rcpp::StringVector>(SettlementTraitsParamsR.slot("MutationDistribution"));
+        Rcpp::NumericMatrix MutationParamsRmat = Rcpp::as<Rcpp::NumericMatrix>(SettlementTraitsParamsR.slot("MutationParameters"));
+        Rcpp::NumericVector MutationRateRvec = Rcpp::as<Rcpp::NumericVector>(SettlementTraitsParamsR.slot("MutationRate"));
+
+        // Output values
+        Rcpp::LogicalVector isOutputRvec = Rcpp::as<Rcpp::LogicalVector>(SettlementTraitsParamsR.slot("OutputValues"));
+
+        string TraitTypeR;
+        int sexdep;
+
+        for (int l = 0; l < nbTraits; l++){
+                if (sett.sexDep){
+                    // expecting emigration_d0, emigration_alpha, emigration_beta
+                    if (l == 0 || l == 1) TraitTypeR = "settlement_s0";
+                    else if (l == 2 || l == 3) TraitTypeR = "settlement_alpha";
+                    else if (l == 4 || l == 5) TraitTypeR = "settlement_beta";
+                    //if l is even -> female; sexdep=0
+                    if(l % 2 == 0) sexdep = 0; // FEM
+                    //if l is odd -> male; sexdep=1
+                    else sexdep = 1; // MAL
+                }
+                else {
+                    // expecting emigration_d0, emigration_alpha, emigration_beta
+                    if (l == 0) TraitTypeR = "settlement_d0";
+                    else if (l == 1) TraitTypeR = "settlement_alpha";
+                    else if (l == 2) TraitTypeR = "settlement_beta";
+                    sexdep=2;
+                }
+
+            set<int> positions;
+            int NbOfPositionsR = -9;
+            // check if PositionsR[l] is a string
+            if(Rf_isString(PositionsRList[l])){
+                string pos = Rcpp::as<string>(PositionsRList[l]);
+                if(pos == "random"){
+                    NbOfPositionsR = (int)NbOfPositionsRvec[l]; // here is the error message
+                    if(NbOfPositionsR > 0){
+                        positions = selectRandomLociPositions(NbOfPositionsR, genomeSize);
+                        Rcpp::Rcout << "SettlementGenes(): " << NbOfPositionsR << " random positions selected." << endl;
+                        for (auto pos : positions) {
+                            std::cout << pos << " ";
+                        }
+                    }
+                }
+                else throw logic_error("SettlementGenes(): If positions are random you must provide the number of positions (>0).");
+            }
+            else {
+                Rcpp::NumericVector PositionsR = Rcpp::as<Rcpp::NumericVector>(PositionsRList[l]); // Positions are provided as numeric vector
+                // use a for loop to insert the values at PositionsR into the set positions
+                for (int i = 0; i < PositionsR.size(); i++) {
+                    if (static_cast<int>(PositionsR[i]) <= genomeSize) {
+                        positions.insert(static_cast<int>(PositionsR[i]));
+                    }
+                    else throw logic_error("SettlementGenes(): Loci positions must be smaller than genome size");
+                }
+            }
+
+            string ExpressionTypeR = (string)ExpressionTypeRvec[l];
+
+            string initDistR = (string)InitialDistRvec[l]; // it is checked beforehand whether the correct distributions are provided
+            Rcpp::NumericVector initParamsR = InitialParamsRmat.row(l);
+
+            bool isInherited = isInheritedRvec[l] == 1;
+
+            string MutationDistR =  (string)MutationDistRvec[l];
+            Rcpp::NumericVector MutationParamsR = MutationParamsRmat.row(l);
+
+            float MutationRateR = (float) MutationRateRvec[l];
+            bool isOutputR = isOutputRvec[l] == 1;
+
+            setUpSpeciesTrait(TraitTypeR,
+                              positions,
+                              ExpressionTypeR,
+                              initDistR,
+                              initParamsR,
+                              DominanceDistR,
+                              DominanceParamsR,
+                              isInherited,
+                              MutationDistR,
+                              MutationParamsR,
+                              MutationRateR,
+                              sexdep,
+                              isOutputR);
+        }
+
+    }
+
+    switch(TransferType){
+        case 0: { // kernel
+            if(trfr.indVar){
+                KernelTraitsParamsR = Rcpp::as<Rcpp::S4>(TraitsParamsR.slot("KernelGenes"));
+
+                // number of expected traits
+                int nbTraits;
+                if(trfr.twinKern){
+                    nbTraits = 3;
+                }
+                else {
+                    nbTraits = 1;
+                }
+                if(trfr.sexDep){
+                    nbTraits *= 2;
+                }
+
+                // Positions and number of Positions
+                Rcpp::List PositionsRList = Rcpp::as<Rcpp::List>(KernelTraitsParamsR.slot("Positions"));
+                Rcpp::NumericVector NbOfPositionsRvec;
+                if (KernelTraitsParamsR.slot("NbOfPositions")!= R_NilValue){
+                    NbOfPositionsRvec = Rcpp::as<Rcpp::NumericVector> (KernelTraitsParamsR.slot("NbOfPositions"));
+                }
+
+                // Expression type
+                Rcpp::StringVector ExpressionTypeRvec = Rcpp::as<Rcpp::StringVector> (KernelTraitsParamsR.slot("ExpressionType")); // not applicable for genetic loads
+
+                // Initial distribution
+                Rcpp::StringVector InitialDistRvec = Rcpp::as<Rcpp::StringVector>(KernelTraitsParamsR.slot("InitialDistribution"));
+                Rcpp::NumericMatrix InitialParamsRmat = Rcpp::as<Rcpp::NumericMatrix>(KernelTraitsParamsR.slot("InitialParameters")); // as a matrix: columns for parameter, rows for Settlement trait
+
+                Rcpp::LogicalVector isInheritedRvec = Rcpp::as<Rcpp::LogicalVector>(KernelTraitsParamsR.slot("IsInherited"));
+
+                // Dominance distribution
+                string DominanceDistR = "#"; // not applicable for dispersal traits
+                Rcpp::NumericVector DominanceParamsR = {0,0}; // not applicable for dispersal traits
+
+                // Mutation parameters
+                Rcpp::StringVector MutationDistRvec = Rcpp::as<Rcpp::StringVector>(KernelTraitsParamsR.slot("MutationDistribution"));
+                Rcpp::NumericMatrix MutationParamsRmat = Rcpp::as<Rcpp::NumericMatrix>(KernelTraitsParamsR.slot("MutationParameters"));
+                Rcpp::NumericVector MutationRateRvec = Rcpp::as<Rcpp::NumericVector>(KernelTraitsParamsR.slot("MutationRate"));
+
+                // Output values
+                Rcpp::LogicalVector isOutputRvec = Rcpp::as<Rcpp::LogicalVector>(KernelTraitsParamsR.slot("OutputValues"));
+
+                string TraitTypeR;
+                int sexdep;
+
+                for (int l = 0; l < nbTraits; l++){
+                    // expecting crw_stepLength, crw_stepCorrelation
+                    if(trfr.twinKern){
+                        if(trfr.sexDep){
+                            // should be two lines
+                            if(l==0 || l == 1)    TraitTypeR = "kernel_meanDistance1";
+                            if(l==2 || l == 3)    TraitTypeR = "kernel_meanDistance2";
+                            if(l==4 || l == 5)    TraitTypeR = "kernel_probability";
+                            if(l % 2 == 0) sexdep = 0; // FEML
+                            else sexdep = 1; // MAL
+                        }
+                        else {
+                            if(l==0)    TraitTypeR = "kernel_meanDistance1";
+                            if(l==1)    TraitTypeR = "kernel_meanDistance2";
+                            if(l==2)    TraitTypeR = "kernel_probability";
+                            sexdep = 2;
+                        }
+                    }
+                    else {
+                        if(trfr.sexDep){
+                            // should be two lines
+                            TraitTypeR = "kernel_meanDistance1";
+                            if(l % 2 == 0) sexdep = 0; // FEML
+                            else sexdep = 1; // MAL
+                        }
+                        else {
+                            //should only be one line
+                            TraitTypeR = "kernel_meanDistance1";
+                            sexdep = 2;
+                        }
+                    }
+
+
+                    set<int> positions;
+                    int NbOfPositionsR = -9;
+                    // check if PositionsR[l] is a string
+                    if(Rf_isString(PositionsRList[l])){
+                        string pos = Rcpp::as<string>(PositionsRList[l]);
+                        if(pos == "random"){
+                            NbOfPositionsR = (int)NbOfPositionsRvec[l]; // here is the error message
+                            if(NbOfPositionsR > 0){
+                                positions = selectRandomLociPositions(NbOfPositionsR, genomeSize);
+                                Rcpp::Rcout << "KernelGenes(): " << NbOfPositionsR << " random positions selected." << endl;
+                                for (auto pos : positions) {
+                                    std::cout << pos << " ";
+                                }
+                            }
+                        }
+                        else throw logic_error("KernelGenes(): If positions are random you must provide the number of positions (>0).");
+                    }
+                    else {
+                        Rcpp::NumericVector PositionsR = Rcpp::as<Rcpp::NumericVector>(PositionsRList[l]); // Positions are provided as numeric vector
+                        // use a for loop to insert the values at PositionsR into the set positions
+                        for (int i = 0; i < PositionsR.size(); i++) {
+                            if (static_cast<int>(PositionsR[i]) <= genomeSize) {
+                                positions.insert(static_cast<int>(PositionsR[i]));
+                            }
+                            else throw logic_error("KernelGenes(): Loci positions must be smaller than genome size");
+                        }
+                    }
+
+                    string ExpressionTypeR = (string)ExpressionTypeRvec[l];
+
+                    string initDistR = (string)InitialDistRvec[l]; // it is checked beforehand whether the correct distributions are provided
+                    Rcpp::NumericVector initParamsR = InitialParamsRmat.row(l);
+
+                    bool isInherited = isInheritedRvec[l] == 1;
+
+                    string MutationDistR =  (string)MutationDistRvec[l];
+                    Rcpp::NumericVector MutationParamsR = MutationParamsRmat.row(l);
+
+                    float MutationRateR = (float) MutationRateRvec[l];
+                    bool isOutputR = isOutputRvec[l] == 1;
+
+                    setUpSpeciesTrait(TraitTypeR,
+                                      positions,
+                                      ExpressionTypeR,
+                                      initDistR,
+                                      initParamsR,
+                                      DominanceDistR,
+                                      DominanceParamsR,
+                                      isInherited,
+                                      MutationDistR,
+                                      MutationParamsR,
+                                      MutationRateR,
+                                      sexdep,
+                                      isOutputR);
+                }
+            }
+        }
+        break;
+
+        case 1: { // SMS
+            // SMS traits
+            trfrMovtParams smstraits = pSpecies->getSpMovtTraits();
+            if(trfr.indVar){
+                SMSTraitsParamsR = Rcpp::as<Rcpp::S4>(TraitsParamsR.slot("SMSGenes"));
+
+                // number of expected traits
+                int nbTraits = 1;
+                if (smstraits.gb==2) nbTraits = 4;
+
+
+                // Positions and number of Positions
+                Rcpp::List PositionsRList = Rcpp::as<Rcpp::List>(SMSTraitsParamsR.slot("Positions"));
+                Rcpp::NumericVector NbOfPositionsRvec;
+                if (SMSTraitsParamsR.slot("NbOfPositions")!= R_NilValue){
+                    NbOfPositionsRvec = Rcpp::as<Rcpp::NumericVector> (SMSTraitsParamsR.slot("NbOfPositions"));
+                }
+
+                // Expression type
+                Rcpp::StringVector ExpressionTypeRvec = Rcpp::as<Rcpp::StringVector> (SMSTraitsParamsR.slot("ExpressionType")); // not applicable for genetic loads
+
+                // Initial distribution
+                Rcpp::StringVector InitialDistRvec = Rcpp::as<Rcpp::StringVector>(SMSTraitsParamsR.slot("InitialDistribution"));
+                Rcpp::NumericMatrix InitialParamsRmat = Rcpp::as<Rcpp::NumericMatrix>(SMSTraitsParamsR.slot("InitialParameters")); // as a matrix: columns for parameter, rows for Settlement trait
+
+                Rcpp::LogicalVector isInheritedRvec = Rcpp::as<Rcpp::LogicalVector>(SMSTraitsParamsR.slot("IsInherited"));
+
+                // Dominance distribution
+                string DominanceDistR = "#"; // not applicable for dispersal traits
+                Rcpp::NumericVector DominanceParamsR = {0,0}; // not applicable for dispersal traits
+
+                // Mutation parameters
+                Rcpp::StringVector MutationDistRvec = Rcpp::as<Rcpp::StringVector>(SMSTraitsParamsR.slot("MutationDistribution"));
+                Rcpp::NumericMatrix MutationParamsRmat = Rcpp::as<Rcpp::NumericMatrix>(SMSTraitsParamsR.slot("MutationParameters"));
+                Rcpp::NumericVector MutationRateRvec = Rcpp::as<Rcpp::NumericVector>(SMSTraitsParamsR.slot("MutationRate"));
+
+                // Output values
+                Rcpp::LogicalVector isOutputRvec = Rcpp::as<Rcpp::LogicalVector>(SMSTraitsParamsR.slot("OutputValues"));
+
+                string TraitTypeR;
+                int sexdep;
+
+                for (int l = 0; l < nbTraits; l++){
+                    // expecting crw_stepLength, crw_stepCorrelation
+                    if (l == 0) {
+                        TraitTypeR = "sms_directionalPersistence";
+                    }
+                    else if (l == 1) {
+                        TraitTypeR = "sms_goalBias";
+                    }
+                    else if (l == 2) {
+                        TraitTypeR = "sms_alphaDB";
+                    }
+                    else {
+                        TraitTypeR = "sms_betaDB";
+                    }
+
+                    sexdep=2;
+
+                    set<int> positions;
+                    int NbOfPositionsR = -9;
+                    // check if PositionsR[l] is a string
+                    if(Rf_isString(PositionsRList[l])){
+                        string pos = Rcpp::as<string>(PositionsRList[l]);
+                        if(pos == "random"){
+                            NbOfPositionsR = (int)NbOfPositionsRvec[l]; // here is the error message
+                            if(NbOfPositionsR > 0){
+                                positions = selectRandomLociPositions(NbOfPositionsR, genomeSize);
+                                Rcpp::Rcout << "SMSGenes(): " << NbOfPositionsR << " random positions selected." << endl;
+                                for (auto pos : positions) {
+                                    std::cout << pos << " ";
+                                }
+                            }
+                        }
+                        else throw logic_error("SMSGenes(): If positions are random you must provide the number of positions (>0).");
+                    }
+                    else {
+                        Rcpp::NumericVector PositionsR = Rcpp::as<Rcpp::NumericVector>(PositionsRList[l]); // Positions are provided as numeric vector
+                        // use a for loop to insert the values at PositionsR into the set positions
+                        for (int i = 0; i < PositionsR.size(); i++) {
+                            if (static_cast<int>(PositionsR[i]) <= genomeSize) {
+                                positions.insert(static_cast<int>(PositionsR[i]));
+                            }
+                            else throw logic_error("SMSGenes(): Loci positions must be smaller than genome size");
+                        }
+                    }
+
+                    string ExpressionTypeR = (string)ExpressionTypeRvec[l];
+
+                    string initDistR = (string)InitialDistRvec[l]; // it is checked beforehand whether the correct distributions are provided
+                    Rcpp::NumericVector initParamsR = InitialParamsRmat.row(l);
+
+                    bool isInherited = isInheritedRvec[l] == 1;
+
+                    string MutationDistR =  (string)MutationDistRvec[l];
+                    Rcpp::NumericVector MutationParamsR = MutationParamsRmat.row(l);
+
+                    float MutationRateR = (float) MutationRateRvec[l];
+                    bool isOutputR = isOutputRvec[l] == 1;
+
+                    setUpSpeciesTrait(TraitTypeR,
+                                      positions,
+                                      ExpressionTypeR,
+                                      initDistR,
+                                      initParamsR,
+                                      DominanceDistR,
+                                      DominanceParamsR,
+                                      isInherited,
+                                      MutationDistR,
+                                      MutationParamsR,
+                                      MutationRateR,
+                                      sexdep,
+                                      isOutputR);
+                }
+
+            }
+        }
+        break;
+
+        case 2: { //CorrRW
+            // CorrRW traits
+            if(trfr.indVar){
+                CorrRWTraitsParamsR = Rcpp::as<Rcpp::S4>(TraitsParamsR.slot("CorrRWGenes"));
+
+                // number of expected traits
+                int nbTraits = 2;
+
+                // Positions and number of Positions
+                Rcpp::List PositionsRList = Rcpp::as<Rcpp::List>(CorrRWTraitsParamsR.slot("Positions"));
+                Rcpp::NumericVector NbOfPositionsRvec;
+                if (CorrRWTraitsParamsR.slot("NbOfPositions")!= R_NilValue){
+                    NbOfPositionsRvec = Rcpp::as<Rcpp::NumericVector> (CorrRWTraitsParamsR.slot("NbOfPositions"));
+                }
+
+                // Expression type
+                Rcpp::StringVector ExpressionTypeRvec = Rcpp::as<Rcpp::StringVector> (CorrRWTraitsParamsR.slot("ExpressionType")); // not applicable for genetic loads
+
+                // Initial distribution
+                Rcpp::StringVector InitialDistRvec = Rcpp::as<Rcpp::StringVector>(CorrRWTraitsParamsR.slot("InitialDistribution"));
+                Rcpp::NumericMatrix InitialParamsRmat = Rcpp::as<Rcpp::NumericMatrix>(CorrRWTraitsParamsR.slot("InitialParameters")); // as a matrix: columns for parameter, rows for Settlement trait
+
+                Rcpp::LogicalVector isInheritedRvec = Rcpp::as<Rcpp::LogicalVector>(CorrRWTraitsParamsR.slot("IsInherited"));
+
+                // Dominance distribution
+                string DominanceDistR = "#"; // not applicable for dispersal traits
+                Rcpp::NumericVector DominanceParamsR = {0,0}; // not applicable for dispersal traits
+
+                // Mutation parameters
+                Rcpp::StringVector MutationDistRvec = Rcpp::as<Rcpp::StringVector>(CorrRWTraitsParamsR.slot("MutationDistribution"));
+                Rcpp::NumericMatrix MutationParamsRmat = Rcpp::as<Rcpp::NumericMatrix>(CorrRWTraitsParamsR.slot("MutationParameters"));
+                Rcpp::NumericVector MutationRateRvec = Rcpp::as<Rcpp::NumericVector>(CorrRWTraitsParamsR.slot("MutationRate"));
+
+                // Output values
+                Rcpp::LogicalVector isOutputRvec = Rcpp::as<Rcpp::LogicalVector>(CorrRWTraitsParamsR.slot("OutputValues"));
+
+                string TraitTypeR;
+                int sexdep;
+
+                for (int l = 0; l < nbTraits; l++){
+                    // expecting crw_stepLength, crw_stepCorrelation
+                    if (l == 0) {
+                        TraitTypeR = "crw_stepLength";
+                    }
+                    else {
+                        TraitTypeR = "crw_stepCorrelation";
+                    }
+                    sexdep=2;
+
+                    set<int> positions;
+                    int NbOfPositionsR = -9;
+                    // check if PositionsR[l] is a string
+                    if(Rf_isString(PositionsRList[l])){
+                        string pos = Rcpp::as<string>(PositionsRList[l]);
+                        if(pos == "random"){
+                            NbOfPositionsR = (int)NbOfPositionsRvec[l]; // here is the error message
+                            if(NbOfPositionsR > 0){
+                                positions = selectRandomLociPositions(NbOfPositionsR, genomeSize);
+                                Rcpp::Rcout << "CorrRWGenes(): " << NbOfPositionsR << " random positions selected." << endl;
+                                for (auto pos : positions) {
+                                    std::cout << pos << " ";
+                                }
+                            }
+                        }
+                        else throw logic_error("CorrRWGenes(): If positions are random you must provide the number of positions (>0).");
+                    }
+                    else {
+                        Rcpp::NumericVector PositionsR = Rcpp::as<Rcpp::NumericVector>(PositionsRList[l]); // Positions are provided as numeric vector
+                        // use a for loop to insert the values at PositionsR into the set positions
+                        for (int i = 0; i < PositionsR.size(); i++) {
+                            if (static_cast<int>(PositionsR[i]) <= genomeSize) {
+                                positions.insert(static_cast<int>(PositionsR[i]));
+                            }
+                            else throw logic_error("CorrRWGenes(): Loci positions must be smaller than genome size");
+                        }
+                    }
+
+                    string ExpressionTypeR = (string)ExpressionTypeRvec[l];
+
+                    string initDistR = (string)InitialDistRvec[l]; // it is checked beforehand whether the correct distributions are provided
+                    Rcpp::NumericVector initParamsR = InitialParamsRmat.row(l);
+
+                    bool isInherited = isInheritedRvec[l] == 1;
+
+                    string MutationDistR =  (string)MutationDistRvec[l];
+                    Rcpp::NumericVector MutationParamsR = MutationParamsRmat.row(l);
+
+                    float MutationRateR = (float) MutationRateRvec[l];
+                    bool isOutputR = isOutputRvec[l] == 1;
+
+                    setUpSpeciesTrait(TraitTypeR,
+                                      positions,
+                                      ExpressionTypeR,
+                                      initDistR,
+                                      initParamsR,
+                                      DominanceDistR,
+                                      DominanceParamsR,
+                                      isInherited,
+                                      MutationDistR,
+                                      MutationParamsR,
+                                      MutationRateR,
+                                      sexdep,
+                                      isOutputR);
+                }
+
+            }
+        }
+        break;
+    }
+
+
+    // SMS traits
+
+    // Kernel traits
 
     return 0;
 
@@ -3114,8 +4011,7 @@ map<GenParamType, float> NumericToParameterMap(string distributionString, Rcpp::
             paramMap.emplace(GenParamType::SCALE, (float) parameter[1]);
         }
         else if (distributionString == "scaled"){
-            paramMap.emplace(GenParamType::MIN, (float) parameter[0]);
-            paramMap.emplace(GenParamType::MAX, (float) parameter[1]);
+            paramMap.emplace(GenParamType::MEAN, (float) parameter[0]);
         }
         else if (distributionString == "negExp"){
             paramMap.emplace(GenParamType::MEAN, (float) parameter[0]);
@@ -3141,7 +4037,6 @@ set<int> selectRandomLociPositions(int nbLoci, const int& genomeSize) {
         do {
             rndLocus = pRandom->IRandom(0, genomeSize - 1);
         } while (positions.contains(rndLocus));
-        Rcpp::Rcout << "random position: " << rndLocus << endl;
         positions.insert(rndLocus);
     }
     return positions;
@@ -3203,6 +4098,40 @@ void setUpSpeciesTrait(string TraitTypeR, set<int> positions, string ExpressionT
     int ploidy = gNbSexesDisp;
 
     const bool isOutput = isOutputR;
+
+    // test Traits before creating a new trait:
+    Rcpp::Rcout << "TraitTypeR: " << to_string(traitType) << std::endl;
+
+    Rcpp::Rcout << "Positions: ";
+    for (auto pos : positions) {
+        std::cout << pos << " ";
+    }
+    Rcpp::Rcout << std::endl;
+
+    Rcpp::Rcout << "ExpressionType: " << to_string(expressionType) << std::endl;
+    Rcpp::Rcout << "initDist: " << to_string(initDist) << std::endl;
+
+    Rcpp::Rcout << "Init Parameters: ";
+    for (const auto& pair : initParams) Rcpp::Rcout << to_string(pair.first) << " " << pair.second << " ";
+    Rcpp::Rcout << endl;
+
+    Rcpp::Rcout << "DominanceDist: " << to_string(dominanceDist) << std::endl;
+
+    Rcpp::Rcout << "Dominance Parameter: ";
+    for (const auto& pair : dominanceParams) Rcpp::Rcout << to_string(pair.first) << " " << pair.second << " ";
+    Rcpp::Rcout << std::endl;
+
+    Rcpp::Rcout << "isInherited: " << (isInherited ? "true" : "false") << std::endl;
+    Rcpp::Rcout << "MutationDistR: " <<  to_string(mutationDistribution) << std::endl;
+
+    Rcpp::Rcout << "Mutation Parameter: ";
+    for (const auto& pair : mutationParameters) Rcpp::Rcout << to_string(pair.first) << " " << pair.second << " ";
+    Rcpp::Rcout << std::endl;
+
+    Rcpp::Rcout << "MutationRateR: " << mutationRate << std::endl;
+    Rcpp::Rcout << "sexdep: " << sexdep << std::endl;
+    Rcpp::Rcout << "isOutputR: " << (isOutput ? "true" : "false") << std::endl;
+
     // Create species trait
     SpeciesTrait* trait = new SpeciesTrait(
         traitType, sex,
@@ -3215,52 +4144,16 @@ void setUpSpeciesTrait(string TraitTypeR, set<int> positions, string ExpressionT
         isOutput
     );
 
-    Rcpp::Rcout << "TraitTypeR: " << TraitTypeR << std::endl;
 
-    Rcpp::Rcout << "Positions: ";
-    for (auto pos : positions) {
-        std::cout << pos << " ";
-    }
-    Rcpp::Rcout << std::endl;
-
-    Rcpp::Rcout << "ExpressionTypeR: " << ExpressionTypeR << std::endl;
-    Rcpp::Rcout << "initDistR: " << initDistR << std::endl;
-
-    Rcpp::Rcout << "initParamsR: ";
-    for (int i = 0; i < initParamsR.size(); ++i) {
-        Rcpp::Rcout << initParamsR[i] << " ";
-    }
-    Rcpp::Rcout << std::endl;
-
-    Rcpp::Rcout << "DominanceDistR: " << DominanceDistR << std::endl;
-
-    Rcpp::Rcout << "DominanceParamsR: ";
-    for (int i = 0; i < DominanceParamsR.size(); ++i) {
-        Rcpp::Rcout << DominanceParamsR[i] << " ";
-    }
-    Rcpp::Rcout << std::endl;
-
-    Rcpp::Rcout << "isInherited: " << (isInherited ? "true" : "false") << std::endl;
-    Rcpp::Rcout << "MutationDistR: " << MutationDistR << std::endl;
-
-    Rcpp::Rcout << "MutationParamsR: ";
-    for (int i = 0; i < MutationParamsR.size(); ++i) {
-        Rcpp::Rcout << MutationParamsR[i] << " ";
-    }
-    Rcpp::Rcout << std::endl;
-
-    Rcpp::Rcout << "MutationRateR: " << MutationRateR << std::endl;
-    Rcpp::Rcout << "sexdep: " << sexdep << std::endl;
-    Rcpp::Rcout << "isOutputR: " << (isOutputR ? "true" : "false") << std::endl;
     pSpecies->addTrait(traitType, *trait);
     // get the values and print them:
     // Getters
-    sex_t s = pSpecies->getSpTrait(GENETIC_LOAD1)->getSex();
-    float mut = pSpecies->getSpTrait(GENETIC_LOAD1)->getMutationRate();
-    short pl = pSpecies->getSpTrait(GENETIC_LOAD1)->getPloidy();
-    const set<int> pos = pSpecies->getSpTrait(GENETIC_LOAD1)->getGenePositions();
-    int si = pSpecies->getSpTrait(GENETIC_LOAD1)->getPositionsSize();
-    bool inher = pSpecies->getSpTrait(GENETIC_LOAD1)->isInherited();
+    sex_t s = pSpecies->getSpTrait(traitType)->getSex();
+    float mut = pSpecies->getSpTrait(traitType)->getMutationRate();
+    short pl = pSpecies->getSpTrait(traitType)->getPloidy();
+    const set<int> pos = pSpecies->getSpTrait(traitType)->getGenePositions();
+    int si = pSpecies->getSpTrait(traitType)->getPositionsSize();
+    bool inher = pSpecies->getSpTrait(traitType)->isInherited();
 
     Rcpp::Rcout << "sex: " << s << std::endl;
     Rcpp::Rcout << "mutationrate: " << mut <<endl;
@@ -3271,13 +4164,13 @@ void setUpSpeciesTrait(string TraitTypeR, set<int> positions, string ExpressionT
     Rcpp::Rcout << "genome size: " << si << std::endl;
     Rcpp::Rcout << "is inherited" << inher << endl;
 
-    DistributionType mutdist = pSpecies->getSpTrait(GENETIC_LOAD1)->getMutationDistribution();
-    map<GenParamType, float> mutpara =  pSpecies->getSpTrait(GENETIC_LOAD1)->getMutationParameters();
-    DistributionType domdist = pSpecies->getSpTrait(GENETIC_LOAD1)->getDominanceDistribution();
-    map<GenParamType, float>  dompara = pSpecies->getSpTrait(GENETIC_LOAD1)->getDominanceParameters();
-    DistributionType initdist = pSpecies->getSpTrait(GENETIC_LOAD1)->getInitialDistribution();
-    map<GenParamType, float> initpara =  pSpecies->getSpTrait(GENETIC_LOAD1)->getInitialParameters();
-    ExpressionType exprtype = pSpecies->getSpTrait(GENETIC_LOAD1)->getExpressionType();
+    DistributionType mutdist = pSpecies->getSpTrait(traitType)->getMutationDistribution();
+    map<GenParamType, float> mutpara =  pSpecies->getSpTrait(traitType)->getMutationParameters();
+    DistributionType domdist = pSpecies->getSpTrait(traitType)->getDominanceDistribution();
+    map<GenParamType, float>  dompara = pSpecies->getSpTrait(traitType)->getDominanceParameters();
+    DistributionType initdist = pSpecies->getSpTrait(traitType)->getInitialDistribution();
+    map<GenParamType, float> initpara =  pSpecies->getSpTrait(traitType)->getInitialParameters();
+    ExpressionType exprtype = pSpecies->getSpTrait(traitType)->getExpressionType();
 
     Rcpp::Rcout << "Mutation Distribution: " << to_string(mutdist) << std::endl;
     Rcpp::Rcout << "Dominance distribution: " << to_string(domdist) << endl;
@@ -3856,7 +4749,6 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
                         params_ok = false;
                     }
                 }
-
                 if(params_ok) {
 #if RSDEBUG
                     DebugGUI("RunBatchR(): simulation i=" + Int2Str(i));
@@ -3893,6 +4785,8 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
                     rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
                     params_ok = false;
                 }
+
+                Rcpp::Rcout << "ReadInitialisationR() done." << endl;
 
                 if (gHasGenetics) { // genetics need to be set and traits file need to be provided
                     Rcpp::S4 GeneParamsR("GeneticsParams");
@@ -4005,9 +4899,11 @@ void setglobalvarsR(Rcpp::S4 control)
     gTransferType = Rcpp::as<int>(control.slot("transfer"));
     translocation = Rcpp::as<int>(control.slot("translocation"));
     gHasNeutralGenetics = Rcpp::as<int>(control.slot("neutralgenetics"));
+    Rcpp::Rcout << "gHasNeutralGenetics: " << gHasNeutralGenetics << std::endl;
     gHasGeneticLoad = Rcpp::as<int>(control.slot("geneticload"));
     // gHasGenetics should be true if gHasNeutralGenetics or gHasGeneticLoads is true
     gHasGenetics = gHasNeutralGenetics || gHasGeneticLoad;
+    Rcpp::Rcout << "gHasGenetics: " << gHasGenetics << std::endl;
 
 #if RSDEBUG
     /*

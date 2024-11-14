@@ -11,13 +11,11 @@ CorrRW(StepLength = 1, Rho = 0.5,
       StepMort = 0.0)
 }
 \arguments{
-\item{StepLength}{Step length given in meters, defaults to \eqn{1}.\cr If \code{IndVar=TRUE}, expects a vector of length three
-specifying (Mean, SD, TraitScaleFactor) of \code{StepLength}.}
+\item{StepLength}{Step length given in meters, defaults to \eqn{1}.\cr If \code{IndVar=TRUE}, \code{NULL} and define the trait in \code{\link[RangeShiftR]{CorrRWTraits}}.}
 
-\item{Rho}{Correlation parameter \eqn{ρ}, defaults to \eqn{0.5}. Must be in the open interval \eqn{(0,1)}.\cr If \code{IndVar=TRUE},
-expects a vector of length three specifying (Mean, SD, TraitScaleFactor) of \code{Rho}.}
+\item{Rho}{Correlation parameter \eqn{ρ}, defaults to \eqn{0.5}. Must be in the open interval \eqn{(0,1)}.\cr If \code{IndVar=TRUE}, \code{NULL} and define the trait in \code{\link[RangeShiftR]{CorrRWTraits}}}
 
-\item{IndVar}{Individual variability in CorrRW traits (i.e. \code{StepLength} and \code{Rho})? Defaults to \code{FALSE}.}
+\item{IndVar}{Individual variability in CorrRW traits (i.e. \code{StepLength} and \code{Rho})? Defaults to \code{FALSE}. if \code{TRUE}, define CorrRWTraits in \code{\link[RangeShiftR]{CorrRWTraits}}}
 
 \item{StraightenPath}{Straighten path after decision not to settle in a patch? Defaults to \code{TRUE}, see Details below.}
 
@@ -43,9 +41,7 @@ simultaneously. In the case of patch-based models,
 \eqn{Rho} is automatically set to \eqn{0.99} until the individual steps outside its natal patch, after which the value of
 \eqn{Rho} set by the user is restored. \cr
 The \code{StepLength} and \eqn{Rho} can be set to vary between individuals and evolve (set \code{IndVar=TRUE}).
-In this case, each individual exhibits two traits for these two parameters.
-For each trait the initial mean and standard deviations must be set, as well as the TraitScaleFactor (see \code{\link[RangeShiftR]{Settlement}}),
-instead of only one constant value each.\cr
+In this case, \code{StepLength} and \eqn{Rho} must be set to \code{NULL} and the corresponding traits must be defined in \code{\link[RangeShiftR]{CorrRWTraits}} (see also \code{\link[RangeShiftR]{Genetics}}). \cr
 Note that the step length may not evolve below one fifth of
 the landscape resolution, and correlation may not evolve above \eqn{0.999}. \cr
 Per-step mortality is not allowed to vary between individuals or to evolve. \cr

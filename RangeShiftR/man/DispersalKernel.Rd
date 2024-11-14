@@ -8,7 +8,6 @@
 DispersalKernel(Distances = 100, DoubleKernel = FALSE,
                 SexDep = FALSE, StageDep = FALSE,
                 IndVar = FALSE,
-                TraitScaleFactor,
                 DistMort = FALSE,
                 MortProb = 0.0, Slope, InflPoint)
 }
@@ -112,10 +111,6 @@ table lists the required columns and their correct order for different settings:
  F \tab F \tab F \tab T \tab sex, \eqn{δ} \cr
  F \tab F \tab T \tab T \tab stage, sex, \eqn{δ} \cr
  F \tab T \tab F \tab F \tab \ifelse{html}{\out{&delta;<sub>1</sub>, &delta;<sub>2</sub>, p<sub>I</sub>}}{\eqn{δ_1, δ_2, p_I}} \cr
- T \tab F \tab F \tab F \tab mean\eqn{(δ)}, sd\eqn{(δ)} \cr
- T \tab T \tab F \tab F \tab \ifelse{html}{\out{mean(&delta;<sub>1</sub>)}}{mean\eqn{(δ_1)}}, \ifelse{html}{\out{sd(&delta;<sub>1</sub>)}}{sd\eqn{(δ_1)}}, \ifelse{html}{\out{mean(&delta;<sub>2</sub>)}}{mean\eqn{(δ_2)}}, \ifelse{html}{\out{sd(&delta;<sub>2</sub>)}}{sd\eqn{(δ_2)}}, mean\ifelse{html}{\out{(p<sub>I</sub>)}}{\eqn{(p_I)}}, sd\ifelse{html}{\out{(p<sub>I</sub>)}}{\eqn{(p_I)}} \cr
- \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \cr
- T \tab T \tab F \tab T \tab sex, \ifelse{html}{\out{mean(&delta;<sub>1</sub>)}}{mean\eqn{(δ_1)}}, \ifelse{html}{\out{sd(&delta;<sub>1</sub>)}}{sd\eqn{(δ_1)}}, \ifelse{html}{\out{mean(&delta;<sub>2</sub>)}}{mean\eqn{(δ_2)}}, \ifelse{html}{\out{sd(&delta;<sub>2</sub>)}}{sd\eqn{(δ_2)}}, mean\ifelse{html}{\out{(p<sub>I</sub>)}}{\eqn{(p_I)}}, sd\ifelse{html}{\out{(p<sub>I</sub>)}}{\eqn{(p_I)}}
  }
 
 The column headings need not be included, only the numeric matrix is required. The rows require no particular order, but there must be exactly

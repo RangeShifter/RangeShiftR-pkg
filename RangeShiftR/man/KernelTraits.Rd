@@ -4,11 +4,77 @@
 \name{KernelTraits}
 \alias{KernelTraits}
 \title{Set genetic traits structure for kernel traits}
+\usage{
+KernelTraits(Positions = list("random"), NbOfPositions = c(10),
+ExpressionType = rep("additive",1),
+InitialDistribution = rep("normal",1), InitialParameters = matrix(c(rep(0.5,1),(rep(0.1,1), nrow=1),
+IsInherited = rep(FALSE,1),
+MutationDistribution = rep("normal",1), MutationParameters = matrix(c(rep(0.5,1),(rep(0.2,1), nrow=1),
+MutationRate = rep(0.0001,1), OutputValues = rep(FALSE,1))
+}
+\arguments{
+\item{Positions}{Loci positions coding for the trait within genome. Should be provided as a list. Entries can either be a string (\code{"random"}) and/or vectors of integers.
+The length must be equal to the number of required kernel traits (see above) and the sequence must match the sequence of the kernel traits listed above.}
+
+\item{NbOfPositions}{Only specify when the \code{Positions} of the kernel trait is set to ‘random’, else must be blank (\code{NULL}).
+The length must be equal to the number of required kernel traits (see above) and the sequence must match the sequence of the kernel traits listed above.}
+
+\item{ExpressionType}{Type of expression for the emigration trait. Can be either \code{additive} or \code{average}.
+The length must be equal to the number of required kernel traits (see above) and the sequence must match the sequence of the kernel traits listed above.}
+
+\item{InitialDistribution}{Distribution of the initial values. Can be \code{uniform} or \code{normal}. Should be provided as a vector of strings.
+The length must be equal to the number of required kernel traits (see above) and the sequence must match the sequence of the kernel traits listed above.}
+
+\item{InitialParameters}{Parameters for the initial distribution: You must provide two colums min and max  for \code{uniform} distribution and mean and sd for \code{normal} distribution.
+Each row in the matrix corresponds to an emigration trait. The number of rows must be equal to the number of required emigration traits (see above) and the sequence must match the sequence of the emigration traits listed above.}
+
+\item{IsInherited}{Should the emigration trait be inherited? Can be either \code{TRUE} or \code{FALSE}.
+The length must be equal to the number of required kernel traits (see above) and the sequence must match the sequence of the kernel traits listed above.}
+
+\item{MutationDistribution}{Distribution for mutations to draw from. Can be \code{uniform} or \code{normal}.
+The length must be equal to the number of required kernel traits (see above) and the sequence must match the sequence of the kernel traits listed above.}
+
+\item{MutationParameters}{Parameters for the mutation distribution: You must provide two colums: min and max for \code{uniform} distribution and mean and sd for \code{normal} distribution.
+Each row in the matrix corresponds to an emigration trait. The number of rows must be equal to the number of required emigration traits (see above) and the sequence must match the sequence of the emigration traits listed above.}
+
+\item{MutationRate}{Mutation rate applicable to this type of loci. Must be between 0.0 and 1.0.
+The length must be equal to the number of required kernel traits (see above) and the sequence must match the sequence of the kernel traits listed above.}
+
+\item{OutputValues}{If OutputGeneValues in GeneticsFile is enabled, should allele values for this gene be written to output? Ignored if OutputGeneValues is set to \code{FALSE}.
+The length must be equal to the number of required kernel traits (see above) and the sequence must match the sequence of the kernel traits listed above.}
+}
 \value{
 a parameter object of class "KernelTraitsParams"
 }
 \description{
-Can I have a list of different kerneltraits() depending on the dispersal parameter? (E0. Ealpa, Ebeta,)
+Depending on the settings of \code{\link[RangeShiftR]{DispersalKernel}}, the following traits can be evolvable:
+
+- The mean parameters(s) of the (two) dispersel kernel(s) \cr
+- The probability of using the first kernel, if a double kernel is used (\code{DoubleKernel=TRUE}). \cr
+
+If dispersal kernels are sex dependent, \code{SexDep=TRUE}, you must provide details for both sexes.
+
+This results in the following number of dispersal kernel traits that need to be specified:
+
+- 1 if \code{DoubleKernel=FALSE} and \code{SexDep=FALSE}: \ifelse{html}{\out{&delta;}}{\eqn{δ}} \cr
+- 2 if \code{DoubleKernel=FALSE} and \code{SexDep=TRUE}: \ifelse{html}{\out{&delta;(f)}}{\eqn{δ}(f)}, \ifelse{html}{\out{&delta;(m)}}{\eqn{δ}(m)}\cr
+- 3 if \code{DoubleKernel=TRUE} and \code{SexDep=FALSE}: \ifelse{html}{\out{&delta;<sub>1</sub>, &delta;<sub>2</sub>, p<sub>I</sub>}}{\eqn{δ_1, δ_2, p_I}}\cr
+- 6 if \code{DoubleKernel=TRUE} and \code{SexDep=TRUE}: \ifelse{html}{\out{&delta;<sub>1</sub>(f), &delta;<sub>1</sub>(m), &delta;<sub>2</sub>(f), &delta;<sub>2</sub>(m), p<sub>I</sub>(f), p<sub>I</sub>(m)}}{\eqn{δ_1(f), δ_1(m), δ_2(f), δ_2(m), p_I(f), p_I(m)}} \cr
+
+The entries of the trait parameters must be provided in the same order as the kernel traits are listed above. If parameters expect a matrix, the rows must match the order of kernel traits listed above.
+}
+\details{
+Traits set to evolve cannot simultaneously be stage-dependent.
+
+The alleles of each trait can be expressed according to an additive model (allele values across all loci are summed) or be averaged.
+
+Mutations are additive and can be sampled in either a \code{normal} or \code{uniform} distribution.
+
+Initial allele values are sampled in a \code{normal} or \code{uniform} distribution.
+
+Dispersal kernel traits can also be **not** inherited, that is, allele values are resampled from the initial distribution for every new individual.
+
+Dominance values are not applicable for dispersal kernel traits.
 }
 \author{
 Jette Reeg

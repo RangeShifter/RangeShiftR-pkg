@@ -3,12 +3,79 @@
 \docType{class}
 \name{SettlementTraits}
 \alias{SettlementTraits}
-\title{Set genetic traits structure for neutral traits}
+\title{Set genetic traits structure for settlement traits}
+\usage{
+SettlementTraits(Positions = list("random","random","random"), NbOfPositions = c(10, 10, 10),
+ExpressionType = rep("additive",3),
+InitialDistribution = rep("normal",3), InitialParameters = matrix(c(rep(0.5,3),(rep(0.1,3), nrow=3),
+IsInherited = rep(FALSE,3),
+MutationDistribution = rep("normal",3), MutationParameters = matrix(c(rep(0.5,3),(rep(0.2,3), nrow=3),
+MutationRate = rep(0.0001,3), OutputValues = rep(FALSE,3))
+}
+\arguments{
+\item{Positions}{Loci positions coding for the trait within genome. Should be provided as a list. Entries can either be a string (\code{"random"}) and/or vectors of integers.
+The length must be equal to the number of required settlement traits (see above) and the sequence must match the sequence of the settlement traits listed above.}
+
+\item{NbOfPositions}{Only specify when the \code{Positions} of the settlement trait is set to \code{"random"}, else must be blank (\code{NULL}).
+The length must be equal to the number of required settlement traits (see above) and the sequence must match the sequence of the settlement traits listed above.}
+
+\item{ExpressionType}{Type of expression for the settlement trait. Can be either \code{additive} or \code{average}.
+The length must be equal to the number of required settlement traits (see above) and the sequence must match the sequence of the settlement traits listed above.}
+
+\item{InitialDistribution}{Distribution of the initial values. Can be \code{uniform} or \code{normal}. Should be provided as a vector of strings.
+The length must be equal to the number of required settlement traits (see above) and the sequence must match the sequence of the settlement traits listed above.}
+
+\item{InitialParameters}{Parameters for the initial distribution: You must provide two colums min and max  for \code{uniform} distribution and mean and sd for \code{normal} distribution.
+Each row in the matrix corresponds to an settlement trait. The number of rows must be equal to the number of required settlement traits (see above) and the sequence must match the sequence of the settlement traits listed above.}
+
+\item{IsInherited}{Should the settlement trait be inherited? Can be either TRUE or FALSE.
+The length must be equal to the number of required settlement traits (see above) and the sequence must match the sequence of the settlement traits listed above.}
+
+\item{MutationDistribution}{Distribution for mutations to draw from. Can be \code{uniform} or \code{normal}.
+The length must be equal to the number of required settlement traits (see above) and the sequence must match the sequence of the settlement traits listed above.}
+
+\item{MutationParameters}{Parameters for the mutation distribution: You must provide two colums: min and max for \code{uniform} distribution and mean and sd for \code{normal} distribution.
+Each row in the matrix corresponds to an settlement trait. The number of rows must be equal to the number of required settlement traits (see above) and the sequence must match the sequence of the settlement traits listed above.}
+
+\item{MutationRate}{Mutation rate applicable to this type of loci. Must be between 0.0 and 1.0.
+The length must be equal to the number of required settlement traits (see above) and the sequence must match the sequence of the settlement traits listed above.}
+
+\item{OutputValues}{If OutputGeneValues in GeneticsFile is enabled, should allele values for this gene be written to output? Ignored if OutputGeneValues is set to \code{FALSE}.
+The length must be equal to the number of required settlement traits (see above) and the sequence must match the sequence of the settlement traits listed above.}
+}
 \value{
 a parameter object of class "SettlementTraitsParams"
 }
 \description{
-Can I have a list of different dispersaltraits() depending on the dispersal parameter? (E0. Ealpa, Ebeta,)
+Only if settlement is density-dependent (\code{DensDep = TRUE}) in \code{\link[RangeShiftR]{Settlement}}, settlement traits can be evolvable.
+
+Three settlement traits can evolve:
+
+ - The probability of settlement \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}} \cr
+ - The slope of the density-dependent settlement function \ifelse{html}{\out{&alpha;}}{\eqn{α}} \cr
+ - The density threshold of the density-dependent settlement function \ifelse{html}{\out{&beta;}}{\eqn{β}} \cr
+
+If settlement is sex dependent, \code{SexDep=TRUE}, you must provide details for both sexes.
+
+This results in following number of settlement traits that need to be specifed:
+
+- 3 entries/rows if settlement probability is not sex dependent \code{SexDep=FALSE}:  \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}}, \eqn{α} and \eqn{β} \cr
+- 6 entries/rows if settlement probability is sex dependent (\code{SexDep=TRUE}): \ifelse{html}{\out{S<sub>0</sub>(f), S<sub>0</sub>(m)}}{\eqn{S_0(f),S_0(m)}}, \ifelse{html}{\out{&alpha;(f), &alpha;(m)}}{\eqn{α(f), α(m)}} and \ifelse{html}{\out{&beta;(f), &beta;(m)}}{\eqn{β(f), β(m)}} \cr
+
+The entries of the trait parameters must be provided in the same order as the kernel traits are listed above. If parameters expect a matrix, the rows must match the order of kernel traits listed above.
+}
+\details{
+Traits set to evolve cannot simultaneously be stage-dependent.
+
+The alleles of each trait can be expressed according to an additive model (allele values across all loci are summed) or be averaged.
+
+Mutations are additive and can be sampled in either a \code{normal} or \code{uniform} distribution.
+
+Initial allele values are sampled in a \code{normal} or \code{uniform} distribution.
+
+Settlement traits can also be **not** inherited, that is, allele values are resampled from the initial distribution for every new individual.
+
+Dominance values are not applicable for settlement traits.
 }
 \author{
 Jette Reeg

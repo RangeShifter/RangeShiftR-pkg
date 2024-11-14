@@ -10,7 +10,7 @@ Genetics(GenomeSize = 10,
          OutputGeneValues = FALSE, OutputNeutralStatistics = FALSE,
          OutputFstatsWeirCockerham = FALSE, OutputFstatsWeirHill = FALSE,
          OutputStartGenetics = NULL, OutputInterval = NULL,
-         PatchList = NULL, NbrPatchToSample = NULL,
+         PatchList = NULL, NbrPatchesToSample = NULL,
          nIndividualsToSample = NULL, Stages = NULL, Traits = Traits()
          )
 }
@@ -19,25 +19,23 @@ Genetics(GenomeSize = 10,
 
 \item{ChromosomeEnds}{Where the genome is split into chromosomes, if empty
 assumed one chromosome is equal to GenomeSize. These areas recombine with a
-probability of 0.5.}
+probability of 0.5. Disabled for haploid organisms (no recombination).}
 
 \item{RecombinationRate}{Recombination rate (through chromosomal crossover)
-across the whole genome (in addition to the chromosomeEnds above).}
+across the whole genome (in addition to the chromosomeEnds above). Disabled for haploid organisms (no recombination).}
 
-\item{OutputGeneValues}{Output the values of all alleles for all genes of all
-sampled individuals. Does not output the resulting trait values: mean and SD
-of dispersal and genetic fitness traits are output in the TraitsXPatch,
-TraitsXCell and/or TraitsXrow output files. Enables the geneValues output
-files.}
+\item{OutputGeneValues}{Output the values of all alleles for all genes of all sampled individuals.
+Does not output the resulting trait values: mean and SD of dispersal and genetic fitness traits are
+output in the TraitsXPatch, TraitsXCell and/or TraitsXrow output files. Enables the geneValues output files.}
 
-\item{OutputFstatsWeirCockerham}{Calculate F-statistics (including global and
-per-locus estimates) according to Weir & Cockerham (1984)'s method-of-moments
-approach. Enables the neutralGenetics and perLocusNeutralGenetics output files.}
+\item{OutputFstatsWeirCockerham}{Calculate F-statistics (including global and per-locus estimates)
+according to Weir & Cockerham (1984)'s method-of-moments approach. Enables the neutralGenetics and
+perLocusNeutralGenetics output files.}
 
-\item{OutputFstatsWeirHill}{Calculate F-statistics calculated according to the
-estimators of Weir & Hill (2002), including global estimates corrected for
-unequal sample sizes, population- (i.e. patch-) specific estimates, and pairwise
-estimates. Enables the neutralGenetics and pairwisePatchNeutralGenetics output files.}
+\item{OutputFstatsWeirHill}{Calculate F-statistics calculated according to the estimators of Weir & Hill (2002),
+including global estimates corrected for unequal sample sizes,
+population- (i.e. patch-) specific estimates, and pairwise estimates.
+Enables the neutralGenetics and pairwisePatchNeutralGenetics output files.}
 
 \item{OutputStartGenetics}{Which year should RangeShifter start to produce the output files listed above?}
 
@@ -48,7 +46,7 @@ specified according to their patch number, as per the patch layer in a patch-bas
 model. Or sampled randomly or all patches can be chosen. In a cell-based landscape
 random is the only option with number of patches (=cells) specified.}
 
-\item{NbrPatchToSample}{If PatchList=random or random_occupied then this specifies
+\item{NbrPatchesToSample}{If PatchList=random or random_occupied then this specifies
 the number of patches to sample randomly. Random: The chosen sample patches remain
 the same throughout the simulation, i.e. do not vary between years or replicates
 unless artificially generated landscape that is generated afresh between replicates.
@@ -58,21 +56,23 @@ Random_occupied: patches are re-sampled every generation among all patches conta
 
 \item{Stages}{The age stages to sample from.}
 
-\item{Traits}{The genetic traits to be modelled.}
+\item{Traits}{The genetic traits to be modelled. See \code{\link[RangeShiftR]{Traits}} for more information.}
 }
 \value{
 a parameter object of class "GeneticsParams"
 }
 \description{
-Set genetics parameters\cr
-
-Controls heritability and evolution of traits (if inter-individual variability is enabled (\code{IndVar=TRUE}) for at least one (dispersal) trait).
-Provides control over the genome size, the number of loci, the recombination rate (if the species is diploid) and a
-flexible mapping of traits to chromosomes, allowing linkage, pleiotropy and neutral alleles to be incorporated. It is also possible to model
-neutral alleles when no adaptive traits are present.
+Controls heritability and evolution of traits (in case of dispersal traits only if inter-individual variability is enabled (\code{IndVar=TRUE})).
+Provides control over the genome size, the number of loci, the recombination rate, output options and the genetic traits to be modelled
 }
 \details{
-TBD
+The genome itself is not modelled explicitly, and is instead represented by a genome size,
+the set of gene positions and a set of positions for the chromosome breaks (hence determining the number of chromosomes).
+
+The rate of recombination applies to the entire genome. Genetic linkage does occur, based on the distances between genes controlling different traits.
+Multiple traits can use the same position, making the alleles of such genes completely linked, but mutations and expression of different traits are resolved independently,
+such that pleiotropy is not possible.
+If either option for sexual reproduction is selected, all individuals are diploid. Otherwise, asexual individuals are always haploid (and do not recombine).
 }
 \author{
 Jette Reeg

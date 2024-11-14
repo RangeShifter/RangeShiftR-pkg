@@ -7,37 +7,77 @@
 \usage{
 GeneticLoadTraits(NbGeneticLoads = 1, Positions = list("random"), NbOfPositions = 10,
 DominanceDistribution = "normal", DominanceParameters = matrix(c(0.5,0.1), nrow=1),
-MutationDistribution = "normal", MutationParameters = matrix(c(0.5,0.2), nrow=1), MutationRate = 0.0001, OutputValues = FALSE)
+MutationDistribution = "normal", MutationParameters = matrix(c(0.5,0.2), nrow=1),
+MutationRate = 0.0001, OutputValues = FALSE)
 }
 \arguments{
 \item{NbGeneticLoads}{Number of genetic loads}
 
 \item{Positions}{Loci positions coding for that trait within genome. Should be provided as a list of strings (if random) and/or vectors of integers (if not random)}
 
-\item{NbOfPositions}{Only specify when the \code{Positions} of a genetic load trait are set to ‘random’, else must be blank (NULL)}
+\item{NbOfPositions}{Only specify when the \code{Positions} of a genetic load trait are set to \code{"random"}, else must be blank (\code{NULL})}
 
-\item{DominanceDistribution}{Distribution of dominance values. Can be \code{gamma}, \code{uniform}, \code{normal}, \code{negExp}, \code{scaled}. Should be provided as a vector of strings if \code{NbGeneticLoads} > 1}
+\item{DominanceDistribution}{Distribution of dominance values. Can be \code{gamma}, \code{uniform}, \code{normal}, \code{negExp}, \code{scaled}. Should be provided as a vector of strings if \code{NbGeneticLoads > 1}}
 
-\item{DominanceParameters}{Parameters for the dominance distribution: You must provide two colums for \code{uniform}, \code{normal} and \code{gamma} distributions: min and max (uniform), mean and sd (normal) or shape and scale (gamma) or one column for \code{negExp}, \code{scaled}: mean
-If genetic loads have different \code{DominanceDistribution} and one require two columns you need to set the second value to NA in case of \code{negExp} or \code{scaled} distribution.
+\item{DominanceParameters}{Parameters for the dominance distribution: You must provide two colums for \code{uniform}, \code{normal} and \code{gamma} distributions:
+ min and max (\code{uniform}), mean and sd (\code{normal}) or shape and scale (\code{gamma}) or one column for \code{negExp}, \code{scaled}: mean
+If genetic loads have different \code{DominanceDistribution} and one requires two columns you need to set the second value to \code{NA} in case of \code{negExp} or \code{scaled} distribution.
 Each row in the matrix corresponds to a genetic load trait.}
 
-\item{MutationDistribution}{Distribution for mutations to draw from. Can be \code{gamma}, \code{uniform}, \code{normal}, \code{negExp}. Should be provided as a vector of strings if \code{NbGeneticLoads} > 1}
+\item{MutationDistribution}{Distribution for mutations to draw from. Can be \code{gamma}, \code{uniform}, \code{normal}, \code{negExp}. Should be provided as a vector of strings if \code{NbGeneticLoads > 1}}
 
-\item{MutationParameters}{Parameters for the mutation distribution: You must provide two colums for \code{uniform}, \code{normal} and \code{gamma} distributions: min and max (uniform), mean and sd (normal) or shape and scale (gamma) or one column for \code{negExp}: mean
-If genetic loads have different \code{DominanceDistribution} and one require two columns you need to set the second value to NA in case of \code{negExp} distribution.}
+\item{MutationParameters}{Parameters for the mutation distribution: You must provide two colums for \code{uniform}, \code{normal} and \code{gamma} distributions: min and max (\code{uniform}), mean and sd (\code{normal})
+ or shape and scale (\code{gamma}) or one column for \code{negExp}: mean
+If genetic loads have different \code{DominanceDistribution} and one require two columns you need to set the second value to \code{NA} in case of \code{negExp} distribution.}
 
-\item{MutationRate}{Mutation rate applicable to this type of loci. Must be between 0.0 and 1.0. Should be provided as a vector if multiple genetic loads are specified.}
+\item{MutationRate}{Mutation rate applicable to this type of loci. Must be between \code{0.0} and \code{1.0}. Should be provided as a vector if multiple genetic loads are specified.}
 
-\item{OutputValues}{If OutputGeneValues in GeneticsFile is enabled, should allele values for this gene be written to output? Ignored if OutputGeneValues is set to FALSE. Should be provided as a vector if multiple genetic loads are specified.
-
-The expression type of genetic load traits is always multiplicative.}
+\item{OutputValues}{If OutputGeneValues in GeneticsFile is enabled, should allele values for this gene be written to output? Ignored if OutputGeneValues is set to \code{FALSE}.
+Should be provided as a vector if multiple genetic loads are specified.}
 }
 \value{
 a parameter object of class "GeneticLoadParams"
 }
 \description{
-Set genetic structure for genetic fitness traits
+A method to specify genetic fitness traits in the genetic module. You can specify up to 5 genetic loads.
+}
+\details{
+The alleles of genetic fitness traits represent deleterious mutations which combined expression reduce the viability of juveniles,
+i.e. the genetic load. Immediately after birth, all newly born individuals are checked for viability via a Bernoulli trial.
+The probability of an individual passing the test and surviving birth is equal to its genetic fitness.
+Genetic fitness is 1 by default, but every allele reduces this value by an amount that depends on
+its selection coefficient \eqn{s}, and (for diploid systems) the value of its dominance coefficient \eqn{h} relative
+to that of the other allele it is paired with.
+
+More precisely, the genetic fitness \eqn{W} of an individual is the product of the contributions \eqn{w} of each genetic load locus.
+The contribution \ifelse{html}{\out{w<sub>i</sub>}}{\eqn{w_i}}  of locus \eqn{i} with alleles \eqn{A} and \eqn{B} is:
+
+\ifelse{html}{\out{&emsp;&emsp; w<sub>i</sub> = 1 - h<sub>i</sub>s<sub>A</sub> - (1 - h<sub>i</sub>)s<sub>B</sub>}}{\deqn{w_i = 1 - h_i s_A - (1 - h_i) s_b}}
+
+\ifelse{html}{\out{&emsp;&emsp; h<sub>i</sub> = h<sub>A</sub> / (h<sub>A</sub> + h<sub>B</sub>)}}{\deqn{h_i = h_A / ( h_A + h_B )}}
+
+Selection and dominance coefficients for new alleles (mutations) are drawn from distributions specified by the user:
+either a uniform, normal, gamma, or negative exponential, and are not additive.
+Dominance coefficients can additionally be sampled from a scaled uniform distribution between zero and a maximum value
+that depends on the selection coefficient. This maximum value is equal to \ifelse{html}{\out{e<sup>-ks<sub>i</sub></sup>}}{\deqn{exp(-ks_i)}} where \ifelse{html}{\out{s<sub>i</sub>}}{\eqn{s_i}}is the selection coefficient
+for the locus and
+
+\ifelse{html}{\out{&emsp;&emsp; k = -log (2h<sub>D</sub>)/s<sub>D</sub>;&ast;h<sub>D</sub>}}{\deqn{k = -log(2h_D) / s_D}}
+
+\ifelse{html}{\out{h<sub>D</sub>}}{\eqn{h_D}} is the desired mean dominance coefficient; \ifelse{html}{\out{s<sub>D</sub>}}{\eqn{s_D}} is the mean of the selection coefficient distribution,
+calculated after the parameters entered for the (selection coefficients) mutation distribution.
+
+While selection coefficients should typically be zero or positive, to represent the effect of deleterious mutations,
+negative values up to -1 are allowed and may arise if the mutation distribution specified by the user allows it.
+In this case, negative values would represent (universally) beneficial mutations that counteract the effect of genetic load.
+The total genetic fitness is however bounded to 1.
+
+To allow more flexibility, there can be up to 5 such genetic load traits, each with a potentially different distribution
+of mutations and/or dominance distribution and associated parameters.
+
+The expression type of genetic load traits is always multiplicative.
+
+Initial values and inheritance is not applicable for genetic load traits.
 }
 \author{
 Jette Reeg

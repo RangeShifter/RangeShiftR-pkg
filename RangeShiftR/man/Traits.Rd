@@ -4,11 +4,55 @@
 \name{Traits}
 \alias{Traits}
 \title{Set genetic traits structure}
+\usage{
+Traits(Neutral = FALSE,
+GeneticLoad = FALSE,
+EmigrationGenes = FALSE,
+SettlementGenes = FALSE,
+CorrRWGenes = FALSE,
+SMSGenes = FALSE,
+KernelGenes = FALSE)
+}
+\arguments{
+\item{Neutral}{If neutral traits should be modelled, define \code{\link[RangeShiftR]{NeutralTraits}}. If \code{FALSE} (default), the neutral traits are not modelled.}
+
+\item{GeneticLoad}{If genetic load should be modelled, define \code{\link[RangeShiftR]{GeneticLoadTraits}}. There can be up to 5 genetic loads. If \code{FALSE} (default), the genetic load is not modelled.}
+
+\item{EmigrationGenes}{If evolvable emigration traits should be modelled (\code{IndVar = TRUE} in \code{\link[RangeShiftR]{Emigration}}), define \code{\link[RangeShiftR]{EmigrationTraits}}. If \code{FALSE} (default), the emigration traits are not modelled/evolvable.}
+
+\item{SettlementGenes}{If evolvable settlement traits should be modelled (\code{IndVar = TRUE} in \code{\link[RangeShiftR]{Settlement}}), define \code{\link[RangeShiftR]{SettlementTraits}}. If \code{FALSE} (default), the settlement traits are not modelled/evolvable.}
+
+\item{CorrRWGenes}{If evolvable CorrRW traits should be modelled (\code{IndVar = TRUE} in \code{\link[RangeShiftR]{CorrRW}}), define \code{\link[RangeShiftR]{CorrRWTraits}}. If \code{FALSE} (default), the CorrRW traits are not modelled/evolvable.}
+
+\item{SMSGenes}{If evolvable SMS traits should be modelled (\code{IndVar = TRUE} in \code{\link[RangeShiftR]{SMS}}), define \code{\link[RangeShiftR]{SMSTraits}}. If \code{FALSE} (default), the SMS traits are not modelled/evolvable.}
+
+\item{KernelGenes}{If evolvable Kernel traits should be modelled (\code{IndVar = TRUE} in \code{\link[RangeShiftR]{Kernel}}), define \code{\link[RangeShiftR]{KernelTraits}}. If \code{FALSE} (default), the Kernel traits are not modelled/evolvable.}
+}
 \value{
 a parameter object of class "TraitsParams"
 }
 \description{
-Set genetic traits structure
+Three types of traits can be made evolvable and parameterised with their own genetic architecture:
+
+- Dispersal traits correspond to the main parameters controlling each phase of dispersal (emigration, transfer and settlement). \cr
+- Genetic fitness traits represent genetic load, the accumulation of deleteriousmutations and their effect on the viability of newborn offspring. \cr
+- Neutral trait does not have any phenotypic effect during the simulation. It is used to compute F-statistics and other measures of neutral variation. \cr
+}
+\details{
+The parameterisation structure for each type of trait is defined in the corresponding subclasses:
+
+- Dispersal traits: \code{\link[RangeShiftR]{EmigrationTraits}}, \code{\link[RangeShiftR]{SettlementTraits}}, \code{\link[RangeShiftR]{CorrRWTraits}}, \code{\link[RangeShiftR]{SMSTraits}} and \code{\link[RangeShiftR]{KernelTraits}} \cr
+- Genetic fitness traits: \code{\link[RangeShiftR]{GeneticLoadTraits}} \cr
+- Neutral traits: \code{\link[RangeShiftR]{NeutralTraits}} \cr
+
+They follow a similar structure, but some parameters and their specific options are specific to the type of trait.
+
+-	The number and positions of genes controlling the trait. \cr
+-	A rule for expression (restricted to dispersal traits) \cr
+-	A mutation rate for all genes controlling the trait. \cr
+-	A distribution to sample mutations from. \cr
+-	A distribution to sample initial values from. \cr
+-	A distribution to sample dominance coefficients from (restricted to genetic fitness traits). \cr
 }
 \author{
 Jette Reeg

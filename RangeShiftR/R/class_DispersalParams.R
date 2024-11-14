@@ -33,13 +33,12 @@
 #' Emigration - the first phase of dispersal - is modelled as the probability that an individual leaves its natal patch during the present year (or season).
 #' It is constant by default, but can be set to be density-dependent (\code{DensDep}) and/or to vary for each individual (\code{IndVar}). In case of a stage-structured/sexual
 #' population model, the emigration probabilities can also vary with stage/sex (\code{StageDep/SexDep}). If inter-individual variability is
-#' enabled, the emigration traits can also be allowed to evolve (also set \code{TraitScaleFactor}).
+#' enabled, the emigration traits can also be allowed to evolve (see \code{\link[RangeShiftR]{EmigrationTraits}}).
 #'
 #' @usage Emigration(EmigProb = 0.0,
 #'            SexDep = FALSE, StageDep = FALSE,
 #'            DensDep = FALSE,
 #'            IndVar = FALSE,
-#'            TraitScaleFactor,
 #'            EmigStage,
 #'            UseFullKern = FALSE)
 #' @param EmigProb Matrix containing all parameters (#columns) to determine emigration probabilities for each stage/sex (#rows). Its structure depends on the other parameters, see the Details.
@@ -48,7 +47,6 @@
 #' @param StageDep Stage-dependent emigration probability? (default: \code{FALSE}) Must be \code{FALSE} if \code{IndVar=TRUE}.
 #' @param DensDep Density-dependent emigration probability? (default: \code{FALSE})
 #' @param IndVar Individual variability in emigration traits? (default: \code{FALSE}) Must be \code{FALSE} if \code{StageDep=TRUE}.
-#' @param TraitScaleFactor Required if \code{IndVar=TRUE}: The scaling factor(s) for emigration traits. A numeric of length \eqn{1} (if \code{DensDep=FALSE}) or \eqn{3} (if \code{DensDep=TRUE}).
 #' @param EmigStage Required for stage-structured populations with \code{IndVar=TRUE}: Stage which emigrates. (\code{StageDep} must be \code{FALSE})
 #' @param UseFullKern Applicable only if transfer phase is modelled by a \code{\link[RangeShiftR]{DispersalKernel}} and \code{DensDep=FALSE}: Shall the emigration probability be derived from dispersal kernel?
 #' @details Emigration is modelled as the probability \eqn{d} that an individual leaves its natal patch during the present year or season (every reproductive event
@@ -80,8 +78,7 @@
 #' The emigration probability can be allowed to vary between individuals (set \code{IndVar=TRUE}) and to evolve. In the this case, individuals exhibit either one trait
 #' determining the density-independent \eqn{d} (when \code{DensDep=FALSE}), or the three traits \ifelse{html}{\out{D<sub>0</sub>}}{\eqn{D_0}}, \eqn{α} and
 #' \eqn{β} determining the density-dependent emigration probability (when \code{DensDep=TRUE}).\cr
-#' For each trait the initial distribution in the population (as mean and standard variation) must be set in \code{EmigProb} (instead of only one constant value),
-#' as well as their scaling factors in \code{TraitScaleFactor} (see \code{\link[RangeShiftR]{Genetics}}).
+#' The traits must be set in \code{\link[RangeShiftR]{EmigrationTraits}} (instead of the constant value(s) in this funciton).
 #' Also, if \code{IndVar=TRUE} is set for a stage-structured population, it is required to specify the stage which emigrates via \code{EmigStage}.
 #'
 #' It is possible to model sex-specific emigration strategies (set \code{SexDep=TRUE}) \insertCite{greenwood1980mating,lawson2007advances}{RangeShiftR}.
@@ -89,11 +86,11 @@
 #' As well as being sex-biased, emigration parameters can be stage-biased (set \code{StageDep=TRUE}) when modelling stage-structured populations.
 #' However, the current version does not accommodate inter-individual variation in emigration strategies when they are stage-dependent.
 #'
-#' The parameters that determine the emigration probabilities have to be provided via \code{EmigProb}, which generally takes a matrix, or - if only a single constant probability is
-#' used (i.e. \code{DensDep, IndVar, StageDep, SexDep = FALSE}) - a single numeric. The format of the matrix is defined as follows: The number of columns depend on the options \code{DensDep} and \code{IndVar}. If \code{DensDep=FALSE}, the
+#' If there is no inter-individual variation in emigration, the parameters that determine the emigration probabilities have to be provided via \code{EmigProb}, which generally takes a matrix, or - if only a single constant probability is
+#' used (i.e. \code{DensDep, IndVar, StageDep, SexDep = FALSE}) - a single numeric. If inter-individual variation is enabled, the parameters are set in \code{\link[RangeShiftR]{EmigrationTraits}} and EmigProb is not required.
+#'
+#' The format of the matrix is defined as follows: The number of columns depend on the options \code{DensDep}. If \code{DensDep=FALSE}, the
 #' density-independent probability \eqn{d} must be specified. If \code{DensDep=TRUE}, the functional parameters \ifelse{html}{\out{D<sub>0</sub>}}{\eqn{D_0}}, \eqn{α} and \eqn{β} (cp. equation above) must be specified.
-#' Additionally, if \code{IndVar=FALSE}, these parameters are fixed, but if \code{IndVar=TRUE} each of them is replaced by two parameters: their respective mean and
-#' standard deviation. They are used to normally distribute the traits values among the individuals of the initial population.
 #'
 #' All parameters have to be given for each stage/sex if the respective dependence is enabled. If \code{StageDep=TRUE}, state the corresponding stage in the first column.
 #' If \code{SexDep=TRUE}, state the corresponding stage in the next (i.e. first/second) column, with \eqn{0} for \emph{female} and \eqn{1} for \emph{male}. The following table lists the required columns and their correct order for different settings:
@@ -104,10 +101,6 @@
 #'  F \tab F \tab F \tab T \tab sex, \eqn{d} \cr
 #'  F \tab F \tab T \tab T \tab stage, sex, \eqn{d} \cr
 #'  T \tab F \tab F \tab F \tab \ifelse{html}{\out{D<sub>0</sub>}}{\eqn{D_0}}, \eqn{α}, \eqn{β} \cr
-#'  F \tab T \tab F \tab F \tab mean\eqn{(d)}, sd\eqn{(d)} \cr
-#'  T \tab T \tab F \tab F \tab \ifelse{html}{\out{mean(D<sub>0</sub>)}}{mean\eqn{(D_0)}}, \ifelse{html}{\out{sd(D<sub>0</sub>)}}{sd\eqn{(D_0)}}, mean\eqn{(α)}, sd\eqn{(α)}, mean\eqn{(β)}, sd\eqn{(β)} \cr
-#'  \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \cr
-#'  T \tab T \tab F \tab T \tab sex, \ifelse{html}{\out{mean(D<sub>0</sub>)}}{mean\eqn{(D_0)}}, \ifelse{html}{\out{sd(D<sub>0</sub>)}}{sd\eqn{(D_0)}}, mean\eqn{(α)}, sd\eqn{(α)}, mean\eqn{(β)}, sd\eqn{(β)}
 #'  }
 #'
 #' The column headings need not be included, only the numeric matrix is required. The rows require no particular order, but there must be exactly one row for each stage/sex combination. For example, in the case of density-, stage- and sex-dependent emigration with no individual variability:
@@ -133,14 +126,12 @@
 #' emig_2 <- Emigration(DensDep = TRUE, StageDep = TRUE, SexDep = TRUE, EmigProb = emigmat_2)
 #' plotProbs(emig_2)
 #'
-#' # inter-individual variation with density- and sex-dependence :
-#' emigmat_3 <- matrix(c(0,.7,.1,20,7,.2,.01,1,.9,.05,40,4,.5,.05), byrow = TRUE, ncol = 7)
-#' emig_3 <- Emigration(DensDep = TRUE, IndVar = TRUE, SexDep = TRUE, EmigProb = emigmat_3, TraitScaleFactor = c(.1,7,.05))
-#' plotProbs(emig_3)
+#' emig_3 <- Emigration(DensDep = TRUE, IndVar = TRUE, SexDep = TRUE, EmigProb = 0)
+
 #' @references
 #'         \insertAllCited{}
 #' @return a parameter object of class "EmigrationParams"
-#' @author Anne-Kathleen Malchow
+#' @author Anne-Kathleen Malchow and Jette Reeg
 #' @name Emigration
 #' @export Emigration
 Emigration <- setClass("EmigrationParams", slots = c(DensDep = "logical",
@@ -148,7 +139,6 @@ Emigration <- setClass("EmigrationParams", slots = c(DensDep = "logical",
                                                      StageDep = "logical",
                                                      SexDep = "logical",
                                                      EmigProb = "matrix_OR_numeric",
-                                                     TraitScaleFactor = "numeric",
                                                      EmigStage = "integer_OR_numeric",
                                                      UseFullKern = "logical")
                        , prototype = list(DensDep = FALSE,
@@ -156,8 +146,7 @@ Emigration <- setClass("EmigrationParams", slots = c(DensDep = "logical",
                                           StageDep = FALSE,
                                           SexDep = FALSE,
                                           EmigProb = matrix(data = 0.0, nrow = 1, ncol = 1),
-                                          #TraitScaleFactor = NA_real_,
-                                          #EmigStage = 0L,
+                                          EmigStage = 0L,
                                           UseFullKern = FALSE)
 )
         # discuss TraitScaleFactor in the Details
@@ -199,13 +188,10 @@ setValidity("EmigrationParams", function(object) {
             }
         }
         else {
-            if (class(object@EmigProb)[1]!="matrix" && length(object@EmigProb)!=1) {
+            if (class(object@EmigProb)[1]!="matrix" && length(object@EmigProb)!=1 && !object@IndVar) {
                 msg <- c(msg, "EmigProb must be a matrix!")
             }
             else {
-                if (object@IndVar && !object@DensDep && !object@StageDep && !object@SexDep && any(dim(object@EmigProb)!=c(1,2)) ) {
-                    msg <- c(msg, "EmigProb must be a 1x2 matrix if DensDep,StageDep,SexDep = FALSE and IndVar = TRUE!")
-                }
                 if (!object@IndVar && object@DensDep && !object@StageDep && !object@SexDep && any(dim(object@EmigProb)!=c(1,3)) ) {
                     msg <- c(msg, "EmigProb must be a 1x3 matrix if IndVar,StageDep,SexDep = FALSE and DensDep = TRUE!")
                 }
@@ -224,51 +210,13 @@ setValidity("EmigrationParams", function(object) {
                 if (!object@IndVar && object@DensDep && !object@StageDep && object@SexDep && any(dim(object@EmigProb)!=c(2,4)) ) {
                     msg <- c(msg, "EmigProb must be a 2x4 matrix if IndVar,StageDep = FALSE and DensDep,SexDep = TRUE!")
                 }
-                if (object@IndVar && !object@DensDep && !object@StageDep && object@SexDep && any(dim(object@EmigProb)!=c(2,3)) ) {
-                    msg <- c(msg, "EmigProb must be a 2x3 matrix if DensDep,StageDep = FALSE and IndVar,SexDep = TRUE!")
-                }
-                if (object@IndVar && object@DensDep && !object@StageDep && !object@SexDep && any(dim(object@EmigProb)!=c(1,6)) ) {
-                    msg <- c(msg, "EmigProb must be a 1x6 matrix if StageDep,SexDep = FALSE and IndVar,DensDep = TRUE!")
-                }
-                if (object@IndVar && object@DensDep && !object@StageDep && object@SexDep && any(dim(object@EmigProb)!=c(2,7)) ) {
-                    msg <- c(msg, "EmigProb must be a 2x7 matrix if StageDep = FALSE and IndVar,DensDep,SexDep = TRUE!")
-                }
                 if (!object@IndVar && object@DensDep && object@StageDep && object@SexDep && dim(object@EmigProb)[2]!=5 ) {
                     msg <- c(msg, "EmigProb must have 5 columns if IndVar = FALSE and DensDep,StageDep,SexDep = TRUE!")
                 }
             }
         }
     }
-    if (object@IndVar) {
-        if (anyNA(object@TraitScaleFactor) || (length(object@TraitScaleFactor)==0)) {
-            msg <- c(msg, "TraitScaleFactor must be set!")
-        }
-        else{
-            if (object@DensDep) {
-                if (length(object@TraitScaleFactor)!=3) {
-                    msg <- c(msg, "TraitScaleFactor must have length 3 if DensDep=TRUE!")
-                }
-                else {
-                    if (object@TraitScaleFactor[1] <= 0.0 || object@TraitScaleFactor[1] > 1.0 ) {
-                        msg <- c(msg, "TraitScaleFactor μ(D0) must be in the half-open interval (0,1] !")
-                    }
-                    if (any(object@TraitScaleFactor[2:3] <= 0.0 )) {
-                        msg <- c(msg, "TraitScaleFactor μ(α) and μ(β) must be strictly positive !")
-                    }
-                }
-            }
-            else {
-                if (length(object@TraitScaleFactor)!=1) {
-                    msg <- c(msg, "TraitScaleFactor must have length 1 if DensDep=FALSE!")
-                }
-                else {
-                    if (object@TraitScaleFactor <= 0 || object@TraitScaleFactor > 1 ) {
-                        msg <- c(msg, "TraitScaleFactor μ(D0) must be in the half-open interval (0,1] !")
-                    }
-                }
-            }
-        }
-    }
+
     if (anyNA(object@UseFullKern) || length(object@UseFullKern)!=1) {
         msg <- c(msg, "UseFullKern must be set and of length 1!")
     }
@@ -295,10 +243,6 @@ setMethod("initialize", "EmigrationParams", function(.Object, ...) {
     #     warning(this_func, "Using default EmigProb = 0.0", call. = FALSE)
     # }
     if (!.Object@IndVar) {
-        .Object@TraitScaleFactor = -9L
-        if (!is.null(args$TraitScaleFactor)) {
-            warning(this_func, "TraitScaleFactor", warn_msg_ignored, "since IndVar = FALSE.", call. = FALSE)
-        }
         .Object@EmigStage = -9L
         if (!is.null(args$EmigStage)) {
             warning(this_func, "EmigStage", warn_msg_ignored, "since IndVar = FALSE.", call. = FALSE)
@@ -325,9 +269,10 @@ setMethod("show", "EmigrationParams", function(object){
         cat("   SexDep =", object@SexDep, "\n")
     }
     cat("   Emigration probabilities:\n")
-    print(object@EmigProb)
+    if (!object@IndVar){
+        print(object@EmigProb)
+    }
     if (object@IndVar) {
-        cat("   TraitScaleFactor =", object@TraitScaleFactor, "\n")
         if (!anyNA(object@EmigStage) && length(object@EmigStage)!=0) {
             cat("   EmigStage =", object@EmigStage, "\n")
         }
@@ -338,75 +283,82 @@ setMethod("show", "EmigrationParams", function(object){
 })
 setMethod("plotProbs", "EmigrationParams", function(x, stage = NULL, sex = NULL, xmax = NULL, ymax = NULL){
     emig <- x@EmigProb
-    # error messages
-    if (!is.null(stage)){
+    if (x@IndVar) {
+        print("Plotting of inter-individual variability in emigration traits is not implemented yet.")
+        return()
+    } else{
+        # error messages
+        if (!is.null(stage)){
+            if (x@StageDep) {
+                emig <- subset(emig, emig[,1] %in% stage)
+            }
+            else{ print("This emigration module has no stage-dependency.\n") }
+        }
+        if (!is.null(sex)){
+            if (x@SexDep) {
+                if (x@StageDep) emig <- subset(emig, emig[,2] %in% sex)
+                else emig <- subset(emig, emig[,1] %in% sex)
+            }
+            else{ print("This emigration module has no sex-dependency.\n") }
+        }
+        # get column indices
         if (x@StageDep) {
-            emig <- subset(emig, emig[,1] %in% stage)
+            if (x@SexDep) {ind_D0 <- 3} else {ind_D0 <- 2}
+        }else{
+            if (x@SexDep) {ind_D0 <- 2} else {ind_D0 <- 1}
         }
-        else{ print("This emigration module has no stage-dependency.\n") }
-    }
-    if (!is.null(sex)){
-        if (x@SexDep) {
-            if (x@StageDep) emig <- subset(emig, emig[,2] %in% sex)
-            else emig <- subset(emig, emig[,1] %in% sex)
+        # if (x@IndVar) {IV <- 2} else {IV <- 1}
+        IV <- 1
+        # New plot
+        if (x@DensDep) {
+            if (is.null(xmax)) {
+                ind_max <- which.max(emig[,ind_D0+2*IV])
+                xmax = min(2*emig[ind_max,ind_D0+2*IV], emig[ind_max,ind_D0+2*IV] + 4.0/emig[ind_max,ind_D0+IV])
+            }
+            xvals = seq(0, xmax, length.out = 100)
         }
-        else{ print("This emigration module has no sex-dependency.\n") }
-    }
-    # get column indices
-    if (x@StageDep) {
-        if (x@SexDep) {ind_D0 <- 3} else {ind_D0 <- 2}
-    }else{
-        if (x@SexDep) {ind_D0 <- 2} else {ind_D0 <- 1}
-    }
-    if (x@IndVar) {IV <- 2} else {IV <- 1}
-    # New plot
-    if (x@DensDep) {
-        if (is.null(xmax)) {
-            ind_max <- which.max(emig[,ind_D0+2*IV])
-            xmax = min(2*emig[ind_max,ind_D0+2*IV], emig[ind_max,ind_D0+2*IV] + 4.0/emig[ind_max,ind_D0+IV])
-        }
-        xvals = seq(0, xmax, length.out = 100)
-    }
-    else {if(is.null(xmax)) xmax <- 1} # !DensDep
+        else {if(is.null(xmax)) xmax <- 1} # !DensDep
 
-    if (is.null(ymax)) {ymax = 1}
-    plot(NULL, type = "n", ylab = "Emigration probability", xlab = "relative population density (N/K or bN)", xlim = c(0,xmax), ylim = c(0,ymax))
-    leg.txt <- c()
-    # Go through lines of distances matrix and add curves to plot
-    for(line in 1:nrow(emig)){
-        if (x@IndVar) {
+        if (is.null(ymax)) {ymax = 1}
+        plot(NULL, type = "n", ylab = "Emigration probability", xlab = "relative population density (N/K or bN)", xlim = c(0,xmax), ylim = c(0,ymax))
+        leg.txt <- c()
+        # Go through lines of distances matrix and add curves to plot
+        for(line in 1:nrow(emig)){
+            # if (x@IndVar) {
+            #     if (x@DensDep) {
+            #         res <- matrix(ncol = 8, nrow = length(xvals))
+            #         res[,1] <- densdep(xvals, A0 = emig[line,ind_D0]-emig[line,ind_D0+1], alpha = emig[line,ind_D0+2]-emig[line,ind_D0+3], beta = emig[line,ind_D0+4]-emig[line,ind_D0+5])
+            #         res[,2] <- densdep(xvals, A0 = emig[line,ind_D0]-emig[line,ind_D0+1], alpha = emig[line,ind_D0+2]-emig[line,ind_D0+3], beta = emig[line,ind_D0+4]+emig[line,ind_D0+5])
+            #         res[,3] <- densdep(xvals, A0 = emig[line,ind_D0]-emig[line,ind_D0+1], alpha = emig[line,ind_D0+2]+emig[line,ind_D0+3], beta = emig[line,ind_D0+4]-emig[line,ind_D0+5])
+            #         res[,4] <- densdep(xvals, A0 = emig[line,ind_D0]-emig[line,ind_D0+1], alpha = emig[line,ind_D0+2]+emig[line,ind_D0+3], beta = emig[line,ind_D0+4]+emig[line,ind_D0+5])
+            #         res[,5] <- densdep(xvals, A0 = emig[line,ind_D0]+emig[line,ind_D0+1], alpha = emig[line,ind_D0+2]-emig[line,ind_D0+3], beta = emig[line,ind_D0+4]-emig[line,ind_D0+5])
+            #         res[,6] <- densdep(xvals, A0 = emig[line,ind_D0]+emig[line,ind_D0+1], alpha = emig[line,ind_D0+2]-emig[line,ind_D0+3], beta = emig[line,ind_D0+4]+emig[line,ind_D0+5])
+            #         res[,7] <- densdep(xvals, A0 = emig[line,ind_D0]+emig[line,ind_D0+1], alpha = emig[line,ind_D0+2]+emig[line,ind_D0+3], beta = emig[line,ind_D0+4]-emig[line,ind_D0+5])
+            #         res[,8] <- densdep(xvals, A0 = emig[line,ind_D0]+emig[line,ind_D0+1], alpha = emig[line,ind_D0+2]+emig[line,ind_D0+3], beta = emig[line,ind_D0+4]+emig[line,ind_D0+5])
+            #         polygon(c(xvals,rev(xvals)), c(apply(res, 1, min), rev(apply(res, 1, max))), border=NA, col='grey80')
+            #     }
+            #     else {#constant
+            #         polygon(c(0,xmax,xmax,0), c(rep(emig[line,ind_D0]-emig[line,ind_D0+1],2),rep(emig[line,ind_D0]+emig[line,ind_D0+1],2)), border=NA, col='grey80')
+            #     }
+            # }
             if (x@DensDep) {
-                res <- matrix(ncol = 8, nrow = length(xvals))
-                res[,1] <- densdep(xvals, A0 = emig[line,ind_D0]-emig[line,ind_D0+1], alpha = emig[line,ind_D0+2]-emig[line,ind_D0+3], beta = emig[line,ind_D0+4]-emig[line,ind_D0+5])
-                res[,2] <- densdep(xvals, A0 = emig[line,ind_D0]-emig[line,ind_D0+1], alpha = emig[line,ind_D0+2]-emig[line,ind_D0+3], beta = emig[line,ind_D0+4]+emig[line,ind_D0+5])
-                res[,3] <- densdep(xvals, A0 = emig[line,ind_D0]-emig[line,ind_D0+1], alpha = emig[line,ind_D0+2]+emig[line,ind_D0+3], beta = emig[line,ind_D0+4]-emig[line,ind_D0+5])
-                res[,4] <- densdep(xvals, A0 = emig[line,ind_D0]-emig[line,ind_D0+1], alpha = emig[line,ind_D0+2]+emig[line,ind_D0+3], beta = emig[line,ind_D0+4]+emig[line,ind_D0+5])
-                res[,5] <- densdep(xvals, A0 = emig[line,ind_D0]+emig[line,ind_D0+1], alpha = emig[line,ind_D0+2]-emig[line,ind_D0+3], beta = emig[line,ind_D0+4]-emig[line,ind_D0+5])
-                res[,6] <- densdep(xvals, A0 = emig[line,ind_D0]+emig[line,ind_D0+1], alpha = emig[line,ind_D0+2]-emig[line,ind_D0+3], beta = emig[line,ind_D0+4]+emig[line,ind_D0+5])
-                res[,7] <- densdep(xvals, A0 = emig[line,ind_D0]+emig[line,ind_D0+1], alpha = emig[line,ind_D0+2]+emig[line,ind_D0+3], beta = emig[line,ind_D0+4]-emig[line,ind_D0+5])
-                res[,8] <- densdep(xvals, A0 = emig[line,ind_D0]+emig[line,ind_D0+1], alpha = emig[line,ind_D0+2]+emig[line,ind_D0+3], beta = emig[line,ind_D0+4]+emig[line,ind_D0+5])
-                polygon(c(xvals,rev(xvals)), c(apply(res, 1, min), rev(apply(res, 1, max))), border=NA, col='grey80')
+                lines(xvals, densdep(xvals, A0 = emig[line,ind_D0], alpha = emig[line,ind_D0+IV], beta = emig[line,ind_D0+2*IV]), type = "l", lty = 1, col = line)
             }
             else {#constant
-                polygon(c(0,xmax,xmax,0), c(rep(emig[line,ind_D0]-emig[line,ind_D0+1],2),rep(emig[line,ind_D0]+emig[line,ind_D0+1],2)), border=NA, col='grey80')
+                lines(x=c(0,xmax), y=rep(emig[line,ind_D0],2), type = "l", lty = 1, col = line)
+            }
+            if (x@StageDep) {
+                if (x@SexDep) {leg.txt <- c(leg.txt, paste0("Stage ",emig[line,1], ifelse(emig[line,2]," male"," female")))} else {leg.txt <- c(leg.txt, paste0("Stage ",emig[line,1]))}
+            }
+            else {
+                if (x@SexDep) {leg.txt <- c(leg.txt, ifelse(emig[line,1],"male","female"))}
             }
         }
-        if (x@DensDep) {
-            lines(xvals, densdep(xvals, A0 = emig[line,ind_D0], alpha = emig[line,ind_D0+IV], beta = emig[line,ind_D0+2*IV]), type = "l", lty = 1, col = line)
-        }
-        else {#constant
-            lines(x=c(0,xmax), y=rep(emig[line,ind_D0],2), type = "l", lty = 1, col = line)
-        }
-        if (x@StageDep) {
-            if (x@SexDep) {leg.txt <- c(leg.txt, paste0("Stage ",emig[line,1], ifelse(emig[line,2]," male"," female")))} else {leg.txt <- c(leg.txt, paste0("Stage ",emig[line,1]))}
-        }
-        else {
-            if (x@SexDep) {leg.txt <- c(leg.txt, ifelse(emig[line,1],"male","female"))}
+        if (length(leg.txt)>0) {
+            legend("topleft", leg.txt, col = 1:nrow(emig), lwd = 1.5)
         }
     }
-    if (length(leg.txt)>0) {
-        legend("topleft", leg.txt, col = 1:nrow(emig), lwd = 1.5)
-    }
+
 })
 
 
@@ -461,7 +413,6 @@ setMethod("show", "TransferParams", function(object){
 #' @usage DispersalKernel(Distances = 100, DoubleKernel = FALSE,
 #'                 SexDep = FALSE, StageDep = FALSE,
 #'                 IndVar = FALSE,
-#'                 TraitScaleFactor,
 #'                 DistMort = FALSE,
 #'                 MortProb = 0.0, Slope, InflPoint)
 #' @param Distances Matrix containing all dispersal kernel parameters (#columns) for each stage/sex (#rows). Its structure depends on the other parameters, see the Details.
@@ -544,10 +495,6 @@ setMethod("show", "TransferParams", function(object){
 #'  F \tab F \tab F \tab T \tab sex, \eqn{δ} \cr
 #'  F \tab F \tab T \tab T \tab stage, sex, \eqn{δ} \cr
 #'  F \tab T \tab F \tab F \tab \ifelse{html}{\out{&delta;<sub>1</sub>, &delta;<sub>2</sub>, p<sub>I</sub>}}{\eqn{δ_1, δ_2, p_I}} \cr
-#'  T \tab F \tab F \tab F \tab mean\eqn{(δ)}, sd\eqn{(δ)} \cr
-#'  T \tab T \tab F \tab F \tab \ifelse{html}{\out{mean(&delta;<sub>1</sub>)}}{mean\eqn{(δ_1)}}, \ifelse{html}{\out{sd(&delta;<sub>1</sub>)}}{sd\eqn{(δ_1)}}, \ifelse{html}{\out{mean(&delta;<sub>2</sub>)}}{mean\eqn{(δ_2)}}, \ifelse{html}{\out{sd(&delta;<sub>2</sub>)}}{sd\eqn{(δ_2)}}, mean\ifelse{html}{\out{(p<sub>I</sub>)}}{\eqn{(p_I)}}, sd\ifelse{html}{\out{(p<sub>I</sub>)}}{\eqn{(p_I)}} \cr
-#'  \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \cr
-#'  T \tab T \tab F \tab T \tab sex, \ifelse{html}{\out{mean(&delta;<sub>1</sub>)}}{mean\eqn{(δ_1)}}, \ifelse{html}{\out{sd(&delta;<sub>1</sub>)}}{sd\eqn{(δ_1)}}, \ifelse{html}{\out{mean(&delta;<sub>2</sub>)}}{mean\eqn{(δ_2)}}, \ifelse{html}{\out{sd(&delta;<sub>2</sub>)}}{sd\eqn{(δ_2)}}, mean\ifelse{html}{\out{(p<sub>I</sub>)}}{\eqn{(p_I)}}, sd\ifelse{html}{\out{(p<sub>I</sub>)}}{\eqn{(p_I)}}
 #'  }
 #'
 #' The column headings need not be included, only the numeric matrix is required. The rows require no particular order, but there must be exactly
@@ -600,8 +547,7 @@ DispersalKernel <- setClass("DispersalKernel", slots = c(IndVar = "logical",
                                                          DoubleKernel = "logical",
                                                          StageDep = "logical",
                                                          SexDep = "logical",
-                                                         Distances = "matrix_OR_numeric",
-                                                         TraitScaleFactor = "numeric",
+                                                         Distances = "ANY",
                                                          DistMort = "logical",
                                                          MortProb = "numeric",
                                                          Slope = "numeric",
@@ -611,7 +557,6 @@ DispersalKernel <- setClass("DispersalKernel", slots = c(IndVar = "logical",
                                           StageDep = FALSE,
                                           SexDep = FALSE,
                                           Distances = matrix(data = 100L, nrow = 1, ncol = 1),
-                                          #TraitScaleFactor,
                                           DistMort = FALSE,
                                           MortProb = 0.0
                                           #,Slope = -9,
@@ -641,30 +586,31 @@ setValidity("DispersalKernel", function(object) {
     if (anyNA(object@SexDep) || length(object@SexDep)!=1) {
         msg <- c(msg, "SexDep must be set and of length 1!")
     }
-    if (anyNA(object@Distances) || length(object@Distances)==0) {
-        msg <- c(msg, "Distances must be set!")
-    }
-    else{
-        if (!object@IndVar && !object@DoubleKernel && !object@StageDep && !object@SexDep) {
-            if (length(object@Distances)!=1) {
-                msg <- c(msg, "Distances must be a single value if IndVar,DoubleKernel,StageDep,SexDep = FALSE!")
+    if(object@IndVar){
+        if(!is.null(object@Distances)){
+            msg <- c(msg, "Distances must be NULL if IndVar=TRUE!")
+        }
+    } else{
+        if (anyNA(object@Distances) || length(object@Distances)==0) {
+            msg <- c(msg, "Distances must be set!")
+        }
+        else{
+            if (!object@DoubleKernel && !object@StageDep && !object@SexDep) {
+                if (length(object@Distances)!=1) {
+                    msg <- c(msg, "Distances must be a single value if IndVar,DoubleKernel,StageDep,SexDep = FALSE!")
+                }
+            }
+            else {
+                if (class(object@Distances)[1] !="matrix") {
+                    msg <- c(msg, "Distances must be a matrix!")
+                }
             }
         }
-        else {
-            if (class(object@Distances)[1] !="matrix") {
-                msg <- c(msg, "Distances must be a matrix!")
-            }
-        }
     }
+
     if (is.null(msg)) {
-        if (object@IndVar && !object@DoubleKernel && !object@StageDep && !object@SexDep && any(dim(object@Distances)!=c(1,2)) ) {
-            msg <- c(msg, "Distances must be a 1x2 matrix if DoubleKernel,StageDep,SexDep = FALSE and IndVar = TRUE!")
-        }
         if (!object@IndVar && object@DoubleKernel && !object@StageDep && !object@SexDep && any(dim(object@Distances)!=c(1,3)) ) {
             msg <- c(msg, "Distances must be a 1x3 matrix if IndVar,StageDep,SexDep = FALSE and DoubleKernel = TRUE!")
-        }
-        if (!object@IndVar && !object@DoubleKernel && object@StageDep && !object@SexDep && dim(object@Distances)[2]!=2 ) {
-            msg <- c(msg, "Distances must have 2 columns if IndVar,DoubleKernel,SexDep = FALSE and StageDep = TRUE!")
         }
         if (!object@IndVar && !object@DoubleKernel && !object@StageDep && object@SexDep && any(dim(object@Distances)!=c(2,2)) ) {
             msg <- c(msg, "Distances must be a 2x2 matrix if IndVar,DoubleKernel,StageDep = FALSE and SexDep = TRUE!")
@@ -677,48 +623,6 @@ setValidity("DispersalKernel", function(object) {
         }
         if (!object@IndVar && object@DoubleKernel && !object@StageDep && object@SexDep && any(dim(object@Distances)!=c(2,4)) ) {
             msg <- c(msg, "Distances must be a 2x4 matrix if IndVar,StageDep = FALSE and DoubleKernel,SexDep = TRUE!")
-        }
-        if (object@IndVar && !object@DoubleKernel && !object@StageDep && object@SexDep && any(dim(object@Distances)!=c(2,3)) ) {
-            msg <- c(msg, "Distances must be a 2x3 matrix if DoubleKernel,StageDep = FALSE and IndVar,SexDep = TRUE!")
-        }
-        if (object@IndVar && object@DoubleKernel && !object@StageDep && !object@SexDep && any(dim(object@Distances)!=c(1,6)) ) {
-            msg <- c(msg, "Distances must be a 1x6 matrix if StageDep,SexDep = FALSE and IndVar,DoubleKernel = TRUE!")
-        }
-        if (object@IndVar && object@DoubleKernel && !object@StageDep && object@SexDep && any(dim(object@Distances)!=c(2,7)) ) {
-            msg <- c(msg, "Distances must be a 2x7 matrix if StageDep = FALSE and IndVar,DoubleKernel,SexDep = TRUE!")
-        }
-        if (!object@IndVar && object@DoubleKernel && object@StageDep && object@SexDep && dim(object@Distances)[2]!=5 ) {
-            msg <- c(msg, "Distances must have 5 columns if IndVar = FALSE and DoubleKernel,StageDep,SexDep = TRUE!")
-        }
-    }
-    if (object@IndVar) {
-        if (anyNA(object@TraitScaleFactor) || (length(object@TraitScaleFactor)==0)) {
-            msg <- c(msg, "TraitScaleFactor must be set!")
-        }
-        else{
-            if (object@DoubleKernel) {
-                if (length(object@TraitScaleFactor)!=3) {
-                    msg <- c(msg, "TraitScaleFactor must have length 3 if DoubleKernel=TRUE!")
-                }
-                else {
-                    if (object@TraitScaleFactor[3] <= 0.0 || object@TraitScaleFactor[3] > 1.0 ) {
-                        msg <- c(msg, "TraitScaleFactor μ(p) must be in the half-open interval (0,1] !")
-                    }
-                    if (any(object@TraitScaleFactor[1:2] <= 0.0 )) {
-                        msg <- c(msg, "TraitScaleFactor μ(δ1) and μ(δ2) must be strictly positive !")
-                    }
-                }
-            }
-            else {
-                if (length(object@TraitScaleFactor)!=1) {
-                    msg <- c(msg, "TraitScaleFactor must have length 1 if DoubleKernel=FALSE!")
-                }
-                else {
-                    if (object@TraitScaleFactor <= 0.0) {
-                        msg <- c(msg, "TraitScaleFactor μ(δ) must be strictly positive !")
-                    }
-                }
-            }
         }
     }
     if (anyNA(object@DistMort) || length(object@DistMort)!=1) {
@@ -757,12 +661,6 @@ setMethod("initialize", "DispersalKernel", function(.Object, ...) {
     if (class(args$Distances)[1]=="numeric" && length(args$Distances)==1) {
         .Object@Distances <- as.matrix(args$Distances)
     }
-    if (!.Object@IndVar) {
-        .Object@TraitScaleFactor = -9L
-        if (!is.null(args$TraitScaleFactor)) {
-            warning(this_func, "TraitScaleFactor", warn_msg_ignored, "since IndVar = FALSE.", call. = FALSE)
-        }
-    }
     if (.Object@DistMort) {
         .Object@MortProb = -9L
         if (!is.null(args$MortProb)) {
@@ -796,10 +694,8 @@ setMethod("show", "DispersalKernel", function(object){
         cat("   SexDep =", object@SexDep, "\n")
     }
     cat("   Dispersal kernel traits:\n")
-    print(object@Distances)
-    if (object@IndVar) {
-        cat("   TraitScaleFactor =", object@TraitScaleFactor, "\n")
-    }
+    if(!object@IndVar) print(object@Distances)
+    else print("Traits defined in KernelTraits()")
     if (object@DistMort) {
         cat("   Distance-dependent mortality prob with:\n   Inflection point =", object@InflPoint, "\n   Slope =", object@Slope, "\n")
     }
@@ -958,15 +854,12 @@ setMethod("plotProbs", "DispersalKernel", function(x, mortality = FALSE, combine
 #' @param MemSize Size of memory, given as the number of previous steps over which to calculate current direction to apply directional persistence
 #' (\code{DP}). A maximum of \eqn{14} steps is supported, default is \eqn{1}. (integer)
 #' @param DP Directional persistence. Corresponds to the tendency to follow a correlated random walk, must be \eqn{\ge 1.0}, defaults to \eqn{1.0}.\cr
-#' If \code{IndVar=TRUE}, expects a vector of length three specifying (Mean, SD, TraitScaleFactor) of \code{DP}.
+#' If \code{IndVar=TRUE}, set to NULL and specify the SMSTraits in \code{\link[RangeShiftR]{SMSTraits}}.
 #' @param GoalType Goal bias type: \eqn{0 = } None (default), \eqn{2 = } Dispersal bias.
-#' @param GoalBias Only if \code{GoalType=2}: Goal bias strength. Must be must be \eqn{\ge 1.0}, defaults to \eqn{1.0}. \cr If \code{IndVar=TRUE}, expects a vector of length three
-#' specifying (Mean, SD, TraitScaleFactor) of \code{GoalBias}.
-#' @param AlphaDB Required if \code{GoalType=2}: Dispersal bias decay rate. Must be must be \eqn{> 0.0}.\cr If \code{IndVar=TRUE}, expects a vector of length three
-#' specifying (Mean, SD, TraitScaleFactor) of \code{AlphaDB}.
-#' @param BetaDB Required if \code{GoalType=2}: Dispersal bias decay inflection point (given in number of steps). Must be must be \eqn{> 0.0}.\cr If \code{IndVar=TRUE},
-#' expects a vector of length three specifying (Mean, SD, TraitScaleFactor) of \code{BetaDB}.
-#' @param IndVar Individual variability in SMS traits (i.e. \code{DP}, \code{GoalBias}, \code{AlphaDB} and \code{BetaDB})? Defaults to \code{FALSE}.
+#' @param GoalBias Only if \code{GoalType=2}: Goal bias strength. Must be must be \eqn{\ge 1.0}, defaults to \eqn{1.0}. \cr If \code{IndVar=TRUE},  set to NULL and specify the SMSTraits in \code{\link[RangeShiftR]{SMSTraits}}.
+#' @param AlphaDB Required if \code{GoalType=2}: Dispersal bias decay rate. Must be must be \eqn{> 0.0}.\cr If \code{IndVar=TRUE},  set to NULL and specify the SMSTraits in \code{\link[RangeShiftR]{SMSTraits}}.
+#' @param BetaDB Required if \code{GoalType=2}: Dispersal bias decay inflection point (given in number of steps). Must be must be \eqn{> 0.0}.\cr If \code{IndVar=TRUE},  set to NULL and specify the SMSTraits in \code{\link[RangeShiftR]{SMSTraits}}.
+#' @param IndVar Individual variability in SMS traits (i.e. \code{DP}, \code{GoalBias}, \code{AlphaDB} and \code{BetaDB})? Defaults to \code{FALSE}. If \code{TRUE}, specify the SMSTraits in \code{\link[RangeShiftR]{SMSTraits}}.
 #' @param Costs Describes the landscapes resistance to movement. Set either: \cr
 #'  - \emph{habitat-specific} costs for each habitat type, or\cr
 #'  - \code{"file"}, to indictae to use the \emph{cost raster} map(s) specified in the landscape module and import the cost values from them.\cr
@@ -1027,8 +920,7 @@ setMethod("plotProbs", "DispersalKernel", function(x, mortality = FALSE, combine
 #' surrounded by very high cost matrix.
 #'
 #' When inter-individual variability is activated (set \code{IndVar=TRUE}), the four SMS movement traits \code{DP}, as well as - if dispersal goal bias
-#' is enabled - \code{GB}, \code{AlphaDB} and \code{BetaDB} can evolve.
-#' For each trait the population initial mean and standard deviations must be set (instead of the constant value), as well as its scaling factor
+#' is enabled - \code{GB}, \code{AlphaDB} and \code{BetaDB} can evolve. In this case, you must set the corresponding traits to \code{NULL} here and must specify them in the \code{\link[RangeShiftR]{SMSTraits}} module and set up the genetics
 #' (see \code{\link[RangeShiftR]{Genetics}}).\cr
 #'
 #' As currently implemented, there is no sex- or stage- dependence of SMS traits.
@@ -1068,10 +960,10 @@ SMS <- setClass("StochMove", slots = c(PR = "integer_OR_numeric",
                                        MemSize = "integer_OR_numeric",
                                        GoalType = "integer_OR_numeric", # 0 (none) or 2 (dispersal bias)
                                        IndVar = "logical",
-                                       DP = "numeric",
-                                       GoalBias = "numeric",
-                                       AlphaDB = "numeric",
-                                       BetaDB = "integer_OR_numeric",
+                                       DP = "ANY", # numeric",
+                                       GoalBias = "ANY", # "numeric",
+                                       AlphaDB = "ANY", # "numeric",
+                                       BetaDB = "ANY", # "integer_OR_numeric",
                                        StraightenPath = "logical",
                                        Costs = "numeric_OR_character", # will determine on C++ level the values of CostHab1 ... CostHabN, CostHabitat, CostMatrix, CostMap, CostMapFile
                                        CostMap = "logical",
@@ -1128,30 +1020,13 @@ setValidity("StochMove", function(object) {
         msg <- c(msg, "IndVar must be set and of length 1!")
     }
     if(is.null(msg)){
-        if (anyNA(object@DP) || length(object@DP)==0) {
-            msg <- c(msg, "DP must be set!")
+        if(object@IndVar){
+            if(!is.null(object@DP))
+                msg <- c(msg, "If IndVar=TRUE, DP must be set to NULL!")
         }
         else{
-            if(object@IndVar){
-                if(length(object@DP)==3){
-                    if (object@DP[1] < 1.0) {
-                        msg <- c(msg, "DP (mean) must be >= 1.0!")
-                    }
-                    if (object@DP[2] <= 0.0) {
-                        msg <- c(msg, "DP (SD) must be strictly positive!")
-                    }
-                    if (object@DP[3] <= 0.0) {
-                        msg <- c(msg, "DP (scaling factor) must be strictly positive !")
-                    }
-                    if(is.null(msg)){
-                        if (object@DP[3] < object@DP[2]) {
-                            msg <- c(msg, "DP scaling factor must be greater than or equal to its SD !")
-                        }
-                    }
-                }
-                else{
-                    msg <- c(msg, "DP must have length 3 if IndVar=TRUE!")
-                }
+            if (anyNA(object@DP) || length(object@DP)==0) {
+            msg <- c(msg, "DP must be set!")
             }
             else {
                 if(length(object@DP)==1){
@@ -1164,33 +1039,25 @@ setValidity("StochMove", function(object) {
                 }
             }
         }
+
         if (object@GoalType) { # GoalType = 2
-            if (anyNA(object@GoalBias) || length(object@GoalBias)==0) {
-                msg <- c(msg, "GoalBias strength must be set!")
-            }
-            else{
-                if(object@IndVar){
-                    if(length(object@GoalBias)==3){
-                        if (object@GoalBias[1] < 1.0) {
-                            msg <- c(msg, "GoalBias strength (mean) must be >= 1.0!")
-                        }
-                        if (object@GoalBias[2] <= 0.0) {
-                            msg <- c(msg, "GoalBias strength (SD) must be strictly positive!")
-                        }
-                        if (object@GoalBias[3] <= 0.0) {
-                            msg <- c(msg, "GoalBias strength (scaling factor) must be strictly positive !")
-                        }
-                        if(is.null(msg)){
-                            if (object@GoalBias[3] < object@GoalBias[2]) {
-                                msg <- c(msg, "GoalBias strength scaling factor must be greater than or equal to its SD !")
-                            }
-                        }
-                    }
-                    else{
-                        msg <- c(msg, "GoalBias strength must have length 3 if IndVar=TRUE!")
-                    }
+            if (object@IndVar) {
+                if (!is.null(object@GoalBias)) {
+                    msg <- c(msg, "If IndVar=TRUE, GoalBias must be set to NULL!")
                 }
-                else {
+                if (!is.null(object@AlphaDB)) {
+                    msg <- c(msg, "If IndVar=TRUE, AlphaDB must be set to NULL!")
+                }
+                if (!is.null(object@BetaDB)) {
+                    msg <- c(msg, "If IndVar=TRUE, BetaDB must be set to NULL!")
+                }
+
+            } else
+            {
+                if (anyNA(object@GoalBias) || length(object@GoalBias)==0) {
+                    msg <- c(msg, "GoalBias strength must be set!")
+                }
+                else{
                     if(length(object@GoalBias)==1){
                         if (object@GoalBias < 1.0 ) {
                             msg <- c(msg, "GoalBias strength must be >= 1.0 !")
@@ -1200,33 +1067,10 @@ setValidity("StochMove", function(object) {
                         msg <- c(msg, "GoalBias strength must have length 1 if IndVar=FALSE!")
                     }
                 }
-            }
-            if (anyNA(object@AlphaDB) || length(object@AlphaDB)==0) {
-                msg <- c(msg, "AlphaDB must be set!")
-            }
-            else{
-                if(object@IndVar){
-                    if(length(object@AlphaDB)==3){
-                        if (object@AlphaDB[1] <= 0.0) {
-                            msg <- c(msg, "AlphaDB (mean) must be strictly positive!")
-                        }
-                        if (object@AlphaDB[2] <= 0.0) {
-                            msg <- c(msg, "AlphaDB (SD) must be strictly positive!")
-                        }
-                        if (object@AlphaDB[3] <= 0.0) {
-                            msg <- c(msg, "AlphaDB (scaling factor) must be strictly positive !")
-                        }
-                        if(is.null(msg)){
-                            if (object@AlphaDB[3] < object@AlphaDB[2]) {
-                                msg <- c(msg, "AlphaDB scaling factor must be greater than or equal to its SD !")
-                            }
-                        }
-                    }
-                    else{
-                        msg <- c(msg, "AlphaDB must have length 3 if IndVar=TRUE!")
-                    }
+                if (anyNA(object@AlphaDB) || length(object@AlphaDB)==0) {
+                    msg <- c(msg, "AlphaDB must be set!")
                 }
-                else {
+                else{
                     if(length(object@AlphaDB)==1){
                         if (object@AlphaDB <= 0.0) {
                             msg <- c(msg, "AlphaDB must be strictly positive!")
@@ -1236,33 +1080,10 @@ setValidity("StochMove", function(object) {
                         msg <- c(msg, "AlphaDB must have length 1 if IndVar=FALSE!")
                     }
                 }
-            }
-            if (anyNA(object@BetaDB) || length(object@BetaDB)==0) {
-                msg <- c(msg, "BetaDB must be set!")
-            }
-            else{
-                if(object@IndVar){
-                    if(length(object@BetaDB)==3){
-                        if (object@BetaDB[1] < 1.0) {
-                            msg <- c(msg, "BetaDB (mean) must be >= 1 steps!")
-                        }
-                        if (object@BetaDB[2] <= 0.0) {
-                            msg <- c(msg, "BetaDB (SD) must be strictly positive!")
-                        }
-                        if (object@BetaDB[3] <= 0.0) {
-                            msg <- c(msg, "BetaDB (scaling factor) must be strictly positive !")
-                        }
-                        if(is.null(msg)){
-                            if (object@BetaDB[3] < object@BetaDB[2]) {
-                                msg <- c(msg, "BetaDB scaling factor must be greater than or equal to its SD !")
-                            }
-                        }
-                    }
-                    else{
-                        msg <- c(msg, "BetaDB must have length 3 if IndVar=TRUE!")
-                    }
+                if (anyNA(object@BetaDB) || length(object@BetaDB)==0) {
+                    msg <- c(msg, "BetaDB must be set!")
                 }
-                else {
+                else{
                     if(length(object@BetaDB)==1){
                         if (object@BetaDB < 1.0) {
                             msg <- c(msg, "BetaDB must be >= 1 steps!")
@@ -1273,6 +1094,9 @@ setValidity("StochMove", function(object) {
                     }
                 }
             }
+
+
+
         }
     }
     if (anyNA(object@StraightenPath) || length(object@StraightenPath)!=1) {
@@ -1373,47 +1197,53 @@ setMethod("show", "StochMove", function(object){
     }
 )
 setMethod("plotProbs", "StochMove", function(x, xmax = NULL, ymax = NULL){
-    # get parameters
-    gb  <- x@GoalBias
-    if (x@GoalType == 2) {
-        alp <- x@AlphaDB
-        bet <- x@BetaDB
-        main = "Dispersal Bias"
-    } else main = "Goal Bias is disabled"
-    # New plot
-    if (x@GoalType == 2) {
-        if (is.null(xmax)) xmax = 2*bet[1]
-        xvals = seq(0, xmax)
-    }
-    else {if(is.null(xmax)) xmax <- 100}
-    if (is.null(ymax)) {ymax = gb[1]*1.1}
-    plot(NULL, type = "n", main = main, xlab = "Nr of steps", ylab = "Bias strength", xlim = c(0,xmax), ylim = c(1.0,ymax))
-    leg.txt <- c()
-    # add to plot:
-    if (x@IndVar) {
-    # plot shaded sd interval
+    if (x@IndVar){
+        print("Plotting of inter-individual variability in SMS traits is not implemented yet.")
+        return()
+    } else {
+        # get parameters
+        gb  <- x@GoalBias
         if (x@GoalType == 2) {
-            res <- matrix(ncol = 8, nrow = length(xvals))
-            res[,1] <- 1+densdep(xvals, A0 = (gb[1]-gb[2]-1), alpha = -(alp[1]-alp[2]), beta = (bet[1]-bet[2]))
-            res[,2] <- 1+densdep(xvals, A0 = (gb[1]-gb[2]-1), alpha = -(alp[1]-alp[2]), beta = (bet[1]+bet[2]))
-            res[,3] <- 1+densdep(xvals, A0 = (gb[1]-gb[2]-1), alpha = -(alp[1]+alp[2]), beta = (bet[1]-bet[2]))
-            res[,4] <- 1+densdep(xvals, A0 = (gb[1]-gb[2]-1), alpha = -(alp[1]+alp[2]), beta = (bet[1]+bet[2]))
-            res[,5] <- 1+densdep(xvals, A0 = (gb[1]+gb[2]-1), alpha = -(alp[1]-alp[2]), beta = (bet[1]-bet[2]))
-            res[,6] <- 1+densdep(xvals, A0 = (gb[1]+gb[2]-1), alpha = -(alp[1]-alp[2]), beta = (bet[1]+bet[2]))
-            res[,7] <- 1+densdep(xvals, A0 = (gb[1]+gb[2]-1), alpha = -(alp[1]+alp[2]), beta = (bet[1]-bet[2]))
-            res[,8] <- 1+densdep(xvals, A0 = (gb[1]+gb[2]-1), alpha = -(alp[1]+alp[2]), beta = (bet[1]+bet[2]))
-            polygon(c(xvals,rev(xvals)), c(apply(res, 1, min), rev(apply(res, 1, max))), border=NA, col='grey80')
+            alp <- x@AlphaDB
+            bet <- x@BetaDB
+            main = "Dispersal Bias"
+        } else main = "Goal Bias is disabled"
+        # New plot
+        if (x@GoalType == 2) {
+            if (is.null(xmax)) xmax = 2*bet[1]
+            xvals = seq(0, xmax)
         }
-        else {#constant
-            polygon(c(0,xmax,xmax,0), c(rep(gb[1]-gb[2],2),rep(gb[1]+gb[2],2)), border=NA, col='grey80')
+        else {if(is.null(xmax)) xmax <- 100}
+        if (is.null(ymax)) {ymax = gb[1]*1.1}
+        plot(NULL, type = "n", main = main, xlab = "Nr of steps", ylab = "Bias strength", xlim = c(0,xmax), ylim = c(1.0,ymax))
+        leg.txt <- c()
+        # add to plot:
+        # if (x@IndVar) {
+        # # plot shaded sd interval
+        #     if (x@GoalType == 2) {
+        #         res <- matrix(ncol = 8, nrow = length(xvals))
+        #         res[,1] <- 1+densdep(xvals, A0 = (gb[1]-gb[2]-1), alpha = -(alp[1]-alp[2]), beta = (bet[1]-bet[2]))
+        #         res[,2] <- 1+densdep(xvals, A0 = (gb[1]-gb[2]-1), alpha = -(alp[1]-alp[2]), beta = (bet[1]+bet[2]))
+        #         res[,3] <- 1+densdep(xvals, A0 = (gb[1]-gb[2]-1), alpha = -(alp[1]+alp[2]), beta = (bet[1]-bet[2]))
+        #         res[,4] <- 1+densdep(xvals, A0 = (gb[1]-gb[2]-1), alpha = -(alp[1]+alp[2]), beta = (bet[1]+bet[2]))
+        #         res[,5] <- 1+densdep(xvals, A0 = (gb[1]+gb[2]-1), alpha = -(alp[1]-alp[2]), beta = (bet[1]-bet[2]))
+        #         res[,6] <- 1+densdep(xvals, A0 = (gb[1]+gb[2]-1), alpha = -(alp[1]-alp[2]), beta = (bet[1]+bet[2]))
+        #         res[,7] <- 1+densdep(xvals, A0 = (gb[1]+gb[2]-1), alpha = -(alp[1]+alp[2]), beta = (bet[1]-bet[2]))
+        #         res[,8] <- 1+densdep(xvals, A0 = (gb[1]+gb[2]-1), alpha = -(alp[1]+alp[2]), beta = (bet[1]+bet[2]))
+        #         polygon(c(xvals,rev(xvals)), c(apply(res, 1, min), rev(apply(res, 1, max))), border=NA, col='grey80')
+        #     }
+        #     else {#constant
+        #         polygon(c(0,xmax,xmax,0), c(rep(gb[1]-gb[2],2),rep(gb[1]+gb[2],2)), border=NA, col='grey80')
+        #     }
+        # }
+        # plot lines
+        if (x@GoalType == 2) {
+            lines(xvals, 1+densdep(xvals, A0 = (gb[1]-1), alpha = -alp[1], beta = bet[1]), type = "b", lty = 1, col = "blue")
+        }else { # constant
+            lines(x=c(0,xmax), y=rep(gb[1],2), type = "b", lty = 1, col = "blue")
         }
     }
-    # plot lines
-    if (x@GoalType == 2) {
-        lines(xvals, 1+densdep(xvals, A0 = (gb[1]-1), alpha = -alp[1], beta = bet[1]), type = "b", lty = 1, col = "blue")
-    }else { # constant
-        lines(x=c(0,xmax), y=rep(gb[1],2), type = "b", lty = 1, col = "blue")
-    }
+
 })
 
 
@@ -1428,11 +1258,9 @@ setMethod("plotProbs", "StochMove", function(x, xmax = NULL, ymax = NULL){
 #'       IndVar = FALSE,
 #'       StraightenPath = FALSE,
 #'       StepMort = 0.0)
-#' @param StepLength Step length given in meters, defaults to \eqn{1}.\cr If \code{IndVar=TRUE}, expects a vector of length three
-#' specifying (Mean, SD, TraitScaleFactor) of \code{StepLength}.
-#' @param Rho Correlation parameter \eqn{ρ}, defaults to \eqn{0.5}. Must be in the open interval \eqn{(0,1)}.\cr If \code{IndVar=TRUE},
-#' expects a vector of length three specifying (Mean, SD, TraitScaleFactor) of \code{Rho}.
-#' @param IndVar Individual variability in CorrRW traits (i.e. \code{StepLength} and \code{Rho})? Defaults to \code{FALSE}.
+#' @param StepLength Step length given in meters, defaults to \eqn{1}.\cr If \code{IndVar=TRUE}, \code{NULL} and define the trait in \code{\link[RangeShiftR]{CorrRWTraits}}.
+#' @param Rho Correlation parameter \eqn{ρ}, defaults to \eqn{0.5}. Must be in the open interval \eqn{(0,1)}.\cr If \code{IndVar=TRUE}, \code{NULL} and define the trait in \code{\link[RangeShiftR]{CorrRWTraits}}
+#' @param IndVar Individual variability in CorrRW traits (i.e. \code{StepLength} and \code{Rho})? Defaults to \code{FALSE}. if \code{TRUE}, define CorrRWTraits in \code{\link[RangeShiftR]{CorrRWTraits}}
 #' @param StraightenPath Straighten path after decision not to settle in a patch? Defaults to \code{TRUE}, see Details below.
 #' @param StepMort Per-step mortality probability. Can be either \emph{constant}, in which case a single numeric is expected (the default, with
 #' value \eqn{0.0}) or \emph{habitat-specific}, in which case a numeric vector is expected with a length of, respectively, \code{Nhabitats} for an
@@ -1448,9 +1276,7 @@ setMethod("plotProbs", "StochMove", function(x, xmax = NULL, ymax = NULL){
 #' \eqn{Rho} is automatically set to \eqn{0.99} until the individual steps outside its natal patch, after which the value of
 #' \eqn{Rho} set by the user is restored. \cr
 #' The \code{StepLength} and \eqn{Rho} can be set to vary between individuals and evolve (set \code{IndVar=TRUE}).
-#' In this case, each individual exhibits two traits for these two parameters.
-#' For each trait the initial mean and standard deviations must be set, as well as the TraitScaleFactor (see \code{\link[RangeShiftR]{Settlement}}),
-#' instead of only one constant value each.\cr
+#' In this case, \code{StepLength} and \eqn{Rho} must be set to \code{NULL} and the corresponding traits must be defined in \code{\link[RangeShiftR]{CorrRWTraits}} (see also \code{\link[RangeShiftR]{Genetics}}). \cr
 #' Note that the step length may not evolve below one fifth of
 #' the landscape resolution, and correlation may not evolve above \eqn{0.999}. \cr
 #' Per-step mortality is not allowed to vary between individuals or to evolve. \cr
@@ -1481,8 +1307,8 @@ setMethod("plotProbs", "StochMove", function(x, xmax = NULL, ymax = NULL){
 #' @name CorrRW
 #' @export CorrRW
 CorrRW <- setClass("CorrRW", slots = c(IndVar = "logical",
-                                       StepLength = "numeric",
-                                       Rho = "numeric",
+                                       StepLength = "ANY",#"numeric", NULL or numeric
+                                       Rho = "ANY",#"numeric", NULL or numeric
                                        StraightenPath = "logical",
                                        StepMort = "numeric")  # will determine on C++ level the values of HabMort, MortConst, MortHab1 ... MortHabN, MortHabitat, MortMatrix
                 , prototype = list(IndVar = FALSE,
@@ -1497,68 +1323,31 @@ setValidity("CorrRW", function(object) {
     if (anyNA(object@IndVar) || length(object@IndVar)!=1) {
         msg <- c(msg, "IndVar must be set and of length 1!")
     }
-    if (anyNA(object@StepLength) || length(object@StepLength)==0) {
-        msg <- c(msg, "StepLength must be set!")
-    }
-    else{
-        if(object@IndVar){
-            if(length(object@StepLength)==3){
-                if (object@StepLength[1] <= 0.0) {
-                    msg <- c(msg, "Step Length (mean) must be strictly positive!")
-                }
-                if (object@StepLength[2] <= 0.0) {
-                    msg <- c(msg, "Step Length (SD) must be strictly positive!")
-                }
-                if (object@StepLength[3] <= 0.0) {
-                    msg <- c(msg, "Step Length (scaling factor) must be strictly positive !")
-                }
-                if(is.null(msg)){
-                    if (object@StepLength[3] < object@StepLength[2]) {
-                        msg <- c(msg, "Step Length scaling factor must be greater than or equal to its SD !")
-                    }
-                }
-            }
-            else{
-                msg <- c(msg, "StepLength must have length 3 if IndVar=TRUE!")
-            }
+    if (object@IndVar){
+        if (!is.null(object@StepLength)){
+            msg <- c(msg, "StepLength must be NULL is IndVar == TRUE!")
         }
-        else {
+        if (!is.null(object@Rho)){
+            msg <- c(msg, "Rho must be NULL if IndVAR == TRUE!")
+        }
+    } else{
+        if(!is.numeric(object@StepLength) && (anyNA(object@StepLength) || length(object@StepLength)==0)) {
+            msg <- c(msg, "StepLength must be set!")
+        }
+        else{
             if(length(object@StepLength)==1){
-                if (object@StepLength <= 0.0) {
-                    msg <- c(msg, "StepLength must be strictly positive!")
-                }
-            }
-            else{
-                msg <- c(msg, "StepLength must have length 1 if IndVar=FALSE!")
-            }
-        }
-    }
-    if (anyNA(object@Rho) || length(object@Rho)==0) {
-        msg <- c(msg, "Rho must be set!")
-    }
-    else{
-        if(object@IndVar){
-            if(length(object@Rho)==3){
-                if (object@Rho[1] <= 0.0 || object@Rho[1] >= 1.0) {
-                    msg <- c(msg, "Rho (mean) must be within the open interval (1,0)!")
-                }
-                if (object@Rho[2] <= 0.0 || object@Rho[2] >= 1.0) {
-                    msg <- c(msg, "Rho (SD) must be within the open interval (1,0)!")
-                }
-                if (object@Rho[3] <= 0.0 || object@Rho[3] >= 1.0) {
-                    msg <- c(msg, "Rho (scaling factor) must be within the open interval (1,0)!")
-                }
-                if(is.null(msg)){
-                    if (object@Rho[3] < object@Rho[2]) {
-                        msg <- c(msg, "Rho scaling factor must be greater than or equal to its SD !")
+                    if (object@StepLength <= 0.0) {
+                        msg <- c(msg, "StepLength must be strictly positive!")
                     }
                 }
-            }
-            else{
-                msg <- c(msg, "Rho must have length 3 if IndVar=TRUE!")
-            }
+                else{
+                    msg <- c(msg, "StepLength must have length 1 if IndVar=FALSE!")
+                }
         }
-        else {
+        if (!is.numeric(object@Rho) && (anyNA(object@Rho) || length(object@Rho)==0)) {
+            msg <- c(msg, "Rho must be set!")
+        }
+        else{
             if(length(object@Rho)==1){
                 if (object@Rho <= 0.0 || object@Rho >= 1.0) {
                     msg <- c(msg, "Correlation coefficient (Rho) must be within the open interval (1,0)!")
@@ -1569,6 +1358,9 @@ setValidity("CorrRW", function(object) {
             }
         }
     }
+
+
+
     if (anyNA(object@StraightenPath) || length(object@StraightenPath)!=1) {
         msg <- c(msg, "StraightenPath must be set and of length 1!")
     }
@@ -1594,8 +1386,7 @@ setValidity("CorrRW", function(object) {
 setMethod("show", "CorrRW", function(object){
     callNextMethod()
     if (object@IndVar) {
-        cat("   StepLength =", object@StepLength[1], "\u00B1" , object@StepLength[2], ", scale \u03bc =", object@StepLength[3], "\n")
-        cat("   Rho =", object@Rho[1], "\u00B1" , object@Rho[2], ", scale \u03bc =", object@Rho[3], "\n")
+        cat("   Inter-individual variability enabled. \n")
     }
     else {
         cat("   StepLength =", object@StepLength, "\n")
@@ -1625,15 +1416,13 @@ setMethod("show", "CorrRW", function(object){
 #'           MinSteps = 0, MaxSteps = 0, MaxStepsYear = 0)
 #' @param StageDep Stage-dependent settlement requirements? (default: \code{FALSE})
 #' @param SexDep Sex-dependent settlement requirements? (default: \code{FALSE})
-#' @param Settle Settlement codes (for \code{DispersalKernel}) or settlement probability parameters (for \emph{Movement process}) for all
+#' @param Settle Settlement codes (for \code{DispersalKernel}) or settlement probability parameters (for \emph{Movement process} if \code{IndVar=TRUE}) for all
 #' stages/sexes, defaults to \eqn{0} (i.e. 'die when unsuitable' for \emph{DispersalKernel} and
 #' 'always settle when suitable' for \emph{Movement process}). See the Details below.
 #' @param FindMate Mating requirements to settle? Set for all stages/sexes. Must be \code{FALSE} (default) in a female-only model.
 #' @param DensDep Movement process only: Density-dependent settlement probability? (default: \code{FALSE})
 #' @param IndVar Movement process only: Individual variability in settlement probability traits? Must be \code{FALSE} (default),
-#' if \code{DensDep=FALSE} or \code{StageDep=TRUE}.
-#' @param TraitScaleFactor Movement process only, required if \code{IndVar=TRUE}: Scaling factors for the three traits of density-dependent settlement,
-#' a numeric of length \eqn{3}.
+#' if \code{DensDep=FALSE} or \code{StageDep=TRUE}. If \code{TRUE} settlement traits are defined in \code{\link[RangeShiftR]{SettlementTraits}}.
 #' @param MinSteps Movement process only: Minimum number of steps. Defaults to \eqn{0}.
 #' @param MaxSteps Movement process only: Maximum number of steps. Must be \eqn{0} or more; set to \eqn{0} (default) for “per-step mortality only”.
 #' @param MaxStepsYear Movement process and stage-structured population only: Maximum number of steps per year, if there are more than \eqn{1} reproductive seasons (option \code{RepSeasons} in \code{\link[RangeShiftR]{StageStructure}}).
@@ -1686,7 +1475,7 @@ setMethod("show", "CorrRW", function(object){
 #' \code{\link[RangeShiftR]{CorrRW}}), at each step (made simultaneously) they each evaluate their current cell or patch for the
 #' possibility of settling. This allows for the implementation of more complex settlement rules. The simplest one is that the individual
 #' decides to stop if there is suitable habitat; this is in any case a necessary condition (set \code{DensDep=FALSE}).\cr
-#' If a Settlement module with a constant \eqn{S_0=0} (the default) is used in a model with \emph{movement process},
+#' If a Settlement module with a constant \eqn{S_0=0} (the default) is used in a model with \emph{movement process} and \code{IndVar=FALSE},
 #' it gets converted to \eqn{S_0=1.0}, i.e. 'always settle when habitat is suitable'. \cr
 #' \cr
 #' Furthermore, the settlement decision can be density-dependent (set \code{DensDep=TRUE}). In this case, the individual has a probability \ifelse{html}{\out{p<sub>S</sub>}}{\eqn{p_S}}
@@ -1707,20 +1496,18 @@ setMethod("show", "CorrRW", function(object){
 #'
 #' Inter-individual variability \code{IndVar=TRUE} and thus evolution is implemented only for the three traits determining density-dependent settlement
 #' (\code{DensDep=TRUE}), and if so, it may not be stage-dependent (\code{StageDep=FALSE}).
-#' For each trait the initial distribution in the population (as mean and standard variation) must be set in \code{Settle} (instead of only one constant value),
-#' as well as their scaling factors in \code{TraitScaleFactor} (see \code{\link[RangeShiftR]{Genetics}}).
+#' Settlement traits must be set in \code{\link[RangeShiftR]{SettlementTraits}} and \code{Settle} must be 0. For details see also \code{\link[RangeShiftR]{Genetics}} and \code{\link[RangeShiftR]{Traits}}
 #'
 #' The parameters that determine the settlement probabilities have to be provided via the parameter \code{Settle}, which generally takes a numeric matrix, or - if only a single constant probability is
-#' used (i.e. \code{DensDep, IndVar, StageDep, SexDep = FALSE}) - a single numeric.
-#' The format of the matrix is defined as follows: The number of columns depend on the options \code{DensDep} and \code{IndVar}. If \code{DensDep=FALSE}, the
+#' used (i.e. \code{DensDep, IndVar, StageDep, SexDep = FALSE}) - a single numeric. If individual variability is enabled, \code{Settle} must be \code{0}.
+#' The format of the matrix is defined as follows: The number of required parameter depend on the option \code{DensDep}. If \code{DensDep=FALSE}, the
 #' density-independent probability \ifelse{html}{\out{p<sub>S</sub>}}{\eqn{p_S}} must be specified. If \code{DensDep=TRUE}, the functional parameters \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}},
 #' \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{α_S}} and \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}} (cf. equation above) must be specified.
-#' Additionally, if \code{IndVar=FALSE}, these traits are fixed, but if \code{IndVar=TRUE} each of them is replaced by two parameters: their respective initial mean and
-#' standard deviation. They are used to normally distribute the traits values among the individuals of the initial population. Additionally, the \code{TraitScaleFactor} of
-#' these traits have to be set.
 #'
 #' All parameters have to be given for each stage/sex if the respective dependency is enabled. If \code{StageDep=TRUE}, state the corresponding stage in the first column.
 #' If \code{SexDep=TRUE}, state the corresponding stage in the next (i.e. first/second) column, with \eqn{0} for \emph{female} and \eqn{1} for \emph{male}.
+#'
+#'
 #' The following table lists the required columns and their correct order for different settings:
 #'
 #' \tabular{ccccc}{DensDep \tab IndVar \tab StageDep \tab SexDep \tab columns \cr
@@ -1732,8 +1519,6 @@ setMethod("show", "CorrRW", function(object){
 #'  T \tab F \tab F \tab F \tab \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}}, \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{α_S}}, \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}} \cr
 #'  \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \cr
 #'  T \tab F \tab T \tab T \tab stage, sex, \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}}, \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{α_S}}, \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}} \cr
-#'  T \tab T \tab F \tab F \tab mean\ifelse{html}{\out{(S<sub>0</sub>)}}{\eqn{(S_0)}}, sd\ifelse{html}{\out{(S<sub>0</sub>)}}{\eqn{(S_0)}}, mean\ifelse{html}{\out{(&alpha;<sub>S</sub>)}}{(\eqn{α_S})}, sd\ifelse{html}{\out{(&alpha;<sub>S</sub>)}}{(\eqn{α_S})}, mean\ifelse{html}{\out{(&beta;<sub>S</sub>)}}{(\eqn{β_S})}, sd\ifelse{html}{\out{(&beta;<sub>S</sub>)}}{(\eqn{β_S})} \cr
-#'  T \tab T \tab F \tab T \tab sex, mean\ifelse{html}{\out{(S<sub>0</sub>)}}{\eqn{(S_0)}}, sd\ifelse{html}{\out{(S<sub>0</sub>)}}{\eqn{(S_0)}}, mean\ifelse{html}{\out{(&alpha;<sub>S</sub>)}}{(\eqn{α_S})}, sd\ifelse{html}{\out{(&alpha;<sub>S</sub>)}}{(\eqn{α_S})}, mean\ifelse{html}{\out{(&beta;<sub>S</sub>)}}{(\eqn{β_S})}, sd\ifelse{html}{\out{(&beta;<sub>S</sub>)}}{(\eqn{β_S})}
 #'  }
 #'
 #' The column headings need not be included, only the numeric matrix is required. The rows require no particular order, but there must be exactly one row for each stage/sex combination.
@@ -1758,13 +1543,29 @@ setMethod("show", "CorrRW", function(object){
 #' place. This is useful for simulating situations where animals, in a ‘dispersal mode’, will keep moving and not consider settling even
 #' if suitable conditions are available \insertCite{@e.g. @barton2012risky}{RangeShiftR}.
 #'
+#' Each of the three parameters \code{MinSteps, MaxSteps, MaxStepsYr} need to be provided as single integer (if \code{StageDep=FALSE} and \code{SexDep=FALSE}) or numeric matrix, providing the stage (if \code{StageDep=TRUE}) and sex (if \code{SexDep=TRUE}).
+#' The rows require no particular order, but there must be exactly one row for each stage/sex combination.
+#'
+#' \tabular{ccccc}{StageDep \tab SexDep \tab columns \cr
+#' F \tab F \tab - not applicable only provide single numeric value - \cr
+#' T \tab F \tab stage, \code{MinSteps/MaxSteps/MaxStepsYr} \cr
+#' F \tab T \tab sex, \code{MinSteps/MaxSteps/MaxStepsYr}\cr
+#' T \tab T \tab stage, sex, \code{MinSteps/MaxSteps/MaxStepsYr} \cr
+#'  }
+#'
 #' \emph{Mating requirements}\cr
 #' Sexual species may be required to find a mate, i.e. there has to be at least one individual of the opposite sex present for the cell/patch to be considered suitable for settlement.
 #' Density-dependence and mating requirements can also be combined together to determine the settlement decision.
 #'
 #' The application of this mating condition can be switched on or off using the parameter \code{FindMate}, which takes either a single
-#' logical if \code{StageDep=FALSE} and \code{SexDep=FALSE} or, otherwise, a logical vector of same length as the number rows in
-#' \code{Settle}, using same order.
+#' logical if \code{StageDep=FALSE} and \code{SexDep=FALSE} or, otherwise, a matrix of the similar structure as for \code{MinSteps, MaxSteps} and \code{MaxStepsYr}.
+#'
+#' #' \tabular{ccccc}{StageDep \tab SexDep \tab columns \cr
+#' F \tab F \tab - not applicable only provide single logical value - \cr
+#' T \tab F \tab stage, \code{FindMate} as logical value \cr
+#' F \tab T \tab sex, \code{FindMate} as logical value\cr
+#' T \tab T \tab stage, sex, \code{FindMate} as logical value \cr
+#'  }
 #'
 #' @references
 #'         \insertAllCited{}
@@ -1775,20 +1576,18 @@ setMethod("show", "CorrRW", function(object){
 Settlement <- setClass("SettlementParams", slots = c(StageDep = "logical",
                                                      SexDep = "logical",
                                                      Settle = "matrix_OR_numeric",      # Settlement conditions for all sexes/stages. Settlement rule if the arrival cell/patch is unsuitable: 0 = die, 1 = wait, 2 = randomly choose a suitable cell/patch or die, 3 = randomly choose a suitable cell/patch or wait
-                                                     FindMate = "logical",
+                                                     FindMate = "matrix_OR_logical",
                                                      DensDep = "logical",               # For MovementProcess only!
                                                      IndVar = "logical",                # For MovementProcess only!
-                                                     TraitScaleFactor = "numeric",        # For MovementProcess only! For IndVar only. Set for stage=0 only and 1 bzw 2 sexes
-                                                     MinSteps = "integer_OR_numeric",   # For MovementProcess only!
-                                                     MaxSteps = "integer_OR_numeric",   # For MovementProcess only!
-                                                     MaxStepsYear = "integer_OR_numeric")   # For MovementProcess only!
+                                                     MinSteps = "matrix_OR_numeric",   # For MovementProcess only!
+                                                     MaxSteps = "matrix_OR_numeric",   # For MovementProcess only!
+                                                     MaxStepsYear = "matrix_OR_numeric")   # For MovementProcess only!
                        , prototype = list(StageDep = FALSE,
                                           SexDep = FALSE,
                                           Settle = matrix(0L),  # for DispKernel this is "die"
                                           FindMate = FALSE,
                                           DensDep = FALSE,
                                           IndVar = FALSE,
-                                          #TraitScaleFactor,
                                           MinSteps = 0L,
                                           MaxSteps = 0L,
                                           MaxStepsYear = 0L)
@@ -1807,17 +1606,7 @@ setValidity("SettlementParams", function(object) {
     }
     else{
         if (class(object@Settle)[1]=="numeric" && length(object@Settle)!=1) {
-            msg <- c(msg, "Settle must be a matrix!")
-        }
-    }
-    if (anyNA(object@FindMate) || length(object@FindMate)==0) {
-        msg <- c(msg, "FindMate must be set!")
-    }
-    else {
-        if (is.null(msg)) {
-            if( length(object@FindMate)!=nrow(object@Settle) && length(object@FindMate)!=1 ) {
-                msg <- c(msg, "FindMate must have either 1 entry or as many as rows in the Settle matrix!")
-            }
+            msg <- c(msg, "Settle must be a single numeric or a numeric matrix!")
         }
     }
     if (anyNA(object@DensDep) || length(object@DensDep)!=1) {
@@ -1834,36 +1623,21 @@ setValidity("SettlementParams", function(object) {
             msg <- c(msg, "Inter-individual variability (IndVar=TRUE) in stage-dependent (StageDep=TRUE) settlement traits is not implemented!")
         }
     }
-    if (is.null(msg)) {
-        if (object@IndVar) {
-            if (anyNA(object@TraitScaleFactor) || length(object@TraitScaleFactor)==0) {
-                msg <- c(msg, "TraitScaleFactor must be set!")
-            }
-            else{
-                if (object@DensDep) {
-                    if (length(object@TraitScaleFactor)!=3) {
-                        msg <- c(msg, "TraitScaleFactor must have length 3 if DensDep=TRUE!")
-                    }
-                    else {
-                        if (object@TraitScaleFactor[1] <= 0.0 || object@TraitScaleFactor[1] > 1.0 ) {
-                            msg <- c(msg, "TraitScaleFactor μ(S_0) must be in the half-open interval (0,1] !")
-                        }
-                        if (any(object@TraitScaleFactor[2:3] <= 0.0 )) {
-                            msg <- c(msg, "TraitScaleFactor μ(α_s) and μ(β_s) must be strictly positive !")
-                        }
-                    }
+    if (anyNA(object@FindMate) || length(object@FindMate)==0) {
+        msg <- c(msg, "FindMate must be set!")
+    }
+    else {
+        if (is.null(msg)) {
+            if(object@IndVar){
+                if (class(object@FindMate)[1]=="logical" && length(object@FindMate)!=1) {
+                    msg <- c(msg, "FindMate must be a single logical value or a matrix!")
                 }
-                else {
-                    if (length(object@TraitScaleFactor)!=1) {
-                        msg <- c(msg, "TraitScaleFactor must have length 1 if DensDep=FALSE!")
-                    }
-                    else {
-                        if (object@TraitScaleFactor <= 0 || object@TraitScaleFactor > 1 ) {
-                            msg <- c(msg, "TraitScaleFactor μ(S_0) must be in the half-open interval (0,1] !")
-                        }
-                    }
+            } else {
+                if(nrow(object@FindMate)!=nrow(object@Settle) && length(object@FindMate)!=1 ) {
+                    msg <- c(msg, "FindMate must have either 1 entry or as many as rows in the Settle matrix!")
                 }
             }
+
         }
     }
     if (anyNA(object@MinSteps) || length(object@MinSteps)==0) {
@@ -1883,12 +1657,32 @@ setValidity("SettlementParams", function(object) {
         }
     }
     if (is.null(msg)) {
-        if( length(object@MinSteps)!=nrow(object@Settle) && length(object@MinSteps)!=1 ) {
-            msg <- c(msg, "MinSteps must have either 1 entry or as many as rows in the Settle matrix!")
+        if(object@IndVar){
+            if(object@SexDep){ # sex dependent -> constant or provide for both sexes
+                if(nrow(object@MinSteps)!=2 && length(object@MinSteps)!=1 ) {
+                    msg <- c(msg, "MinSteps must have either 1 entry or 2 rows, one for each sex!")
+                }
+                if(nrow(object@MaxSteps)!=2 && length(object@MaxSteps)!=1 ) {
+                    msg <- c(msg, "MaxSteps must have either 1 entry or 2 rows, one for each sex!")
+                }
+            } else{ # sex independent -> one value
+                if( length(object@MinSteps)!=1 ) {
+                    msg <- c(msg, "MinSteps must have 1 entry!")
+                }
+                if( length(object@MaxSteps)!=1 ) {
+                    msg <- c(msg, "MaxSteps must have 1 entry!")
+                }
+            }
+
+        } else{
+            if( nrow(object@MinSteps)!=nrow(object@Settle) && length(object@MinSteps)!=1 ) {
+                msg <- c(msg, "MinSteps must have either 1 entry or as many as rows in the Settle matrix!")
+            }
+            if( nrow(object@MaxSteps)!=nrow(object@Settle) && length(object@MaxSteps)!=1 ) {
+                msg <- c(msg, "MaxSteps must have either 1 entry or as many as rows in the Settle matrix!")
+            }
         }
-        if( length(object@MaxSteps)!=nrow(object@Settle) && length(object@MaxSteps)!=1 ) {
-            msg <- c(msg, "MaxSteps must have either 1 entry or as many as rows in the Settle matrix!")
-        }
+
     }
     if (object@StageDep) {
         if (anyNA(object@MaxStepsYear) || length(object@MaxStepsYear)==0) {
@@ -1899,7 +1693,7 @@ setValidity("SettlementParams", function(object) {
                 msg <- c(msg, "MaxStepsYear can't be negative!")
             }
             else{
-                if( length(object@MaxStepsYear)!=nrow(object@Settle) && length(object@MaxStepsYear)!=1 ) {
+                if( nrow(object@MaxStepsYear)!=nrow(object@Settle) && length(object@MaxStepsYear)!=1 ) {
                     msg <- c(msg, "MaxStepsYear must have either 1 entry or as many as rows in the Settle matrix!")
                 }
                 else {
@@ -1923,11 +1717,17 @@ setMethod("initialize", "SettlementParams", function(.Object,...) {
         if (class(args$Settle)[1]=="numeric" && length(args$Settle)==1) {
             .Object@Settle <- as.matrix(args$Settle)
         }
-    }
-    if (!.Object@IndVar) {
-        .Object@TraitScaleFactor = -9L
-        if (!is.null(args$TraitScaleFactor)) {
-            warning(this_func, "TraitScaleFactor", warn_msg_ignored, "since IndVar = FALSE.", call. = FALSE)
+        if (class(args$FindMate)[1]=="logical" && length(args$FindMate)==1) {
+            .Object@FindMate <- as.matrix(args$FindMate)
+        }
+        if (class(args$MinSteps)[1]=="logical" && length(args$MinSteps)==1) {
+            .Object@MinSteps <- as.matrix(args$MinSteps)
+        }
+        if (class(args$MaxSteps)[1]=="logical" && length(args$MaxSteps)==1) {
+            .Object@MaxSteps <- as.matrix(args$MaxSteps)
+        }
+        if (class(args$MaxStepsYr)[1]=="logical" && length(args$MaxStepsYr)==1) {
+            .Object@MaxStepsYr <- as.matrix(args$MaxStepsYr)
         }
     }
     .Object}
@@ -1947,15 +1747,13 @@ setMethod("show", "SettlementParams", function(object){
     }
     cat("   Settlement conditions:\n")
     print(object@Settle)
-    if (object@IndVar) {
-        cat("   TraitScaleFactor =", object@TraitScaleFactor, "\n")
-    }
-    cat("   FindMate =", object@FindMate, "\n")
+    cat("   FindMate =\n")
+    print(object@FindMate)
     }
 )
 setMethod("plotProbs", "SettlementParams", function(x, stage = NULL, sex = NULL, xmax = NULL, ymax = NULL){
     sett <- x@Settle
-    if (x@DensDep) {
+    if (x@DensDep && !x@IndVar) {
         # error messages
         if (!is.null(stage)){
             if (x@StageDep) {
@@ -1976,7 +1774,7 @@ setMethod("plotProbs", "SettlementParams", function(x, stage = NULL, sex = NULL,
         }else{
             if (x@SexDep) {ind_D0 <- 2} else {ind_D0 <- 1}
         }
-        if (x@IndVar) {IV <- 2} else {IV <- 1}
+        IV <- 1
         # New plot
         if (is.null(xmax)) {
             ind_max <- which.max(sett[,ind_D0+2*IV])
@@ -1990,18 +1788,18 @@ setMethod("plotProbs", "SettlementParams", function(x, stage = NULL, sex = NULL,
         leg.txt <- c()
         # Go through lines of distances matrix and add curves to plot
         for(line in 1:nrow(sett)){
-            if (x@IndVar) {
-                res <- matrix(ncol = 8, nrow = length(xvals))
-                res[,1] <- densdep(xvals, A0 = sett[line,ind_D0]-sett[line,ind_D0+1], alpha = sett[line,ind_D0+2]-sett[line,ind_D0+3], beta = sett[line,ind_D0+4]-sett[line,ind_D0+5])
-                res[,2] <- densdep(xvals, A0 = sett[line,ind_D0]-sett[line,ind_D0+1], alpha = sett[line,ind_D0+2]-sett[line,ind_D0+3], beta = sett[line,ind_D0+4]+sett[line,ind_D0+5])
-                res[,3] <- densdep(xvals, A0 = sett[line,ind_D0]-sett[line,ind_D0+1], alpha = sett[line,ind_D0+2]+sett[line,ind_D0+3], beta = sett[line,ind_D0+4]-sett[line,ind_D0+5])
-                res[,4] <- densdep(xvals, A0 = sett[line,ind_D0]-sett[line,ind_D0+1], alpha = sett[line,ind_D0+2]+sett[line,ind_D0+3], beta = sett[line,ind_D0+4]+sett[line,ind_D0+5])
-                res[,5] <- densdep(xvals, A0 = sett[line,ind_D0]+sett[line,ind_D0+1], alpha = sett[line,ind_D0+2]-sett[line,ind_D0+3], beta = sett[line,ind_D0+4]-sett[line,ind_D0+5])
-                res[,6] <- densdep(xvals, A0 = sett[line,ind_D0]+sett[line,ind_D0+1], alpha = sett[line,ind_D0+2]-sett[line,ind_D0+3], beta = sett[line,ind_D0+4]+sett[line,ind_D0+5])
-                res[,7] <- densdep(xvals, A0 = sett[line,ind_D0]+sett[line,ind_D0+1], alpha = sett[line,ind_D0+2]+sett[line,ind_D0+3], beta = sett[line,ind_D0+4]-sett[line,ind_D0+5])
-                res[,8] <- densdep(xvals, A0 = sett[line,ind_D0]+sett[line,ind_D0+1], alpha = sett[line,ind_D0+2]+sett[line,ind_D0+3], beta = sett[line,ind_D0+4]+sett[line,ind_D0+5])
-                polygon(c(xvals,rev(xvals)), c(apply(res, 1, min), rev(apply(res, 1, max))), border=NA, col='grey80')
-            }
+            # if (x@IndVar) {
+            #     res <- matrix(ncol = 8, nrow = length(xvals))
+            #     res[,1] <- densdep(xvals, A0 = sett[line,ind_D0]-sett[line,ind_D0+1], alpha = sett[line,ind_D0+2]-sett[line,ind_D0+3], beta = sett[line,ind_D0+4]-sett[line,ind_D0+5])
+            #     res[,2] <- densdep(xvals, A0 = sett[line,ind_D0]-sett[line,ind_D0+1], alpha = sett[line,ind_D0+2]-sett[line,ind_D0+3], beta = sett[line,ind_D0+4]+sett[line,ind_D0+5])
+            #     res[,3] <- densdep(xvals, A0 = sett[line,ind_D0]-sett[line,ind_D0+1], alpha = sett[line,ind_D0+2]+sett[line,ind_D0+3], beta = sett[line,ind_D0+4]-sett[line,ind_D0+5])
+            #     res[,4] <- densdep(xvals, A0 = sett[line,ind_D0]-sett[line,ind_D0+1], alpha = sett[line,ind_D0+2]+sett[line,ind_D0+3], beta = sett[line,ind_D0+4]+sett[line,ind_D0+5])
+            #     res[,5] <- densdep(xvals, A0 = sett[line,ind_D0]+sett[line,ind_D0+1], alpha = sett[line,ind_D0+2]-sett[line,ind_D0+3], beta = sett[line,ind_D0+4]-sett[line,ind_D0+5])
+            #     res[,6] <- densdep(xvals, A0 = sett[line,ind_D0]+sett[line,ind_D0+1], alpha = sett[line,ind_D0+2]-sett[line,ind_D0+3], beta = sett[line,ind_D0+4]+sett[line,ind_D0+5])
+            #     res[,7] <- densdep(xvals, A0 = sett[line,ind_D0]+sett[line,ind_D0+1], alpha = sett[line,ind_D0+2]+sett[line,ind_D0+3], beta = sett[line,ind_D0+4]-sett[line,ind_D0+5])
+            #     res[,8] <- densdep(xvals, A0 = sett[line,ind_D0]+sett[line,ind_D0+1], alpha = sett[line,ind_D0+2]+sett[line,ind_D0+3], beta = sett[line,ind_D0+4]+sett[line,ind_D0+5])
+            #     polygon(c(xvals,rev(xvals)), c(apply(res, 1, min), rev(apply(res, 1, max))), border=NA, col='grey80')
+            # }
             lines(xvals, densdep(xvals, A0 = sett[line,ind_D0], alpha = sett[line,ind_D0+IV], beta = sett[line,ind_D0+2*IV]), type = "l", lty = 1, col = line)
 
             if (x@StageDep) {
@@ -2015,7 +1813,7 @@ setMethod("plotProbs", "SettlementParams", function(x, stage = NULL, sex = NULL,
             legend("topright", leg.txt, col = 1:nrow(sett), lwd = 1.5)
         }
     }
-    else{ print("Plotting is only implemented for density-dependent settlement (in a movement process).\n") }
+    else{ print("Plotting is only implemented for density-dependent settlement (in a movement process) without inter-individual variability.\n") }
 })
 
 
@@ -2098,7 +1896,7 @@ setValidity("DispersalParams", function(object) {
             msg <- c(msg, "Dispersal(): Settlement can only be density-dependent (DensDep = TRUE) if a movement process is used as transfer method!")
         }
     }else{
-        if (any(object@Settlement@MaxSteps<=0) && all(object@Transfer@StepMort<=0) ) {
+        if (any(object@Settlement@MaxSteps[,ncol(object@Settlement@MaxSteps)]<=0) && all(object@Transfer@StepMort<=0) ) {
             msg <- c(msg, "Dispersal(): At least one of the two options MaxSteps and StepMort must be set (>0) if a movement process is used as transfer method!")
         }
     }
@@ -2121,9 +1919,12 @@ setMethod("show", "DispersalParams", function(object){
     cat("\n  Settlement:\n")
     print(object@Settlement)
     if (!class(object@Transfer)[1] == "DispersalKernel") {
-        cat("   MinSteps =", object@Settlement@MinSteps, "\n")
-        cat("   MaxSteps =", object@Settlement@MaxSteps, "\n")
-        cat("   MaxStepsYear =", object@Settlement@MaxStepsYear, "\n")
+        cat("   MinSteps =\n")
+        print(object@Settlement@MinSteps)
+        cat("   MaxSteps =\n")
+        print(object@Settlement@MaxSteps)
+        cat("   MaxStepsYear =\n")
+        print(object@Settlement@MaxStepsYear)
     }
 })
 

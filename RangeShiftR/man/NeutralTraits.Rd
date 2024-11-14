@@ -3,25 +3,25 @@
 \docType{class}
 \name{NeutralTraits}
 \alias{NeutralTraits}
-\title{Set genetic traits structure for neutral traits}
+\title{Set up structure of neutral traits}
 \arguments{
 \item{Positions}{Loci positions coding for trait within genome. Must be in the
-range 0-(GenomeSize-1), specified in Genetics file. Positions can overlap across
+range 0-(\code{GenomeSize}-1), specified in \code{\link[RangeShiftR]{Genetics}}. Positions can overlap across
 traits - there will be no pleiotropy, but this will influence genetic linkage.,}
 
-\item{NbOfPositions}{Only specify if above is set to ‘random’, else must be blank (NULL)}
+\item{NbOfPositions}{Only specify if above is set to \code{"random"}, else must be blank (\code{NULL})}
 
 \item{InitialDistribution}{Distribution from which to draw initial allele values from.
-If \code{uniform}. Initialise with random characters between 0 – max. Can be left blank (NULL)
-and assume every individual is the ‘wildtype’ (max value provided in  \code{InitialParameters} ) and new mutations alter that.}
+If \code{uniform}. Initialise with random characters between 0 – \code{max}. Note that possible values start at 0, so \code{max=0}
+specifies a monomorphic initial population.}
 
 \item{InitialParameters}{Maximal value for the uniform distribution.}
 
-\item{MutationDistribution}{Distribution for mutations to draw from. Can be either 'KAM' or 'SSM'. KAM (k-alleles model) is randomly
-draw a value between 0 and max (see MutationParameters).
-SSM (single-step mutation) is to move in a stepwise manner, A to B, B to C.}
+\item{MutationDistribution}{Distribution for mutations to draw from. Can be either \code{"KAM"} or \code{"SSM"}. \code{KAM} (k-alleles model) is randomly
+draw a value between 0 and \code{max} (see \code{MutationParameters}).
+\code{SSM} (single-step mutation) is to move in a stepwise manner, A to B, B to C.}
 
-\item{MutationParameters}{Parameters for the above distribution: maximal value for KAM or SSM (cannot exceed 255)}
+\item{MutationParameters}{Parameters for the above distribution: maximal value for \code{KAM} or \code{SSM} (cannot exceed 255)}
 
 \item{MutationRate}{Mutation rate applicable to this type of loci. Must be between 0.0 and 1.0}
 
@@ -32,7 +32,23 @@ enabled, should allele values for this gene be written to output? Ignored if Out
 a parameter object of class "NeutralTraitsParams"
 }
 \description{
-Set genetic traits structure for neutral traits
+A method to specify neutral traits in the genetic module.
+}
+\details{
+Neutral trait does not have any phenotypic effect during the simulation. It is used to compute F-statistics and other measures of neutral variation.
+For neutral trait you must specify:
+
+-	The number and positions of genes controlling the trait: \code{Positions} and \code{NbOfPositions} \cr
+-	A distribution to sample initial values from: \code{InitialDistribution} and \code{InitialParameters} \cr
+-	A mutation rate for all genes controlling the trait. \code{MutationRate} \cr
+-	A distribution to sample mutations from. \code{MutationDistribution} and \code{MutationParameters} \cr
+
+The user specifies the number of possible alleles for neutral loci (up to 256), via the maximum parameter of the mutation distribution.
+Initial values are either identical for all sites (equal to the max value) or sampled in a uniform distribution (between 0 and the maximum value).
+Mutations are either sampled in a uniform distribution between 0 and the max parameter (k-allele model, KAM, Peng et al. 2012) or
+added as increments (random -1 or +1 changes) of the previous value (symmetric stepwise model, SSM, Peng et al. 2012).
+
+Dominance values and inheritance are not applicable for neutral traits.
 }
 \author{
 Jette Reeg

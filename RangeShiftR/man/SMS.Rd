@@ -23,20 +23,17 @@ mean\cr \eqn{3 = }Weighted arithmetic mean}
 (\code{DP}). A maximum of \eqn{14} steps is supported, default is \eqn{1}. (integer)}
 
 \item{DP}{Directional persistence. Corresponds to the tendency to follow a correlated random walk, must be \eqn{\ge 1.0}, defaults to \eqn{1.0}.\cr
-If \code{IndVar=TRUE}, expects a vector of length three specifying (Mean, SD, TraitScaleFactor) of \code{DP}.}
+If \code{IndVar=TRUE}, set to NULL and specify the SMSTraits in \code{\link[RangeShiftR]{SMSTraits}}.}
 
 \item{GoalType}{Goal bias type: \eqn{0 = } None (default), \eqn{2 = } Dispersal bias.}
 
-\item{GoalBias}{Only if \code{GoalType=2}: Goal bias strength. Must be must be \eqn{\ge 1.0}, defaults to \eqn{1.0}. \cr If \code{IndVar=TRUE}, expects a vector of length three
-specifying (Mean, SD, TraitScaleFactor) of \code{GoalBias}.}
+\item{GoalBias}{Only if \code{GoalType=2}: Goal bias strength. Must be must be \eqn{\ge 1.0}, defaults to \eqn{1.0}. \cr If \code{IndVar=TRUE},  set to NULL and specify the SMSTraits in \code{\link[RangeShiftR]{SMSTraits}}.}
 
-\item{AlphaDB}{Required if \code{GoalType=2}: Dispersal bias decay rate. Must be must be \eqn{> 0.0}.\cr If \code{IndVar=TRUE}, expects a vector of length three
-specifying (Mean, SD, TraitScaleFactor) of \code{AlphaDB}.}
+\item{AlphaDB}{Required if \code{GoalType=2}: Dispersal bias decay rate. Must be must be \eqn{> 0.0}.\cr If \code{IndVar=TRUE},  set to NULL and specify the SMSTraits in \code{\link[RangeShiftR]{SMSTraits}}.}
 
-\item{BetaDB}{Required if \code{GoalType=2}: Dispersal bias decay inflection point (given in number of steps). Must be must be \eqn{> 0.0}.\cr If \code{IndVar=TRUE},
-expects a vector of length three specifying (Mean, SD, TraitScaleFactor) of \code{BetaDB}.}
+\item{BetaDB}{Required if \code{GoalType=2}: Dispersal bias decay inflection point (given in number of steps). Must be must be \eqn{> 0.0}.\cr If \code{IndVar=TRUE},  set to NULL and specify the SMSTraits in \code{\link[RangeShiftR]{SMSTraits}}.}
 
-\item{IndVar}{Individual variability in SMS traits (i.e. \code{DP}, \code{GoalBias}, \code{AlphaDB} and \code{BetaDB})? Defaults to \code{FALSE}.}
+\item{IndVar}{Individual variability in SMS traits (i.e. \code{DP}, \code{GoalBias}, \code{AlphaDB} and \code{BetaDB})? Defaults to \code{FALSE}. If \code{TRUE}, specify the SMSTraits in \code{\link[RangeShiftR]{SMSTraits}}.}
 
 \item{Costs}{Describes the landscapes resistance to movement. Set either: \cr
  - \emph{habitat-specific} costs for each habitat type, or\cr
@@ -112,8 +109,7 @@ advisable to disable the feature (\code{StraightenPath=FALSE}), although care mu
 surrounded by very high cost matrix.
 
 When inter-individual variability is activated (set \code{IndVar=TRUE}), the four SMS movement traits \code{DP}, as well as - if dispersal goal bias
-is enabled - \code{GB}, \code{AlphaDB} and \code{BetaDB} can evolve.
-For each trait the population initial mean and standard deviations must be set (instead of the constant value), as well as its scaling factor
+is enabled - \code{GB}, \code{AlphaDB} and \code{BetaDB} can evolve. In this case, you must set the corresponding traits to \code{NULL} here and must specify them in the \code{\link[RangeShiftR]{SMSTraits}} module and set up the genetics
 (see \code{\link[RangeShiftR]{Genetics}}).\cr
 
 As currently implemented, there is no sex- or stage- dependence of SMS traits.
