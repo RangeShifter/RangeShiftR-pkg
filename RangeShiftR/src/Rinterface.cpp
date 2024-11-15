@@ -86,7 +86,7 @@ DispersalTraitInputOptions gDispTraitOpt;
 int translocation;
 rasterdata landraster,patchraster,spdistraster,costsraster;
 
-string name_landscape, name_patch, name_sp_dist, gNameCostFile;
+string name_landscape, name_patch, name_sp_dist, name_costfile;
 
 string msgnlines = "No. of lines for final Simulation ";
 string msgshldbe = " should be ";
@@ -496,11 +496,11 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
             costmaps = Rcpp::as<Rcpp::StringVector>(LandParamsR.slot("CostsFile"));
             name_landscape = habitatmaps(0);
             name_patch = patchmaps(0);
-            gNameCostFile = costmaps(0);
+            name_costfile = costmaps(0);
         } else {
             name_landscape = Rcpp::as<string>(LandParamsR.slot("LandscapeFile"));
             name_patch = Rcpp::as<string>(LandParamsR.slot("PatchFile"));
-            gNameCostFile = Rcpp::as<string>(LandParamsR.slot("CostsFile"));
+            name_costfile = Rcpp::as<string>(LandParamsR.slot("CostsFile"));
         }
         if(!patchmodel && name_patch != "NULL") Rcpp::Rcout << "PatchFile must be NULL in a cell-based model!" << endl;
 
@@ -586,7 +586,7 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 
         // check cost map filename
         ftype = "CostMapFile";
-        if (gNameCostFile == "NULL") {
+        if (name_costfile == "NULL") {
             if ( gTransferType == 1) { // SMS
                 if (landtype == 2) { // habitat quality
                     BatchErrorR(filetype, -999, 0, " ");
@@ -597,7 +597,7 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
         }
         else {
             if ( gTransferType == 1) { // SMS
-                fname = indir + gNameCostFile;
+                fname = indir + name_costfile;
                 costsraster = ParseRasterHead(fname);
                 if(costsraster.ok) {
                     // check resolutions match
@@ -669,7 +669,7 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
                     Rcpp::Rcout << "Dynamic landscape: Patchmaps must have as many elements as Years and habitat maps." << endl;
                 }
             }
-            if (gNameCostFile != "NULL") {
+            if (name_costfile != "NULL") {
                 if( dynland_years.size() != costmaps.size() ||
                     habitatmaps.size()   != costmaps.size() ) {
                     errors++;
@@ -686,7 +686,7 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
                     chg.habfile = indir + habitatmaps(i);
                     if(patchmodel) chg.pchfile = indir + patchmaps(i);
                     else chg.pchfile = "NULL";
-                    if (gNameCostFile == "NULL") chg.costfile = "none";
+                    if (name_costfile == "NULL") chg.costfile = "none";
                     else chg.costfile = indir + costmaps(i);
                     pLandscape->addLandChange(chg);
                 }
@@ -4620,7 +4620,7 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
             if(landtype != 9)
                 DEBUGLOG << " name_landscape=" << name_landscape
                          << " name_patch=" << name_patch
-                         << " gNameCostFile=" << gNameCostFile
+                         << " name_costfile=" << name_costfile
                          << " name_sp_dist=" << name_sp_dist;
                 DEBUGLOG << endl;
 #endif
@@ -4647,8 +4647,8 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
                     string hname = paramsSim->getDir(1) + name_landscape;
                     int landcode;
                     string cname;
-                    if (gNameCostFile == "NULL" || gNameCostFile == "none") cname = "NULL";
-                    else cname = paramsSim->getDir(1) + gNameCostFile;
+                    if (name_costfile == "NULL" || name_costfile == "none") cname = "NULL";
+                    else cname = paramsSim->getDir(1) + name_costfile;
                     if(paramsLand.patchModel) {
                         string pname = paramsSim->getDir(1) + name_patch;
                         landcode = pLandscape->readLandscape(0, hname, pname, cname);

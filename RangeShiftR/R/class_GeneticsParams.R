@@ -57,8 +57,8 @@
 #'
 #' The user specifies the number of possible alleles for neutral loci (up to 256), via the maximum parameter of the mutation distribution.
 #' Initial values are either identical for all sites (equal to the max value) or sampled in a uniform distribution (between 0 and the maximum value).
-#' Mutations are either sampled in a uniform distribution between 0 and the max parameter (k-allele model, KAM, Peng et al. 2012) or
-#' added as increments (random -1 or +1 changes) of the previous value (symmetric stepwise model, SSM, Peng et al. 2012).
+#' Mutations are either sampled in a uniform distribution between 0 and the max parameter (k-allele model, KAM, \insertCite{peng2012}) or
+#' added as increments (random -1 or +1 changes) of the previous value (symmetric stepwise model, SSM, \insertCite{peng2012}).
 #'
 #' Dominance values and inheritance are not applicable for neutral traits.
 #'
@@ -788,16 +788,16 @@ SettlementTraits<- setClass("SettlementTraitsParams", slots = c(Positions = "lis
                                                                 MutationRate = "numeric", # float
                                                                 OutputValues = "logical")
                             , prototype = list(
-                                Positions = list("random"), # "random" or list of integer values
-                                NbOfPositions = 2L, # numeric, only of positions random
-                                ExpressionType = "additive", # dispersal: "additive" or "average"
-                                InitialDistribution = "uniform", # uniform , normal (dispersal)
-                                InitialParameters = matrix(c(0.5,0.1), nrow=1), # dispersal: two values: either min/max oder mean+sd
-                                IsInherited = FALSE, # only for dispersal
-                                MutationDistribution = "uniform", # dispersal: uniform or normal
-                                MutationParameters = matrix(c(0.5,0.1), nrow=1), # single value or 2 values
-                                MutationRate = c(0.001), # numeric
-                                OutputValues = FALSE
+                                Positions = list("random", "random", "random"), # "random" or list of integer values
+                                NbOfPositions = c(2, 2, 2), # numeric, only of positions random
+                                ExpressionType = rep("additive",3), # dispersal: "additive" or "average"
+                                InitialDistribution = rep("uniform",3), # uniform , normal (dispersal)
+                                InitialParameters = matrix(c(0.5,0.5,0.5,0.1,0.1,0.1), nrow=3), # dispersal: two values: either min/max oder mean+sd
+                                IsInherited = rep(FALSE, 3), # only for dispersal
+                                MutationDistribution = rep("uniform",3), # dispersal: uniform or normal
+                                MutationParameters = matrix(c(0.5,0.5,0.5,0.1,0.1,0.1), nrow=3), # single value or 2 values
+                                MutationRate = rep(0.001,3), # numeric
+                                OutputValues = rep(FALSE,3)
                             ))
 setValidity("SettlementTraitsParams", function(object) {
     msg <- NULL
@@ -1481,15 +1481,15 @@ CorrRWTraits<- setClass("CorrRWTraitsParams", slots = c(Positions = "list", #
                                                         OutputValues = "logical")
                         , prototype = list(
                             Positions = list("random", "random"), # "random" or list of integer values
-                            NbOfPositions = 2L, # numeric, only of positions random
-                            ExpressionType = "additive", # dispersal: "additive" or "average"
-                            InitialDistribution = "uniform", # uniform , normal (dispersal)
-                            InitialParameters = matrix(c(0.5,0.1), nrow=1), # dispersal: two values: either min/max oder mean+sd
-                            IsInherited = FALSE, # only for dispersal
-                            MutationDistribution = "uniform", # dispersal: uniform or normal
-                            MutationParameters = matrix(c(0.5,0.1), nrow=1), # single value or 2 values
-                            MutationRate = c(0.001), # numeric
-                            OutputValues = FALSE
+                            NbOfPositions = rep(2,2), # numeric, only of positions random
+                            ExpressionType = rep("additive",2), # dispersal: "additive" or "average"
+                            InitialDistribution = rep("uniform",2), # uniform , normal (dispersal)
+                            InitialParameters = matrix(c(0.5,0.5,0.1,0.1), nrow=2), # dispersal: two values: either min/max oder mean+sd
+                            IsInherited = rep(FALSE,2), # only for dispersal
+                            MutationDistribution = rep("uniform",2), # dispersal: uniform or normal
+                            MutationParameters = matrix(c(0.5,0.5,0.1,0.1), nrow=2), # single value or 2 values
+                            MutationRate = rep(0.001,2), # numeric
+                            OutputValues = rep(FALSE,2)
                         ))
 setValidity("CorrRWTraitsParams", function(object) {
     msg <- NULL
@@ -1784,9 +1784,9 @@ setMethod("show", "TraitsParams", function(object){
 #' Does not output the resulting trait values: mean and SD of dispersal and genetic fitness traits are
 #' output in the TraitsXPatch, TraitsXCell and/or TraitsXrow output files. Enables the geneValues output files.
 #' @param OutputFstatsWeirCockerham Calculate F-statistics (including global and per-locus estimates)
-#' according to Weir & Cockerham (1984)'s method-of-moments approach. Enables the neutralGenetics and
+#' according to \insertCite{weir1984}'s method-of-moments approach. Enables the neutralGenetics and
 #' perLocusNeutralGenetics output files.
-#' @param OutputFstatsWeirHill Calculate F-statistics calculated according to the estimators of Weir & Hill (2002),
+#' @param OutputFstatsWeirHill Calculate F-statistics calculated according to the estimators of \insertCite{weir2002},
 #' including global estimates corrected for unequal sample sizes,
 #' population- (i.e. patch-) specific estimates, and pairwise estimates.
 #' Enables the neutralGenetics and pairwisePatchNeutralGenetics output files.
