@@ -3093,14 +3093,12 @@ int ReadGeneticsR(Rcpp::S4 GeneParamsR, Landscape* pLandscape)
             }
         }
     }
-    Rcpp::Rcout << "Genetic parameters loaded." << endl;
 
 
     pSpecies->setGeneticParameters(chrEnds, genomeSize, recombinationRate,
                                    patchList, strNbInds, stagesToSampleFrom, nPatchesToSample);
 
     paramsSim->setGeneticSim(patchSamplingOption, outputGeneValues, outputWeirCockerham, outputWeirHill, outputStartGenetics, outputGeneticInterval);
-    Rcpp::Rcout << "Genetic parameters set." << endl;
     return 0;
 }
 
@@ -3108,10 +3106,6 @@ int ReadGeneticsR(Rcpp::S4 GeneParamsR, Landscape* pLandscape)
 
 int ReadTraitsR(Rcpp::S4 TraitsParamsR)
 {
-
-    Rcpp::Rcout << "ReadTraitsR(): " << endl;
-
-
     Rcpp::S4 GeneticLoadParamsR("GeneticLoadParams");
     Rcpp::S4 EmigrationTraitsParamsR("EmigrationTraitsParams");
     Rcpp::S4 KernelTraitsParamsR("KernelTraitsParams");
@@ -3244,10 +3238,6 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
                     NbOfPositionsR = (int)NbOfPositionsRvec[l]; // here is the error message
                     if(NbOfPositionsR > 0){
                         positions = selectRandomLociPositions(NbOfPositionsR, genomeSize);
-                        Rcpp::Rcout << "GeneticLoad(): " << NbOfPositionsR << " random positions selected." << endl;
-                        for (auto pos : positions) {
-                            std::cout << pos << " ";
-                        }
                     }
                 }
                 else throw logic_error("GeneticLoad(): If positions are random you must provide the number of positions (>0).");
@@ -3371,10 +3361,6 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
                     NbOfPositionsR = (int)NbOfPositionsRvec[l]; // here is the error message
                     if(NbOfPositionsR > 0){
                         positions = selectRandomLociPositions(NbOfPositionsR, genomeSize);
-                        Rcpp::Rcout << "EmigrationGEnes(): " << NbOfPositionsR << " random positions selected." << endl;
-                        for (auto pos : positions) {
-                            std::cout << pos << " ";
-                        }
                     }
                 }
                 else throw logic_error("EmigrationGenes(): If positions are random you must provide the number of positions (>0).");
@@ -3488,10 +3474,6 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
                     NbOfPositionsR = (int)NbOfPositionsRvec[l]; // here is the error message
                     if(NbOfPositionsR > 0){
                         positions = selectRandomLociPositions(NbOfPositionsR, genomeSize);
-                        Rcpp::Rcout << "SettlementGenes(): " << NbOfPositionsR << " random positions selected." << endl;
-                        for (auto pos : positions) {
-                            std::cout << pos << " ";
-                        }
                     }
                 }
                 else throw logic_error("SettlementGenes(): If positions are random you must provide the number of positions (>0).");
@@ -3627,10 +3609,6 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
                             NbOfPositionsR = (int)NbOfPositionsRvec[l]; // here is the error message
                             if(NbOfPositionsR > 0){
                                 positions = selectRandomLociPositions(NbOfPositionsR, genomeSize);
-                                Rcpp::Rcout << "KernelGenes(): " << NbOfPositionsR << " random positions selected." << endl;
-                                for (auto pos : positions) {
-                                    std::cout << pos << " ";
-                                }
                             }
                         }
                         else throw logic_error("KernelGenes(): If positions are random you must provide the number of positions (>0).");
@@ -3745,10 +3723,6 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
                             NbOfPositionsR = (int)NbOfPositionsRvec[l]; // here is the error message
                             if(NbOfPositionsR > 0){
                                 positions = selectRandomLociPositions(NbOfPositionsR, genomeSize);
-                                Rcpp::Rcout << "SMSGenes(): " << NbOfPositionsR << " random positions selected." << endl;
-                                for (auto pos : positions) {
-                                    std::cout << pos << " ";
-                                }
                             }
                         }
                         else throw logic_error("SMSGenes(): If positions are random you must provide the number of positions (>0).");
@@ -3854,10 +3828,6 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
                             NbOfPositionsR = (int)NbOfPositionsRvec[l]; // here is the error message
                             if(NbOfPositionsR > 0){
                                 positions = selectRandomLociPositions(NbOfPositionsR, genomeSize);
-                                Rcpp::Rcout << "CorrRWGenes(): " << NbOfPositionsR << " random positions selected." << endl;
-                                for (auto pos : positions) {
-                                    std::cout << pos << " ";
-                                }
                             }
                         }
                         else throw logic_error("CorrRWGenes(): If positions are random you must provide the number of positions (>0).");
@@ -4099,39 +4069,6 @@ void setUpSpeciesTrait(string TraitTypeR, set<int> positions, string ExpressionT
 
     const bool isOutput = isOutputR;
 
-    // test Traits before creating a new trait:
-    Rcpp::Rcout << "TraitTypeR: " << to_string(traitType) << std::endl;
-
-    Rcpp::Rcout << "Positions: ";
-    for (auto pos : positions) {
-        std::cout << pos << " ";
-    }
-    Rcpp::Rcout << std::endl;
-
-    Rcpp::Rcout << "ExpressionType: " << to_string(expressionType) << std::endl;
-    Rcpp::Rcout << "initDist: " << to_string(initDist) << std::endl;
-
-    Rcpp::Rcout << "Init Parameters: ";
-    for (const auto& pair : initParams) Rcpp::Rcout << to_string(pair.first) << " " << pair.second << " ";
-    Rcpp::Rcout << endl;
-
-    Rcpp::Rcout << "DominanceDist: " << to_string(dominanceDist) << std::endl;
-
-    Rcpp::Rcout << "Dominance Parameter: ";
-    for (const auto& pair : dominanceParams) Rcpp::Rcout << to_string(pair.first) << " " << pair.second << " ";
-    Rcpp::Rcout << std::endl;
-
-    Rcpp::Rcout << "isInherited: " << (isInherited ? "true" : "false") << std::endl;
-    Rcpp::Rcout << "MutationDistR: " <<  to_string(mutationDistribution) << std::endl;
-
-    Rcpp::Rcout << "Mutation Parameter: ";
-    for (const auto& pair : mutationParameters) Rcpp::Rcout << to_string(pair.first) << " " << pair.second << " ";
-    Rcpp::Rcout << std::endl;
-
-    Rcpp::Rcout << "MutationRateR: " << mutationRate << std::endl;
-    Rcpp::Rcout << "sexdep: " << sexdep << std::endl;
-    Rcpp::Rcout << "isOutputR: " << (isOutput ? "true" : "false") << std::endl;
-
     // Create species trait
     SpeciesTrait* trait = new SpeciesTrait(
         traitType, sex,
@@ -4146,52 +4083,6 @@ void setUpSpeciesTrait(string TraitTypeR, set<int> positions, string ExpressionT
 
 
     pSpecies->addTrait(traitType, *trait);
-    // get the values and print them:
-    // Getters
-    sex_t s = pSpecies->getSpTrait(traitType)->getSex();
-    float mut = pSpecies->getSpTrait(traitType)->getMutationRate();
-    short pl = pSpecies->getSpTrait(traitType)->getPloidy();
-    const set<int> pos = pSpecies->getSpTrait(traitType)->getGenePositions();
-    int si = pSpecies->getSpTrait(traitType)->getPositionsSize();
-    bool inher = pSpecies->getSpTrait(traitType)->isInherited();
-
-    Rcpp::Rcout << "sex: " << s << std::endl;
-    Rcpp::Rcout << "mutationrate: " << mut <<endl;
-    Rcpp::Rcout << "ploidy: " << pl << endl;
-    Rcpp::Rcout << "positions: ";
-    for (auto pos : positions) Rcpp::Rcout << pos << " ";
-    Rcpp::Rcout << std::endl;
-    Rcpp::Rcout << "genome size: " << si << std::endl;
-    Rcpp::Rcout << "is inherited" << inher << endl;
-
-    DistributionType mutdist = pSpecies->getSpTrait(traitType)->getMutationDistribution();
-    map<GenParamType, float> mutpara =  pSpecies->getSpTrait(traitType)->getMutationParameters();
-    DistributionType domdist = pSpecies->getSpTrait(traitType)->getDominanceDistribution();
-    map<GenParamType, float>  dompara = pSpecies->getSpTrait(traitType)->getDominanceParameters();
-    DistributionType initdist = pSpecies->getSpTrait(traitType)->getInitialDistribution();
-    map<GenParamType, float> initpara =  pSpecies->getSpTrait(traitType)->getInitialParameters();
-    ExpressionType exprtype = pSpecies->getSpTrait(traitType)->getExpressionType();
-
-    Rcpp::Rcout << "Mutation Distribution: " << to_string(mutdist) << std::endl;
-    Rcpp::Rcout << "Dominance distribution: " << to_string(domdist) << endl;
-    Rcpp::Rcout << "initial distribution: " << to_string(initdist) << endl;
-
-    Rcpp::Rcout << "Mutation Parameters: ";
-    for (const auto& pair : mutpara) Rcpp::Rcout << to_string(pair.first) << " " << pair.second << " ";
-    Rcpp::Rcout << endl;
-
-    Rcpp::Rcout << "Dominance Parameters: ";
-    for (const auto& pair : dompara) Rcpp::Rcout << to_string(pair.first) << " " << pair.second << " ";
-    Rcpp::Rcout << endl;
-
-    Rcpp::Rcout << "Initial Parameters: ";
-    for (const auto& pair : initpara) Rcpp::Rcout << to_string(pair.first) << " " << pair.second << " ";
-    Rcpp::Rcout << endl;
-
-    Rcpp::Rcout << "Expression type" << to_string(exprtype) << endl;
-
-
-
 };
 //---------------------------------------------------------------------------
 
