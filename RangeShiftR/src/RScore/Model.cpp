@@ -838,7 +838,7 @@ void OutParameters(Landscape* pLandscape)
 			outPar << "PATCH FILE: " << name_patch << endl;
 		}
 		if (trfr.costMap) {
-			outPar << "COSTS FILE: " << gNameCostFile << endl;
+			outPar << "COSTS FILE: " << name_costfile << endl;
 		}
 #else
 		if (sim.batchMode) outPar << " (see batch file) " << landFile << endl;
