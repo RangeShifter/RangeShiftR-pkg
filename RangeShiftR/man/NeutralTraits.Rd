@@ -45,10 +45,13 @@ For neutral trait you must specify:
 
 The user specifies the number of possible alleles for neutral loci (up to 256), via the maximum parameter of the mutation distribution.
 Initial values are either identical for all sites (equal to the max value) or sampled in a uniform distribution (between 0 and the maximum value).
-Mutations are either sampled in a uniform distribution between 0 and the max parameter (k-allele model, KAM, Peng et al. 2012) or
-added as increments (random -1 or +1 changes) of the previous value (symmetric stepwise model, SSM, Peng et al. 2012).
+Mutations are either sampled in a uniform distribution between 0 and the max parameter (k-allele model, KAM, \insertCite{peng2012}{RangeShiftR}) or
+added as increments (random -1 or +1 changes) of the previous value (symmetric stepwise model, SSM, \insertCite{peng2012}{RangeShiftR}).
 
 Dominance values and inheritance are not applicable for neutral traits.
+}
+\references{
+\insertAllCited{}
 }
 \author{
 Jette Reeg

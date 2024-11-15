@@ -28,14 +28,10 @@ across the whole genome (in addition to the chromosomeEnds above). Disabled for 
 Does not output the resulting trait values: mean and SD of dispersal and genetic fitness traits are
 output in the TraitsXPatch, TraitsXCell and/or TraitsXrow output files. Enables the geneValues output files.}
 
-\item{OutputFstatsWeirCockerham}{Calculate F-statistics (including global and per-locus estimates)
-according to Weir & Cockerham (1984)'s method-of-moments approach. Enables the neutralGenetics and
+\item{OutputFstatsWeirCockerham}{Calculate F-statistics. Enables the neutralGenetics and
 perLocusNeutralGenetics output files.}
 
-\item{OutputFstatsWeirHill}{Calculate F-statistics calculated according to the estimators of Weir & Hill (2002),
-including global estimates corrected for unequal sample sizes,
-population- (i.e. patch-) specific estimates, and pairwise estimates.
-Enables the neutralGenetics and pairwisePatchNeutralGenetics output files.}
+\item{OutputFstatsWeirHill}{Calculate F-statistics. Enables the neutralGenetics and pairwisePatchNeutralGenetics output files.}
 
 \item{OutputStartGenetics}{Which year should RangeShifter start to produce the output files listed above?}
 
@@ -73,6 +69,100 @@ The rate of recombination applies to the entire genome. Genetic linkage does occ
 Multiple traits can use the same position, making the alleles of such genes completely linked, but mutations and expression of different traits are resolved independently,
 such that pleiotropy is not possible.
 If either option for sexual reproduction is selected, all individuals are diploid. Otherwise, asexual individuals are always haploid (and do not recombine).
+
+\emph{Output} \cr
+
+\emph{Sampling} \cr
+The volume of genetic output grows quickly with the number of individuals in the simulation, and it is therefore crucial to first constitute an appropriate sample of the community. \cr
+First, a set of patches is sampled from either a random subset of all patches in the landscape, or a pre-specified list of patches.
+In either case, the same patches will be sampled through the simulation, and no check is conducted to verify if each patch does contain a population or is empty.
+There is an additional option to sample patches from a random subset of occupied patches, which will change from one generation to the next. \cr
+Second, a number of individuals are sampled from the population of each sampled patch. In stage-structured populations,
+it is possible to select only certain stages to be sampled.\cr
+
+\emph{Allele values}\cr
+
+This output, if enabled (\code{OutputGeneValues = TRUE}), will write all alleles values of the sampled individuals for the selected trait(s) to \emph{Sim<sim_nb>_Land<landscape_nb>_Rep<replicate_nb>_geneValues},
+along with some contextual information.\cr
+
+Each row corresponds to a single gene:\cr
+
+    1.	Year\cr
+    2.	Generation\cr
+    3.	Individual ID\cr
+    4.	Trait type (e.g. “kernel_meanDist1”, matching the value given as input)\cr
+    5.	Position in the genome\cr
+    6.	Value of the allele on the first chromosome\cr
+    7.	 Dominance coefficient for the allele on the first chromosome (this will be 0 except for genetic fitness traits)\cr
+    8.	(If diploid) Value of the allele on the second chromosome\cr
+    9.	 (If diploid) Dominance coefficient for the allele on the second chromosome\cr
+
+\emph{Neutral genetics} \cr
+
+The standard neutral genetics output, Sim<sim_nb>_Land<landscape_nb>_neutralGenetics, writes the following entries (one row per generation): \cr
+1.	Replicate number \cr
+2.	Year \cr
+3.	Generation \cr
+4.	Number of sampled patches with a non-zero population \cr
+5.	Total number of sampled individuals \cr
+6.	Standard Fst  (Cockerham’s θ) \cr
+7.	Standard Fis (Cockerham’s f) \cr
+8.	Standard Fit (Cockerham’s F) \cr
+9.	Global allelic diversity, calculated as the mean number of neutral alleles per locus for the entire sample. \cr
+10.	Local allelic diversity, calculated as the mean number of neutral alleles per locus for each sampled patch, then averaged over patches. \cr
+11.	Number of globally fixed alleles. \cr
+12.	Mean number of fixed alleles per patch. Note that this may differ from the number of globally fixed alleles, for example if one allele is fixed in a given patch but polymorphism exists in other patches. \cr
+13.	Observed heterozygosity Ho, calculated as the mean number of heterozygous loci per individual per locus. \cr
+
+RangeShifter estimates standard F-statistics as \insertCite{cockerham1969}{RangeShiftR}’s \ifelse{html}{\out{&theta;}}{\eqn{θ}} statistics, using 1) the classic method-of-moments estimator of \insertCite{weir1984}{RangeShiftR} (\code{OutputFstatsWeirCockerham=TRUE}) and/or
+2) the unequal sample-size generalization and extensions from \insertCite{weir2002}{RangeShiftR} (\code{OutputFstatsWeirHill=TRUE}). \cr
+
+In short, \ifelse{html}{\out{&theta;}}{\eqn{θ}} (Fst) measures the correlation between alleles within sub-populations (patches) relative to the complete sampled population,
+f (Fis) the correlation between alleles within individuals relative to the sub-population and F (Fit) the correlation between alleles
+within individuals relative to the complete sampled population (see \insertCite{holsinger2009}{RangeShiftR} for an introduction). \cr
+
+See the RangeShifter manual for more details on the calculation of these statistics. \cr
+
+\emph{Per-locus neutral genetics} \cr
+
+If the Weir and Cockerham method is enabled (\code{OutputFstatsWeirCockerham=TRUE}), RangeShifter outputs an additional file \emph{Sim<sim_nb>_Land<landscape_nb>_perLocusNeutralGenetics} with one entry for each neutral locus:\cr
+
+1.	Year \cr
+2.	RepSeason \cr
+3.	Locus, the ID of locus \eqn{l} \cr
+4.	\ifelse{html}{\out{F<sub>st</sub>}}{\eqn{F_st}}, the value of \ifelse{html}{\out{F<sub>st,l</sub>}}{\eqn{F_st,l}} for locus \eqn{l} \cr
+5.	\ifelse{html}{\out{F<sub>is</sub>}}{\eqn{F_is}}, the value of \ifelse{html}{\out{F<sub>is</sub>}}{\eqn{F_is,l}} for locus \eqn{l} \cr
+6.	\ifelse{html}{\out{F<sub>it</sub>}}{\eqn{F_it}}, the value of \ifelse{html}{\out{F<sub>it</sub>}}{\eqn{F_it,l}} for locus \eqn{l} \cr
+7.	Het, the sample-level observed heterozygosity (\ifelse{html}{\out{H<sub>o</sub>}}{\eqn{H_o}}) for locus \eqn{l} \cr
+8.	One column \emph{patch_<i>_het} for each patch \emph{i} in the sample, indicating \ifelse{html}{\out{H<sub>o</sub>}}{\eqn{H_o}} for patch \emph{i} and locus \eqn{l} \cr
+
+\emph{Pairwise patch neutral genetics}\cr
+
+If the Weir and Hill method is enabled (\code{OutputFstatsWeirHill=TRUE}), a pairwise \ifelse{html}{\out{F<sub>st</sub>}}{\eqn{F_st}} matrix is constituted and filled with the corresponding
+values of \ifelse{html}{\out{&beta;<sub>ii’</sub>}}{\eqn{β_ii’}} for each pair of patches in the sample. Values of ifelse{html}{\out{&beta;<sub>i</sub>}}{\eqn{β_i}} are also computed along the diagonal. \cr
+
+In this case, there is one row of output for each pair: \cr
+    1.	Year\cr
+    2.	Generation\cr
+    3.	Patch ID of the first patch\cr
+    4.	Patch ID of the second patch (same as 3. along the diagonal of the matrix) \cr
+    5.	Pairwise \ifelse{html}{\out{F<sub>st</sub>}}{\eqn{F_st}} \cr
+
+\emph{Traits} \cr
+
+In the case of inter-individual variability and evolution of the dispersal traits,
+it is possible to output the mean traits of the population. There are two types of traits output:\cr
+
+1.	\emph{Mean traits by cell/patch (Sim0_TraitsXcell.txt or Sim0_TraitsXpatch.txt}). This file reports mean and standard deviation of the varying traits for each cell/patch,
+for each replicate and reproductive season at the set year interval. \cr
+2.	\emph{Mean traits by row (Sim0_TraitsXrow.txt)}. The mean and standard deviation of the varying traits are computed at the row (\emph{y}) level,
+pulling together all the populations occupying cells in \emph{y}. Values are reported for each replicate and reproductive season at the specified yearly interval.
+This is particularly useful for analysing the structuring of traits along latitudinal gradients. It is possible to compute this output only for cell-based models. \cr
+
+Data for these outputs are collected at the same time as for the range and population outputs, i.e. before reproduction at each reproductive season at the set year interval and at the end of the simulation. \cr
+}
+\references{
+\insertAllCited{}
 }
 \author{
 Jette Reeg
