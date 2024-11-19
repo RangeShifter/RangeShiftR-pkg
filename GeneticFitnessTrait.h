@@ -59,10 +59,19 @@ private:
     // Initialisation
     void initialise();
 
+    void setScaledCoeff(const DistributionType& selCoeffDist, const map<GenParamType, float>& selCoeffParams);
+
     // Mutation
     float scaledDomMeanSelCoeff = 0; // s_d, only for scaled dominance distribution
-    float drawDominance(float);
-    float drawSelectionCoef();
+    float drawDominance(
+        float selCoef, 
+        const DistributionType& domDist, 
+        const map<GenParamType, float>& domParams
+    );
+    float drawSelectionCoef(
+        const DistributionType& mutationDistribution, 
+        const map<GenParamType, float>& mutationParameters
+    );
 
     // Immutable features, set at initialisation
     // and passed down to every subsequent trait copy

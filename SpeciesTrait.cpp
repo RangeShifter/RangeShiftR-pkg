@@ -3,16 +3,20 @@
 
 // Species trait constructor
 SpeciesTrait::SpeciesTrait(
-	const TraitType& trType, const sex_t& sx,
-	const set<int>& pos, 
+	const TraitType& trType,
+	const sex_t& sx,
+	const set<int>& pos,
 	const ExpressionType& expr,
-	const DistributionType& initDist, 
+	const DistributionType& initDist,
 	const map<GenParamType, float> initParams,
-	const DistributionType& dominanceDist, 
-	const map<GenParamType, float> dominanceParams,
-	bool isInherited, const float& mutRate,
-	const DistributionType& mutationDist, 
+	const DistributionType& initDomDist,
+	const map<GenParamType, float> initDomParams,
+	bool isInherited,
+	const float& mutRate,
+	const DistributionType& mutationDist,
 	const map<GenParamType, float> mutationParams,
+	const DistributionType& dominanceDist,
+	const map<GenParamType, float> dominanceParams,
 	const int nPloidy,
 	const bool isOutput) :
 	traitType{ trType },
@@ -21,6 +25,8 @@ SpeciesTrait::SpeciesTrait(
 	expressionType{ expr },
 	initialDistribution{ initDist },
 	initialParameters{ initParams },
+	initialDomDistribution{ initDomDist },
+	initialDomParameters{ initDomParams },
 	dominanceDistribution{ dominanceDist },
 	dominanceParameters{ dominanceParams },
 	inherited{ isInherited },
@@ -31,7 +37,7 @@ SpeciesTrait::SpeciesTrait(
 	traitIsOutput{ isOutput }
 {
 	// Check distribution parameters
-	// Initial distribution
+	// Initial allele distribution
 	for (auto [paramType, paramVal] : initParams) {
 		switch (paramType)
 		{
@@ -42,6 +48,23 @@ SpeciesTrait::SpeciesTrait(
 		case SD:
 			if (paramVal <= 0.0)
 				throw logic_error("Invalid parameter value: initial parameter " + to_string(paramType) + " must be strictly positive");
+			break;
+		default:
+			break;
+		}
+	}
+
+	// Initial dominance distribution
+	for (auto [paramType, paramVal] : initDomParams) {
+		switch (paramType)
+		{
+		case MIN: case MAX: case MEAN:
+			if (paramVal < 0.0)
+				throw logic_error("Invalid parameter value: initial dominance parameter " + to_string(paramType) + " must not be negative.");
+			break;
+		case SD: case SHAPE: case SCALE:
+			if (paramVal <= 0.0)
+				throw logic_error("Invalid parameter value: initial dominance parameter " + to_string(paramType) + " must be strictly positive");
 			break;
 		default:
 			break;
