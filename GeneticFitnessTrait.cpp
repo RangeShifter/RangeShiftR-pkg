@@ -56,8 +56,8 @@ GeneticFitnessTrait::GeneticFitnessTrait(SpeciesTrait* P)
 	}
 	}
 
-	DistributionType initDomDistribution = pSpeciesTrait->getInitialDistribution();
-	map<GenParamType, float> initDomParameters = pSpeciesTrait->getInitialParameters();
+	DistributionType initDomDistribution = pSpeciesTrait->getInitDomDistribution();
+	map<GenParamType, float> initDomParameters = pSpeciesTrait->getInitDomParameters();
 	switch (initDomDistribution) {
 	case UNIFORM:
 	{
@@ -93,9 +93,9 @@ GeneticFitnessTrait::GeneticFitnessTrait(SpeciesTrait* P)
 	{
 		if (initDomParameters.count(MEAN) != 1)
 			throw logic_error("Error:: genetic load dominance distribution set to scaled, so parameters must contain mean dominance value (e.g. mean= ) \n");
-		break;
 		// Set for drawing initial values
 		setScaledCoeff(initialDistribution, initialParameters);
+		break;
 	}
 	case NONE: // default values, zero-dominance coefficients
 		break;

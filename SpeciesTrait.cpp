@@ -228,6 +228,8 @@ SpeciesTrait* createTestEmigSpTrait(const set<int>& genePositions, const bool& i
 		0.0, // mutation rate
 		DistributionType::UNIFORM,
 		distParams,
+		DistributionType::NONE, // no dominance
+		distParams,
 		isDiploid ? 2 : 1,
 		false
 	);
@@ -245,12 +247,14 @@ SpeciesTrait* createTestGenLoadTrait(const set<int>& genePositions, const bool& 
 		sex_t::NA,
 		genePositions,
 		ExpressionType::MULTIPLICATIVE,
-		DistributionType::UNIFORM,
+		DistributionType::NONE,
 		distParams,
-		DistributionType::UNIFORM,
+		DistributionType::NONE, // initialise dominance to zero
 		distParams,
 		true, // isInherited
 		0.0, // mutation rate
+		DistributionType::UNIFORM,
+		distParams,
 		DistributionType::UNIFORM,
 		distParams,
 		isDiploid ? 2 : 1,
@@ -272,13 +276,15 @@ SpeciesTrait* createTestNeutralSpTrait(const float& maxAlleleVal, const set<int>
 		ExpressionType::NOTEXPR,
 		// Sample initial values from uniform(0, max)
 		DistributionType::UNIFORM, distParams,
-		// No dominance
-		DistributionType::NONE, map<GenParamType, float>{}, 
+		DistributionType::NONE, // No dominance
+		map<GenParamType, float>{}, 
 		true, // isInherited
 		0.0, // mutation rate
 		// Mutation sampled from a uniform(0, max)
 		DistributionType::KAM, 
 		distParams,
+		DistributionType::NONE, // No dominance
+		map<GenParamType, float>{},
 		isDiploid ? 2 : 1,
 		false
 	);
