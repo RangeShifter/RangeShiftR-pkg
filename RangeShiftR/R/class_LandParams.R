@@ -412,7 +412,7 @@ ImportedLandscape <- setClass("ImportedLandscape", slots = c(LandscapeFile = "li
                                                              SpDistFile = "list",         # sets the speciesdist -switch in class ControlParams when added
                                                              SpDistResolution = "integer_OR_numeric",
                                                              DynamicLandYears = "integer_OR_numeric", #= "data.frame")
-                                                             nrDemogScaleLayers = "integer",
+                                                             nrDemogScaleLayers = "integer_OR_numeric",
                                                              demogScaleLayers = "list")
                               , prototype = list(#LandscapeFile,
                                                  Resolution = 100L,
