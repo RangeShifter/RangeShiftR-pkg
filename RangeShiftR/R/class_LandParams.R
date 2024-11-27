@@ -598,7 +598,7 @@ setValidity("ImportedLandscape", function(object) {
             else {
                 if (length(object@demogScaleLayers) > 0){ # scaling layers are given
                     if( any( sapply(object@demogScaleLayers, class) != "array")){
-                        msg <- c(msg, "demogScaleLayers must be a list that contains an array for each element in DynamicLandYears.")
+                        msg <- c(msg, "demogScaleLayers must be a list of arrays.")
                     }
                     else{
                         if( length(object@demogScaleLayers) != length(object@DynamicLandYears) ){
@@ -614,7 +614,7 @@ setValidity("ImportedLandscape", function(object) {
                                     msg <- c(msg, "demogScaleLayers must be a list that contains 3-dimensional arrays.")
                                 }
                                 else{
-                                    if( any(apply(ds_dims,1,var)!=0) ){
+                                    if( !all(unlist(dims) == unlist(dims[[1]])) ){
                                         msg <- c(msg, "all arrays in demogScaleLayers must have the same size.")
                                     }
                                     else{
