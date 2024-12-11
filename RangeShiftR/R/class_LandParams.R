@@ -614,7 +614,7 @@ setValidity("ImportedLandscape", function(object) {
                                     msg <- c(msg, "demogScaleLayers must be a list that contains 3-dimensional arrays.")
                                 }
                                 else{
-                                    if( !all(unlist(dims) == unlist(dims[[1]])) ){
+                                    if( !all(unlist(ds_dims) == unlist(ds_dims[[1]])) ){
                                         msg <- c(msg, "all arrays in demogScaleLayers must have the same size.")
                                     }
                                     else{
