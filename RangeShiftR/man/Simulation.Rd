@@ -18,6 +18,7 @@ Simulation(Simulation = 1, Replicates = 2, Years = 50, Absorbing = FALSE,
            OutStartPop = 0, OutStartInd = 0,
            OutStartTraitCell = 0, OutStartTraitRow = 0,
            OutStartConn = 0, OutStartPaths = 0, OutStartGenetic = 0,
+           ReturnPopRaster = FALSE, CreatePopFile = TRUE,
            SMSHeatMap = FALSE)
 }
 \arguments{
@@ -104,6 +105,10 @@ If \code{FALSE} (default), Genetics output will be written to several files.
 \cr If \code{TRUE} Genetics output is generated as a cross table.}
 
 \item{SMSHeatMap}{Produce SMS heat map raster as output? Defaults to \code{FALSE}.}
+
+\item{ReturnPopRaster}{Return population data to R (as data frame)? Defaults to \code{TRUE}.}
+
+\item{CreatePopFile}{Create population output file? Defaults to \code{TRUE}.}
 }
 \description{
 Set basic simulation parameters and control output types.\cr
