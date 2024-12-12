@@ -112,7 +112,7 @@
 # #' @param DrawLoadedSp If \code{FALSE} (default), only the simulated distribution is drawn into the output map.\cr
 # #' If \code{TRUE}, the initial species distribution is drawn additionally.
 #' @param SMSHeatMap Produce SMS heat map raster as output? Defaults to \code{FALSE}.
-#' @param ReturnPopRaster Return population data to R (as data frame)? Defaults to \code{TRUE}.
+#' @param ReturnPopRaster Return population data to R (as data frame)? Defaults to \code{FALSE}.
 #' @param CreatePopFile Create population output file? Defaults to \code{TRUE}.
 #' @details \emph{Environmental Gradient}\cr
 #' In \emph{RangeShiftR}, it is possible to superimpose an artificial gradient on top of the landscape map (real or artificial).

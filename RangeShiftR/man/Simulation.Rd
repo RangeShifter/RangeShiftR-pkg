@@ -106,7 +106,7 @@ If \code{FALSE} (default), Genetics output will be written to several files.
 
 \item{SMSHeatMap}{Produce SMS heat map raster as output? Defaults to \code{FALSE}.}
 
-\item{ReturnPopRaster}{Return population data to R (as data frame)? Defaults to \code{TRUE}.}
+\item{ReturnPopRaster}{Return population data to R (as data frame)? Defaults to \code{FALSE}.}
 
 \item{CreatePopFile}{Create population output file? Defaults to \code{TRUE}.}
 }
