@@ -1272,11 +1272,11 @@ int ReadDynLandR(Landscape *pLandscape, Rcpp::S4 LandParamsR)
 	Rcpp::List habitatmaps;
 	Rcpp::List patchmaps;
 	Rcpp::List costmaps;
-	
+
 	Rcpp::NumericMatrix hraster;
 	Rcpp::NumericMatrix praster;
 	Rcpp::NumericMatrix craster;
-	
+
 #if SPATIALDEMOG
 	int nrDemogScaleLayers = 0;
 	Rcpp::List demogScaleLayers;
@@ -4332,13 +4332,14 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 
 				Rcpp::NumericMatrix craster;
 				costmaps = Rcpp::as<Rcpp::List>(LandParamsR.slot("CostsFile"));
-				if (costmaps.size() > 0) Rcpp::NumericMatrix craster = Rcpp::as<Rcpp::NumericMatrix>(costmaps[0]);
+				if (costmaps.size() > 0) craster = Rcpp::as<Rcpp::NumericMatrix>(costmaps[0]);
 				else craster = Rcpp::NumericMatrix(0);
+
 #if SPATIALDEMOG
 				int nrDemogScaleLayers = 0;
 				Rcpp::List demogScaleLayers;                      // list of lists of layers for each dynamic land year
 				Rcpp::NumericVector scalinglayers = Rcpp::NumericVector::create(-1);  // array of demog scaling layers for a given year (initialise invalid value)
-				
+
 				if(landtype == 2 && stagestruct) {
 					nrDemogScaleLayers = Rcpp::as<int>(LandParamsR.slot("nrDemogScaleLayers"));
 					if(nrDemogScaleLayers) {
@@ -4348,7 +4349,7 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 					//else scalinglayers // no scaling layers -> create empty list
 				}
 #endif
-				
+
 				int landcode;
 #if SPATIALDEMOG
 				landcode = pLandscape->readLandscape(0, hraster, praster, craster, scalinglayers);
