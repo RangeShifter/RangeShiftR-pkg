@@ -479,6 +479,7 @@ void Community::dispersal(short landIx)
 	// (even if not physically in the matrix)
 	int ndispersers = 0;
 	do {
+		#pragma omp parallel for schedule(static)
 		for (int i = 0; i < nsubcomms; i++) { // all populations
 			subComms[i]->resetPossSettlers();
 		}
