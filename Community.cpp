@@ -422,6 +422,7 @@ void Community::reproduction(int yr)
 		<< " nsubcomms=" << nsubcomms << endl;
 #endif
 
+	#pragma omp parallel for private(eps) schedule(static,128)
 	for (int i = 0; i < nsubcomms; i++) { // all sub-communities
 		if (env.stoch) {
 			if (!env.local) { // global stochasticty

@@ -25,7 +25,11 @@
 #include "Individual.h"
 //---------------------------------------------------------------------------
 
+#ifdef _OPENMP
+std::atomic<int> Individual::indCounter = 0;
+#else // _OPENMP
 int Individual::indCounter = 0;
+#endif // _OPENMP
 
 //---------------------------------------------------------------------------
 
@@ -33,8 +37,7 @@ int Individual::indCounter = 0;
 Individual::Individual(Cell* pCell, Patch* pPatch, short stg, short a, short repInt,
 	float probmale, bool movt, short moveType)
 {
-	indId = indCounter;
-	indCounter++; // unique identifier for each individual
+	indId = indCounter++; // unique identifier for each individual
 
 	stage = stg;
 	if (probmale <= 0.0) sex = 0;
