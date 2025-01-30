@@ -303,6 +303,12 @@ void Patch::setSubComm(intptr sc)
 intptr Patch::getSubComm(void)
 { return subCommPtr; }
 
+#ifdef _OPENMP
+std::unique_lock<std::mutex> Patch::lockPopns(void) {
+return std::unique_lock<std::mutex>(popns_mutex);
+}
+#endif
+
 void Patch::addPopn(patchPopn pop) {
 popns.push_back(pop);
 }

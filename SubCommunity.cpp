@@ -372,6 +372,7 @@ void SubCommunity::completeDispersal(Landscape* pLandscape, bool connect)
 	for (int i = 0; i < npops; i++) { // all populations
 		pSpecies = popns[i]->getSpecies();
 		popsize = popns[i]->getNInds();
+		#pragma omp parallel for private(settler, pNewPatch, pPop, pSubComm, pPrevCell, pPrevPatch)
 		for (int j = 0; j < popsize; j++) {
 			bool settled;
 			settler = popns[i]->extractSettler(j);
@@ -381,11 +382,16 @@ void SubCommunity::completeDispersal(Landscape* pLandscape, bool connect)
 			// find new patch
 				pNewPatch = (Patch*)settler.pCell->getPatch();
 				// find population within the patch (if there is one)
+				{
+#ifdef _OPENMP
+				const std::unique_lock<std::mutex> lock = pNewPatch->lockPopns();
+#endif // _OPENMP
 				pPop = (Population*)pNewPatch->getPopn((intptr)pSpecies);
 				if (pPop == 0) { // settler is the first in a previously uninhabited patch
 					// create a new population in the corresponding sub-community
 					pSubComm = (SubCommunity*)pNewPatch->getSubComm();
 					pPop = pSubComm->newPopn(pLandscape, pSpecies, pNewPatch, 0);
+				}
 				}
 				pPop->recruit(settler.pInd);
 				if (connect) { // increment connectivity totals

@@ -74,6 +74,7 @@ using namespace std;
 
 #ifdef _OPENMP
 #include <atomic>
+#include <mutex>
 #endif
 
 //---------------------------------------------------------------------------
@@ -119,6 +120,9 @@ public:
 		intptr		// pointer to the Sub-community cast as an integer
 	);
 	intptr getSubComm(void);
+#ifdef _OPENMP
+	std::unique_lock<std::mutex> lockPopns(void);
+#endif
 	void addPopn(
 		patchPopn // structure holding pointers to Species and Population cast as integers
 	);
@@ -168,6 +172,9 @@ public:
 	std::vector <Cell*> cells;
 	std::vector <patchPopn> popns;
 
+#ifdef _OPENMP
+	std::mutex popns_mutex;
+#endif
 };
 
 //---------------------------------------------------------------------------

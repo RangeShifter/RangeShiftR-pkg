@@ -59,6 +59,11 @@ using namespace std;
 #include "Patch.h"
 #include "Cell.h"
 
+#ifdef _OPENMP
+#include <atomic>
+#include <mutex>
+#endif
+
 //---------------------------------------------------------------------------
 
 struct popStats {
@@ -220,12 +225,18 @@ private:
 	short nSexes;
 	Species *pSpecies;	// pointer to the species
 	Patch *pPatch;			// pointer to the patch
+#ifdef _OPENMP
+	std::atomic<int> nInds[NSTAGES][NSEXES];		// no. of individuals in each stage/sex
+#else
 	int nInds[NSTAGES][NSEXES];		// no. of individuals in each stage/sex
+#endif // _OPENMP
 
 	std::vector <Individual*> inds; // all individuals in population except ...
 	std::vector <Individual*> juvs; // ... juveniles until reproduction of ALL species
 																	// has been completed
-
+#ifdef _OPENMP
+	std::mutex inds_mutex;
+#endif // _OPENMP
 };
 
 //---------------------------------------------------------------------------

@@ -804,9 +804,12 @@ disperser Population::extractSettler(int ix) {
 // Add a specified individual to the new/current dispersal group
 // Add a specified individual to the population
 void Population::recruit(Individual* pInd) {
-	inds.push_back(pInd);
 	indStats ind = pInd->getStats();
 	nInds[ind.stage][ind.sex]++;
+#ifdef _OPENMP
+	const std::lock_guard<std::mutex> lock(inds_mutex);
+#endif // _OPENMP
+	inds.push_back(pInd);
 }
 
 //---------------------------------------------------------------------------
