@@ -872,6 +872,7 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 	}
 
 // each individual which has reached a potential patch decides whether to settle
+	#pragma omp parallel for reduction(-:ndispersers) default(none) shared(ninds, settletype, pRandom, trfr, ppLand, pLandscape) private(ind, othersex, sett, pCell, mateOK, densdepOK, settle, patch, pPatch, localK, popn, popsize, pNewPopn, settDD, settprob, newloc, nbrloc, patchnum) schedule(static)
 	for (int i = 0; i < ninds; i++) {
 		ind = inds[i]->getStats();
 		if (ind.sex == 0) othersex = 1; else othersex = 0;

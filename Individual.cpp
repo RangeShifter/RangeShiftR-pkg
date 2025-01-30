@@ -23,6 +23,13 @@
  //---------------------------------------------------------------------------
 
 #include "Individual.h"
+
+#if RS_RCPP
+#ifdef _OMPENMP
+#include <mutex>
+#endif
+#endif
+
 //---------------------------------------------------------------------------
 
 #ifdef _OPENMP
@@ -1742,6 +1749,10 @@ void Individual::outGenetics(const int rep, const int year, const int spnum,
 }
 
 #if RS_RCPP
+#ifdef _OMPENMP
+std::mutex outMovePaths_mutex;
+#endif
+
 //---------------------------------------------------------------------------
 // Write records to movement paths file
 void Individual::outMovePath(const int year)
@@ -1750,6 +1761,9 @@ void Individual::outMovePath(const int year)
 
 	//if (pPatch != pNatalPatch) {
 	loc = pCurrCell->getLocn();
+#ifdef _OMPENMP
+	const std::lock_guard<std::mutex> lock(outMovePaths_mutex);
+#endif
 	// if still dispersing...
 	if (status == 1) {
 		// at first step, record start cell first
