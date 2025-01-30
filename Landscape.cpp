@@ -1106,8 +1106,8 @@ void Landscape::addLandChange(landChange c) {
 int Landscape::numLandChanges(void) { return (int)landchanges.size(); }
 
 landChange Landscape::getLandChange(short ix) {
-	landChange c; c.chgnum = c.chgyear = 0;
-	c.habfile = c.pchfile = c.costfile = "none";
+	landChange c; c.chgNb = c.chgYear = 0;
+	c.pathHabFile = c.pathPatchFile = c.pathCostFile = "none";
 	int nchanges = (int)landchanges.size();
 	if (ix < nchanges) c = landchanges[ix];
 	return c;
@@ -1148,17 +1148,17 @@ int Landscape::readLandChange(int filenum, bool costs)
 
 #if !RS_RCPP || R_CMD
 	// open habitat file and optionally also patch and costs files
-	hfile.open(landchanges[filenum].habfile.c_str());
+	hfile.open(landchanges[filenum].pathHabFile.c_str());
 	if (!hfile.is_open()) return 30;
 	if (patchModel) {
-		pfile.open(landchanges[filenum].pchfile.c_str());
+		pfile.open(landchanges[filenum].pathPatchFile.c_str());
 		if (!pfile.is_open()) {
 			hfile.close(); hfile.clear();
 			return 31;
 		}
 	}
 	if (costs) {
-		cfile.open(landchanges[filenum].costfile.c_str());
+		cfile.open(landchanges[filenum].pathCostFile.c_str());
 		if (!cfile.is_open()) {
 			hfile.close(); hfile.clear();
 			if (pfile.is_open()) {
@@ -1784,7 +1784,7 @@ int Landscape::readLandscape(int fileNum, string habfile, string pchfile, string
 
 	// open habitat file and optionally also patch file
 #if RS_RCPP
-	hfile.open(habfile, std::ios::binary);
+	hfile.open(pathHabFile, std::ios::binary);
 	if (landraster.utf) {
 		// apply BOM-sensitive UTF-16 facet
 		hfile.imbue(std::locale(hfile.getloc(), new std::codecvt_utf16<wchar_t, 0x10ffff, std::consume_header>));
@@ -1796,7 +1796,7 @@ int Landscape::readLandscape(int fileNum, string habfile, string pchfile, string
 	if (fileNum == 0) {
 		if (patchModel) {
 #if RS_RCPP
-			pfile.open(pchfile, std::ios::binary);
+			pfile.open(pathPatchFile, std::ios::binary);
 			if (patchraster.utf) {
 				// apply BOM-sensitive UTF-16 facet
 				pfile.imbue(std::locale(pfile.getloc(), new std::codecvt_utf16<wchar_t, 0x10ffff, std::consume_header>));
@@ -1819,7 +1819,7 @@ int Landscape::readLandscape(int fileNum, string habfile, string pchfile, string
 #if RS_RCPP
 	if (!hfile.good()) {
 		// corrupt file stream
-		StreamErrorR(habfile);
+		StreamErrorR(pathHabFile);
 		hfile.close();
 		hfile.clear();
 		if (patchModel) {
@@ -1853,7 +1853,7 @@ int Landscape::readLandscape(int fileNum, string habfile, string pchfile, string
 #if RS_RCPP
 		if (!pfile.good()) {
 			// corrupt file stream
-			StreamErrorR(pchfile);
+			StreamErrorR(pathPatchFile);
 			hfile.close();
 			hfile.clear();
 			pfile.close();
@@ -1900,7 +1900,7 @@ int Landscape::readLandscape(int fileNum, string habfile, string pchfile, string
 #if RS_RCPP && !R_CMD
 						Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" << std::endl;
 #endif
-						StreamErrorR(pchfile);
+						StreamErrorR(pathPatchFile);
 						hfile.close();
 						hfile.clear();
 						pfile.close();
@@ -1914,7 +1914,7 @@ int Landscape::readLandscape(int fileNum, string habfile, string pchfile, string
 #if RS_RCPP && !R_CMD
 			Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" << std::endl;
 #endif
-					StreamErrorR(habfile);
+					StreamErrorR(pathHabFile);
 					hfile.close();
 					hfile.clear();
 					if (patchModel) {
@@ -1980,11 +1980,11 @@ int Landscape::readLandscape(int fileNum, string habfile, string pchfile, string
 		}
 #if RS_RCPP
 hfile >> hfloat;
-if (!hfile.eof()) EOFerrorR(habfile);
+if (!hfile.eof()) EOFerrorR(pathHabFile);
 if (patchModel)
 {
 	pfile >> pfloat;
-	if (!pfile.eof()) EOFerrorR(pchfile);
+	if (!pfile.eof()) EOFerrorR(pathPatchFile);
 }
 #endif
 		break;
@@ -2015,7 +2015,7 @@ if (patchModel)
 #if RS_RCPP && !R_CMD
 					Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" << std::endl;
 #endif
-					StreamErrorR(pchfile);
+					StreamErrorR(pathPatchFile);
 					hfile.close();
 					hfile.clear();
 					pfile.close();
@@ -2096,7 +2096,7 @@ else { // couldn't read from hfile
 #if RS_RCPP && !R_CMD
 	Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" << std::endl;
 #endif
-	StreamErrorR(habfile);
+	StreamErrorR(pathHabFile);
 	hfile.close();
 	hfile.clear();
 	if (patchModel) {
@@ -2112,11 +2112,11 @@ else { // couldn't read from hfile
 		habIndexed = true; // habitats are already numbered 1...n in correct order
 #if RS_RCPP
 	hfile >> hfloat;
-	if (!hfile.eof()) EOFerrorR(habfile);
+	if (!hfile.eof()) EOFerrorR(pathHabFile);
 	if (patchModel)
 	{
 		pfile >> pfloat;
-		if (!pfile.eof()) EOFerrorR(pchfile);
+		if (!pfile.eof()) EOFerrorR(pathPatchFile);
 	}
 #endif
 		break;
@@ -2139,7 +2139,7 @@ else { // couldn't read from hfile
 #if RS_RCPP && !R_CMD
 		Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" << std::endl;
 #endif
-		StreamErrorR(habfile);
+		StreamErrorR(pathHabFile);
 		hfile.close();
 		hfile.clear();
 				if (patchModel) {
@@ -2164,7 +2164,7 @@ else { // couldn't read from hfile
 #if RS_RCPP && !R_CMD
 		Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" << std::endl;
 #endif
-		StreamErrorR(pchfile);
+		StreamErrorR(pathPatchFile);
 		hfile.close();
 		hfile.clear();
 		pfile.close();
@@ -2224,11 +2224,11 @@ else { // couldn't read from hfile
 		}
 #if RS_RCPP
 	hfile >> hfloat;
-	if (!hfile.eof()) EOFerrorR(habfile);
+	if (!hfile.eof()) EOFerrorR(pathHabFile);
 	if (patchModel)
 	{
 		pfile >> pfloat;
-		if (!pfile.eof()) EOFerrorR(pchfile);
+		if (!pfile.eof()) EOFerrorR(pathPatchFile);
 	}
 #endif
 		break;

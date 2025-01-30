@@ -179,7 +179,8 @@ struct patchData {
 	Patch* pPatch; int patchNum, nCells; int x, y;
 };
 struct landChange {
-	int chgnum, chgyear; string habfile, pchfile, costfile;
+	int chgNb, chgYear; 
+	string pathHabFile, pathPatchFile, pathCostFile;
 };
 struct patchChange {
 	int chgnum, x, y, oldpatch, newpatch;

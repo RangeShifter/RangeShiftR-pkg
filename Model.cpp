@@ -218,7 +218,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 			pLandscape->createConnectMatrix();
 
 		// variables to control dynamic landscape
-		landChange landChg; landChg.chgnum = 0; landChg.chgyear = 999999;
+		landChange landChg; landChg.chgNb = 0; landChg.chgYear = 999999;
 		if (!ppLand.generated && ppLand.dynamic) {
 			landChg = pLandscape->getLandChange(0); // get first change year
 		}
@@ -315,8 +315,8 @@ int RunModel(Landscape* pLandscape, int seqsim)
 					updateCC = true;
 				}
 				if (ppLand.dynamic) {
-					if (yr == landChg.chgyear) { // apply landscape change
-						landIx = landChg.chgnum;
+					if (yr == landChg.chgYear) { // apply landscape change
+						landIx = landChg.chgNb;
 						updateland = updateCC = true;
 						if (ppLand.patchModel) { // apply any patch changes
 							Patch* pPatch;
@@ -343,7 +343,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 							ixpchchg--;
 							pLandscape->resetPatches(); // reset patch limits
 						}
-						if (landChg.costfile != "NULL") { // apply any SMS cost changes
+						if (landChg.pathCostFile != "NULL") { // apply any SMS cost changes
 							Cell* pCell;
 							costchange = pLandscape->getCostChange(ixcostchg++);
 							while (costchange.chgnum <= landIx && ixcostchg <= ncostchanges) {
@@ -360,7 +360,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 							landChg = pLandscape->getLandChange(landIx);
 						}
 						else {
-							landChg.chgyear = 9999999;
+							landChg.chgYear = 9999999;
 						}
 					}
 				}
@@ -841,13 +841,13 @@ void OutParameters(Landscape* pLandscape)
 		int nchanges = pLandscape->numLandChanges();
 		for (int i = 0; i < nchanges; i++) {
 			chg = pLandscape->getLandChange(i);
-			outPar << "Change no. " << chg.chgnum << " in year " << chg.chgyear << endl;
-			outPar << "Landscape: " << chg.habfile << endl;
+			outPar << "Change no. " << chg.chgNb << " in year " << chg.chgYear << endl;
+			outPar << "Landscape: " << chg.pathHabFile << endl;
 			if (ppLand.patchModel) {
-				outPar << "Patches  : " << chg.pchfile << endl;
+				outPar << "Patches  : " << chg.pathPatchFile << endl;
 			}
-			if (chg.costfile != "none" && chg.costfile != "NULL") {
-				outPar << "Costs    : " << chg.costfile << endl;
+			if (chg.pathCostFile != "none" && chg.pathCostFile != "NULL") {
+				outPar << "Costs    : " << chg.pathCostFile << endl;
 			}
 		}
 	}
