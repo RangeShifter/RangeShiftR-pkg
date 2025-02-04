@@ -1072,7 +1072,7 @@ void Community::outOccupancy(void) {
 	}
 }
 
-void Community::outOccSuit(bool view) {
+void Community::outOccSuit() {
 	double sum, ss, mean, sd, se;
 	simParams sim = paramsSim->getSim();
 
@@ -1107,7 +1107,6 @@ order of y
 void Community::outTraits(Species* pSpecies, int rep, int yr, int gen)
 {
 	simParams sim = paramsSim->getSim();
-	simView v = paramsSim->getViews();
 	landParams land = pLandscape->getLandParams();
 	traitsums* ts = 0;
 	traitsums sctraits;
@@ -1132,9 +1131,8 @@ void Community::outTraits(Species* pSpecies, int rep, int yr, int gen)
 			}
 		}
 	}
-	if (v.viewTraits
-		|| ((sim.outTraitsCells && yr >= sim.outStartTraitCell && yr % sim.outIntTraitCell == 0) ||
-			(sim.outTraitsRows && yr >= sim.outStartTraitRow && yr % sim.outIntTraitRow == 0)))
+	if ((sim.outTraitsCells && yr >= sim.outStartTraitCell && yr % sim.outIntTraitCell == 0) ||
+			(sim.outTraitsRows && yr >= sim.outStartTraitRow && yr % sim.outIntTraitRow == 0))
 	{
 		// generate output for each sub-community (patch) in the community
 		int nsubcomms = (int)subComms.size();

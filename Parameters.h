@@ -301,18 +301,32 @@ private:
 
 struct simParams {
 	int batchNum;
-	int simulation; int reps; int years;
-	int outStartPop; int outStartInd;
-	int outStartTraitCell; int outStartTraitRow; int outStartConn;
-	int outIntRange; int outIntOcc; int outIntPop; int outIntInd;
-	int outIntTraitCell; int outIntTraitRow; int outIntConn;
-	int mapInt; int traitInt;
-	bool batchMode; bool absorbing;
-	bool outRange; bool outOccup; bool outPop; bool outInds;
-	bool outTraitsCells; bool outTraitsRows; bool outConnect;
-	bool saveMaps;
-	bool drawLoaded; bool saveTraitMaps;
+	int simulation; 
+	int reps; 
+	int years;
+	int outStartPop; 
+	int outStartInd;
+	int outIntInd;
+	int outStartTraitCell; 
+	int outStartTraitRow; 
+	int outStartConn;
+	int outIntRange; 
+	int outIntOcc; 
+	int outIntPop; 
 	bool saveVisits;
+	int outIntTraitCell; 
+	int outIntTraitRow; 
+	int outIntConn;
+	int traitInt;
+	bool batchMode;
+	bool absorbing;
+	bool outRange; 
+	bool outOccup; 
+	bool outPop; 
+	bool outInds;
+	bool outTraitsCells; 
+	bool outTraitsRows; 
+	bool outConnect;
 #if RS_RCPP
 	int outStartPaths; int outIntPaths;
 	bool outPaths;	bool ReturnPopRaster; bool CreatePopFile;
@@ -339,8 +353,6 @@ public:
 	void setGeneticSim(string patchSamplingOption, bool outputGeneticValues, bool outputWeirCockerham, bool outputWeirHill, int outputStartGenetics, int outputGeneticInterval);
 	simParams getSim(void);
 	int getSimNum(void);
-	void setViews(simView);
-	simView getViews(void);
 	string getDir(int);
 	void setBatchNum(const int& batchNb) {
 		batchNum = batchNb;
@@ -352,35 +364,32 @@ public:
 #endif
 
 private:
-	int batchNum;						// batch number
-	int simulation;					// simulation no.
-	int reps;								// no. of replicates
-	int years;							// no. of years
-	int outStartPop;				// output start year for population file
-	int outStartInd;				// output start year for individuals file
-	int outStartTraitCell;	// output start year for traits by cell file
+	int batchNum;				// batch number
+	int simulation;				// simulation no.
+	int reps;					// no. of replicates
+	int years;					// no. of years
+	int outStartPop;			// output start year for population file
+	int outStartInd;			// output start year for individuals file
+	int outStartTraitCell;		// output start year for traits by cell file
 	int outStartTraitRow;		// output start year for traits by row file
-	int outStartConn;				// output start year for connectivity matrix
-	int outIntRange;				// output interval for range file
-	int outIntOcc;					// output interval for occupancy file
-	int outIntPop;					// output interval for population file
-	int outIntInd;					// output interval for individuals file
+	int outStartConn;			// output start year for connectivity matrix
+	int outIntRange;			// output interval for range file
+	int outIntOcc;				// output interval for occupancy file
+	int outIntPop;				// output interval for population file
+	int outIntInd;				// output interval for individuals file
 	int outIntTraitCell;		// output interval for traits by cell file
 	int outIntTraitRow;			// output interval for traits by row file
-	int outIntConn;					// output interval for connectivity matrix
-	int mapInt;							// output interval for maps
-	int traitInt;						// output interval for evolving traits maps
-	int slowFactor;					// to reduce speed of movement paths on screen
-	bool batchMode;					//
-	bool absorbing; 				// landscape boundary and no-data regions are absorbing boundaries
-	bool outRange;					// produce output range file?
-	bool outOccup;					// produce output occupancy file?
-	bool outPop;						// produce output population file?
-	bool outInds;						// produce output individuals file?
+	int outIntConn;				// output interval for connectivity matrix
+	int traitInt;				// output interval for evolving traits maps
+	bool batchMode;				
+	bool absorbing; 			// landscape boundary and no-data regions are absorbing boundaries
+	bool outRange;				// produce output range file?
+	bool outOccup;				// produce output occupancy file?
+	bool outPop;				// produce output population file?
+	bool outInds;				// produce output individuals file?
 	bool outTraitsCells;		// produce output summary traits by cell file?
 	bool outTraitsRows;			// produce output summary traits by row (y) file?
-	bool outConnect;				// produce output connectivity file?
-	bool saveMaps;					// save landscape/population maps?
+	bool outConnect;			// produce output connectivity file?
 	bool saveVisits;        // save dispersal visits heat maps?
 #if RS_RCPP
 	int outStartPaths;
@@ -389,17 +398,7 @@ private:
 	bool ReturnPopRaster;
 	bool CreatePopFile;
 #endif
-	bool saveTraitMaps;			// save summary traits maps?
-	bool viewLand;					// view landscape map on screen?
-	bool viewPatch;					// view map of landscape patches on screen?
-	bool viewGrad;					// view gradient map on screen?
-	bool viewCosts;					// view costs map on screen?
-	bool viewPop;						// view population density on landscape map on screen?
-	bool viewTraits;				// view summary traits map(s) on screen?
-	bool viewPaths;					// view individual movement paths on screen?
-	bool viewGraph;					// view population/occupancy graph on screen?
-	string dir;							// full name of working directory
-
+	string dir;					// full name of working directory
 	bool fixReplicateSeed;
 	string patchSamplingOption;
 	bool outputGenes;

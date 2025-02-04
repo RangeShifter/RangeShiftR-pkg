@@ -2276,9 +2276,6 @@ int Landscape::readCosts(string fname)
 	string header;
 #endif
 	Cell* pCell;
-#if !RS_RCPP
-	simView v = paramsSim->getViews();
-#endif
 
 	int maxcost = 0;
 
@@ -2598,14 +2595,12 @@ void Landscape::outVisits(int rep, int landNr) {
 			+ "Sim" + to_string(sim.simulation)
 			+ "_land" + to_string(landNr) + "_rep" + to_string(rep)
 #endif
-			//		+ "_yr" + to_string(yr)
 			+ "_Visits.txt";
 	}
 	else {
 		name = paramsSim->getDir(3)
 			+ "Sim" + to_string(sim.simulation)
 			+ "_land" + to_string(landNr) + "_rep" + to_string(rep)
-			//		+ "_yr" + to_string(yr)
 			+ "_Visits.txt";
 	}
 	outvisits.open(name.c_str());
@@ -2629,7 +2624,8 @@ void Landscape::outVisits(int rep, int landNr) {
 		outvisits << endl;
 	}
 
-	outvisits.close(); outvisits.clear();
+	outvisits.close(); 
+	outvisits.clear();
 }
 
 //---------------------------------------------------------------------------

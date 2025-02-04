@@ -45,7 +45,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 	transferRules trfr = pSpecies->getTransferRules();
 	initParams init = paramsInit->getInit();
 	simParams sim = paramsSim->getSim();
-	simView v = paramsSim->getViews();
 
 	if (!ppLand.generated) {
 		if (!ppLand.patchModel) { // cell-based landscape
@@ -402,8 +401,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 			for (int gen = 0; gen < dem.repSeasons; gen++) // generation loop
 			{
 				// Output and pop. visualisation before reproduction
-				if (v.viewPop || v.viewTraits || sim.outOccup
-					|| sim.outTraitsCells || sim.outTraitsRows || sim.saveMaps)
+				if (sim.outOccup || sim.outTraitsCells || sim.outTraitsRows)
 					PreReproductionOutput(pLandscape, pComm, rep, yr, gen);
 				// for non-structured population, also produce range and population output now
 				if (!dem.stageStruct && (sim.outRange || sim.outPop))
@@ -523,8 +521,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 
 		// Final output
 		// produce final summary output
-		if (v.viewPop || v.viewTraits || sim.outOccup
-			|| sim.outTraitsCells || sim.outTraitsRows || sim.saveMaps)
+		if (sim.outOccup || sim.outTraitsCells || sim.outTraitsRows)
 			PreReproductionOutput(pLandscape, pComm, rep, yr, 0);
 		if (sim.outRange || sim.outPop)
 			RangePopOutput(pComm, rep, yr, 0);
@@ -620,7 +617,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 	// Occupancy outputs
 	if (sim.outOccup && sim.reps > 1) {
 		pComm->outOccupancy();
-		pComm->outOccSuit(v.viewGraph);
+		pComm->outOccSuit();
 		pComm->deleteOccupancy((sim.years / sim.outIntOcc) + 1);
 		pComm->outOccupancyHeaders(-999);
 	}
@@ -703,12 +700,10 @@ bool CheckDirectory(const string& pathToProjDir)
 void PreReproductionOutput(Landscape* pLand, Community* pComm, int rep, int yr, int gen)
 {
 	simParams sim = paramsSim->getSim();
-	simView v = paramsSim->getViews();
 
 	// trait outputs and visualisation
-	if (v.viewTraits
-		|| ((sim.outTraitsCells && yr >= sim.outStartTraitCell && yr % sim.outIntTraitCell == 0) ||
-			(sim.outTraitsRows && yr >= sim.outStartTraitRow && yr % sim.outIntTraitRow == 0)))
+	if ((sim.outTraitsCells && yr >= sim.outStartTraitCell && yr % sim.outIntTraitCell == 0) 
+		|| (sim.outTraitsRows && yr >= sim.outStartTraitRow && yr % sim.outIntTraitRow == 0))
 	{
 		pComm->outTraits(pSpecies, rep, yr, gen);
 	}
@@ -1708,20 +1703,7 @@ void OutParameters(Landscape* pLandscape)
 		outPar << endl;
 	}
 #endif
-	outPar << "SAVE MAPS: ";
-	if (sim.saveMaps) {
-		outPar << "yes - every " << sim.mapInt << " year";
-		if (sim.mapInt > 1) outPar << "s";
-		outPar << endl;
-	}
-	else outPar << "no" << endl;
-	outPar << "SAVE TRAITS MAPS: ";
-	if (sim.saveTraitMaps) {
-		outPar << "yes - every " << sim.traitInt << " year";
-		if (sim.traitInt > 1) outPar << "s";
-		outPar << endl;
-	}
-	else outPar << "no" << endl;
+	
 	if (trfr.usesMovtProc && trfr.moveType == 1) {
 		outPar << "SMS HEAT MAPS: ";
 		if (sim.saveVisits) outPar << "yes" << endl;
