@@ -443,6 +443,7 @@ void Community::emigration(void)
 	DEBUGLOG << "Community::emigration(): this=" << this
 		<< " nsubcomms=" << nsubcomms << endl;
 #endif
+	#pragma omp parallel for schedule(static, 128)
 	for (int i = 0; i < nsubcomms; i++) { // all sub-communities
 		subComms[i]->emigration();
 	}
