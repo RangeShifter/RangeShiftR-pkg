@@ -54,7 +54,7 @@ setMethod("+", signature(e1 = "RSparams", e2 = "LandParams"), function(e1, e2) {
             e1@control@landtype = 0L
             e1@control@maxNhab = e2@Nhabitats
         }
-        if (e2@SpDistFile=="NULL" || length(e2@SpDistMatrix)==0) {
+        if (is.null(e2@SpDistFile) || length(e2@SpDistMatrix)==0) {
             e1@control@speciesdist = FALSE
             e1@control@distresolution = -9L
         }

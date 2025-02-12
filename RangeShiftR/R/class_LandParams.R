@@ -432,16 +432,16 @@ setMethod("show", "ArtificialLandscape", function(object){
 #' @export ImportedLandscape
 ImportedLandscape <- setClass("ImportedLandscape", slots = c(LandscapeFile = "character",
                                                              LandscapeMatrix = "list",
-                                                             OriginCoords = "numeric",
+                                                             OriginCoords = "ANY",
                                                              Resolution = "integer_OR_numeric",
                                                              HabPercent = "logical",
                                                              Nhabitats = "integer_OR_numeric", # not used in RS anymore. In R is used to define maxNhab in ControlParams
                                                              K_or_DensDep = "integer_OR_numeric",
-                                                             PatchFile = "character",          # sets the patchmodel -switch in class ControlParams when added
+                                                             PatchFile = "ANY",          # sets the patchmodel -switch in class ControlParams when added
                                                              PatchMatrix = "list",
-                                                             CostsFile = "character",
+                                                             CostsFile = "ANY",
                                                              CostsMatrix = "list",
-                                                             SpDistFile = "character",         # sets the speciesdist -switch in class ControlParams when added
+                                                             SpDistFile = "ANY",         # sets the speciesdist -switch in class ControlParams when added
                                                              SpDistMatrix = "list",
                                                              SpDistResolution = "integer_OR_numeric",
                                                              DynamicLandYears = "integer_OR_numeric",
@@ -454,11 +454,11 @@ ImportedLandscape <- setClass("ImportedLandscape", slots = c(LandscapeFile = "ch
                                                  OriginCoords = NULL,
                                                  #Nhabitats,
                                                  K_or_DensDep = 10L,
-                                                 PatchFile = "NULL",
+                                                 PatchFile = NULL,
                                                  PatchMatrix = list(),
-                                                 CostsFile = "NULL",
+                                                 CostsFile = NULL,
                                                  CostsMatrix = list(),
-                                                 SpDistFile = "NULL",
+                                                 SpDistFile = NULL,
                                                  SpDistMatrix = list(),
                                                  #SpDistResolution,
                                                  DynamicLandYears = 0L,
@@ -502,7 +502,7 @@ setValidity("ImportedLandscape", function(object) {
         msg <- c(msg, "HabPercent must be set!")
     }
     if (length(object@LandscapeMatrix) > 0) {
-        if (anyNA(object@OriginCoords) || length(object@OriginCoords)!=2) {
+        if (!is.numeric(object@OriginCoords) || anyNA(object@OriginCoords) || length(object@OriginCoords)!=2) {
             msg <- c(msg, "Origin coordinates must be set and of length 2!")
         } else{
             if ( any(object@OriginCoords < 0) ) {
@@ -553,15 +553,6 @@ setValidity("ImportedLandscape", function(object) {
         if(length(object@PatchFile) > 0) { # if patch-based
             if (anyNA(object@PatchFile) || length(object@PatchFile)!=length(object@LandscapeFile)) {
                 msg <- c(msg, "If patch-based, PatchFile must be the same length as LandscapeFile!")
-            }else {
-                if(any(sapply(object@PatchMatrix, class)[1,] != "matrix")){
-                    msg <- c(msg, "All elements of the PatchMatrix list must be of class matrix.")
-                }
-                else{
-                    if( (any(sapply(object@PatchMatrix, ncol) != land_ncol)) || (any(sapply(object@PatchMatrix, nrow) != land_nrow)) ){
-                        msg <- c(msg, "All elements of PatchMatrix list must have the same ncol and nrow as the LandscapeMatrix list")
-                    }
-                }
             }
         }
     } else{ # if length(LandscapeFile==0) -> LandscapeMatrix!
@@ -571,6 +562,14 @@ setValidity("ImportedLandscape", function(object) {
         if(length(object@PatchMatrix) > 0) {
             if (anyNA(object@PatchMatrix) || length(object@PatchMatrix)!=length(object@LandscapeMatrix)) {
                 msg <- c(msg, "If patch-based, PatchMatrix must be the same length as LandscapeMatrix!")
+            }
+            if(any(sapply(object@PatchMatrix, class)[1,] != "matrix")){
+                msg <- c(msg, "All elements of the PatchMatrix list must be of class matrix.")
+            }
+            else{
+                if( (any(sapply(object@PatchMatrix, ncol) != land_ncol)) || (any(sapply(object@PatchMatrix, nrow) != land_nrow)) ){
+                    msg <- c(msg, "All elements of PatchMatrix list must have the same ncol and nrow as the LandscapeMatrix list")
+                }
             }
         }
     }
@@ -636,7 +635,7 @@ setValidity("ImportedLandscape", function(object) {
         }
     }
 
-    if (object@SpDistFile!="NULL" || length(object@SpDistMatrix)>0) {
+    if (!is.null(object@SpDistFile) || length(object@SpDistMatrix)>0) {
         if (anyNA(object@SpDistResolution) || length(object@SpDistResolution)!=1) {
             msg <- c(msg, "Resolution of Species distribution must be set and of length 1!")
         }
@@ -661,18 +660,35 @@ setValidity("ImportedLandscape", function(object) {
         msg <- c(msg, "DynamicLandYears must be set!")
     }
     else {
-        if(length(object@LandscapeFile) != length(object@DynamicLandYears) || length(object@LandscapeMatrix) != length(object@DynamicLandYears)){
-            msg <- c(msg, "LandscapeFile/LandscapeMatrix and DynamicLandYears must have the same number of entries!")
-        }
-        else{
-            if(object@DynamicLandYears[1] != 0){
-                msg <- c(msg, "The first entry of DynamicLandYears must be 0!")
+        if(length(object@LandscapeFile) > 0){
+            if(length(object@LandscapeFile) != length(object@DynamicLandYears)){
+                msg <- c(msg, "LandscapeFile and DynamicLandYears must have the same number of entries!")
             }
             else{
-                if(!all(sort(object@DynamicLandYears) == object@DynamicLandYears)){
-                    msg <- c(msg, "DynamicLandYears must contain subsequent years!")
+                if(object@DynamicLandYears[1] != 0){
+                    msg <- c(msg, "The first entry of DynamicLandYears must be 0!")
+                }
+                else{
+                    if(!all(sort(object@DynamicLandYears) == object@DynamicLandYears)){
+                        msg <- c(msg, "DynamicLandYears must contain subsequent years!")
+                    }
                 }
             }
+        } else {
+            if(length(object@LandscapeMatrix) != length(object@DynamicLandYears)){
+                msg <- c(msg, "LandscapeMatrix and DynamicLandYears must have the same number of entries!")
+            }
+            else{
+                if(object@DynamicLandYears[1] != 0){
+                    msg <- c(msg, "The first entry of DynamicLandYears must be 0!")
+                }
+                else{
+                    if(!all(sort(object@DynamicLandYears) == object@DynamicLandYears)){
+                        msg <- c(msg, "DynamicLandYears must contain subsequent years!")
+                    }
+                }
+            }
+
         }
     }
 
@@ -752,7 +768,7 @@ setMethod("initialize", "ImportedLandscape", function(.Object, ...) {
             warning(this_func, "Nhabitats", warn_msg_ignored, "for continuous habitat percentage landscape.", call. = FALSE)
         }
     }
-    if (.Object@SpDistFile=="NULL") {
+    if (is.null(.Object@SpDistFile) && length(.Object@SpDistMatrix) == 0) {
         .Object@SpDistResolution = -9
         if (!is.null(args$SpDistResolution)) {
             warning(this_func, "Resolution of Species distribution", warn_msg_ignored, "since no map file is given.", call. = FALSE)
@@ -840,7 +856,7 @@ setMethod("show", "ImportedLandscape", function(object){
             }
         }
     }
-    if(object@SpDistFile!="NULL") {
+    if(!is.null(object@SpDistFile)) {
         cat(" Initial Species Distribution imported from file:\n  ", paste(object@SpDistFile), "\n")
         cat ("   Resolution      :", paste(object@SpDistResolution),"\n")
     }
