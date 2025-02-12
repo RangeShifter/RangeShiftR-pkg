@@ -9,6 +9,7 @@ StageStructure(Stages, TransMatrix, MaxAge = 100, MinAge = 0,
                RepSeasons = 1, PRep = 1.0, RepInterval = 0, SurvSched = 0,
                FecDensDep = FALSE, DevDensDep = FALSE, SurvDensDep = FALSE,
                FecStageWtsMatrix, DevStageWtsMatrix, SurvStageWtsMatrix,
+               FecLayer, DevLayer, SurvLayer,
                PostDestructn = FALSE)
 }
 \arguments{
@@ -33,6 +34,11 @@ StageStructure(Stages, TransMatrix, MaxAge = 100, MinAge = 0,
 \item{DevDensCoeff, SurvDensCoeff}{Relative density dependence coefficient for development / survival. Defaults to \eqn{1.0}.}
 
 \item{FecStageWtsMatrix, DevStageWtsMatrix, SurvStageWtsMatrix}{Stage-dependent weights in density dependence of fecundity / development / survival. Takes a quadratic matrix with (#sexes * #stages) rows/columns indicating the weight of the abundance of each stage/sex on the fecundity/development/survival of each other stage/sex. If not set, all stages are weighted equally.}
+
+\item{FecLayer, DevLayer, SurvLayer}{A matrix of layer indices for the three demographic rates (fecundity/development/survival) if they are spatially varying. The indices match the
+scaling layers given in the \code{\link[RangeShiftR]{ImportedLandscape}} module to each demographic rate. The value NA denotes a spatially constant rate. The row number corresponds
+to the stage; the first/second column contains the layer index for females/males. In case of a female-only or simple sexual model (\code{ReproductionType={0,1}}) only the first
+column is needed and a vector is accepted to represent it. In any case, values will be coerced to integer.}
 
 \item{PostDestructn}{In a dynamic landscape, determine if all individuals of a population should die (\code{FALSE}, default) or disperse (\code{TRUE}) if its patch gets destroyed.}
 }
@@ -136,6 +142,12 @@ different stages contributing differently to density-dependence \insertCite{casw
 where \ifelse{html}{\out{&omega;<sub>&phi;</sub>}}{\eqn{ω_φ}}, \ifelse{html}{\out{&omega;<sub>&sigma;</sub>}}{\eqn{ω_σ}}, \ifelse{html}{\out{&omega;<sub>&gamma;</sub>}}{\eqn{ω_γ}} are weight matrices given by \code{FecStageWtsMatrix, DevStageWtsMatrix, SurvStageWtsMatrix}. Their elements \ifelse{html}{\out{&omega;<sub>ij</sub>}}{\eqn{ω_ij}}
 represent the contributions of the abundance of stage \eqn{j} to the density dependence in the fecundity / survival / development of stage \eqn{i}, thus they are quadratic matrices of size \code{Stages}\eqn{^2}. Note that the row sums are not required to be normalized, therefore they can be used
 to scale the density-dependence for the different stages. In fact, any real value will be accepted for the single weights, so care should be taken when setting them.
+
+The demographic rates (fecundity, development probability and survival probability) can be allowed to vary spatially, if the landscape is an imported habitat quality map. In this case, additional maps with the same resolution and extent as the habitat quality map(s) need to be given
+in \code{\link[RangeShiftR]{ImportedLandscape}()}. These additional layers contain percentage values between 0 and 100 and the matrices \code{FecLayer}, \code{DevLayer}, and \code{SurvLayer} indicate the mapping of each demographic rate to these layers. The local value
+of a given demographic rate for a certain stage and sex in a cell or patch is then determined as the maximum value (the value given in the transition matrix \code{TransMatrix}) scaled with the percentage in the respective mapped layer.
+For a patch-based landscape, the scaling percentage of a patch is given by the average percentage of its constituent cells.
+Potential density-dependence mediated by the strength 1/b still takes effect also for spatially-varying demographic rates. The respective base values φ_0, σ_0 or γ_0 are then replaced by their locally scaled values.
 }
 \examples{
  # Stage-structure for simple sexual model

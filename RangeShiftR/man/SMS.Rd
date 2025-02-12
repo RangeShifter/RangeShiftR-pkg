@@ -37,11 +37,11 @@ If \code{IndVar=TRUE}, set to NULL and specify the SMSTraits in \code{\link[Rang
 
 \item{Costs}{Describes the landscapes resistance to movement. Set either: \cr
  - \emph{habitat-specific} costs for each habitat type, or\cr
- - \code{"file"}, to indictae to use the \emph{cost raster} map(s) specified in the landscape module and import the cost values from them.\cr
+ - \code{"file" or "matrix"}, to indicate to use the \emph{cost raster} map(s) specified in the landscape module and import the cost values from them.\cr
 In the first case of \emph{habitat-specific} costs a numeric vector is expected with, respectively, length \code{Nhabitats} for an \code{\link[RangeShiftR]{ImportedLandscape}}
 with habitat codes (i.e. \code{HabPercent=FALSE})) or length \eqn{2} for an \code{\link[RangeShiftR]{ArtificialLandscape}} (matrix and habitat costs).\cr
-In the second case of importing a \emph{cost raster} file, specify the file name(s) in the \code{\link[RangeShiftR]{ImportedLandscape}} module.
-The specified map has to match the landscape raster in extent, coordinates and resolution, and each cell contains a cost value (\eqn{\ge 1}).
+In the second case of importing a \emph{cost raster} file or matrix, specify the file name(s) or matrices in the \code{\link[RangeShiftR]{ImportedLandscape}} module.
+The specified map or matrix has to match the landscape raster/matrix in extent, coordinates and resolution, and each cell contains a cost value (\eqn{\ge 1}).
 This is the only option for an imported landscape with habitat qualities / cover percentage (i.e. \code{HabPercent=TRUE}).}
 
 \item{StepMort}{Per-step mortality probability. Can be either \emph{constant}, in which case a single numeric is expected (the default, with
@@ -121,8 +121,8 @@ single replicate simulation, can be enabled with the option \code{SMSHeatMap} in
 Critical for the outcomes of SMS are the relative costs assigned to the different habitats (as it is also the case for
 the LCP approach). Habitat costs or resistance to movement can be set manually for each habitat code or imported as a raster map, which
 allows for costs to be a function of multiple variables instead of a simple value associated to the habitat type.
-In the latter case, the file names are provided in the \code{\link[RangeShiftR]{ImportedLandscape}} module.
-The specified map has to match the landscape raster in extent, coordinates and resolution, and each cell contains a cost value, with the minimal possible cost being \eqn{1}.
+In the latter case, the file names/matrices are provided in the \code{\link[RangeShiftR]{ImportedLandscape}} module.
+The specified map has to match the landscape raster/matrix in extent, coordinates and resolution, and each cell contains a cost value, with the minimal possible cost being \eqn{1}.
 Importing a cost layer is the only option when the landscape comprises habitat coverage or quality.
 
 \emph{Mortality} \cr

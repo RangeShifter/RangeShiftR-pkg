@@ -39,7 +39,7 @@ setMethod("+", signature(e1 = "RSparams", e2 = "SimulationParams"), function(e1,
 setMethod("+", signature(e1 = "RSparams", e2 = "LandParams"), function(e1, e2) {
     validObject(e2)
     if (class(e2)[1] == "ImportedLandscape") {
-        if (any(e2@PatchFile=="NULL")) {
+        if (any(e2@PatchFile=="NULL") || length(e2@PatchMatrix==0)) {
             e1@control@patchmodel = FALSE
         }
         else {
@@ -54,13 +54,19 @@ setMethod("+", signature(e1 = "RSparams", e2 = "LandParams"), function(e1, e2) {
             e1@control@landtype = 0L
             e1@control@maxNhab = e2@Nhabitats
         }
-        if (e2@SpDistFile=="NULL") {
+        if (e2@SpDistFile=="NULL" || length(e2@SpDistMatrix)==0) {
             e1@control@speciesdist = FALSE
             e1@control@distresolution = -9L
         }
         else {
             e1@control@speciesdist = TRUE
             e1@control@distresolution = e2@SpDistResolution
+        }
+        if(length(e2@LandscapeMatrix>0)){
+            e1@control@threadsafe = TRUE
+        }
+        if(e2@nrDemogScaleLayers>0){
+            e1@control@spatial_demography = TRUE
         }
     }
     if (class(e2)[1] == "ArtificialLandscape") {

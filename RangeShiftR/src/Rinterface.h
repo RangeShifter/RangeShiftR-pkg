@@ -100,6 +100,9 @@ void setUpSpeciesTrait(string TraitTypeR, set<int> positions, string ExpressionT
 int ReadTranslocationR(Landscape*,Rcpp::S4);
 
 int ParseInitIndsFileR(wifstream&);
+
+int ReadInitIndsFileR(int,Landscape*,Rcpp::DataFrame);
+
 int ReadInitIndsFileR(int,Landscape*);
 
 

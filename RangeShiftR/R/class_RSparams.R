@@ -89,9 +89,9 @@ setValidity("RSparams", function(object) {
         if (any(object@land@DynamicLandYears>object@simul@Years)) {
             warning("ImportedLandscape(): Dynamic landscape contains years that exceed the simulated years, so that some land changes will not apply.", call. = FALSE)
         }
-        if (object@land@CostsFile[1] !="NULL") {
+        if (object@land@CostsFile[1] !="NULL" || length(object@land@CostsMatrix)>0) { # for threadsafe: length(object@land@CostsFile)>0
             if (class(object@dispersal@Transfer)[1] == "StochMove") {
-                if (object@dispersal@Transfer@Costs[1] != "file") {
+                if (!(object@dispersal@Transfer@Costs[1] %in% c("file", "matrix"))) {
                     warning("ImportedLandscape(): Landscape module contains SMS cost layers, but SMS module does not use them.", call. = FALSE)
                 }
             }
@@ -102,6 +102,26 @@ setValidity("RSparams", function(object) {
     }
     #DEMOGRAPHY
     validObject(object@demog)
+    if (object@control@landtype == 2L){ # habitat quality
+        varydemogixs <- (length(object@demog@StageStruct@FecLayer)+length(object@demog@StageStruct@DevLayer)+length(object@demog@StageStruct@SurvLayer)>0)
+        varydemoglyr <- (length(object@land@demogScaleLayers)>0)
+        if(varydemogixs & !varydemoglyr){
+            msg <- c(msg, "RSsim(): If FecLayer, DevLayer and/or SurvLayer are used, the demographic scaling layers must be given in ImportedLandscape.")
+        }
+        if(varydemoglyr & !varydemogixs){
+            msg <- c(msg, "RSsim(): If deographic scaling layers are given, the demographic rates they correspond to must be defined with FecLayer, DevLayer and/or SurvLayer in StageStructure().")
+        }
+        if(varydemoglyr & varydemogixs){
+            if ((length(object@demog@StageStruct@FecLayer) + length(object@demog@StageStruct@DevLayer) + length(object@demog@StageStruct@SurvLayer)) > 0 ){ # spatially varying demographic rates
+                ixs <- c(object@demog@StageStruct@FecLayer,object@demog@StageStruct@DevLayer,object@demog@StageStruct@SurvLayer)
+                ixs[is.na(ixs)] <- -9
+                if ( any( ixs > object@land@nrDemogScaleLayers )){
+                    msg <- c(msg, "StageStructure(): Entries of FecLayer, DevLayer and SurvLayer must not exceed the number of layers in demogScaleLayers (of ImportedLandscape) !")
+                }
+            }
+        }
+    }
+
     #DISPERSAL
     validObject(object@dispersal)
     ## Emigration: check dimensions and values of EmigProb and EmigStage:
@@ -364,8 +384,8 @@ setValidity("RSparams", function(object) {
                 }
                 if (class(object@dispersal@Transfer@Costs)=="character") {
                     if (object@dispersal@Transfer@Costs == "file") {
-                        if (object@land@CostsFile[1] == "NULL") {
-                            msg <- c(msg, "SMS(): No cost map filenames found in the landscape module!")
+                        if (object@land@CostsFile[1] == "NULL" || length(object@land@CostsMatrix)==0) { # for threadsafe: length(object@land@CostsFile)==0
+                            msg <- c(msg, "SMS(): No cost map filenames  or  list of matrices found in the landscape module!")
                         }
                     }
                     else{
@@ -380,12 +400,12 @@ setValidity("RSparams", function(object) {
                     }
                     if (class(object@dispersal@Transfer@Costs)=="character") {
                         if (object@dispersal@Transfer@Costs == "file") {
-                            if (object@land@CostsFile[1] == "NULL") {
-                                msg <- c(msg, "SMS(): No cost map filenames found in the landscape module!")
+                            if (object@land@CostsFile[1] == "NULL" || length(object@land@CostsMatrix)==0) { # threadsafe: length(object@land@CostsFile)==0
+                                msg <- c(msg, "SMS(): No cost map filenames or  list of matrices found in the landscape module!")
                             }
                         }
                         else{
-                            msg <- c(msg, "SMS(): Costs has a wrong format! Must be either numeric or the keyword \"file\".")
+                            msg <- c(msg, "SMS(): Costs has a wrong format! Must be either numeric or the keyword \"file\" or \"matrix\".")
                         }
                     }
                     else{
@@ -418,7 +438,7 @@ setValidity("RSparams", function(object) {
             }
             else{
                 if(object@dispersal@Transfer@CostMap){
-                    if(object@dispersal@Transfer@Costs[1] != "file") {
+                    if(!(object@dispersal@Transfer@Costs[1] %in% c("file", "matrix"))) {
                         msg <- c(msg, "SMS(): Something went wrong adding a SMS Transfer method to the Parameter Master: CostMap switch incorrect.")
                     }
                 }
@@ -975,6 +995,11 @@ setValidity("RSparams", function(object) {
     else {  # imported land
         if (object@init@InitType == 1 && !object@control@speciesdist) {
             msg <- c(msg, 'Initialise(): A species distribution map has to be loaded via the \'land\' module if InitType = 1 (initialisation from loaded species distribution map) !')
+        }
+        if (object@init@InitType == 2 && object@init@InitIndsFile == "NULL") { # from initial individuals list from list of data.frames in 'InitIndsList'; NOTE:was != "NULL" in public repo
+            if(length(object@init@InitIndsList)!=object@simul@Replicates) {
+                msg <- c(msg, 'Initialise(): Number of elements in InitIndsList must equal the number of Replicates!')
+            }
         }
     }
     if (object@control@stagestruct) {
