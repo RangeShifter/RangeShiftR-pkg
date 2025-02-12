@@ -59,6 +59,11 @@ Cell::~Cell() {
 		if (smsData->effcosts != 0) delete smsData->effcosts;
 		delete smsData;
 	}
+demoScalings.clear();
+
+#if RSDEBUG
+//DEBUGLOG << "Cell::~Cell(): deleted" << endl;
+#endif
 }
 
 void Cell::setHabIndex(short hx) {
@@ -177,13 +182,30 @@ void Cell::resetVisits(void) { visits = 0; }
 void Cell::incrVisits(void) { visits++; }
 unsigned long int Cell::getVisits(void) { return visits; }
 
+
+void Cell::addchgDemoScaling(std::vector<float> ds) {
+	std::for_each(ds.begin(), ds.end(), [](float& perc){ if(perc < 0.0 || perc > 100.0) perc=100; });
+	demoScalings.push_back(ds);
+	return;
+}
+
+std::vector<float> Cell::getDemoScaling(short chgyear) {
+	if (chgyear < 0 || chgyear >= (int)demoScalings.size()) {
+		std::vector<float> ret(1, -1);
+		return ret;
+	}
+	else return demoScalings[chgyear];
+}
+
+
+
 //---------------------------------------------------------------------------
 
 // Initial species distribution cell functions
 
 DistCell::DistCell(int xx,int yy) {
-	x = xx; 
-	y = yy; 
+	x = xx;
+	y = yy;
 	initialise = false;
 }
 
@@ -203,9 +225,9 @@ bool DistCell::toInitialise(locn loc) {
 bool DistCell::selected(void) { return initialise; }
 
 locn DistCell::getLocn(void) {
-	locn loc; 
-	loc.x = x; 
-	loc.y = y; 
+	locn loc;
+	loc.x = x;
+	loc.y = y;
 	return loc;
 }
 

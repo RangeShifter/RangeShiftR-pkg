@@ -36,12 +36,14 @@ Patch::Patch(int seqnum, int num)
 	for (int sex = 0; sex < gMaxNbSexes; sex++) {
 		nTemp[sex] = 0;
 	}
+	localDemoScaling.assign(nDSlayer,1.0);
 	changed = false;
 }
 
 Patch::~Patch() {
 	cells.clear();
 	popns.clear();
+	localDemoScaling.clear();
 }
 
 int Patch::getSeqNum(void) { return patchSeqNum; }
@@ -209,6 +211,53 @@ void Patch::setCarryingCapacity(Species* pSpecies, patchLimits landlimits,
 
 
 float Patch::getK(void) { return localK; }
+
+// SPATIALDEMOG
+void Patch::setDemoScaling(std::vector <float> ds) {
+
+	std::for_each(ds.begin(), ds.end(), [](float& perc){ if(perc < 0.0 || perc > 1.0) perc=1; });
+
+	localDemoScaling.assign(ds.begin(), ds.end());
+
+	return;
+}
+
+std::vector <float> Patch::getDemoScaling(void) { return localDemoScaling; }
+
+void Patch::setPatchDemoScaling(short landIx, patchLimits landlimits) {
+
+	// if patch wholly outside current landscape boundaries
+	if (xMin > landlimits.xMax || xMax < landlimits.xMin
+	||  yMin > landlimits.yMax || yMax < landlimits.yMin) {
+		localDemoScaling.assign(nDSlayer,0.0); // set all local scales to zero
+		return;
+	}
+
+	// loop through constituent cells of the patch
+	int ncells = (int)cells.size();
+	std::vector<float> patchDS(nDSlayer, 0.0);
+	std::vector<float> cellDS(nDSlayer, 0.0);
+
+	for (int i = 0; i < ncells; i++) {
+		cellDS = cells[i]->getDemoScaling(landIx); // is that ok?
+
+		//add cell value to patch value
+		for (int ly = 0; ly < nDSlayer; ly++) {
+			patchDS[ly] += cellDS[ly];
+		}
+	}
+
+	// take mean over cells and divide by 100 to scale to range [0,1]
+	for (int ly = 0; ly < nDSlayer; ly++) {
+		patchDS[ly] = patchDS[ly] / ncells / 100.0f;
+	}
+
+	// set values
+	setDemoScaling(patchDS);
+
+	return;
+}
+//SPATIALDEMOG
 
 // Return co-ordinates of a specified cell
 locn Patch::getCellLocn(int ix) {

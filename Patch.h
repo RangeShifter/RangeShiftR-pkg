@@ -141,6 +141,9 @@ public:
 		bool					// TRUE if there is a gradient in carrying capacity across the Landscape
 	);
 	float getK(void);
+	void setDemoScaling(std::vector <float>);
+	std::vector <float> getDemoScaling(void);
+	void setPatchDemoScaling(short, patchLimits); // calculate demog. scalings of patch from its cells //TODO arguments
 	bool speciesIsPresent(Species* sp);
 
 private:
@@ -152,6 +155,7 @@ private:
 	intptr subCommPtr; // pointer (cast as integer) to sub-community associated with the patch
 	// NOTE: FOR MULTI-SPECIES MODEL, PATCH WILL NEED TO STORE K FOR EACH SPECIES
 	float localK;		// patch carrying capacity (individuals)
+	std::vector <float> localDemoScaling;
 	bool changed;
 	// NOTE: THE FOLLOWING ARRAY WILL NEED TO BE MADE SPECIES-SPECIFIC...
 	short nTemp[gMaxNbSexes];						// no. of potential settlers in each sex
@@ -165,5 +169,7 @@ private:
 
 extern paramStoch* paramsStoch;
 extern RSrandom* pRandom;
+
+extern short nDSlayer;
 
 #endif

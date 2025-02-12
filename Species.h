@@ -282,6 +282,45 @@ public:
 		short		// sex
 	);
 
+	void setFecSpatial(bool);
+	bool getFecSpatial(void){return fecSpatial;};
+	void setDevSpatial(bool);
+	bool getDevSpatial(void){return devSpatial;};
+	void setSurvSpatial(bool);
+	bool getSurvSpatial(void){return survSpatial;};
+	void setFecLayer( // set the layer of the spatial demographic scaling used for fecundity
+		short, // stage
+		short, // sex
+		short // layer
+	);
+
+	short getFecLayer( // get the layer of the spatial demographic scaling used for fecundity
+		short, // stage
+		short // sex
+	);
+
+	void setDevLayer( // set the layer of the spatial demographic scaling used for development
+		short, // stage
+		short, // sex
+		short // layer
+	);
+
+	short getDevLayer( // get the layer of the spatial demographic scaling used for development
+		short, // stage
+		short // sex
+	);
+
+	void setSurvLayer( // set the layer of the spatial demographic scaling used for survival
+		short, // stage
+		short, // sex
+		short // layer
+	);
+
+	short getSurvLayer( // get the layer of the spatial demographic scaling used for survival
+		short, // stage
+		short // sex
+	);
+
 	float getMaxFec(void); // Get highest fecundity of any stage
 	void setMinAge( // Set minimum age
 		short,	// stage
@@ -512,6 +551,7 @@ private:
 	bool survStageDens;
 	bool disperseOnLoss;	// individuals disperse on complete loss of patch
 	// (otherwise they die)
+	bool fecSpatial, devSpatial, survSpatial;
 	short habDimK;			// dimension of carrying capacities matrix
 	float* habK;				// habitat-specific carrying capacities (inds/cell)
 	float devCoeff; 		// density-dependent development coefficient
@@ -524,6 +564,9 @@ private:
 	float dev[gMaxNbStages][gMaxNbSexes];			// development probabilities
 	float surv[gMaxNbStages][gMaxNbSexes];		// survival probabilities
 	short minAge[gMaxNbStages][gMaxNbSexes];	// minimum age to enter stage
+	int fecLayer[gMaxNbStages][gMaxNbSexes]; // layer for spatial varying fecundity
+	int devLayer[gMaxNbStages][gMaxNbSexes]; // layer for spatial varying development
+	int survLayer[gMaxNbStages][gMaxNbSexes]; // layer for spatial varying survival
 	// NOTE - IN THEORY, NEXT 3 VARIABLES COULD BE COMMON, BUT WE WOULD NEED TO ENSURE THAT
 	// ALL MATRICES ARE DELETED IF THERE IS A CHANGE IN NO. OF STAGES OR REPRODUCTION TYPE
 	// ***** TO BE RECONSIDERED LATER *****

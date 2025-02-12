@@ -48,7 +48,10 @@ Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <chrono>
+#if RS_RCPP
+#include <Rcpp.h>
+#include "../Rinterface.h"
+#endif // RS_RCPP
 
 #include "Parameters.h"
 #include "Landscape.h"
@@ -65,7 +68,8 @@ using namespace std::filesystem;
 #if RS_RCPP && !R_CMD
 Rcpp::List RunModel(
 	Landscape*,	// pointer to Landscape
-	int					// sequential simulation number
+	int,					// sequential simulation number
+	Rcpp::S4	// parameter master to read initial conditions in each replicate simulation
 );
 #else
 int RunModel(

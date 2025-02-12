@@ -65,6 +65,7 @@ constexpr int gAbsorbingNoDataCost = 100; // cost to use in place of nodata valu
 // when boundaries are absorbing
 constexpr int gMaxNbStages = 10;		// maximum number of stages permitted
 constexpr int gMaxNbSexes = 2;			// maximum number of sexes permitted
+constexpr int gMaxNbLayers = 3*gMaxNbSexes*gMaxNbStages; // maximum number of demographic scaling layers permitted
 
 #if RS_RCPP
 typedef intptr_t intptr;
@@ -94,7 +95,7 @@ struct locn { int x; int y; };
 /** Trait types **/
 
 enum TraitType {
-	NEUTRAL, 
+	NEUTRAL,
 	GENETIC_LOAD, GENETIC_LOAD1, GENETIC_LOAD2, GENETIC_LOAD3, GENETIC_LOAD4, GENETIC_LOAD5,
 
 	E_D0, E_ALPHA, E_BETA,
@@ -233,7 +234,7 @@ struct initParams {
 };
 
 struct initInd {
-	int year, patchID, x, y; 
+	int year, patchID, x, y;
 	short species, sex, age, stage;
 };
 

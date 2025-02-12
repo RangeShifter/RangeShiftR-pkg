@@ -455,7 +455,7 @@ double Population::computeHs() {
 	return hs;
 }
 
-popStats Population::getStats(void)
+popStats Population::getStats(std::vector <float> localDemoScaling)
 {
 	popStats p = popStats();
 	int ninds;
@@ -474,8 +474,18 @@ popStats Population::getStats(void)
 			p.nNonJuvs += ninds;
 			if (ninds > 0) {
 				if (pSpecies->stageStructured()) {
-					if (dem.repType == 2) fec = pSpecies->getFec(stg, sex);
-					else fec = pSpecies->getFec(stg, 0);
+					if (dem.repType == 2) {
+						if (pSpecies->getFecSpatial() && pSpecies->getFecLayer(stg,sex)>=0){
+						fec = pSpecies->getFec(stg,sex)*localDemoScaling[pSpecies->getFecLayer(stg,sex)];
+						}
+						else fec = pSpecies->getFec(stg,sex);
+					}
+					else {
+						if (pSpecies->getFecSpatial() && pSpecies->getFecLayer(stg,0)>=0){
+							fec = pSpecies->getFec(stg,0)*localDemoScaling[pSpecies->getFecLayer(stg,0)];
+						}
+						else fec = pSpecies->getFec(stg,0);
+					}
 					if (fec > 0.0) { breeders[sex] = true; p.nAdults += ninds; }
 				}
 				else breeders[sex] = true;
@@ -535,7 +545,7 @@ void Population::extirpate(void) {
 
 //---------------------------------------------------------------------------
 // Produce juveniles and hold them in the juvs vector
-void Population::reproduction(const float localK, const float envval, const int resol)
+void Population::reproduction(const float localK, const float envval, const int resol, std::vector <float> localDemoScaling)
 {
 
 	// get population size at start of reproduction
@@ -567,10 +577,17 @@ void Population::reproduction(const float localK, const float envval, const int 
 			if (dem.stageStruct) {
 				if (dem.repType == 1) { // simple sexual model
 					// both sexes use fecundity recorded for females
-					fec[stg][sex] = pSpecies->getFec(stg, 0);
+					if (pSpecies->getFecSpatial() && pSpecies->getFecLayer(stg,0)>=0){
+						fec[stg][sex] = pSpecies->getFec(stg,0)*localDemoScaling[pSpecies->getFecLayer(stg,0)];
+					}
+					else fec[stg][sex] = pSpecies->getFec(stg,0);
 				}
-				else
-					fec[stg][sex] = pSpecies->getFec(stg, sex);
+				else {
+					if (pSpecies->getFecSpatial() && pSpecies->getFecLayer(stg,sex)>=0){
+						fec[stg][sex] = pSpecies->getFec(stg,sex)*localDemoScaling[pSpecies->getFecLayer(stg,sex)];
+					}
+					else fec[stg][sex] = pSpecies->getFec(stg,sex);
+				}
 			}
 			else { // non-structured population
 				if (stg == 1) fec[stg][sex] = dem.lambda; // adults
@@ -1329,7 +1346,7 @@ bool Population::matePresent(Cell* pCell, short othersex)
 // FOR MULTIPLE SPECIES, MAY NEED TO SEPARATE OUT THIS IDENTIFICATION STAGE,
 // SO THAT IT CAN BE PERFORMED FOR ALL SPECIES BEFORE ANY UPDATING OF POPULATIONS
 
-void Population::survival0(float localK, short option0, short option1)
+void Population::survival0(float localK, short option0, short option1, std::vector <float> localDemoScaling)
 {
 	// option0:	0 - stage 0 (juveniles) only
 	//					1 - all stages
@@ -1357,13 +1374,25 @@ void Population::survival0(float localK, short option0, short option1)
 			if (dem.stageStruct) {
 				if (dem.repType == 1) { // simple sexual model
 					// both sexes use development and survival recorded for females
-					dev[stg][sex] = pSpecies->getDev(stg, 0);
-					surv[stg][sex] = pSpecies->getSurv(stg, 0);
+					if (pSpecies->getDevSpatial() && pSpecies->getDevLayer(stg,0)>=0){
+						dev[stg][sex] = pSpecies->getDev(stg,0)*localDemoScaling[pSpecies->getDevLayer(stg,0)];
+					} 
+					else dev[stg][sex] = pSpecies->getDev(stg,0);
+					if (pSpecies->getSurvSpatial() && pSpecies->getSurvLayer(stg,0)>=0){
+						surv[stg][sex] = pSpecies->getSurv(stg,0)*localDemoScaling[pSpecies->getSurvLayer(stg,0)];
+					}
+					else surv[stg][sex] = pSpecies->getSurv(stg,0);
 					minAge[stg][sex] = pSpecies->getMinAge(stg, 0);
 				}
 				else {
-					dev[stg][sex] = pSpecies->getDev(stg, sex);
-					surv[stg][sex] = pSpecies->getSurv(stg, sex);
+					if (pSpecies->getDevSpatial() && pSpecies->getDevLayer(stg,sex)>=0){
+						dev[stg][sex] = pSpecies->getDev(stg,sex)*localDemoScaling[pSpecies->getDevLayer(stg,sex)];
+					}
+					else dev[stg][sex] = pSpecies->getDev(stg,sex);
+					if (pSpecies->getSurvSpatial() && pSpecies->getSurvLayer(stg,sex)>=0){
+										surv[stg][sex] = pSpecies->getSurv(stg,sex)*localDemoScaling[pSpecies->getSurvLayer(stg,sex)];
+					}
+					else surv[stg][sex] = pSpecies->getSurv(stg,sex);
 					minAge[stg][sex] = pSpecies->getMinAge(stg, sex);
 				}
 				if (option1 == 0) surv[stg][sex] = 1.0; // development only - all survive
@@ -1614,7 +1643,7 @@ void Population::outPopulation(int rep, int yr, int gen, float eps,
 	}
 	outPop << "\t" << pSpecies->getSpNum();
 	if (dem.stageStruct) {
-		p = getStats();
+		p = getStats(pPatch->getDemoScaling());
 		outPop << "\t" << p.nNonJuvs;
 		// non-juvenile stage totals from permanent array
 		for (int stg = 1; stg < nStages; stg++) {

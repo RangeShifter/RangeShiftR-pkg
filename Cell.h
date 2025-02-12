@@ -31,9 +31,9 @@
  DistCell - Initial species distribution cell
 
  For full details of RangeShifter, please see:
- Bocedi G., Palmer S.C.F., Pe’er G., Heikkinen R.K., Matsinos Y.G., Watts K.
+ Bocedi G., Palmer S.C.F., Pe?er G., Heikkinen R.K., Matsinos Y.G., Watts K.
  and Travis J.M.J. (2014). RangeShifter: a platform for modelling spatial
- eco-evolutionary dynamics and species’ responses to environmental changes.
+ eco-evolutionary dynamics and species? responses to environmental changes.
  Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
  Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
@@ -44,6 +44,9 @@
 
 #ifndef CellH
 #define CellH
+
+
+#include <algorithm>
 
 #include <vector>
 using namespace std;
@@ -121,6 +124,11 @@ public:
 	void incrVisits(void);
 	unsigned long int getVisits(void);
 
+	void addchgDemoScaling(std::vector<float>);
+	void setDemoScaling(std::vector<float>, short);
+	std::vector<float> getDemoScaling(short);
+
+
 private:
 	int x, y;			// cell co-ordinates
 	intptr pPatch; 	// pointer (cast as integer) to the Patch to which cell belongs
@@ -137,6 +145,9 @@ private:
 	// NB initially, habitat codes are loaded, then converted to index nos.
 	//    once landscape is fully loaded
 	vector <float> habitats;	// habitat proportions (rasterType=1) or quality (rasterType=2)
+
+	std::vector<std::vector<float>> demoScalings;	// demographic scaling layers (only if rasterType==2)
+
 };
 
 //---------------------------------------------------------------------------

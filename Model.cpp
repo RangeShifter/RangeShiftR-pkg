@@ -29,7 +29,7 @@ using namespace std::chrono;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 #if RS_RCPP && !R_CMD
-Rcpp::List RunModel(Landscape* pLandscape, int seqsim)
+Rcpp::List RunModel(Landscape* pLandscape, int seqsim, Rcpp::S4 ParMaster) //Rcpp::S4 ParMaster new for all variants
 #else
 int RunModel(Landscape* pLandscape, int seqsim)
 #endif
@@ -61,6 +61,12 @@ int RunModel(Landscape* pLandscape, int seqsim)
 		pComm = new Community(pLandscape); // set up community
 		// set up a sub-community associated with each patch (incl. the matrix)
 		pLandscape->updateCarryingCapacity(pSpecies, 0, 0);
+
+		//if SPATIALDEMOG
+			if (ppLand.rasterType == 2 && ppLand.spatialdemog)
+				pLandscape->updateDemoScalings(0); // TODO -> is this needed independent of whether it is on or off?
+		// endif SPATIALDEMOG
+
 		patchData ppp;
 		int npatches = pLandscape->patchCount();
 		for (int i = 0; i < npatches; i++) {
@@ -146,6 +152,20 @@ int RunModel(Landscape* pLandscape, int seqsim)
 		}
 
 		filesOK = true;
+#if RS_RCPP
+		if(init.seedType==2 && init.indsFile=="NULL"){ // initialisation from InitInds list of dataframes
+			if(rep > 0){
+				int error_init = 0;
+				Rcpp::S4 InitParamsR("InitialisationParams");
+				InitParamsR = Rcpp::as<Rcpp::S4>(ParMaster.slot("init"));
+				Rcpp::List InitIndsList = Rcpp::as<Rcpp::List>(InitParamsR.slot("InitIndsList"));
+				error_init = ReadInitIndsFileR(0, pLandscape, Rcpp::as<Rcpp::DataFrame>(InitIndsList[rep]));
+				if(error_init>0) {
+					filesOK = false;
+				}
+			}
+		}
+#endif
 		if (rep == 0) {
 			// open output files
 			if (sim.outRange) { // open Range file
@@ -157,7 +177,11 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				if (!pComm->outOccupancyHeaders(0)) {
 					filesOK = false;
 				}
+#if RS_RCPP
+			if (sim.outPop && sim.CreatePopFile) {
+#else
 			if (sim.outPop) {
+#endif
 				// open Population file
 				if (!pComm->outPopHeaders(pSpecies, ppLand.landNum)) {
 					filesOK = false;
@@ -227,6 +251,11 @@ int RunModel(Landscape* pLandscape, int seqsim)
 
 		// set up populations in the community
 		pLandscape->updateCarryingCapacity(pSpecies, 0, 0);
+
+		if (ppLand.rasterType == 2 && ppLand.spatialdemog)
+			pLandscape->updateDemoScalings(0);
+
+//	if (init.seedType != 2) {
 		pComm->initialise(pSpecies, -1);
 		bool updateland = false;
 		int landIx = 0; // landscape change index
@@ -370,6 +399,10 @@ int RunModel(Landscape* pLandscape, int seqsim)
 
 			if (updateCC) {
 				pLandscape->updateCarryingCapacity(pSpecies, yr, landIx);
+
+				if (ppLand.rasterType == 2 && ppLand.spatialdemog) //ppLand.spatialdemog false by default
+					pLandscape->updateDemoScalings((short)landIx);
+
 			}
 
 			if (sim.outConnect && ppLand.patchModel)
@@ -500,10 +533,10 @@ int RunModel(Landscape* pLandscape, int seqsim)
 			} // end of the generation loop
 
 			totalInds = pComm->totalInds();
-			if (totalInds <= 0) { 
+			if (totalInds <= 0) {
 				cout << "All populations went extinct." << endl;
-				yr++; 
-				break; 
+				yr++;
+				break;
 			}
 
 			// Connectivity Matrix
@@ -522,9 +555,9 @@ int RunModel(Landscape* pLandscape, int seqsim)
 					pComm->outInds(rep, yr, -1, -1); // list any individuals dying having reached maximum age
 				pComm->survival(1, 0, 1);						// delete any such individuals
 				totalInds = pComm->totalInds();
-				if (totalInds <= 0) { 
+				if (totalInds <= 0) {
 					cout << "All populations went extinct." << endl;
-					yr++; 
+					yr++;
 					break;
 			}
 			}
@@ -638,7 +671,11 @@ int RunModel(Landscape* pLandscape, int seqsim)
 	if (sim.outRange) {
 		pComm->outRangeHeaders(pSpecies, -999); // close Range file
 	}
+#if RS_RCPP
+	if (sim.outPop && sim.CreatePopFile) {
+#else
 	if (sim.outPop) {
+#endif
 		pComm->outPopHeaders(pSpecies, -999); // close Population file
 	}
 	if (sim.outTraitsCells)
@@ -734,7 +771,11 @@ void RangePopOutput(Community* pComm, int rep, int yr, int gen)
 	if (sim.outRange && (yr % sim.outIntRange == 0 || pComm->totalInds() <= 0))
 		pComm->outRange(pSpecies, rep, yr, gen);
 
+#if RS_RCPP
+if (sim.outPop && sim.CreatePopFile && yr >= sim.outStartPop && yr%sim.outIntPop == 0)
+#else
 	if (sim.outPop && yr >= sim.outStartPop && yr % sim.outIntPop == 0)
+#endif
 		pComm->outPop(rep, yr, gen);
 
 }
@@ -780,7 +821,7 @@ void OutParameters(Landscape* pLandscape)
 	outPar << endl << endl;
 
 	outPar << "BATCH MODE \t";
-	if (sim.batchMode) outPar << "yes" << endl; 
+	if (sim.batchMode) outPar << "yes" << endl;
 	else outPar << "no" << endl;
 #if RS_RCPP
 	outPar << "SEED \t" << RS_random_seed << endl;
