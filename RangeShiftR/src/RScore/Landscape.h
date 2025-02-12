@@ -89,8 +89,15 @@ using namespace std;
 #endif
 #include <Rcpp.h>
 #endif
+#include <armadillo>
 
 //---------------------------------------------------------------------------
+// not sure whether it needs to be added here for the readDistribution() function to work
+
+struct landOrigin {
+	double minEast; double minNorth;
+};
+
 
 // Initial species distribution
 
@@ -98,11 +105,19 @@ class InitDist{
 public:
 	InitDist(Species*);
 	~InitDist();
+#if RS_RCPP
 	int readDistribution(
+		Rcpp::NumericMatrix,
+		landOrigin,
+		int
 		string // name of species distribution file
 	);
+#endif
+	int readDistribution(
+	        string // name of species distribution file
+	);
 	void setDistribution(
-		int	// no. of distribution cells to be initialised (0 for all cells)
+		int	// no. of distribution cells to be initlandOriginialised (0 for all cells)
 	);
 	void setDistCell( // Set a specified cell (by position in cells vector)
 		int,	// index no. of DistCell in cells vector
@@ -145,6 +160,7 @@ private:
 struct landParams {
 	bool patchModel; bool spDist; bool generated;
 	bool dynamic;
+	bool spatialdemog;
 	int landNum; int resol; int spResol; int nHab; int nHabMax;
 	int dimX,dimY,minX,minY,maxX,maxY;
 	short rasterType;
@@ -159,9 +175,11 @@ struct genLandParams {
 struct landPix {
 	int pix; float gpix;
 };
+/*
 struct landOrigin {
 	double minEast; double minNorth;
 };
+ */
 struct rasterHdr {
 	bool ok;
 	int errors,ncols,nrows,cellsize;
@@ -332,7 +350,19 @@ public:
 		short	// change number
 	);
 	void deleteLandChanges(void);
+//#if RS_THREADSAFE
 #if RS_RCPP && !R_CMD
+	int readLandChange(
+		int,		// change number
+		Rcpp::NumericMatrix,// habitat raster
+		Rcpp::NumericMatrix,// patch raster
+		Rcpp::NumericMatrix	// cost raster
+//#if SPATIALDEMOG
+		,Rcpp::NumericVector// array of demographic scaling layers
+//#endif
+	);
+//#else
+// #if RS_RCPP && !R_CMD
 	int readLandChange(
 	    int,		// change file number
 		bool,		// change SMS costs?
@@ -342,8 +372,10 @@ public:
 		int,		// habnodata
 		int,		// pchnodata
 		int			// costnodata
+// TODO: add spatial demography with normal file input
 	);
 #else
+	// TODO: add spatial demography for batch version
 	int readLandChange(
 		int,	// change file number
 		bool	// change SMS costs?
@@ -363,6 +395,9 @@ public:
 	costChange getCostChange(
 		int	// cost change number
 	);
+//#if SPATIALDEMOG
+	void updateDemoScalings(short);
+//#endif // SPATIALDEMOG
 
 	// functions to handle species distributions
 
@@ -370,6 +405,19 @@ public:
 		Species*,	// pointer to Species
 		string		// name of initial distribution file
 	);
+
+	// function for new file input
+#if RS_RCPP
+	int newDistribution(
+			Species*,	// pointer to Species
+	//#if RS_THREADSAFE
+			Rcpp::NumericMatrix,
+			int
+	//#else
+			string		// name of initial distribution file
+		);
+#endif
+
 	void setDistribution(
 		Species*, // pointer to Species
 		int				// no. of distribution squares to initialise
@@ -445,6 +493,15 @@ public:
 
 	// functions to handle input and output
 
+#if RS_RCPP
+	int readLandscape(
+		int, 				// no. of seasonss
+		Rcpp::NumericMatrix,// habitat raster
+		Rcpp::NumericMatrix,// patch raster
+		Rcpp::NumericMatrix	// cost raster
+		,Rcpp::NumericVector // array of demographic scaling layers
+	);
+#endif //for RS_THREADSAFE
 	int readLandscape(
 		int,		// fileNum == 0 for (first) habitat file and optional patch file
 						// fileNum > 0  for subsequent habitat files under the %cover option
@@ -467,6 +524,9 @@ private:
 	bool continuous;			//
 	bool dynamic;					// landscape changes during simulation
 	bool habIndexed;			// habitat codes have been converted to index numbers
+//#if SPATIALDEMOG
+	bool spatialdemog;			// are there spatially varying demographic rates?
+//#endif // SPATIALDEMOG
 	short rasterType;			// 0 = habitat codes 1 = % cover 2 = quality 9 = artificial landscape
 	int landNum;					// landscape number
 	int resol;						// cell size (m)
@@ -514,7 +574,7 @@ private:
 	int **connectMatrix;
 
 	// global environmental stochasticity (epsilon)
-	float* epsGlobal;	// pointer to time-series	
+	float* epsGlobal;	// pointer to time-series
 
 	// patch and costs change matrices (temporary - used when reading dynamic landscape)
 	// indexed by [descending y][x][period]

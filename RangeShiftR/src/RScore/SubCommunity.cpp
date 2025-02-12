@@ -166,7 +166,7 @@ popStats SubCommunity::getPopStats(void) {
 	// FOR SINGLE SPECIES IMPLEMENTATION, THERE IS ONLY ONE POPULATION IN THE PATCH
 	int npops = (int)popns.size();
 	for (int i = 0; i < npops; i++) { // all populations
-		pop = popns[i]->getStats();
+		pop = popns[i]->getStats(pPatch->getDemoScaling());
 		p.pSpecies = pop.pSpecies;
 		p.spNum = pop.spNum;
 		p.nInds += pop.nInds;
@@ -246,6 +246,7 @@ void SubCommunity::reproduction(int resol, float epsGlobal, short rasterType, bo
 {
 	if (subCommNum == 0) return; // no reproduction in the matrix
 	float localK, envval;
+	std::vector <float> localDemoScaling;
 	Cell* pCell;
 	envGradParams grad = paramsGrad->getGradient();
 	envStochParams env = paramsStoch->getStoch();
@@ -255,6 +256,7 @@ void SubCommunity::reproduction(int resol, float epsGlobal, short rasterType, bo
 	if (npops < 1) return;
 
 	localK = pPatch->getK();
+	localDemoScaling = pPatch->getDemoScaling();
 	if (localK > 0.0) {
 		if (patchModel) {
 			envval = 1.0; // environmental gradient is currently not applied for patch-based model
@@ -279,7 +281,7 @@ void SubCommunity::reproduction(int resol, float epsGlobal, short rasterType, bo
 			}
 		}
 		for (int i = 0; i < npops; i++) { // all populations
-			popns[i]->reproduction(localK, envval, resol);
+			popns[i]->reproduction(localK, envval, resol, localDemoScaling);
 			popns[i]->fledge();
 		}
 	}
@@ -306,7 +308,7 @@ void SubCommunity::initiateDispersal(SubCommunity* matrix) {
 
 	int npops = (int)popns.size();
 	for (int i = 0; i < npops; i++) { // all populations
-		pop = popns[i]->getStats();
+		pop = popns[i]->getStats(pPatch->getDemoScaling());
 		for (int j = 0; j < pop.nInds; j++) {
 			disp = popns[i]->extractDisperser(j);
 			if (disp.yes) { // disperser - has already been removed from natal population
@@ -412,10 +414,12 @@ void SubCommunity::survival(short part, short option0, short option1)
 {
 	int npops = (int)popns.size();
 	if (npops < 1) return;
+	std::vector <float> localDemoScaling;
 	if (part == 0) {
+		localDemoScaling = pPatch->getDemoScaling();
 		float localK = pPatch->getK();
 		for (int i = 0; i < npops; i++) { // all populations
-			popns[i]->survival0(localK, option0, option1);
+			popns[i]->survival0(localK, option0, option1, localDemoScaling);
 		}
 	}
 	else {
@@ -440,7 +444,7 @@ Population* SubCommunity::findPop(Species* pSp, Patch* pPch) {
 	int npops = (int)popns.size();
 
 	for (int i = 0; i < npops; i++) { // all populations
-		pop = popns[i]->getStats();
+		pop = popns[i]->getStats(pPatch->getDemoScaling());
 		if (pop.pSpecies == pSp && pop.pPatch == pPch) { // population located
 			pPop = popns[i];
 			break;
@@ -464,7 +468,7 @@ void SubCommunity::updateOccupancy(int row) {
 	popStats pop;
 	int npops = (int)popns.size();
 	for (int i = 0; i < npops; i++) {
-		pop = popns[i]->getStats();
+		pop = popns[i]->getStats(pPatch->getDemoScaling());
 		if (pop.nInds > 0 && pop.breeding) {
 			occupancy[row]++;
 			i = npops;

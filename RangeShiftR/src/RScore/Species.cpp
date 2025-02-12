@@ -34,53 +34,59 @@ Species::Species(const short& repro, const short& nbRepSeasons, const bool& hasS
 	moveType{movementType}
 {
 	// initialise demographic parameters
-	propMales = 0.0; 
-	harem = 1.0; 
-	bc = 1.0; 
-	lambda = 1.5; 
+	propMales = 0.0;
+	harem = 1.0;
+	bc = 1.0;
+	lambda = 1.5;
 	probRep = 1.0;
-	repInterval = 0; 
-	maxAge = 1000; 
+	repInterval = 0;
+	maxAge = 1000;
 	survival = 1;
-	fecDens = false; 
+	fecDens = false;
 	fecStageDens = false;
-	devDens = false; 
+	devDens = false;
 	devStageDens = false;
-	survDens = false; 
+	survDens = false;
 	survStageDens = false;
+	fecSpatial = false;
+	survSpatial = false;
+	devSpatial = false;
 	disperseOnLoss = false;
 	for (int i = 0; i < gMaxNbStages; i++) {
 		for (int j = 0; j < gMaxNbSexes; j++) {
-			fec[i][j] = 0.0; 
-			dev[i][j] = 0.0; 
+			fec[i][j] = 0.0;
+			dev[i][j] = 0.0;
 			surv[i][j] = 0.0;
 			minAge[i][j] = 0;
+			fecLayer[i][j] = -9;
+			devLayer[i][j] = -9;
+			survLayer[i][j] = -9;
 		}
 	}
 	devCoeff = survCoeff = 1.0;
-	ddwtFec = ddwtDev = ddwtSurv = 0; 
+	ddwtFec = ddwtDev = ddwtSurv = 0;
 	ddwtFecDim = ddwtDevDim = ddwtSurvDim = 0;
-	habK = 0; 
+	habK = 0;
 	habDimK = 0;
-	minRK = 1.0; 
+	minRK = 1.0;
 	maxRK = 2.0;
 
 	// initialise emigration parameters
-	densDepEmig = false; 
-	stgDepEmig = false; 
-	sexDepEmig = false; 
+	densDepEmig = false;
+	stgDepEmig = false;
+	sexDepEmig = false;
 	indVarEmig = false;
 	emigStage = 0;
 	for (int i = 0; i < gMaxNbStages; i++) {
 		for (int j = 0; j < gMaxNbSexes; j++) {
-			d0[i][j] = 0.0; 
-			alphaEmig[i][j] = 0.0; 
+			d0[i][j] = 0.0;
+			alphaEmig[i][j] = 0.0;
 			betaEmig[i][j] = 1.0;
 		}
 	}
 	// initialise transfer parameters
-	stgDepTrfr = false; 
-	sexDepTrfr = false; 
+	stgDepTrfr = false;
+	sexDepTrfr = false;
 	distMort = false;
 	indVarTrfr = false;
 	twinKern = false;
@@ -88,45 +94,45 @@ Species::Species(const short& repro, const short& nbRepSeasons, const bool& hasS
 	costMap = false;
 	for (int i = 0; i < gMaxNbStages; i++) {
 		for (int j = 0; j < gMaxNbSexes; j++) {
-			meanDist1[i][j] = 100.0f; 
-			meanDist2[i][j] = 1000.0f; 
+			meanDist1[i][j] = 100.0f;
+			meanDist2[i][j] = 1000.0f;
 			probKern1[i][j] = 0.99f;
 		}
 	}
-	pr = 1; 
-	prMethod = 1; 
-	memSize = 1; 
+	pr = 1;
+	prMethod = 1;
+	memSize = 1;
 	goalType = 0;
-	dp = 1.0; 
+	dp = 1.0;
 	gb = 1.0;
-	alphaDB = 1.0; 
+	alphaDB = 1.0;
 	betaDB = 100000;
-	stepMort = 0.0; 
-	stepLength = 10.0; 
+	stepMort = 0.0;
+	stepLength = 10.0;
 	rho = 0.9f;
 	habStepMort = 0;
 	habCost = 0;
-	fixedMort = 0.0; 
-	mortAlpha = 0.0; 
+	fixedMort = 0.0;
+	mortAlpha = 0.0;
 	mortBeta = 1.0;
 	habDimTrfr = 0;
 	straightenPath = false;
 	fullKernel = false;
 	// initialise settlement parameters
-	stgDepSett = false; 
-	sexDepSett = false; 
+	stgDepSett = false;
+	sexDepSett = false;
 	indVarSett = false;
 	for (int i = 0; i < gMaxNbStages; i++) {
 		for (int j = 0; j < gMaxNbSexes; j++) {
-			densDepSett[i][j] = false; 
-			wait[i][j] = false; 
-			go2nbrLocn[i][j] = false; 
+			densDepSett[i][j] = false;
+			wait[i][j] = false;
+			go2nbrLocn[i][j] = false;
 			findMate[i][j] = false;
-			maxStepsYr[i][j] = 99999999; 	
-			minSteps[i][j] = 0; 
+			maxStepsYr[i][j] = 99999999;
+			minSteps[i][j] = 0;
 			maxSteps[i][j] = 99999999;
-			s0[i][j] = 1.0; 
-			alphaS[i][j] = 0.0; 
+			s0[i][j] = 1.0;
+			alphaS[i][j] = 0.0;
 			betaS[i][j] = 1.0;
 		}
 	}
@@ -220,11 +226,11 @@ void Species::setStage(const stageParams s) {
 	if (s.maxAge >= 1) maxAge = s.maxAge;
 	if (s.survival >= 0 && s.survival <= 2) survival = s.survival;
 	if (s.probRep > 0.0 && s.probRep <= 1.0) probRep = s.probRep;
-	fecDens = s.fecDens;		
+	fecDens = s.fecDens;
 	fecStageDens = s.fecStageDens;
-	devDens = s.devDens;		
+	devDens = s.devDens;
 	devStageDens = s.devStageDens;
-	survDens = s.survDens;	
+	survDens = s.survDens;
 	survStageDens = s.survStageDens;
 	disperseOnLoss = s.disperseOnLoss;
 }
@@ -283,6 +289,51 @@ float Species::getSurv(short stg, short sex) {
 	if (stg >= 0 && stg < gMaxNbStages && sex >= 0 && sex < gMaxNbSexes)
 		return surv[stg][sex];
 	else return 0.0;
+}
+
+void Species::setFecSpatial(bool spat) {
+	fecSpatial = spat;
+}
+
+void Species::setDevSpatial(bool spat) {
+	devSpatial = spat;
+}
+
+void Species::setSurvSpatial(bool spat) {
+	survSpatial = spat;
+}
+
+void Species::setFecLayer(short stg,short sex,short l) {
+if (stg >= 0 && stg < gMaxNbStages && sex >= 0 && sex < gMaxNbSexes && l >= 0)
+	fecLayer[stg][sex] = l;
+}
+
+short Species::getFecLayer(short stg,short sex) {
+if (stg >= 0 && stg < gMaxNbStages && sex >= 0 && sex < gMaxNbSexes)
+	return fecLayer[stg][sex];
+else return -9;
+}
+
+void Species::setDevLayer(short stg,short sex,short l) {
+if (stg >= 0 && stg < gMaxNbStages && sex >= 0 && sex < gMaxNbSexes && l >= 0)
+	devLayer[stg][sex] = l;
+}
+
+short Species::getDevLayer(short stg,short sex) {
+if (stg >= 0 && stg < gMaxNbStages && sex >= 0 && sex < gMaxNbSexes)
+	return devLayer[stg][sex];
+else return -9;
+}
+
+void Species::setSurvLayer(short stg,short sex,short l) {
+if (stg >= 0 && stg < gMaxNbStages && sex >= 0 && sex < gMaxNbSexes && l >= 0)
+	survLayer[stg][sex] = l;
+}
+
+short Species::getSurvLayer(short stg,short sex) {
+if (stg >= 0 && stg < gMaxNbStages && sex >= 0 && sex < gMaxNbSexes)
+	return survLayer[stg][sex];
+else return -9;
 }
 
 void Species::setMinAge(short stg, short sex, int age) {
@@ -527,8 +578,8 @@ set<int> Species::getChromosomeEnds() const {
 
 // Emigration functions
 void Species::setEmigRules(const emigRules e) {
-	densDepEmig = e.densDep; 
-	stgDepEmig = e.stgDep; 
+	densDepEmig = e.densDep;
+	stgDepEmig = e.stgDep;
 	sexDepEmig = e.sexDep;
 	indVarEmig = e.indVar;
 	if (e.emigStage >= 0) emigStage = e.emigStage;
@@ -536,10 +587,10 @@ void Species::setEmigRules(const emigRules e) {
 
 emigRules Species::getEmigRules(void) {
 	emigRules e;
-	e.densDep = densDepEmig; 
-	e.stgDep = stgDepEmig; 
+	e.densDep = densDepEmig;
+	e.stgDep = stgDepEmig;
 	e.sexDep = sexDepEmig;
-	e.indVar = indVarEmig; 
+	e.indVar = indVarEmig;
 	e.emigStage = emigStage;
 	return e;
 }
@@ -547,7 +598,7 @@ emigRules Species::getEmigRules(void) {
 void Species::setSpEmigTraits(const short stg, const short sex, const emigTraits e) {
 	if (stg >= 0 && stg < gMaxNbStages && sex >= 0 && sex < gMaxNbSexes) {
 		if (e.d0 >= 0.0 && e.d0 <= 1.0) d0[stg][sex] = e.d0;
-		alphaEmig[stg][sex] = e.alpha; 
+		alphaEmig[stg][sex] = e.alpha;
 		betaEmig[stg][sex] = e.beta;
 	}
 }
@@ -579,14 +630,14 @@ float Species::getSpEmigD0(short stg, short sex) {
 // Transfer functions
 
 void Species::setTrfrRules(const transferRules t) {
-	usesMovtProcess = t.usesMovtProc; 
-	stgDepTrfr = t.stgDep; 
+	usesMovtProcess = t.usesMovtProc;
+	stgDepTrfr = t.stgDep;
 	sexDepTrfr = t.sexDep;
 	distMort = t.distMort;
 	indVarTrfr = t.indVar;
 	twinKern = t.twinKern;
 	habMort = t.habMort;
-	moveType = t.moveType; 
+	moveType = t.moveType;
 	costMap = t.costMap;
 }
 
