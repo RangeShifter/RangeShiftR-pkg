@@ -2026,7 +2026,6 @@ void Landscape::clearInitCells(void) {
 // for new landscape input using R objects AND spatial demography:
 // RS_THREADSAFE and SPATIALDEMOG
 int Landscape::readLandscape(int fileNum, Rcpp::NumericMatrix habfile, Rcpp::NumericMatrix pchfile, Rcpp::NumericMatrix costfile, Rcpp::NumericVector scalinglayers) {
-
 	if (fileNum < 0) return 19;
 
 	int h,seq,p,ncols,nrows,hc,maxcost = 0;
@@ -2201,7 +2200,6 @@ int Landscape::readLandscape(int fileNum, Rcpp::NumericMatrix habfile, Rcpp::Num
 
 		for (int y = dimY-1; y >= 0; y--) {
 			for (int x = 0; x < dimX; x++) {
-
 				hfloat = habfile(dimY-1-y,x);
 				if ( R_IsNA(hfloat) ) { // check for NA
 					addNewCellToLand(x,y,-1); // add cell only to landscape

@@ -383,8 +383,8 @@ setValidity("RSparams", function(object) {
                     }
                 }
                 if (class(object@dispersal@Transfer@Costs)=="character") {
-                    if (object@dispersal@Transfer@Costs == "file") {
-                        if (object@land@CostsFile[1] == "NULL" || length(object@land@CostsMatrix)==0) { # for threadsafe: length(object@land@CostsFile)==0
+                    if (object@dispersal@Transfer@Costs %in% c("file", "matrix")) {
+                        if (object@land@CostsFile[1] == "NULL" && length(object@land@CostsMatrix)==0) { # for threadsafe: length(object@land@CostsFile)==0
                             msg <- c(msg, "SMS(): No cost map filenames  or  list of matrices found in the landscape module!")
                         }
                     }
@@ -399,8 +399,8 @@ setValidity("RSparams", function(object) {
                         msg <- c(msg, "SMS(): Per-step mortality probability must be a constant for an imported habitat percentage landscape!")
                     }
                     if (class(object@dispersal@Transfer@Costs)=="character") {
-                        if (object@dispersal@Transfer@Costs == "file") {
-                            if (object@land@CostsFile[1] == "NULL" || length(object@land@CostsMatrix)==0) { # threadsafe: length(object@land@CostsFile)==0
+                        if (object@dispersal@Transfer@Costs %in% c("file", "matrix")) {
+                            if (object@land@CostsFile[1] == "NULL" && length(object@land@CostsMatrix)==0) { # threadsafe: length(object@land@CostsFile)==0
                                 msg <- c(msg, "SMS(): No cost map filenames or  list of matrices found in the landscape module!")
                             }
                         }
@@ -585,15 +585,22 @@ setValidity("RSparams", function(object) {
 
         #if Movemodel, check its additional parameters:
         if (object@control@transfer) {
-            if (!nrow(object@dispersal@Settlement@MinSteps) %in% c(1,rows) ){
-                msg <- c(msg, paste0("Settlement(): MinSteps must have either 1 or ", rows ," rows (with the current settings)!"))
+            if (!is.null(nrow(object@dispersal@Settlement@MinSteps))){
+                if (nrow(object@dispersal@Settlement@MinSteps)!= rows){
+                    msg <- c(msg, paste0("Settlement(): MinSteps must have either 1 value or ", rows ," rows (with the current settings)!"))
+                }
             }
-            if (!nrow(object@dispersal@Settlement@MaxSteps) %in% c(1,rows) ){
-                msg <- c(msg, paste0("Settlement(): MaxSteps must have either 1 or ", rows ," rows (with the current settings)!"))
+
+            if (!is.null(nrow(object@dispersal@Settlement@MaxSteps))){
+                if(nrow(object@dispersal@Settlement@MaxSteps) != rows ){
+                    msg <- c(msg, paste0("Settlement(): MaxSteps must have either 1 value or ", rows ," rows (with the current settings)!"))
+                }
             }
             if (object@dispersal@Settlement@StageDep) {
-                if (!nrow(object@dispersal@Settlement@MaxStepsYear) %in% c(1,rows) ){
-                    msg <- c(msg, paste0("Settlement(): MaxStepsYear must have either 1 or ", rows ," rows (with the current settings)!"))
+                if (!is.null(nrow(object@dispersal@Settlement@MaxStepsYear))){
+                    if(nrow(object@dispersal@Settlement@MaxStepsYear) != rows ){
+                        msg <- c(msg, paste0("Settlement(): MaxStepsYear must have either 1 or ", rows ," rows (with the current settings)!"))
+                    }
                 }
             }
         }

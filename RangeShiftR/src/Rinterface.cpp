@@ -930,25 +930,30 @@ int ReadDynLandR(Landscape *pLandscape, Rcpp::S4 LandParamsR)
     Rcpp::NumericMatrix praster;
     Rcpp::NumericMatrix craster;
 
+    // !threadsafe
+    Rcpp::StringVector habitatmaps, patchmaps, costmaps;
+
     // general
     bool costs = false;
 
     // threadsafe
-    habitatmatrix = Rcpp::as<Rcpp::List>(LandParamsR.slot("LandscapeMatrix"));
-    if (patchmodel) patchmatrix = Rcpp::as<Rcpp::List>(LandParamsR.slot("PatchMatrix"));
-    else praster = Rcpp::NumericMatrix(0);
-    costmatrix = Rcpp::as<Rcpp::List>(LandParamsR.slot("CostsMatrix"));
-    if (costmatrix.size() > 0) costs = true;
-    else craster = Rcpp::NumericMatrix(0);
-
-    // file
-    Rcpp::StringVector habitatmaps, patchmaps, costmaps;
-    habitatmaps = Rcpp::as<Rcpp::StringVector>(LandParamsR.slot("LandscapeFile"));
-    if (patchmodel) {
-        patchmaps = Rcpp::as<Rcpp::StringVector>(LandParamsR.slot("PatchFile"));
+    if(threadsafe){
+        habitatmatrix = Rcpp::as<Rcpp::List>(LandParamsR.slot("LandscapeMatrix"));
+        if (patchmodel) patchmatrix = Rcpp::as<Rcpp::List>(LandParamsR.slot("PatchMatrix"));
+        else praster = Rcpp::NumericMatrix(0);
+        costmatrix = Rcpp::as<Rcpp::List>(LandParamsR.slot("CostsMatrix"));
+        if (costmatrix.size() > 0) costs = true;
+        else craster = Rcpp::NumericMatrix(0);
+    } else {
+        // file
+        habitatmaps = Rcpp::as<Rcpp::StringVector>(LandParamsR.slot("LandscapeFile"));
+        if (patchmodel) {
+            patchmaps = Rcpp::as<Rcpp::StringVector>(LandParamsR.slot("PatchFile"));
+        }
+        costmaps = Rcpp::as<Rcpp::StringVector>(LandParamsR.slot("CostsFile"));
+        if (costmaps(0) != "NULL") costs = true;
     }
-    costmaps = Rcpp::as<Rcpp::StringVector>(LandParamsR.slot("CostsFile"));
-    if (costmaps(0) != "NULL") costs = true;
+
 
     // spatial demography (independent of landscape input)
     int nrDemogScaleLayers = 0;
@@ -977,13 +982,25 @@ int ReadDynLandR(Landscape *pLandscape, Rcpp::S4 LandParamsR)
         pLandscape->createCostsChgMatrix();
     }
 
-    for(int i=1; i < habitatmaps.size(); i++ ) {
+    int nb_landscapes;
+    if(threadsafe) {
+        nb_landscapes = habitatmatrix.size();
+        Rcpp::Rcout << "Number of dynamic landscapes: " << nb_landscapes << endl;
+    } else {
+        nb_landscapes = habitatmaps.size();
+        Rcpp::Rcout << "Number of dynamic landscapes: " << nb_landscapes << endl;
+    }
+
+
+    // nb_landscapes = 1;
+
+    for(int i=1; i < nb_landscapes; i++ ) {
         // Now read raster data of Habitat and, if applicable, Patch and/or Cost maps:
         int imported = 0;
         if (threadsafe) {
-            hraster = Rcpp::as<Rcpp::NumericMatrix>(habitatmaps[i]);
-            if (patchmodel) praster = Rcpp::as<Rcpp::NumericMatrix>(patchmaps[i]);
-            if (costs) craster = Rcpp::as<Rcpp::NumericMatrix>(costmaps[i]);
+            hraster = Rcpp::as<Rcpp::NumericMatrix>(habitatmatrix[i]);
+            if (patchmodel) praster = Rcpp::as<Rcpp::NumericMatrix>(patchmatrix[i]);
+            if (costs) craster = Rcpp::as<Rcpp::NumericMatrix>(costmatrix[i]);
         } else {
             // for file inputs
 
@@ -2426,23 +2443,90 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
     DEBUGLOG << "ReadSettlementR(): sett.stgDep = " << sett.stgDep << ", sett.sexDep = " << sett.sexDep
              << ", sett.indVar = " << sett.indVar << endl;
 #endif
+    // check whether SettleParamsR.slot("FindMate") is a matrix, then use Rcpp::NumericMatrix, otherwise use NumericVector
+    /*if (Rcpp::is<Rcpp::NumericMatrix>(slot)) {
+        return true;
+    }*/
 
-    Rcpp::NumericMatrix FindMate = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("FindMate"));
+    Rcpp::NumericMatrix FindMate;
+    try {
+        FindMate = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("FindMate"));
+        // Rcpp::Rcout << "The slot 'FindMate' is a NumericMatrix." << endl;
+    } catch (const std::exception &e1) {
+        // If it's not a NumericMatrix, try bool
+        try {
+            bool result = Rcpp::as<bool>(SettleParamsR.slot("FindMate"));
+            // Rcpp::Rcout << "The slot 'FindMate' is a bool." << endl;
+            // set FindMate at position {0,0} to result:
+            FindMate(0, 0) = (int) result;
+        } catch (const std::exception &e2) {
+            // Rcpp::Rcout << "The slot 'FindMate' could not be imported as a NumericMatrix or bool.\n";
+        }
+    }
+
     bool constFindMate = false;
     if(FindMate.nrow() == 1) {
         constFindMate = true;
     }
-    Rcpp::NumericMatrix MinSteps = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("MinSteps"));
+
+    Rcpp::NumericMatrix MinSteps;
+    try {
+        MinSteps = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("MinSteps")); // could also be not a matrix
+        // Rcpp::Rcout << "The slot 'MinSteps' is a NumericMatrix." << endl;
+    } catch (const std::exception &e1) {
+        // If it's not a NumericMatrix, try bool
+        try {
+            int result = Rcpp::as<int>(SettleParamsR.slot("MinSteps"));
+            // Rcpp::Rcout << "The slot 'MinSteps' is an integer." << endl;
+            // set FindMate at position {0,0} to result:
+            MinSteps(0, 0) = result;
+        } catch (const std::exception &e2) {
+            // Rcpp::Rcout << "The slot 'MinSteps' could not be imported as a NumericMatrix or integer.\n";
+        }
+    }
+
+
     bool constMinSteps = false;
     if(MinSteps.nrow() == 1) {
         constMinSteps = true;
     }
-    Rcpp::NumericMatrix MaxSteps = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("MaxSteps"));
+
+    Rcpp::NumericMatrix MaxSteps;
+    try {
+        MaxSteps = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("MaxSteps")); // could also be not a matrix
+        // Rcpp::Rcout << "The slot 'MaxSteps' is a NumericMatrix." << endl;
+    } catch (const std::exception &e1) {
+        // If it's not a NumericMatrix, try bool
+        try {
+            int result = Rcpp::as<int>(SettleParamsR.slot("MaxSteps"));
+             // Rcpp::Rcout << "The slot 'MaxSteps' is an integer." << endl;
+             // set MaxSteps at position {0,0} to result:
+             MaxSteps(0, 0) = result;
+        } catch (const std::exception &e2) {
+            // Rcpp::Rcout << "The slot 'MaxSteps' could not be imported as a NumericMatrix or integer.\n";
+        }
+    }
+
     bool constMaxSteps = false;
     if(MaxSteps.nrow() == 1) {
         constMaxSteps = true;
     }
-    Rcpp::NumericMatrix MaxStepsYr = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("MaxStepsYear"));
+    Rcpp::NumericMatrix MaxStepsYr;
+    try {
+        MaxStepsYr = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("MaxStepsYear")); // could also be not a matrix
+        // Rcpp::Rcout << "The slot 'MaxStepsYr' is a NumericMatrix." << endl;
+    } catch (const std::exception &e1) {
+        // If it's not a NumericMatrix, try bool
+        try {
+            int result = Rcpp::as<int>(SettleParamsR.slot("MaxStepsYear"));
+            // Rcpp::Rcout << "The slot 'MaxStepsYr' is an integer." << endl;
+            // set MaxSteps at position {0,0} to result:
+            MaxStepsYr(0, 0) = result;
+        } catch (const std::exception &e2) {
+            // Rcpp::Rcout << "The slot 'MaxStepsYr' could not be imported as a NumericMatrix or integer.\n";
+        }
+    }
+
     bool constMaxStepsYr = false;
     if(MaxStepsYr.nrow() == 1) {
         constMaxStepsYr = true;
@@ -2450,8 +2534,21 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
 
     sexSettle = 2 * sett.stgDep + sett.sexDep;
 
-    Rcpp::NumericMatrix SettleCondMatrix = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("Settle"));
-
+    Rcpp::NumericMatrix SettleCondMatrix;
+    try {
+        SettleCondMatrix = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("Settle")); // could also be not a matrix
+        // Rcpp::Rcout << "The slot 'SettleCondMatrix' is a NumericMatrix." << endl;
+    } catch (const std::exception &e1) {
+        // If it's not a NumericMatrix, try bool
+        try {
+            int result = Rcpp::as<int>(SettleParamsR.slot("Settle"));
+            // Rcpp::Rcout << "The slot 'Settle' is an integer." << endl;
+            // set SettleCondMatrix at position {0,0} to result:
+            SettleCondMatrix(0, 0) = result;
+        } catch (const std::exception &e2) {
+            // Rcpp::Rcout << "The slot 'MaxStepsYr' could not be imported as a NumericMatrix or integer.\n";
+        }
+    }
 
     for(int line = 0; line < Nlines; line++) {
         // FindMate
@@ -2607,6 +2704,9 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
             } // end of switch (sexSettle)
 
         } // end of dispersal kernel
+
+
+
 
         // MinSteps
         // determine stage and sex of this line
@@ -4694,9 +4794,7 @@ int ReadTranslocationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 {
     int land_nr;
-#if !RS_THREADSAFE
     int t0, t1, t00, t01;
-#endif
     int read_error;
     bool params_ok;
     simParams sim = paramsSim->getSim();
@@ -4710,33 +4808,37 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
     DEBUGLOG << "RunBatchR(): landtype=" << landtype << " maxNhab=" << maxNhab << endl;
 #endif
 
-#if !RS_THREADSAFE
-    t0 = time(0);
-#endif
+    if(!threadsafe){
+        t0 = time(0);
+    }
+
+
+
 
     // int batch_line = 0;
 
     string name = paramsSim->getDir(2) + "Batch" + to_string(sim.batchNum) + "_RS_log.csv";
-#if !RS_THREADSAFE
-    if(rsLog.is_open()) {
-        rsLog.close();
-        rsLog.clear();
+
+    if(!threadsafe){
+        if(rsLog.is_open()) {
+            rsLog.close();
+            rsLog.clear();
+        }
+        rsLog.open(name.c_str());
+        if(!rsLog.is_open()) {
+            Rcpp::Rcout << endl
+                        << "Error - unable to open Batch" << sim.batchNum << "_RS_log.csv file - aborting batch run"
+                        << endl;
+            return Rcpp::List::create(Rcpp::Named("Errors") = -678);
+        }
+        rsLog << "Event,Number,Reps,Years,Time" << endl;
+    #if RSDEBUG
+        rsLog << "WARNING,***** RSDEBUG mode is active *****,,," << endl;
+    #endif
+    #if RS_RCPP
+        rsLog << "RNG SEED,,,," << RS_random_seed << endl;
+    #endif
     }
-    rsLog.open(name.c_str());
-    if(!rsLog.is_open()) {
-        Rcpp::Rcout << endl
-                    << "Error - unable to open Batch" << sim.batchNum << "_RS_log.csv file - aborting batch run"
-                    << endl;
-        return Rcpp::List::create(Rcpp::Named("Errors") = -678);
-    }
-    rsLog << "Event,Number,Reps,Years,Time" << endl;
-#if RSDEBUG
-    rsLog << "WARNING,***** RSDEBUG mode is active *****,,," << endl;
-#endif
-#if RS_RCPP
-    rsLog << "RNG SEED,,,," << RS_random_seed << endl;
-#endif
-#endif //!RS_THREADSAFE
 
     // loop over landscpaes
 
@@ -4751,59 +4853,50 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
         pLandscape = new Landscape;
         bool landOK = true;
 
-#if !RS_THREADSAFE
-        t00 = time(0);
-#endif
+        if(!threadsafe){
+            t00 = time(0);
+        }
 
         landOK = ReadLandParamsR(pLandscape, ParMaster);
         //land_nr = ReadLandParamsR(pLandscape, ParMaster);
         land_nr = j; // TODO: ReadLandParamsR() is supposed to return land_nr; this is a temporary replacement; should I adapt this?
 
         if(!landOK) {
-#if !RS_THREADSAFE
-            // to get more precise error codes: use return values in ReadLandParamsR() similar to batch version
-            // then it would be
-            // if(land_nr<= 0){
-            //  string msg = "Error code " + to_string(-land_nr)
-            // + " returned from reading LandFile - aborting batch run";
-            // cout << endl << msg << endl;
-            rsLog << "Error reading landscape ASCII haeders - aborting" << endl;
-#endif
+            if(!threadsafe){
+                rsLog << "Error reading landscape ASCII haeders - aborting" << endl;
+            }
             Rcpp::Rcout << "Error reading landscape ASCII haeders - aborting" << endl;
         } else {
-
-
 #if RSDEBUG
             DEBUGLOG << endl << "RunBatchR(): j=" << j << " land_nr=" << land_nr << " landtype=" << landtype;
-            if(landtype != 9)
+            if(landtype != 9 && "threadsafe")
                 DEBUGLOG << " name_landscape=" << name_landscape
                          << " name_patch=" << name_patch
                          << " name_costfile=" << name_costfile
                          << " name_sp_dist=" << name_sp_dist;
-                DEBUGLOG << endl;
+            DEBUGLOG << endl;
 #endif
-                landParams paramsLand = pLandscape->getLandParams();
-                paramsLand.patchModel = patchmodel;
-                paramsLand.resol = resolution;
-                paramsLand.rasterType = landtype;
-                if(landtype == 9) {
-                    paramsLand.generated = true;
-                    paramsLand.nHab = 2;
-                } else {
-                    paramsLand.generated = false;
-                    /*if(name_dynland == "NULL")
-                     paramsLand.dynamic = false;
-                     else
-                     paramsLand.dynamic = true;*/
-                }
-                paramsLand.nHabMax = maxNhab;
-                paramsLand.spDist = speciesdist;
-                paramsLand.spResol = distresolution;
-                pLandscape->setLandParams(paramsLand, sim.batchMode);
+            landParams paramsLand = pLandscape->getLandParams();
+            paramsLand.patchModel = patchmodel;
+            paramsLand.resol = resolution;
+            paramsLand.rasterType = landtype;
+            if(landtype == 9) {
+                paramsLand.generated = true;
+                paramsLand.nHab = 2;
+            } else {
+                paramsLand.generated = false;
+                /*if(name_dynland == "NULL")
+                 paramsLand.dynamic = false;
+                 else
+                 paramsLand.dynamic = true;*/
+            }
+            paramsLand.nHabMax = maxNhab;
+            paramsLand.spDist = speciesdist;
+            paramsLand.spResol = distresolution;
+            pLandscape->setLandParams(paramsLand, sim.batchMode);
+            Rcpp::Rcout << "General landscape settings done..." << endl;
+            if(landtype != 9) { // imported landscape
 
-                if(landtype != 9) { // imported landscape
-
-#if RS_THREADSAFE
 				Rcpp::S4 LandParamsR("LandParams");
 				LandParamsR = Rcpp::as<Rcpp::S4>(ParMaster.slot("land"));
 
@@ -4811,86 +4904,97 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 				Rcpp::List patchmaps;
 				Rcpp::List costmaps;
 				Rcpp::List spdistmap;
-
-				habitatmaps = Rcpp::as<Rcpp::List>(LandParamsR.slot("LandscapeFile"));
-				Rcpp::NumericMatrix hraster = Rcpp::as<Rcpp::NumericMatrix>(habitatmaps[0]);
-
+				Rcpp::NumericMatrix hraster;
 				Rcpp::NumericMatrix praster;
-				if (patchmodel) {
-					patchmaps = Rcpp::as<Rcpp::List>(LandParamsR.slot("PatchFile"));
-					praster = Rcpp::as<Rcpp::NumericMatrix>(patchmaps[0]);
-				}
-				else{
-					praster = Rcpp::NumericMatrix(0);
-				}
-
 				Rcpp::NumericMatrix craster;
-				costmaps = Rcpp::as<Rcpp::List>(LandParamsR.slot("CostsFile"));
-				if (costmaps.size() > 0) Rcpp::NumericMatrix craster = Rcpp::as<Rcpp::NumericMatrix>(costmaps[0]);
-				else craster = Rcpp::NumericMatrix(0);
-#if SPATIALDEMOG
+
+				string hname;
+				string cname;
+				string pname;
+				string distname;
+
 				int nrDemogScaleLayers = 0;
 				Rcpp::List demogScaleLayers;                      // list of lists of layers for each dynamic land year
 				Rcpp::NumericVector scalinglayers = Rcpp::NumericVector::create(-1);  // array of demog scaling layers for a given year (initialise invalid value)
 
-				if(landtype == 2 && stagestruct) {
-					nrDemogScaleLayers = Rcpp::as<int>(LandParamsR.slot("nrDemogScaleLayers"));
-					if(nrDemogScaleLayers) {
-						demogScaleLayers = Rcpp::as<Rcpp::List>(LandParamsR.slot("demogScaleLayers"));
-						scalinglayers = demogScaleLayers[0];   // get array of scaling layers of year 0
-					}
-					//else scalinglayers // no scaling layers -> create empty list
-				}
-#endif
-
 				int landcode;
-#if SPATIALDEMOG
-				landcode = pLandscape->readLandscape(0, hraster, praster, craster, scalinglayers);
-#else
-				landcode = pLandscape->readLandscape(0, hraster, praster, craster);
-#endif
 
-				if(landcode != 0) {
-					Rcpp::Rcout << endl << "Error reading landscape " << land_nr << " - aborting" << endl;
-					landOK = false;
+				if(threadsafe){
+				    habitatmaps = Rcpp::as<Rcpp::List>(LandParamsR.slot("LandscapeMatrix"));
+				    Rcpp::Rcout << "Imported habitat maps...\n";
+				    hraster = Rcpp::as<Rcpp::NumericMatrix>(habitatmaps[0]);
+				    Rcpp::Rcout << "Imported first habitat map...\n";
+
+    				if (patchmodel) {
+    					patchmaps = Rcpp::as<Rcpp::List>(LandParamsR.slot("PatchMatrix"));
+    					praster = Rcpp::as<Rcpp::NumericMatrix>(patchmaps[0]);
+    				}
+    				else{
+    					praster = Rcpp::NumericMatrix(0);
+    				}
+
+    				Rcpp::Rcout << "Imported patch map...\n";
+
+    				costmaps = Rcpp::as<Rcpp::List>(LandParamsR.slot("CostsMatrix"));
+    				if (costmaps.size() > 0) craster = Rcpp::as<Rcpp::NumericMatrix>(costmaps[0]);
+    				else craster = Rcpp::NumericMatrix(0);
+
+
+    				Rcpp::Rcout << "Imported first cost map...\n";
+
+                    if(spatial_demography){
+        				if(landtype == 2 && stagestruct) {
+        					nrDemogScaleLayers = Rcpp::as<int>(LandParamsR.slot("nrDemogScaleLayers"));
+        					if(nrDemogScaleLayers) {
+        						demogScaleLayers = Rcpp::as<Rcpp::List>(LandParamsR.slot("demogScaleLayers"));
+        						scalinglayers = demogScaleLayers[0];   // get array of scaling layers of year 0
+        					}
+        					//else scalinglayers // no scaling layers -> create empty list
+        				}
+                    }
+                    Rcpp::Rcout << "Start reading in landscapes..\n";
+    				landcode = pLandscape->readLandscape(0, hraster, praster, craster, scalinglayers);
+
+
+    				if(landcode != 0) {
+    					Rcpp::Rcout << endl << "Error reading landscape " << land_nr << " - aborting" << endl;
+    					landOK = false;
+    				}
+    				if(paramsLand.dynamic) {
+    				    Rcpp::Rcout << "Reading dynamic landscape...\n";
+    					landcode = ReadDynLandR(pLandscape, LandParamsR);
+    					Rcpp::Rcout << "Dynamic landscape read...\n";
+    					if(landcode != 0) {
+    						Rcpp::Rcout << endl << "Error reading landscape " << land_nr << " - aborting" << endl;
+    						landOK = false;
+    					}
+    				}
+    				if(landtype == 0) {
+    					pLandscape->updateHabitatIndices();
+    				}
+    				// species distribution
+    				if(paramsLand.spDist) { // read initial species distribution
+    					// WILL NEED TO BE CHANGED FOR MULTIPLE SPECIES ...
+
+    					spdistmap = Rcpp::as<Rcpp::List>(LandParamsR.slot("SpDistMatrix"));
+    					landcode = pLandscape->newDistribution(pSpecies, Rcpp::as<Rcpp::NumericMatrix>(spdistmap[0]), distresolution);
+    					if(landcode == 0) {
+    					} else {
+    						Rcpp::Rcout << endl
+    						            << "Error reading initial distribution for landscape " << land_nr << " - aborting"
+    						            << endl;
+    						landOK = false;
+    					}
+    				}
+    				paramsSim->setSim(sim);
 				}
-				if(paramsLand.dynamic) {
-					landcode = ReadDynLandR(pLandscape, LandParamsR);
-					if(landcode != 0) {
-						Rcpp::Rcout << endl << "Error reading landscape " << land_nr << " - aborting" << endl;
-						landOK = false;
-					}
-				}
-				if(landtype == 0) {
-					pLandscape->updateHabitatIndices();
-				}
-				// species distribution
-				if(paramsLand.spDist) { // read initial species distribution
-					// WILL NEED TO BE CHANGED FOR MULTIPLE SPECIES ...
+                else{
+                    hname = paramsSim->getDir(1) + name_landscape;
 
-					spdistmap = Rcpp::as<Rcpp::List>(LandParamsR.slot("SpDistFile"));
-					landcode = pLandscape->newDistribution(pSpecies, Rcpp::as<Rcpp::NumericMatrix>(spdistmap[0]), distresolution);
-					if(landcode == 0) {
-					} else {
-						Rcpp::Rcout << endl
-						            << "Error reading initial distribution for landscape " << land_nr << " - aborting"
-						            << endl;
-						landOK = false;
-					}
-				}
-				paramsSim->setSim(sim);
-
-				//if(landOK) t01 = time(0);
-
-#else // RS_THREADSAFE
-
-                    string hname = paramsSim->getDir(1) + name_landscape;
-                    int landcode;
-                    string cname;
                     if (name_costfile == "NULL" || name_costfile == "none") cname = "NULL";
                     else cname = paramsSim->getDir(1) + name_costfile;
                     if(paramsLand.patchModel) {
-                        string pname = paramsSim->getDir(1) + name_patch;
+                        pname = paramsSim->getDir(1) + name_patch;
                         landcode = pLandscape->readLandscape(0, hname, pname, cname);
                     } else
                         landcode = pLandscape->readLandscape(0, hname, " ", cname);
@@ -4898,15 +5002,17 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
                         rsLog << "Landscape," << land_nr << ",ERROR,CODE," << landcode << endl;
                         Rcpp::Rcout << endl << "Error reading landscape " << land_nr << " - aborting" << endl;
                         landOK = false;
+                    } else{
+                        Rcpp::Rcout << "ReadLandParamsR(): Landscapes read successfully" << std::endl;
                     }
                     if(paramsLand.dynamic) {
-                        Rcpp::S4 LandParamsR("LandParams");
-                        LandParamsR = Rcpp::as<Rcpp::S4>(ParMaster.slot("land"));
                         landcode = ReadDynLandR(pLandscape, LandParamsR);
                         if(landcode != 0) {
                             rsLog << "Landscape," << land_nr << ",ERROR,CODE," << landcode << endl;
                             Rcpp::Rcout << endl << "Error reading landscape " << land_nr << " - aborting" << endl;
                             landOK = false;
+                        } else{
+                            Rcpp::Rcout << "ReadDynLandR(): Dynamic landscapes read successfully" << std::endl;
                         }
                     }
                     if(landtype == 0) {
@@ -4922,9 +5028,10 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 
                     if(paramsLand.spDist) { // read initial species distribution
                         // WILL NEED TO BE CHANGED FOR MULTIPLE SPECIES ...
-                        string distname = paramsSim->getDir(1) + name_sp_dist;
+                        distname = paramsSim->getDir(1) + name_sp_dist;
                         landcode = pLandscape->newDistribution(pSpecies, distname);
                         if(landcode == 0) {
+                            Rcpp::Rcout << "ReadLandParamsR(): Species distribution read successfully" << std::endl;
                         } else {
                             rsLog << "Landscape," << land_nr << ",ERROR,CODE," << landcode << endl;
                             Rcpp::Rcout << endl
@@ -4943,10 +5050,9 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
                         rsLog << "Landscape," << land_nr << ",,," << t01 - t00 << endl;
 
                     } // end of landOK condition
+                }// end threadsafe
 
-#endif // RS_THREADSAFE
-
-                } // end of imported landscape
+            } // end of imported landscape
         }
         if(landOK) {
 
@@ -4958,96 +5064,87 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
             string msgerr = ",ERROR CODE,";
             string msgabt = ",simulation aborted";
             for(int i = 0; i < nSimuls; i++) { // this loop is useless at the moment since nSimuls is set to one in R entry function BatchMainR()
-#if !RS_THREADSAFE
-                t00 = time(0);
-                simParams sim = paramsSim->getSim();
-#endif
+                if(!threadsafe){
+                    t00 = time(0);
+                    simParams sim = paramsSim->getSim();
+                }
                 params_ok = true;
                 read_error = ReadParametersR(pLandscape, ParMaster);
                 if(read_error) {
-#if RS_THREADSAFE
-				    Rcpp::Rcout << "Error reading simulation parameters - aborting" << endl;
-#else
-                    rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
-#endif
+                    if(threadsafe){
+				        Rcpp::Rcout << "Error reading simulation parameters - aborting" << endl;
+                    } else{
+                       rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
+                    }
                     params_ok = false;
+                } else{
+                    Rcpp::Rcout << "ReadParametersR() done." << endl;
                 }
                 if(stagestruct) {
                     ReadStageStructureR(ParMaster); // in Spatial_demog: read_error = ReadStageStructureR(ParMaster);
+                    Rcpp::Rcout << "ReadStageStructureR() done." << endl;
                 }
                 read_error = ReadEmigrationR(ParMaster);
                 if(read_error) {
-#if RS_THREADSAFE
-		    Rcpp::Rcout << "Error reading emigration parameters - aborting" << endl;
-#else
-                    rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
-#endif
+                    if(threadsafe){
+                        Rcpp::Rcout << "Error reading emigration parameters - aborting" << endl;
+                    } else {
+                        rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
+                    }
                     params_ok = false;
+                } else{
+                    Rcpp::Rcout << "ReadEmigrationR() done." << endl;
                 }
                 read_error = ReadTransferR(pLandscape, ParMaster);
                 if(read_error) {
-#if RS_THREADSAFE
-		    Rcpp::Rcout << "Error reading transfer parameters - aborting" << endl;
-#else
-                    rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
-#endif
+                    if(threadsafe){
+                        Rcpp::Rcout << "Error reading transfer parameters - aborting" << endl;
+                    } else{
+                        rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
+                    }
                     params_ok = false;
+                } else{
+                    Rcpp::Rcout << "ReadTransferR() done." << endl;
                 }
                 read_error = ReadSettlementR(ParMaster);
                 if(read_error) {
-#if RS_THREADSAFE
-		    Rcpp::Rcout << "Error reading settlement parameters - aborting" << endl;
-#else
-                    rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
-#endif
+                    if(threadsafe){
+                        Rcpp::Rcout << "Error reading settlement parameters - aborting" << endl;
+                    } else{
+                        rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
+                    }
                     params_ok = false;
+                } else{
+                    Rcpp::Rcout << "ReadSettlementR() done." << endl;
                 }
                 if(translocation){
                     read_error = ReadTranslocationR(pLandscape, ParMaster);
                     if(read_error) {
-                        rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
+                        if(threadsafe){
+                            Rcpp::Rcout << "Error reading translocation parameters - aborting" << endl;
+                        } else{
+                            rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
+                        }
                         params_ok = false;
+                    } else{
+                        Rcpp::Rcout << "ReadTranslocationR() done." << endl;
                     }
                 }
                 if(params_ok) {
 #if RSDEBUG
                     DebugGUI("RunBatchR(): simulation i=" + Int2Str(i));
 #endif
-                    // veraltet
-                    // pSpecies->setNChromosomes(0);
-                    // pSpecies->setTraits();
                 }
-                // veraltet
-                // Rcpp::S4 GeneParamsR("GeneticsParams");
-                // GeneParamsR = Rcpp::as<Rcpp::S4>(ParMaster.slot("gene"));
-                // if (anyIndVar || Rcpp::as<int>(GeneParamsR.slot("Architecture")) == 1) {
-                // 	read_error = ReadGeneticsR(GeneParamsR);
-                // 	if(read_error) {
-                // 		rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
-                // 		params_ok = false;
-                // 	}
-                // } else {
-                // 	// use default genetics parameters
-                // 	// (by setting illegal values except for diploid)
-                // 	genomeData g;
-                // 	g.nLoci = -1;
-                // 	g.probMutn = g.probCrossover = g.alleleSD = g.mutationSD = -1.0;
-                // 	if(reproductn == 0)
-                // 		g.diploid = false;
-                // 	else
-                // 		g.diploid = true;
-                // 	g.neutralMarkers = g.trait1Chromosome = false;
-                //
-                // 	pSpecies->setGenomeData(g);
-                // }
                 read_error = ReadInitialisationR(pLandscape, ParMaster);
                 if(read_error) {
-#if RS_THREADSAFE
-		    Rcpp::Rcout << "Error reading genetic parameters - aborting" << endl;
-#else
-                    rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
-#endif
+                    if(threadsafe){
+                        Rcpp::Rcout << "Error reading genetic parameters - aborting" << endl;
+                    } else{
+                        rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
+                    }
                     params_ok = false;
+                } else{
+                    Rcpp::Rcout << "ReadInitialisationR() done." << endl;
                 }
 
                 Rcpp::Rcout << "ReadInitialisationR() done." << endl;
@@ -5061,13 +5158,14 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
                     DEBUGLOG << "ReadGeneticsFile()" << endl;
 #endif
                     if (read_error) {
-#if RS_THREADSAFE
-		         Rcpp::Rcout << "Error reading genetics parameters - aborting" << endl;
-#else
-                        rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
-#endif
+                        if(threadsafe){
+                            Rcpp::Rcout << "Error reading genetics parameters - aborting" << endl;
+                        } else{
+                            rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
+                        }
                         params_ok = false;
                     }
+
                     Rcpp::S4 TraitsParamsR("TraitsParams");
                     TraitsParamsR = Rcpp::as<Rcpp::S4>(GeneParamsR.slot("Traits"));
                     read_error = ReadTraitsR(TraitsParamsR);
@@ -5075,11 +5173,11 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
                     DEBUGLOG << "ReadTraitsFile()" << endl;
 #endif
                     if (read_error) {
-#if RS_THREADSAFE
-		         Rcpp::Rcout << "Error reading trait parameters - aborting" << endl;
-#else
-                        rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
-#endif
+                        if(threadsafe){
+                            Rcpp::Rcout << "Error reading trait parameters - aborting" << endl;
+                        } else{
+                            rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
+                        }
                         params_ok = false;
                     }
 
@@ -5103,9 +5201,8 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 
 
                     // for batch processing, include landscape number in parameter file name
-#if !RS_THREADSAFE
-                    OutParameters(pLandscape);
-#endif
+                    if(!threadsafe)
+                        OutParameters(pLandscape);
 
                     // run the model
                     list_outPop = RunModel(pLandscape, i, ParMaster);
@@ -5116,12 +5213,12 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
                     //	<< " simulation = " << sim.simulation << " landFile = " << landFile
                     //	<< endl;
 #endif
-
-#if !RS_THREADSAFE
-                    t01 = time(0);
-                    rsLog << msgsim << sim.simulation << "," << sim.reps << "," << sim.years << "," << t01 - t00
+                    if(!threadsafe){
+                        t01 = time(0);
+                        rsLog << msgsim << sim.simulation << "," << sim.reps << "," << sim.years << "," << t01 - t00
                           << endl;
-#endif
+                    }
+
                 } // end of if (params_ok)
                 else {
                     Rcpp::Rcout << endl << "Error in reading parameter file(s)... see RS log." << endl;
@@ -5144,15 +5241,14 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
     } // end of nLandscapes loop
 
     // Write performance data to log file
-#if !RS_THREADSAFE
-    t1 = time(0);
-    rsLog << endl << "Batch,,,," << t1 - t0 << endl;
-
-    if(rsLog.is_open()) {
-        rsLog.close();
-        rsLog.clear();
+    if(!threadsafe){
+        t1 = time(0);
+        rsLog << endl << "Batch,,,," << t1 - t0 << endl;
+        if(rsLog.is_open()) {
+            rsLog.close();
+            rsLog.clear();
+        }
     }
-#endif
 
     return list_outPop;
 }

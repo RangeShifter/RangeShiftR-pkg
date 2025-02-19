@@ -59,13 +59,15 @@ RunRS <- function(RSparams, dirpath = getwd()){
 			 if(class(RSparams@land)=="ImportedLandscape") llcorner = RSparams@land@OriginCoords
 				    else  llcorner = c(0,0)
 				    raster_list <- lapply(out, function(x) {
-				        r <- terra::rast(x, xmin = llcorner[1], xmax = ncol(out[[1]])*resol+llcorner[1], ymin = llcorner[2], ymax = nrow(out[[1]])*resol+llcorner[2])
+				        r <- terra::rast(x)
+				        ext(r) <- c(llcorner[1], ncol(out[[1]])*resol+llcorner[1], llcorner[2], nrow(out[[1]])*resol+llcorner[2])
 				        return(r)
 				    })
 				    return(terra::rast(raster_list))
 		} else {
     		    raster_list <- lapply(out, function(x) {
-    		        r <- terra::rast(x, xmin = 0, xmax = ncol(out[[1]])*resol, ymin = 0, ymax = nrow(out[[1]])*resol)
+    		        r <- terra::rast(x)
+    		        ext(r) <- c(0, ncol(out[[1]])*resol, 0, nrow(out[[1]])*resol)
     		        return(r)
     		    })
 			    return(terra::rast(raster_list))

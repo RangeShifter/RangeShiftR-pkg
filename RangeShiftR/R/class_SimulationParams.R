@@ -45,7 +45,7 @@
 #'            OutStartTraitCell = 0, OutStartTraitRow = 0,
 #'            OutStartConn = 0, OutStartPaths = 0,
 # #'            SaveMaps = FALSE, MapsInterval, DrawLoadedSp = FALSE,,
-# #'            ReturnPopRaster = FALSE, CreatePopFile = TRUE
+#'            ReturnPopRaster = FALSE, CreatePopFile = TRUE
 #'            SMSHeatMap = FALSE)
 #' @param Simulation ID number of current simulation, defaults to \eqn{1}. (integer)
 #' @param Replicates Number of simulation iterations, defaults to \eqn{2}. (integer)
@@ -110,8 +110,8 @@
 # #' @param DrawLoadedSp If \code{FALSE} (default), only the simulated distribution is drawn into the output map.\cr
 # #' If \code{TRUE}, the initial species distribution is drawn additionally.
 #' @param SMSHeatMap Produce SMS heat map raster as output? Defaults to \code{FALSE}.
-# #' @param ReturnPopRaster Return population data to R (as data frame)? Defaults to \code{TRUE}.
-# #' @param CreatePopFile Create population output file? Defaults to \code{TRUE}.
+#' @param ReturnPopRaster Return population data to R (as data frame)? Defaults to \code{TRUE}.
+#' @param CreatePopFile Create population output file? Defaults to \code{TRUE}.
 #' @details \emph{Environmental Gradient}\cr
 #' In \emph{RangeShiftR}, it is possible to superimpose an artificial gradient on top of the landscape map (real or artificial).
 #' Gradients are implemented for cell-based models only.\cr
@@ -389,7 +389,7 @@ Simulation <- setClass("SimulationParams", slots = c(Simulation = "integer_OR_nu
                                           DrawLoadedSp = FALSE,
                                           SMSHeatMap = FALSE,
                                           ReturnPopRaster = FALSE,
-                                          CreatePopFile = FALSE
+                                          CreatePopFile = TRUE
                                           #moved! PropMales,
                                           #moved! Harem,
                                           #moved! bc,
