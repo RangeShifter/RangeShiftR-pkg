@@ -468,8 +468,17 @@ void Community::dispersal(short landIx)
 	int nsubcomms = (int)subComms.size();
 	// initiate dispersal - all emigrants leave their natal community and join matrix community
 	SubCommunity* matrix = subComms[0]; // matrix community is always the first
+	#pragma omp parallel
+	{
+	std::map<Species *,vector<Individual*>> inds_map;
+	#pragma omp for schedule(static,128) nowait
 	for (int i = 0; i < nsubcomms; i++) { // all populations
-		subComms[i]->initiateDispersal(matrix);
+		subComms[i]->initiateDispersal(inds_map);
+	}
+	for (std::pair<Species* const,std::vector<Individual*>> &item : inds_map) {
+		// add to matrix population
+		matrix->recruitMany(item.second, item.first);
+	}
 	}
 #if RSDEBUG
 	t1 = time(0);

@@ -150,6 +150,9 @@ public:
 	void recruit( // Add a specified individual to the population
 		Individual*	// pointer to Individual
 	);
+	void recruitMany( // Add specified individuals to the population
+		std::vector<Individual*>&	// vector of pointers to Individuals
+	);
 #if RS_RCPP
 	int transfer( // Executed for the Population(s) in the matrix only
 		Landscape*,	// pointer to Landscape

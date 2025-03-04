@@ -812,6 +812,20 @@ void Population::recruit(Individual* pInd) {
 	inds.push_back(pInd);
 }
 
+// Add specified individuals to the new/current dispersal group
+// Add specified individuals to the population
+void Population::recruitMany(std::vector<Individual*>& new_inds) {
+	if (new_inds.empty()) return;
+	for (Individual* pInd : new_inds) {
+		indStats ind = pInd->getStats();
+		nInds[ind.stage][ind.sex]++;
+	}
+#ifdef _OPENMP
+	const std::lock_guard<std::mutex> lock(inds_mutex);
+#endif // _OPENMP
+	inds.insert(inds.end(), new_inds.begin(), new_inds.end());
+}
+
 //---------------------------------------------------------------------------
 
 // Transfer is run for populations in the matrix only

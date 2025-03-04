@@ -299,8 +299,8 @@ void SubCommunity::emigration(void)
 	}
 }
 
-// Remove emigrants from their natal patch and add to patch 0 (matrix)
-void SubCommunity::initiateDispersal(SubCommunity* matrix) {
+// Remove emigrants from their natal patch and add to a map of vectors
+void SubCommunity::initiateDispersal(std::map<Species*,std::vector<Individual *>> &inds_map) {
 	if (subCommNum == 0) return; // no dispersal initiation in the matrix
 	popStats pop;
 	disperser disp;
@@ -308,11 +308,11 @@ void SubCommunity::initiateDispersal(SubCommunity* matrix) {
 	int npops = (int)popns.size();
 	for (int i = 0; i < npops; i++) { // all populations
 		pop = popns[i]->getStats();
+		Species* pSpecies = popns[i]->getSpecies();
 		for (int j = 0; j < pop.nInds; j++) {
 			disp = popns[i]->extractDisperser(j);
 			if (disp.yes) { // disperser - has already been removed from natal population
-				// add to matrix population
-				matrix->recruit(disp.pInd, pop.pSpecies);
+				inds_map[pSpecies].push_back(disp.pInd);
 			}
 		}
 		// remove pointers to emigrants
@@ -327,6 +327,16 @@ void SubCommunity::recruit(Individual* pInd, Species* pSpecies) {
 	for (int i = 0; i < npops; i++) { // all populations
 		if (pSpecies == popns[i]->getSpecies()) {
 			popns[i]->recruit(pInd);
+		}
+	}
+}
+
+// Add individuals into the local population of their species in the patch
+void SubCommunity::recruitMany(std::vector<Individual*>& inds, Species* pSpecies) {
+	int npops = (int)popns.size();
+	for (int i = 0; i < npops; i++) { // all populations
+		if (pSpecies == popns[i]->getSpecies()) {
+			popns[i]->recruitMany(inds);
 		}
 	}
 }
