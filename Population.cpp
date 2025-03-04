@@ -176,10 +176,10 @@ Population::Population(Species* pSp, Patch* pPch, int ninds, int resol)
 			else age = stg;
 #if RSDEBUG
 			// NOTE: CURRENTLY SETTING ALL INDIVIDUALS TO RECORD NO. OF STEPS ...
-			inds.push_back(new Individual(pCell, pPatch, stg, age, sstruct.repInterval,
+			inds.push_back(new Individual(pSpecies, pCell, pPatch, stg, age, sstruct.repInterval,
 				probmale, true, trfr.moveType));
 #else
-			inds.push_back(new Individual(pCell, pPatch, stg, age, sstruct.repInterval,
+			inds.push_back(new Individual(pSpecies, pCell, pPatch, stg, age, sstruct.repInterval,
 				probmale, trfr.moveModel, trfr.moveType));
 #endif
 			sex = inds[nindivs + i]->getSex();
@@ -489,9 +489,9 @@ void Population::reproduction(const float localK, const float envval, const int 
 					for (int j = 0; j < njuvs; j++) {
 #if RSDEBUG
 						// NOTE: CURRENTLY SETTING ALL INDIVIDUALS TO RECORD NO. OF STEPS ...
-						juvs.push_back(new Individual(pCell, pPatch, 0, 0, 0, 0.0, true, trfr.moveType));
+						juvs.push_back(new Individual(pSpecies, pCell, pPatch, 0, 0, 0, 0.0, true, trfr.moveType));
 #else
-						juvs.push_back(new Individual(pCell, pPatch, 0, 0, 0, 0.0, trfr.moveModel, trfr.moveType));
+						juvs.push_back(new Individual(pSpecies, pCell, pPatch, 0, 0, 0, 0.0, trfr.moveModel, trfr.moveType));
 #endif
 						nInds[0][0]++;
 						if (emig.indVar || trfr.indVar || sett.indVar || gen.neutralMarkers)
@@ -564,9 +564,9 @@ void Population::reproduction(const float localK, const float envval, const int 
 							for (int j = 0; j < njuvs; j++) {
 #if RSDEBUG
 								// NOTE: CURRENTLY SETTING ALL INDIVIDUALS TO RECORD NO. OF STEPS ...
-								juvs.push_back(new Individual(pCell, pPatch, 0, 0, 0, dem.propMales, true, trfr.moveType));
+								juvs.push_back(new Individual(pSpecies, pCell, pPatch, 0, 0, 0, dem.propMales, true, trfr.moveType));
 #else
-								juvs.push_back(new Individual(pCell, pPatch, 0, 0, 0, dem.propMales, trfr.moveModel, trfr.moveType));
+								juvs.push_back(new Individual(pSpecies, pCell, pPatch, 0, 0, 0, dem.propMales, trfr.moveModel, trfr.moveType));
 #endif
 								sex = juvs[nj + j]->getSex();
 								nInds[0][sex]++;

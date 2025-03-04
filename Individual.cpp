@@ -25,13 +25,75 @@
 #include "Individual.h"
 //---------------------------------------------------------------------------
 
+template <typename T>
+MemoryQueue<T>::MemoryQueue(std::size_t size):
+	space(size),
+	data(new T[size]),
+	begin_idx(0),
+	nb_elts(0)
+{ }
+
+template <typename T>
+T &MemoryQueue<T>::front() {
+	return data[begin_idx];
+}
+
+template <typename T>
+T const &MemoryQueue<T>::front() const {
+	return data[begin_idx];
+}
+
+template <typename T>
+T &MemoryQueue<T>::back() {
+	return data[(begin_idx + nb_elts - 1) % space];
+}
+
+template <typename T>
+T const &MemoryQueue<T>::back() const {
+	return data[(begin_idx + nb_elts - 1) % space];
+}
+
+template <typename T>
+void MemoryQueue<T>::push(const T& value) {
+	size_t end_idx = (begin_idx + nb_elts) % space;
+	data[end_idx] = value;
+	nb_elts++;
+}
+
+template <typename T>
+void MemoryQueue<T>::push(T&& value) {
+	size_t end_idx = (begin_idx + nb_elts) % space;
+	data[end_idx] = std::move(value);
+	nb_elts++;
+}
+
+template <typename T>
+void MemoryQueue<T>::pop() {
+	begin_idx++;
+	begin_idx %= space;
+	nb_elts--;
+}
+
+template <typename T>
+std::size_t MemoryQueue<T>::size() const {
+	return nb_elts;
+}
+
+template <typename T>
+bool MemoryQueue<T>::empty() const {
+	return nb_elts == 0;
+}
+
+//---------------------------------------------------------------------------
+
 int Individual::indCounter = 0;
 
 //---------------------------------------------------------------------------
 
 // Individual constructor
-Individual::Individual(Cell* pCell, Patch* pPatch, short stg, short a, short repInt,
-	float probmale, bool movt, short moveType)
+Individual::Individual(Species* pSpecies, Cell* pCell, Patch* pPatch, short stg, short a, short repInt,
+	float probmale, bool movt, short moveType):
+	memory(pSpecies->getSMSTraits().memSize)
 {
 	indId = indCounter;
 	indCounter++; // unique identifier for each individual
@@ -1818,6 +1880,8 @@ double cauchy(double location, double scale) {
 
 void testIndividual() {
 
+	Species* pSpecies = new Species();
+
 	Patch* pPatch = new Patch(0, 0);
 	int cell_x = 2;
 	int cell_y = 5;
@@ -1831,7 +1895,7 @@ void testIndividual() {
 	float probmale = 0;
 	bool uses_movt_process = true;
 	short moveType = 1;
-	Individual ind(pCell, pPatch, stg, age, repInt, probmale, uses_movt_process, moveType);
+	Individual ind(pSpecies, pCell, pPatch, stg, age, repInt, probmale, uses_movt_process, moveType);
 
 	// An individual can move to a neighbouring cell
 	//ind.moveto();
