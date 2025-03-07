@@ -386,6 +386,7 @@ void Community::addManuallySelected(void) {
 
 void Community::resetPopns(void) {
 	int nsubcomms = (int)subComms.size();
+	#pragma omp parallel for schedule(static,128)
 	for (int i = 0; i < nsubcomms; i++) { // all sub-communities
 		subComms[i]->resetPopns();
 	}
