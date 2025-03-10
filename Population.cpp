@@ -609,7 +609,7 @@ void Population::fledge(void)
 		for (int sex = 0; sex < nSexes; sex++) {
 			nInds[1][sex] = 0; // set count of adults to zero
 		}
-		inds = juvs;
+		inds = std::move(juvs);
 	}
 	juvs.clear();
 
