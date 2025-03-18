@@ -481,7 +481,7 @@ void Species::addTrait(TraitType traitType, const SpeciesTrait& trait) {
 		}
 		default:
 		{
-			cout << endl << ("Error:: Too many genetic load traits in Traits file, max = 5 \n");
+			cout << endl << ("Too many genetic load traits in Traits file, max = 5 \n");
 			break;
 		}
 		}

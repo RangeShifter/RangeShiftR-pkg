@@ -24,24 +24,24 @@ DispersalTrait::DispersalTrait(SpeciesTrait* P)
 		case UNIFORM:
 		{
 			if (mutationParameters.count(MAX) != 1)
-				throw logic_error("Error: mutation uniform distribution parameter must contain max value (e.g. max= ) \n");
+				throw logic_error("mutation uniform distribution parameter must contain max value (e.g. max= ) \n");
 			if (mutationParameters.count(MIN) != 1)
-				throw logic_error("Error: mutation uniform distribution parameter must contain min value (e.g. min= ) \n");
+				throw logic_error("mutation uniform distribution parameter must contain min value (e.g. min= ) \n");
 			_mutate_func_ptr = &DispersalTrait::mutateUniform;
 			break;
 		}
 		case NORMAL:
 		{
 			if (mutationParameters.count(MEAN) != 1)
-				throw logic_error("Error: mutation distribution set to normal so parameters must contain mean value (e.g. mean= ) \n");
+				throw logic_error("mutation distribution set to normal so parameters must contain mean value (e.g. mean= ) \n");
 			if (mutationParameters.count(SD) != 1)
-				throw logic_error("Error: mutation distribution set to normal so parameters must contain sdev value (e.g. sdev= ) \n");
+				throw logic_error("mutation distribution set to normal so parameters must contain sdev value (e.g. sdev= ) \n");
 			_mutate_func_ptr = &DispersalTrait::mutateNormal;
 			break;
 		}
 		default:
 		{
-			throw logic_error("Error: wrong parameter value for mutation model, must be uniform/normal \n"); //unless want to add gamma or negative exp 
+			throw logic_error("wrong parameter value for mutation model, must be uniform/normal \n"); //unless want to add gamma or negative exp 
 			break;
 		}
 		}
@@ -54,9 +54,9 @@ DispersalTrait::DispersalTrait(SpeciesTrait* P)
 	case UNIFORM:
 	{
 		if (initialParameters.count(MAX) != 1)
-			throw logic_error("Error: initial uniform distribution parameter must contain max value (e.g. max= ) \n");
+			throw logic_error("initial uniform distribution parameter must contain max value (e.g. max= ) \n");
 		if (initialParameters.count(MIN) != 1)
-			throw logic_error("Error: initial uniform distribution parameter must contain min value (e.g. min= ) \n");
+			throw logic_error("initial uniform distribution parameter must contain min value (e.g. min= ) \n");
 		float maxD = initialParameters.find(MAX)->second;
 		float minD = initialParameters.find(MIN)->second;
 		initialiseUniform(minD, maxD);
@@ -65,9 +65,9 @@ DispersalTrait::DispersalTrait(SpeciesTrait* P)
 	case NORMAL:
 	{
 		if (initialParameters.count(MEAN) != 1)
-			throw logic_error("Error: initial normal distribution parameter must contain mean value (e.g. mean= ) \n");
+			throw logic_error("initial normal distribution parameter must contain mean value (e.g. mean= ) \n");
 		if (initialParameters.count(SD) != 1)
-			throw logic_error("Error: initial normal distribution parameter must contain sdev value (e.g. sdev= ) \n");
+			throw logic_error("initial normal distribution parameter must contain sdev value (e.g. sdev= ) \n");
 		float mean = initialParameters.find(MEAN)->second;
 		float sd = initialParameters.find(SD)->second;
 		initialiseNormal(mean, sd);
@@ -278,9 +278,9 @@ void DispersalTrait::reInitialiseGenes(const bool& fromMother, map<int, vector<s
 	case UNIFORM:
 	{
 		if (initialParameters.count(MAX) != 1)
-			throw logic_error("Error:: initial uniform distribution parameter must contain max value (e.g. max= ) \n");
+			throw logic_error("initial uniform distribution parameter must contain max value (e.g. max= ) \n");
 		if (initialParameters.count(MIN) != 1)
-			throw logic_error("Error:: initial uniform distribution parameter must contain min value (e.g. min= ) \n");
+			throw logic_error("initial uniform distribution parameter must contain min value (e.g. min= ) \n");
 		float maxD = initialParameters.find(MAX)->second;
 		float minD = initialParameters.find(MIN)->second;
 		initialiseUniform(minD, maxD);
@@ -289,9 +289,9 @@ void DispersalTrait::reInitialiseGenes(const bool& fromMother, map<int, vector<s
 	case NORMAL:
 	{
 		if (initialParameters.count(MEAN) != 1)
-			throw logic_error("Error:: initial normal distribution parameter must contain mean value (e.g. mean= ) \n");
+			throw logic_error("initial normal distribution parameter must contain mean value (e.g. mean= ) \n");
 		if (initialParameters.count(SD) != 1)
-			throw logic_error("Error:: initial normal distribution parameter must contain sdev value (e.g. sdev= ) \n");
+			throw logic_error("initial normal distribution parameter must contain sdev value (e.g. sdev= ) \n");
 		float mean = initialParameters.find(MEAN)->second;
 		float sd = initialParameters.find(SD)->second;
 		initialiseNormal(mean, sd);

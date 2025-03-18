@@ -21,7 +21,7 @@ public:
 	// Get value at specified position
 	double get(unsigned int i, unsigned int j) {
 		if (i >= cols || j >= rows)
-			throw runtime_error("Error: PatchMatrix::get() out of range!\n");
+			throw runtime_error("PatchMatrix::get() out of range!\n");
 		else return value[i * cols + j];
 	}
 
@@ -30,7 +30,7 @@ public:
 	/** Sets element at row i and column j to value val **/
 	void set(unsigned int i, unsigned int j, double val) {
 		if (i >= cols || j >= rows)
-			throw runtime_error("Error: PatchMatrix::set() out of range!\n");
+			throw runtime_error("PatchMatrix::set() out of range!\n");
 		else value[i * cols + j] = val;
 	}
 
