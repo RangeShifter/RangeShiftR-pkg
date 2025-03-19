@@ -91,12 +91,21 @@ ExpressionType stringToExpressionType(const std::string& str);
 map<GenParamType, float> NumericToParameterMap(string parameterString, Rcpp::NumericVector parameter);
 set<int> selectRandomLociPositions(int noLoci, const int& genomeSize);
 DistributionType stringToDistributionType(const std::string& str);
-void setUpSpeciesTrait(string TraitTypeR, set<int> positions, string ExpressionTypeR,
-                       string initDistR, Rcpp::NumericVector initParamsR,
-                       string DominanceDistR, Rcpp::NumericVector DominanceParamsR,
-                       bool isInherited, string MutationDistR,
-                       Rcpp::NumericVector MutationParamsR, float MutationRateR,
-                       int sexdep, bool isOutputR);
+void setUpSpeciesTrait(string TraitTypeR,
+                       set<int> positions,
+                       string ExpressionTypeR,
+                       string initDistR,
+                       Rcpp::NumericVector initParamsR,
+                       string initDominanceDistR,
+                       Rcpp::NumericVector initDominanceParamsR,
+                       string DominanceDistR,
+                       Rcpp::NumericVector DominanceParamsR,
+                       bool isInherited,
+                       string MutationDistR,
+                       Rcpp::NumericVector MutationParamsR,
+                       float MutationRateR,
+                       int sexdep,
+                       bool isOutputR);
 int ReadTranslocationR(Landscape*,Rcpp::S4);
 
 int ParseInitIndsFileR(wifstream&);
