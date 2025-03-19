@@ -626,23 +626,23 @@ bool SubCommunity::outTraitsHeaders(Landscape* pLandscape, Species* pSpecies, in
 	if (sim.batchMode) {
 		if (land.patchModel) {
 			name = DirOut
-				+ "Batch" + Int2Str(sim.batchNum) + "_"
-				+ "Sim" + Int2Str(sim.simulation) + "_Land" + Int2Str(landNr)
+				+ "Batch" + to_string(sim.batchNum) + "_"
+				+ "Sim" + to_string(sim.simulation) + "_Land" + to_string(landNr)
 				+ "_TraitsXpatch.txt";
 		}
 		else {
 			name = DirOut
-				+ "Batch" + Int2Str(sim.batchNum) + "_"
-				+ "Sim" + Int2Str(sim.simulation) + "_Land" + Int2Str(landNr)
+				+ "Batch" + to_string(sim.batchNum) + "_"
+				+ "Sim" + to_string(sim.simulation) + "_Land" + to_string(landNr)
 				+ "_TraitsXcell.txt";
 		}
 	}
 	else {
 		if (land.patchModel) {
-			name = DirOut + "Sim" + Int2Str(sim.simulation) + "_TraitsXpatch.txt";
+			name = DirOut + "Sim" + to_string(sim.simulation) + "_TraitsXpatch.txt";
 		}
 		else {
-			name = DirOut + "Sim" + Int2Str(sim.simulation) + "_TraitsXcell.txt";
+			name = DirOut + "Sim" + to_string(sim.simulation) + "_TraitsXcell.txt";
 		}
 	}
 	outtraits.open(name.c_str());
