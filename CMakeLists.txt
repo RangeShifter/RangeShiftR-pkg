@@ -12,6 +12,11 @@ else() # that is, RScore compiled as library within RangeShifter_batch
 	add_library(RScore Species.cpp Cell.cpp Community.cpp FractalGenerator.cpp Genome.cpp Individual.cpp Landscape.cpp Model.cpp Parameters.cpp Patch.cpp Population.cpp RandomCheck.cpp RSrandom.cpp SubCommunity.cpp Utils.cpp)
 endif()
 
+find_package(OpenMP COMPONENTS CXX)
+if (OpenMP_CXX_FOUND)
+	target_link_libraries(RScore PUBLIC OpenMP::OpenMP_CXX)
+endif()
+
 # pass config definitions to compiler
 target_compile_definitions(RScore PRIVATE RSWIN64)
 
@@ -27,4 +32,4 @@ endif()
 
 if(NOT batchmode)
 	target_include_directories(RScore PUBLIC "${PROJECT_BINARY_DIR}")
-endif() 
+endif()
