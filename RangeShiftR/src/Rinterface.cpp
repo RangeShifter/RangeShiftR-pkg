@@ -4408,8 +4408,8 @@ void setUpSpeciesTrait(string TraitTypeR, set<int> positions, string ExpressionT
     const DistributionType initDist = stringToDistributionType(initDistR);
     const map<GenParamType, float> initParams = NumericToParameterMap(initDistR,initParamsR);
 
-    const DistributionType dominanceDist = stringToDistributionType(DominanceDistR);
-    const map<GenParamType, float> dominanceParams = NumericToParameterMap(DominanceDistR,DominanceParamsR);
+    const DistributionType initDomDist = stringToDistributionType(DominanceDistR);
+    const map<GenParamType, float> initDomParams = NumericToParameterMap(DominanceDistR,DominanceParamsR);
 
     DistributionType mutationDistribution = isInherited ?
     stringToDistributionType(MutationDistR) :
@@ -4431,7 +4431,7 @@ void setUpSpeciesTrait(string TraitTypeR, set<int> positions, string ExpressionT
         traitType, sex,
         positions, expressionType,
         initDist, initParams,
-        dominanceDist, dominanceParams,
+        initDomDist, initDomParams,
         isInherited, mutationRate,
         mutationDistribution, mutationParameters,
         ploidy,
@@ -4548,7 +4548,7 @@ int ReadTranslocationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
             locn s;
             if(paramsLand.patchModel){ // if patch model, the x is the patch ID
                 // only if patch ID exists? otherwise exit?
-                if(translocation_matrix_R(i,1) <= pLandscape->patchCount() && translocation_matrix_R(i,1) > 0){
+                if(translocation_matrix_R(i,1) <= pLandscape->patchCount() && translocation_matrix_R(i,1) > 0){ // not sure if I can run this check here
                     s.x = translocation_matrix_R(i,1);
                     s.y = -9;
                 } else{
@@ -4632,21 +4632,21 @@ int ReadTranslocationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
                 // the maximal age of the individuals to the max_age map
                 // and the stage of the individuals to the stage map
                 if(paramsLand.patchModel){
-                    if ((int)translocation_matrix_R(i,4)>=0 | (int)translocation_matrix_R(i,4)==-9){
+                    if ((int)translocation_matrix_R(i,4)>=0 || (int)translocation_matrix_R(i,4)==-9){
                         t.min_age[year].push_back((int)translocation_matrix_R(i,4));
                     } else{
                         Rcpp::Rcout << "ReadTranslocationR(): minimal age of the individuals to be translocated is a negative value which is not -9." << std::endl;
                         error = 600;
                         return error;
                     }
-                    if ((int)translocation_matrix_R(i,5)>0 | (int)translocation_matrix_R(i,5)==-9){
+                    if ((int)translocation_matrix_R(i,5)>0 || (int)translocation_matrix_R(i,5)==-9){
                         t.max_age[year].push_back((int)translocation_matrix_R(i,5));
                     } else{
                         Rcpp::Rcout << "ReadTranslocationR(): maximal age of the individuals to be translocated is 0 or a negative value which is not -9." << std::endl;
                         error = 600;
                         return error;
                     }
-                    if ((int)translocation_matrix_R(i,6)>=0 | (int)translocation_matrix_R(i,6)==-9){
+                    if ((int)translocation_matrix_R(i,6)>=0 || (int)translocation_matrix_R(i,6)==-9){
                         t.stage[year].push_back((int)translocation_matrix_R(i,6));
                     } else{
                         Rcpp::Rcout << "ReadTranslocationR(): stage of the individuals to be translocated is a negative value which is not -9." << std::endl;
