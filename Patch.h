@@ -72,6 +72,10 @@ using namespace std;
 #include "Cell.h"
 #include "Species.h"
 
+#ifdef _OPENMP
+#include <atomic>
+#endif
+
 //---------------------------------------------------------------------------
 
 struct patchLimits {
@@ -155,7 +159,11 @@ public:
 	float localK;		// patch carrying capacity (individuals)
 	bool changed;
 // NOTE: THE FOLLOWING ARRAY WILL NEED TO BE MADE SPECIES-SPECIFIC...
+#ifdef _OPENMP
+	std::atomic<short> nTemp[NSEXES];						// no. of potential settlers in each sex
+#else
 	short nTemp[NSEXES];						// no. of potential settlers in each sex
+#endif
 
 	std::vector <Cell*> cells;
 	std::vector <patchPopn> popns;

@@ -1326,7 +1326,10 @@ movedata Individual::smsMove(Landscape* pLand, Species* pSpecies,
 
 	// get habitat-dependent weights (mean effective costs, given perceptual range)
 	// first check if costs have already been calculated
-
+	{
+#ifdef _OPENMP
+	const std::unique_lock<std::mutex> lock = pCurrCell->lockCost();
+#endif
 	hab = pCurrCell->getEffCosts();
 
 	if (hab.cell[0][0] < 0.0) { // costs have not already been calculated
@@ -1336,6 +1339,7 @@ movedata Individual::smsMove(Landscape* pLand, Species* pSpecies,
 	}
 	else {
 		// they have already been calculated - no action required
+	}
 	}
 
 	// determine weighted effective cost for the 8 neighbours

@@ -843,6 +843,7 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 	// each individual takes one step
 	// for dispersal by kernel, this should be the only step taken
 	int ninds = (int)inds.size();
+	#pragma omp parallel for reduction(+:ndispersers) private(disperser, pCell, pPatch, patch) schedule(static,128)
 	for (int i = 0; i < ninds; i++) {
 		if (trfr.moveModel) {
 			disperser = inds[i]->moveStep(pLandscape, pSpecies, landIx, sim.absorbing);
