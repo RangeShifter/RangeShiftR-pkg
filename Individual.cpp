@@ -1266,7 +1266,7 @@ movedata Individual::smsMove(Landscape* pLand, Species* pSpecies,
 	array3x3d goal;	// to hold weights for moving towards a goal location
 	array3x3f hab;	// to hold weights for habitat (includes percep range)
 	int x2, y2; 			// x index from 0=W to 2=E, y index from 0=N to 2=S
-	int newX = -9, newY = -9; // BUGFIX: must not be 0 because 0,0 is a valid landscape cell
+	int newX = -9, newY = -9;
 	Cell* pCell;
 	Cell* pNewCell = NULL;
 	double sum_nbrs = 0.0;
