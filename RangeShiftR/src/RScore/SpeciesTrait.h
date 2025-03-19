@@ -22,12 +22,14 @@ public:
         const ExpressionType& expr,
         const DistributionType& initDist,
         const map<GenParamType, float> initParams,
-        const DistributionType& dominanceDist,
-        const map<GenParamType, float> dominanceParams,
+        const DistributionType& initDomDist,
+        const map<GenParamType, float> initDomParams,
         bool isInherited,
         const float& mutationRate,
         const DistributionType& mutationDist,
         const map<GenParamType, float> mutationParams,
+        const DistributionType& dominanceDist,
+        const map<GenParamType, float> dominanceParams,
         const int ploidy,
         const bool isOutput
     );
@@ -44,12 +46,15 @@ public:
     int getPositionsSize() const { return static_cast<int>(genePositions.size()); }
     bool isInherited() const { return inherited; }
 
+    DistributionType getInitialDistribution() const { return initialDistribution; };
+    map<GenParamType, float> getInitialParameters() const { return initialParameters; };
+    DistributionType getInitDomDistribution() const { return initialDomDistribution; };
+    map<GenParamType, float> getInitDomParameters() const { return initialDomParameters; };
     DistributionType getMutationDistribution() const { return mutationDistribution; };
     map<GenParamType, float> getMutationParameters() const { return mutationParameters; };
     DistributionType getDominanceDistribution() const { return dominanceDistribution; };
     map<GenParamType, float> getDominanceParameters() const { return dominanceParameters; };
-    DistributionType getInitialDistribution() const { return initialDistribution; };
-    map<GenParamType, float> getInitialParameters() const { return initialParameters; };
+
     ExpressionType getExpressionType() const { return expressionType; };
 
     int getNbNeutralAlleles() const {
@@ -78,6 +83,8 @@ private:
     ExpressionType expressionType;
     DistributionType initialDistribution;
     map<GenParamType, float> initialParameters;
+    DistributionType initialDomDistribution;
+    map<GenParamType, float> initialDomParameters;
     DistributionType dominanceDistribution;
     map<GenParamType, float> dominanceParameters;
     bool inherited;

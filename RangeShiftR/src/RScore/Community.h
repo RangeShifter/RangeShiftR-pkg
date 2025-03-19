@@ -160,9 +160,7 @@ public:
 		int		// option: -999 to close the file
 	);
 	void outOccupancy(void);
-	void outOccSuit(
-		bool	// TRUE if occupancy graph is to be viewed on screen
-	);
+	void outOccSuit();
 	bool outTraitsHeaders( // Open traits file and write header record
 		Species*,	// pointer to Species
 		int				// Landscape number (-999 to close the file)

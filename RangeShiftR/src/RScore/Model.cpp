@@ -47,7 +47,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 	translocationParams transloc = pManagement->getTranslocationParams();
 	initParams init = paramsInit->getInit();
 	simParams sim = paramsSim->getSim();
-	simView v = paramsSim->getViews();
 
 	if (!ppLand.generated) {
 		if (!ppLand.patchModel) { // cell-based landscape
@@ -244,7 +243,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 			pLandscape->createConnectMatrix();
 
 		// variables to control dynamic landscape
-		landChange landChg; landChg.chgnum = 0; landChg.chgyear = 999999;
+		landChange landChg; landChg.chgNb = 0; landChg.chgYear = 999999;
 		if (!ppLand.generated && ppLand.dynamic) {
 			landChg = pLandscape->getLandChange(0); // get first change year
 		}
@@ -346,8 +345,8 @@ int RunModel(Landscape* pLandscape, int seqsim)
 					updateCC = true;
 				}
 				if (ppLand.dynamic) {
-					if (yr == landChg.chgyear) { // apply landscape change
-						landIx = landChg.chgnum;
+					if (yr == landChg.chgYear) { // apply landscape change
+						landIx = landChg.chgNb;
 						updateland = updateCC = true;
 						if (ppLand.patchModel) { // apply any patch changes
 							Patch* pPatch;
@@ -374,7 +373,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 							ixpchchg--;
 							pLandscape->resetPatches(); // reset patch limits
 						}
-						if (landChg.costfile != "NULL") { // apply any SMS cost changes
+						if (landChg.pathCostFile != "NULL") { // apply any SMS cost changes
 							Cell* pCell;
 							costchange = pLandscape->getCostChange(ixcostchg++);
 							while (costchange.chgnum <= landIx && ixcostchg <= ncostchanges) {
@@ -391,7 +390,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 							landChg = pLandscape->getLandChange(landIx);
 						}
 						else {
-							landChg.chgyear = 9999999;
+							landChg.chgYear = 9999999;
 						}
 					}
 				}
@@ -445,8 +444,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				}
 
 				// Output and pop. visualisation before reproduction
-				if (v.viewPop || v.viewTraits || sim.outOccup
-					|| sim.outTraitsCells || sim.outTraitsRows || sim.saveMaps)
+				if (sim.outOccup || sim.outTraitsCells || sim.outTraitsRows)
 					PreReproductionOutput(pLandscape, pComm, rep, yr, gen);
 				// for non-structured population, also produce range and population output now
 				if (!dem.stageStruct && (sim.outRange || sim.outPop))
@@ -566,8 +564,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 
 		// Final output
 		// produce final summary output
-		if (v.viewPop || v.viewTraits || sim.outOccup
-			|| sim.outTraitsCells || sim.outTraitsRows || sim.saveMaps)
+		if (sim.outOccup || sim.outTraitsCells || sim.outTraitsRows)
 			PreReproductionOutput(pLandscape, pComm, rep, yr, 0);
 		if (sim.outRange || sim.outPop)
 			RangePopOutput(pComm, rep, yr, 0);
@@ -663,7 +660,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 	// Occupancy outputs
 	if (sim.outOccup && sim.reps > 1) {
 		pComm->outOccupancy();
-		pComm->outOccSuit(v.viewGraph);
+		pComm->outOccSuit();
 		pComm->deleteOccupancy((sim.years / sim.outIntOcc) + 1);
 		pComm->outOccupancyHeaders(-999);
 	}
@@ -750,12 +747,10 @@ bool CheckDirectory(const string& pathToProjDir)
 void PreReproductionOutput(Landscape* pLand, Community* pComm, int rep, int yr, int gen)
 {
 	simParams sim = paramsSim->getSim();
-	simView v = paramsSim->getViews();
 
 	// trait outputs and visualisation
-	if (v.viewTraits
-		|| ((sim.outTraitsCells && yr >= sim.outStartTraitCell && yr % sim.outIntTraitCell == 0) ||
-			(sim.outTraitsRows && yr >= sim.outStartTraitRow && yr % sim.outIntTraitRow == 0)))
+	if ((sim.outTraitsCells && yr >= sim.outStartTraitCell && yr % sim.outIntTraitCell == 0) 
+		|| (sim.outTraitsRows && yr >= sim.outStartTraitRow && yr % sim.outIntTraitRow == 0))
 	{
 		pComm->outTraits(pSpecies, rep, yr, gen);
 	}
@@ -896,13 +891,13 @@ void OutParameters(Landscape* pLandscape)
 		int nchanges = pLandscape->numLandChanges();
 		for (int i = 0; i < nchanges; i++) {
 			chg = pLandscape->getLandChange(i);
-			outPar << "Change no. " << chg.chgnum << " in year " << chg.chgyear << endl;
-			outPar << "Landscape: " << chg.habfile << endl;
+			outPar << "Change no. " << chg.chgNb << " in year " << chg.chgYear << endl;
+			outPar << "Landscape: " << chg.pathHabFile << endl;
 			if (ppLand.patchModel) {
-				outPar << "Patches  : " << chg.pchfile << endl;
+				outPar << "Patches  : " << chg.pathPatchFile << endl;
 			}
-			if (chg.costfile != "none" && chg.costfile != "NULL") {
-				outPar << "Costs    : " << chg.costfile << endl;
+			if (chg.pathCostFile != "none" && chg.pathCostFile != "NULL") {
+				outPar << "Costs    : " << chg.pathCostFile << endl;
 			}
 		}
 	}
@@ -1802,20 +1797,7 @@ void OutParameters(Landscape* pLandscape)
 		outPar << endl;
 	}
 #endif
-	outPar << "SAVE MAPS: ";
-	if (sim.saveMaps) {
-		outPar << "yes - every " << sim.mapInt << " year";
-		if (sim.mapInt > 1) outPar << "s";
-		outPar << endl;
-	}
-	else outPar << "no" << endl;
-	outPar << "SAVE TRAITS MAPS: ";
-	if (sim.saveTraitMaps) {
-		outPar << "yes - every " << sim.traitInt << " year";
-		if (sim.traitInt > 1) outPar << "s";
-		outPar << endl;
-	}
-	else outPar << "no" << endl;
+	
 	if (trfr.usesMovtProc && trfr.moveType == 1) {
 		outPar << "SMS HEAT MAPS: ";
 		if (sim.saveVisits) outPar << "yes" << endl;
