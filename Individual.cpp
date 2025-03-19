@@ -1225,7 +1225,7 @@ int Individual::moveStep(Landscape* pLandscape, Species* pSpecies,
 
 		} // end of switch (trfr.moveType)
 
-		if (dispersing==1 && // only if it is still dispersing and did not die during the last step, it should make this decision!
+		if (dispersing == 1 &&
             patch > 0  // not no-data area or matrix
 			&& path->total >= settsteps.minSteps) {
 			pPatch = (Patch*)patch;
