@@ -2390,7 +2390,7 @@ resol = (int) tmpresol;
 #if RS_RCPP
 	if (!hfile.good()) {
 		// corrupt file stream
-		StreamErrorR(pathHabFile);
+		StreamErrorR(habfile);
 		hfile.close();
 		hfile.clear();
 		if (patchModel) {
@@ -2424,7 +2424,7 @@ resol = (int) tmpresol;
 #if RS_RCPP
 		if (!pfile.good()) {
 			// corrupt file stream
-			StreamErrorR(pathPatchFile);
+			StreamErrorR(pchfile);
 			hfile.close();
 			hfile.clear();
 			pfile.close();
@@ -2471,7 +2471,7 @@ resol = (int) tmpresol;
 #if RS_RCPP && !R_CMD
 					Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" << std::endl;
 #endif
-						StreamErrorR(pathPatchFile);
+						StreamErrorR(pchfile);
 					hfile.close();
 					hfile.clear();
 					pfile.close();
@@ -2485,7 +2485,7 @@ resol = (int) tmpresol;
 #if RS_RCPP && !R_CMD
 			Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" << std::endl;
 #endif
-					StreamErrorR(pathHabFile);
+					StreamErrorR(habfile);
 			hfile.close();
 			hfile.clear();
 			if (patchModel) {
@@ -2551,11 +2551,11 @@ resol = (int) tmpresol;
 		}
 #if RS_RCPP
 hfile >> hfloat;
-if (!hfile.eof()) EOFerrorR(pathHabFile);
+if (!hfile.eof()) EOFerrorR(habfile);
 if (patchModel)
 {
 	pfile >> pfloat;
-	if (!pfile.eof()) EOFerrorR(pathPatchFile);
+	if (!pfile.eof()) EOFerrorR(pchfile);
 }
 #endif
 break;
@@ -2586,7 +2586,7 @@ case 1: // multiple % cover
 #if RS_RCPP && !R_CMD
 					Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" << std::endl;
 #endif
-					StreamErrorR(pathPatchFile);
+					StreamErrorR(pchfile);
 					hfile.close();
 					hfile.clear();
 					pfile.close();
@@ -2667,7 +2667,7 @@ else { // couldn't read from hfile
 #if RS_RCPP && !R_CMD
 	Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" << std::endl;
 #endif
-	StreamErrorR(pathHabFile);
+	StreamErrorR(habfile);
 	hfile.close();
 	hfile.clear();
 	if (patchModel) {
@@ -2683,11 +2683,11 @@ else { // couldn't read from hfile
 	habIndexed = true; // habitats are already numbered 1...n in correct order
 #if RS_RCPP
 	hfile >> hfloat;
-	if (!hfile.eof()) EOFerrorR(pathHabFile);
+	if (!hfile.eof()) EOFerrorR(habfile);
 	if (patchModel)
 	{
 		pfile >> pfloat;
-		if (!pfile.eof()) EOFerrorR(pathPatchFile);
+		if (!pfile.eof()) EOFerrorR(pchfile);
 	}
 #endif
 	break;
@@ -2710,7 +2710,7 @@ case 2: // habitat quality
 #if RS_RCPP && !R_CMD
 		Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" << std::endl;
 #endif
-		StreamErrorR(pathHabFile);
+		StreamErrorR(habfile);
 		hfile.close();
 		hfile.clear();
 		if (patchModel) {
@@ -2735,7 +2735,7 @@ case 2: // habitat quality
 #if RS_RCPP && !R_CMD
 		Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" << std::endl;
 #endif
-		StreamErrorR(pathPatchFile);
+		StreamErrorR(pchfile);
 		hfile.close();
 		hfile.clear();
 		pfile.close();
@@ -2795,11 +2795,11 @@ case 2: // habitat quality
 	}
 #if RS_RCPP
 	hfile >> hfloat;
-	if (!hfile.eof()) EOFerrorR(pathHabFile);
+	if (!hfile.eof()) EOFerrorR(habfile);
 	if (patchModel)
 	{
 		pfile >> pfloat;
-		if (!pfile.eof()) EOFerrorR(pathPatchFile);
+		if (!pfile.eof()) EOFerrorR(habfile);
 	}
 #endif
 	break;
