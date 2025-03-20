@@ -3522,8 +3522,8 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
         Rcpp::NumericVector initParamsR = {0,Rcpp::as<int>(NeutralTraitsParamsR.slot("InitialParameters"))};
 
         // Initial dominance distribution parameters not applicable for neutral traits
-        string initDominanceDistR = "#";
-        Rcpp::NumericVector initDominanceParamsR = {0,0};
+        string initDomDistR = "#";
+        Rcpp::NumericVector initDomParamsR = {0,0};
 
         // Dominance distribution parameters not applicable for neutral traits
         string DominanceDistR = "#";
@@ -3546,8 +3546,8 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
                           ExpressionTypeR,
                           initDistR,
                           initParamsR,
-                          initDominanceDistR,
-                          initDominanceParamsR,
+                          initDomDistR,
+                          initDomParamsR,
                           DominanceDistR,
                           DominanceParamsR,
                           isInherited,
