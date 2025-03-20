@@ -194,10 +194,10 @@ setMethod("show", "NeutralTraitsParams", function(object){
 #' min and max (\code{uniform}), mean and sd (\code{normal}) or shape and scale (\code{gamma}) or one column for \code{negExp}: mean
 #' If genetic loads have different \code{InitialDistribution} and one requires two columns you need to set the second value to \code{NA} in case of \code{negExp} distribution.
 #' Each row in the matrix corresponds to a genetic load trait.
-#' @param InitialDomDist Distribution from which to draw initial dominance values. Can be \code{gamma}, \code{uniform}, \code{normal}, \code{negExp}, \code{scaled}. Should be provided as a vector of strings if \code{NbGeneticLoads > 1}
-#' @param InitialDomParams Parameters for the initial dominance distribution: You must provide two colums for \code{uniform}, \code{normal} and \code{gamma} distributions:
+#' @param InitialDomDistribution Distribution from which to draw initial dominance values. Can be \code{gamma}, \code{uniform}, \code{normal}, \code{negExp}, \code{scaled}. Should be provided as a vector of strings if \code{NbGeneticLoads > 1}
+#' @param InitialDomParameters Parameters for the initial dominance distribution: You must provide two colums for \code{uniform}, \code{normal} and \code{gamma} distributions:
 #' min and max (\code{uniform}), mean and sd (\code{normal}) or shape and scale (\code{gamma}) or one column for \code{negExp}: mean
-#' If genetic loads have different \code{InitialDomDist} and one requires two columns you need to set the second value to \code{NA} in case of \code{negExp} distribution.
+#' If genetic loads have different \code{InitialDomParameters} and one requires two columns you need to set the second value to \code{NA} in case of \code{negExp} distribution.
 #' Each row in the matrix corresponds to a genetic load trait.
 #' @param DominanceDistribution Distribution of dominance values. Can be \code{gamma}, \code{uniform}, \code{normal}, \code{negExp}, \code{scaled}. Should be provided as a vector of strings if \code{NbGeneticLoads > 1}
 #' @param DominanceParameters Parameters for the dominance distribution: You must provide two colums for \code{uniform}, \code{normal} and \code{gamma} distributions:
@@ -260,7 +260,7 @@ GeneticLoadTraits<- setClass("GeneticLoadParams", slots = c(
     NbOfPositions = "ANY", # numeric, only where positions are random; otherwise NA
     InitialDistribution = "character", #‘gamma’, ‘uniform’, ‘normal’,‘negExp’
     InitialParameters = "matrix", # 2 values for min/max, mean/sd, shape/scale or one value: mean
-    InitialDomDist = "character", #  ‘gamma’, ‘uniform’, ‘normal’, ‘negExp’, ‘scaled’
+    InitialDomDistribution = "character", #  ‘gamma’, ‘uniform’, ‘normal’, ‘negExp’, ‘scaled’
     InitialDomParameters = "matrix", # 2 values for min/max, mean/sd, shape/scale or one value: mean
     DominanceDistribution = "character", # ‘gamma’, ‘uniform’, ‘normal’, ‘negExp’, ‘scaled’ # character vector
     DominanceParameters = "matrix", # 2 values for min/max, mean/sd, shape/scale or one value: mean
@@ -274,7 +274,7 @@ GeneticLoadTraits<- setClass("GeneticLoadParams", slots = c(
         NbOfPositions = 2L,
         InitialDistribution = "normal",
         InitialParameters = matrix(c(0.5,0.1), nrow=1),
-        InitialDomDist = "normal",
+        InitialDomDistribution = "normal",
         InitialDomParameters = matrix(c(0.5,0.1), nrow=1),
         DominanceDistribution = "normal",
         DominanceParameters = matrix(c(0.5,0.1), nrow=1),
@@ -384,9 +384,9 @@ setValidity("GeneticLoadParams", function(object) {
         }
     }
 
-    # Check InitialDomDist
-    if (!is.null(object@InitialDomDist)){
-        if(length(object@InitialDomDist) != object@NbGeneticLoads) {
+    # Check InitialDomDistribution
+    if (!is.null(object@InitialDomDistribution)){
+        if(length(object@InitialDomDistribution) != object@NbGeneticLoads) {
             msg <- c(msg, "If you want to have initial dominance distribution for one genetic load, you must provide it for all genetic load. If you don't want to set the initial dominance value for some genetic loads, set it to NA for those.")
         } else if (nrow(object@InitialDomParameters) != object@NbGeneticLoads) {
             msg <- c(msg, "If you have set InitialDomDistributions for at least one genetic load you must provide the InitialDomParameters for each genetic load. Use one row for each genetic load.")

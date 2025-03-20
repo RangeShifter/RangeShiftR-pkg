@@ -3586,13 +3586,28 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
             initDistRvec = {"#"};
         }
 
-        Rcpp::NumericMatrix initParamsRmat = Rcpp::as<Rcpp::NumericMatrix>(GeneticLoadParamsR.slot("InitialParameters")); // as a matrix: columns for parameter, rows for load nb
+        Rcpp::NumericMatrix initParamsRmat;
+        if(GeneticLoadParamsR.slot("InitialParameters")!= R_NilValue){
+            initParamsRmat = Rcpp::as<Rcpp::NumericMatrix>(GeneticLoadParamsR.slot("InitialParameters")); // as a matrix: columns for parameter, rows for load nb
+        } else {
+            initParamsRmat = R_NilValue;
+        }
 
 
         // Initial dominance distribution parameters applicable for genetic loads
-        string initDominanceDistR = "#";
-        Rcpp::NumericVector initDominanceParamsR = {0,0};
+        Rcpp::StringVector initDomDistRvec;
+        if (GeneticLoadParamsR.slot("InitialDomDistribution")!= R_NilValue){
+            initDomDistRvec =  Rcpp::as<Rcpp::StringVector>(GeneticLoadParamsR.slot("InitialDomDistribution"));
+        } else {
+            initDomDistRvec = {"#"};
+        }
 
+        Rcpp::NumericMatrix initDomParamsRmat;
+        if(GeneticLoadParamsR.slot("InitialDomParameters")!= R_NilValue){
+            initDomParamsRmat = Rcpp::as<Rcpp::NumericMatrix>(GeneticLoadParamsR.slot("InitialDomParameters")); // as a matrix: columns for parameter, rows for load nb
+        } else {
+            initDomParamsRmat = R_NilValue;
+        }
 
 
         // Dominance distribution parameters
@@ -3636,27 +3651,46 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
                 }
             }
 
+            string initDistR;
+            if (initDistRvec[1] != "#") initDistR = (string)initDistRvec[l]; // it is checked beforehand whether the correct distributions are provided
+            else initDistR = "#";
+
+            Rcpp::NumericVector initParamsR;
+            if (initParamsRmat != R_NilValue) initParamsR = initParamsRmat.row(l);
+            else initParamsR = {0,0};
+
+            string initDomDistR;
+            if (initDomDistRvec[1] != "#") initDomDistR = (string)initDomDistRvec[l]; // it is checked beforehand whether the correct distributions are provided
+            else initDomDistR = "#";
+
+            Rcpp::NumericVector initDomParamsR;
+            if (initDomParamsRmat != R_NilValue) initDomParamsR = initDomParamsRmat.row(l);
+            else initDomParamsR = {0,0};
+
             string DominanceDistR = (string)DominanceDistRvec[l]; // it is checked beforehand whether the correct distributions are provided
             Rcpp::NumericVector DominanceParamsR = DominanceParamsRmat.row(l);
+
             string MutationDistR =  (string)MutationDistRvec[l];
             Rcpp::NumericVector MutationParamsR = MutationParamsRmat.row(l);
             float MutationRateR = (float) MutationRateRvec[l];
+
             bool isOutputR = isOutputRvec[l] == 1;
+
             setUpSpeciesTrait(TraitTypeR,
                               positions,
                               ExpressionTypeR,
-                          initDistR,
-                          initParamsR,
-                          initDominanceDistR,
-                              initDominanceParamsR,
-                          DominanceDistR,
+                              initDistR,
+                              initParamsR,
+                              initDomDistR,
+                              initDomParamsR,
+                              DominanceDistR,
                               DominanceParamsR,
-                          isInherited,
+                              isInherited,
                               MutationDistR,
-                          MutationParamsR,
-                          MutationRateR,
-                          sexdep,
-                          isOutputR);
+                              MutationParamsR,
+                              MutationRateR,
+                              sexdep,
+                              isOutputR);
         }
     }
 
@@ -3688,6 +3722,10 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
         Rcpp::NumericMatrix InitialParamsRmat = Rcpp::as<Rcpp::NumericMatrix>(EmigrationTraitsParamsR.slot("InitialParameters")); // as a matrix: columns for parameter, rows for emigration trait
 
         Rcpp::LogicalVector isInheritedRvec = Rcpp::as<Rcpp::LogicalVector>(EmigrationTraitsParamsR.slot("IsInherited"));
+
+        // Initial dominance distribution
+        string initDomDistR = "#"; // not applicable for dispersal traits
+        Rcpp::NumericVector initDomParamsR = {0,0}; // not applicable for dispersal traits
 
         // Dominance distribution
         string DominanceDistR = "#"; // not applicable for dispersal traits
@@ -3779,8 +3817,8 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
                               ExpressionTypeR,
                               initDistR,
                               initParamsR,
-                              initDominanceDistR,
-                              initDominanceParamsR,
+                              initDomDistR,
+                              initDomParamsR,
                               DominanceDistR,
                               DominanceParamsR,
                               isInherited,
@@ -3817,6 +3855,10 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
         Rcpp::NumericMatrix InitialParamsRmat = Rcpp::as<Rcpp::NumericMatrix>(SettlementTraitsParamsR.slot("InitialParameters")); // as a matrix: columns for parameter, rows for Settlement trait
 
         Rcpp::LogicalVector isInheritedRvec = Rcpp::as<Rcpp::LogicalVector>(SettlementTraitsParamsR.slot("IsInherited"));
+
+        // Initial dominance distribution
+        string initDomDistR = "#"; // not applicable for dispersal traits
+        Rcpp::NumericVector initDomParamsR = {0,0}; // not applicable for dispersal traits
 
         // Dominance distribution
         string DominanceDistR = "#"; // not applicable for dispersal traits
@@ -3894,8 +3936,8 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
                               ExpressionTypeR,
                               initDistR,
                               initParamsR,
-                              initDominanceDistR,
-                              initDominanceParamsR,
+                              initDomDistR,
+                              initDomParamsR,
                               DominanceDistR,
                               DominanceParamsR,
                               isInherited,
@@ -3940,6 +3982,10 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
                 Rcpp::NumericMatrix InitialParamsRmat = Rcpp::as<Rcpp::NumericMatrix>(KernelTraitsParamsR.slot("InitialParameters")); // as a matrix: columns for parameter, rows for Settlement trait
 
                 Rcpp::LogicalVector isInheritedRvec = Rcpp::as<Rcpp::LogicalVector>(KernelTraitsParamsR.slot("IsInherited"));
+
+                // Initial dominance distribution
+                string initDomDistR = "#"; // not applicable for dispersal traits
+                Rcpp::NumericVector initDomParamsR = {0,0}; // not applicable for dispersal traits
 
                 // Dominance distribution
                 string DominanceDistR = "#"; // not applicable for dispersal traits
@@ -4031,8 +4077,8 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
                                       ExpressionTypeR,
                                       initDistR,
                                       initParamsR,
-                                      initDominanceDistR,
-                                      initDominanceParamsR,
+                                      initDomDistR,
+                                      initDomParamsR,
                                       DominanceDistR,
                                       DominanceParamsR,
                                       isInherited,
@@ -4072,6 +4118,10 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
                 Rcpp::NumericMatrix InitialParamsRmat = Rcpp::as<Rcpp::NumericMatrix>(SMSTraitsParamsR.slot("InitialParameters")); // as a matrix: columns for parameter, rows for Settlement trait
 
                 Rcpp::LogicalVector isInheritedRvec = Rcpp::as<Rcpp::LogicalVector>(SMSTraitsParamsR.slot("IsInherited"));
+
+                // Initial dominance distribution
+                string initDomDistR = "#"; // not applicable for dispersal traits
+                Rcpp::NumericVector initDomParamsR = {0,0}; // not applicable for dispersal traits
 
                 // Dominance distribution
                 string DominanceDistR = "#"; // not applicable for dispersal traits
@@ -4147,8 +4197,8 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
                                       ExpressionTypeR,
                                       initDistR,
                                       initParamsR,
-                                      initDominanceDistR,
-                                      initDominanceParamsR,
+                                      initDomDistR,
+                                      initDomParamsR,
                                       DominanceDistR,
                                       DominanceParamsR,
                                       isInherited,
@@ -4186,6 +4236,10 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
                 Rcpp::NumericMatrix InitialParamsRmat = Rcpp::as<Rcpp::NumericMatrix>(CorrRWTraitsParamsR.slot("InitialParameters")); // as a matrix: columns for parameter, rows for Settlement trait
 
                 Rcpp::LogicalVector isInheritedRvec = Rcpp::as<Rcpp::LogicalVector>(CorrRWTraitsParamsR.slot("IsInherited"));
+
+                // Initial dominance distribution
+                string initDomDistR = "#"; // not applicable for dispersal traits
+                Rcpp::NumericVector initDomParamsR = {0,0}; // not applicable for dispersal traits
 
                 // Dominance distribution
                 string DominanceDistR = "#"; // not applicable for dispersal traits
@@ -4254,8 +4308,8 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
                                       ExpressionTypeR,
                                       initDistR,
                                       initParamsR,
-                                      initDominanceDistR,
-                                      initDominanceParamsR,
+                                      initDomDistR,
+                                      initDomParamsR,
                                       DominanceDistR,
                                       DominanceParamsR,
                                       isInherited,
