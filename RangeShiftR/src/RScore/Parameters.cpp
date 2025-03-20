@@ -296,6 +296,7 @@ simParams paramSim::getSim() {
 	s.absorbing = absorbing;
 	s.traitInt = traitInt;
 #if RS_RCPP
+	s.saveVisits = saveVisits;
 	s.outStartPaths = outStartPaths;
 	s.outIntPaths = outIntPaths;
 	s.outPaths = outPaths;
