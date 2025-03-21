@@ -176,7 +176,6 @@ Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
     // ParMaster = global.get(ParMaster_name);
     control = Rcpp::as<Rcpp::S4>(ParMaster.slot("control"));
     setglobalvarsR(control);
-
     nSimuls = 1;
     nLandscapes = 1;
 
@@ -500,41 +499,74 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
         dynland_years = Rcpp::as<Rcpp::IntegerVector>(LandParamsR.slot("DynamicLandYears"));
         if(dynland_years.size() == 1 && dynland_years[0] == 0 ) ppLand.dynamic = false;
         else ppLand.dynamic = true;
-if (threadsafe){
-		habitatmatrix = Rcpp::as<Rcpp::List>(LandParamsR.slot("LandscapeMatrix"));
-		patchmatrix = Rcpp::as<Rcpp::List>(LandParamsR.slot("PatchMatrix"));
-		costmatrix = Rcpp::as<Rcpp::List>(LandParamsR.slot("CostsMatrix"));
-		spdistmatrix = Rcpp::as<Rcpp::List>(LandParamsR.slot("SpDistMatrix"));
-		if(!patchmodel && patchmatrix.size() != 0) Rcpp::Rcout << "PatchMatrix must be empty in a cell-based model!" << endl;
-		// new slot for coordinates of lower left corner
-		Rcpp::NumericVector origin_coords;
-		origin_coords = Rcpp::as<Rcpp::NumericVector>(LandParamsR.slot("OriginCoords"));
-		landOrigin origin;
-		origin.minEast = origin_coords[0];
-		origin.minNorth = origin_coords[1];
-		pLandscape->setOrigin(origin); // only used with matrix input
-} else {
-		if(ppLand.dynamic) {
-		    habitatmaps = Rcpp::as<Rcpp::StringVector>(LandParamsR.slot("LandscapeFile"));
-		    patchmaps = Rcpp::as<Rcpp::StringVector>(LandParamsR.slot("PatchFile"));
-		    costmaps = Rcpp::as<Rcpp::StringVector>(LandParamsR.slot("CostsFile"));
-		    name_landscape = habitatmaps(0);
-		    name_patch = patchmaps(0);
-		    name_costfile = costmaps(0);
-		} else {
-		    name_landscape = Rcpp::as<string>(LandParamsR.slot("LandscapeFile"));
-		    name_patch = Rcpp::as<string>(LandParamsR.slot("PatchFile"));
-		    name_costfile = Rcpp::as<string>(LandParamsR.slot("CostsFile"));
-		}
-		name_sp_dist = Rcpp::as<string>(LandParamsR.slot("SpDistFile"));
-		if(!patchmodel && name_patch != "NULL") Rcpp::Rcout << "PatchFile must be NULL in a cell-based model!" << endl;
-}
+        if (threadsafe){
+            Rcpp::Rcout << "Using landscape matrices..." << endl;
+        		habitatmatrix = Rcpp::as<Rcpp::List>(LandParamsR.slot("LandscapeMatrix"));
+        		patchmatrix = Rcpp::as<Rcpp::List>(LandParamsR.slot("PatchMatrix"));
+        		costmatrix = Rcpp::as<Rcpp::List>(LandParamsR.slot("CostsMatrix"));
+        		spdistmatrix = Rcpp::as<Rcpp::List>(LandParamsR.slot("SpDistMatrix"));
+        		if(!patchmodel && patchmatrix.size() != 0) Rcpp::Rcout << "PatchMatrix must be empty in a cell-based model!" << endl;
+        		// new slot for coordinates of lower left corner
+        		Rcpp::NumericVector origin_coords;
+        		origin_coords = Rcpp::as<Rcpp::NumericVector>(LandParamsR.slot("OriginCoords"));
+        		landOrigin origin;
+        		origin.minEast = origin_coords[0];
+        		origin.minNorth = origin_coords[1];
+        		pLandscape->setOrigin(origin); // only used with matrix input
+        } else {
+        		if(ppLand.dynamic) {
+        		    if(LandParamsR.slot("LandscapeFile") != R_NilValue) {
+        		        habitatmaps = Rcpp::as<Rcpp::StringVector>(LandParamsR.slot("LandscapeFile"));
+        		    } else{
+        		        habitatmaps = "NULL";
+        		    }
+        		    if(LandParamsR.slot("PatchFile") != R_NilValue) {
+        		        patchmaps = Rcpp::as<Rcpp::StringVector>(LandParamsR.slot("PatchFile"));
+        		    } else{
+        		        patchmaps = "NULL";
+        		    }
+        		    if(LandParamsR.slot("CostsFile") != R_NilValue) {
+        		        costmaps = Rcpp::as<Rcpp::StringVector>(LandParamsR.slot("CostsFile"));
+        		    } else{
+        		        costmaps = "NULL";
+        		    }
+        		    name_landscape = habitatmaps(0);
+        		    name_patch = patchmaps(0);
+        		    name_costfile = costmaps(0);
+        		} else {
+        		    if(LandParamsR.slot("LandscapeFile") != R_NilValue) {
+        		        name_landscape = Rcpp::as<string>(LandParamsR.slot("LandscapeFile"));
+        		    } else {
+        		        name_landscape = "NULL";
+        		    }
+
+        		    if(LandParamsR.slot("PatchFile") != R_NilValue) {
+        		        name_patch = Rcpp::as<string>(LandParamsR.slot("PatchFile"));
+        		    } else {
+        		        name_patch = "NULL";
+        		    }
+
+        		    if(LandParamsR.slot("CostsFile") != R_NilValue) {
+        		        name_costfile = Rcpp::as<string>(LandParamsR.slot("CostsFile"));
+        		    } else {
+        		        name_costfile = "NULL";
+        		    }
+        		}
+        		if(LandParamsR.slot("SpDistFile") != R_NilValue){
+        		    name_sp_dist = Rcpp::as<string>(LandParamsR.slot("SpDistFile"));
+        		} else {
+        		    name_sp_dist = "NULL";
+        		}
+
+        		if(!patchmodel && name_patch != "NULL") Rcpp::Rcout << "PatchFile must be NULL in a cell-based model!" << endl;
+        }
 
 		int nrDemogScaleLayers = 0;
 		Rcpp::List demogScaleLayers;
 		if (landtype == 2) { // habitat quality
 			nrDemogScaleLayers = Rcpp::as<int>(LandParamsR.slot("nrDemogScaleLayers"));
 			if(nrDemogScaleLayers) {
+			    Rcpp::Rcout << "Spatial demography is active..." << endl;
 				ppLand.spatialdemog = true;
 				nDSlayer = nrDemogScaleLayers;
 				demogScaleLayers = Rcpp::as<Rcpp::List>(LandParamsR.slot("demogScaleLayers"));
@@ -904,6 +936,7 @@ if (threadsafe){
 		} // end else (not threadsafe)
 
     } // end else (imported raster map)
+
 
     pLandscape->setLandParams(ppLand, true);
     pLandscape->setGenLandParams(ppGenLand);
@@ -4945,7 +4978,7 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
     #endif
     }
 
-    // loop over landscpaes
+    // loop over landscapes
 
     for(int j = 0; j < nLandscapes; j++) {
 
@@ -4999,7 +5032,6 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
             paramsLand.spDist = speciesdist;
             paramsLand.spResol = distresolution;
             pLandscape->setLandParams(paramsLand, sim.batchMode);
-            Rcpp::Rcout << "General landscape settings done..." << endl;
             if(landtype != 9) { // imported landscape
 
 				Rcpp::S4 LandParamsR("LandParams");
@@ -5252,8 +5284,6 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
                     Rcpp::Rcout << "ReadInitialisationR() done." << endl;
                 }
 
-                Rcpp::Rcout << "ReadInitialisationR() done." << endl;
-
                 if (gHasGenetics) { // genetics need to be set and traits file need to be provided
                     Rcpp::S4 GeneParamsR("GeneticsParams");
                     GeneParamsR = Rcpp::as<Rcpp::S4>(ParMaster.slot("gene"));
@@ -5269,6 +5299,8 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
                             rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
                         }
                         params_ok = false;
+                    }else{
+                        Rcpp::Rcout << "ReadGeneticsR() done." << endl;
                     }
 
                     Rcpp::S4 TraitsParamsR("TraitsParams");
@@ -5284,6 +5316,8 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
                             rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
                         }
                         params_ok = false;
+                    }else{
+                        Rcpp::Rcout << "ReadTraitsR() done." << endl;
                     }
 
                 }
