@@ -578,7 +578,7 @@ setValidity("GeneticLoadParams", function(object) {
         }
     }
 
-    if (!all(object@OutputValues == (TRUE || FALSE))) {
+    if (!all(object@OutputValues %in% c(TRUE, FALSE))) {
         msg <- c(msg, "OutputValues for genetic loads must be either TRUE or FALSE.")
     }
     if (is.null(msg)) TRUE else msg
@@ -808,7 +808,7 @@ setValidity("EmigrationTraitsParams", function(object) {
 
 
     # Check OutputValues
-    if (length(object@OutputValues) != length(object@Positions) && !all(object@OutputValues == (TRUE || FALSE))) {
+    if (length(object@OutputValues) != length(object@Positions) && !all(object@OutputValues %in% c(TRUE, FALSE))) {
         msg <- c(msg, "In EmigrationTraits(): OutputValues must be provided for all emigration traits and must be either TRUE or FALSE.")
     }
 
@@ -1045,7 +1045,7 @@ setValidity("SettlementTraitsParams", function(object) {
 
 
     # Check OutputValues
-    if (length(object@OutputValues) != length(object@Positions) && !all(object@OutputValues == (TRUE || FALSE))) {
+    if (length(object@OutputValues) != length(object@Positions) && !all(object@OutputValues %in% c(TRUE, FALSE))) {
         msg <- c(msg, "In SettlementTraits(): OutputValues must be provided for all settlement traits and must be either TRUE or FALSE.")
     }
 
@@ -1276,7 +1276,7 @@ setValidity("KernelTraitsParams", function(object) {
     }
 
     # Check OutputValues
-    if (!(length(object@OutputValues) %in% c(1,2,3,6)) && !all(object@OutputValues == (TRUE || FALSE))) {
+    if (!(length(object@OutputValues) %in% c(1,2,3,6)) && !all(object@OutputValues %in% c(TRUE, FALSE))) {
         msg <- c(msg, "In KernelTraits(): OutputValues must be provided for all kernel traits and must be either TRUE or FALSE.")
     }
 
@@ -1519,7 +1519,7 @@ setValidity("SMSTraitsParams", function(object) {
 
 
     # Check OutputValues
-    if (!(length(object@OutputValues) %in% c(1,4)) && !all(object@OutputValues == (TRUE || FALSE))) {
+    if (!(length(object@OutputValues) %in% c(1,4)) && !all(object@OutputValues %in% c(TRUE, FALSE))) {
         msg <- c(msg, "In SMSTraits(): OutputValues must be provided for all SMS traits and must be either TRUE or FALSE.")
     }
 
@@ -1740,7 +1740,7 @@ setValidity("CorrRWTraitsParams", function(object) {
 
 
     # Check OutputValues
-    if (length(object@OutputValues) != 2 && !all(object@OutputValues == (TRUE || FALSE))) {
+    if (length(object@OutputValues) != 2 && !all(object@OutputValues %in% c(TRUE, FALSE))) {
         msg <- c(msg, "In CorrRWTraits(): OutputValues must be provided for all CorrRW traits and must be either TRUE or FALSE.")
     }
 
