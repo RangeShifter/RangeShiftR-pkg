@@ -303,7 +303,6 @@ Landscape::~Landscape() {
 
 	patchnums.clear();
 	habCodes.clear();
-	colours.clear();
 	landchanges.clear();
 	patchchanges.clear();
 
@@ -500,27 +499,6 @@ int Landscape::getHabCode(int ixhab) {
 
 void Landscape::clearHabitats(void) {
 	habCodes.clear();
-	colours.clear();
-}
-
-void Landscape::addColour(rgb c) {
-	colours.push_back(c);
-}
-
-void Landscape::changeColour(int i, rgb col) {
-	int ncolours = (int)colours.size();
-	if (i >= 0 && i < ncolours) {
-		if (col.r >= 0 && col.r <= 255 && col.g >= 0 && col.g <= 255 && col.b >= 0 && col.b <= 255)
-			colours[i] = col;
-	}
-}
-
-rgb Landscape::getColour(int ix) {
-	return colours[ix];
-}
-
-int Landscape::colourCount(void) {
-	return (int)colours.size();
 }
 
 //---------------------------------------------------------------------------
@@ -2303,10 +2281,6 @@ costs >> maxXcost >> header >> maxYcost >> header >> minLongCost;
 costs >> header >> minLatCost >> header >> tmpresolCost >> header >> NODATACost;
 resolCost = (int) tmpresolCost;
 
-#if !RS_RCPP
-	MemoLine("Loading costs map. Please wait...");
-#endif
-
 	for (int y = maxYcost - 1; y > -1; y--) {
 		for (int x = 0; x < maxXcost; x++) {
 #if RS_RCPP
@@ -2360,8 +2334,6 @@ if (costs.eof()) {
 #endif
 }
 else EOFerrorR(fname);
-#else
-MemoLine("Costs map loaded.");
 #endif
 
 costs.close(); costs.clear();
@@ -2386,42 +2358,24 @@ rasterdata CheckRasterFile(string fname)
 	infile.open(fname.c_str());
 	if (infile.is_open()) {
 		infile >> header >> r.ncols;
-#if RSDEBUG
-		DebugGUI(("CheckRasterFile(): header=" + header + " r.ncols=" + Int2Str(r.ncols)
-			).c_str());
-#endif
+
 		if (header != "ncols" && header != "NCOLS") r.errors++;
 		infile >> header >> r.nrows;
-#if RSDEBUG
-		DebugGUI(("CheckRasterFile(): header=" + header + " r.nrows=" + Int2Str(r.nrows)
-			).c_str());
-#endif
+
 		if (header != "nrows" && header != "NROWS") r.errors++;
 		infile >> header >> r.xllcorner;
-#if RSDEBUG
-		DebugGUI(("CheckRasterFile(): header=" + header + " r.xllcorner=" + Float2Str(r.xllcorner)
-			).c_str());
-#endif
+
 		if (header != "xllcorner" && header != "XLLCORNER") r.errors++;
 		infile >> header >> r.yllcorner;
-#if RSDEBUG
-		DebugGUI(("CheckRasterFile(): header=" + header + " r.yllcorner=" + Float2Str(r.yllcorner)
-			).c_str());
-#endif
+
 		if (header != "yllcorner" && header != "YLLCORNER") r.errors++;
 		double tmpcellsize;
 		infile >> header >> tmpcellsize;
 		r.cellsize = (int) tmpcellsize;
-#if RSDEBUG
-		DebugGUI(("CheckRasterFile(): header=" + header + " r.cellsize=" + Int2Str(r.cellsize)
-			).c_str());
-#endif
+
 		if (header != "cellsize" && header != "CELLSIZE") r.errors++;
 		infile >> header >> inint;
-#if RSDEBUG
-		DebugGUI(("CheckRasterFile(): header=" + header + " inint=" + Int2Str(inint)
-			).c_str());
-#endif
+
 		if (header != "NODATA_value" && header != "NODATA_VALUE") r.errors++;
 		infile.close();
 		infile.clear();
@@ -2499,11 +2453,11 @@ bool Landscape::outConnectHeaders(int option)
 
 	string name = paramsSim->getDir(2);
 	if (sim.batchMode) {
-		name += "Batch" + Int2Str(sim.batchNum) + "_";
-		name += "Sim" + Int2Str(sim.simulation) + "_Land" + Int2Str(landNum);
+		name += "Batch" + to_string(sim.batchNum) + "_";
+		name += "Sim" + to_string(sim.simulation) + "_Land" + to_string(landNum);
 	}
 	else
-		name += "Sim" + Int2Str(sim.simulation);
+		name += "Sim" + to_string(sim.simulation);
 	name += "_Connect.txt";
 	outConnMat.open(name.c_str());
 
@@ -2525,14 +2479,14 @@ void Landscape::outPathsHeaders(int rep, int option)
 		simParams sim = paramsSim->getSim();
 		string name = paramsSim->getDir(2);
 		if (sim.batchMode) {
-			name += "Batch" + Int2Str(sim.batchNum)
-				+ "_Sim" + Int2Str(sim.simulation)
-				+ "_Land" + Int2Str(landNum)
-				+ "_Rep" + Int2Str(rep);
+			name += "Batch" + to_string(sim.batchNum)
+				+ "_Sim" + to_string(sim.simulation)
+				+ "_Land" + to_string(landNum)
+				+ "_Rep" + to_string(rep);
 		}
 		else {
-			name += "Sim" + Int2Str(sim.simulation)
-				+ "_Rep" + Int2Str(rep);
+			name += "Sim" + to_string(sim.simulation)
+				+ "_Rep" + to_string(rep);
 		}
 		name += "_MovePaths.txt";
 
@@ -2618,20 +2572,20 @@ void Landscape::outVisits(int rep, int landNr) {
 	if (sim.batchMode) {
 		name = paramsSim->getDir(3)
 #if RS_RCPP
-			+ "Batch" + Int2Str(sim.batchNum) + "_"
-			+ "Sim" + Int2Str(sim.simulation)
-			+ "_Land" + Int2Str(landNr) + "_Rep" + Int2Str(rep)
+			+ "Batch" + to_string(sim.batchNum) + "_"
+			+ "Sim" + to_string(sim.simulation)
+			+ "_Land" + to_string(landNr) + "_Rep" + to_string(rep)
 #else
-			+ "Batch" + Int2Str(sim.batchNum) + "_"
-			+ "Sim" + Int2Str(sim.simulation)
-			+ "_land" + Int2Str(landNr) + "_rep" + Int2Str(rep)
+			+ "Batch" + to_string(sim.batchNum) + "_"
+			+ "Sim" + to_string(sim.simulation)
+			+ "_land" + to_string(landNr) + "_rep" + to_string(rep)
 #endif
 			+ "_Visits.txt";
 	}
 	else {
 		name = paramsSim->getDir(3)
-			+ "Sim" + Int2Str(sim.simulation)
-			+ "_land" + Int2Str(landNr) + "_rep" + Int2Str(rep)
+			+ "Sim" + to_string(sim.simulation)
+			+ "_land" + to_string(landNr) + "_rep" + to_string(rep)
 			+ "_Visits.txt";
 	}
 	outvisits.open(name.c_str());
