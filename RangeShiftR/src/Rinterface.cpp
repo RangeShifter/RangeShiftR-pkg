@@ -5001,9 +5001,9 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 
         if(!landOK) {
             if(!threadsafe){
-                rsLog << "Error reading landscape ASCII haeders - aborting" << endl;
+                rsLog << "Error reading landscape ASCII headers - aborting" << endl;
             }
-            Rcpp::Rcout << "Error reading landscape ASCII haeders - aborting" << endl;
+            Rcpp::Rcout << "Error reading landscape ASCII headers - aborting" << endl;
         } else {
 #if RSDEBUG
             DEBUGLOG << endl << "RunBatchR(): j=" << j << " land_nr=" << land_nr << " landtype=" << landtype;
