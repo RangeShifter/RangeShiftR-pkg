@@ -23,6 +23,8 @@
  //---------------------------------------------------------------------------
 
 #include "Population.h"
+
+#include <algorithm>
 //---------------------------------------------------------------------------
 
 ofstream outPop;
@@ -607,7 +609,7 @@ void Population::fledge(void)
 		for (int sex = 0; sex < nSexes; sex++) {
 			nInds[1][sex] = 0; // set count of adults to zero
 		}
-		inds = juvs;
+		inds = std::move(juvs);
 	}
 	juvs.clear();
 
@@ -1286,15 +1288,7 @@ void Population::clean(void)
 {
 	int ninds = (int)inds.size();
 	if (ninds > 0) {
-			// ALTERNATIVE METHOD: AVOIDS SLOW SORTING OF POPULATION
-		std::vector <Individual*> survivors; // all surviving individuals
-		for (int i = 0; i < ninds; i++) {
-			if (inds[i] != NULL) {
-				survivors.push_back(inds[i]);
-			}
-		}
-		inds.clear();
-		inds = survivors;
+		inds.erase(std::remove(inds.begin(), inds.end(), (Individual *)NULL), inds.end());
 #if RS_RCPP
 		shuffle(inds.begin(), inds.end(), pRandom->getRNG());
 #else
