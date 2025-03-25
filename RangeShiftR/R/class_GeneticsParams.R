@@ -29,6 +29,16 @@
 #'
 #' A method to specify neutral traits in the genetic module.
 #'
+#' #' @usage NeutralTraits(Positions = "random", NbOfPositions = 10,
+#' Positions = "random", # "random" or list of integer values
+#' NbOfPositions = 10, # numeric, only of positions random
+#' InitialDistribution = NULL, # uniform (neutral + dispersal), normal (dispersal)
+#' InitialParameters = 2, # neutral traits: only max value; dispersal: two values: either min/max oder mean+sd, not applicable for genetic load
+#' MutationDistribution = "KAM", # neutral: "KAM" or "SSM", genetic load: "gamma", "uniform", "normal", "negExp", dispersal: uniform or normal
+#' MutationParameters = 2, # single value or 2 values
+#' MutationRate = 0.0, # numeric
+#' OutputValues = FALSE)
+#'
 #' @param Positions Loci positions coding for trait within genome. Must be in the
 #' range 0-(\code{GenomeSize}-1), specified in \code{\link[RangeShiftR]{Genetics}}. Positions can overlap across
 #' traits - there will be no pleiotropy, but this will influence genetic linkage.,
@@ -69,7 +79,7 @@
 #' @name NeutralTraits
 #' @export NeutralTraits
 NeutralTraits<- setClass("NeutralTraitsParams", slots = c(Positions = "ANY", # vector of numbers or "random"
-                                                         NbOfPositions = "ANY", # random or list of integer values
+                                                         NbOfPositions = "ANY", # integer value or NULL
                                                          InitialDistribution = "character", # uniform
                                                          InitialParameters = "integer_OR_numeric", # max value
                                                          MutationDistribution = "character", # KAM or SSM
@@ -77,10 +87,10 @@ NeutralTraits<- setClass("NeutralTraitsParams", slots = c(Positions = "ANY", # v
                                                          MutationRate = "integer_OR_numeric", # float
                                                          OutputValues = "logical")
                    , prototype = list(Positions = "random", # "random" or list of integer values
-                                      NbOfPositions = NULL, # numeric, only of positions random
-                                      InitialDistribution = NULL, # uniform (neutral + dispersal), normal (dispersal)
-                                      InitialParameters = 2, # neutral traits: only max value; dispersal: two values: either min/max oder mean+sd, not applicable for genetic load
-                                      MutationDistribution = "KAM", # neutral: "KAM" or "SSM", genetic load: "gamma", "uniform", "normal", "negExp", dispersal: uniform or normal
+                                      NbOfPositions = 10, # numeric, only if positions random
+                                      InitialDistribution = NULL, # uniform
+                                      InitialParameters = 2, # neutral traits: only max value;
+                                      MutationDistribution = "KAM", # neutral: "KAM" or "SSM"
                                       MutationParameters = 2, # single value or 2 values
                                       MutationRate = 0.0, # numeric
                                       OutputValues = FALSE
@@ -182,6 +192,8 @@ setMethod("show", "NeutralTraitsParams", function(object){
 #'
 #'
 #' @usage GeneticLoadTraits(NbGeneticLoads = 1, Positions = list("random"), NbOfPositions = 10,
+#' InitialDistribution = "normal", InitialParameters = matrix(c(0.5,0.1), nrow=1),
+#' InitialDomDistribution = "normal", InitialDomParameters = matrix(c(0.5,0.1), nrow=1),
 #' DominanceDistribution = "normal", DominanceParameters = matrix(c(0.5,0.1), nrow=1),
 #' MutationDistribution = "normal", MutationParameters = matrix(c(0.5,0.2), nrow=1),
 #' MutationRate = 0.0001, OutputValues = FALSE)
@@ -258,10 +270,10 @@ GeneticLoadTraits<- setClass("GeneticLoadParams", slots = c(
     NbGeneticLoads = "integer_OR_numeric", # number of genetic loads
     Positions = "list",# "random" or list of integer values
     NbOfPositions = "ANY", # numeric, only where positions are random; otherwise NA
-    InitialDistribution = "character", #‘gamma’, ‘uniform’, ‘normal’,‘negExp’
-    InitialParameters = "matrix", # 2 values for min/max, mean/sd, shape/scale or one value: mean
-    InitialDomDistribution = "character", #  ‘gamma’, ‘uniform’, ‘normal’, ‘negExp’, ‘scaled’
-    InitialDomParameters = "matrix", # 2 values for min/max, mean/sd, shape/scale or one value: mean
+    InitialDistribution = "ANY", #‘gamma’, ‘uniform’, ‘normal’,‘negExp’
+    InitialParameters = "ANY", # 2 values for min/max, mean/sd, shape/scale or one value: mean
+    InitialDomDistribution = "ANY", #  ‘gamma’, ‘uniform’, ‘normal’, ‘negExp’, ‘scaled’
+    InitialDomParameters = "ANY", # 2 values for min/max, mean/sd, shape/scale or one value: mean
     DominanceDistribution = "character", # ‘gamma’, ‘uniform’, ‘normal’, ‘negExp’, ‘scaled’ # character vector
     DominanceParameters = "matrix", # 2 values for min/max, mean/sd, shape/scale or one value: mean
     MutationDistribution = "character", # ‘gamma’, ‘uniform’, ‘normal’,‘negExp’
@@ -272,10 +284,10 @@ GeneticLoadTraits<- setClass("GeneticLoadParams", slots = c(
         NbGeneticLoads = 1L,
         Positions = list("random"),
         NbOfPositions = 2L,
-        InitialDistribution = "normal",
-        InitialParameters = matrix(c(0.5,0.1), nrow=1),
-        InitialDomDistribution = "normal",
-        InitialDomParameters = matrix(c(0.5,0.1), nrow=1),
+        InitialDistribution = NULL, # "normal",
+        InitialParameters = NULL, # matrix(c(0.5,0.1), nrow=1),
+        InitialDomDistribution = NULL, # "normal",
+        InitialDomParameters = NULL, # matrix(c(0.5,0.1), nrow=1),
         DominanceDistribution = "normal",
         DominanceParameters = matrix(c(0.5,0.1), nrow=1),
         MutationDistribution = "normal",
@@ -327,6 +339,14 @@ setValidity("GeneticLoadParams", function(object) {
 
     # Check InitialDistribution given or NA
     if (!is.null(object@InitialDistribution)){
+        # if it is given, it should be character
+        if (class(object@InitialDistribution) != "character") {
+            msg <- c(msg, "InitialDistribution must be a character vector.")
+        }
+        # and also InitialParameters should be numeric
+        if (class(object@InitialParameters)[1] != "matrix") {
+            msg <- c(msg, "InitialParameters must be a matrix.")
+        }
         if(length(object@InitialDistribution) != object@NbGeneticLoads) {
             msg <- c(msg, "If you want to have initial allel distribution for one genetic load, you must provide it for all genetic load. If you don't want to set the initial allel value for some genetic loads, set it to NA for those.")
         } else if (nrow(object@InitialParameters) != object@NbGeneticLoads) {
@@ -386,6 +406,13 @@ setValidity("GeneticLoadParams", function(object) {
 
     # Check InitialDomDistribution
     if (!is.null(object@InitialDomDistribution)){
+        if (class(object@InitialDomDistribution) != "character") {
+            msg <- c(msg, "InitialDistribution must be a character vector.")
+        }
+        # and also InitialParameters should be numeric
+        if (class(object@InitialDomParameters)[1] != "matrix") {
+            msg <- c(msg, "InitialParameters must be a matrix.")
+        }
         if(length(object@InitialDomDistribution) != object@NbGeneticLoads) {
             msg <- c(msg, "If you want to have initial dominance distribution for one genetic load, you must provide it for all genetic load. If you don't want to set the initial dominance value for some genetic loads, set it to NA for those.")
         } else if (nrow(object@InitialDomParameters) != object@NbGeneticLoads) {
@@ -2076,7 +2103,7 @@ Genetics <- setClass("GeneticsParams", slots = c(GenomeSize = "integer_OR_numeri
                                                         OutputInterval = NULL,
                                                         PatchList = NULL, #"all", # vector or string
                                                         NbrPatchesToSample = NULL, #0L, # NULL or integer
-                                                        nIndividualsToSample = NULL, #"all", # NULL or integer
+                                                        nIndividualsToSample = NULL, # "all", # NULL or integer
                                                         Stages = NULL, #"all", # vector
                                                         Traits = Traits())
 
@@ -2124,11 +2151,11 @@ setValidity('GeneticsParams', function(object){
     anyGeneticsOutput = object@OutputGeneValues == "TRUE" || anyNeutral
 
     if (anyGeneticsOutput) {
-        if (object@OutputStartGenetics < 0) {
+        if (is.null(object@OutputStartGenetics) || object@OutputStartGenetics < 0) {
             msg <- c(msg, "OutStartGenetics be greater than 0 if any genetic output option is TRUE.")
         }
 
-        if (object@OutputInterval <= 0) { # check whether is.null()
+        if (is.null(object@OutputInterval) || object@OutputInterval <= 0) { # check whether is.null()
             msg <- c(msg,"OutputInterval must be at least 1 if any genetic output option is TRUE.")
         }
     }
@@ -2138,11 +2165,16 @@ setValidity('GeneticsParams', function(object){
 
     # Check PatchList
     if (anyGeneticsOutput) {
-        if (is.character(object@PatchList) || is.numeric(object@PatchList)) {
-            if (!is.numeric(object@PatchList) && object@PatchList != "random" && object@PatchList != "all" && object@PatchList != "random_occupied") {
-                msg <- c(msg,"PatchList must be either a vector of integers, or \"random\", \"random_occupied\" or \"all\".")
+        if(!is.null(object@PatchList)){
+            if (is.character(object@PatchList) || is.numeric(object@PatchList)) {
+                if (!is.numeric(object@PatchList) && object@PatchList != "random" && object@PatchList != "all" && object@PatchList != "random_occupied") {
+                    msg <- c(msg,"PatchList must be either a vector of integers, or \"random\", \"random_occupied\" or \"all\".")
+                }
             }
+        } else{
+            msg <- c(msg, "PatchList cannot be NULL if any genetic output option is TRUE.")
         }
+
     }
     else if (!is.null(object@PatchList)) {
         msg <- c(msg, "PatchList should be NULL if all genetic output options are FALSE.")

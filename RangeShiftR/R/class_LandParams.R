@@ -308,12 +308,12 @@ setMethod("show", "ArtificialLandscape", function(object){
 #'                  OriginCoords = c(0,0),
 #'                  HabPercent = FALSE,
 #'                  Nhabitats, K_or_DensDep = 10,
-#'                  PatchFile =  "NULL",
+#'                  PatchFile =  NULL,
 #'                  PatchMatrix =  list(),
-#'                  CostsFile =  "NULL",
-#'                  CostMatrix = list(),
+#'                  CostsFile =  NULL,
+#'                  CostsMatrix = list(),
 #'                  DynamicLandYears = 0,
-#'                  SpDistFile = "NULL",
+#'                  SpDistFile = NULL,
 #'                  SpDistMatrix = list(),
 #'                  SpDistResolution,
 #'                  demogScaleLayers, nrDemogScaleLayers)
@@ -796,7 +796,8 @@ setMethod("initialize", "ImportedLandscape", function(.Object, ...) {
 setMethod("show", "ImportedLandscape", function(object){
     cat(" Landscape imported from file")
     if(length(object@DynamicLandYears)==1) {
-        cat(":\n  ", paste(object@LandscapeFile))
+        if(!is.null(object@LandscapeFile)) cat(":\n  ", paste(object@LandscapeFile))
+        else cat(":\n  used a landscape matrix")
     }
     cat("\n")
     if(object@HabPercent) {
@@ -807,58 +808,94 @@ setMethod("show", "ImportedLandscape", function(object){
         cat("   with", paste(object@Nhabitats), "unique integer habitat code(s)\n")
         cat("   K or 1/b        : ", paste(object@K_or_DensDep), "[inds per ha].\n")
     }
-    if (object@PatchFile[1] !="NULL") {
+    if (!is.null(object@PatchFile[1])) {
         cat("   Patches imported from file \n")
         if(length(object@DynamicLandYears)==1) {
             cat(paste(object@PatchFile),"\n")
         }
     }
-    if (object@CostsFile[1] !="NULL") {
+    if(length(object@PatchMatrix)>0) {
+        cat("   Patches imported from matrix\n")
+    }
+    if (!is.null(object@CostsFile[1])) {
         cat("   SMS costs imported from file \n")
         if(length(object@DynamicLandYears)==1) {
             cat(paste(object@CostsFile),"\n")
         }
     }
+    if(length(object@CostsMatrix)>0) {
+        cat("   SMS costs imported from matrix\n")
+    }
     cat ("   Resolution      :", paste(object@Resolution),"\n")
     if(length(object@DynamicLandYears)>1) {
-        if (object@PatchFile[1] =="NULL") {
-            if (object@CostsFile[1] =="NULL") {
-                cat("   Land changes in\n    Year   to  Habitat file:\n")
+        if(!is.null(object@LandscapeFile)){
+            if (is.null(object@PatchFile[1])) {
+                if (is.null(object@CostsFile[1])) {
+                    cat("   Land changes in\n    Year   to  Habitat file:\n")
+                }
+                else {
+                    cat("   Land changes in\n    Year   to  Habitat file     Costs file:\n")
+                }
             }
             else {
-                cat("   Land changes in\n    Year   to  Habitat file     Costs file:\n")
+                if (is.null(object@CostsFile[1])) {
+                    cat("   Land changes in\n    Year   to  Habitat file     Patch file:\n")
+                }
+                else {
+                    cat("   Land changes in\n    Year   to  Habitat file     Patch file     Costs file:\n")
+                }
             }
         }
         else {
-            if (object@CostsFile[1] =="NULL") {
-                cat("   Land changes in\n    Year   to  Habitat file     Patch file:\n")
+            if (length(object@PatchMatrix)>0) {
+                if (length(object@CostsMatrix)>0) {
+                    cat("   Land changes in\n    Year   to  Habitat matrix, patch matrix and costs matrix:\n")
+                }
+                else {
+                    cat("   Land changes in\n    Year   to  Habitat matrix and patch matrix:\n")
+                }
             }
             else {
-                cat("   Land changes in\n    Year   to  Habitat file     Patch file     Costs file:\n")
+                if (length(object@CostsMatrix)>0) {
+                    cat("   Land changes in\n    Year   to  Habitat matrix and costs matrix:\n")
+                }
+                else {
+                    cat("   Land changes in\n    Year   to  Habitat matrix:\n")
+                }
             }
         }
+
         for (a in 1:length(object@DynamicLandYears)) {
-            if (object@PatchFile[1] =="NULL") {
-                if (object@CostsFile[1] =="NULL") {
-                    cat("   ",paste(object@DynamicLandYears[a]),"  ",paste(object@LandscapeFile[a]),"\n")
+            if(!is.null(object@LandscapeFile)){
+                if (is.null(object@PatchFile[1])) {
+                    if (is.null(object@CostsFile[1])) {
+                        cat("   ",paste(object@DynamicLandYears[a]),"  ",paste(object@LandscapeFile[a]),"\n")
+                    }
+                    else {
+                        cat("   ",paste(object@DynamicLandYears[a]),"  ",paste(object@LandscapeFile[a]),"  ",paste(object@CostsFile[a]),"\n")
+                    }
                 }
                 else {
-                    cat("   ",paste(object@DynamicLandYears[a]),"  ",paste(object@LandscapeFile[a]),"  ",paste(object@CostsFile[a]),"\n")
+                    if (is.null(object@CostsFile[1] )) {
+                        cat("   ",paste(object@DynamicLandYears[a]),"  ",paste(object@LandscapeFile[a]),"  ",paste(object@PatchFile[a]),"\n")
+                    }
+                    else {
+                        cat("   ",paste(object@DynamicLandYears[a]),"  ",paste(object@LandscapeFile[a]),"  ",paste(object@PatchFile[a]),"  ",paste(object@CostsFile[a]),"\n")
+                    }
                 }
             }
             else {
-                if (object@CostsFile[1] =="NULL") {
-                    cat("   ",paste(object@DynamicLandYears[a]),"  ",paste(object@LandscapeFile[a]),"  ",paste(object@PatchFile[a]),"\n")
-                }
-                else {
-                    cat("   ",paste(object@DynamicLandYears[a]),"  ",paste(object@LandscapeFile[a]),"  ",paste(object@PatchFile[a]),"  ",paste(object@CostsFile[a]),"\n")
-                }
+                cat("   ", paste(object@DynamicLandYears[a]), "\n")
             }
+
         }
     }
     if(!is.null(object@SpDistFile)) {
         cat(" Initial Species Distribution imported from file:\n  ", paste(object@SpDistFile), "\n")
         cat ("   Resolution      :", paste(object@SpDistResolution),"\n")
+    }
+    if(length(object@SpDistMatrix)>0) {
+        cat(" Initial Species Distribution imported from matrix\n")
     }
     #cat ("\n")
     }

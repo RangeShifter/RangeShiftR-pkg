@@ -89,7 +89,7 @@ setValidity("RSparams", function(object) {
         if (any(object@land@DynamicLandYears>object@simul@Years)) {
             warning("ImportedLandscape(): Dynamic landscape contains years that exceed the simulated years, so that some land changes will not apply.", call. = FALSE)
         }
-        if (object@land@CostsFile[1] !="NULL" || length(object@land@CostsMatrix)>0) { # for threadsafe: length(object@land@CostsFile)>0
+        if (!is.null(object@land@CostsFile[1]) || length(object@land@CostsMatrix)>0) { # for threadsafe: length(object@land@CostsFile)>0
             if (class(object@dispersal@Transfer)[1] == "StochMove") {
                 if (!(object@dispersal@Transfer@Costs[1] %in% c("file", "matrix"))) {
                     warning("ImportedLandscape(): Landscape module contains SMS cost layers, but SMS module does not use them.", call. = FALSE)
@@ -384,7 +384,7 @@ setValidity("RSparams", function(object) {
                 }
                 if (class(object@dispersal@Transfer@Costs)=="character") {
                     if (object@dispersal@Transfer@Costs %in% c("file", "matrix")) {
-                        if (object@land@CostsFile[1] == "NULL" && length(object@land@CostsMatrix)==0) { # for threadsafe: length(object@land@CostsFile)==0
+                        if (is.null(object@land@CostsFile[1]) && length(object@land@CostsMatrix)==0) { # for threadsafe: length(object@land@CostsFile)==0
                             msg <- c(msg, "SMS(): No cost map filenames  or  list of matrices found in the landscape module!")
                         }
                     }
@@ -400,7 +400,7 @@ setValidity("RSparams", function(object) {
                     }
                     if (class(object@dispersal@Transfer@Costs)=="character") {
                         if (object@dispersal@Transfer@Costs %in% c("file", "matrix")) {
-                            if (object@land@CostsFile[1] == "NULL" && length(object@land@CostsMatrix)==0) { # threadsafe: length(object@land@CostsFile)==0
+                            if (is.null(object@land@CostsFile[1]) && length(object@land@CostsMatrix)==0) { # threadsafe: length(object@land@CostsFile)==0
                                 msg <- c(msg, "SMS(): No cost map filenames or  list of matrices found in the landscape module!")
                             }
                         }
@@ -1003,7 +1003,7 @@ setValidity("RSparams", function(object) {
         if (object@init@InitType == 1 && !object@control@speciesdist) {
             msg <- c(msg, 'Initialise(): A species distribution map has to be loaded via the \'land\' module if InitType = 1 (initialisation from loaded species distribution map) !')
         }
-        if (object@init@InitType == 2 && object@init@InitIndsFile == "NULL") { # from initial individuals list from list of data.frames in 'InitIndsList'; NOTE:was != "NULL" in public repo
+        if (object@init@InitType == 2 && is.null(object@init@InitIndsFile)) { # from initial individuals list from list of data.frames in 'InitIndsList'; NOTE:was != "NULL" in public repo
             if(length(object@init@InitIndsList)!=object@simul@Replicates) {
                 msg <- c(msg, 'Initialise(): Number of elements in InitIndsList must equal the number of Replicates!')
             }

@@ -25,7 +25,7 @@ The length must be equal to the number of required emigration traits (see above)
 \item{InitialDistribution}{Distribution of the initial values. Can be \code{uniform} or \code{normal}. Should be provided as a vector of strings.
 The length must be equal to the number of required emigration traits (see above) and the sequence must match the sequence of the emigration traits listed above.}
 
-\item{InitialParameters}{Parameters for the initial distribution: You must provide two colums min and max  for \code{uniform} distribution and mean and sd for \code{normal} distribution.
+\item{InitialParameters}{Parameters for the initial distribution: You must provide two colums min and max for \code{uniform} distribution and mean and sd for \code{normal} distribution.
 Each row in the matrix corresponds to an emigration trait. The number of rows must be equal to the number of required emigration traits (see above) and the sequence must match the sequence of the emigration traits listed above.}
 
 \item{IsInherited}{Should the emigration trait be inherited? Can be either \code{TRUE} or \code{FALSE}.

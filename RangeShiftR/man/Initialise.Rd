@@ -5,7 +5,7 @@
 \alias{Initialise}
 \title{Set Initialisation Parameters}
 \usage{
-Initialise(InitType = 0, FreeType = 1, SpType = 0, NrCells, InitIndsFile = "NULL", InitIndsList = list(),
+Initialise(InitType = 0, FreeType = 1, SpType = 0, NrCells, InitIndsFile = NULL, InitIndsList = list(),
            InitDens = 1, IndsHaCell, PropStages = 0, InitAge = 2, minX, minY, maxX, maxY,
            InitFreezeYear = 0, RestrictRows = 0, RestrictFreq = 0, FinalFreezeYear = 0)
 }

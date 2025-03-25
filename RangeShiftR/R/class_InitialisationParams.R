@@ -37,7 +37,7 @@
 #'
 #' @include plotProbs.R
 #' @include Rfunctions.R
-#' @usage Initialise(InitType = 0, FreeType = 1, SpType = 0, NrCells, InitIndsFile = "NULL", InitIndsList = list(),
+#' @usage Initialise(InitType = 0, FreeType = 1, SpType = 0, NrCells, InitIndsFile = NULL, InitIndsList = list(),
 #'            InitDens = 1, IndsHaCell, PropStages = 0, InitAge = 2, minX, minY, maxX, maxY,
 #'            InitFreezeYear = 0, RestrictRows = 0, RestrictFreq = 0, FinalFreezeYear = 0)
 #' @param InitType Type of initialisation:\cr
@@ -163,7 +163,7 @@ Initialise <- setClass("InitialisationParams", slots = c(InitType = "integer_OR_
                                                          FreeType = "integer_OR_numeric",
                                                          SpType = "integer_OR_numeric",
                                                          NrCells = "integer_OR_numeric",
-                                                         InitIndsFile = "character",
+                                                         InitIndsFile = "ANY",
                                                          InitIndsList = "list", # "data.frame",
                                                          InitDens = "integer_OR_numeric",
                                                          IndsHaCell = "integer_OR_numeric",
@@ -181,7 +181,7 @@ Initialise <- setClass("InitialisationParams", slots = c(InitType = "integer_OR_
                                           FreeType = 1L, #all
                                           SpType = 0L,   #all
                                           #NrCells,
-                                          InitIndsFile = "NULL",
+                                          InitIndsFile = NULL,
                                           InitIndsList = list(), # data.frame(),
                                           InitDens = 1L, #K/2
                                           #IndsHaCell,
@@ -199,9 +199,12 @@ Initialise <- setClass("InitialisationParams", slots = c(InitType = "integer_OR_
 
 setValidity('InitialisationParams', function(object){
     msg <- NULL
-    if (anyNA(object@InitIndsFile) || length(object@InitIndsFile) != 1){
-        msg <- c(msg, 'InitIndsFile must contain exactly one element.')
+    if(!is.null(object@InitIndsFile)){
+        if (anyNA(object@InitIndsFile) || length(object@InitIndsFile) != 1){
+            msg <- c(msg, 'InitIndsFile must contain exactly one element.')
+        }
     }
+
     if (anyNA(object@InitType) || length(object@InitType)!=1){
         msg <- c(msg, 'Type of initialisation (InitType) must be set and of length 1!')
     }
@@ -328,11 +331,11 @@ setValidity('InitialisationParams', function(object){
                 }
             }
             if (object@InitType == 2){  # Init IndsList
-                if (object@InitIndsFile == "NULL" & length(object@InitIndsList)==0){
+                if (is.null(object@InitIndsFile) & length(object@InitIndsList)==0){
                     msg <- c(msg, 'InitIndsFile or InitIndsList is required if InitType = 2 (from loaded initial individuals list).')
                 }
                 else {
-                    if (object@InitIndsFile != "NULL" & length(object@InitIndsList)!=0){ # both are given
+                    if (!is.null(object@InitIndsFile) & length(object@InitIndsList)!=0){ # both are given
                             msg <- c(msg, 'Both InitIndsFile and InitIndsList are given, but only one can be used.')
                     }
                 }
@@ -452,12 +455,12 @@ setMethod('initialize', 'InitialisationParams', function(.Object, ...) {
         }
     }
     else{
-        .Object@InitIndsFile = "NULL"
+        .Object@InitIndsFile = NULL
         .Object@InitIndsList = list() # data.frame()
         if (!is.null(args$InitIndsFile)) {
             warning(this_func, "InitIndsFile", warn_msg_ignored, "since InitType != 2.", call. = FALSE)
         }
-        if (!is.null(args$InitIndsList)) {
+        if (length(args$InitIndsList)>0) {
             warning(this_func, "InitIndsList", warn_msg_ignored, "since InitType != 2.", call. = FALSE)
         }
     }

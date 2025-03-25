@@ -3300,8 +3300,12 @@ int ReadInitialisationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
     init.finalFrzYr =
         Rcpp::as<int>(InitParamsR.slot("FinalFreezeYear")); // Year after which species is confined to current range
     // limits. Must be > InitFreezeYear if applied, otherwise 0.
-    init.indsFile = Rcpp::as<string>(InitParamsR.slot("InitIndsFile")); // Name of the initial individuals file (*.txt). Required for SeedType = 2, otherwise NULL.
-#if RSDEBUG
+    if(InitParamsR.slot("InitIndsFile") != R_NilValue){
+        init.indsFile = Rcpp::as<string>(InitParamsR.slot("InitIndsFile")); // Name of the initial individuals file (*.txt). Required for SeedType = 2, otherwise NULL.
+    }else{
+        init.indsFile = "NULL";
+    }
+    #if RSDEBUG
     DEBUGLOG << "ReadInitialisationR():"
     //<< " simulation=" << simulation
       << " seedType=" << init.seedType
@@ -3445,8 +3449,8 @@ int ReadGeneticsR(Rcpp::S4 GeneParamsR, Landscape* pLandscape)
         else  {
             patchSamplingOption = inPatches[0];
             if (inPatches[0] == "random" || inPatches[0] == "random_occupied"){
-                if(GeneParamsR.slot("NbrPatchToSample") != R_NilValue)
-                    nPatchesToSample = Rcpp::as<int>(GeneParamsR.slot("NbrPatchToSample"));
+                if(GeneParamsR.slot("NbrPatchesToSample") != R_NilValue)
+                    nPatchesToSample = Rcpp::as<int>(GeneParamsR.slot("NbrPatchesToSample"));
                 else throw logic_error("You must provide the number of patches to sample if PatchList is random or random_occupied.");
                 // patchList remains empty, filled when patches are sampled every gen
             }
@@ -3618,14 +3622,14 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
         } else {
             initDistRvec = {"#"};
         }
-
+        Rcpp::Rcout << "initDistRvec read..." << endl;
         Rcpp::NumericMatrix initParamsRmat;
         if(GeneticLoadParamsR.slot("InitialParameters")!= R_NilValue){
             initParamsRmat = Rcpp::as<Rcpp::NumericMatrix>(GeneticLoadParamsR.slot("InitialParameters")); // as a matrix: columns for parameter, rows for load nb
         } else {
-            initParamsRmat = R_NilValue;
+            initParamsRmat = Rcpp::NumericMatrix(0, 0);// empty matrix
         }
-
+        Rcpp::Rcout << "initParamsRmat read..." << endl;
 
         // Initial dominance distribution parameters applicable for genetic loads
         Rcpp::StringVector initDomDistRvec;
@@ -3634,14 +3638,15 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
         } else {
             initDomDistRvec = {"#"};
         }
+        Rcpp::Rcout << "initDomDistRvec read..." << endl;
 
         Rcpp::NumericMatrix initDomParamsRmat;
         if(GeneticLoadParamsR.slot("InitialDomParameters")!= R_NilValue){
             initDomParamsRmat = Rcpp::as<Rcpp::NumericMatrix>(GeneticLoadParamsR.slot("InitialDomParameters")); // as a matrix: columns for parameter, rows for load nb
         } else {
-            initDomParamsRmat = R_NilValue;
+            initDomParamsRmat = Rcpp::NumericMatrix(0, 0);
         }
-
+        Rcpp::Rcout << "initDomParamsRmat read..." << endl;
 
         // Dominance distribution parameters
         Rcpp::StringVector DominanceDistRvec = Rcpp::as<Rcpp::StringVector>(GeneticLoadParamsR.slot("DominanceDistribution")); // check if values are NA -> then '#'
@@ -3689,7 +3694,7 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
             else initDistR = "#";
 
             Rcpp::NumericVector initParamsR;
-            if (initParamsRmat != R_NilValue) initParamsR = initParamsRmat.row(l);
+            if (initParamsRmat.size() > 0) initParamsR = initParamsRmat.row(l);
             else initParamsR = {0,0};
 
             string initDomDistR;
@@ -3697,7 +3702,7 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
             else initDomDistR = "#";
 
             Rcpp::NumericVector initDomParamsR;
-            if (initDomParamsRmat != R_NilValue) initDomParamsR = initDomParamsRmat.row(l);
+            if (initDomParamsRmat.size() >0) initDomParamsR = initDomParamsRmat.row(l);
             else initDomParamsR = {0,0};
 
             string DominanceDistR = (string)DominanceDistRvec[l]; // it is checked beforehand whether the correct distributions are provided
