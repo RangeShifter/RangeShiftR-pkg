@@ -482,6 +482,7 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
             ppGenLand.maxPct = 100;
         }
     } else { // imported raster map
+
         ppLand.landNum = Rcpp::as<int>(LandParamsR.slot("LandNum"));
         ppLand.nHab = Rcpp::as<int>(LandParamsR.slot("Nhabitats")); // no longer necessary to read no. of habitats from landFile
 
@@ -2176,32 +2177,60 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
     DEBUGLOG << "ReadSettlementR(): sett.stgDep = " << sett.stgDep << ", sett.sexDep = " << sett.sexDep
              << ", sett.indVar = " << sett.indVar << endl;
 #endif
+    // check if SettleParamsR.slots are single values or a matrix and assign them accordingly:
+    Rcpp::NumericMatrix mat(1,1); // temporary storage for single value
 
-    Rcpp::NumericMatrix FindMate = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("FindMate"));
+    Rcpp::NumericMatrix FindMate;
     bool constFindMate = false;
-    if(FindMate.nrow() == 1) {
+    if(Rf_isMatrix(SettleParamsR.slot("FindMate"))){
+        FindMate = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("FindMate"));
+    } else {
+        mat(0,0) = Rcpp::as<int>(SettleParamsR.slot("FindMate"));
+        FindMate = mat;
         constFindMate = true;
     }
-    Rcpp::NumericMatrix MinSteps = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("MinSteps"));
+
+    Rcpp::NumericMatrix MinSteps;
     bool constMinSteps = false;
-    if(MinSteps.nrow() == 1) {
+    if(Rf_isMatrix(SettleParamsR.slot("MinSteps"))){
+        MinSteps = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("MinSteps"));
+    } else {
+        mat(0,0) = Rcpp::as<int>(SettleParamsR.slot("MinSteps"));
+        MinSteps = mat;
         constMinSteps = true;
     }
-    Rcpp::NumericMatrix MaxSteps = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("MaxSteps"));
+
+
+    Rcpp::NumericMatrix MaxSteps;
     bool constMaxSteps = false;
-    if(MaxSteps.nrow() == 1) {
+    if(Rf_isMatrix(SettleParamsR.slot("MaxSteps"))){
+        MaxSteps = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("MaxSteps"));
+    } else {
+        mat(0,0) = Rcpp::as<int>(SettleParamsR.slot("MaxSteps"));
+        MaxSteps = mat;
         constMaxSteps = true;
     }
-    Rcpp::NumericMatrix MaxStepsYr = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("MaxStepsYear"));
+
+    Rcpp::NumericMatrix MaxStepsYr;
     bool constMaxStepsYr = false;
-    if(MaxStepsYr.nrow() == 1) {
+    if(Rf_isMatrix(SettleParamsR.slot("MaxStepsYear"))){
+        MaxStepsYr = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("MaxStepsYear"));
+    } else {
+        mat(0,0) = Rcpp::as<int>(SettleParamsR.slot("MaxStepsYear"));
+        MaxStepsYr = mat;
         constMaxStepsYr = true;
     }
 
     sexSettle = 2 * sett.stgDep + sett.sexDep;
 
-    Rcpp::NumericMatrix SettleCondMatrix = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("Settle"));
+    Rcpp::NumericMatrix SettleCondMatrix;
 
+    if(Rf_isMatrix(SettleParamsR.slot("Settle"))){
+        SettleCondMatrix = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("Settle"));
+    } else {
+        mat(0,0) = Rcpp::as<int>(SettleParamsR.slot("Settle"));
+        SettleCondMatrix = mat;
+    }
 
     for(int line = 0; line < Nlines; line++) {
         // FindMate
@@ -3159,10 +3188,10 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
         string ExpressionTypeR = "#";
 
         // Initial distribution parameters
-        string initDistR = "uniform"; // Rcpp::as<string>(NeutralTraitsParamsR.slot("InitialDistribution"));
+        string initDistR = Rcpp::as<string>(NeutralTraitsParamsR.slot("InitialDistribution"));
         if(initDistR != "uniform") initDistR == "#";
 
-        Rcpp::NumericVector initParamsR = {0,10}; // {0,Rcpp::as<int>(NeutralTraitsParamsR.slot("InitialParameters"))};
+        Rcpp::NumericVector initParamsR = {0,Rcpp::as<int>(NeutralTraitsParamsR.slot("InitialParameters"))};
 
         // Dominance distribution parameters not applicable for neutral traits
         string DominanceDistR = "#";
@@ -3170,9 +3199,9 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
 
         // Mutation parameters
         bool isInherited = true;
-        string MutationDistR = "KAM"; // Rcpp::as<string>(NeutralTraitsParamsR.slot("MutationDistribution"));
-        Rcpp::NumericVector MutationParamsR = {2}; // Rcpp::as<Rcpp::NumericVector>(NeutralTraitsParamsR.slot("MutationParameters"));
-        float MutationRateR =  0.0001; //Rcpp::as<float>(NeutralTraitsParamsR.slot("MutationRate"));
+        string MutationDistR = Rcpp::as<string>(NeutralTraitsParamsR.slot("MutationDistribution"));
+        Rcpp::NumericVector MutationParamsR = Rcpp::as<Rcpp::NumericVector>(NeutralTraitsParamsR.slot("MutationParameters"));
+        float MutationRateR =  Rcpp::as<float>(NeutralTraitsParamsR.slot("MutationRate"));
 
         // sex dependency
         int sexdep = 2; // NA = 2, FEM = 0 , MAL = 1; depending on row
