@@ -48,7 +48,7 @@ SubCommunity::~SubCommunity() {
 	if (occupancy != 0) delete[] occupancy;
 }
 
-intptr SubCommunity::getNum(void) { return subCommNum; }
+int SubCommunity::getNum(void) { return subCommNum; }
 
 Patch* SubCommunity::getPatch(void) { return pPatch; }
 
