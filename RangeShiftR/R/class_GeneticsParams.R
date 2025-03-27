@@ -352,54 +352,53 @@ setValidity("GeneticLoadParams", function(object) {
         } else if (nrow(object@InitialParameters) != object@NbGeneticLoads) {
             msg <- c(msg, "If you have set InitialDistributions for at least one genetic load you must provide the InitialParameters for each genetic load. Use one row for each genetic load.")
         } else {
-            if (any(object@InitialDistribution == "normal")) { # if any distribution is normal
+            # if any InitialDistribution is not 'normal', 'gamma', 'uniform', 'negExp' or 'scaled' OR NA
+            if (!all(object@InitialDistribution %in% c("uniform", "normal", "gamma", "negExp", NA))) {
+                msg <- c(msg, "InitialDistribution must be either normal, gamma, uniform, negExp, scaled or NA (if not initialized for a genetic load) for genetic load traits.")
+            }
+            if (any(object@InitialDistribution[!is.na(object@InitialDistribution)] == "normal")) { # if any distribution is normal
                 # two values for mean and sd
                 if (ncol(object@InitialParameters) !=2 || # if DominanceParameters has not 2 columns OR
-                    any(!is.numeric(object@InitialParameters[object@InitialDistribution=="normal"])) || # if entries are not numeric
-                    any(is.na(object@InitialParameters[object@InitialDistribution=="normal"]))) { # if entries are NA
+                    any(!is.numeric(object@InitialParameters[which(object@InitialDistribution=="normal"),])) || # if entries are not numeric
+                    any(is.na(object@InitialParameters[which(object@InitialDistribution=="normal"),]))) { # if entries are NA
                     msg <- c(msg,"For a normal initial distribution, InitialParams must provide two values for mean (first column) and sd (second column)")
                 }
             }
-            if (any(object@InitialDistribution == "gamma")) {
+            if (any(object@InitialDistribution[!is.na(object@InitialDistribution)] == "gamma")) {
                 # two values for shape and scale
                 if (ncol(object@InitialParameters) !=2 || # if DominanceParameters has not 2 columns OR
-                    any(!is.numeric(object@InitialParameters[object@InitialDistribution=="gamma"])) || # if entries are not numeric
-                    any(is.na(object@InitialParameters[object@InitialDistribution=="gamma"]))) { # if entries are NA
+                    any(!is.numeric(object@InitialParameters[which(object@InitialDistribution=="gamma"),])) || # if entries are not numeric
+                    any(is.na(object@InitialParameters[which(object@InitialDistribution=="gamma"),]))) { # if entries are NA
                     msg <- c(msg,"For a gamma initial distribution, InitialParams must provide two values for shape (first column) and scale (second column)")
                 }
             }
-            if (any(object@InitialDistribution == "uniform")) {
+            if (any(object@InitialDistribution[!is.na(object@InitialDistribution)] == "uniform")) {
                 # two values for min and max
                 if (ncol(object@InitialParameters) !=2 || # if DominanceParameters has not 2 columns OR
-                    any(!is.numeric(object@InitialParameters[object@InitialDistribution=="uniform"])) || # if entries are not numeric
-                    any(is.na(object@InitialParameters[object@InitialDistribution=="uniform"]))) { # if entries are NA
+                    any(!is.numeric(object@InitialParameters[which(object@InitialDistribution=="uniform"),])) || # if entries are not numeric
+                    any(is.na(object@InitialParameters[which(object@InitialDistribution=="uniform"),]))) { # if entries are NA
                     msg <- c(msg,"For a uniform initial distribution, InitialParams must provide two values for min (first column) and max (second column)")
                 }
             }
-            if (all(object@InitialDistribution == "negExp")) { # if it is only negExp or scaled
+            if (all(object@InitialDistribution[!is.na(object@InitialDistribution)] == "negExp")) { # if it is only negExp or scaled
                 # one value for mean and one NA
                 if (ncol(object@InitialParameters) !=1 || # if DominanceParameters has more than 1 column
-                    !is.numeric(object@InitialParameters) ||
-                    any(is.na(object@InitialParameters))
+                    !is.numeric(object@InitialParameters[which(object@InitialDistribution == "negExp"),]) ||
+                    any(is.na(object@InitialParameters[which(object@InitialDistribution == "negExp"),]))
                 ) {
                     msg <- c(msg,"For negative exponential and scaled initial distribution, InitialParams must provide only one column for mean.")
                 }
             } else{
-                if (any(object@InitialDistribution == "negExp")) { # if only some are scaled or negative exponential
+                if (any(object@InitialDistribution[!is.na(object@InitialDistribution)] == "negExp")) { # if only some are scaled or negative exponential
                     # one value for mean and one NA if other distributions need 2 values
                     if (ncol(object@InitialParameters) !=2 || # if DominanceParameters has not 2 columns OR
                         !is.numeric(object@InitialParameters) || # if entries are not numeric
-                        !all(is.na(object@InitialParameters[object@InitialDistribution=="negExp",2])) || # second column is not NA
-                        any(is.na(object@InitialParameters[object@InitialDistribution=="negExp",1])) # first column is NA
+                        !all(is.na(object@InitialParameters[which(object@InitialDistribution=="negExp"),2])) || # second column is not NA
+                        any(is.na(object@InitialParameters[which(object@InitialDistribution=="negExp"),1])) # first column is NA
                     ) {
                         msg <- c(msg,"For the negative exponential initial distribution, InitialParameters must provide only one value for mean (first column) and the second column need to be NA if other genetic loads use other initial distributions.")
                     }
                 }
-            }
-
-            # if any InitialDistribution is not 'normal', 'gamma', 'uniform', 'negExp' or 'scaled' OR NA
-            if (!all(object@InitialDistribution %in% c("uniform", "normal", "gamma", "negExp", NA))) {
-                msg <- c(msg, "InitialDistribution must be either normal, gamma, uniform, negExp, scaled or NA (if not initialized for a genetic load) for genetic load traits.")
             }
         }
     }
@@ -418,56 +417,56 @@ setValidity("GeneticLoadParams", function(object) {
         } else if (nrow(object@InitialDomParameters) != object@NbGeneticLoads) {
             msg <- c(msg, "If you have set InitialDomDistributions for at least one genetic load you must provide the InitialDomParameters for each genetic load. Use one row for each genetic load.")
         } else {
-            if (any(object@InitialDomDistribution == "normal")) { # if any distribution is normal
+            # if any InitialDomDistribution is not 'normal', 'gamma', 'uniform', 'negExp' or 'scaled' OR NA
+            if (!all(object@InitialDomDistribution %in% c("uniform", "normal", "gamma", "negExp", "scaled", NA))) {
+                msg <- c(msg, "InitialDomDistribution must be either normal, gamma, uniform, negExp, scaled or NA (if not initialized for a genetic load) for genetic load traits.")
+            }
+
+            if (any(object@InitialDomDistribution[!is.na(object@InitialDomDistribution)] == "normal")) { # if any distribution is normal
                 # two values for mean and sd
                 if (ncol(object@InitialDomParameters) !=2 || # if DominanceParameters has not 2 columns OR
-                    any(!is.numeric(object@InitialDomParameters[object@InitialDomDistribution=="normal"])) || # if entries are not numeric
-                    any(is.na(object@InitialDomParameters[object@InitialDomDistribution=="normal"]))) { # if entries are NA
+                    any(!is.numeric(object@InitialDomParameters[which(object@InitialDomDistribution=="normal"), ])) || # if entries are not numeric
+                    any(is.na(object@InitialDomParameters[which(object@InitialDomDistribution=="normal"), ]))) { # if entries are NA
                     msg <- c(msg,"For a normal initial dominance distribution, InitialDomParameters must provide two values for mean (first column) and sd (second column)")
                 }
             }
-            if (any(object@InitialDomDistribution == "gamma")) {
+            if (any(object@InitialDomDistribution[!is.na(object@InitialDomDistribution)] == "gamma")) {
                 # two values for shape and scale
                 if (ncol(object@InitialDomParameters) !=2 || # if DominanceParameters has not 2 columns OR
-                    any(!is.numeric(object@InitialDomParameters[object@InitialDomDistribution=="gamma"])) || # if entries are not numeric
-                    any(is.na(object@InitialDomParameters[object@InitialDomDistribution=="gamma"]))) { # if entries are NA
+                    any(!is.numeric(object@InitialDomParameters[which(object@InitialDomDistribution=="gamma"), ])) || # if entries are not numeric
+                    any(is.na(object@InitialDomParameters[which(object@InitialDomDistribution=="gamma"), ]))) { # if entries are NA
                     msg <- c(msg,"For a gamma initial dominance distribution, InitialDomParameters must provide two values for shape (first column) and scale (second column)")
                 }
             }
-            if (any(object@InitialDomDistribution == "uniform")) {
+            if (any(object@InitialDomDistribution[!is.na(object@InitialDomDistribution)] == "uniform")) {
                 # two values for min and max
                 if (ncol(object@InitialDomParameters) !=2 || # if DominanceParameters has not 2 columns OR
-                    any(!is.numeric(object@InitialDomParameters[object@InitialDomDistribution=="uniform"])) || # if entries are not numeric
-                    any(is.na(object@InitialDomParameters[object@InitialDomDistribution=="uniform"]))) { # if entries are NA
+                    any(!is.numeric(object@InitialDomParameters[which(object@InitialDomDistribution=="uniform"),])) || # if entries are not numeric
+                    any(is.na(object@InitialDomParameters[which(object@InitialDomDistribution=="uniform"),]))) { # if entries are NA
                     msg <- c(msg,"For a uniform initial dominance distribution, InitialDomParameters must provide two values for min (first column) and max (second column)")
                 }
             }
-            if (all(object@InitialDomDistribution == "negExp" || object@InitialDomDistribution == "scaled")) { # if it is only negExp or scaled
+            if (all(object@InitialDomDistribution[!is.na(object@InitialDomDistribution)] %in% c("negExp", "scaled"))) { # if it is only negExp or scaled
                 # one value for mean and one NA
                 if (ncol(object@InitialDomParameters) !=1 || # if DominanceParameters has more than 1 column
-                    !is.numeric(object@InitialDomParameters) ||
-                    any(is.na(object@InitialDomParameters))
+                    !is.numeric(object@InitialDomParameters[which(object@InitialDomDistribution %in% c("negExp", "scaled")),]) ||
+                    any(is.na(object@InitialDomParameters[which(object@InitialDomDistribution %in% c("negExp", "scaled")),]))
                 ) {
                     msg <- c(msg,"For negative exponential and scaled initial dominance distribution, InitialParameters must provide only one column for mean.")
                 }
             } else{
-                if (any(object@InitialDomDistribution == "scaled" || object@InitialDomDistribution == "negExp")) { # if only some are scaled or negative exponential
+                if (any(object@InitialDomDistribution[!is.na(object@InitialDomDistribution)] == "scaled" %in% c("negExp", "scaled"))) { # if only some are scaled or negative exponential
                     # one value for mean and one NA if other distributions need 2 values
                     if (ncol(object@InitialDomParameters) !=2 || # if DominanceParameters has not 2 columns OR
                         !is.numeric(object@InitialDomParameters) || # if entries are not numeric
-                        !all(is.na(object@InitialDomParameters[object@InitialDomDistribution=="scaled",2])) || # second column is not NA
-                        !all(is.na(object@InitialDomParameters[object@InitialDomDistribution=="negExp",2])) || # second column is not NA
-                        any(is.na(object@InitialDomParameters[object@InitialDomDistribution=="scaled",1])) || # first column is NA
-                        any(is.na(object@InitialDomParameters[object@InitialDomDistribution=="negExp",1])) # first column is NA
+                        !all(is.na(object@InitialDomParameters[which(object@InitialDomDistribution=="scaled"),2])) || # second column is not NA
+                        !all(is.na(object@InitialDomParameters[which(object@InitialDomDistribution=="negExp"),2])) || # second column is not NA
+                        any(is.na(object@InitialDomParameters[which(object@InitialDomDistribution=="scaled"),1])) || # first column is NA
+                        any(is.na(object@InitialDomParameters[which(object@InitialDomDistribution=="negExp"),1])) # first column is NA
                     ) {
                         msg <- c(msg,"For the scaled or negative exponential initial dominance distribution, InitialParameters must provide only one value for mean (first column) and the second column need to be NA if other genetic loads use other initial dominance distributions.")
                     }
                 }
-            }
-
-            # if any InitialDomDistribution is not 'normal', 'gamma', 'uniform', 'negExp' or 'scaled' OR NA
-            if (!all(object@InitialDomDistribution %in% c("uniform", "normal", "gamma", "negExp", "scaled", NA))) {
-                msg <- c(msg, "InitialDomDistribution must be either normal, gamma, uniform, negExp, scaled or NA (if not initialized for a genetic load) for genetic load traits.")
             }
         }
     }
@@ -479,31 +478,35 @@ setValidity("GeneticLoadParams", function(object) {
         } else if (nrow(object@DominanceParameters) != object@NbGeneticLoads) {
             msg <- c(msg, "If you have set DominanceDistributions you must provide the DominanceParameters for each genetic load. Use one row for each genetic load.")
         } else {
+            # if any DominanceDistribution is not 'normal', 'gamma', 'uniform', 'negExp' or 'scaled' OR NA
+            if (!all(object@DominanceDistribution %in% c("uniform", "normal", "gamma", "negExp", "scaled"))) {
+                msg <- c(msg, "DominanceDistribution must be either normal, gamma, uniform, negExp, or scaled for genetic load traits.")
+            }
             if (any(object@DominanceDistribution == "normal")) { # if any distribution is normal
                 # two values for mean and sd
                 if (ncol(object@DominanceParameters) !=2 || # if DominanceParameters has not 2 columns OR
-                    any(!is.numeric(object@DominanceParameters[object@DominanceDistribution=="normal"])) || # if entries are not numeric
-                    any(is.na(object@DominanceParameters[object@DominanceDistribution=="normal"]))) { # if entries are NA
+                    any(!is.numeric(object@DominanceParameters[which(object@DominanceDistribution=="normal"),])) || # if entries are not numeric
+                    any(is.na(object@DominanceParameters[which(object@DominanceDistribution=="normal"),]))) { # if entries are NA
                     msg <- c(msg,"For a normal dominance distribution, DominanceParams must provide two values for mean (first column) and sd (second column)")
                 }
             }
             if (any(object@DominanceDistribution == "gamma")) {
                 # two values for shape and scale
                 if (ncol(object@DominanceParameters) !=2 || # if DominanceParameters has not 2 columns OR
-                    any(!is.numeric(object@DominanceParameters[object@DominanceDistribution=="gamma"])) || # if entries are not numeric
-                    any(is.na(object@DominanceParameters[object@DominanceDistribution=="gamma"]))) { # if entries are NA
+                    any(!is.numeric(object@DominanceParameters[which(object@DominanceDistribution=="gamma"),])) || # if entries are not numeric
+                    any(is.na(object@DominanceParameters[which(object@DominanceDistribution=="gamma"),]))) { # if entries are NA
                     msg <- c(msg,"For a gamma dominance distribution, DominanceParams must provide two values for shape (first column) and scale (second column)")
                 }
             }
             if (any(object@DominanceDistribution == "uniform")) {
                 # two values for min and max
                 if (ncol(object@DominanceParameters) !=2 || # if DominanceParameters has not 2 columns OR
-                    any(!is.numeric(object@DominanceParameters[object@DominanceDistribution=="uniform"])) || # if entries are not numeric
-                    any(is.na(object@DominanceParameters[object@DominanceDistribution=="uniform"]))) { # if entries are NA
+                    any(!is.numeric(object@DominanceParameters[which(object@DominanceDistribution=="uniform"),])) || # if entries are not numeric
+                    any(is.na(object@DominanceParameters[which(object@DominanceDistribution=="uniform"),]))) { # if entries are NA
                     msg <- c(msg,"For a uniform dominance distribution, DominanceParams must provide two values for min (first column) and max (second column)")
                 }
             }
-            if (all(object@DominanceDistribution == "negExp" || object@DominanceDistribution == "scaled")) { # if it is only negExp or scaled
+            if (all(object@DominanceDistribution %in% c("negExp", "scaled"))) { # if it is only negExp or scaled
                 # one value for mean and one NA
                 if (ncol(object@DominanceParameters) !=1 || # if DominanceParameters has more than 1 column
                     !is.numeric(object@DominanceParameters) ||
@@ -512,22 +515,18 @@ setValidity("GeneticLoadParams", function(object) {
                     msg <- c(msg,"For negative exponential and scaled dominance distribution, DominanceParams must provide only one column for mean.")
                 }
             } else{
-                if (any(object@DominanceDistribution == "scaled" || object@DominanceDistribution == "negExp")) { # if only some are scaled or negative exponential
+                if (any(object@DominanceDistribution %in% c("scaled", "negExp"))) { # if only some are scaled or negative exponential
                     # one value for mean and one NA if other distributions need 2 values
                     if (ncol(object@DominanceParameters) !=2 || # if DominanceParameters has not 2 columns OR
                         !is.numeric(object@DominanceParameters) || # if entries are not numeric
-                        !all(is.na(object@DominanceParameters[object@DominanceDistribution=="scaled",2])) || # second column is not NA
-                        !all(is.na(object@DominanceParameters[object@DominanceDistribution=="negExp",2])) || # second column is not NA
-                        any(is.na(object@DominanceParameters[object@DominanceDistribution=="scaled",1])) || # first column is NA
-                        any(is.na(object@DominanceParameters[object@DominanceDistribution=="negExp",1])) # first column is NA
+                        !all(is.na(object@DominanceParameters[which(object@DominanceDistribution=="scaled"),2])) || # second column is not NA
+                        !all(is.na(object@DominanceParameters[which(object@DominanceDistribution=="negExp"),2])) || # second column is not NA
+                        any(is.na(object@DominanceParameters[which(object@DominanceDistribution=="scaled"),1])) || # first column is NA
+                        any(is.na(object@DominanceParameters[which(object@DominanceDistribution=="negExp"),1])) # first column is NA
                         ) {
                         msg <- c(msg,"For the scaled or negative exponential dominance distribution, DominanceParameters must provide only one value for mean (first column) and the second column need to be NA if other genetic loads use other dominance distributions.")
                     }
                 }
-            }
-            # if any DominanceDistribution is not 'normal', 'gamma', 'uniform', 'negExp' or 'scaled' OR NA
-            if (!all(object@DominanceDistribution %in% c("uniform", "normal", "gamma", "negExp", "scaled"))) {
-                msg <- c(msg, "DominanceDistribution must be either normal, gamma, uniform, negExp, or scaled for genetic load traits.")
             }
         }
     } else{ # cannot be NULL
@@ -550,6 +549,10 @@ setValidity("GeneticLoadParams", function(object) {
         } else if (nrow(object@MutationParameters) != object@NbGeneticLoads) {
             msg <- c(msg, "For each genetic load you must provide the MutationParameters.")
         } else {
+            if (!all(object@MutationDistribution %in% c("normal", "gamma", "uniform", "negExp"))) {
+                msg <- c(msg, "MutationDistribution must be either normal, gamma, uniform or negExp for genetic load traits.")
+            }
+
             if (any(object@MutationDistribution == "uniform", object@MutationDistribution == "normal", object@MutationDistribution == "gamma")){
                 if (ncol(object@MutationParameters) !=2){
                     msg <- c(msg,"MutationParams must provide two values for uniform/normal/gamma distribution: min/mean/shape (first column) and max/sd/scale (second column)")
@@ -557,22 +560,22 @@ setValidity("GeneticLoadParams", function(object) {
             }
             if (any(object@MutationDistribution == "uniform")) {
                 # two values for min and max
-                if (any(!is.numeric(object@MutationParameters[object@MutationDistribution=="uniform"])) ||
-                    any(is.na(object@MutationParameters[object@MutationDistribution=="uniform"]))) {
+                if (any(!is.numeric(object@MutationParameters[which(object@MutationDistribution=="uniform"),])) ||
+                    any(is.na(object@MutationParameters[which(object@MutationDistribution=="uniform"),]))) {
                     msg <- c(msg,"For a uniform mutation distribution, MutationParams must provide two values for min (first column) and max (second column)")
                 }
             }
             if (any(object@MutationDistribution == "normal")) {
                 # two values for meand and sd
-                if (any(!is.numeric(object@MutationParameters[object@MutationDistribution=="normal"])) ||
-                    any(is.na(object@MutationParameters[object@MutationDistribution=="normal"]))) {
+                if (any(!is.numeric(object@MutationParameters[which(object@MutationDistribution=="normal"),])) ||
+                    any(is.na(object@MutationParameters[which(object@MutationDistribution=="normal"),]))) {
                     msg <- c(msg,"For a normal mutation distribution, MutationParams must provide two values for mean (first column) and sd (second column)")
                 }
             }
             if (any(object@MutationDistribution == "gamma")) {
                 # two values for shape and scale
-                if (any(!is.numeric(object@MutationParameters[object@MutationDistribution=="gamma"])) ||
-                    any(is.na(object@MutationParameters[object@MutationDistribution=="gamma"]))) {
+                if (any(!is.numeric(object@MutationParameters[which(object@MutationDistribution=="gamma"),])) ||
+                    any(is.na(object@MutationParameters[which(object@MutationDistribution=="gamma"),]))) {
                     msg <- c(msg,"For a gamma mutation distribution, MutationParams must provide two values for shape (first column) and scale (second column)")
                 }
             }
@@ -589,19 +592,13 @@ setValidity("GeneticLoadParams", function(object) {
                     # one value for mean and one NA if other distributions need 2 values
                     if (ncol(object@MutationParameters) !=2 || # if DominanceParameters has not 2 columns OR
                         !is.numeric(object@MutationParameters) || # if entries are not numeric
-                        !all(is.na(object@MutationParameters[object@MutationDistribution=="negExp",2])) || # second column is not NA
-                        any(is.na(object@MutationParameters[object@MutationDistribution=="negExp",1])) # first column is NA
+                        !all(is.na(object@MutationParameters[which(object@MutationDistribution=="negExp"),2])) || # second column is not NA
+                        any(is.na(object@MutationParameters[which(object@MutationDistribution=="negExp"),1])) # first column is NA
                     ) {
                         msg <- c(msg,"For the negative exponential mutation distribution, MutationParameters must provide only one value for mean (first column) and the second column need to be NA if other genetic loads use other mutation distributions.")
                     }
                 }
             }
-
-            if (any(object@MutationDistribution != "normal" && object@MutationDistribution != "gamma" &&
-                    object@MutationDistribution != "uniform" && object@MutationDistribution != "negExp")) {
-                msg <- c(msg, "MutationDistribution must be either normal, gamma, uniform or negExp for genetic load traits.")
-            }
-
         }
     }
 
@@ -624,7 +621,7 @@ setMethod("show", "GeneticLoadParams", function(object){
     cat("     Number of genetic loads: ", object@NbGeneticLoads, "\n")
     for (i in 1:object@NbGeneticLoads){
         cat("     Configuration of genetic load ", i, ": \n")
-        if(is.numeric(object@Positions[i])) cat("     Loci positions coding for trait: ", object@Positions[i], "\n")
+        if(is.numeric(object@Positions[i])) cat("          Loci positions coding for trait: ", object@Positions[i], "\n")
         if(!is.numeric(object@Positions[i]) && object@Positions[i]=="random") cat("    Loci positions coding for trait randomly chosen with ", object@NbOfPositions[i], " positions\n")
         cat("       Initial allel distribution: ", object@InitialDistribution[i], "\n")
         cat("       Initial allel distribution parameter: ", object@InitialParameters[i,], "\n")
@@ -635,7 +632,7 @@ setMethod("show", "GeneticLoadParams", function(object){
         cat("       Mutation distribution: ", object@MutationDistribution[i], "\n")
         cat("       Mutation parameters: ", object@MutationParameters[i,], "\n")
         cat("       Mutation rate: ", object@MutationRate, "\n")
-        if(object@OutputValues) cat("       Allel values for gene is written to output. \n")
+        if(object@OutputValues[i]) cat("       Allel values for gene is written to output. \n")
     }
 
 })
@@ -1939,7 +1936,7 @@ setMethod("show", "TraitsParams", function(object){
 #'
 #' @usage Genetics(GenomeSize = 10,
 #'          ChromosomeEnds = 1, RecombinationRate = 0.0,
-#'          OutputGeneValues = FALSE, OutputNeutralStatistics = FALSE,
+#'          OutputGeneValues = FALSE,
 #'          OutputFstatsWeirCockerham = FALSE, OutputFstatsWeirHill = FALSE,
 #'          OutputStartGenetics = NULL, OutputInterval = NULL,
 #'          PatchList = NULL, NbrPatchesToSample = NULL,

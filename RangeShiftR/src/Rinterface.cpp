@@ -2476,111 +2476,59 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
     DEBUGLOG << "ReadSettlementR(): sett.stgDep = " << sett.stgDep << ", sett.sexDep = " << sett.sexDep
              << ", sett.indVar = " << sett.indVar << endl;
 #endif
-    // check whether SettleParamsR.slot("FindMate") is a matrix, then use Rcpp::NumericMatrix, otherwise use NumericVector
-    /*if (Rcpp::is<Rcpp::NumericMatrix>(slot)) {
-        return true;
-    }*/
+    // check if SettleParamsR.slots are single values or a matrix and assign them accordingly:
+    Rcpp::NumericMatrix mat(1,1); // temporary storage for single value
 
     Rcpp::NumericMatrix FindMate;
-    try {
-        FindMate = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("FindMate"));
-        // Rcpp::Rcout << "The slot 'FindMate' is a NumericMatrix." << endl;
-    } catch (const std::exception &e1) {
-        // If it's not a NumericMatrix, try bool
-        try {
-            bool result = Rcpp::as<bool>(SettleParamsR.slot("FindMate"));
-            // Rcpp::Rcout << "The slot 'FindMate' is a bool." << endl;
-            // set FindMate at position {0,0} to result:
-            FindMate(0, 0) = (int) result;
-        } catch (const std::exception &e2) {
-            // Rcpp::Rcout << "The slot 'FindMate' could not be imported as a NumericMatrix or bool.\n";
-        }
-    }
-
     bool constFindMate = false;
-    if(FindMate.nrow() == 1) {
+    if(Rf_isMatrix(SettleParamsR.slot("FindMate"))){
+        FindMate = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("FindMate"));
+    } else {
+        mat(0,0) = Rcpp::as<int>(SettleParamsR.slot("FindMate"));
+        FindMate = mat;
         constFindMate = true;
     }
 
     Rcpp::NumericMatrix MinSteps;
-    try {
-        MinSteps = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("MinSteps")); // could also be not a matrix
-        // Rcpp::Rcout << "The slot 'MinSteps' is a NumericMatrix." << endl;
-    } catch (const std::exception &e1) {
-        // If it's not a NumericMatrix, try bool
-        try {
-            int result = Rcpp::as<int>(SettleParamsR.slot("MinSteps"));
-            // Rcpp::Rcout << "The slot 'MinSteps' is an integer." << endl;
-            // set FindMate at position {0,0} to result:
-            MinSteps(0, 0) = result;
-        } catch (const std::exception &e2) {
-            // Rcpp::Rcout << "The slot 'MinSteps' could not be imported as a NumericMatrix or integer.\n";
-        }
-    }
-
-
     bool constMinSteps = false;
-    if(MinSteps.nrow() == 1) {
+    if(Rf_isMatrix(SettleParamsR.slot("MinSteps"))){
+        MinSteps = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("MinSteps"));
+    } else {
+        mat(0,0) = Rcpp::as<int>(SettleParamsR.slot("MinSteps"));
+        MinSteps = mat;
         constMinSteps = true;
     }
 
-    Rcpp::NumericMatrix MaxSteps;
-    try {
-        MaxSteps = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("MaxSteps")); // could also be not a matrix
-        // Rcpp::Rcout << "The slot 'MaxSteps' is a NumericMatrix." << endl;
-    } catch (const std::exception &e1) {
-        // If it's not a NumericMatrix, try bool
-        try {
-            int result = Rcpp::as<int>(SettleParamsR.slot("MaxSteps"));
-             // Rcpp::Rcout << "The slot 'MaxSteps' is an integer." << endl;
-             // set MaxSteps at position {0,0} to result:
-             MaxSteps(0, 0) = result;
-        } catch (const std::exception &e2) {
-            // Rcpp::Rcout << "The slot 'MaxSteps' could not be imported as a NumericMatrix or integer.\n";
-        }
-    }
 
+    Rcpp::NumericMatrix MaxSteps;
     bool constMaxSteps = false;
-    if(MaxSteps.nrow() == 1) {
+    if(Rf_isMatrix(SettleParamsR.slot("MaxSteps"))){
+        MaxSteps = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("MaxSteps"));
+    } else {
+        mat(0,0) = Rcpp::as<int>(SettleParamsR.slot("MaxSteps"));
+        MaxSteps = mat;
         constMaxSteps = true;
     }
-    Rcpp::NumericMatrix MaxStepsYr;
-    try {
-        MaxStepsYr = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("MaxStepsYear")); // could also be not a matrix
-        // Rcpp::Rcout << "The slot 'MaxStepsYr' is a NumericMatrix." << endl;
-    } catch (const std::exception &e1) {
-        // If it's not a NumericMatrix, try bool
-        try {
-            int result = Rcpp::as<int>(SettleParamsR.slot("MaxStepsYear"));
-            // Rcpp::Rcout << "The slot 'MaxStepsYr' is an integer." << endl;
-            // set MaxSteps at position {0,0} to result:
-            MaxStepsYr(0, 0) = result;
-        } catch (const std::exception &e2) {
-            // Rcpp::Rcout << "The slot 'MaxStepsYr' could not be imported as a NumericMatrix or integer.\n";
-        }
-    }
 
+    Rcpp::NumericMatrix MaxStepsYr;
     bool constMaxStepsYr = false;
-    if(MaxStepsYr.nrow() == 1) {
+    if(Rf_isMatrix(SettleParamsR.slot("MaxStepsYear"))){
+        MaxStepsYr = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("MaxStepsYear"));
+    } else {
+        mat(0,0) = Rcpp::as<int>(SettleParamsR.slot("MaxStepsYear"));
+        MaxStepsYr = mat;
         constMaxStepsYr = true;
     }
 
     sexSettle = 2 * sett.stgDep + sett.sexDep;
 
     Rcpp::NumericMatrix SettleCondMatrix;
-    try {
-        SettleCondMatrix = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("Settle")); // could also be not a matrix
-        // Rcpp::Rcout << "The slot 'SettleCondMatrix' is a NumericMatrix." << endl;
-    } catch (const std::exception &e1) {
-        // If it's not a NumericMatrix, try bool
-        try {
-            int result = Rcpp::as<int>(SettleParamsR.slot("Settle"));
-            // Rcpp::Rcout << "The slot 'Settle' is an integer." << endl;
-            // set SettleCondMatrix at position {0,0} to result:
-            SettleCondMatrix(0, 0) = result;
-        } catch (const std::exception &e2) {
-            // Rcpp::Rcout << "The slot 'MaxStepsYr' could not be imported as a NumericMatrix or integer.\n";
-        }
+
+    if(Rf_isMatrix(SettleParamsR.slot("Settle"))){
+        SettleCondMatrix = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("Settle"));
+    } else {
+        mat(0,0) = Rcpp::as<int>(SettleParamsR.slot("Settle"));
+        SettleCondMatrix = mat;
     }
 
     for(int line = 0; line < Nlines; line++) {
@@ -3689,21 +3637,25 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
                 }
             }
 
-            string initDistR;
-            if (initDistRvec[1] != "#") initDistR = (string)initDistRvec[l]; // it is checked beforehand whether the correct distributions are provided
-            else initDistR = "#";
+            string initDistR = "#";
+            if (initDistRvec[0] != "#") initDistR = (string)initDistRvec[l]; // it is checked beforehand whether the correct distributions are provided
 
-            Rcpp::NumericVector initParamsR;
+            Rcpp::NumericVector initParamsR= {0,0};
             if (initParamsRmat.size() > 0) initParamsR = initParamsRmat.row(l);
-            else initParamsR = {0,0};
+            if (initDistR == "NA") {
+                initDistR = "#";
+                initParamsR = {0,0};
+            }
 
-            string initDomDistR;
-            if (initDomDistRvec[1] != "#") initDomDistR = (string)initDomDistRvec[l]; // it is checked beforehand whether the correct distributions are provided
-            else initDomDistR = "#";
+            string initDomDistR = "#";
+            if (initDomDistRvec[0] != "#") initDomDistR = (string)initDomDistRvec[l]; // it is checked beforehand whether the correct distributions are provided
 
-            Rcpp::NumericVector initDomParamsR;
-            if (initDomParamsRmat.size() >0) initDomParamsR = initDomParamsRmat.row(l);
-            else initDomParamsR = {0,0};
+            Rcpp::NumericVector initDomParamsR = {0,0};
+            if (initDomParamsRmat.size() > 0) initDomParamsR = initDomParamsRmat.row(l);
+            if (initDomDistR == "NA") {
+                initDomDistR = "#";
+                initDomParamsR = {0,0};
+            }
 
             string DominanceDistR = (string)DominanceDistRvec[l]; // it is checked beforehand whether the correct distributions are provided
             Rcpp::NumericVector DominanceParamsR = DominanceParamsRmat.row(l);
@@ -5001,6 +4953,7 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
         }
 
         landOK = ReadLandParamsR(pLandscape, ParMaster);
+        Rcpp::Rcout << "ReadLandParamsR() done\n";
         //land_nr = ReadLandParamsR(pLandscape, ParMaster);
         land_nr = j; // TODO: ReadLandParamsR() is supposed to return land_nr; this is a temporary replacement; should I adapt this?
 
@@ -5138,8 +5091,11 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
                     if(paramsLand.patchModel) {
                         pname = paramsSim->getDir(1) + name_patch;
                         landcode = pLandscape->readLandscape(0, hname, pname, cname);
+                        Rcpp::Rcout << "Reading landscape files done\n";
                     } else
                         landcode = pLandscape->readLandscape(0, hname, " ", cname);
+
+                    Rcpp::Rcout << "Reading landscape files done\n";
                     if(landcode != 0) {
                         rsLog << "Landscape," << land_nr << ",ERROR,CODE," << landcode << endl;
                         Rcpp::Rcout << endl << "Error reading landscape " << land_nr << " - aborting" << endl;
@@ -5280,7 +5236,7 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
                 read_error = ReadInitialisationR(pLandscape, ParMaster);
                 if(read_error) {
                     if(threadsafe){
-                        Rcpp::Rcout << "Error reading genetic parameters - aborting" << endl;
+                        Rcpp::Rcout << "Error reading initialisation parameters - aborting" << endl;
                     } else{
                         rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
                     }
