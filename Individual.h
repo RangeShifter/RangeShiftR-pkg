@@ -119,6 +119,7 @@ public:
 	void pop();
 	std::size_t size() const;
 	bool empty() const;
+	bool full() const;
 };
 
 class Individual {

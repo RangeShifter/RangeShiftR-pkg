@@ -84,6 +84,11 @@ bool MemoryQueue<T>::empty() const {
 	return nb_elts == 0;
 }
 
+template <typename T>
+bool MemoryQueue<T>::full() const {
+	return nb_elts == space;
+}
+
 //---------------------------------------------------------------------------
 
 int Individual::indCounter = 0;
@@ -1506,7 +1511,7 @@ movedata Individual::smsMove(Landscape* pLand, Species* pSpecies,
 		newcellcost = pNewCell->getCost();
 		move.cost = move.dist * 0.5f * ((float)cellcost + (float)newcellcost);
 		// make the selected move
-		if ((short)memory.size() == movt.memSize) {
+		if (memory.full()) {
 			memory.pop(); // remove oldest memory element
 		}
 		memory.push(current); // record previous location in memory
