@@ -379,7 +379,7 @@ void SubCommunity::completeDispersal(Landscape* pLandscape, bool connect)
 			if (settled) {
 			// settler - has already been removed from matrix population
 			// find new patch
-				pNewPatch = (Patch*)settler.pCell->getPatch();
+				pNewPatch = settler.pCell->getPatch();
 				// find population within the patch (if there is one)
 				pPop = (Population*)pNewPatch->getPopn((intptr)pSpecies);
 				if (pPop == 0) { // settler is the first in a previously uninhabited patch
@@ -391,9 +391,8 @@ void SubCommunity::completeDispersal(Landscape* pLandscape, bool connect)
 				if (connect) { // increment connectivity totals
 					int newpatch = pNewPatch->getSeqNum();
 					pPrevCell = settler.pInd->getLocn(0); // previous cell
-					intptr patch = pPrevCell->getPatch();
-					if (patch != 0) {
-						pPrevPatch = (Patch*)patch;
+					pPrevPatch = pPrevCell->getPatch();
+					if (pPrevPatch != nullptr) {
 						int prevpatch = pPrevPatch->getSeqNum();
 						pLandscape->incrConnectMatrix(prevpatch, newpatch);
 					}

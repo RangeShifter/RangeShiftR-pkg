@@ -52,6 +52,8 @@ using namespace std;
 
 //---------------------------------------------------------------------------
 
+class Patch; // Forward-declaration of the Patch class
+
 struct array3x3f { float cell[3][3]; }; 	// neighbourhood cell array (SMS)
 struct smscosts { int cost; array3x3f *effcosts; };	// cell costs for SMS
 
@@ -62,13 +64,13 @@ public:
 	Cell( // Constructor for habitat codes
 		int,				// x co-ordinate
 		int,				// y co-ordinate
-		intptr,			// pointer (cast as integer) to the Patch to which Cell belongs
+		Patch *,			// pointer to the Patch to which Cell belongs
 		int					// habitat index number
 	);
 	Cell( // Constructor for habitat % cover or habitat quality
 		int,				// x co-ordinate
 		int,				// y co-ordinate
-		intptr,			// pointer (cast as integer) to the Patch to which Cell belongs
+		Patch *,			// pointer to the Patch to which Cell belongs
 		float				// habitat proportion or cell quality score
 	);
 	~Cell();
@@ -90,9 +92,9 @@ public:
 		int		// habitat index number / landscape change number
 	);
 	void setPatch(
-		intptr		// pointer (cast as integer) to the Patch to which Cell belongs
+		Patch *		// pointer to the Patch to which Cell belongs
 	);
-	intptr getPatch(void);
+	Patch *getPatch(void);
 	locn getLocn(void);
 	void setEnvDev(
 		float	// local environmental deviation
@@ -123,7 +125,7 @@ public:
 
 private:
 	int x,y;			// cell co-ordinates
-	intptr pPatch; 	// pointer (cast as integer) to the Patch to which cell belongs
+	Patch *pPatch; 	// pointer to the Patch to which cell belongs
 	// NOTE: THE FOLLOWING ENVIRONMENTAL VARIABLES COULD BE COMBINED IN A STRUCTURE
 	// AND ACCESSED BY A POINTER ...
 	float envVal; // environmental value, representing one of:
