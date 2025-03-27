@@ -74,11 +74,14 @@ using namespace std;
 
 //---------------------------------------------------------------------------
 
+class Population;
+
 struct patchLimits {
 	int xMin,xMax,yMin,yMax;
 };
 struct patchPopn {
-	intptr pSp,pPop; // pointers to Species and Population cast as integers
+	Species *pSp; // pointers to Species
+	Population *pPop; // pointers to Population
 };
 
 class Patch{
@@ -116,10 +119,10 @@ public:
 	);
 	intptr getSubComm(void);
 	void addPopn(
-		patchPopn // structure holding pointers to Species and Population cast as integers
+		patchPopn // structure holding pointers to Species and Population
 	);
-	intptr getPopn( // return pointer (cast as integer) to the Population of the Species
-		intptr // pointer to Species cast as integer
+	Population *getPopn( // return pointer to the Population of the Species
+		Species * // pointer to Species
 	);
 	void resetPopn(void);
 	void resetPossSettlers(void);

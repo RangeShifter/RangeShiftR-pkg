@@ -381,7 +381,7 @@ void SubCommunity::completeDispersal(Landscape* pLandscape, bool connect)
 			// find new patch
 				pNewPatch = settler.pCell->getPatch();
 				// find population within the patch (if there is one)
-				pPop = (Population*)pNewPatch->getPopn((intptr)pSpecies);
+				pPop = pNewPatch->getPopn(pSpecies);
 				if (pPop == 0) { // settler is the first in a previously uninhabited patch
 					// create a new population in the corresponding sub-community
 					pSubComm = (SubCommunity*)pNewPatch->getSubComm();

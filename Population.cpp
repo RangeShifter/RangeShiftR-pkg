@@ -59,7 +59,7 @@ Population::Population(Species* pSp, Patch* pPch, int ninds, int resol)
 	pPatch = pPch;
 	// record the new population in the patch
 	patchPopn pp;
-	pp.pSp = (intptr)pSpecies; pp.pPop = (intptr)this;
+	pp.pSp = pSpecies; pp.pPop = this;
 	pPatch->addPopn(pp);
 
 	demogrParams dem = pSpecies->getDemogr();
@@ -824,7 +824,6 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 	int disperser;
 	short othersex;
 	bool mateOK, densdepOK;
-	intptr popn;
 	int patchnum;
 	double localK, popsize, settprob;
 	Patch* pPatch = 0;
@@ -915,12 +914,11 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 						{
 							// determine whether settlement occurs in the (new) patch
 							localK = (double)pPatch->getK();
-							popn = pPatch->getPopn((intptr)pSpecies);
-							if (popn == 0) { // population has not been set up in the new patch
+							pNewPopn = pPatch->getPopn(pSpecies);
+							if (pNewPopn == nullptr) { // population has not been set up in the new patch
 								popsize = 0.0;
 							}
 							else {
-								pNewPopn = (Population*)popn;
 								popsize = (double)pNewPopn->totalPop();
 							}
 							if (localK > 0.0) {
@@ -1079,8 +1077,8 @@ bool Population::matePresent(Cell* pCell, short othersex)
 		if (pPatch->getPatchNum() > 0) { // not the matrix patch
 			if (pPatch->getK() > 0.0)
 			{ // suitable
-				pNewPopn = (Population*)pPatch->getPopn((intptr)pSpecies);
-				if (pNewPopn != 0) {
+				pNewPopn = pPatch->getPopn(pSpecies);
+				if (pNewPopn != nullptr) {
 					// count members of other sex already resident in the patch
 					for (int stg = 0; stg < nStages; stg++) {
 						popsize += pNewPopn->nInds[stg][othersex];

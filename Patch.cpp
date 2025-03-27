@@ -307,8 +307,8 @@ void Patch::addPopn(patchPopn pop) {
 popns.push_back(pop);
 }
 
-// Return pointer (cast as integer) to the Population of the specified Species
-intptr Patch::getPopn(intptr sp)
+// Return pointer to the Population of the specified Species
+Population *Patch::getPopn(Species *sp)
 {
 int npops = (int)popns.size();
 for (int i = 0; i < npops; i++) {
