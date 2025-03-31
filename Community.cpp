@@ -715,18 +715,18 @@ bool Community::outRangeHeaders(Species* pSpecies, int landNr)
 	if (sim.batchMode) {
 		name = paramsSim->getDir(2)
 #if RS_RCPP
-			+ "Batch" + Int2Str(sim.batchNum) + "_"
-			+ "Sim" + Int2Str(sim.simulation) + "_Land"
-			+ Int2Str(landNr)
+			+ "Batch" + to_string(sim.batchNum) + "_"
+			+ "Sim" + to_string(sim.simulation) + "_Land"
+			+ to_string(landNr)
 #else
-			+ "Batch" + Int2Str(sim.batchNum) + "_"
-			+ "Sim" + Int2Str(sim.simulation) + "_Land"
-			+ Int2Str(landNr)
+			+ "Batch" + to_string(sim.batchNum) + "_"
+			+ "Sim" + to_string(sim.simulation) + "_Land"
+			+ to_string(landNr)
 #endif
 			+ "_Range.txt";
 	}
 	else {
-		name = paramsSim->getDir(2) + "Sim" + Int2Str(sim.simulation) + "_Range.txt";
+		name = paramsSim->getDir(2) + "Sim" + to_string(sim.simulation) + "_Range.txt";
 	}
 	outrange.open(name.c_str());
 	outrange << "Rep\tYear\tRepSeason";
@@ -874,10 +874,7 @@ void Community::outRange(Species* pSpecies, int rep, int yr, int gen)
 	if (emig.indVar || trfr.indVar || sett.indVar) { // output trait means
 		traitsums ts;
 		traitsums scts; // sub-community traits
-		traitCanvas tcanv;
 		int ngenes, popsize;
-
-		tcanv.pcanvas[0] = NULL;
 
 		for (int i = 0; i < NSEXES; i++) {
 			ts.ninds[i] = 0;
@@ -896,7 +893,7 @@ void Community::outRange(Species* pSpecies, int rep, int yr, int gen)
 
 		int nsubcomms = (int)subComms.size();
 		for (int i = 0; i < nsubcomms; i++) { // all sub-communities (incl. matrix)
-			scts = subComms[i]->outTraits(tcanv, pLandscape, rep, yr, gen, true);
+			scts = subComms[i]->outTraits(pLandscape, rep, yr, gen, true);
 			for (int j = 0; j < NSEXES; j++) {
 				ts.ninds[j] += scts.ninds[j];
 				ts.sumD0[j] += scts.sumD0[j];     ts.ssqD0[j] += scts.ssqD0[j];
@@ -1139,22 +1136,22 @@ bool Community::outOccupancyHeaders(int option)
 
 	name = paramsSim->getDir(2);
 	if (sim.batchMode) {
-		name += "Batch" + Int2Str(sim.batchNum) + "_";
-		name += "Sim" + Int2Str(sim.simulation) + "_Land" + Int2Str(ppLand.landNum);
+		name += "Batch" + to_string(sim.batchNum) + "_";
+		name += "Sim" + to_string(sim.simulation) + "_Land" + to_string(ppLand.landNum);
 	}
 	else
-		name += "Sim" + Int2Str(sim.simulation);
+		name += "Sim" + to_string(sim.simulation);
 	name += "_Occupancy_Stats.txt";
 	outsuit.open(name.c_str());
 	outsuit << "Year\tMean_OccupSuit\tStd_error" << endl;
 
 	name = paramsSim->getDir(2);
 	if (sim.batchMode) {
-		name += "Batch" + Int2Str(sim.batchNum) + "_";
-		name += "Sim" + Int2Str(sim.simulation) + "_Land" + Int2Str(ppLand.landNum);
+		name += "Batch" + to_string(sim.batchNum) + "_";
+		name += "Sim" + to_string(sim.simulation) + "_Land" + to_string(ppLand.landNum);
 	}
 	else
-		name += "Sim" + Int2Str(sim.simulation);
+		name += "Sim" + to_string(sim.simulation);
 	name += "_Occupancy.txt";
 	outoccup.open(name.c_str());
 	if (ppLand.patchModel) {
@@ -1210,7 +1207,6 @@ void Community::outOccSuit(bool view) {
 		else sd = 0.0;
 		se = sd / sqrt((double)(sim.reps));
 		outsuit << i * sim.outIntOcc << "\t" << mean << "\t" << se << endl;
-		if (view) viewOccSuit(i * sim.outIntOcc, mean, se);
 	}
 
 }
@@ -1226,8 +1222,7 @@ only, this function relies on the fact that subcommunities are created in the sa
 sequence as patches, which is in asecending order of x nested within descending
 order of y
 */
-void Community::outTraits(traitCanvas tcanv, Species* pSpecies,
-	int rep, int yr, int gen)
+void Community::outTraits(Species* pSpecies, int rep, int yr, int gen)
 {
 	simParams sim = paramsSim->getSim();
 	simView v = paramsSim->getViews();
@@ -1261,7 +1256,7 @@ void Community::outTraits(traitCanvas tcanv, Species* pSpecies,
 		// generate output for each sub-community (patch) in the community
 		int nsubcomms = (int)subComms.size();
 		for (int i = 1; i < nsubcomms; i++) { // // all except matrix sub-community
-			sctraits = subComms[i]->outTraits(tcanv, pLandscape, rep, yr, gen, false);
+			sctraits = subComms[i]->outTraits(pLandscape, rep, yr, gen, false);
 			locn loc = subComms[i]->getLocn();
 			int y = loc.y;
 			if (sim.outTraitsRows && yr >= sim.outStartTraitRow && yr % sim.outIntTraitRow == 0)
@@ -1461,11 +1456,11 @@ bool Community::outTraitsRowsHeaders(Species* pSpecies, int landNr) {
 	string DirOut = paramsSim->getDir(2);
 	if (sim.batchMode) {
 		name = DirOut
-			+ "Batch" + Int2Str(sim.batchNum) + "_"
-			+ "Sim" + Int2Str(sim.simulation) + "_Land" + Int2Str(landNr) + "_TraitsXrow.txt";
+			+ "Batch" + to_string(sim.batchNum) + "_"
+			+ "Sim" + to_string(sim.simulation) + "_Land" + to_string(landNr) + "_TraitsXrow.txt";
 	}
 	else {
-		name = DirOut + "Sim" + Int2Str(sim.simulation) + "_TraitsXrow.txt";
+		name = DirOut + "Sim" + to_string(sim.simulation) + "_TraitsXrow.txt";
 	}
 	outtraitsrows.open(name.c_str());
 

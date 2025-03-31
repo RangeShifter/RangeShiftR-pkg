@@ -133,7 +133,7 @@ void SubCommunity::initialInd(Landscape* pLandscape, Species* pSpecies,
 	else {
 		if (iind.sex == 1) probmale = 1.0; else probmale = 0.0;
 	}
-	pInd = new Individual(pCell, pPatch, stg, age, repInt, probmale, trfr.moveModel, trfr.moveType);
+	pInd = new Individual(pSpecies, pCell, pPatch, stg, age, repInt, probmale, trfr.moveModel, trfr.moveType);
 
 	// add new individual to the population
 	// NB THIS WILL NEED TO BE CHANGED FOR MULTIPLE SPECIES...
@@ -642,23 +642,23 @@ bool SubCommunity::outTraitsHeaders(Landscape* pLandscape, Species* pSpecies, in
 	if (sim.batchMode) {
 		if (land.patchModel) {
 			name = DirOut
-				+ "Batch" + Int2Str(sim.batchNum) + "_"
-				+ "Sim" + Int2Str(sim.simulation) + "_Land" + Int2Str(landNr)
+				+ "Batch" + to_string(sim.batchNum) + "_"
+				+ "Sim" + to_string(sim.simulation) + "_Land" + to_string(landNr)
 				+ "_TraitsXpatch.txt";
 		}
 		else {
 			name = DirOut
-				+ "Batch" + Int2Str(sim.batchNum) + "_"
-				+ "Sim" + Int2Str(sim.simulation) + "_Land" + Int2Str(landNr)
+				+ "Batch" + to_string(sim.batchNum) + "_"
+				+ "Sim" + to_string(sim.simulation) + "_Land" + to_string(landNr)
 				+ "_TraitsXcell.txt";
 		}
 	}
 	else {
 		if (land.patchModel) {
-			name = DirOut + "Sim" + Int2Str(sim.simulation) + "_TraitsXpatch.txt";
+			name = DirOut + "Sim" + to_string(sim.simulation) + "_TraitsXpatch.txt";
 		}
 		else {
-			name = DirOut + "Sim" + Int2Str(sim.simulation) + "_TraitsXcell.txt";
+			name = DirOut + "Sim" + to_string(sim.simulation) + "_TraitsXcell.txt";
 		}
 	}
 	outtraits.open(name.c_str());
@@ -732,8 +732,7 @@ bool SubCommunity::outTraitsHeaders(Landscape* pLandscape, Species* pSpecies, in
 }
 
 // Write records to traits file and return aggregated sums
-traitsums SubCommunity::outTraits(traitCanvas tcanv,
-	Landscape* pLandscape, int rep, int yr, int gen, bool commlevel)
+traitsums SubCommunity::outTraits(Landscape* pLandscape, int rep, int yr, int gen, bool commlevel)
 {
 	int popsize, ngenes;
 	landParams land = pLandscape->getLandParams();

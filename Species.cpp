@@ -498,14 +498,6 @@ void Species::setTraits(void) {
 	movtTrait[0] = 0; movtTrait[1] = 0;
 	settTrait[0] = 0; settTrait[1] = 0;
 	nTraits = 0;
-#if RSDEBUG
-	DebugGUI("Species::setTraits(): 0000 nChromosomes=" + Int2Str(nChromosomes)
-		+ " nTraits=" + Int2Str(nTraits)
-		+ " indVarEmig=" + Int2Str((int)indVarEmig)
-		+ " indVarTrfr=" + Int2Str((int)indVarTrfr)
-		+ " indVarSett=" + Int2Str((int)indVarSett)
-	);
-#endif
 
 	if (indVarEmig) {
 		if (sexDepEmig) {
@@ -546,12 +538,6 @@ void Species::setTraits(void) {
 	}
 
 	setTraitNames();
-
-#if RSDEBUG
-	DebugGUI("Species::setTraits(): 9999 nChromosomes=" + Int2Str(nChromosomes)
-		+ " nTraits=" + Int2Str(nTraits));
-#endif
-
 }
 
 void Species::setTraitNames(void) {

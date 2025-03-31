@@ -23,6 +23,8 @@
  //---------------------------------------------------------------------------
 
 #include "Population.h"
+
+#include <algorithm>
 //---------------------------------------------------------------------------
 
 ofstream outPop;
@@ -176,10 +178,10 @@ Population::Population(Species* pSp, Patch* pPch, int ninds, int resol)
 			else age = stg;
 #if RSDEBUG
 			// NOTE: CURRENTLY SETTING ALL INDIVIDUALS TO RECORD NO. OF STEPS ...
-			inds.push_back(new Individual(pCell, pPatch, stg, age, sstruct.repInterval,
+			inds.push_back(new Individual(pSpecies, pCell, pPatch, stg, age, sstruct.repInterval,
 				probmale, true, trfr.moveType));
 #else
-			inds.push_back(new Individual(pCell, pPatch, stg, age, sstruct.repInterval,
+			inds.push_back(new Individual(pSpecies, pCell, pPatch, stg, age, sstruct.repInterval,
 				probmale, trfr.moveModel, trfr.moveType));
 #endif
 			sex = inds[nindivs + i]->getSex();
@@ -489,9 +491,9 @@ void Population::reproduction(const float localK, const float envval, const int 
 					for (int j = 0; j < njuvs; j++) {
 #if RSDEBUG
 						// NOTE: CURRENTLY SETTING ALL INDIVIDUALS TO RECORD NO. OF STEPS ...
-						juvs.push_back(new Individual(pCell, pPatch, 0, 0, 0, 0.0, true, trfr.moveType));
+						juvs.push_back(new Individual(pSpecies, pCell, pPatch, 0, 0, 0, 0.0, true, trfr.moveType));
 #else
-						juvs.push_back(new Individual(pCell, pPatch, 0, 0, 0, 0.0, trfr.moveModel, trfr.moveType));
+						juvs.push_back(new Individual(pSpecies, pCell, pPatch, 0, 0, 0, 0.0, trfr.moveModel, trfr.moveType));
 #endif
 						nInds[0][0]++;
 						if (emig.indVar || trfr.indVar || sett.indVar || gen.neutralMarkers)
@@ -564,9 +566,9 @@ void Population::reproduction(const float localK, const float envval, const int 
 							for (int j = 0; j < njuvs; j++) {
 #if RSDEBUG
 								// NOTE: CURRENTLY SETTING ALL INDIVIDUALS TO RECORD NO. OF STEPS ...
-								juvs.push_back(new Individual(pCell, pPatch, 0, 0, 0, dem.propMales, true, trfr.moveType));
+								juvs.push_back(new Individual(pSpecies, pCell, pPatch, 0, 0, 0, dem.propMales, true, trfr.moveType));
 #else
-								juvs.push_back(new Individual(pCell, pPatch, 0, 0, 0, dem.propMales, trfr.moveModel, trfr.moveType));
+								juvs.push_back(new Individual(pSpecies, pCell, pPatch, 0, 0, 0, dem.propMales, trfr.moveModel, trfr.moveType));
 #endif
 								sex = juvs[nj + j]->getSex();
 								nInds[0][sex]++;
@@ -607,7 +609,7 @@ void Population::fledge(void)
 		for (int sex = 0; sex < nSexes; sex++) {
 			nInds[1][sex] = 0; // set count of adults to zero
 		}
-		inds = juvs;
+		inds = std::move(juvs);
 	}
 	juvs.clear();
 
@@ -1305,15 +1307,7 @@ void Population::clean(void)
 {
 	int ninds = (int)inds.size();
 	if (ninds > 0) {
-			// ALTERNATIVE METHOD: AVOIDS SLOW SORTING OF POPULATION
-		std::vector <Individual*> survivors; // all surviving individuals
-		for (int i = 0; i < ninds; i++) {
-			if (inds[i] != NULL) {
-				survivors.push_back(inds[i]);
-			}
-		}
-		inds.clear();
-		inds = survivors;
+		inds.erase(std::remove(inds.begin(), inds.end(), (Individual *)NULL), inds.end());
 #if RS_RCPP
 		shuffle(inds.begin(), inds.end(), pRandom->getRNG());
 #else
@@ -1349,11 +1343,11 @@ bool Population::outPopHeaders(int landNr, bool patchModel) {
 
 	if (sim.batchMode) {
 		name = paramsSim->getDir(2)
-			+ "Batch" + Int2Str(sim.batchNum) + "_"
-			+ "Sim" + Int2Str(sim.simulation) + "_Land" + Int2Str(landNr) + "_Pop.txt";
+			+ "Batch" + to_string(sim.batchNum) + "_"
+			+ "Sim" + to_string(sim.simulation) + "_Land" + to_string(landNr) + "_Pop.txt";
 	}
 	else {
-		name = paramsSim->getDir(2) + "Sim" + Int2Str(sim.simulation) + "_Pop.txt";
+		name = paramsSim->getDir(2) + "Sim" + to_string(sim.simulation) + "_Pop.txt";
 	}
 	outPop.open(name.c_str());
 	outPop << "Rep\tYear\tRepSeason";
@@ -1466,13 +1460,13 @@ void Population::outIndsHeaders(int rep, int landNr, bool patchModel)
 
 	if (sim.batchMode) {
 		name = paramsSim->getDir(2)
-			+ "Batch" + Int2Str(sim.batchNum) + "_"
-			+ "Sim" + Int2Str(sim.simulation)
-			+ "_Land" + Int2Str(landNr) + "_Rep" + Int2Str(rep) + "_Inds.txt";
+			+ "Batch" + to_string(sim.batchNum) + "_"
+			+ "Sim" + to_string(sim.simulation)
+			+ "_Land" + to_string(landNr) + "_Rep" + to_string(rep) + "_Inds.txt";
 	}
 	else {
-		name = paramsSim->getDir(2) + "Sim" + Int2Str(sim.simulation)
-			+ "_Rep" + Int2Str(rep) + "_Inds.txt";
+		name = paramsSim->getDir(2) + "Sim" + to_string(sim.simulation)
+			+ "_Rep" + to_string(rep) + "_Inds.txt";
 	}
 	outInds.open(name.c_str());
 
