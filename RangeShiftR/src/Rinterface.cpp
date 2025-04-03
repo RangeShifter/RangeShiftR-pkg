@@ -3389,8 +3389,9 @@ int ReadGeneticsR(Rcpp::S4 GeneParamsR, Landscape* pLandscape)
         if (inPatches[0] != "all" && inPatches[0] != "random" && inPatches[0] != "random_occupied") {
             // then must be a list of indices
             patchSamplingOption = "list";
-            for (int i = 0; i < inPatches.size(); i++) {
-                patchList.insert(Rcpp::as<int>(inPatches[i]));
+            Rcpp::IntegerVector inPatchesInt = Rcpp::as<Rcpp::IntegerVector>(GeneParamsR.slot("PatchList"));
+            for (int i = 0; i < inPatchesInt.size(); i++) {
+                patchList.insert(inPatchesInt[i]);
             }
             if (patchList.contains(0)) throw logic_error("Patch sampling: ID 0 is reserved for the matrix and should not be sampled.");
         }
@@ -3416,6 +3417,7 @@ int ReadGeneticsR(Rcpp::S4 GeneParamsR, Landscape* pLandscape)
             NbInds = Rcpp::as<string>(GeneParamsR.slot("nIndividualsToSample"));
         }
     }
+
     const string strNbInds = NbInds;
 
     const int nbStages = pSpecies->getStageParams().nStages;
