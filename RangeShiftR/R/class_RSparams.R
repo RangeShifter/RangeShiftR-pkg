@@ -199,7 +199,7 @@ setValidity("RSparams", function(object) {
         }
         # check sex column of EmigProb
         if (object@dispersal@Emigration@SexDep) {
-            if(any(object@dispersal@Emigration@EmigProb[,offset]!=0 && object@dispersal@Emigration@EmigProb[,offset]!=1)){
+            if(any( !object@dispersal@Emigration@EmigProb[,offset] %in% c(0,1) )){
                 msg <- c(msg, paste0(offset,". column of emigration probability traits matrix (EmigProb) must contain the sex numbers (0 for female, 1 for male)!"))
             }
             else {
@@ -333,7 +333,7 @@ setValidity("RSparams", function(object) {
                 }
                 if (object@dispersal@Transfer@SexDep) {
                     # check sex column of Distances matrix
-                    if(any(object@dispersal@Transfer@Distances[,offset]!=0 && object@dispersal@Transfer@Distances[,offset]!=1)){
+                    if(any( !object@dispersal@Transfer@Distances[,offset] %in% c(0,1) )){
                         msg <- c(msg, paste0(offset,". column of dispersal kernel traits (Distances) matrix must contain the sex numbers (0 for female, 1 for male)!"))
                     }
                     else {
