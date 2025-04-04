@@ -3403,13 +3403,12 @@ int ReadGeneticsR(Rcpp::S4 GeneParamsR, Landscape* pLandscape)
                 else throw logic_error("You must provide the number of patches to sample if PatchList is random or random_occupied.");
                 // patchList remains empty, filled when patches are sampled every gen
             }
-
         }
     }
 
     string NbInds;
     if (GeneParamsR.slot("nIndividualsToSample") != R_NilValue){
-        if (Rf_isInteger(GeneParamsR.slot("nIndividualsToSample"))){
+        if (Rf_isNumeric(GeneParamsR.slot("nIndividualsToSample"))){
             int NbIndsInt = Rcpp::as<int>(GeneParamsR.slot("nIndividualsToSample"));
             NbInds = to_string(NbIndsInt);
         }
@@ -3432,13 +3431,12 @@ int ReadGeneticsR(Rcpp::S4 GeneParamsR, Landscape* pLandscape)
             }
         }
         else {
-            for (int i = 0; i < Stages.size(); i++) {
-                stagesToSampleFrom.insert(Rcpp::as<int>(Stages[i]));
+            Rcpp::IntegerVector intStages = Rcpp::as<Rcpp::IntegerVector>(GeneParamsR.slot("Stages"));
+            for (int i = 0; i < intStages.size(); i++) {
+                stagesToSampleFrom.insert(intStages[i]);
             }
         }
     }
-
-
     pSpecies->setGeneticParameters(chrEnds, genomeSize, recombinationRate,
                                    patchList, strNbInds, stagesToSampleFrom, nPatchesToSample);
 
