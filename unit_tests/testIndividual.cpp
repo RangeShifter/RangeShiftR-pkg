@@ -944,7 +944,7 @@ void testIndividual() {
 			true, // isInherited
 			1.0, // will mutate
 			DistributionType::UNIFORM, mutationParams, // lethal mutation
-			DistributionType::UNIFORM, domParams,
+			DistributionType::NONE, domParams,
 			2, // diploid
 			false
 		);
@@ -995,8 +995,8 @@ void testIndividual() {
 			DistributionType::UNIFORM, distParams,
 			true, // isInherited
 			0.0, // no mutation
-			DistributionType::UNIFORM, distParams,
-			DistributionType::UNIFORM, distParams,
+			DistributionType::UNIFORM, distParams, // lethal mutation
+			DistributionType::NONE, distParams,
 			2, // diploid
 			false
 		);
