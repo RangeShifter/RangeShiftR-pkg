@@ -1541,7 +1541,6 @@ bool Population::outPopHeaders(int landNr, bool patchModel) {
 	stageParams sstruct = pSpecies->getStageParams();
 	name = paramsSim->getDir(2)
 		+ (sim.batchMode ? "Batch" + to_string(sim.batchNum) + "_" : "")
-		+ "Batch" + to_string(sim.batchNum) + "_"
 		+ "Sim" + to_string(sim.simulation) + "_Land" + to_string(landNr) + "_Pop.txt";
 
 	outPop.open(name.c_str());
