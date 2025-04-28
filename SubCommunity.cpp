@@ -140,8 +140,7 @@ void SubCommunity::initialInd(Landscape* pLandscape, Species* pSpecies,
 	// NB THIS WILL NEED TO BE CHANGED FOR MULTIPLE SPECIES...
 	popns[0]->recruit(pInd);
 
-	if (pSpecies->getNTraits() > 0)
-	{
+	if (pSpecies->getNTraits() > 0) {
 		// individual variation - set up genetics
 		landData land = pLandscape->getLandData();
 		pInd->setUpGenes(pSpecies, land.resol);

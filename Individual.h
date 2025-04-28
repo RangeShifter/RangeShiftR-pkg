@@ -223,7 +223,9 @@ public:
 
 	void inheritTraits(Species* pSpecies, Individual* mother, int resol); //haploid
 
-	void setDispersalPhenotypes(Species* pSpecies, int resol);
+	void expressDispersalPhenotypes(Species* pSpecies, int resol);
+
+	void expressGeneticLoad(Species* pSpecies);
 
 	QuantitativeTrait* getTrait(TraitType trait) const;
 

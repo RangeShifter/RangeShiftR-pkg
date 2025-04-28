@@ -175,15 +175,18 @@ Population::Population(Species* pSp, Patch* pPch, int ninds, int resol)
 			}
 			else age = stg;
 
-			inds.push_back(new Individual(pCell, pPatch, stg, age, sstruct.repInterval,
-				probmale, trfr.usesMovtProc, trfr.moveType));
+			Individual* newInd = new Individual(pCell, pPatch, stg, age, sstruct.repInterval,
+				probmale, trfr.usesMovtProc, trfr.moveType);
 
-			sex = inds[nindivs + i]->getSex();
 			if (pSpecies->getNTraits() > 0) {
-				// individual variation - set up genetics
-				inds[nindivs + i]->setUpGenes(pSpecies, resol);
+				newInd->setUpGenes(pSpecies, resol);
 			}
-			nInds[stg][sex]++;
+			// Resolve genetic load
+			if (!newInd->isViable()) delete newInd;
+			else {
+				inds.push_back(newInd);
+				nInds[stg][newInd->getSex()]++;
+			}
 		}
 	}
 }
