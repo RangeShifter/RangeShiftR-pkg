@@ -136,16 +136,15 @@ void SubCommunity::initialInd(Landscape* pLandscape, Species* pSpecies,
 	}
 	pInd = new Individual(pCell, pPatch, stg, age, repInt, probmale, trfr.usesMovtProc, trfr.moveType);
 
-	// add new individual to the population
-	// NB THIS WILL NEED TO BE CHANGED FOR MULTIPLE SPECIES...
-	popns[0]->recruit(pInd);
-
 	if (pSpecies->getNTraits() > 0) {
 		// individual variation - set up genetics
 		landData land = pLandscape->getLandData();
 		pInd->setUpGenes(pSpecies, land.resol);
 	}
 
+	// Resolve genetic load
+	if (!pInd->isViable()) delete pInd;
+	else popns[0]->recruit(pInd);
 }
 
 // Create a new population, and return its address
