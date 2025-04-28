@@ -189,9 +189,6 @@ void Individual::inherit(Species* pSpecies, const Individual* mother) {
 			if (newTrait->getMutationRate() > 0 && pSpecies->areMutationsOn())
 				newTrait->mutate();
 		}
-		if (trait == GENETIC_LOAD1 || trait == GENETIC_LOAD2 || trait == GENETIC_LOAD3 || trait == GENETIC_LOAD4 || trait == GENETIC_LOAD5)
-			geneticFitness *= newTrait->express();
-
 		// Add the inherited trait and genes to the newborn's list
 		spTraitTable.insert(make_pair(trait, move(newTrait)));
 	}
@@ -208,10 +205,11 @@ void Individual::setUpGenes(Species* pSpecies, int resol) {
 		const auto spTrait = pSpecies->getSpTrait(traitType);
 		this->spTraitTable.emplace(traitType, traitFactory.Create(traitType, spTrait));
 	}
-	setDispersalPhenotypes(pSpecies, resol);
+	expressDispersalPhenotypes(pSpecies, resol);
+	expressGeneticLoad(pSpecies);
 }
 
-void Individual::setDispersalPhenotypes(Species* pSpecies, int resol) {
+void Individual::expressDispersalPhenotypes(Species* pSpecies, int resol) {
 
 	const emigRules emig = pSpecies->getEmigRules();
 	const transferRules trfr = pSpecies->getTransferRules();
@@ -219,12 +217,20 @@ void Individual::setDispersalPhenotypes(Species* pSpecies, int resol) {
 	const settleRules settRules = pSpecies->getSettRules(stage, sex);
 
 	// record phenotypic traits
-	if (emig.indVar)
-		this->setEmigTraits(pSpecies, emig.sexDep, emig.densDep);
-	if (trfr.indVar)
-		this->setTransferTraits(pSpecies, trfr, resol);
-	if (sett.indVar)
-		this->setSettlementTraits(pSpecies, sett.sexDep, settRules.densDep);
+	if (emig.indVar) setEmigTraits(pSpecies, emig.sexDep, emig.densDep);
+	if (trfr.indVar) setTransferTraits(pSpecies, trfr, resol);
+	if (sett.indVar) setSettlementTraits(pSpecies, sett.sexDep, settRules.densDep);
+}
+
+// Set the fitness attribute of individuals
+// Only called at initialisation, otherwise probably faster to compute directly during inheritance
+void Individual::expressGeneticLoad(Species* pSpecies) {
+	const int nbGenLoadTraits = pSpecies->getNbGenLoadTraits();
+	const vector<TraitType> whichTrait = { GENETIC_LOAD1 , GENETIC_LOAD2, GENETIC_LOAD3, GENETIC_LOAD4, GENETIC_LOAD5 };
+	for (int i = 0; i < nbGenLoadTraits; i++) {
+		if (spTraitTable.contains(whichTrait[i])) 
+			geneticFitness *= getTrait(whichTrait[i])->express();
+	}
 }
 
 void Individual::setTransferTraits(Species* pSpecies, transferRules trfr, int resol) {
@@ -232,11 +238,9 @@ void Individual::setTransferTraits(Species* pSpecies, transferRules trfr, int re
 		if (trfr.moveType == 1) {
 			setIndSMSTraits(pSpecies);
 		}
-		else
-			setIndCRWTraits(pSpecies);
+		else setIndCRWTraits(pSpecies);
 	}
-	else
-		setIndKernelTraits(pSpecies, trfr.sexDep, trfr.twinKern, resol);
+	else setIndKernelTraits(pSpecies, trfr.sexDep, trfr.twinKern, resol);
 }
 
 void Individual::setSettlementTraits(Species* pSpecies, bool sexDep, bool densDep) {
@@ -283,14 +287,14 @@ void Individual::setSettlementTraits(Species* pSpecies, bool sexDep, bool densDe
 void Individual::inheritTraits(Species* pSpecies, Individual* mother, Individual* father, int resol)
 {
 	inherit(pSpecies, mother, father);
-	setDispersalPhenotypes(pSpecies, resol);
+	expressDispersalPhenotypes(pSpecies, resol);
 }
 
 // Inherit genome from mother, haploid
 void Individual::inheritTraits(Species* pSpecies, Individual* mother, int resol)
 {
 	inherit(pSpecies, mother);
-	setDispersalPhenotypes(pSpecies, resol);
+	expressDispersalPhenotypes(pSpecies, resol);
 }
 
 //---------------------------------------------------------------------------
@@ -1621,7 +1625,7 @@ void Individual::triggerMutations(Species* pSp) {
 			|| trType == GENETIC_LOAD5)
 			geneticFitness *= indTrait->express();
 	}
-	this->setDispersalPhenotypes(pSp, 1.0);
+	this->expressDispersalPhenotypes(pSp, 1.0);
 }
 
 // Shorthand function to edit a genotype with custom values

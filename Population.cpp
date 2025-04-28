@@ -175,15 +175,18 @@ Population::Population(Species* pSp, Patch* pPch, int ninds, int resol)
 			}
 			else age = stg;
 
-			inds.push_back(new Individual(pCell, pPatch, stg, age, sstruct.repInterval,
-				probmale, trfr.usesMovtProc, trfr.moveType));
+			Individual* newInd = new Individual(pCell, pPatch, stg, age, sstruct.repInterval,
+				probmale, trfr.usesMovtProc, trfr.moveType);
 
-			sex = inds[nindivs + i]->getSex();
 			if (pSpecies->getNTraits() > 0) {
-				// individual variation - set up genetics
-				inds[nindivs + i]->setUpGenes(pSpecies, resol);
+				newInd->setUpGenes(pSpecies, resol);
 			}
-			nInds[stg][sex]++;
+			// Resolve genetic load
+			if (!newInd->isViable()) delete newInd;
+			else {
+				inds.push_back(newInd);
+				nInds[stg][newInd->getSex()]++;
+			}
 		}
 	}
 }
@@ -202,7 +205,7 @@ Population::~Population(void) {
 }
 
 traitsums Population::getIndTraitsSums(Species* pSpecies) {
-	int g;
+
 	traitsums ts = traitsums();
 	for (int sex = 0; sex < gMaxNbSexes; sex++) {
 		ts.ninds[sex] = 0;
@@ -228,52 +231,43 @@ traitsums Population::getIndTraitsSums(Species* pSpecies) {
 	transferRules trfr = pSpecies->getTransferRules();
 	settleType sett = pSpecies->getSettle();
 
-	int ninds = (int)inds.size();
-	for (int iInd = 0; iInd < ninds; iInd++) {
-		int sex = inds[iInd]->getSex();
-		if (emig.sexDep || trfr.sexDep || sett.sexDep) 
-			g = sex; 
-		else g = 0;
-		ts.ninds[g] += 1;
+	for (auto& ind : inds) {
+
+		int sex = ind->getSex();
+		ts.ninds[sex] += 1;
 
 		// emigration traits
-		emigTraits e = inds[iInd]->getIndEmigTraits();
-		if (emig.sexDep) g = sex; 
-		else g = 0;
-		ts.sumD0[g] += e.d0;    
-		ts.ssqD0[g] += e.d0 * e.d0;
-		ts.sumAlpha[g] += e.alpha; 
-		ts.ssqAlpha[g] += e.alpha * e.alpha;
-		ts.sumBeta[g] += e.beta;  
-		ts.ssqBeta[g] += e.beta * e.beta;
+		emigTraits e = ind->getIndEmigTraits();
+		ts.sumD0[sex] += e.d0;    
+		ts.ssqD0[sex] += e.d0 * e.d0;
+		ts.sumAlpha[sex] += e.alpha; 
+		ts.ssqAlpha[sex] += e.alpha * e.alpha;
+		ts.sumBeta[sex] += e.beta;  
+		ts.ssqBeta[sex] += e.beta * e.beta;
 
 		// transfer traits
 		if (trfr.usesMovtProc) {
 
 			switch (trfr.moveType) {
 
-			case 1: // SMS
-			{
-				trfrSMSTraits sms = inds[iInd]->getIndSMSTraits();
-				g = 0; // CURRENTLY INDIVIDUAL VARIATION CANNOT BE SEX-DEPENDENT
-				ts.sumDP[g] += sms.dp; 
-				ts.ssqDP[g] += sms.dp * sms.dp;
-				ts.sumGB[g] += sms.gb;
-				ts.ssqGB[g] += sms.gb * sms.gb;
-				ts.sumAlphaDB[g] += sms.alphaDB;
-				ts.ssqAlphaDB[g] += sms.alphaDB * sms.alphaDB;
-				ts.sumBetaDB[g] += sms.betaDB; 
-				ts.ssqBetaDB[g] += sms.betaDB * sms.betaDB;
+			case 1: { // SMS
+				trfrSMSTraits sms = ind->getIndSMSTraits();
+				ts.sumDP[sex] += sms.dp; 
+				ts.ssqDP[sex] += sms.dp * sms.dp;
+				ts.sumGB[sex] += sms.gb;
+				ts.ssqGB[sex] += sms.gb * sms.gb;
+				ts.sumAlphaDB[sex] += sms.alphaDB;
+				ts.ssqAlphaDB[sex] += sms.alphaDB * sms.alphaDB;
+				ts.sumBetaDB[sex] += sms.betaDB; 
+				ts.ssqBetaDB[sex] += sms.betaDB * sms.betaDB;
 				break;
 			}
-			case 2:
-			{
-				trfrCRWTraits c = inds[iInd]->getIndCRWTraits();
-				g = 0; // CURRENTLY INDIVIDUAL VARIATION CANNOT BE SEX-DEPENDENT
-				ts.sumStepL[g] += c.stepLength;
-				ts.ssqStepL[g] += c.stepLength * c.stepLength;
-				ts.sumRho[g] += c.rho;       
-				ts.ssqRho[g] += c.rho * c.rho;
+			case 2: {
+				trfrCRWTraits c = ind->getIndCRWTraits();
+				ts.sumStepL[sex] += c.stepLength;
+				ts.ssqStepL[sex] += c.stepLength * c.stepLength;
+				ts.sumRho[sex] += c.rho;       
+				ts.ssqRho[sex] += c.rho * c.rho;
 				break;
 			}
 			default:
@@ -282,38 +276,31 @@ traitsums Population::getIndTraitsSums(Species* pSpecies) {
 			}
 		}
 		else {
-			trfrKernelParams k = inds[iInd]->getIndKernTraits();
-			if (trfr.sexDep) g = sex; 
-			else g = 0;
-			ts.sumDist1[g] += k.meanDist1; 
-			ts.ssqDist1[g] += k.meanDist1 * k.meanDist1;
-			ts.sumDist2[g] += k.meanDist2;
-			ts.ssqDist2[g] += k.meanDist2 * k.meanDist2;
-			ts.sumProp1[g] += k.probKern1; 
-			ts.ssqProp1[g] += k.probKern1 * k.probKern1;
+			trfrKernelParams k = ind->getIndKernTraits();
+			ts.sumDist1[sex] += k.meanDist1; 
+			ts.ssqDist1[sex] += k.meanDist1 * k.meanDist1;
+			ts.sumDist2[sex] += k.meanDist2;
+			ts.ssqDist2[sex] += k.meanDist2 * k.meanDist2;
+			ts.sumProp1[sex] += k.probKern1; 
+			ts.ssqProp1[sex] += k.probKern1 * k.probKern1;
 		}
 		// settlement traits
-		settleTraits s = inds[iInd]->getIndSettTraits();
-		if (sett.sexDep) g = sex; 
-		else g = 0;
-		//	g = 0; // CURRENTLY INDIVIDUAL VARIATION CANNOT BE SEX-DEPENDENT
-		ts.sumS0[g] += s.s0;     
-		ts.ssqS0[g] += s.s0 * s.s0;
-		ts.sumAlphaS[g] += s.alpha; 
-		ts.ssqAlphaS[g] += s.alpha * s.alpha;
-		ts.sumBetaS[g] += s.beta;   
-		ts.ssqBetaS[g] += s.beta * s.beta;
+		settleTraits s = ind->getIndSettTraits();
+		ts.sumS0[sex] += s.s0;     
+		ts.ssqS0[sex] += s.s0 * s.s0;
+		ts.sumAlphaS[sex] += s.alpha; 
+		ts.ssqAlphaS[sex] += s.alpha * s.alpha;
+		ts.sumBetaS[sex] += s.beta;   
+		ts.ssqBetaS[sex] += s.beta * s.beta;
 
-		if (gMaxNbSexes > 1) g = sex; 
-		else g = 0;
-
-		ts.sumGeneticFitness[g] += inds[iInd]->getGeneticFitness();
-		ts.ssqGeneticFitness[g] += inds[iInd]->getGeneticFitness() * inds[iInd]->getGeneticFitness();
+		double fitness = ind->getGeneticFitness();
+		ts.sumGeneticFitness[sex] += fitness;
+		ts.ssqGeneticFitness[sex] += fitness * fitness;
 	}
 	return ts;
 }
 
-int Population::getNInds(void) { return (int)inds.size(); }
+int Population::getNInds() { return static_cast<int>(inds.size()); }
 
 // ----------------------------------------------------------------------------------------
 // reset allele table
@@ -1541,7 +1528,6 @@ bool Population::outPopHeaders(int landNr, bool patchModel) {
 	stageParams sstruct = pSpecies->getStageParams();
 	name = paramsSim->getDir(2)
 		+ (sim.batchMode ? "Batch" + to_string(sim.batchNum) + "_" : "")
-		+ "Batch" + to_string(sim.batchNum) + "_"
 		+ "Sim" + to_string(sim.simulation) + "_Land" + to_string(landNr) + "_Pop.txt";
 
 	outPop.open(name.c_str());
