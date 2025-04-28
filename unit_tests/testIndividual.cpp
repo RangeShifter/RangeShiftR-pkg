@@ -940,14 +940,15 @@ void testIndividual() {
 			set<int>{ 0 }, // only one locus
 			ExpressionType::MULTIPLICATIVE,
 			DistributionType::NONE, initParams,
-			DistributionType::UNIFORM, domParams, // no dominance, params are ignored
+			DistributionType::UNIFORM, domParams,
 			true, // isInherited
 			1.0, // will mutate
 			DistributionType::UNIFORM, mutationParams, // lethal mutation
-			DistributionType::NONE, initParams,
+			DistributionType::UNIFORM, domParams,
 			2, // diploid
 			false
 		);
+		
 		pSpecies->addTrait(TraitType::GENETIC_LOAD1, *spTr);
 
 		Individual ind = Individual(pCell, pPatch, 0, 0, 0, 0.0, false, 0);
@@ -964,7 +965,7 @@ void testIndividual() {
 		assert(!ind.isViable());
 	}
 
-	// A largely dominant alleles overrides the expression of its homologue
+	// A largely dominant allele overrides the expression of its homologue
 	{
 		Patch* pPatch = new Patch(0, 0);
 		Cell* pCell = new Cell(0, 0, (intptr)pPatch, 0);
@@ -979,23 +980,23 @@ void testIndividual() {
 			set<int>{}, "none", set<int>{}, 0 // no output so no sampling
 		);
 
-		// Create species trait
+		// Create template species trait
 		const map<GenParamType, float> distParams{
 			pair<GenParamType, float>{GenParamType::MIN, 0.0},
 			pair<GenParamType, float>{GenParamType::MAX, 0.0}
 		};
-
+		// Pretty empty, actual values are set below
 		SpeciesTrait* spTr = new SpeciesTrait(
 			TraitType::GENETIC_LOAD1,
 			sex_t::NA,
 			set<int>{ 0 }, // only one locus
 			ExpressionType::MULTIPLICATIVE,
 			DistributionType::NONE, distParams,
-			DistributionType::UNIFORM, distParams, // no dominance, params are ignored
+			DistributionType::UNIFORM, distParams,
 			true, // isInherited
 			0.0, // no mutation
-			DistributionType::UNIFORM, distParams, // lethal mutation
-			DistributionType::NONE, distParams,
+			DistributionType::UNIFORM, distParams,
+			DistributionType::UNIFORM, distParams,
 			2, // diploid
 			false
 		);
