@@ -189,6 +189,10 @@ void Individual::inherit(Species* pSpecies, const Individual* mother) {
 			if (newTrait->getMutationRate() > 0 && pSpecies->areMutationsOn())
 				newTrait->mutate();
 		}
+
+		if (trait == GENETIC_LOAD1 || trait == GENETIC_LOAD2 || trait == GENETIC_LOAD3 || trait == GENETIC_LOAD4 || trait == GENETIC_LOAD5)
+			geneticFitness *= newTrait->express();
+
 		// Add the inherited trait and genes to the newborn's list
 		spTraitTable.insert(make_pair(trait, move(newTrait)));
 	}
