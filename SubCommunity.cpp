@@ -142,9 +142,7 @@ void SubCommunity::initialInd(Landscape* pLandscape, Species* pSpecies,
 		pInd->setUpGenes(pSpecies, land.resol);
 	}
 
-	// Resolve genetic load
-	if (!pInd->isViable()) delete pInd;
-	else popns[0]->recruit(pInd);
+	popns[0]->recruit(pInd);
 }
 
 // Create a new population, and return its address

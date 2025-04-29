@@ -181,12 +181,8 @@ Population::Population(Species* pSp, Patch* pPch, int ninds, int resol)
 			if (pSpecies->getNTraits() > 0) {
 				newInd->setUpGenes(pSpecies, resol);
 			}
-			// Resolve genetic load
-			if (!newInd->isViable()) delete newInd;
-			else {
-				inds.push_back(newInd);
-				nInds[stg][newInd->getSex()]++;
-			}
+			inds.push_back(newInd);
+			nInds[stg][newInd->getSex()]++;
 		}
 	}
 }
