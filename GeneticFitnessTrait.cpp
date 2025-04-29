@@ -243,13 +243,16 @@ void GeneticFitnessTrait::initialise() {
 	auto initDomParams = pSpeciesTrait->getInitDomParameters();
 
 	const set<int> genePositions = pSpeciesTrait->getGenePositions();
+	const set<int> initPositions = pSpeciesTrait->getInitPositions();
+
 	for (auto position : genePositions) {
 		vector<shared_ptr<Allele>> initialGene(ploidy);
 		for (int p = 0; p < ploidy; p++) {
-			initSelCoeff = initDist == NONE ? 0.0 
-				: drawSelectionCoef(initDist, initParams);
-			initDomCoeff = initDomDist == NONE ? 0.0
-				: drawDominance(initSelCoeff, initDomDist, initDomParams);
+			initSelCoeff = initDomCoeff = 0.0;
+			if (initPositions.contains(position)) {
+				initSelCoeff = drawSelectionCoef(initDist, initParams);
+				initDomCoeff = drawDominance(initSelCoeff, initDomDist, initDomParams);
+			}
 			initialGene[p] = make_shared<Allele>(initSelCoeff, initDomCoeff);
 		}
 		genes.insert(make_pair(position, initialGene));
@@ -304,7 +307,7 @@ void GeneticFitnessTrait::mutate()
 // ----------------------------------------------------------------------------------------
 float GeneticFitnessTrait::drawDominance(float selCoef, const DistributionType& domDist, const map<GenParamType, float>& domParams) {
 
-	float h;
+	float h = 0.0;
 	switch (domDist) {
 	case UNIFORM:
 	{
@@ -343,10 +346,14 @@ float GeneticFitnessTrait::drawDominance(float selCoef, const DistributionType& 
 		h = pRandom->FRandom(0, max);
 		break;
 	}
-
+	case NONE:
+	{
+		// nothing, s remains 0.0
+		break;
+	}
 	default:
 	{
-		throw logic_error("wrong parameter value for genetic load dominance model, must be uniform/normal/gamma/negExp/scaled \n");
+		throw logic_error("wrong parameter value for genetic load dominance model, must be uniform/normal/gamma/negExp/scaled/none \n");
 		break;
 	}
 	}
@@ -398,9 +405,14 @@ float GeneticFitnessTrait::drawSelectionCoef(const DistributionType& mutationDis
 		} while (!pSpeciesTrait->isValidTraitVal(s));
 		break;
 	}
+	case NONE:
+	{
+		// nothing, s remains 0.0
+		break;
+	}
 	default:
 	{
-		throw logic_error("wrong parameter value for genetic load mutation model, must be uniform/normal/gamma/negExp/scaled \n");
+		throw logic_error("wrong parameter value for genetic load mutation model, must be uniform/normal/gamma/negExp/scaled/none \n");
 		break;
 	}
 	}
