@@ -30,7 +30,7 @@
 
 // Cell functions
 
-Cell::Cell(int xx,int yy,intptr patch,int hab)
+Cell::Cell(int xx,int yy,Patch *patch,int hab)
 {
 x = xx; y = yy;
 pPatch = patch;
@@ -41,7 +41,7 @@ visits = 0;
 smsData = 0;
 }
 
-Cell::Cell(int xx,int yy,intptr patch,float hab)
+Cell::Cell(int xx,int yy,Patch *patch,float hab)
 {
 x = xx; y = yy;
 pPatch = patch;
@@ -101,10 +101,10 @@ if (ix < 0 || ix >= (int)habitats.size())
 else return habitats[ix];
 }
 
-void Cell::setPatch(intptr p) {
+void Cell::setPatch(Patch *p) {
 pPatch = p;
 }
-intptr Cell::getPatch(void)
+Patch *Cell::getPatch(void)
 {
 return pPatch;
 }

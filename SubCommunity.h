@@ -61,7 +61,7 @@ class SubCommunity {
 public:
 	SubCommunity(Patch*,int);
 	~SubCommunity(void);
-	intptr getNum(void);
+	int getNum(void);
 	Patch* getPatch(void);
 	locn getLocn(void);
 
@@ -184,7 +184,7 @@ public:
 	);
 
 private:
-	intptr subCommNum;	// SubCommunity number
+	int subCommNum;	// SubCommunity number
 		// 0 is reserved for the SubCommunity in the inter-patch matrix
 	Patch *pPatch;
 	int *occupancy;	// pointer to occupancy array
