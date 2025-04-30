@@ -304,8 +304,8 @@ intptr Patch::getSubComm(void)
 { return subCommPtr; }
 
 #ifdef _OPENMP
-std::unique_lock<std::mutex> Patch::lockPopns(void) {
-return std::unique_lock<std::mutex>(popns_mutex);
+std::unique_lock<std::mutex> Patch::lockPopns() {
+	return std::unique_lock<std::mutex>(popns_mutex);
 }
 #endif
 

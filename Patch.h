@@ -121,7 +121,7 @@ public:
 	);
 	intptr getSubComm(void);
 #ifdef _OPENMP
-	std::unique_lock<std::mutex> lockPopns(void);
+	std::unique_lock<std::mutex> lockPopns();
 #endif
 	void addPopn(
 		patchPopn // structure holding pointers to Species and Population cast as integers

@@ -130,8 +130,8 @@ float Cell::getEps(void) { return eps; }
 // Functions to handle costs for SMS
 
 #ifdef _OPENMP
-std::unique_lock<std::mutex> Cell::lockCost(void) {
-return std::unique_lock<std::mutex>(cost_mutex);
+std::unique_lock<std::mutex> Cell::lockCost() {
+	return std::unique_lock<std::mutex>(cost_mutex);
 }
 #endif
 
