@@ -79,11 +79,15 @@ using namespace std;
 
 //---------------------------------------------------------------------------
 
+class Population;
+class SubCommunity;
+
 struct patchLimits {
 	int xMin,xMax,yMin,yMax;
 };
 struct patchPopn {
-	intptr pSp,pPop; // pointers to Species and Population cast as integers
+	Species *pSp; // pointers to Species
+	Population *pPop; // pointers to Population
 };
 
 class Patch{
@@ -117,17 +121,17 @@ public:
 	);
 	Cell* getRandomCell(void);
 	void setSubComm(
-		intptr		// pointer to the Sub-community cast as an integer
+		SubCommunity *		// pointer to the Sub-community
 	);
-	intptr getSubComm(void);
+	SubCommunity *getSubComm(void);
 #ifdef _OPENMP
 	std::unique_lock<std::mutex> lockPopns();
 #endif
 	void addPopn(
-		patchPopn // structure holding pointers to Species and Population cast as integers
+		patchPopn // structure holding pointers to Species and Population
 	);
-	intptr getPopn( // return pointer (cast as integer) to the Population of the Species
-		intptr // pointer to Species cast as integer
+	Population *getPopn( // return pointer to the Population of the Species
+		Species * // pointer to Species
 	);
 	void resetPopn(void);
 	void resetPossSettlers(void);
@@ -156,7 +160,7 @@ public:
 	int nCells;			// no. of cells in the patch
 	int xMin,xMax,yMin,yMax; 	// min and max cell co-ordinates
 	int x,y;				// centroid co-ordinates (approx.)
-	intptr subCommPtr; // pointer (cast as integer) to sub-community associated with the patch
+	SubCommunity *subCommPtr; // pointer to sub-community associated with the patch
 	// NOTE: FOR MULTI-SPECIES MODEL, PATCH WILL NEED TO STORE K FOR EACH SPECIES
 	float localK;		// patch carrying capacity (individuals)
 	bool changed;

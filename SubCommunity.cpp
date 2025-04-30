@@ -33,13 +33,13 @@ SubCommunity::SubCommunity(Patch* pPch, int num) {
 	subCommNum = num;
 	pPatch = pPch;
 	// record the new sub-community no. in the patch
-	pPatch->setSubComm((intptr)this);
+	pPatch->setSubComm(this);
 	initial = false;
 	occupancy = 0;
 }
 
 SubCommunity::~SubCommunity() {
-	pPatch->setSubComm(0);
+	pPatch->setSubComm(nullptr);
 	int npops = (int)popns.size();
 	for (int i = 0; i < npops; i++) { // all populations
 		delete popns[i];
@@ -48,7 +48,7 @@ SubCommunity::~SubCommunity() {
 	if (occupancy != 0) delete[] occupancy;
 }
 
-intptr SubCommunity::getNum(void) { return subCommNum; }
+int SubCommunity::getNum(void) { return subCommNum; }
 
 Patch* SubCommunity::getPatch(void) { return pPatch; }
 
@@ -390,16 +390,16 @@ void SubCommunity::completeDispersal(Landscape* pLandscape, bool connect)
 			if (settled) {
 			// settler - has already been removed from matrix population
 			// find new patch
-				pNewPatch = (Patch*)settler.pCell->getPatch();
+				pNewPatch = settler.pCell->getPatch();
 				// find population within the patch (if there is one)
 				{
 #ifdef _OPENMP
 				const std::unique_lock<std::mutex> lock = pNewPatch->lockPopns();
 #endif // _OPENMP
-				pPop = (Population*)pNewPatch->getPopn((intptr)pSpecies);
+				pPop = pNewPatch->getPopn(pSpecies);
 				if (pPop == 0) { // settler is the first in a previously uninhabited patch
 					// create a new population in the corresponding sub-community
-					pSubComm = (SubCommunity*)pNewPatch->getSubComm();
+					pSubComm = pNewPatch->getSubComm();
 					pPop = pSubComm->newPopn(pLandscape, pSpecies, pNewPatch, 0);
 				}
 				}
@@ -407,9 +407,8 @@ void SubCommunity::completeDispersal(Landscape* pLandscape, bool connect)
 				if (connect) { // increment connectivity totals
 					int newpatch = pNewPatch->getSeqNum();
 					pPrevCell = settler.pInd->getLocn(0); // previous cell
-					intptr patch = pPrevCell->getPatch();
-					if (patch != 0) {
-						pPrevPatch = (Patch*)patch;
+					pPrevPatch = pPrevCell->getPatch();
+					if (pPrevPatch != nullptr) {
 						int prevpatch = pPrevPatch->getSeqNum();
 						pLandscape->incrConnectMatrix(prevpatch, newpatch);
 					}
