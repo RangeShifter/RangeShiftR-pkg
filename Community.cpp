@@ -397,22 +397,20 @@ void Community::patchChanges(void) {
 
 void Community::reproduction(int yr)
 {
-	float eps = 0.0; // epsilon for environmental stochasticity
 	landParams land = pLandscape->getLandParams();
 	envStochParams env = paramsStoch->getStoch();
+	float eps = 0.0; // epsilon for environmental stochasticity
+	if (env.stoch && !env.local) { // global stochasticty
+		eps = pLandscape->getGlobalStoch(yr);
+	}
 	int nsubcomms = (int)subComms.size();
 #if RSDEBUG
 	DEBUGLOG << "Community::reproduction(): this=" << this
 		<< " nsubcomms=" << nsubcomms << endl;
 #endif
 
-	#pragma omp parallel for private(eps) schedule(static,128)
+	#pragma omp parallel for shared(eps) schedule(static,128)
 	for (int i = 0; i < nsubcomms; i++) { // all sub-communities
-		if (env.stoch) {
-			if (!env.local) { // global stochasticty
-				eps = pLandscape->getGlobalStoch(yr);
-			}
-		}
 		subComms[i]->reproduction(land.resol, eps, land.rasterType, land.patchModel);
 	}
 #if RSDEBUG
