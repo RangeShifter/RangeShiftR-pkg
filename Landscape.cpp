@@ -771,7 +771,7 @@ void Landscape::addNewCellToPatch(Patch* pPatch, int x, int y, float q) {
 		cells[y][x] = 0;
 	}
 	else { // create the new cell
-		cells[y][x] = new Cell(x, y, (intptr)pPatch, q);
+		cells[y][x] = new Cell(x, y, pPatch, q);
 		if (pPatch != 0) { // not the matrix patch
 			// add the cell to the patch
 			pPatch->addCell(cells[y][x], x, y);
@@ -783,7 +783,7 @@ void Landscape::addNewCellToPatch(Patch* pPatch, int x, int y, int hab) {
 	if (hab < 0) // no-data cell - no Cell created
 		cells[y][x] = 0;
 	else { // create the new cell
-		cells[y][x] = new Cell(x, y, (intptr)pPatch, hab);
+		cells[y][x] = new Cell(x, y, pPatch, hab);
 		if (pPatch != 0) { // not the matrix patch
 			// add the cell to the patch
 			pPatch->addCell(cells[y][x], x, y);
@@ -792,14 +792,14 @@ void Landscape::addNewCellToPatch(Patch* pPatch, int x, int y, int hab) {
 }
 
 void Landscape::addCellToPatch(Cell* pCell, Patch* pPatch) {
-	pCell->setPatch((intptr)pPatch);
+	pCell->setPatch(pPatch);
 	locn loc = pCell->getLocn();
 	// add the cell to the patch
 	pPatch->addCell(pCell, loc.x, loc.y);
 }
 
 void Landscape::addCellToPatch(Cell* pCell, Patch* pPatch, float q) {
-	pCell->setPatch((intptr)pPatch);
+	pCell->setPatch(pPatch);
 	// update the habitat type of the cell
 	pCell->setHabitat(q);
 	locn loc = pCell->getLocn();
@@ -808,7 +808,7 @@ void Landscape::addCellToPatch(Cell* pCell, Patch* pPatch, float q) {
 }
 
 void Landscape::addCellToPatch(Cell* pCell, Patch* pPatch, int hab) {
-	pCell->setPatch((intptr)pPatch);
+	pCell->setPatch(pPatch);
 	// update the habitat type of the cell
 	pCell->setHabIndex(hab);
 	locn loc = pCell->getLocn();
@@ -1450,7 +1450,6 @@ default:
 // Create & initialise patch change matrix
 void Landscape::createPatchChgMatrix(void)
 {
-	intptr patch;
 	Patch* pPatch;
 	Cell* pCell;
 	if (patchChgMatrix != 0) deletePatchChgMatrix();
@@ -1465,12 +1464,11 @@ void Landscape::createPatchChgMatrix(void)
 			}
 			else {
 				// record initial patch number
-				patch = pCell->getPatch();
-				if (patch == 0) { // matrix cell
+				pPatch = pCell->getPatch();
+				if (pPatch == nullptr) { // matrix cell
 					patchChgMatrix[y][x][0] = patchChgMatrix[y][x][1] = 0;
 				}
 				else {
-					pPatch = (Patch*)patch;
 					patchChgMatrix[y][x][0] = patchChgMatrix[y][x][1] = pPatch->getPatchNum();
 				}
 			}

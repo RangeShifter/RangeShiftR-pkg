@@ -59,8 +59,7 @@ void Community::initialise(Species* pSpecies, int year)
 	locn distloc;
 	patchData pch;
 	patchLimits limits;
-	intptr ppatch, subcomm;
-	std::vector <intptr> subcomms;
+	std::vector <SubCommunity *> subcomms;
 	std::vector <bool> selected;
 	SubCommunity* pSubComm;
 	Patch* pPatch;
@@ -138,7 +137,7 @@ void Community::initialise(Species* pSpecies, int year)
 			}
 			for (int i = 0; i < npatches; i++) {
 				if (selected[i]) {
-					pSubComm = (SubCommunity*)subcomms[i];
+					pSubComm = subcomms[i];
 					pSubComm->setInitial(true);
 				}
 			}
@@ -155,13 +154,10 @@ void Community::initialise(Species* pSpecies, int year)
 					if (patchnum != 0) {
 						if (pch.pPatch->getK() > 0.0)
 						{ // patch is suitable
-							subcomm = pch.pPatch->getSubComm();
-							if (subcomm == 0) {
+							pSubComm = pch.pPatch->getSubComm();
+							if (pSubComm == nullptr) {
 								// create a sub-community in the patch
 								pSubComm = addSubComm(pch.pPatch, patchnum);
-							}
-							else {
-								pSubComm = (SubCommunity*)subcomm;
 							}
 							pSubComm->setInitial(true);
 						}
@@ -211,13 +207,11 @@ void Community::initialise(Species* pSpecies, int year)
 						for (int y = 0; y < spratio; y++) {
 							pCell = pLandscape->findCell(distloc.x * spratio + x, distloc.y * spratio + y);
 							if (pCell != 0) { // not a no-data cell
-								ppatch = pCell->getPatch();
-								if (ppatch != 0) {
-									pPatch = (Patch*)ppatch;
+								pPatch = pCell->getPatch();
+								if (pPatch != nullptr) {
 									if (pPatch->getSeqNum() != 0) { // not the matrix patch
-										subcomm = pPatch->getSubComm();
-										if (subcomm != 0) {
-											pSubComm = (SubCommunity*)subcomm;
+										pSubComm = pPatch->getSubComm();
+										if (pSubComm != nullptr) {
 											pSubComm->setInitial(true);
 										}
 									}
@@ -256,13 +250,10 @@ void Community::initialise(Species* pSpecies, int year)
 							pPatch = pLandscape->findPatch(iind.patchID);
 							if (pPatch->getK() > 0.0)
 							{ // patch is suitable
-								subcomm = pPatch->getSubComm();
-								if (subcomm == 0) {
+								pSubComm = pPatch->getSubComm();
+								if (pSubComm == nullptr) {
 									// create a sub-community in the patch
 									pSubComm = addSubComm(pPatch, iind.patchID);
-								}
-								else {
-									pSubComm = (SubCommunity*)subcomm;
 								}
 								pSubComm->initialInd(pLandscape, pSpecies, pPatch, pPatch->getRandomCell(), indIx);
 							}
@@ -271,18 +262,14 @@ void Community::initialise(Species* pSpecies, int year)
 					else { // cell-based model
 						pCell = pLandscape->findCell(iind.x, iind.y);
 						if (pCell != 0) {
-							intptr ppatch = pCell->getPatch();
-							if (ppatch != 0) {
-								pPatch = (Patch*)ppatch;
+							pPatch = pCell->getPatch();
+							if (pPatch != nullptr) {
 								if (pPatch->getK() > 0.0)
 								{ // patch is suitable
-									subcomm = pPatch->getSubComm();
-									if (subcomm == 0) {
+									pSubComm = pPatch->getSubComm();
+									if (pSubComm == nullptr) {
 										// create a sub-community in the patch
 										pSubComm = addSubComm(pPatch, iind.patchID);
-									}
-									else {
-										pSubComm = (SubCommunity*)subcomm;
 									}
 									pSubComm->initialInd(pLandscape, pSpecies, pPatch, pCell, indIx);
 								}
@@ -319,7 +306,6 @@ void Community::initialise(Species* pSpecies, int year)
 // Add manually selected patches/cells to the selected set for initialisation
 void Community::addManuallySelected(void) {
 	int npatches;
-	intptr subcomm, patch;
 	locn initloc;
 	Cell* pCell;
 	Patch* pPatch;
@@ -338,9 +324,8 @@ void Community::addManuallySelected(void) {
 			initloc = pLandscape->getInitCell(i); // patch number held in x-coord of list
 			pPatch = pLandscape->findPatch(initloc.x);
 			if (pPatch != 0) {
-				subcomm = pPatch->getSubComm();
-				if (subcomm != 0) {
-					pSubComm = (SubCommunity*)subcomm;
+				pSubComm = pPatch->getSubComm();
+				if (pSubComm != nullptr) {
 					pSubComm->setInitial(true);
 				}
 			}
@@ -353,23 +338,21 @@ void Community::addManuallySelected(void) {
 				&& initloc.y >= 0 && initloc.y < ppLand.dimY) {
 				pCell = pLandscape->findCell(initloc.x, initloc.y);
 				if (pCell != 0) { // not no-data cell
-					patch = pCell->getPatch();
+					pPatch = pCell->getPatch();
 #if RSDEBUG
 					DEBUGLOG << "Community::initialise(): i = " << i
 						<< " x = " << initloc.x << " y = " << initloc.y
-						<< " pCell = " << pCell << " patch = " << patch
+						<< " pCell = " << pCell << " patch = " << (intptr)pPatch
 						<< endl;
 #endif
-					if (patch != 0) {
-						pPatch = (Patch*)patch;
-						subcomm = pPatch->getSubComm();
+					if (pPatch != nullptr) {
+						pSubComm = pPatch->getSubComm();
 #if RSDEBUG
 						DEBUGLOG << "Community::initialise(): i = " << i
-							<< " pPatch = " << pPatch << " subcomm = " << subcomm
+							<< " pPatch = " << pPatch << " subcomm = " << (intptr)pSubComm
 							<< endl;
 #endif
-						if (subcomm != 0) {
-							pSubComm = (SubCommunity*)subcomm;
+						if (pSubComm != nullptr) {
 							pSubComm->setInitial(true);
 #if RSDEBUG
 							DEBUGLOG << "Community::initialise(): i = " << i
@@ -1529,10 +1512,8 @@ Rcpp::IntegerMatrix Community::addYearToPopList(int rep, int yr) {  // TODO: def
 
 	landParams ppLand = pLandscape->getLandParams();
 	Rcpp::IntegerMatrix pop_map_year(ppLand.dimY, ppLand.dimX);
-	intptr patch = 0;
 	Patch* pPatch = 0;
-	intptr subcomm = 0;
-	SubCommunity* pSubComm = 0;
+	SubCommunity* pSubComm = nullptr;
 	popStats pop;
 	pop.nInds = pop.nAdults = pop.nNonJuvs = 0;
 
@@ -1543,18 +1524,16 @@ Rcpp::IntegerMatrix Community::addYearToPopList(int rep, int yr) {  // TODO: def
 				pop_map_year(ppLand.dimY - 1 - y, x) = NA_INTEGER;
 			}
 			else {
-				patch = pCell->getPatch();
-				if (patch == 0) { // matrix cell
+				pPatch = pCell->getPatch();
+				if (pPatch == nullptr) { // matrix cell
 					pop_map_year(ppLand.dimY - 1 - y, x) = 0;
 				}
 				else {
-					pPatch = (Patch*)patch;
-					subcomm = pPatch->getSubComm();
-					if (subcomm == 0) { // check if sub-community exists
+					pSubComm = pPatch->getSubComm();
+					if (pSubComm == nullptr) { // check if sub-community exists
 						pop_map_year(ppLand.dimY - 1 - y, x) = 0;
 					}
 					else {
-						pSubComm = (SubCommunity*)subcomm;
 						pop = pSubComm->getPopStats();
 						pop_map_year(ppLand.dimY - 1 - y, x) = pop.nInds; // use indices like this because matrix gets transposed upon casting it into a raster on R-level
 					}
