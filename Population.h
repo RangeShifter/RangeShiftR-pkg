@@ -59,6 +59,11 @@ using namespace std;
 #include "Patch.h"
 #include "Cell.h"
 
+#ifdef _OPENMP
+#include <atomic>
+#include <mutex>
+#endif
+
 //---------------------------------------------------------------------------
 
 struct popStats {
@@ -145,6 +150,9 @@ public:
 	void recruit( // Add a specified individual to the population
 		Individual*	// pointer to Individual
 	);
+	void recruitMany( // Add specified individuals to the population
+		std::vector<Individual*>&	// vector of pointers to Individuals
+	);
 #if RS_RCPP
 	int transfer( // Executed for the Population(s) in the matrix only
 		Landscape*,	// pointer to Landscape
@@ -220,12 +228,18 @@ private:
 	short nSexes;
 	Species *pSpecies;	// pointer to the species
 	Patch *pPatch;			// pointer to the patch
+#ifdef _OPENMP
+	std::atomic<int> nInds[NSTAGES][NSEXES];		// no. of individuals in each stage/sex
+#else
 	int nInds[NSTAGES][NSEXES];		// no. of individuals in each stage/sex
+#endif // _OPENMP
 
 	std::vector <Individual*> inds; // all individuals in population except ...
 	std::vector <Individual*> juvs; // ... juveniles until reproduction of ALL species
 																	// has been completed
-
+#ifdef _OPENMP
+	std::mutex inds_mutex;
+#endif // _OPENMP
 };
 
 //---------------------------------------------------------------------------

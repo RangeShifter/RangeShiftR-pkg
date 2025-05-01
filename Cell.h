@@ -50,6 +50,11 @@ using namespace std;
 
 #include "Parameters.h"
 
+#ifdef _OPENMP
+#include <atomic>
+#include <mutex>
+#endif
+
 //---------------------------------------------------------------------------
 
 class Patch; // Forward-declaration of the Patch class
@@ -112,6 +117,9 @@ public:
 	void setCost(
 		int		// cost value for SMS
 	);
+#ifdef _OPENMP
+	std::unique_lock<std::mutex> lockCost(void);
+#endif
 	int getCost(void);
 	void resetCost(void);
 	array3x3f getEffCosts(void);
@@ -132,13 +140,21 @@ private:
 								// gradient in K, r or extinction probability
 	float envDev;	// local environmental deviation (static, in range -1.0 to +1.0)
 	float eps;		// local environmental stochasticity (epsilon) (dynamic, from N(0,std))
+#ifdef _OPENMP
+	std::atomic<unsigned long int> visits; // no. of times square is visited by dispersers
+#else
 	unsigned long int visits; // no. of times square is visited by dispersers
+#endif
 	smscosts *smsData;
 
 	vector <short> habIxx; 		// habitat indices (rasterType=0)
 		// NB initially, habitat codes are loaded, then converted to index nos.
 		//    once landscape is fully loaded
 	vector <float> habitats;	// habitat proportions (rasterType=1) or quality (rasterType=2)
+
+#ifdef _OPENMP
+	std::mutex cost_mutex;
+#endif
 };
 
 //---------------------------------------------------------------------------

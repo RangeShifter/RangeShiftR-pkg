@@ -72,6 +72,11 @@ using namespace std;
 #include "Cell.h"
 #include "Species.h"
 
+#ifdef _OPENMP
+#include <atomic>
+#include <mutex>
+#endif
+
 //---------------------------------------------------------------------------
 
 class Population;
@@ -119,6 +124,9 @@ public:
 		SubCommunity *		// pointer to the Sub-community
 	);
 	SubCommunity *getSubComm(void);
+#ifdef _OPENMP
+	std::unique_lock<std::mutex> lockPopns();
+#endif
 	void addPopn(
 		patchPopn // structure holding pointers to Species and Population
 	);
@@ -157,11 +165,18 @@ public:
 	float localK;		// patch carrying capacity (individuals)
 	bool changed;
 // NOTE: THE FOLLOWING ARRAY WILL NEED TO BE MADE SPECIES-SPECIFIC...
+#ifdef _OPENMP
+	std::atomic<short> nTemp[NSEXES];						// no. of potential settlers in each sex
+#else
 	short nTemp[NSEXES];						// no. of potential settlers in each sex
+#endif
 
 	std::vector <Cell*> cells;
 	std::vector <patchPopn> popns;
 
+#ifdef _OPENMP
+	std::mutex popns_mutex;
+#endif
 };
 
 //---------------------------------------------------------------------------

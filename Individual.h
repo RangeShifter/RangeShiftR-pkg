@@ -57,6 +57,10 @@ using namespace std;
 #include "Cell.h"
 #include "Genome.h"
 
+#ifdef _OPENMP
+#include <atomic>
+#endif // _OPENMP
+
 #define NODATACOST 100000 // cost to use in place of nodata value for SMS
 #define ABSNODATACOST 100 // cost to use in place of nodata value for SMS
 													// when boundaries are absorbing
@@ -125,7 +129,11 @@ public:
 class Individual {
 
 public:
+#ifdef _OPENMP
+	static std::atomic<int> indCounter; // used to create ID, held by class, not members of class
+#else
 	static int indCounter; // used to create ID, held by class, not members of class
+#endif
 	Individual( // Individual constructor
 		Species*, // pointer to species
 		Cell*,	// pointer to Cell

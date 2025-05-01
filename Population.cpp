@@ -806,9 +806,26 @@ disperser Population::extractSettler(int ix) {
 // Add a specified individual to the new/current dispersal group
 // Add a specified individual to the population
 void Population::recruit(Individual* pInd) {
-	inds.push_back(pInd);
 	indStats ind = pInd->getStats();
 	nInds[ind.stage][ind.sex]++;
+#ifdef _OPENMP
+	const std::lock_guard<std::mutex> lock(inds_mutex);
+#endif // _OPENMP
+	inds.push_back(pInd);
+}
+
+// Add specified individuals to the new/current dispersal group
+// Add specified individuals to the population
+void Population::recruitMany(std::vector<Individual*>& new_inds) {
+	if (new_inds.empty()) return;
+	for (Individual* pInd : new_inds) {
+		indStats ind = pInd->getStats();
+		nInds[ind.stage][ind.sex]++;
+	}
+#ifdef _OPENMP
+	const std::lock_guard<std::mutex> lock(inds_mutex);
+#endif // _OPENMP
+	inds.insert(inds.end(), new_inds.begin(), new_inds.end());
 }
 
 //---------------------------------------------------------------------------
@@ -844,6 +861,7 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 	// each individual takes one step
 	// for dispersal by kernel, this should be the only step taken
 	int ninds = (int)inds.size();
+	#pragma omp parallel for reduction(+:ndispersers) private(disperser, pCell, pPatch) schedule(static,128)
 	for (int i = 0; i < ninds; i++) {
 		if (trfr.moveModel) {
 			disperser = inds[i]->moveStep(pLandscape, pSpecies, landIx, sim.absorbing);
@@ -868,6 +886,7 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 	}
 
 // each individual which has reached a potential patch decides whether to settle
+	#pragma omp parallel for reduction(-:ndispersers) default(none) shared(ninds, settletype, pRandom, trfr, ppLand, pLandscape) private(ind, othersex, sett, pCell, mateOK, densdepOK, settle, pPatch, localK, popsize, pNewPopn, settDD, settprob, newloc, nbrloc, patchnum) schedule(static)
 	for (int i = 0; i < ninds; i++) {
 		ind = inds[i]->getStats();
 		if (ind.sex == 0) othersex = 1; else othersex = 0;

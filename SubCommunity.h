@@ -48,6 +48,7 @@ Last updated: 26 October 2021 by Steve Palmer
 
 #include <vector>
 #include <algorithm>
+#include <map>
 using namespace std;
 
 #include "Parameters.h"
@@ -90,13 +91,18 @@ public:
 		bool		// TRUE for a patch-based model, FALSE for a cell-based model
 	);
 	void emigration(void);
-	// Remove emigrants from their natal patch and add to patch 0 (matrix)
+	// Remove emigrants from their natal patch and add to a map of vectors
 	void initiateDispersal(
-		SubCommunity*	// pointer to matrix SubCommunity
+		std::map<Species*,std::vector<Individual*>>&
 	);
 // Add an individual into the local population of its species in the patch
 	void recruit(
 		Individual*,	// pointer to Individual
+		Species*			// pointer to Species
+	);
+// Add individuals into the local population of their species in the patch
+	void recruitMany(
+		std::vector<Individual*>&,	// vector of pointers to Individuals
 		Species*			// pointer to Species
 	);
 #if RS_RCPP

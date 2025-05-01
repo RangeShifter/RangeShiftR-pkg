@@ -369,6 +369,7 @@ void Community::addManuallySelected(void) {
 
 void Community::resetPopns(void) {
 	int nsubcomms = (int)subComms.size();
+	#pragma omp parallel for schedule(static,128)
 	for (int i = 0; i < nsubcomms; i++) { // all sub-communities
 		subComms[i]->resetPopns();
 	}
@@ -396,21 +397,20 @@ void Community::patchChanges(void) {
 
 void Community::reproduction(int yr)
 {
-	float eps = 0.0; // epsilon for environmental stochasticity
 	landParams land = pLandscape->getLandParams();
 	envStochParams env = paramsStoch->getStoch();
+	float eps = 0.0; // epsilon for environmental stochasticity
+	if (env.stoch && !env.local) { // global stochasticty
+		eps = pLandscape->getGlobalStoch(yr);
+	}
 	int nsubcomms = (int)subComms.size();
 #if RSDEBUG
 	DEBUGLOG << "Community::reproduction(): this=" << this
 		<< " nsubcomms=" << nsubcomms << endl;
 #endif
 
+	#pragma omp parallel for schedule(static,128)
 	for (int i = 0; i < nsubcomms; i++) { // all sub-communities
-		if (env.stoch) {
-			if (!env.local) { // global stochasticty
-				eps = pLandscape->getGlobalStoch(yr);
-			}
-		}
 		subComms[i]->reproduction(land.resol, eps, land.rasterType, land.patchModel);
 	}
 #if RSDEBUG
@@ -425,6 +425,7 @@ void Community::emigration(void)
 	DEBUGLOG << "Community::emigration(): this=" << this
 		<< " nsubcomms=" << nsubcomms << endl;
 #endif
+	#pragma omp parallel for schedule(static, 128)
 	for (int i = 0; i < nsubcomms; i++) { // all sub-communities
 		subComms[i]->emigration();
 	}
@@ -449,8 +450,17 @@ void Community::dispersal(short landIx)
 	int nsubcomms = (int)subComms.size();
 	// initiate dispersal - all emigrants leave their natal community and join matrix community
 	SubCommunity* matrix = subComms[0]; // matrix community is always the first
-	for (int i = 0; i < nsubcomms; i++) { // all populations
-		subComms[i]->initiateDispersal(matrix);
+#pragma omp parallel
+	{
+		std::map<Species*, vector<Individual*>> inds_map;
+#pragma omp for schedule(static,128) nowait
+		for (int i = 0; i < nsubcomms; i++) { // all populations
+			subComms[i]->initiateDispersal(inds_map);
+		}
+		for (std::pair<Species* const, std::vector<Individual*>>& item : inds_map) {
+			// add to matrix population
+			matrix->recruitMany(item.second, item.first);
+		}
 	}
 #if RSDEBUG
 	t1 = time(0);
@@ -462,6 +472,7 @@ void Community::dispersal(short landIx)
 	// (even if not physically in the matrix)
 	int ndispersers = 0;
 	do {
+		#pragma omp parallel for schedule(static)
 		for (int i = 0; i < nsubcomms; i++) { // all populations
 			subComms[i]->resetPossSettlers();
 		}
@@ -484,6 +495,7 @@ void Community::dispersal(short landIx)
 void Community::survival(short part, short option0, short option1)
 {
 	int nsubcomms = (int)subComms.size();
+	#pragma omp parallel for schedule(static,128)
 	for (int i = 0; i < nsubcomms; i++) { // all communities (including in matrix)
 		subComms[i]->survival(part, option0, option1);
 	}

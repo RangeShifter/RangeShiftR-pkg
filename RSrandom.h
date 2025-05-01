@@ -39,6 +39,7 @@ Last updated: 12 January 2021 by Steve Palmer
 #include <stdlib.h>
 #include <fstream>
 #include <cassert>
+#include <vector>
 #include "Utils.h"
 
 using namespace std;
@@ -69,7 +70,7 @@ extern ofstream DEBUGLOG;
 		mt19937 getRNG(void);
 
 	private:
-		mt19937* gen;
+		std::vector<mt19937> gens;
 		std::uniform_real_distribution<>* pRandom01;
 		std::normal_distribution<>* pNormal;
 	};

@@ -23,6 +23,11 @@
  //---------------------------------------------------------------------------
 
 #include "Individual.h"
+
+#ifdef _OPENMP
+#include <mutex>
+#endif
+
 //---------------------------------------------------------------------------
 
 template <typename T>
@@ -91,7 +96,11 @@ bool MemoryQueue<T>::full() const {
 
 //---------------------------------------------------------------------------
 
+#ifdef _OPENMP
+std::atomic<int> Individual::indCounter = 0;
+#else // _OPENMP
 int Individual::indCounter = 0;
+#endif // _OPENMP
 
 //---------------------------------------------------------------------------
 
@@ -100,8 +109,7 @@ Individual::Individual(Species* pSpecies, Cell* pCell, Patch* pPatch, short stg,
 	float probmale, bool movt, short moveType):
 	memory(pSpecies->getSMSTraits().memSize)
 {
-	indId = indCounter;
-	indCounter++; // unique identifier for each individual
+	indId = indCounter++; // unique identifier for each individual
 
 	stage = stg;
 	if (probmale <= 0.0) sex = 0;
@@ -1380,7 +1388,10 @@ movedata Individual::smsMove(Landscape* pLand, Species* pSpecies,
 
 	// get habitat-dependent weights (mean effective costs, given perceptual range)
 	// first check if costs have already been calculated
-
+	{
+#ifdef _OPENMP
+	const std::unique_lock<std::mutex> lock = pCurrCell->lockCost();
+#endif
 	hab = pCurrCell->getEffCosts();
 
 	if (hab.cell[0][0] < 0.0) { // costs have not already been calculated
@@ -1390,6 +1401,7 @@ movedata Individual::smsMove(Landscape* pLand, Species* pSpecies,
 	}
 	else {
 		// they have already been calculated - no action required
+	}
 	}
 
 	// determine weighted effective cost for the 8 neighbours
@@ -1789,6 +1801,10 @@ void Individual::outGenetics(const int rep, const int year, const int spnum,
 }
 
 #if RS_RCPP
+#ifdef _OPENMP
+std::mutex outMovePaths_mutex;
+#endif
+
 //---------------------------------------------------------------------------
 // Write records to movement paths file
 void Individual::outMovePath(const int year)
@@ -1797,6 +1813,9 @@ void Individual::outMovePath(const int year)
 
 	//if (pPatch != pNatalPatch) {
 	loc = pCurrCell->getLocn();
+#ifdef _OPENMP
+	const std::lock_guard<std::mutex> lock(outMovePaths_mutex);
+#endif
 	// if still dispersing...
 	if (status == 1) {
 		// at first step, record start cell first
