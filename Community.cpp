@@ -409,7 +409,7 @@ void Community::reproduction(int yr)
 		<< " nsubcomms=" << nsubcomms << endl;
 #endif
 
-	#pragma omp parallel for shared(eps) schedule(static,128)
+	#pragma omp parallel for schedule(static,128)
 	for (int i = 0; i < nsubcomms; i++) { // all sub-communities
 		subComms[i]->reproduction(land.resol, eps, land.rasterType, land.patchModel);
 	}

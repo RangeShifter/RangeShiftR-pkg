@@ -1,6 +1,6 @@
 # Config file for compilation with CMake
 
-if (NOT batchmode) # that is, RScore as a standalone
+if(NOT batchmode) # that is, RScore as a standalone
 	cmake_minimum_required(VERSION 3.10)
 	# set the project name and version
 	project(RScore VERSION 2.1.0)
@@ -12,9 +12,11 @@ else() # that is, RScore compiled as library within RangeShifter_batch
 	add_library(RScore Species.cpp Cell.cpp Community.cpp FractalGenerator.cpp Genome.cpp Individual.cpp Landscape.cpp Model.cpp Parameters.cpp Patch.cpp Population.cpp RandomCheck.cpp RSrandom.cpp SubCommunity.cpp Utils.cpp)
 endif()
 
-find_package(OpenMP COMPONENTS CXX)
-if (OpenMP_CXX_FOUND)
-	target_link_libraries(RScore PUBLIC OpenMP::OpenMP_CXX)
+if(OMP)
+	find_package(OpenMP COMPONENTS CXX)
+	if(OpenMP_CXX_FOUND)
+		target_link_libraries(RScore PUBLIC OpenMP::OpenMP_CXX)
+	endif()
 endif()
 
 # pass config definitions to compiler
