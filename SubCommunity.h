@@ -146,10 +146,10 @@ public:
 	);
 	void deleteOccupancy(void);
 
-	bool outPopHeaders( // Open population file and write header record
+	bool outPopFinishLandscape(); // Close population file
+	bool outPopStartLandscape( // Open population file and write header record
 		Landscape*,	// pointer to Landscape
-		Species*,		// pointer to Species
-		int					// option: -999 to close the file
+		Species*		// pointer to Species
 	);
 	void outPop( // Write records to population file
 		Landscape*,	// pointer to Landscape
@@ -158,13 +158,17 @@ public:
 		int					// generation
 	);
 
-	void outInds( // Write records to individuals file
+	void outIndsFinishReplicate(); // Close individuals file
+	void outIndsStartReplicate( // Open individuals file and write header record
+		Landscape*,	// pointer to Landscape
+		int,				// replicate
+		int					// Landscape number
+	);
+	void outIndividuals( // Write records to individuals file
 		Landscape*,	// pointer to Landscape
 		int,				// replicate
 		int,				// year
-		int,				// generation
-		int					// Landscape number (>= 0 to open the file, -999 to close the file
-								//									 -1 to write data records)
+		int				// generation
 	);
 	void outGenetics( // Write records to genetics file
 		int,				// replicate

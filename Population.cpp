@@ -1316,14 +1316,16 @@ void Population::clean(void)
 }
 
 //---------------------------------------------------------------------------
-// Open population file and write header record
-bool Population::outPopHeaders(int landNr, bool patchModel) {
+// Close population file
+bool Population::outPopFinishLandscape() {
+	if (outPop.is_open()) outPop.close();
+	outPop.clear();
+	return true;
+}
 
-	if (landNr == -999) { // close file
-		if (outPop.is_open()) outPop.close();
-		outPop.clear();
-		return true;
-	}
+//---------------------------------------------------------------------------
+// Open population file and write header record
+bool Population::outPopStartLandscape(int landNr, bool patchModel) {
 
 	string name;
 	simParams sim = paramsSim->getSim();
@@ -1433,17 +1435,19 @@ void Population::outPopulation(int rep, int yr, int gen, float eps,
 //---------------------------------------------------------------------------
 
 //---------------------------------------------------------------------------
-// Open individuals file and write header record
-void Population::outIndsHeaders(int rep, int landNr, bool patchModel)
+// Close individuals file
+void Population::outIndsFinishReplicate()
 {
-
-	if (landNr == -999) { // close file
-		if (outInds.is_open()) {
-			outInds.close(); outInds.clear();
-		}
-		return;
+	if (outInds.is_open()) {
+		outInds.close(); outInds.clear();
 	}
+	return;
+}
 
+//---------------------------------------------------------------------------
+// Open individuals file and write header record
+void Population::outIndsStartReplicate(int rep, int landNr, bool patchModel)
+{
 	string name;
 	demogrParams dem = pSpecies->getDemogr();
 	emigRules emig = pSpecies->getEmig();

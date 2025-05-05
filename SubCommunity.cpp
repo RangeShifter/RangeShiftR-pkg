@@ -504,27 +504,33 @@ void SubCommunity::deleteOccupancy(void) {
 }
 
 //---------------------------------------------------------------------------
+// Close population file
+bool SubCommunity::outPopFinishLandscape()
+{
+	bool fileOK;
+	Population* pPop;
+
+	// as all populations may have been deleted, set up a dummy one
+	// species is not necessary
+	pPop = new Population();
+	fileOK = pPop->outPopFinishLandscape();
+	delete pPop;
+	return fileOK;
+}
+
+//---------------------------------------------------------------------------
 // Open population file and write header record
-bool SubCommunity::outPopHeaders(Landscape* pLandscape, Species* pSpecies, int option)
+bool SubCommunity::outPopStartLandscape(Landscape* pLandscape, Species* pSpecies)
 {
 	bool fileOK;
 	Population* pPop;
 	landParams land = pLandscape->getLandParams();
 
-	if (option == -999) { // close the file
-		// as all populations may have been deleted, set up a dummy one
-		// species is not necessary
-		pPop = new Population();
-		fileOK = pPop->outPopHeaders(-999, land.patchModel);
-		delete pPop;
-	}
-	else { // open the file
-		// as no population has yet been created, set up a dummy one
-		// species is necessary, as columns depend on stage and sex structure
-		pPop = new Population(pSpecies, pPatch, 0, land.resol);
-		fileOK = pPop->outPopHeaders(land.landNum, land.patchModel);
-		delete pPop;
-	}
+	// as no population has yet been created, set up a dummy one
+	// species is necessary, as columns depend on stage and sex structure
+	pPop = new Population(pSpecies, pPatch, 0, land.resol);
+	fileOK = pPop->outPopStartLandscape(land.landNum, land.patchModel);
+	delete pPop;
 	return fileOK;
 }
 
@@ -575,17 +581,19 @@ void SubCommunity::outPop(Landscape* pLandscape, int rep, int yr, int gen)
 	}
 }
 
-// Write records to individuals file
-void SubCommunity::outInds(Landscape* pLandscape, int rep, int yr, int gen, int landNr) {
+// Close individuals file
+void SubCommunity::outIndsFinishReplicate() {
+	popns[0]->outIndsFinishReplicate();
+}
+
+// Open individuals file and write header record
+void SubCommunity::outIndsStartReplicate(Landscape* pLandscape, int rep, int landNr) {
 	landParams ppLand = pLandscape->getLandParams();
-	if (landNr >= 0) { // open the file
-		popns[0]->outIndsHeaders(rep, landNr, ppLand.patchModel);
-		return;
-	}
-	if (landNr == -999) { // close the file
-		popns[0]->outIndsHeaders(rep, -999, ppLand.patchModel);
-		return;
-	}
+	popns[0]->outIndsStartReplicate(rep, landNr, ppLand.patchModel);
+}
+
+// Write records to individuals file
+void SubCommunity::outIndividuals(Landscape* pLandscape, int rep, int yr, int gen) {
 	// generate output for each population within the sub-community (patch)
 	int npops = (int)popns.size();
 	for (int i = 0; i < npops; i++) { // all populations

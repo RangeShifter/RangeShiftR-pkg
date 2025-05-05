@@ -133,9 +133,9 @@ public:
 		int,			// year
 		int				// generation
 	);
-	bool outPopHeaders( // Open population file and write header record
-		Species*, // pointer to Species
-		int       // option: -999 to close the file
+	bool outPopFinishLandscape(); // Close population file
+	bool outPopStartLandscape( // Open population file and write header record
+		Species* // pointer to Species
 	);
 	void outPop( // Write records to population file
 		int,	// replicate
@@ -143,12 +143,15 @@ public:
 		int		// generation
 	);
 
-	void outInds( // Write records to individuals file
+	void outIndsFinishReplicate(); // Close individuals file
+	void outIndsStartReplicate( // Open individuals file and write header record
+		int,	// replicate
+		int		// Landscape number
+	);
+	void outIndividuals( // Write records to individuals file
 		int,	// replicate
 		int,	// year
-		int,	// generation
-		int		// Landscape number (>= 0 to open the file, -999 to close the file
-					//									 -1 to write data records)
+		int	// generation
 	);
 	void outGenetics( // Write records to genetics file
 		int,	// replicate

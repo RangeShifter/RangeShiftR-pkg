@@ -611,9 +611,14 @@ commStats Community::getStats(void)
 
 // Functions to control production of output files
 
+// Close population file
+bool Community::outPopFinishLandscape() {
+	return subComms[0]->outPopFinishLandscape();
+}
+
 // Open population file and write header record
-bool Community::outPopHeaders(Species* pSpecies, int option) {
-	return subComms[0]->outPopHeaders(pLandscape, pSpecies, option);
+bool Community::outPopStartLandscape(Species* pSpecies) {
+	return subComms[0]->outPopStartLandscape(pLandscape, pSpecies);
 }
 
 // Write records to population file
@@ -628,21 +633,22 @@ void Community::outPop(int rep, int yr, int gen)
 }
 
 
-// Write records to individuals file
-void Community::outInds(int rep, int yr, int gen, int landNr) {
+// Close individuals file
+void Community::outIndsFinishReplicate() {
+	subComms[0]->outIndsFinishReplicate();
+}
 
-	if (landNr >= 0) { // open the file
-		subComms[0]->outInds(pLandscape, rep, yr, gen, landNr);
-		return;
-	}
-	if (landNr == -999) { // close the file
-		subComms[0]->outInds(pLandscape, rep, yr, gen, -999);
-		return;
-	}
+// Open individuals file and write header record
+void Community::outIndsStartReplicate(int rep, int landNr) {
+	subComms[0]->outIndsStartReplicate(pLandscape, rep, landNr);
+}
+
+// Write records to individuals file
+void Community::outIndividuals(int rep, int yr, int gen) {
 	// generate output for each sub-community (patch) in the community
 	int nsubcomms = (int)subComms.size();
 	for (int i = 0; i < nsubcomms; i++) { // all sub-communities
-		subComms[i]->outInds(pLandscape, rep, yr, gen, landNr);
+		subComms[i]->outIndividuals(pLandscape, rep, yr, gen);
 	}
 }
 

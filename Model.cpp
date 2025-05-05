@@ -178,7 +178,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				}
 			if (sim.outPop) {
 				// open Population file
-				if (!pComm->outPopHeaders(pSpecies, ppLand.landNum)) {
+				if (!pComm->outPopStartLandscape(pSpecies)) {
 					filesOK = false;
 				}
 			}
@@ -209,7 +209,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 			if (sim.outOccup && sim.reps > 1)
 				pComm->outOccupancyHeaders(-999);
 			if (sim.outPop) {
-				pComm->outPopHeaders(pSpecies, -999);
+				pComm->outPopFinishLandscape();
 			}
 			if (sim.outTraitsCells)
 				pComm->outTraitsHeaders(pSpecies, -999);
@@ -263,7 +263,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 
 		// open a new individuals file for each replicate
 		if (sim.outInds)
-			pComm->outInds(rep, 0, 0, ppLand.landNum);
+			pComm->outIndsStartReplicate(rep, ppLand.landNum);
 		// open a new genetics file for each replicate
 		if (sim.outGenetics) {
 			pComm->outGenetics(rep, 0, 0, ppLand.landNum);
@@ -275,7 +275,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 #if RSDEBUG
 		// output initialised Individuals
 		if (sim.outInds)
-			pComm->outInds(rep, -1, -1, -1);
+			pComm->outIndividuals(rep, -1, -1);
 #endif
 #if RS_RCPP
 		// open a new movement paths file for each replicate
@@ -545,7 +545,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 
 				// output Individuals
 				if (sim.outInds && yr >= sim.outStartInd && yr % sim.outIntInd == 0)
-					pComm->outInds(rep, yr, gen, -1);
+					pComm->outIndividuals(rep, yr, gen);
 				// output Genetics
 				if (sim.outGenetics && yr >= sim.outStartGenetic && yr % sim.outIntGenetic == 0)
 					pComm->outGenetics(rep, yr, gen, -1);
@@ -585,7 +585,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 			if (dem.stageStruct) {
 				pComm->ageIncrement(); // increment age of all individuals
 				if (sim.outInds && yr >= sim.outStartInd && yr % sim.outIntInd == 0)
-					pComm->outInds(rep, yr, -1, -1); // list any individuals dying having reached maximum age
+					pComm->outIndividuals(rep, yr, -1); // list any individuals dying having reached maximum age
 				pComm->survival(1, 0, 1);						// delete any such individuals
 #if RSDEBUG
 				DEBUGLOG << "RunModel(): yr=" << yr << " completed Age_increment and final survival" << endl;
@@ -679,7 +679,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 			pLandscape->resetConnectMatrix(); // set connectivity matrix to zeroes
 
 		if (sim.outInds) // close Individuals output file
-			pComm->outInds(rep, 0, 0, -999);
+			pComm->outIndsFinishReplicate();
 		if (sim.outGenetics) // close Genetics output file
 			pComm->outGenetics(rep, 0, 0, -999);
 
@@ -715,7 +715,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 		pComm->outRangeHeaders(pSpecies, -999); // close Range file
 	}
 	if (sim.outPop) {
-		pComm->outPopHeaders(pSpecies, -999); // close Population file
+		pComm->outPopFinishLandscape(); // close Population file
 	}
 	if (sim.outTraitsCells)
 		pComm->outTraitsHeaders(pSpecies, -999); // close Traits file
@@ -723,7 +723,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 		pComm->outTraitsRowsHeaders(pSpecies, -999); // close Traits rows file
 	// close Individuals & Genetics output files if open
 	// they can still be open if the simulation was stopped by the user
-	if (sim.outInds) pComm->outInds(0, 0, 0, -999);
+	if (sim.outInds) pComm->outIndsFinishReplicate();
 	if (sim.outGenetics) pComm->outGenetics(0, 0, 0, -999);
 
 	delete pComm; 

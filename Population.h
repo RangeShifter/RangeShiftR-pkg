@@ -190,8 +190,9 @@ public:
 	);
 	void survival1(void); // Apply survival changes to the population
 	void ageIncrement(void);
-	bool outPopHeaders( // Open population file and write header record
-		int,	// Landscape number (-999 to close the file)
+	bool outPopFinishLandscape(); // Close population file
+	bool outPopStartLandscape( // Open population file and write header record
+		int,	// Landscape number
 		bool	// TRUE for a patch-based model, FALSE for a cell-based model
 	);
 	void outPopulation( // Write record to population file
@@ -204,9 +205,10 @@ public:
 		bool		// TRUE if there is a gradient in carrying capacity
 	);
 
-	void outIndsHeaders( // Open individuals file and write header record
+	void outIndsFinishReplicate(); // Close individuals file
+	void outIndsStartReplicate( // Open individuals file and write header record
 		int,	// replicate
-		int,	// Landscape number (-999 to close the file)
+		int,	// Landscape number
 		bool	// TRUE for a patch-based model, FALSE for a cell-based model
 	);
 	void outIndividual( // Write records to individuals file
