@@ -500,13 +500,12 @@ indStats Individual::getStats(void) {
 	return s;
 }
 
-Cell* Individual::getLocn(const short option) {
-	if (option == 0) { // return previous location
-		return pPrevCell;
-	}
-	else { // return current location
-		return pCurrCell;
-	}
+Cell* Individual::getPrevCell() {
+	return pPrevCell;
+}
+
+Cell* Individual::getCurrCell() {
+	return pCurrCell;
 }
 
 Patch* Individual::getNatalPatch(void) { return pNatalPatch; }

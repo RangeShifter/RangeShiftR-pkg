@@ -406,7 +406,7 @@ void SubCommunity::completeDispersal(Landscape* pLandscape, bool connect)
 				pPop->recruit(settler.pInd);
 				if (connect) { // increment connectivity totals
 					int newpatch = pNewPatch->getSeqNum();
-					pPrevCell = settler.pInd->getLocn(0); // previous cell
+					pPrevCell = settler.pInd->getPrevCell();
 					pPrevPatch = pPrevCell->getPatch();
 					if (pPrevPatch != nullptr) {
 						int prevpatch = pPrevPatch->getSeqNum();

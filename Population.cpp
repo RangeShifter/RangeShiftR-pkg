@@ -793,7 +793,7 @@ disperser Population::extractSettler(int ix) {
 
 	indStats ind = inds[ix]->getStats();
 
-	pCell = inds[ix]->getLocn(1);
+	pCell = inds[ix]->getCurrCell();
 	d.pInd = inds[ix];  d.pCell = pCell; d.yes = false;
 	if (ind.status == 4 || ind.status == 5) { // settled
 		d.yes = true;
@@ -875,7 +875,7 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 			{ // sexual species - record as potential settler in new patch
 				if (inds[i]->getStatus() == 2)
 				{ // disperser has found a patch
-					pCell = inds[i]->getLocn(1);
+					pCell = inds[i]->getCurrCell();
 					pPatch = pCell->getPatch();
 					if (pPatch != nullptr) { // not no-data area
 						pPatch->incrPossSettler(pSpecies, inds[i]->getSex());
@@ -900,7 +900,7 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 		}
 		if (ind.status == 2)
 		{ // awaiting settlement
-			pCell = inds[i]->getLocn(1);
+			pCell = inds[i]->getCurrCell();
 			if (pCell == 0) {
 				// this condition can occur in a patch-based model at the time of a dynamic landscape
 				// change when there is a range restriction in place, since a patch can straddle the
@@ -1034,7 +1034,7 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 			// for kernel-based transfer only ...
 			// determine whether recruitment to a neighbouring cell is possible
 
-			pCell = inds[i]->getLocn(1);
+			pCell = inds[i]->getCurrCell();
 			newloc = pCell->getLocn();
 			vector <Cell*> nbrlist;
 			for (int dx = -1; dx < 2; dx++) {
@@ -1543,11 +1543,11 @@ void Population::outIndividual(Landscape* pLandscape, int rep, int yr, int gen,
 			else { // non-structured population
 				outInds << "\t" << ind.status;
 			}
-			pCell = inds[i]->getLocn(1);
+			pCell = inds[i]->getCurrCell();
 			locn loc;
 			if (pCell == 0) loc.x = loc.y = -1; // beyond boundary or in no-data cell
 			else loc = pCell->getLocn();
-			pCell = inds[i]->getLocn(0);
+			pCell = inds[i]->getPrevCell();
 			locn natalloc = pCell->getLocn();
 			if (ppLand.patchModel) {
 				outInds << "\t" << inds[i]->getNatalPatch()->getPatchNum();

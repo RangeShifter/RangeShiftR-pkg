@@ -203,9 +203,8 @@ public:
 	int getSex(void);
 	int getStatus(void);
 	indStats getStats(void);
-	Cell* getLocn( // Return location (as pointer to Cell)
-		const short	// option: 0 = get natal locn, 1 = get current locn
-	); //
+	Cell* getPrevCell(); // Return previous location (as pointer to Cell)
+	Cell* getCurrCell(); // Return current location (as pointer to Cell)
 	Patch* getNatalPatch(void);
 	void setYearSteps(int);
 	pathSteps getSteps(void);
