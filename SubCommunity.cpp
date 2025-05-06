@@ -425,20 +425,20 @@ void SubCommunity::completeDispersal(Landscape* pLandscape, bool connect)
 
 //---------------------------------------------------------------------------
 
-void SubCommunity::survival(short part, short option0, short option1)
+void SubCommunity::survival0(short option0, short option1)
 {
 	int npops = (int)popns.size();
-	if (npops < 1) return;
-	if (part == 0) {
-		float localK = pPatch->getK();
-		for (int i = 0; i < npops; i++) { // all populations
-			popns[i]->survival0(localK, option0, option1);
-		}
+	float localK = pPatch->getK();
+	for (int i = 0; i < npops; i++) { // all populations
+		popns[i]->survival0(localK, option0, option1);
 	}
-	else {
-		for (int i = 0; i < npops; i++) { // all populations
-			popns[i]->survival1();
-		}
+}
+
+void SubCommunity::survival1()
+{
+	int npops = (int)popns.size();
+	for (int i = 0; i < npops; i++) { // all populations
+		popns[i]->survival1();
 	}
 }
 

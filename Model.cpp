@@ -496,7 +496,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 
 				if (dem.stageStruct) {
 					if (sstruct.survival == 0) { // at reproduction
-						pComm->survival(0, 2, 1); // survival of all non-juvenile stages
+						pComm->survival0(2, 1); // survival of all non-juvenile stages
 					}
 				}
 
@@ -526,17 +526,17 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				// survival part 0
 				if (dem.stageStruct) {
 					if (sstruct.survival == 0) { // at reproduction
-						pComm->survival(0, 0, 1); // survival of juveniles only
+						pComm->survival0(0, 1); // survival of juveniles only
 					}
 					if (sstruct.survival == 1) { // between reproduction events
-						pComm->survival(0, 1, 1); // survival of all stages
+						pComm->survival0(1, 1); // survival of all stages
 					}
 					if (sstruct.survival == 2) { // annually
-						pComm->survival(0, 1, 0); // development only of all stages
+						pComm->survival0(1, 0); // development only of all stages
 					}
 				}
 				else { // non-structured population
-					pComm->survival(0, 1, 1);
+					pComm->survival0(1, 1);
 				}
 #if RSDEBUG
 				DEBUGLOG << "RunModel(): yr=" << yr << " gen=" << gen << " completed survival part 0" << endl;
@@ -552,10 +552,10 @@ int RunModel(Landscape* pLandscape, int seqsim)
 
 				// survival part 1
 				if (dem.stageStruct) {
-					pComm->survival(1, 0, 1);
+					pComm->survival1();
 				}
 				else { // non-structured population
-					pComm->survival(1, 0, 1);
+					pComm->survival1();
 				}
 #if RSDEBUG
 				DEBUGLOG << "RunModel(): yr=" << yr << " gen=" << gen << " completed survival part 1" << endl;
@@ -575,8 +575,8 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				pLandscape->outConnect(rep, yr);
 
 			if (dem.stageStruct && sstruct.survival == 2) {  // annual survival - all stages
-				pComm->survival(0, 1, 2);
-				pComm->survival(1, 0, 1);
+				pComm->survival0(1, 2);
+				pComm->survival1();
 #if RSDEBUG
 				DEBUGLOG << "RunModel(): yr=" << yr << " completed annual survival" << endl;
 #endif
@@ -586,7 +586,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				pComm->ageIncrement(); // increment age of all individuals
 				if (sim.outInds && yr >= sim.outStartInd && yr % sim.outIntInd == 0)
 					pComm->outIndividuals(rep, yr, -1); // list any individuals dying having reached maximum age
-				pComm->survival(1, 0, 1);						// delete any such individuals
+				pComm->survival1();						// delete any such individuals
 #if RSDEBUG
 				DEBUGLOG << "RunModel(): yr=" << yr << " completed Age_increment and final survival" << endl;
 #endif

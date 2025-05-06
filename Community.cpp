@@ -492,12 +492,21 @@ void Community::dispersal(short landIx)
 
 }
 
-void Community::survival(short part, short option0, short option1)
+void Community::survival0(short option0, short option1)
 {
 	int nsubcomms = (int)subComms.size();
 	#pragma omp parallel for schedule(static,128)
 	for (int i = 0; i < nsubcomms; i++) { // all communities (including in matrix)
-		subComms[i]->survival(part, option0, option1);
+		subComms[i]->survival0(option0, option1);
+	}
+}
+
+void Community::survival1()
+{
+	int nsubcomms = (int)subComms.size();
+	#pragma omp parallel for schedule(static,128)
+	for (int i = 0; i < nsubcomms; i++) { // all communities (including in matrix)
+		subComms[i]->survival1();
 	}
 }
 
