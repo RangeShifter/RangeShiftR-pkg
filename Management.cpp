@@ -99,6 +99,9 @@ void Management::translocate(int yr
 #if RS_RCPP
     Rcpp::Rcout << "Start translocation events in year " << yr << endl;
 #endif
+#ifndef NDEBUG
+    cout << "Start translocation events in year " << yr << endl;
+#endif
     landParams ppLand = pLandscape->getLandParams();
     auto it = nb.find(yr); // the number of translocation events is determined by the number of elements of the maps at year yr
     auto nb_it = nb.find(yr);
@@ -113,6 +116,9 @@ void Management::translocate(int yr
 #if RS_RCPP
         Rcpp::Rcout << "Translocation event " << e << " in year " << yr << endl;
 #endif
+#ifndef NDEBUG
+    cout << "Translocation event " << e << " in year " << yr << endl;
+#endif
         // find the source patch
         Patch* s_patch;
         Population* s_pPop;
@@ -121,6 +127,10 @@ void Management::translocate(int yr
 #if RS_RCPP
                 Rcpp::Rcout << "Source patch exist." << endl;
 #endif
+#ifndef NDEBUG
+    cout << "Source patch exist." << endl;
+#endif
+
                 s_patch = pLandscape->findPatch(source_it->second[e].x);
                 if (s_patch != 0) {
                     // test if population in patch is not zero
@@ -130,11 +140,17 @@ void Management::translocate(int yr
 #if RS_RCPP
                         Rcpp::Rcout << "Population does not exist in source patch or is 0! skipping translocation event." << endl;
 #endif
+#ifndef NDEBUG
+    cout << "Population does not exist in source patch or is 0! skipping translocation event." << endl;
+#endif
                         return;
                     }
                 } else {
 #if RS_RCPP
                     Rcpp::Rcout << "Source patch was found but NULL! skipping translocation event." << endl; // not sure if this ever happens
+#endif
+#ifndef NDEBUG
+    cout << "Source patch was found but NULL! skipping translocation event." << endl; // not sure if this ever happens
 #endif
                     return;
                 }
@@ -142,6 +158,9 @@ void Management::translocate(int yr
             } else{
 #if RS_RCPP
                 Rcpp::Rcout << "Source patch was not found in landscape! skipping translocation event." << endl;
+#endif
+#ifndef NDEBUG
+    cout << "Source patch was not found in landscape! skipping translocation event." << endl;
 #endif
                 return;
             }
@@ -151,6 +170,9 @@ void Management::translocate(int yr
            if (pCell != 0) {
 #if RS_RCPP
                Rcpp::Rcout << "Source cell was found" << endl;
+#endif
+#ifndef NDEBUG
+    cout << "Source cell was found" << endl;
 #endif
                intptr s_ppatch = pCell->getPatch();
                if (s_ppatch != 0) {
@@ -162,17 +184,27 @@ void Management::translocate(int yr
 #if RS_RCPP
                        Rcpp::Rcout << "Population does not exist in source cell or is 0! skipping translocation event." << endl;
 #endif
+#ifndef NDEBUG
+    cout << "Population does not exist in source cell or is 0! skipping translocation event." << endl;
+#endif
                        return;
                    }
                } else {
 #if RS_RCPP
                    Rcpp::Rcout << "Source cell does not exist! skipping translocation event." << endl;
 #endif
+#ifndef NDEBUG
+    cout << "Source cell does not exist! skipping translocation event." << endl;
+#endif
+
                    return;
                }
            } else {
 #if RS_RCPP
                Rcpp::Rcout << "Cell does not belong to landscape! skipping translocation event." << endl;
+#endif
+#ifndef NDEBUG
+    cout << "Cell does not belong to landscape! skipping translocation event." << endl;
 #endif
                return;
            }
@@ -185,10 +217,16 @@ void Management::translocate(int yr
 #if RS_RCPP
                 Rcpp::Rcout << "Target patch exist." << endl;
 #endif
+#ifndef NDEBUG
+    cout << "Target patch exist." << endl;
+#endif
                 t_patch = pLandscape->findPatch(target_it->second[e].x);
            } else{
 #if RS_RCPP
                Rcpp::Rcout << "Target patch was not found in landscape! skipping translocation event." << endl;
+#endif
+#ifndef NDEBUG
+    cout << "Target patch was not found in landscape! skipping translocation event." << endl;
 #endif
                return;
            }
@@ -199,6 +237,9 @@ void Management::translocate(int yr
 #if RS_RCPP
                Rcpp::Rcout << "Target cell was found" << endl;
 #endif
+#ifndef NDEBUG
+    cout << "Target cell was found" << endl;
+#endif
                intptr t_ppatch = pCell->getPatch();
                if (t_ppatch != 0) {
                    t_patch = (Patch*)t_ppatch;
@@ -206,11 +247,17 @@ void Management::translocate(int yr
 #if RS_RCPP
                    Rcpp::Rcout << "Target cell does not exist! skipping translocation event." << endl;
 #endif
+#ifndef NDEBUG
+    cout << "Target cell does not exist! skipping translocation event." << endl;
+#endif
                    return;
                }
            } else {
 #if RS_RCPP
                Rcpp::Rcout << "Target cell does not belong to landscape! skipping translocation event." << endl;
+#endif
+#ifndef NDEBUG
+    cout << "Target cell does not belong to landscape! skipping translocation event." << endl;
 #endif
                return;
            }
@@ -242,6 +289,9 @@ void Management::translocate(int yr
 #if RS_RCPP
                         Rcpp::Rcout << "Population does not exist in target patch. Creating new population." << endl;
 #endif
+#ifndef NDEBUG
+    cout << "Population does not exist in target patch. Creating new population." << endl;
+#endif
                         // create a new population in the corresponding sub-community
                         SubCommunity* pSubComm = (SubCommunity*)t_patch->getSubComm();
                         t_pPop = pSubComm->newPopn(pLandscape, pSpecies, t_patch, 0);
@@ -266,6 +316,9 @@ void Management::translocate(int yr
         }
 #if RS_RCPP
         Rcpp::Rcout << "Successfully translocated " << translocated << " out of " << nb_it->second[e] << " individuals in translocation event " << e <<"." << endl;
+#endif
+#ifndef NDEBUG
+    cout << "Successfully translocated " << translocated << " out of " << nb_it->second[e] << " individuals in translocation event " << e <<"." << endl;
 #endif
         // remove pointers to sampled individuals
         s_pPop->clean();
