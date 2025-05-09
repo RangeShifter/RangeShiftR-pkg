@@ -168,7 +168,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 		if (rep == 0) {
 			// open output files
 			if (sim.outRange) { // open Range file
-				if (!pComm->outRangeHeaders(pSpecies, ppLand.landNum)) {
+				if (!pComm->outRangeStartLandscape(pSpecies, ppLand.landNum)) {
 					filesOK = false;
 				}
 			}
@@ -204,7 +204,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 #endif
 			// close any files which may be open
 			if (sim.outRange) {
-				pComm->outRangeHeaders(pSpecies, -999);
+				pComm->outRangeFinishLandscape();
 			}
 			if (sim.outOccup && sim.reps > 1)
 				pComm->outOccupancyHeaders(-999);
@@ -712,7 +712,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 	}
 
 	if (sim.outRange) {
-		pComm->outRangeHeaders(pSpecies, -999); // close Range file
+		pComm->outRangeFinishLandscape(); // close Range file
 	}
 	if (sim.outPop) {
 		pComm->outPopFinishLandscape(); // close Population file

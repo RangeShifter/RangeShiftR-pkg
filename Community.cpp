@@ -679,16 +679,17 @@ void Community::outGenetics(int rep, int yr, int gen, int landNr) {
 	}
 }
 
-// Open range file and write header record
-bool Community::outRangeHeaders(Species* pSpecies, int landNr)
+// Close range file
+bool Community::outRangeFinishLandscape()
 {
+	if (outrange.is_open()) outrange.close();
+	outrange.clear();
+	return true;
+}
 
-	if (landNr == -999) { // close the file
-		if (outrange.is_open()) outrange.close();
-		outrange.clear();
-		return true;
-	}
-
+// Open range file and write header record
+bool Community::outRangeStartLandscape(Species* pSpecies, int landNr)
+{
 	string name;
 	landParams ppLand = pLandscape->getLandParams();
 	envStochParams env = paramsStoch->getStoch();

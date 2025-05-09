@@ -122,9 +122,10 @@ public:
 		int		// no. of rows (as above)
 	);
 
-	bool outRangeHeaders( // Open range file and write header record
+	bool outRangeFinishLandscape(); // Close range file
+	bool outRangeStartLandscape( // Open range file and write header record
 		Species*,	// pointer to Species
-		int				// Landscape number (-999 to close the file)
+		int				// Landscape number
 	);
 	void outRange( // Write record to range file
 		Species*, // pointer to Species
