@@ -183,11 +183,11 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				}
 			}
 			if (sim.outTraitsCells)
-				if (!pComm->outTraitsHeaders(pSpecies, ppLand.landNum)) {
+				if (!pComm->outTraitsStartLandscape(pSpecies, ppLand.landNum)) {
 					filesOK = false;
 				}
 			if (sim.outTraitsRows)
-				if (!pComm->outTraitsRowsHeaders(pSpecies, ppLand.landNum)) {
+				if (!pComm->outTraitsRowsStartLandscape(pSpecies, ppLand.landNum)) {
 					filesOK = false;
 				}
 			if (sim.outConnect && ppLand.patchModel) // open Connectivity file
@@ -212,9 +212,9 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				pComm->outPopFinishLandscape();
 			}
 			if (sim.outTraitsCells)
-				pComm->outTraitsHeaders(pSpecies, -999);
+				pComm->outTraitsFinishLandscape();
 			if (sim.outTraitsRows)
-				pComm->outTraitsRowsHeaders(pSpecies, -999);
+				pComm->outTraitsRowsFinishLandscape();
 			if (sim.outConnect && ppLand.patchModel)
 				pLandscape->outConnectHeaders(-999);
 #if RS_RCPP && !R_CMD
@@ -718,9 +718,9 @@ int RunModel(Landscape* pLandscape, int seqsim)
 		pComm->outPopFinishLandscape(); // close Population file
 	}
 	if (sim.outTraitsCells)
-		pComm->outTraitsHeaders(pSpecies, -999); // close Traits file
+		pComm->outTraitsFinishLandscape(); // close Traits file
 	if (sim.outTraitsRows)
-		pComm->outTraitsRowsHeaders(pSpecies, -999); // close Traits rows file
+		pComm->outTraitsRowsFinishLandscape(); // close Traits rows file
 	// close Individuals & Genetics output files if open
 	// they can still be open if the simulation was stopped by the user
 	if (sim.outInds) pComm->outIndsFinishReplicate();

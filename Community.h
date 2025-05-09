@@ -168,13 +168,15 @@ public:
 	void outOccSuit(
 		bool	// TRUE if occupancy graph is to be viewed on screen
 	);
-	bool outTraitsHeaders( // Open traits file and write header record
+	bool outTraitsFinishLandscape(); // Close traits file
+	bool outTraitsStartLandscape( // Open traits file and write header record
 		Species*,	// pointer to Species
-		int				// Landscape number (-999 to close the file)
+		int				// Landscape number
 	);
-	bool outTraitsRowsHeaders( // Open trait rows file and write header record
+	bool outTraitsRowsFinishLandscape(); // Close trait rows file
+	bool outTraitsRowsStartLandscape( // Open trait rows file and write header record
 		Species*, // pointer to Species
-		int       // Landscape number (-999 to close the file)
+		int       // Landscape number
 	);
 	void outTraits( // Write records to traits file
 		Species*,		// pointer to Species

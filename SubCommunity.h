@@ -192,10 +192,11 @@ public:
 		int					// Landscape number (>= 0 to open the file, -999 to close the file
 								//									 -1 to write data records)
 	);
-	bool outTraitsHeaders( // Open traits file and write header record
+	bool outTraitsFinishLandscape(); // Close traits file
+	bool outTraitsStartLandscape( // Open traits file and write header record
 		Landscape*,	// pointer to Landscape
 		Species*,		// pointer to Species
-		int					// Landscape number (-999 to close the file)
+		int					// Landscape number
 	);
 	traitsums outTraits( // Write records to traits file and return aggregated sums
 		Landscape*, 	// pointer to Landscape

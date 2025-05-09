@@ -629,16 +629,18 @@ int SubCommunity::stagePop(int stage) {
 	return popsize;
 }
 
+// Close traits file
+bool SubCommunity::outTraitsFinishLandscape()
+{
+	if (outtraits.is_open()) outtraits.close();
+	outtraits.clear();
+	return true;
+}
+
 // Open traits file and write header record
-bool SubCommunity::outTraitsHeaders(Landscape* pLandscape, Species* pSpecies, int landNr)
+bool SubCommunity::outTraitsStartLandscape(Landscape* pLandscape, Species* pSpecies, int landNr)
 {
 	landParams land = pLandscape->getLandParams();
-	if (landNr == -999) { // close file
-		if (outtraits.is_open()) outtraits.close();
-		outtraits.clear();
-		return true;
-	}
-
 	string name;
 	emigRules emig = pSpecies->getEmig();
 	trfrRules trfr = pSpecies->getTrfr();

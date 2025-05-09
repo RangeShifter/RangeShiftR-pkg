@@ -1208,9 +1208,14 @@ void Community::outOccSuit(bool view) {
 
 }
 
+// Close traits file
+bool Community::outTraitsFinishLandscape() {
+	return subComms[0]->outTraitsFinishLandscape();
+}
+
 // Open traits file and write header record
-bool Community::outTraitsHeaders(Species* pSpecies, int landNr) {
-	return subComms[0]->outTraitsHeaders(pLandscape, pSpecies, landNr);
+bool Community::outTraitsStartLandscape(Species* pSpecies, int landNr) {
+	return subComms[0]->outTraitsStartLandscape(pLandscape, pSpecies, landNr);
 }
 
 // Write records to traits file
@@ -1435,15 +1440,15 @@ void Community::writeTraitsRows(Species* pSpecies, int rep, int yr, int gen, int
 	outtraitsrows << endl;
 }
 
+// Close trait rows file
+bool Community::outTraitsRowsFinishLandscape() {
+	if (outtraitsrows.is_open()) outtraitsrows.close();
+	outtraitsrows.clear();
+	return true;
+}
+
 // Open trait rows file and write header record
-bool Community::outTraitsRowsHeaders(Species* pSpecies, int landNr) {
-
-	if (landNr == -999) { // close file
-		if (outtraitsrows.is_open()) outtraitsrows.close();
-		outtraitsrows.clear();
-		return true;
-	}
-
+bool Community::outTraitsRowsStartLandscape(Species* pSpecies, int landNr) {
 	string name;
 	emigRules emig = pSpecies->getEmig();
 	trfrRules trfr = pSpecies->getTrfr();
