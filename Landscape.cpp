@@ -2438,15 +2438,17 @@ void Landscape::deleteConnectMatrix(void)
 	}
 }
 
-// Write connectivity file headers
-bool Landscape::outConnectHeaders(int option)
+// Close connectivity file
+bool Landscape::outConnectFinishLandscape()
 {
-	if (option == -999) { // close the file
-		if (outConnMat.is_open()) outConnMat.close();
-		outConnMat.clear();
-		return true;
-	}
+	if (outConnMat.is_open()) outConnMat.close();
+	outConnMat.clear();
+	return true;
+}
 
+// Open connectivity file and write header record
+bool Landscape::outConnectStartLandscape()
+{
 	simParams sim = paramsSim->getSim();
 
 	string name = paramsSim->getDir(2);
@@ -2465,39 +2467,39 @@ bool Landscape::outConnectHeaders(int option)
 }
 
 #if RS_RCPP
-// Write movement paths file headers
-void Landscape::outPathsHeaders(int rep, int option)
+// Close movement paths file
+void Landscape::outPathsFinishReplicate()
 {
-	if (option == -999) { // close the file
-		if (outMovePaths.is_open()) outMovePaths.close();
-		outMovePaths.clear();
+	if (outMovePaths.is_open()) outMovePaths.close();
+	outMovePaths.clear();
+}
+
+// Open movement paths file and write header record
+void Landscape::outPathsStartReplicate(int rep)
+{
+	simParams sim = paramsSim->getSim();
+	string name = paramsSim->getDir(2);
+	if (sim.batchMode) {
+		name += "Batch" + to_string(sim.batchNum)
+			+ "_Sim" + to_string(sim.simulation)
+			+ "_Land" + to_string(landNum)
+			+ "_Rep" + to_string(rep);
 	}
-	if (option == 0) { // open the file and write header
+	else {
+		name += "Sim" + to_string(sim.simulation)
+			+ "_Rep" + to_string(rep);
+	}
+	name += "_MovePaths.txt";
 
-		simParams sim = paramsSim->getSim();
-		string name = paramsSim->getDir(2);
-		if (sim.batchMode) {
-			name += "Batch" + to_string(sim.batchNum)
-				+ "_Sim" + to_string(sim.simulation)
-				+ "_Land" + to_string(landNum)
-				+ "_Rep" + to_string(rep);
-		}
-		else {
-			name += "Sim" + to_string(sim.simulation)
-				+ "_Rep" + to_string(rep);
-		}
-		name += "_MovePaths.txt";
-
-		outMovePaths.open(name.c_str());
-		if (outMovePaths.is_open()) {
-			outMovePaths << "Year\tIndID\tStep\tx\ty\tStatus" << endl;
-		}
-		else {
+	outMovePaths.open(name.c_str());
+	if (outMovePaths.is_open()) {
+		outMovePaths << "Year\tIndID\tStep\tx\ty\tStatus" << endl;
+	}
+	else {
 #if RSDEBUG
-			DEBUGLOG << "RunModel(): UNABLE TO OPEN MOVEMENT PATHS FILE" << endl;
+		DEBUGLOG << "RunModel(): UNABLE TO OPEN MOVEMENT PATHS FILE" << endl;
 #endif
-			outMovePaths.clear();
-		}
+		outMovePaths.clear();
 	}
 }
 #endif

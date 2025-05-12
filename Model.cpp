@@ -191,7 +191,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 					filesOK = false;
 				}
 			if (sim.outConnect && ppLand.patchModel) // open Connectivity file
-				if (!pLandscape->outConnectHeaders(0)) {
+				if (!pLandscape->outConnectStartLandscape()) {
 					filesOK = false;
 				}
 		}
@@ -216,7 +216,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 			if (sim.outTraitsRows)
 				pComm->outTraitsRowsFinishLandscape();
 			if (sim.outConnect && ppLand.patchModel)
-				pLandscape->outConnectHeaders(-999);
+				pLandscape->outConnectFinishLandscape();
 #if RS_RCPP && !R_CMD
 			return Rcpp::List::create(Rcpp::Named("Errors") = 666);
 #else
@@ -280,7 +280,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 #if RS_RCPP
 		// open a new movement paths file for each replicate
 		if (sim.outPaths)
-			pLandscape->outPathsHeaders(rep, 0);
+			pLandscape->outPathsStartReplicate(rep);
 #endif
 
 		// years loop
@@ -690,7 +690,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 
 #if RS_RCPP
 		if (sim.outPaths)
-			pLandscape->outPathsHeaders(rep, -999);
+			pLandscape->outPathsFinishReplicate();
 #endif
 #if RSDEBUG
 		DEBUGLOG << endl << "RunModel(): finished rep=" << rep << endl;
@@ -700,7 +700,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 
 	if (sim.outConnect && ppLand.patchModel) {
 		pLandscape->deleteConnectMatrix();
-		pLandscape->outConnectHeaders(-999); // close Connectivity Matrix file
+		pLandscape->outConnectFinishLandscape(); // close Connectivity Matrix file
 	}
 
 	// Occupancy outputs
