@@ -173,7 +173,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				}
 			}
 			if (sim.outOccup && sim.reps > 1)
-				if (!pComm->outOccupancyHeaders(0)) {
+				if (!pComm->outOccupancyStartLandscape()) {
 					filesOK = false;
 				}
 			if (sim.outPop) {
@@ -207,7 +207,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				pComm->outRangeFinishLandscape();
 			}
 			if (sim.outOccup && sim.reps > 1)
-				pComm->outOccupancyHeaders(-999);
+				pComm->outOccupancyFinishLandscape();
 			if (sim.outPop) {
 				pComm->outPopFinishLandscape();
 			}
@@ -708,7 +708,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 		pComm->outOccupancy();
 		pComm->outOccSuit(v.viewGraph);
 		pComm->deleteOccupancy((sim.years / sim.outIntOcc) + 1);
-		pComm->outOccupancyHeaders(-999);
+		pComm->outOccupancyFinishLandscape();
 	}
 
 	if (sim.outRange) {

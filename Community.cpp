@@ -1118,16 +1118,18 @@ void Community::outRange(Species* pSpecies, int rep, int yr, int gen)
 	outrange << endl;
 }
 
-// Open occupancy file, write header record and set up occupancy array
-bool Community::outOccupancyHeaders(int option)
+// Close occupancy file
+bool Community::outOccupancyFinishLandscape()
 {
-	if (option == -999) { // close the files
-		if (outsuit.is_open()) outsuit.close();
-		if (outoccup.is_open()) outoccup.close();
-		outsuit.clear(); outoccup.clear();
-		return true;
-	}
+	if (outsuit.is_open()) outsuit.close();
+	if (outoccup.is_open()) outoccup.close();
+	outsuit.clear(); outoccup.clear();
+	return true;
+}
 
+// Open occupancy file, write header record and set up occupancy array
+bool Community::outOccupancyStartLandscape()
+{
 	string name, nameI;
 	simParams sim = paramsSim->getSim();
 	landParams ppLand = pLandscape->getLandParams();

@@ -162,10 +162,10 @@ public:
 		int,	// replicate
 		int	// year
 	);
+	// Close occupancy file
+	bool outOccupancyFinishLandscape();
 	// Open occupancy file, write header record and set up occupancy array
-	bool outOccupancyHeaders(
-		int		// option: -999 to close the file
-	);
+	bool outOccupancyStartLandscape();
 	void outOccupancy(void);
 	void outOccSuit(
 		bool	// TRUE if occupancy graph is to be viewed on screen
