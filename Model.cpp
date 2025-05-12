@@ -266,10 +266,10 @@ int RunModel(Landscape* pLandscape, int seqsim)
 			pComm->outIndsStartReplicate(rep, ppLand.landNum);
 		// open a new genetics file for each replicate
 		if (sim.outGenetics) {
-			pComm->outGenetics(rep, 0, 0, ppLand.landNum);
+			pComm->outGenStartReplicate(rep, ppLand.landNum);
 			if (!dem.stageStruct && sim.outStartGenetic == 0) {
 				// write genetic data for initialised individuals of non-strucutred population
-				pComm->outGenetics(rep, 0, 0, -1);
+				pComm->outGenetics(rep, 0);
 			}
 		}
 #if RSDEBUG
@@ -548,7 +548,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 					pComm->outIndividuals(rep, yr, gen);
 				// output Genetics
 				if (sim.outGenetics && yr >= sim.outStartGenetic && yr % sim.outIntGenetic == 0)
-					pComm->outGenetics(rep, yr, gen, -1);
+					pComm->outGenetics(rep, yr);
 
 				// survival part 1
 				if (dem.stageStruct) {
@@ -681,7 +681,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 		if (sim.outInds) // close Individuals output file
 			pComm->outIndsFinishReplicate();
 		if (sim.outGenetics) // close Genetics output file
-			pComm->outGenetics(rep, 0, 0, -999);
+			pComm->outGenFinishReplicate();
 
 		if (sim.saveVisits) {
 			pLandscape->outVisits(rep, ppLand.landNum);
@@ -724,7 +724,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 	// close Individuals & Genetics output files if open
 	// they can still be open if the simulation was stopped by the user
 	if (sim.outInds) pComm->outIndsFinishReplicate();
-	if (sim.outGenetics) pComm->outGenetics(0, 0, 0, -999);
+	if (sim.outGenetics) pComm->outGenFinishReplicate();
 
 	delete pComm; 
 	pComm = 0;

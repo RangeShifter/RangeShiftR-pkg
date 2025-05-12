@@ -185,12 +185,14 @@ public:
 		int,				// year
 		int				// generation
 	);
+	void outGenFinishReplicate(); // Close genetics file
+	void outGenStartReplicate( // Open genetics file and write header record
+		int,				// replicate
+		int					// Landscape number
+	);
 	void outGenetics( // Write records to genetics file
 		int,				// replicate
-		int,				// year
-		int,				// generation
-		int					// Landscape number (>= 0 to open the file, -999 to close the file
-								//									 -1 to write data records)
+		int				// year
 	);
 	bool outTraitsFinishLandscape(); // Close traits file
 	bool outTraitsStartLandscape( // Open traits file and write header record

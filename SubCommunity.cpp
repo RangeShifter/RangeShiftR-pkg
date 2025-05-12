@@ -601,21 +601,25 @@ void SubCommunity::outIndividuals(Landscape* pLandscape, int rep, int yr, int ge
 	}
 }
 
-// Write records to individuals file
-void SubCommunity::outGenetics(int rep, int yr, int gen, int landNr)
+// Close genetics file
+void SubCommunity::outGenFinishReplicate()
 {
-	if (landNr >= 0) { // open the file
-		popns[0]->outGenetics(rep, yr, landNr);
-		return;
-	}
-	if (landNr == -999) { // close the file
-		popns[0]->outGenetics(rep, yr, landNr);
-		return;
-	}
+	popns[0]->outGenFinishReplicate();
+}
+
+// Open genetics file and write header record
+void SubCommunity::outGenStartReplicate(int rep, int landNr)
+{
+	popns[0]->outGenStartReplicate(rep, landNr);
+}
+
+// Write records to genetics file
+void SubCommunity::outGenetics(int rep, int yr)
+{
 	// generate output for each population within the sub-community (patch)
 	int npops = (int)popns.size();
 	for (int i = 0; i < npops; i++) { // all populations
-		popns[i]->outGenetics(rep, yr, landNr);
+		popns[i]->outGenetics(rep, yr);
 	}
 }
 

@@ -218,10 +218,14 @@ public:
 		int,				// generation
 		int					// Patch number
 	);
+	void outGenFinishReplicate(); // Close genetics file
+	void outGenStartReplicate( // Open genetics file and write header record
+		const int,		// replicate
+		const int	 		// landscape number
+	);
 	void outGenetics( // Write records to genetics file
 		const int,		// replicate
-		const int,		// year
-		const int	 		// landscape number
+		const int		// year
 	);
 	void clean(void); // Remove zero pointers to dead or dispersed individuals
 

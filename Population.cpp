@@ -1629,34 +1629,37 @@ void Population::outIndividual(Landscape* pLandscape, int rep, int yr, int gen,
 //---------------------------------------------------------------------------
 
 //---------------------------------------------------------------------------
-// Write records to genetics file
-void Population::outGenetics(const int rep, const int year, const int landNr)
+// Close genetics file
+void Population::outGenFinishReplicate()
+{
+	Genome* pGenome = new Genome();
+	pGenome->outGenFinishReplicate();
+	delete pGenome;
+}
+
+// Open genetics file and write header record
+void Population::outGenStartReplicate(const int rep, const int landNr)
 {
 
 	simParams sim = paramsSim->getSim();
-
-	if (landNr >= 0) { // open file
-		Genome* pGenome;
-		genomeData gen = pSpecies->getGenomeData();
-		if (gen.trait1Chromosome) {
-			pGenome = new Genome(pSpecies->getNChromosomes(), pSpecies->getNLoci(0),
-				pSpecies->isDiploid());
-		}
-		else {
-			pGenome = new Genome(pSpecies);
-		}
-		pGenome->outGenHeaders(rep, landNr, sim.outGenXtab);
-		delete pGenome;
-		return;
+	Genome* pGenome;
+	genomeData gen = pSpecies->getGenomeData();
+	if (gen.trait1Chromosome) {
+		pGenome = new Genome(pSpecies->getNChromosomes(), pSpecies->getNLoci(0),
+			pSpecies->isDiploid());
 	}
-
-	if (landNr == -999) { // close file
-		Genome* pGenome = new Genome();
-		pGenome->outGenHeaders(rep, landNr, sim.outGenXtab);
-		delete pGenome;
-		return;
+	else {
+		pGenome = new Genome(pSpecies);
 	}
+	pGenome->outGenStartReplicate(rep, landNr, sim.outGenXtab);
+	delete pGenome;
+	return;
+}
 
+// Write records to genetics file
+void Population::outGenetics(const int rep, const int year)
+{
+	simParams sim = paramsSim->getSim();
 	short spNum = pSpecies->getSpNum();
 	short nstages = 1;
 	if (pSpecies->stageStructured()) {
@@ -1670,7 +1673,7 @@ void Population::outGenetics(const int rep, const int year, const int landNr)
 		if (year == 0 || sim.outGenType == 1
 			|| (sim.outGenType == 0 && ind.stage == 0)
 			|| (sim.outGenType == 2 && ind.stage == nstages - 1)) {
-			inds[i]->outGenetics(rep, year, spNum, landNr, sim.outGenXtab);
+			inds[i]->outGenetics(rep, year, spNum, sim.outGenXtab);
 		}
 	}
 

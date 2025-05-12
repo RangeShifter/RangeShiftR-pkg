@@ -271,11 +271,16 @@ public:
 		const short,	// landscape change index
 		const bool    // absorbing boundaries?
 	);
+	void outGenFinishReplicate(); // Close genetics file
+	void outGenStartReplicate( // Open genetics file and write header record
+		const int,		 	// replicate
+		const int,		 	// landscape number
+		const bool	 		// output as cross table?
+	);
 	void outGenetics( // Write records to genetics file
 		const int,		 	// replicate
 		const int,		 	// year
 		const int,		 	// species number
-		const int,		 	// landscape number
 		const bool	 		// output as cross table?
 	);
 #if RS_RCPP
