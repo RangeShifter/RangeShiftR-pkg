@@ -126,7 +126,10 @@ setValidity("TranslocationParams", function(object) {
                     msg <- c(msg, "TransLocMat must have 8 or 10 columns: year, source location (patch ID OR 2 columns X and Y), target location (patch ID OR 2 columns X and Y), number of individuals, min age, max age, stage.")
                 }
             }
-
+            # check if unique values of first column of TransLocMat are equal to years
+            if (!all(unique(object@TransLocMat[,1]) %in% object@years)) {
+                msg <- c(msg, "You must provide define at least one translocation event for each year of translocation.")
+            }
         }
     }
 
