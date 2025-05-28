@@ -3483,8 +3483,9 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
                     if(NbOfPositionsR > 0){
                         positions = selectRandomLociPositions(NbOfPositionsR, genomeSize);
                     }
+                    else throw logic_error("NeutralTraits(): If positions are random you must provide the number of positions (>0).");
                 }
-                else throw logic_error("NeutralTraits(): If positions are random you must provide the number of positions (>0).");
+
         }
         else {
             Rcpp::NumericVector PositionsR = Rcpp::as<Rcpp::NumericVector>(NeutralTraitsParamsR.slot("Positions")); // Positions are provided as numeric vector
@@ -3499,6 +3500,35 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
 
         // Expression type
         string ExpressionTypeR = "#";
+
+        // initial Positions
+        set<int> initialPositions;
+        int NbOfInitialPositionsR = -9;
+        if(Rf_isString(NeutralTraitsParamsR.slot("initialPositions"))){
+            string initialPositionsR = Rcpp::as<string>(NeutralTraitsParamsR.slot("initialPositions"));
+            if(initialPositionsR == "random"){
+                NbOfInitialPositionsR = Rcpp::as<int>(NeutralTraitsParamsR.slot("NbOfInitialPositions"));
+                if(NbOfPositionsR > 0){
+                    initialPositions = selectRandomLociPositions(NbOfInitialPositionsR, genomeSize);
+                }
+                else throw logic_error("NeutralTraits(): If initial positions are random you must provide the number of initial positions (>0).");
+            }
+
+            if(initialPositionsR == "all"){
+                initialPositions = positions;
+            }
+        }
+        else {
+            Rcpp::NumericVector initialPositionsR = Rcpp::as<Rcpp::NumericVector>(NeutralTraitsParamsR.slot("initialPositions")); // Positions are provided as numeric vector
+            // use a for loop to insert the values at initialPositionsR into the set positions
+            for (int i = 0; i < initialPositionsR.size(); i++) {
+                if (static_cast<int>(initialPositionsR[i]) <= genomeSize) { // not sure if this is needed; initial positions should be checked beforehand and be within positons range
+                    initialPositions.insert(static_cast<int>(initialPositionsR[i]));
+                }
+                else throw logic_error("NeutralTraits(): initial loci positions must be smaller than genome size");
+            }
+        }
+
 
         // Initial distribution parameters
         string initDistR = Rcpp::as<string>(NeutralTraitsParamsR.slot("InitialDistribution"));
@@ -3529,6 +3559,7 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
         setUpSpeciesTrait(TraitTypeR,
                           positions,
                           ExpressionTypeR,
+                          initialPositions,
                           initDistR,
                           initParamsR,
                           initDomDistR,
@@ -3562,6 +3593,13 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
 
         // Expression type
         string ExpressionTypeR = "multiplicative"; // not applicable for genetic loads
+
+        // initial Positions and number of Positions
+        Rcpp::List initialPositionsRList = Rcpp::as<Rcpp::List>(GeneticLoadParamsR.slot("initialPositions"));
+        Rcpp::NumericVector NbOfInitialPositionsRvec;
+        if (GeneticLoadParamsR.slot("NbOfInitialPositions")!= R_NilValue){
+            NbOfInitialPositionsRvec = Rcpp::as<Rcpp::NumericVector> (GeneticLoadParamsR.slot("NbOfInitialPositions"));
+        }
 
         // Initial distribution parameters
         Rcpp::StringVector initDistRvec;
@@ -3623,8 +3661,9 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
                     if(NbOfPositionsR > 0){
                         positions = selectRandomLociPositions(NbOfPositionsR, genomeSize);
                     }
+                    else throw logic_error("GeneticLoad(): If positions are random you must provide the number of positions (>0).");
                 }
-                else throw logic_error("GeneticLoad(): If positions are random you must provide the number of positions (>0).");
+
             }
             else {
                 Rcpp::NumericVector PositionsR = Rcpp::as<Rcpp::NumericVector>(PositionsRList[l]); // Positions are provided as numeric vector
@@ -3634,6 +3673,33 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
                         positions.insert(static_cast<int>(PositionsR[i]));
                     }
                     else throw logic_error("GeneticLoad(): Loci positions must be smaller than genome size");
+                }
+            }
+
+            set<int> initialPositions;
+            int NbOfInitialPositionsR = -9;
+            // check if initialPositionsR[l] is a string
+            if(Rf_isString(initialPositionsRList[l])){
+                string pos = Rcpp::as<string>(initialPositionsRList[l]);
+                if(pos == "random"){
+                    NbOfInitialPositionsR = (int)NbOfInitialPositionsRvec[l]; // here is the error message
+                    if(NbOfInitialPositionsR > 0){
+                        initialPositions = selectRandomLociPositions(NbOfInitialPositionsR, genomeSize);
+                    }
+                    else throw logic_error("GeneticLoad(): If initial positions are random you must provide the number of initial positions (>0).");
+                }
+                if(pos == "all"){
+                    initialPositions = positions;
+                }
+            }
+            else {
+                Rcpp::NumericVector initialPositionsR = Rcpp::as<Rcpp::NumericVector>(initialPositionsRList[l]); // Positions are provided as numeric vector
+                // use a for loop to insert the values at PositionsR into the set positions
+                for (int i = 0; i < initialPositionsR.size(); i++) {
+                    if (static_cast<int>(initialPositionsR[i]) <= genomeSize) {
+                        initialPositions.insert(static_cast<int>(initialPositionsR[i]));
+                    }
+                    else throw logic_error("GeneticLoad(): Initial loci positions must be smaller than genome size");
                 }
             }
 
@@ -3669,6 +3735,7 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
             setUpSpeciesTrait(TraitTypeR,
                               positions,
                               ExpressionTypeR,
+                              initialPositions,
                               initDistR,
                               initParamsR,
                               initDomDistR,
@@ -3802,9 +3869,12 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
             float MutationRateR = (float) MutationRateRvec[l];
             bool isOutputR = isOutputRvec[l] == 1;
 
+            set <int> initialPositions=positions; // for dispersal traits, initial positions are the same as the general positions for the trait
+
             setUpSpeciesTrait(TraitTypeR,
                               positions,
                               ExpressionTypeR,
+                              initialPositions,
                               initDistR,
                               initParamsR,
                               initDomDistR,
@@ -3921,9 +3991,12 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
             float MutationRateR = (float) MutationRateRvec[l];
             bool isOutputR = isOutputRvec[l] == 1;
 
+            set <int> initialPositions=positions; // for dispersal traits, initial positions are the same as the general positions for the trait
+
             setUpSpeciesTrait(TraitTypeR,
                               positions,
                               ExpressionTypeR,
+                              initialPositions,
                               initDistR,
                               initParamsR,
                               initDomDistR,
@@ -4062,9 +4135,12 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
                     float MutationRateR = (float) MutationRateRvec[l];
                     bool isOutputR = isOutputRvec[l] == 1;
 
+                    set <int> initialPositions=positions; // for dispersal traits, initial positions are the same as the general positions for the trait
+
                     setUpSpeciesTrait(TraitTypeR,
                                       positions,
                                       ExpressionTypeR,
+                                      initialPositions,
                                       initDistR,
                                       initParamsR,
                                       initDomDistR,
@@ -4182,9 +4258,12 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
                     float MutationRateR = (float) MutationRateRvec[l];
                     bool isOutputR = isOutputRvec[l] == 1;
 
+                    set <int> initialPositions=positions; // for dispersal traits, initial positions are the same as the general positions for the trait
+
                     setUpSpeciesTrait(TraitTypeR,
                                       positions,
                                       ExpressionTypeR,
+                                      initialPositions,
                                       initDistR,
                                       initParamsR,
                                       initDomDistR,
@@ -4293,9 +4372,12 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
                     float MutationRateR = (float) MutationRateRvec[l];
                     bool isOutputR = isOutputRvec[l] == 1;
 
+                    set <int> initialPositions=positions; // for dispersal traits, initial positions are the same as the general positions for the trait
+
                     setUpSpeciesTrait(TraitTypeR,
                                       positions,
                                       ExpressionTypeR,
+                                      initialPositions,
                                       initDistR,
                                       initParamsR,
                                       initDomDistR,
@@ -4478,6 +4560,7 @@ DistributionType stringToDistributionType(const std::string& str) {
 void setUpSpeciesTrait(string TraitTypeR,
                        set<int> positions,
                        string ExpressionTypeR,
+                       set<int> initialPositions,
                        string initDistR,
                        Rcpp::NumericVector initParamsR,
                        string initDominanceDistR,
@@ -4525,9 +4608,11 @@ void setUpSpeciesTrait(string TraitTypeR,
     unique_ptr<SpeciesTrait> trait(new SpeciesTrait(
             traitType, sex,
             positions, expressionType,
+            initialPositions,
             initDist, initParams,
             initDomDist, initDomParams,
-            isInherited, mutationRate,
+            isInherited,
+            mutationRate,
             mutationDistribution, mutationParameters,
             dominanceDist, dominanceParams,
             ploidy,

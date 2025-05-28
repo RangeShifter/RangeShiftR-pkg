@@ -94,6 +94,7 @@ DistributionType stringToDistributionType(const std::string& str);
 void setUpSpeciesTrait(string TraitTypeR,
                        set<int> positions,
                        string ExpressionTypeR,
+                       set<int> initialPositions,
                        string initDistR,
                        Rcpp::NumericVector initParamsR,
                        string initDominanceDistR,
