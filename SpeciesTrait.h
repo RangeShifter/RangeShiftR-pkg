@@ -20,6 +20,7 @@ public:
         const sex_t& sex,
         const set<int>& pos,
         const ExpressionType& expr,
+        const set<int>& initialPositions,
         const DistributionType& initDist,
         const map<GenParamType, float> initParams,
         const DistributionType& initDomDist,
@@ -43,6 +44,7 @@ public:
     float getMutationRate() const { return mutationRate; }
     short getPloidy() const { return ploidy; }
     set<int>& getGenePositions() { return genePositions; } // returning by reference, make sure receiver is const
+    set<int> getInitPositions() const { return initPositions; }
     int getPositionsSize() const { return static_cast<int>(genePositions.size()); }
     bool isInherited() const { return inherited; }
 
@@ -79,6 +81,7 @@ private:
     // Positions in the genome of all genes (loci) pertaining to this trait
     // The genome itself is not modelled explicitly
     set<int> genePositions;
+    set<int> initPositions;
 
     ExpressionType expressionType;
     DistributionType initialDistribution;
