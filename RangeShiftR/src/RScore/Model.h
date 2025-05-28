@@ -52,6 +52,7 @@ Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 #include <Rcpp.h>
 #include "../Rinterface.h"
 #endif // RS_RCPP
+#include <chrono>
 
 #include "Parameters.h"
 #include "Landscape.h"

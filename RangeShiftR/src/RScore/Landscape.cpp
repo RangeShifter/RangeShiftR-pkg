@@ -1903,7 +1903,8 @@ void Landscape::deleteCostsChgMatrix(void) {
 
 // Species distribution functions
 
-//If file input as R objects
+//If file input as R objects only for #RS_RCPP
+#if RS_RCPP
 int Landscape::newDistribution(Species *pSpecies, Rcpp::NumericMatrix distname, int spResol) {
 	int readcode;
 	int ndistns = (int)distns.size();
@@ -1917,6 +1918,7 @@ int Landscape::newDistribution(Species *pSpecies, Rcpp::NumericMatrix distname, 
 	}
 	return readcode;
 }
+#endif
 // Standard file input
 int Landscape::newDistribution(Species *pSpecies, string distname) {
 	int readcode;
@@ -2023,8 +2025,9 @@ void Landscape::clearInitCells(void) {
 // Read landscape file(s)
 // Returns error code or zero if read correctly
 
-// for new landscape input using R objects AND spatial demography:
+// for new landscape input using R objects AND spatial demography: only for RS_RCPP
 // RS_THREADSAFE and SPATIALDEMOG
+#if RS_RCPP
 int Landscape::readLandscape(int fileNum, Rcpp::NumericMatrix habfile, Rcpp::NumericMatrix pchfile, Rcpp::NumericMatrix costfile, Rcpp::NumericVector scalinglayers) {
 	if (fileNum < 0) return 19;
 
@@ -2318,7 +2321,7 @@ int Landscape::readLandscape(int fileNum, Rcpp::NumericMatrix habfile, Rcpp::Num
 	}
 	return 0;
 }
-
+#endif
 
 int Landscape::readLandscape(int fileNum, string habfile, string pchfile, string costfile)
 {

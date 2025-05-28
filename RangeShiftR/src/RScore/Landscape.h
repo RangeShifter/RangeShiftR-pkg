@@ -88,8 +88,9 @@ using namespace std;
 #include <codecvt>
 #endif
 #include <Rcpp.h>
-#endif
 #include <armadillo>
+#endif
+
 
 //---------------------------------------------------------------------------
 // not sure whether it needs to be added here for the readDistribution() function to work
@@ -502,7 +503,7 @@ public:
 		Rcpp::NumericMatrix	// cost raster
 		,Rcpp::NumericVector // array of demographic scaling layers
 	);
-#endif //for RS_THREADSAFE
+#endif
 	int readLandscape(
 		int,		// fileNum == 0 for (first) habitat file and optional patch file
 						// fileNum > 0  for subsequent habitat files under the %cover option

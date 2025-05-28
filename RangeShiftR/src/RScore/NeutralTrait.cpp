@@ -240,14 +240,18 @@ void NeutralTrait::inheritHaploid(const bool& fromMother, map<int, vector<unsign
 void NeutralTrait::initialiseUniform(int maxAlleleVal)
 {
 	const auto& genePositions = pSpeciesTrait->getGenePositions();
+	const auto& initPositions = pSpeciesTrait->getInitPositions();
 	short ploidy = pSpeciesTrait->getPloidy();
 
 	for (auto position : genePositions) {
 		vector<unsigned char> allelePair;
 
 		for (int i = 0; i < ploidy; i++) {
-			//  allele values span 0 - max inclusive, max is wildtype
-			auto alleleVal = (unsigned char)pRandom->IRandom(0, maxAlleleVal); 
+			unsigned char alleleVal = char(0);
+			if (initPositions.contains(position)) {
+				//  allele values span 0 - max inclusive, max is wildtype
+				alleleVal = (unsigned char)pRandom->IRandom(0, maxAlleleVal);
+			}
 			allelePair.emplace_back(alleleVal);
 		}
 		genes.insert(make_pair(position, allelePair));

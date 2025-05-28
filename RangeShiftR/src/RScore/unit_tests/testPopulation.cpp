@@ -8,7 +8,7 @@ void testPopulation()
 	// Given a genetic load trait, offspring 
 	// Survival is (inversely) proportional to the mutation rate
 	{
-		vector<float> mutationRates = { 0.0, 0.05, 0.1 };
+		vector<float> mutationRates = { 0.0, 0.1, 0.2 };
 		vector<int> survivingInds;
 		const int initialNbInds = 1000;
 		const float localK = 10000; // not limiting
@@ -63,7 +63,8 @@ void testPopulation()
 			pop.fledge(); // non-overlapping: adults are replaced with juveniles
 			survivingInds.push_back(pop.getNInds());
 		}
-		assert(survivingInds[0] > survivingInds[1] && survivingInds[1] > survivingInds[2]);
+		assert(survivingInds[0] > survivingInds[1] 
+			&& survivingInds[1] > survivingInds[2]);
 	}
 
 	// Dispersal is proportional to the mutation rate

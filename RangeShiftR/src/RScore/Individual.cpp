@@ -192,6 +192,7 @@ void Individual::inherit(Species* pSpecies, const Individual* mother) {
 			if (newTrait->getMutationRate() > 0 && pSpecies->areMutationsOn())
 				newTrait->mutate();
 					}
+
 		if (trait == GENETIC_LOAD1 || trait == GENETIC_LOAD2 || trait == GENETIC_LOAD3 || trait == GENETIC_LOAD4 || trait == GENETIC_LOAD5)
 			geneticFitness *= newTrait->express();
 
@@ -211,10 +212,11 @@ void Individual::setUpGenes(Species* pSpecies, int resol) {
 		const auto spTrait = pSpecies->getSpTrait(traitType);
 		this->spTraitTable.emplace(traitType, traitFactory.Create(traitType, spTrait));
 			}
-	setDispersalPhenotypes(pSpecies, resol);
+	expressDispersalPhenotypes(pSpecies, resol);
+	expressGeneticLoad(pSpecies);
 			}
 
-void Individual::setDispersalPhenotypes(Species* pSpecies, int resol) {
+void Individual::expressDispersalPhenotypes(Species* pSpecies, int resol) {
 
 	const emigRules emig = pSpecies->getEmigRules();
 	const transferRules trfr = pSpecies->getTransferRules();
@@ -222,24 +224,30 @@ void Individual::setDispersalPhenotypes(Species* pSpecies, int resol) {
 	const settleRules settRules = pSpecies->getSettRules(stage, sex);
 
 		// record phenotypic traits
-	if (emig.indVar)
-		this->setEmigTraits(pSpecies, emig.sexDep, emig.densDep);
-	if (trfr.indVar)
-		this->setTransferTraits(pSpecies, trfr, resol);
-	if (sett.indVar)
-		this->setSettlementTraits(pSpecies, sett.sexDep, settRules.densDep);
+	if (emig.indVar) setEmigTraits(pSpecies, emig.sexDep, emig.densDep);
+	if (trfr.indVar) setTransferTraits(pSpecies, trfr, resol);
+	if (sett.indVar) setSettlementTraits(pSpecies, sett.sexDep, settRules.densDep);
 	}
+
+// Set the fitness attribute of individuals
+// Only called at initialisation, otherwise probably faster to compute directly during inheritance
+void Individual::expressGeneticLoad(Species* pSpecies) {
+	const int nbGenLoadTraits = pSpecies->getNbGenLoadTraits();
+	const vector<TraitType> whichTrait = { GENETIC_LOAD1 , GENETIC_LOAD2, GENETIC_LOAD3, GENETIC_LOAD4, GENETIC_LOAD5 };
+	for (int i = 0; i < nbGenLoadTraits; i++) {
+		if (spTraitTable.contains(whichTrait[i])) 
+			geneticFitness *= getTrait(whichTrait[i])->express();
+	}
+}
 
 void Individual::setTransferTraits(Species* pSpecies, transferRules trfr, int resol) {
 	if (trfr.usesMovtProc) {
 		if (trfr.moveType == 1) {
 			setIndSMSTraits(pSpecies);
 		}
-		else
-			setIndCRWTraits(pSpecies);
+		else setIndCRWTraits(pSpecies);
 	}
-	else
-		setIndKernelTraits(pSpecies, trfr.sexDep, trfr.twinKern, resol);
+	else setIndKernelTraits(pSpecies, trfr.sexDep, trfr.twinKern, resol);
 }
 
 void Individual::setSettlementTraits(Species* pSpecies, bool sexDep, bool densDep) {
@@ -286,14 +294,14 @@ void Individual::setSettlementTraits(Species* pSpecies, bool sexDep, bool densDe
 void Individual::inheritTraits(Species* pSpecies, Individual* mother, Individual* father, int resol)
 				{
 	inherit(pSpecies, mother, father);
-	setDispersalPhenotypes(pSpecies, resol);
+	expressDispersalPhenotypes(pSpecies, resol);
 				}
 
 // Inherit genome from mother, haploid
 void Individual::inheritTraits(Species* pSpecies, Individual* mother, int resol)
 				{
 	inherit(pSpecies, mother);
-	setDispersalPhenotypes(pSpecies, resol);
+	expressDispersalPhenotypes(pSpecies, resol);
 				}
 
 //---------------------------------------------------------------------------
@@ -1011,7 +1019,8 @@ int Individual::moveStep(Landscape* pLandscape, Species* pSpecies,
 
 		} // end of switch (trfr.moveType)
 
-		if (patch > 0  // not no-data area or matrix
+		if (dispersing==1 && // only if it is still dispersing and did not die during the last step, it should make this decision!
+            patch > 0  // not no-data area or matrix
 			&& path->total >= settsteps.minSteps) {
 			pPatch = (Patch*)patch;
 			if (pPatch != pNatalPatch)
@@ -1049,7 +1058,7 @@ movedata Individual::smsMove(Landscape* pLand, Species* pSpecies,
 	array3x3d goal;	// to hold weights for moving towards a goal location
 	array3x3f hab;	// to hold weights for habitat (includes percep range)
 	int x2, y2; 			// x index from 0=W to 2=E, y index from 0=N to 2=S
-	int newX = 0, newY = 0;
+	int newX = -9, newY = -9; // BUGFIX: must not be 0 because 0,0 is a valid landscape cell
 	Cell* pCell;
 	Cell* pNewCell = NULL;
 	double sum_nbrs = 0.0;
@@ -1214,11 +1223,12 @@ movedata Individual::smsMove(Landscape* pLand, Species* pSpecies,
 			if (newX < land.minX || newX > land.maxX
 				|| newY < land.minY || newY > land.maxY) {
 				pNewCell = 0;
+			} else{
+			   pNewCell = pLand->findCell(newX, newY); // would also return 0 if outside boundary
 			}
-			pNewCell = pLand->findCell(newX, newY);
 		}
 	} while (!absorbing && pNewCell == 0 && loopsteps < 1000); // no-data cell
-	if (loopsteps >= 1000 || pNewCell == 0) {
+	if (loopsteps >= 1000 || pNewCell == 0 || (newX == -9 || newY== -9)) { // if no cell was found
 		// unable to make a move or crossed absorbing boundary
 		// flag individual to die
 		move.dist = -123.0;
@@ -1622,7 +1632,7 @@ void Individual::triggerMutations(Species* pSp) {
 			|| trType == GENETIC_LOAD5)
 			geneticFitness *= indTrait->express();
 	}
-	this->setDispersalPhenotypes(pSp, 1.0);
+	this->expressDispersalPhenotypes(pSp, 1.0);
 }
 
 // Shorthand function to edit a genotype with custom values
