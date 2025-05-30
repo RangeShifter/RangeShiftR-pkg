@@ -416,7 +416,7 @@ setMethod("show", "TransferParams", function(object){
 #'                 DistMort = FALSE,
 #'                 MortProb = 0.0, Slope, InflPoint)
 #' @param Distances Matrix containing all dispersal kernel parameters (#columns) for each stage/sex (#rows) if applicable. Its structure depends on the other parameters, see the Details.
-#' If the mean dispersal distance is constant (i.e. \code{DensDep, IndVar, StageDep, SexDep = FALSE}), \code{Distances} must be a matrix with a single value. Default is to \code matrix(c(100),nrow=1)).
+#' If the mean dispersal distance is constant (i.e. \code{DensDep, IndVar, StageDep, SexDep = FALSE}), \code{Distances} must be a matrix with a single value. Default is to \code{matrix(c(100),nrow=1)}.
 #' @param DoubleKernel Use a mixed (i.e. double negative exponential) kernel? (default: \code{FALSE}) Set probability for using Kernel-1 in matrix \code{Distances}.
 #' @param SexDep Sex-dependent dispersal kernel? (default: \code{FALSE})
 #' @param StageDep Stage-dependent dispersal kernel? (default: \code{FALSE}) Must be \code{FALSE} if \code{IndVar=TRUE}.
