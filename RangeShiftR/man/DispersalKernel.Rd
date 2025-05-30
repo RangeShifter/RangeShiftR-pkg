@@ -5,15 +5,15 @@
 \alias{DispersalKernel}
 \title{Set up a Dispersal Kernel}
 \usage{
-DispersalKernel(Distances = 100, DoubleKernel = FALSE,
+DispersalKernel(Distances = matrix(c(100),nrow=1), DoubleKernel = FALSE,
                 SexDep = FALSE, StageDep = FALSE,
                 IndVar = FALSE,
                 DistMort = FALSE,
                 MortProb = 0.0, Slope, InflPoint)
 }
 \arguments{
-\item{Distances}{Matrix containing all dispersal kernel parameters (#columns) for each stage/sex (#rows). Its structure depends on the other parameters, see the Details.
-If the mean dispersal distance is constant (i.e. \code{DensDep, IndVar, StageDep, SexDep = FALSE}), \code{Distances} can take a single numeric. Defaults to \eqn{100}.}
+\item{Distances}{Matrix containing all dispersal kernel parameters (#columns) for each stage/sex (#rows) if applicable. Its structure depends on the other parameters, see the Details.
+If the mean dispersal distance is constant (i.e. \code{DensDep, IndVar, StageDep, SexDep = FALSE}), \code{Distances} must be a matrix with a single value. Default is to \code matrix(c(100),nrow=1)).}
 
 \item{DoubleKernel}{Use a mixed (i.e. double negative exponential) kernel? (default: \code{FALSE}) Set probability for using Kernel-1 in matrix \code{Distances}.}
 
@@ -21,7 +21,7 @@ If the mean dispersal distance is constant (i.e. \code{DensDep, IndVar, StageDep
 
 \item{StageDep}{Stage-dependent dispersal kernel? (default: \code{FALSE}) Must be \code{FALSE} if \code{IndVar=TRUE}.}
 
-\item{IndVar}{Individual variability in dispersal kernel traits? (default: \code{FALSE}) Must be \code{FALSE}, if \code{StageDep=TRUE}.}
+\item{IndVar}{Individual variability in dispersal kernel traits? (default: \code{FALSE}) Must be \code{FALSE}, if \code{StageDep=TRUE}. If \code{IndVar=TRUE}, specify the trait in \code{\link[RangeShiftR]{KernelTraits}}.}
 
 \item{TraitScaleFactor}{Required if \code{IndVar=TRUE}: The scaling factor(s) for dispersal kernel traits. A numeric of length \eqn{1} (if \code{DoubleKernel=FALSE}) or \eqn{3} (if \code{DoubleKernel=TRUE}).}
 
@@ -86,7 +86,8 @@ Otherwise, the conditions for the single kernel apply.
 
 For both types of kernel, inter-individual variability of the kernel traits is possible (set \code{IndVar=TRUE}). Individuals will
 carry either one trait for \eqn{δ} or three traits for \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{δ_1}}, \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{δ_2}} and
-\ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}}, which they inherit from their parents.\cr
+\ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}}, which they inherit from their parents. In this case, you must set the \code{Distances} to \code{NULL} here and specify
+them in the \code{\link[RangeShiftR]{KernelTraits}} module to set up the genetics (see \code{\link[RangeShiftR]{Genetics}})\cr
 Dispersal kernels can also be sex-dependent (set \code{SexDep=TRUE}). In the case of inter-individual variability, the number of traits is doubled to two trait (female \eqn{δ}
 and male δ) or six traits (female and male \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{δ_1}}, \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{δ_2}} and \ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}}).\cr
 For each trait the initial distribution in the population (as mean and standard variation) must be set in \code{Distances} (instead of only one constant value),
@@ -98,8 +99,7 @@ All dispersal kernel parameters have to be provided via \code{Distances}, which 
 used (i.e. \code{DensDep, IndVar, StageDep, SexDep = FALSE}) - a single numeric. The format of the matrix is defined as follows: The number of columns depend on the options \code{IndVar} and \code{DoubleKernel}.
 If \code{DoubleKernel=FALSE}, the mean dispersal distance \eqn{δ} must be specified (in meters). If \code{DoubleKernel=TRUE}, the mean dispersal distances
 \ifelse{html}{\out{&delta;<sub>1</sub>}}{\eqn{δ_1}} and \ifelse{html}{\out{&delta;<sub>2</sub>}}{\eqn{δ_2}} (in meters), as well as the probability \ifelse{html}{\out{p<sub>I</sub>}}{\eqn{p_I}} of using Kernel-1 must be specified.
-Additionally, if \code{IndVar=FALSE}, these parameters are fixed, but if \code{IndVar=TRUE} each of them is replaced by two parameters: their respective mean and
-standard deviation. They are used to normally distribute the traits values among the individuals of the initial population.
+If \code{IndVar=TRUE}, \code{Distances} must be \code{NULL} and the dispersal kernel traits must be set in the \code{\link[RangeShiftR]{KernelTraits}} modules.
 
 All parameters have to be given for each stage/sex if the respective dependence is enabled. If \code{StageDep=TRUE}, state the corresponding stage in the first column.
 If \code{SexDep=TRUE}, state the corresponding stage in the next (i.e. first/second) column, with \eqn{0} for \emph{female} and \eqn{1} for \emph{male}. The following
