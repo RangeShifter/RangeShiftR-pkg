@@ -423,11 +423,11 @@ public:
 		int   // sequential no. of settlement Patch
 	);
 	void deleteConnectMatrix(void);
-	bool outConnectHeaders( // Write connectivity file headers
-		int		// option - set to -999 to close the connectivity file
-	);
+	bool outConnectFinishLandscape(); // Close connectivity file
+	bool outConnectStartLandscape(); // Open connectivity file and write header record
 #if RS_RCPP
-	void outPathsHeaders(int, int);
+	void outPathsFinishReplicate();
+	void outPathsStartReplicate(int);
 #endif
 	void outConnect(
 		int,	// replicate no.

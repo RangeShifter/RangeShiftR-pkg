@@ -168,30 +168,30 @@ int RunModel(Landscape* pLandscape, int seqsim)
 		if (rep == 0) {
 			// open output files
 			if (sim.outRange) { // open Range file
-				if (!pComm->outRangeHeaders(pSpecies, ppLand.landNum)) {
+				if (!pComm->outRangeStartLandscape(pSpecies, ppLand.landNum)) {
 					filesOK = false;
 				}
 			}
 			if (sim.outOccup && sim.reps > 1)
-				if (!pComm->outOccupancyHeaders(0)) {
+				if (!pComm->outOccupancyStartLandscape()) {
 					filesOK = false;
 				}
 			if (sim.outPop) {
 				// open Population file
-				if (!pComm->outPopHeaders(pSpecies, ppLand.landNum)) {
+				if (!pComm->outPopStartLandscape(pSpecies)) {
 					filesOK = false;
 				}
 			}
 			if (sim.outTraitsCells)
-				if (!pComm->outTraitsHeaders(pSpecies, ppLand.landNum)) {
+				if (!pComm->outTraitsStartLandscape(pSpecies, ppLand.landNum)) {
 					filesOK = false;
 				}
 			if (sim.outTraitsRows)
-				if (!pComm->outTraitsRowsHeaders(pSpecies, ppLand.landNum)) {
+				if (!pComm->outTraitsRowsStartLandscape(pSpecies, ppLand.landNum)) {
 					filesOK = false;
 				}
 			if (sim.outConnect && ppLand.patchModel) // open Connectivity file
-				if (!pLandscape->outConnectHeaders(0)) {
+				if (!pLandscape->outConnectStartLandscape()) {
 					filesOK = false;
 				}
 		}
@@ -204,19 +204,19 @@ int RunModel(Landscape* pLandscape, int seqsim)
 #endif
 			// close any files which may be open
 			if (sim.outRange) {
-				pComm->outRangeHeaders(pSpecies, -999);
+				pComm->outRangeFinishLandscape();
 			}
 			if (sim.outOccup && sim.reps > 1)
-				pComm->outOccupancyHeaders(-999);
+				pComm->outOccupancyFinishLandscape();
 			if (sim.outPop) {
-				pComm->outPopHeaders(pSpecies, -999);
+				pComm->outPopFinishLandscape();
 			}
 			if (sim.outTraitsCells)
-				pComm->outTraitsHeaders(pSpecies, -999);
+				pComm->outTraitsFinishLandscape();
 			if (sim.outTraitsRows)
-				pComm->outTraitsRowsHeaders(pSpecies, -999);
+				pComm->outTraitsRowsFinishLandscape();
 			if (sim.outConnect && ppLand.patchModel)
-				pLandscape->outConnectHeaders(-999);
+				pLandscape->outConnectFinishLandscape();
 #if RS_RCPP && !R_CMD
 			return Rcpp::List::create(Rcpp::Named("Errors") = 666);
 #else
@@ -263,24 +263,24 @@ int RunModel(Landscape* pLandscape, int seqsim)
 
 		// open a new individuals file for each replicate
 		if (sim.outInds)
-			pComm->outInds(rep, 0, 0, ppLand.landNum);
+			pComm->outIndsStartReplicate(rep, ppLand.landNum);
 		// open a new genetics file for each replicate
 		if (sim.outGenetics) {
-			pComm->outGenetics(rep, 0, 0, ppLand.landNum);
+			pComm->outGenStartReplicate(rep, ppLand.landNum);
 			if (!dem.stageStruct && sim.outStartGenetic == 0) {
 				// write genetic data for initialised individuals of non-strucutred population
-				pComm->outGenetics(rep, 0, 0, -1);
+				pComm->outGenetics(rep, 0);
 			}
 		}
 #if RSDEBUG
 		// output initialised Individuals
 		if (sim.outInds)
-			pComm->outInds(rep, -1, -1, -1);
+			pComm->outIndividuals(rep, -1, -1);
 #endif
 #if RS_RCPP
 		// open a new movement paths file for each replicate
 		if (sim.outPaths)
-			pLandscape->outPathsHeaders(rep, 0);
+			pLandscape->outPathsStartReplicate(rep);
 #endif
 
 		// years loop
@@ -496,7 +496,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 
 				if (dem.stageStruct) {
 					if (sstruct.survival == 0) { // at reproduction
-						pComm->survival(0, 2, 1); // survival of all non-juvenile stages
+						pComm->survival0(2, 1); // survival of all non-juvenile stages
 					}
 				}
 
@@ -526,17 +526,17 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				// survival part 0
 				if (dem.stageStruct) {
 					if (sstruct.survival == 0) { // at reproduction
-						pComm->survival(0, 0, 1); // survival of juveniles only
+						pComm->survival0(0, 1); // survival of juveniles only
 					}
 					if (sstruct.survival == 1) { // between reproduction events
-						pComm->survival(0, 1, 1); // survival of all stages
+						pComm->survival0(1, 1); // survival of all stages
 					}
 					if (sstruct.survival == 2) { // annually
-						pComm->survival(0, 1, 0); // development only of all stages
+						pComm->survival0(1, 0); // development only of all stages
 					}
 				}
 				else { // non-structured population
-					pComm->survival(0, 1, 1);
+					pComm->survival0(1, 1);
 				}
 #if RSDEBUG
 				DEBUGLOG << "RunModel(): yr=" << yr << " gen=" << gen << " completed survival part 0" << endl;
@@ -545,17 +545,17 @@ int RunModel(Landscape* pLandscape, int seqsim)
 
 				// output Individuals
 				if (sim.outInds && yr >= sim.outStartInd && yr % sim.outIntInd == 0)
-					pComm->outInds(rep, yr, gen, -1);
+					pComm->outIndividuals(rep, yr, gen);
 				// output Genetics
 				if (sim.outGenetics && yr >= sim.outStartGenetic && yr % sim.outIntGenetic == 0)
-					pComm->outGenetics(rep, yr, gen, -1);
+					pComm->outGenetics(rep, yr);
 
 				// survival part 1
 				if (dem.stageStruct) {
-					pComm->survival(1, 0, 1);
+					pComm->survival1();
 				}
 				else { // non-structured population
-					pComm->survival(1, 0, 1);
+					pComm->survival1();
 				}
 #if RSDEBUG
 				DEBUGLOG << "RunModel(): yr=" << yr << " gen=" << gen << " completed survival part 1" << endl;
@@ -575,8 +575,8 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				pLandscape->outConnect(rep, yr);
 
 			if (dem.stageStruct && sstruct.survival == 2) {  // annual survival - all stages
-				pComm->survival(0, 1, 2);
-				pComm->survival(1, 0, 1);
+				pComm->survival0(1, 2);
+				pComm->survival1();
 #if RSDEBUG
 				DEBUGLOG << "RunModel(): yr=" << yr << " completed annual survival" << endl;
 #endif
@@ -585,8 +585,8 @@ int RunModel(Landscape* pLandscape, int seqsim)
 			if (dem.stageStruct) {
 				pComm->ageIncrement(); // increment age of all individuals
 				if (sim.outInds && yr >= sim.outStartInd && yr % sim.outIntInd == 0)
-					pComm->outInds(rep, yr, -1, -1); // list any individuals dying having reached maximum age
-				pComm->survival(1, 0, 1);						// delete any such individuals
+					pComm->outIndividuals(rep, yr, -1); // list any individuals dying having reached maximum age
+				pComm->survival1();						// delete any such individuals
 #if RSDEBUG
 				DEBUGLOG << "RunModel(): yr=" << yr << " completed Age_increment and final survival" << endl;
 #endif
@@ -679,9 +679,9 @@ int RunModel(Landscape* pLandscape, int seqsim)
 			pLandscape->resetConnectMatrix(); // set connectivity matrix to zeroes
 
 		if (sim.outInds) // close Individuals output file
-			pComm->outInds(rep, 0, 0, -999);
+			pComm->outIndsFinishReplicate();
 		if (sim.outGenetics) // close Genetics output file
-			pComm->outGenetics(rep, 0, 0, -999);
+			pComm->outGenFinishReplicate();
 
 		if (sim.saveVisits) {
 			pLandscape->outVisits(rep, ppLand.landNum);
@@ -690,7 +690,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 
 #if RS_RCPP
 		if (sim.outPaths)
-			pLandscape->outPathsHeaders(rep, -999);
+			pLandscape->outPathsFinishReplicate();
 #endif
 #if RSDEBUG
 		DEBUGLOG << endl << "RunModel(): finished rep=" << rep << endl;
@@ -700,7 +700,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 
 	if (sim.outConnect && ppLand.patchModel) {
 		pLandscape->deleteConnectMatrix();
-		pLandscape->outConnectHeaders(-999); // close Connectivity Matrix file
+		pLandscape->outConnectFinishLandscape(); // close Connectivity Matrix file
 	}
 
 	// Occupancy outputs
@@ -708,23 +708,23 @@ int RunModel(Landscape* pLandscape, int seqsim)
 		pComm->outOccupancy();
 		pComm->outOccSuit(v.viewGraph);
 		pComm->deleteOccupancy((sim.years / sim.outIntOcc) + 1);
-		pComm->outOccupancyHeaders(-999);
+		pComm->outOccupancyFinishLandscape();
 	}
 
 	if (sim.outRange) {
-		pComm->outRangeHeaders(pSpecies, -999); // close Range file
+		pComm->outRangeFinishLandscape(); // close Range file
 	}
 	if (sim.outPop) {
-		pComm->outPopHeaders(pSpecies, -999); // close Population file
+		pComm->outPopFinishLandscape(); // close Population file
 	}
 	if (sim.outTraitsCells)
-		pComm->outTraitsHeaders(pSpecies, -999); // close Traits file
+		pComm->outTraitsFinishLandscape(); // close Traits file
 	if (sim.outTraitsRows)
-		pComm->outTraitsRowsHeaders(pSpecies, -999); // close Traits rows file
+		pComm->outTraitsRowsFinishLandscape(); // close Traits rows file
 	// close Individuals & Genetics output files if open
 	// they can still be open if the simulation was stopped by the user
-	if (sim.outInds) pComm->outInds(0, 0, 0, -999);
-	if (sim.outGenetics) pComm->outGenetics(0, 0, 0, -999);
+	if (sim.outInds) pComm->outIndsFinishReplicate();
+	if (sim.outGenetics) pComm->outGenFinishReplicate();
 
 	delete pComm; 
 	pComm = 0;

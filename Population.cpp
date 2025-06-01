@@ -793,7 +793,7 @@ disperser Population::extractSettler(int ix) {
 
 	indStats ind = inds[ix]->getStats();
 
-	pCell = inds[ix]->getLocn(1);
+	pCell = inds[ix]->getCurrCell();
 	d.pInd = inds[ix];  d.pCell = pCell; d.yes = false;
 	if (ind.status == 4 || ind.status == 5) { // settled
 		d.yes = true;
@@ -875,7 +875,7 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 			{ // sexual species - record as potential settler in new patch
 				if (inds[i]->getStatus() == 2)
 				{ // disperser has found a patch
-					pCell = inds[i]->getLocn(1);
+					pCell = inds[i]->getCurrCell();
 					pPatch = pCell->getPatch();
 					if (pPatch != nullptr) { // not no-data area
 						pPatch->incrPossSettler(pSpecies, inds[i]->getSex());
@@ -900,7 +900,7 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 		}
 		if (ind.status == 2)
 		{ // awaiting settlement
-			pCell = inds[i]->getLocn(1);
+			pCell = inds[i]->getCurrCell();
 			if (pCell == 0) {
 				// this condition can occur in a patch-based model at the time of a dynamic landscape
 				// change when there is a range restriction in place, since a patch can straddle the
@@ -1034,7 +1034,7 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 			// for kernel-based transfer only ...
 			// determine whether recruitment to a neighbouring cell is possible
 
-			pCell = inds[i]->getLocn(1);
+			pCell = inds[i]->getCurrCell();
 			newloc = pCell->getLocn();
 			vector <Cell*> nbrlist;
 			for (int dx = -1; dx < 2; dx++) {
@@ -1316,14 +1316,16 @@ void Population::clean(void)
 }
 
 //---------------------------------------------------------------------------
-// Open population file and write header record
-bool Population::outPopHeaders(int landNr, bool patchModel) {
+// Close population file
+bool Population::outPopFinishLandscape() {
+	if (outPop.is_open()) outPop.close();
+	outPop.clear();
+	return true;
+}
 
-	if (landNr == -999) { // close file
-		if (outPop.is_open()) outPop.close();
-		outPop.clear();
-		return true;
-	}
+//---------------------------------------------------------------------------
+// Open population file and write header record
+bool Population::outPopStartLandscape(int landNr, bool patchModel) {
 
 	string name;
 	simParams sim = paramsSim->getSim();
@@ -1433,17 +1435,19 @@ void Population::outPopulation(int rep, int yr, int gen, float eps,
 //---------------------------------------------------------------------------
 
 //---------------------------------------------------------------------------
-// Open individuals file and write header record
-void Population::outIndsHeaders(int rep, int landNr, bool patchModel)
+// Close individuals file
+void Population::outIndsFinishReplicate()
 {
-
-	if (landNr == -999) { // close file
-		if (outInds.is_open()) {
-			outInds.close(); outInds.clear();
-		}
-		return;
+	if (outInds.is_open()) {
+		outInds.close(); outInds.clear();
 	}
+	return;
+}
 
+//---------------------------------------------------------------------------
+// Open individuals file and write header record
+void Population::outIndsStartReplicate(int rep, int landNr, bool patchModel)
+{
 	string name;
 	demogrParams dem = pSpecies->getDemogr();
 	emigRules emig = pSpecies->getEmig();
@@ -1543,11 +1547,11 @@ void Population::outIndividual(Landscape* pLandscape, int rep, int yr, int gen,
 			else { // non-structured population
 				outInds << "\t" << ind.status;
 			}
-			pCell = inds[i]->getLocn(1);
+			pCell = inds[i]->getCurrCell();
 			locn loc;
 			if (pCell == 0) loc.x = loc.y = -1; // beyond boundary or in no-data cell
 			else loc = pCell->getLocn();
-			pCell = inds[i]->getLocn(0);
+			pCell = inds[i]->getPrevCell();
 			locn natalloc = pCell->getLocn();
 			if (ppLand.patchModel) {
 				outInds << "\t" << inds[i]->getNatalPatch()->getPatchNum();
@@ -1625,34 +1629,37 @@ void Population::outIndividual(Landscape* pLandscape, int rep, int yr, int gen,
 //---------------------------------------------------------------------------
 
 //---------------------------------------------------------------------------
-// Write records to genetics file
-void Population::outGenetics(const int rep, const int year, const int landNr)
+// Close genetics file
+void Population::outGenFinishReplicate()
+{
+	Genome* pGenome = new Genome();
+	pGenome->outGenFinishReplicate();
+	delete pGenome;
+}
+
+// Open genetics file and write header record
+void Population::outGenStartReplicate(const int rep, const int landNr)
 {
 
 	simParams sim = paramsSim->getSim();
-
-	if (landNr >= 0) { // open file
-		Genome* pGenome;
-		genomeData gen = pSpecies->getGenomeData();
-		if (gen.trait1Chromosome) {
-			pGenome = new Genome(pSpecies->getNChromosomes(), pSpecies->getNLoci(0),
-				pSpecies->isDiploid());
-		}
-		else {
-			pGenome = new Genome(pSpecies);
-		}
-		pGenome->outGenHeaders(rep, landNr, sim.outGenXtab);
-		delete pGenome;
-		return;
+	Genome* pGenome;
+	genomeData gen = pSpecies->getGenomeData();
+	if (gen.trait1Chromosome) {
+		pGenome = new Genome(pSpecies->getNChromosomes(), pSpecies->getNLoci(0),
+			pSpecies->isDiploid());
 	}
-
-	if (landNr == -999) { // close file
-		Genome* pGenome = new Genome();
-		pGenome->outGenHeaders(rep, landNr, sim.outGenXtab);
-		delete pGenome;
-		return;
+	else {
+		pGenome = new Genome(pSpecies);
 	}
+	pGenome->outGenStartReplicate(rep, landNr, sim.outGenXtab);
+	delete pGenome;
+	return;
+}
 
+// Write records to genetics file
+void Population::outGenetics(const int rep, const int year)
+{
+	simParams sim = paramsSim->getSim();
 	short spNum = pSpecies->getSpNum();
 	short nstages = 1;
 	if (pSpecies->stageStructured()) {
@@ -1666,7 +1673,7 @@ void Population::outGenetics(const int rep, const int year, const int landNr)
 		if (year == 0 || sim.outGenType == 1
 			|| (sim.outGenType == 0 && ind.stage == 0)
 			|| (sim.outGenType == 2 && ind.stage == nstages - 1)) {
-			inds[i]->outGenetics(rep, year, spNum, landNr, sim.outGenXtab);
+			inds[i]->outGenetics(rep, year, spNum, sim.outGenXtab);
 		}
 	}
 

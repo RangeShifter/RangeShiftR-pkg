@@ -492,12 +492,21 @@ void Community::dispersal(short landIx)
 
 }
 
-void Community::survival(short part, short option0, short option1)
+void Community::survival0(short option0, short option1)
 {
 	int nsubcomms = (int)subComms.size();
 	#pragma omp parallel for schedule(static,128)
 	for (int i = 0; i < nsubcomms; i++) { // all communities (including in matrix)
-		subComms[i]->survival(part, option0, option1);
+		subComms[i]->survival0(option0, option1);
+	}
+}
+
+void Community::survival1()
+{
+	int nsubcomms = (int)subComms.size();
+	#pragma omp parallel for schedule(static,128)
+	for (int i = 0; i < nsubcomms; i++) { // all communities (including in matrix)
+		subComms[i]->survival1();
 	}
 }
 
@@ -611,9 +620,14 @@ commStats Community::getStats(void)
 
 // Functions to control production of output files
 
+// Close population file
+bool Community::outPopFinishLandscape() {
+	return subComms[0]->outPopFinishLandscape();
+}
+
 // Open population file and write header record
-bool Community::outPopHeaders(Species* pSpecies, int option) {
-	return subComms[0]->outPopHeaders(pLandscape, pSpecies, option);
+bool Community::outPopStartLandscape(Species* pSpecies) {
+	return subComms[0]->outPopStartLandscape(pLandscape, pSpecies);
 }
 
 // Write records to population file
@@ -628,52 +642,56 @@ void Community::outPop(int rep, int yr, int gen)
 }
 
 
-// Write records to individuals file
-void Community::outInds(int rep, int yr, int gen, int landNr) {
+// Close individuals file
+void Community::outIndsFinishReplicate() {
+	subComms[0]->outIndsFinishReplicate();
+}
 
-	if (landNr >= 0) { // open the file
-		subComms[0]->outInds(pLandscape, rep, yr, gen, landNr);
-		return;
-	}
-	if (landNr == -999) { // close the file
-		subComms[0]->outInds(pLandscape, rep, yr, gen, -999);
-		return;
-	}
+// Open individuals file and write header record
+void Community::outIndsStartReplicate(int rep, int landNr) {
+	subComms[0]->outIndsStartReplicate(pLandscape, rep, landNr);
+}
+
+// Write records to individuals file
+void Community::outIndividuals(int rep, int yr, int gen) {
 	// generate output for each sub-community (patch) in the community
 	int nsubcomms = (int)subComms.size();
 	for (int i = 0; i < nsubcomms; i++) { // all sub-communities
-		subComms[i]->outInds(pLandscape, rep, yr, gen, landNr);
+		subComms[i]->outIndividuals(pLandscape, rep, yr, gen);
 	}
+}
+
+// Close genetics file
+void Community::outGenFinishReplicate() {
+	subComms[0]->outGenFinishReplicate();
+}
+
+// Open genetics file and write header record
+void Community::outGenStartReplicate(int rep, int landNr) {
+	subComms[0]->outGenStartReplicate(rep, landNr);
 }
 
 // Write records to genetics file
-void Community::outGenetics(int rep, int yr, int gen, int landNr) {
+void Community::outGenetics(int rep, int yr) {
 	//landParams ppLand = pLandscape->getLandParams();
-	if (landNr >= 0) { // open the file
-		subComms[0]->outGenetics(rep, yr, gen, landNr);
-		return;
-	}
-	if (landNr == -999) { // close the file
-		subComms[0]->outGenetics(rep, yr, gen, landNr);
-		return;
-	}
 	// generate output for each sub-community (patch) in the community
 	int nsubcomms = (int)subComms.size();
 	for (int i = 0; i < nsubcomms; i++) { // all sub-communities
-		subComms[i]->outGenetics(rep, yr, gen, landNr);
+		subComms[i]->outGenetics(rep, yr);
 	}
 }
 
-// Open range file and write header record
-bool Community::outRangeHeaders(Species* pSpecies, int landNr)
+// Close range file
+bool Community::outRangeFinishLandscape()
 {
+	if (outrange.is_open()) outrange.close();
+	outrange.clear();
+	return true;
+}
 
-	if (landNr == -999) { // close the file
-		if (outrange.is_open()) outrange.close();
-		outrange.clear();
-		return true;
-	}
-
+// Open range file and write header record
+bool Community::outRangeStartLandscape(Species* pSpecies, int landNr)
+{
 	string name;
 	landParams ppLand = pLandscape->getLandParams();
 	envStochParams env = paramsStoch->getStoch();
@@ -1100,16 +1118,18 @@ void Community::outRange(Species* pSpecies, int rep, int yr, int gen)
 	outrange << endl;
 }
 
-// Open occupancy file, write header record and set up occupancy array
-bool Community::outOccupancyHeaders(int option)
+// Close occupancy file
+bool Community::outOccupancyFinishLandscape()
 {
-	if (option == -999) { // close the files
-		if (outsuit.is_open()) outsuit.close();
-		if (outoccup.is_open()) outoccup.close();
-		outsuit.clear(); outoccup.clear();
-		return true;
-	}
+	if (outsuit.is_open()) outsuit.close();
+	if (outoccup.is_open()) outoccup.close();
+	outsuit.clear(); outoccup.clear();
+	return true;
+}
 
+// Open occupancy file, write header record and set up occupancy array
+bool Community::outOccupancyStartLandscape()
+{
 	string name, nameI;
 	simParams sim = paramsSim->getSim();
 	landParams ppLand = pLandscape->getLandParams();
@@ -1192,9 +1212,14 @@ void Community::outOccSuit(bool view) {
 
 }
 
+// Close traits file
+bool Community::outTraitsFinishLandscape() {
+	return subComms[0]->outTraitsFinishLandscape();
+}
+
 // Open traits file and write header record
-bool Community::outTraitsHeaders(Species* pSpecies, int landNr) {
-	return subComms[0]->outTraitsHeaders(pLandscape, pSpecies, landNr);
+bool Community::outTraitsStartLandscape(Species* pSpecies, int landNr) {
+	return subComms[0]->outTraitsStartLandscape(pLandscape, pSpecies, landNr);
 }
 
 // Write records to traits file
@@ -1419,15 +1444,15 @@ void Community::writeTraitsRows(Species* pSpecies, int rep, int yr, int gen, int
 	outtraitsrows << endl;
 }
 
+// Close trait rows file
+bool Community::outTraitsRowsFinishLandscape() {
+	if (outtraitsrows.is_open()) outtraitsrows.close();
+	outtraitsrows.clear();
+	return true;
+}
+
 // Open trait rows file and write header record
-bool Community::outTraitsRowsHeaders(Species* pSpecies, int landNr) {
-
-	if (landNr == -999) { // close file
-		if (outtraitsrows.is_open()) outtraitsrows.close();
-		outtraitsrows.clear();
-		return true;
-	}
-
+bool Community::outTraitsRowsStartLandscape(Species* pSpecies, int landNr) {
 	string name;
 	emigRules emig = pSpecies->getEmig();
 	trfrRules trfr = pSpecies->getTrfr();

@@ -500,13 +500,12 @@ indStats Individual::getStats(void) {
 	return s;
 }
 
-Cell* Individual::getLocn(const short option) {
-	if (option == 0) { // return previous location
-		return pPrevCell;
-	}
-	else { // return current location
-		return pCurrCell;
-	}
+Cell* Individual::getPrevCell() {
+	return pPrevCell;
+}
+
+Cell* Individual::getCurrCell() {
+	return pCurrCell;
 }
 
 Patch* Individual::getNatalPatch(void) { return pNatalPatch; }
@@ -1785,19 +1784,25 @@ array3x3f Individual::getHabMatrix(Landscape* pLand, Species* pSpecies,
 }
 
 //---------------------------------------------------------------------------
-// Write records to individuals file
-void Individual::outGenetics(const int rep, const int year, const int spnum,
-	const int landNr, const bool xtab)
+// Close genetics file
+void Individual::outGenFinishReplicate()
 {
-	if (landNr == -1) {
-		if (pGenome != 0) {
-			pGenome->outGenetics(rep, year, spnum, indId, xtab);
-		}
-	}
-	else { // open/close file
-		pGenome->outGenHeaders(rep, landNr, xtab);
-	}
+	pGenome->outGenFinishReplicate();
+}
 
+// Open genetics file and write header record
+void Individual::outGenStartReplicate(const int rep, const int landNr, const bool xtab)
+{
+	pGenome->outGenStartReplicate(rep, landNr, xtab);
+}
+
+// Write records to genetics file
+void Individual::outGenetics(const int rep, const int year, const int spnum,
+	const bool xtab)
+{
+	if (pGenome != 0) {
+		pGenome->outGenetics(rep, year, spnum, indId, xtab);
+	}
 }
 
 #if RS_RCPP

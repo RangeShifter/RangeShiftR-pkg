@@ -232,16 +232,15 @@ void Genome::inherit(const Genome* parent, const short posn, const short chr,
 
 }
 
-void Genome::outGenHeaders(const int rep, const int landNr, const bool xtab)
+void Genome::outGenFinishReplicate()
 {
-
-	if (landNr == -999) { // close file
-		if (outGenetic.is_open()) {
-			outGenetic.close(); outGenetic.clear();
-		}
-		return;
+	if (outGenetic.is_open()) {
+		outGenetic.close(); outGenetic.clear();
 	}
+}
 
+void Genome::outGenStartReplicate(const int rep, const int landNr, const bool xtab)
+{
 	string name;
 	simParams sim = paramsSim->getSim();
 

@@ -135,7 +135,8 @@ public:
 		const double			// s.d. of mutation magnitude (genetic scale)
 	);
 	short getNChromosomes(void);
-	void outGenHeaders(
+	void outGenFinishReplicate();
+	void outGenStartReplicate(
 		const int,	// replicate
 		const int,	// landscape number
 		const bool	// output as cross table?
