@@ -32,6 +32,8 @@
 #' #' @usage NeutralTraits(Positions = "random", NbOfPositions = 10,
 #' Positions = "random", # "random" or list of integer values
 #' NbOfPositions = 10, # numeric, only of positions random
+#' InitialPositions = "all", # "random" or list of integer values
+#' InitialNbOfPositions = NULL, # numeric, only of positions random
 #' InitialDistribution = NULL, # uniform (neutral + dispersal), normal (dispersal)
 #' InitialParameters = 2, # neutral traits: only max value; dispersal: two values: either min/max oder mean+sd, not applicable for genetic load
 #' MutationDistribution = "KAM", # neutral: "KAM" or "SSM", genetic load: "gamma", "uniform", "normal", "negExp", dispersal: uniform or normal
@@ -42,7 +44,10 @@
 #' @param Positions Loci positions coding for trait within genome. Must be in the
 #' range 0-(\code{GenomeSize}-1), specified in \code{\link[RangeShiftR]{Genetics}}. Positions can overlap across
 #' traits - there will be no pleiotropy, but this will influence genetic linkage.,
-#' @param NbOfPositions Only specify if above is set to \code{"random"}, else must be blank (\code{NULL})
+#' @param NbOfPositions Only specify if \code{Positions} is set to \code{"random"}, else must be blank (\code{NULL})
+#' @param InitialPositions  Specify which positions should be initialised. Must be "all", "random" or a vector of integers. If enabled, the remaining initial value parameters will only be applied to the selected positions,
+#' and all other positions will be set to 0. Must be in the range  of \code{Positions}.
+#' @param InitialNbOfPositions Only specify if \code{InitialPositions} is set to \code{"random"}, else must be blank (\code{NULL}). Cannot be greater than \code{NbOfPositions}
 #' @param InitialDistribution Distribution from which to draw initial allele values from.
 #' If \code{uniform}. Initialise with random characters between 0 – \code{max}. Note that possible values start at 0, so \code{max=0}
 #' specifies a monomorphic initial population.
@@ -80,6 +85,8 @@
 #' @export NeutralTraits
 NeutralTraits<- setClass("NeutralTraitsParams", slots = c(Positions = "ANY", # vector of numbers or "random"
                                                          NbOfPositions = "ANY", # integer value or NULL
+                                                         InitialPositions = "ANY", # vector of numbers or "random"
+                                                         InitialNbOfPositions = "ANY", # integer value or NULL
                                                          InitialDistribution = "character", # uniform
                                                          InitialParameters = "integer_OR_numeric", # max value
                                                          MutationDistribution = "character", # KAM or SSM
@@ -88,6 +95,8 @@ NeutralTraits<- setClass("NeutralTraitsParams", slots = c(Positions = "ANY", # v
                                                          OutputValues = "logical")
                    , prototype = list(Positions = "random", # "random" or list of integer values
                                       NbOfPositions = 10, # numeric, only if positions random
+                                      InitialPositions = "all", # "random" or list of integer values
+                                      InitialNbOfPositions = NULL, # numeric, only if positions random
                                       InitialDistribution = NULL, # uniform
                                       InitialParameters = 2, # neutral traits: only max value;
                                       MutationDistribution = "KAM", # neutral: "KAM" or "SSM"
@@ -110,12 +119,32 @@ setValidity("NeutralTraitsParams", function(object) {
         }
     }
     if (isCharacter && object@Positions == "random") {
-        if (is.null(object@NbOfPositions) && object@NbOfPositions <= 0) {
+        if (is.null(object@NbOfPositions) || object@NbOfPositions <= 0) {
             msg <- c(msg, "NbrOfPositions must be a strictly positive integrer.")
         }
     } else if (!is.null(object@NbOfPositions)) {
         msg <- c(msg, "If Positions is not random, NbrOfPositions must not be set (NULL).")
     }
+
+    # Check InitialPosition and InitialNbOfPositions
+    isNumeric <- class(object@InitialPositions) == "integer"
+    isCharacter <- class(object@InitialPositions) == "character"
+    if (is.null(object@InitialPositions) || (!isNumeric && !isCharacter)) {
+        msg <- c(msg, "Initial positions must be integer or character.")
+    }
+    if (!isNumeric){
+        if(isCharacter && !(object@InitialPositions %in% c("random", "all"))) {
+            msg <- c(msg, "Initial positions in neutral genetics must be either a vector of integers, random or all.")
+        }
+    }
+    if (isCharacter && object@InitialPositions == "random") {
+        if (is.null(object@InitialNbOfPositions) || object@InitialNbOfPositions <= 0 || object@InitialNbOfPositions >= object@NbOfPositions) {
+            msg <- c(msg, "InitialNbOfPositions must be a strictly positive integrer smaller than the NbofPositions.")
+        }
+    } else if (!is.null(object@NbOfPositions)) {
+        msg <- c(msg, "If InitialPositions is not random, InitialNbrOfPositions must not be set (NULL).")
+    }
+
     # Check InitialDistribution
     if (object@InitialDistribution != "uniform") {
         msg <- c(msg,"InitialDistribution must be uniform for the neutral trait.")
@@ -174,6 +203,9 @@ setMethod("show", "NeutralTraitsParams", function(object){
     cat("   Neutral Genetics: \n")
     if(is.numeric(object@Positions)) cat("     Loci positions coding for trait: ", object@Positions, "\n")
     if(!is.numeric(object@Positions) && object@Positions=="random") cat("    Loci positions coding for trait randomly chosen with ", object@NbOfPositions, " positions\n")
+    if(is.numeric(object@InitialPositions)) cat("     Initial loci positions coding for trait: ", object@Positions, "\n")
+    if(!is.numeric(object@InitialPositions) && object@InitialPositions=="random") cat("    Initial loci positions coding for trait randomly chosen with ", object@NbOfPositions, " positions\n")
+    if(!is.numeric(object@InitialPositions) && object@InitialPositions=="all") cat("    All loci positions chosen for initial loci positions\n")
     cat("     Initial distribution: ", object@InitialDistribution, "\n")
     cat("     Initial parameters: ", object@InitialParameters, "\n")
     cat("     Mutation distribution: ", object@MutationDistribution, "\n")
@@ -192,6 +224,7 @@ setMethod("show", "NeutralTraitsParams", function(object){
 #'
 #'
 #' @usage GeneticLoadTraits(NbGeneticLoads = 1, Positions = list("random"), NbOfPositions = 10,
+#' InitialPositions = list("all"), InitialNbOfPositions = NULL,
 #' InitialDistribution = "normal", InitialParameters = matrix(c(0.5,0.1), nrow=1),
 #' InitialDomDistribution = "normal", InitialDomParameters = matrix(c(0.5,0.1), nrow=1),
 #' DominanceDistribution = "normal", DominanceParameters = matrix(c(0.5,0.1), nrow=1),
@@ -200,7 +233,10 @@ setMethod("show", "NeutralTraitsParams", function(object){
 #'
 #' @param NbGeneticLoads Number of genetic loads
 #' @param Positions Loci positions coding for that trait within genome. Should be provided as a list of strings (if random) and/or vectors of integers (if not random)
-#' @param NbOfPositions Only specify when the \code{Positions} of a genetic load trait are set to \code{"random"}, else must be blank (\code{NULL})
+#' @param NbOfPositions Number of positions to randomly sample from across the genome for each specified genetic load. Only specify when the \code{Positions} of a genetic load trait are set to \code{"random"}, else must be blank (\code{NULL})
+#' @param InitialPositions Specify which positions should be initialised. Should be provided as a list of strings ("random" or "all") and/or vectors of integers (if not random). If enabled, the remaining initial value parameters will only be applied to the selected positions,
+#' and all other positions will be set to 0. Must be in the range  of \code{Positions}.
+#' @param InitialNbOfPositions Only specify if \code{InitialPositions} for a genetic load is set to \code{"random"}, else must be blank (\code{NULL}). Cannot be greater than \code{NbOfPositions}
 #' @param InitialDistribution Distribution from which to draw initial allele values from. Can be \code{gamma}, \code{uniform}, \code{normal}, \code{negExp}. Should be provided as a vector of strings if \code{NbGeneticLoads > 1}
 #' @param InitialParameters Parameters for the initial distribution: You must provide two colums for \code{uniform}, \code{normal} and \code{gamma} distributions:
 #' min and max (\code{uniform}), mean and sd (\code{normal}) or shape and scale (\code{gamma}) or one column for \code{negExp}: mean
@@ -269,7 +305,9 @@ setMethod("show", "NeutralTraitsParams", function(object){
 GeneticLoadTraits<- setClass("GeneticLoadParams", slots = c(
     NbGeneticLoads = "integer_OR_numeric", # number of genetic loads
     Positions = "list",# "random" or list of integer values
-    NbOfPositions = "ANY", # numeric, only where positions are random; otherwise NA
+    NbOfPositions = "ANY", # numeric, only where positions are random; otherwise NULL
+    InitialPositions = "list", # "random" or list of integer values
+    InitialNbOfPositions = "ANY", # numeric, only where initial positions are random; otherwise NULL
     InitialDistribution = "ANY", #‘gamma’, ‘uniform’, ‘normal’,‘negExp’
     InitialParameters = "ANY", # 2 values for min/max, mean/sd, shape/scale or one value: mean
     InitialDomDistribution = "ANY", #  ‘gamma’, ‘uniform’, ‘normal’, ‘negExp’, ‘scaled’
@@ -284,6 +322,8 @@ GeneticLoadTraits<- setClass("GeneticLoadParams", slots = c(
         NbGeneticLoads = 1L,
         Positions = list("random"),
         NbOfPositions = 2L,
+        InitialPositions = list("all"),
+        InitialNbOfPositions = NULL, #
         InitialDistribution = NULL, # "normal",
         InitialParameters = NULL, # matrix(c(0.5,0.1), nrow=1),
         InitialDomDistribution = NULL, # "normal",
@@ -307,8 +347,8 @@ setValidity("GeneticLoadParams", function(object) {
         msg <- c(msg, "GeneticLoad(): Positions must be provided as a list.")
     }
     # NbOfPositions must be either numeric, integer or NULL
-    if (!is.null(object@NbOfPositions) && class(object@NbOfPositions) != "numeric" && class(object@NbOfPositions) != "integer") {
-        msg <- c(msg, "GeneticLoad(): NbrOfPositions must be either NULL (if all positions are given) or numeric (if at least one genetic load has random positions).")
+    if (!is.null(object@NbOfPositions) && class(object@NbOfPositions) != "integer") {
+        msg <- c(msg, "GeneticLoad(): NbrOfPositions must be either NULL (if all positions are given) or a vector of integers (and NULL) (if at least one genetic load has random positions).")
     }
 
     if (length(object@Positions) != object@NbGeneticLoads) {
@@ -336,6 +376,48 @@ setValidity("GeneticLoadParams", function(object) {
                 }
             }
         }
+
+    # Check InitialPositions and InitialNbOfPositions
+
+    # InitialPositions must be of type list
+    if(class(object@InitialPositions) != "list") {
+        msg <- c(msg, "GeneticLoad(): Initial positions must be provided as a list.")
+    }
+    # InitialNbOfPositions must be a list of either numeric, integer or NULL, if it is not NULL for all genetic loads
+    if (!is.null(object@InitialNbOfPositions) && class(object@InitialNbOfPositions) != "integer") {
+            msg <- c(msg, "GeneticLoad(): InitialNbrOfPositions must be either NULL (if all positions are given) or integer (if at least one genetic load has random positions).")
+        }
+
+    if (length(object@InitialPositions) != object@NbGeneticLoads) {
+        msg <- c(msg, "For each genetic load you must provide the initial positions.")
+    } else if (all(object@InitialPositions == "random")){ # if all positions are random
+        if(length(object@InitialNbOfPositions[!is.na(object@InitialNbOfPositions)]) != object@NbGeneticLoads ) {
+            msg <- c(msg, "GeneticLoad(): For each genetic load with initial random positions you must provide the number of initial positions.")
+        }
+    } else if (all(object@InitialPositions == "all")){
+        if(!is.null(object@InitialNbOfPositions) ) {
+            msg <- c(msg, "GeneticLoad(): If all genetic loads initialse all positions, you must set the InitialNbOfPositions to NULL.")
+        }
+
+    }   else{ # if NOT all positions are random nor all
+        isInteger <- sapply(object@InitialPositions, is.integer)
+        if (!all(isInteger)) { # if not all are numeric,
+            if(!all(object@InitialPositions[isInteger==FALSE] %in% c("random", "all"))){ # then those not numeric must be random
+                msg <- c(msg, "GeneticLoad(): Initial positions in genetic loads must be either a vector of integers, random or all.")
+            }
+            if (any(is.na(object@InitialNbOfPositions[object@InitialPositions == "random"])) || any(object@InitialNbOfPositions[object@InitialPositions == "random"] <= 0)){ # if number of positions are NA or smaller than 0
+                msg <- c(msg, "GeneticLoad(): NbrOfPositions must be set to a strictly positive integer for random positions.")
+            }
+            if (any(!is.na(object@InitialNbOfPositions[object@InitialPositions != "random"]))) { # if there are NbOfPositions supplied for non-random positions
+                msg <- c(msg, "GeneticLoad(): if initial positions is not random InitialNbrOfPositions must be not be set (NULL).")
+            }
+        }
+        else { # if all initial positions are provided
+            if (!is.null(object@NbOfPositions)) {
+                msg <- c(msg, "GeneticLoad(): If initial positions are not random or all, you must not specify the number of positions (InitialNbOfPositions).")
+            }
+        }
+    }
 
     # Check InitialDistribution given or NA
     if (!is.null(object@InitialDistribution)){
