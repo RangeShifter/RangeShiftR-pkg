@@ -230,8 +230,6 @@ public:
 	// functions to handle patches and cells
 
 	void setCellArray(void);
-	void addPatchNum(int);
-	std::vector<int> getPatchNums() const { return patchnums; }
 	void generatePatches(); 		// create an artificial landscape
 	void allocatePatches(Species*);	// create patches for a cell-based landscape
 	Patch* newPatch(
@@ -488,9 +486,6 @@ private:
 
 	// list of patches in the landscape - can be in any sequence
 	std::vector <Patch*> patches;
-
-	// list of patch numbers in the landscape
-	std::vector <int> patchnums;
 
 	// list of habitat codes
 	std::vector <int> habCodes;

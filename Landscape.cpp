@@ -300,7 +300,6 @@ Landscape::~Landscape() {
 		if (initcells[i] != NULL) delete initcells[i];
 	initcells.clear();
 
-	patchnums.clear();
 	habCodes.clear();
 	landchanges.clear();
 	patchchanges.clear();
@@ -317,7 +316,6 @@ void Landscape::resetLand(void) {
 	int npatches = (int)patches.size();
 	for (int i = 0; i < npatches; i++) if (patches[i] != NULL) delete patches[i];
 	patches.clear();
-	patchnums.clear();
 	if (cells != 0) {
 		for (int y = dimY - 1; y >= 0; y--) {
 			for (int x = 0; x < dimX; x++) {
@@ -513,18 +511,6 @@ void Landscape::setCellArray(void) {
 	}
 }
 
-void Landscape::addPatchNum(int p) {
-	int npatches = (int)patchnums.size();
-	bool addpatch = true;
-	for (int i = 0; i < npatches; i++) {
-		if (p == patchnums[i]) {
-			addpatch = false; i = npatches + 1;
-		}
-	}
-	if (addpatch) patchnums.push_back(p);
-}
-
-
 //---------------------------------------------------------------------------
 /* Create an artificial landscape (random or fractal), which can be
 either binary (habitat index 0 is the matrix, 1 is suitable habitat)
@@ -541,7 +527,6 @@ void Landscape::generatePatches()
 
 	int patchnum = 0;  // initial patch number for cell-based landscape
 	// create patch 0 - the matrix patch (even if there is no matrix)
-	patchnums.push_back(patchnum);
 	newPatch(patchnum++);
 
 	// as landscape generator returns cells in a random sequence, first set up all cells
@@ -570,7 +555,6 @@ void Landscape::generatePatches()
 			pCell = findCell(x, y);
 			if (continuous) {
 				if (iter->value > 0.0) { // habitat
-					patchnums.push_back(patchnum);
 					pPatch = newPatch(patchnum++);
 					addCellToPatch(pCell, pPatch, iter->value);
 				}
@@ -583,7 +567,6 @@ void Landscape::generatePatches()
 					addCellToPatch(pCell, patches[0]);
 				}
 				else { // habitat
-					patchnums.push_back(patchnum);
 					pPatch = newPatch(patchnum++);
 					addCellToPatch(pCell, pPatch);
 					pCell->changeHabIndex(0, 1);
@@ -602,7 +585,6 @@ void Landscape::generatePatches()
 				pCell = findCell(x, y);
 				hab = pCell->getHabIndex(0);
 			} while (hab > 0);
-			patchnums.push_back(patchnum);
 			pPatch = newPatch(patchnum++);
 			pCell = findCell(x, y);
 			addCellToPatch(pCell, pPatch);
@@ -656,7 +638,6 @@ void Landscape::allocatePatches(Species* pSpecies)
 	// create the matrix patch
 	patches.push_back(new Patch(0, 0));
 	Patch* matrixPatch = patches[0];
-	patchnums.push_back(0);
 	int patchnum = 1;
 
 	switch (rasterType) {
@@ -672,7 +653,6 @@ void Landscape::allocatePatches(Species* pSpecies)
 						habK += pSpecies->getHabK(pCell->getHabIndex(i));
 					}
 					if (habK > 0.0) { // cell is suitable - create a patch for it
-						patchnums.push_back(patchnum);
 						pPatch = newPatch(patchnum++);
 						addCellToPatch(pCell, pPatch);
 					}
@@ -696,7 +676,6 @@ void Landscape::allocatePatches(Species* pSpecies)
 						habK += pSpecies->getHabK(i) * pCell->getHabitat(i) / 100.0f;
 					}
 					if (habK > 0.0) { // cell is suitable - create a patch for it
-						patchnums.push_back(patchnum);
 						pPatch = newPatch(patchnum++);
 						addCellToPatch(pCell, pPatch);
 					}
@@ -720,7 +699,6 @@ void Landscape::allocatePatches(Species* pSpecies)
 						habK += pSpecies->getHabK(0) * pCell->getHabitat(i) / 100.0f;
 					}
 					if (habK > 0.0) { // cell is suitable (at some time) - create a patch for it
-						patchnums.push_back(patchnum);
 						pPatch = newPatch(patchnum++);
 						addCellToPatch(pCell, pPatch);
 					}
@@ -1294,7 +1272,6 @@ int Landscape::readLandChange(int filenum, bool costs)
 			else {
 				patchChgMatrix[y][x][2] = p;
 				if (p > 0 && !existsPatch(p)) {
-					addPatchNum(p);
 					newPatch(pchseq++, p);
 				}
 			}
@@ -1435,7 +1412,6 @@ int Landscape::readLandChange(int filenum, bool costs)
 				else {
 					patchChgMatrix[y][x][2] = p;
 					if (p > 0 && !existsPatch(p)) {
-						addPatchNum(p);
 						newPatch(pchseq++, p);
 					}
 				}
@@ -2212,7 +2188,6 @@ else { // couldn't read from hfile
 									//								addNewCellToPatch(findPatch(p),x,y,hfloat);
 								}
 								else {
-									addPatchNum(p);
 									pPatch = newPatch(seq++, p);
 									addNewCellToPatch(pPatch, x, y, hfloat);
 								}
