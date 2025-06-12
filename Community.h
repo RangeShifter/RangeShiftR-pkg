@@ -201,9 +201,9 @@ public:
 
 	//file writers
 	void writeNeutralOutputFile(int rep, int yr, int gen, bool outWeirCockerham, bool outWeirHill);
-	void writePerLocusFstatFile(Species* pSpecies, const int yr, const int gen, const  int nAlleles, const int nLoci, set<int> const& patchList);
+	void writePerLocusFstatFile(Species* pSpecies, const int yr, const int gen, const int nLoci, set<int> const& patchList);
 	void writePairwiseFstFile(Species* pSpecies, const int yr, const int gen, const  int nAlleles, const int nLoci, set<int> const& patchList);
-
+	float getPatchHet(Species* pSpecies, int patchId, int whichLocus) const;
 private:
 	Landscape* pLandscape;
 	int indIx;				// index used to apply initial individuals

@@ -288,6 +288,7 @@ public:
 	Patch* findPatch(
 		int   // Patch id no.
 	);
+	set<int> getPatchNbs() const;
 	set<int> samplePatches(const string& samplingOption, int nbToSample, Species* pSpecies);
 	int checkTotalCover(void);
 	void resetPatchPopns(void);

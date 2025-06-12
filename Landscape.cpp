@@ -836,6 +836,14 @@ Patch* Landscape::findPatch(int num) {
 	return 0;
 }
 
+
+set<int> Landscape::getPatchNbs() const {
+	set<int> patchNbs;
+	for (auto& p : patches)
+		patchNbs.emplace(p->getPatchNum());
+	return patchNbs;
+}
+
 set<int> Landscape::samplePatches(const string& samplingOption, int nbToSample, Species* pSpecies) {
 
 	vector<int> sampledPatches;
@@ -860,7 +868,7 @@ set<int> Landscape::samplePatches(const string& samplingOption, int nbToSample, 
 			nbToSample, rng);
 	}
 	else {
-		throw logic_error("Sampling option should be random, rnadom_occupied or all when sampling patches.");
+		throw logic_error("Sampling option should be random, random_occupied or all when sampling patches.");
 	}
 
 	set<int> patchIds;

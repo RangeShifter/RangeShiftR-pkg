@@ -1596,14 +1596,17 @@ bool Community::openNeutralOutputFile(Species* pSpecies, int landNr)
 
 bool Community::openPerLocusFstFile(Species* pSpecies, Landscape* pLandscape, const int landNr, const int rep)
 {
-	set<int> patchList = pSpecies->getSamplePatches();
-	if (patchList.size() == 0) {
-		// list of patches is not known yet and may change every generation,
-		// e.g. for randomOccupied sampling option
-		// instead, header patch numbers range from 1 to nb of sampled patches
-		for (int i = 0; i < pSpecies->getNbPatchesToSample(); i++) {
-			patchList.emplace(i + 1);
-		}
+	set<int> patchList;
+	string samplingOpt = paramsSim->getSim().patchSamplingOption;
+	if (samplingOpt == "list" 
+		|| samplingOpt == "random"
+		|| (samplingOpt == "all" && !pLandscape->getLandParams().dynamic)
+		) // list of patches always the same
+		patchList = pSpecies->getSamplePatches();
+	else { // random_occupied or all with dynamic landscape
+		// then sampled patches may change every year, 
+		// so produce an entry for all patches
+		patchList = pLandscape->getPatchNbs();
 	}
 
 	if (landNr == -999) { // close the file
@@ -1687,10 +1690,10 @@ void Community::writeNeutralOutputFile(int rep, int yr, int gen, bool outWeirCoc
 			<< pNeutralStatistics->getFisWC() << "\t"
 			<< pNeutralStatistics->getFitWC() << "\t";
 	}
-	else outwcfstat << "N/A" << "\t" << "N/A" << "\t" << "N/A" << "\t";
+	else outwcfstat << "NA" << "\t" << "NA" << "\t" << "NA" << "\t";
 
 	if (outWeirHill) outwcfstat << pNeutralStatistics->getWeightedFst() << "\t";
-	else outwcfstat << "N/A" << "\t";
+	else outwcfstat << "NA" << "\t";
 	
 	outwcfstat << pNeutralStatistics->getMeanNbAllPerLocus() << "\t"
 		<< pNeutralStatistics->getMeanNbAllPerLocusPerPatch() << "\t"
@@ -1705,8 +1708,13 @@ void Community::writeNeutralOutputFile(int rep, int yr, int gen, bool outWeirCoc
 // Write per locus FST results file
 // ----------------------------------------------------------------------------------------
 
-void Community::writePerLocusFstatFile(Species* pSpecies, const int yr, const int gen, const  int nAlleles, const int nLoci, set<int> const& patchList)
+void Community::writePerLocusFstatFile(Species* pSpecies, const int yr, const int gen, const int nLoci, set<int> const& patchList)
 {
+	string samplingOpt = paramsSim->getSim().patchSamplingOption;
+	bool samplingFixed = samplingOpt == "list"
+		|| samplingOpt == "random"
+		|| (samplingOpt == "all" && !pLandscape->getLandParams().dynamic);
+
 	const set<int> positions = pSpecies->getSpTrait(NEUTRAL)->getGenePositions();
 
 	int thisLocus = 0;
@@ -1720,31 +1728,50 @@ void Community::writePerLocusFstatFile(Species* pSpecies, const int yr, const in
 			<< pNeutralStatistics->getPerLocusFit(thisLocus) << "\t" 
 			<< pNeutralStatistics->getPerLocusHo(thisLocus);
 
-		for (int patchId : patchList) {
-			const auto patch = pLandscape->findPatch(patchId);
-			const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
-			int popSize = 0;
-			int het = 0;
-			if (pPop != 0) {
-				popSize = pPop->sampleSize();
-				if (popSize == 0) {
-					outperlocusfstat << "\t" << "N/A";
-				}
-				else {
-					for (int a = 0; a < nAlleles; ++a) {
-						het += static_cast<int>(pPop->getHeteroTally(thisLocus, a));
-					}
-					outperlocusfstat << "\t"
-						<< het / (2.0 * popSize);
-				}
+		if (samplingFixed) { // then safe to output sampled patches in order
+			for (int patchId : patchList) {
+				float het = getPatchHet(pSpecies, patchId, thisLocus);
+				if (het < 0) // patch empty
+					outperlocusfstat << "\t" << "NA";
+				else outperlocusfstat << "\t" << het;
 			}
-			else {
-				outperlocusfstat << "\t" << "N/A";
+		}
+		else { // sampling may change between generations, must produce output for all patches in Landscape
+			for (auto patchId : pLandscape->getPatchNbs()) {
+				if (patchList.contains(patchId)) {
+					float het = getPatchHet(pSpecies, patchId, thisLocus);
+					if (het < 0) // patch empty
+						outperlocusfstat << "\t" << "NA";
+					else outperlocusfstat << "\t" << het;
+				}
+				else { // patch not sampled
+					outperlocusfstat << "\t" << "NA";
+				}
 			}
 		}
 		++thisLocus;
 		outperlocusfstat << endl;
 	}
+}
+
+float Community::getPatchHet(Species* pSpecies, int patchId, int whichLocus) const {
+	const auto patch = pLandscape->findPatch(patchId);
+	const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
+	int nAlleles = pSpecies->getSpTrait(NEUTRAL)->getNbNeutralAlleles();
+	int popSize = 0;
+	int het = 0;
+	if (pPop != 0) {
+		popSize = pPop->sampleSize();
+		if (popSize == 0) return -1.0;
+		else {
+			for (int a = 0; a < nAlleles; ++a) {
+				het += static_cast<int>(pPop->getHeteroTally(whichLocus, a));
+			}
+			het /= (2.0 * popSize);
+			return het;
+		}
+	}
+	else return -1.0;
 }
 
 
@@ -1821,7 +1848,7 @@ void Community::outNeutralGenetics(Species* pSpecies, int rep, int yr, int gen, 
 	writeNeutralOutputFile(rep, yr, gen, outWeirCockerham, outWeirHill);
 
 	if (outWeirCockerham) {
-		writePerLocusFstatFile(pSpecies, yr, gen, maxNbNeutralAlleles, nLoci, patchList);
+		writePerLocusFstatFile(pSpecies, yr, gen, nLoci, patchList);
 	}
 	if (outWeirHill) {
 		writePairwiseFstFile(pSpecies, yr, gen, maxNbNeutralAlleles, nLoci, patchList);
