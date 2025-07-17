@@ -1754,12 +1754,14 @@ void Community::writePerLocusFstatFile(Species* pSpecies, const int yr, const in
 	}
 }
 
+// Calculate the observed heterozygosity (Ho) for a patch
+// = number of heterozygous individuals at this locus / nb individuals in patch
 float Community::getPatchHet(Species* pSpecies, int patchId, int whichLocus) const {
 	const auto patch = pLandscape->findPatch(patchId);
 	const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
 	int nAlleles = pSpecies->getSpTrait(NEUTRAL)->getNbNeutralAlleles();
 	int popSize = 0;
-	int het = 0;
+	float het = 0;
 	if (pPop != 0) {
 		popSize = pPop->sampleSize();
 		if (popSize == 0) return -1.0;
@@ -1767,7 +1769,7 @@ float Community::getPatchHet(Species* pSpecies, int patchId, int whichLocus) con
 			for (int a = 0; a < nAlleles; ++a) {
 				het += static_cast<int>(pPop->getHeteroTally(whichLocus, a));
 			}
-			het /= (2.0 * popSize);
+			het /= popSize;
 			return het;
 		}
 	}
