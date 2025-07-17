@@ -771,7 +771,7 @@ void Landscape::addNewCellToPatch(Patch* pPatch, int x, int y, float q) {
 		cells[y][x] = 0;
 	}
 	else { // create the new cell
-		cells[y][x] = new Cell(x, y, (intptr)pPatch, q);
+		cells[y][x] = new Cell(x, y, pPatch, q);
 		if (pPatch != 0) { // not the matrix patch
 			// add the cell to the patch
 			pPatch->addCell(cells[y][x], x, y);
@@ -783,7 +783,7 @@ void Landscape::addNewCellToPatch(Patch* pPatch, int x, int y, int hab) {
 	if (hab < 0) // no-data cell - no Cell created
 		cells[y][x] = 0;
 	else { // create the new cell
-		cells[y][x] = new Cell(x, y, (intptr)pPatch, hab);
+		cells[y][x] = new Cell(x, y, pPatch, hab);
 		if (pPatch != 0) { // not the matrix patch
 			// add the cell to the patch
 			pPatch->addCell(cells[y][x], x, y);
@@ -792,14 +792,14 @@ void Landscape::addNewCellToPatch(Patch* pPatch, int x, int y, int hab) {
 }
 
 void Landscape::addCellToPatch(Cell* pCell, Patch* pPatch) {
-	pCell->setPatch((intptr)pPatch);
+	pCell->setPatch(pPatch);
 	locn loc = pCell->getLocn();
 	// add the cell to the patch
 	pPatch->addCell(pCell, loc.x, loc.y);
 }
 
 void Landscape::addCellToPatch(Cell* pCell, Patch* pPatch, float q) {
-	pCell->setPatch((intptr)pPatch);
+	pCell->setPatch(pPatch);
 	// update the habitat type of the cell
 	pCell->setHabitat(q);
 	locn loc = pCell->getLocn();
@@ -808,7 +808,7 @@ void Landscape::addCellToPatch(Cell* pCell, Patch* pPatch, float q) {
 }
 
 void Landscape::addCellToPatch(Cell* pCell, Patch* pPatch, int hab) {
-	pCell->setPatch((intptr)pPatch);
+	pCell->setPatch(pPatch);
 	// update the habitat type of the cell
 	pCell->setHabIndex(hab);
 	locn loc = pCell->getLocn();
@@ -1450,7 +1450,6 @@ default:
 // Create & initialise patch change matrix
 void Landscape::createPatchChgMatrix(void)
 {
-	intptr patch;
 	Patch* pPatch;
 	Cell* pCell;
 	if (patchChgMatrix != 0) deletePatchChgMatrix();
@@ -1465,12 +1464,11 @@ void Landscape::createPatchChgMatrix(void)
 			}
 			else {
 				// record initial patch number
-				patch = pCell->getPatch();
-				if (patch == 0) { // matrix cell
+				pPatch = pCell->getPatch();
+				if (pPatch == nullptr) { // matrix cell
 					patchChgMatrix[y][x][0] = patchChgMatrix[y][x][1] = 0;
 				}
 				else {
-					pPatch = (Patch*)patch;
 					patchChgMatrix[y][x][0] = patchChgMatrix[y][x][1] = pPatch->getPatchNum();
 				}
 			}
@@ -2440,15 +2438,17 @@ void Landscape::deleteConnectMatrix(void)
 	}
 }
 
-// Write connectivity file headers
-bool Landscape::outConnectHeaders(int option)
+// Close connectivity file
+bool Landscape::outConnectFinishLandscape()
 {
-	if (option == -999) { // close the file
-		if (outConnMat.is_open()) outConnMat.close();
-		outConnMat.clear();
-		return true;
-	}
+	if (outConnMat.is_open()) outConnMat.close();
+	outConnMat.clear();
+	return true;
+}
 
+// Open connectivity file and write header record
+bool Landscape::outConnectStartLandscape()
+{
 	simParams sim = paramsSim->getSim();
 
 	string name = paramsSim->getDir(2);
@@ -2467,39 +2467,39 @@ bool Landscape::outConnectHeaders(int option)
 }
 
 #if RS_RCPP
-// Write movement paths file headers
-void Landscape::outPathsHeaders(int rep, int option)
+// Close movement paths file
+void Landscape::outPathsFinishReplicate()
 {
-	if (option == -999) { // close the file
-		if (outMovePaths.is_open()) outMovePaths.close();
-		outMovePaths.clear();
+	if (outMovePaths.is_open()) outMovePaths.close();
+	outMovePaths.clear();
+}
+
+// Open movement paths file and write header record
+void Landscape::outPathsStartReplicate(int rep)
+{
+	simParams sim = paramsSim->getSim();
+	string name = paramsSim->getDir(2);
+	if (sim.batchMode) {
+		name += "Batch" + to_string(sim.batchNum)
+			+ "_Sim" + to_string(sim.simulation)
+			+ "_Land" + to_string(landNum)
+			+ "_Rep" + to_string(rep);
 	}
-	if (option == 0) { // open the file and write header
+	else {
+		name += "Sim" + to_string(sim.simulation)
+			+ "_Rep" + to_string(rep);
+	}
+	name += "_MovePaths.txt";
 
-		simParams sim = paramsSim->getSim();
-		string name = paramsSim->getDir(2);
-		if (sim.batchMode) {
-			name += "Batch" + to_string(sim.batchNum)
-				+ "_Sim" + to_string(sim.simulation)
-				+ "_Land" + to_string(landNum)
-				+ "_Rep" + to_string(rep);
-		}
-		else {
-			name += "Sim" + to_string(sim.simulation)
-				+ "_Rep" + to_string(rep);
-		}
-		name += "_MovePaths.txt";
-
-		outMovePaths.open(name.c_str());
-		if (outMovePaths.is_open()) {
-			outMovePaths << "Year\tIndID\tStep\tx\ty\tStatus" << endl;
-		}
-		else {
+	outMovePaths.open(name.c_str());
+	if (outMovePaths.is_open()) {
+		outMovePaths << "Year\tIndID\tStep\tx\ty\tStatus" << endl;
+	}
+	else {
 #if RSDEBUG
-			DEBUGLOG << "RunModel(): UNABLE TO OPEN MOVEMENT PATHS FILE" << endl;
+		DEBUGLOG << "RunModel(): UNABLE TO OPEN MOVEMENT PATHS FILE" << endl;
 #endif
-			outMovePaths.clear();
-		}
+		outMovePaths.clear();
 	}
 }
 #endif

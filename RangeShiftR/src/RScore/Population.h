@@ -59,6 +59,11 @@ using namespace std;
 #include "Patch.h"
 #include "Cell.h"
 
+#ifdef _OPENMP
+#include <atomic>
+#include <mutex>
+#endif
+
 //---------------------------------------------------------------------------
 
 struct popStats {
@@ -145,6 +150,9 @@ public:
 	void recruit( // Add a specified individual to the population
 		Individual*	// pointer to Individual
 	);
+	void recruitMany( // Add specified individuals to the population
+		std::vector<Individual*>&	// vector of pointers to Individuals
+	);
 #if RS_RCPP
 	int transfer( // Executed for the Population(s) in the matrix only
 		Landscape*,	// pointer to Landscape
@@ -182,8 +190,9 @@ public:
 	);
 	void survival1(void); // Apply survival changes to the population
 	void ageIncrement(void);
-	bool outPopHeaders( // Open population file and write header record
-		int,	// Landscape number (-999 to close the file)
+	bool outPopFinishLandscape(); // Close population file
+	bool outPopStartLandscape( // Open population file and write header record
+		int,	// Landscape number
 		bool	// TRUE for a patch-based model, FALSE for a cell-based model
 	);
 	void outPopulation( // Write record to population file
@@ -196,9 +205,10 @@ public:
 		bool		// TRUE if there is a gradient in carrying capacity
 	);
 
-	void outIndsHeaders( // Open individuals file and write header record
+	void outIndsFinishReplicate(); // Close individuals file
+	void outIndsStartReplicate( // Open individuals file and write header record
 		int,	// replicate
-		int,	// Landscape number (-999 to close the file)
+		int,	// Landscape number
 		bool	// TRUE for a patch-based model, FALSE for a cell-based model
 	);
 	void outIndividual( // Write records to individuals file
@@ -208,10 +218,14 @@ public:
 		int,				// generation
 		int					// Patch number
 	);
+	void outGenFinishReplicate(); // Close genetics file
+	void outGenStartReplicate( // Open genetics file and write header record
+		const int,		// replicate
+		const int	 		// landscape number
+	);
 	void outGenetics( // Write records to genetics file
 		const int,		// replicate
-		const int,		// year
-		const int	 		// landscape number
+		const int		// year
 	);
 	void clean(void); // Remove zero pointers to dead or dispersed individuals
 
@@ -220,12 +234,18 @@ private:
 	short nSexes;
 	Species *pSpecies;	// pointer to the species
 	Patch *pPatch;			// pointer to the patch
+#ifdef _OPENMP
+	std::atomic<int> nInds[NSTAGES][NSEXES];		// no. of individuals in each stage/sex
+#else
 	int nInds[NSTAGES][NSEXES];		// no. of individuals in each stage/sex
+#endif // _OPENMP
 
 	std::vector <Individual*> inds; // all individuals in population except ...
 	std::vector <Individual*> juvs; // ... juveniles until reproduction of ALL species
 																	// has been completed
-
+#ifdef _OPENMP
+	std::mutex inds_mutex;
+#endif // _OPENMP
 };
 
 //---------------------------------------------------------------------------

@@ -47,6 +47,7 @@ Last updated: 26 October 2021 by Steve Palmer
 
 #include <queue>
 #include <algorithm>
+#include <memory>
 using namespace std;
 
 #include "Parameters.h"
@@ -55,6 +56,10 @@ using namespace std;
 #include "Patch.h"
 #include "Cell.h"
 #include "Genome.h"
+
+#ifdef _OPENMP
+#include <atomic>
+#endif // _OPENMP
 
 #define NODATACOST 100000 // cost to use in place of nodata value for SMS
 #define ABSNODATACOST 100 // cost to use in place of nodata value for SMS
@@ -99,11 +104,38 @@ struct smsdata {
 	int betaDB;			// dispersal bias decay inflection point (no. of steps)
 };
 
+// A class that mimicks std::queue with a fixed-size circular buffer.
+template <typename T>
+class MemoryQueue {
+	std::unique_ptr<T []> data;
+	const std::size_t space;
+	std::size_t begin_idx;
+	std::size_t nb_elts;
+
+public:
+	MemoryQueue(std::size_t size);
+	T &front();
+	T const &front() const;
+	T &back();
+	T const &back() const;
+	void push(const T& value);
+	void push(T&& value);
+	void pop();
+	std::size_t size() const;
+	bool empty() const;
+	bool full() const;
+};
+
 class Individual {
 
 public:
+#ifdef _OPENMP
+	static std::atomic<int> indCounter; // used to create ID, held by class, not members of class
+#else
 	static int indCounter; // used to create ID, held by class, not members of class
+#endif
 	Individual( // Individual constructor
+		Species*, // pointer to species
 		Cell*,	// pointer to Cell
 		Patch*,	// pointer to patch
 		short,	// stage
@@ -171,9 +203,8 @@ public:
 	int getSex(void);
 	int getStatus(void);
 	indStats getStats(void);
-	Cell* getLocn( // Return location (as pointer to Cell)
-		const short	// option: 0 = get natal locn, 1 = get current locn
-	); //
+	Cell* getPrevCell(); // Return previous location (as pointer to Cell)
+	Cell* getCurrCell(); // Return current location (as pointer to Cell)
 	Patch* getNatalPatch(void);
 	void setYearSteps(int);
 	pathSteps getSteps(void);
@@ -240,11 +271,16 @@ public:
 		const short,	// landscape change index
 		const bool    // absorbing boundaries?
 	);
+	void outGenFinishReplicate(); // Close genetics file
+	void outGenStartReplicate( // Open genetics file and write header record
+		const int,		 	// replicate
+		const int,		 	// landscape number
+		const bool	 		// output as cross table?
+	);
 	void outGenetics( // Write records to genetics file
 		const int,		 	// replicate
 		const int,		 	// year
 		const int,		 	// species number
-		const int,		 	// landscape number
 		const bool	 		// output as cross table?
 	);
 #if RS_RCPP
@@ -282,7 +318,7 @@ private:
 	crwParams *crw;     				// pointer to CRW traits and data
 	smsdata *smsData;						// pointer to variables required for SMS
 	settleTraits *setttraits;		// pointer to settlement traits
-	std::queue <locn> memory;		// memory of last N squares visited for SMS
+	MemoryQueue<locn> memory;		// memory of last N squares visited for SMS
 
 	Genome *pGenome;
 

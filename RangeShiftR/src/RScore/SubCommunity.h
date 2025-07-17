@@ -48,6 +48,7 @@ Last updated: 26 October 2021 by Steve Palmer
 
 #include <vector>
 #include <algorithm>
+#include <map>
 using namespace std;
 
 #include "Parameters.h"
@@ -61,7 +62,7 @@ class SubCommunity {
 public:
 	SubCommunity(Patch*,int);
 	~SubCommunity(void);
-	intptr getNum(void);
+	int getNum(void);
 	Patch* getPatch(void);
 	locn getLocn(void);
 
@@ -90,13 +91,18 @@ public:
 		bool		// TRUE for a patch-based model, FALSE for a cell-based model
 	);
 	void emigration(void);
-	// Remove emigrants from their natal patch and add to patch 0 (matrix)
+	// Remove emigrants from their natal patch and add to a map of vectors
 	void initiateDispersal(
-		SubCommunity*	// pointer to matrix SubCommunity
+		std::map<Species*,std::vector<Individual*>>&
 	);
 // Add an individual into the local population of its species in the patch
 	void recruit(
 		Individual*,	// pointer to Individual
+		Species*			// pointer to Species
+	);
+// Add individuals into the local population of their species in the patch
+	void recruitMany(
+		std::vector<Individual*>&,	// vector of pointers to Individuals
 		Species*			// pointer to Species
 	);
 #if RS_RCPP
@@ -117,15 +123,30 @@ public:
 		Landscape*,	// pointer to Landscape
 		bool				// TRUE to increment connectivity totals
 	);
-	void survival(
-		short,	// part:		0 = determine survival & development,
-						//		 			1 = apply survival changes to the population
-		short,	// option0:	0 = stage 0 (juveniles) only         )
-						//					1 = all stages                       ) used by part 0 only
-						//					2 = stage 1 and above (all non-juvs) )
+	void survival0(	// Determine survival & development
+		short,	// option0:	0 = stage 0 (juveniles) only
+						//					1 = all stages
+						//					2 = stage 1 and above (all non-juvs)
 		short 	// option1:	0 - development only (when survival is annual)
 						//	  	 		1 - development and survival
 	);
+	void survival1();	// Apply survival changes to the population
+	inline void survival(
+		short part,	// part:		0 = determine survival & development,
+						//		 			1 = apply survival changes to the population
+		short option0,	// option0:	0 = stage 0 (juveniles) only         )
+						//					1 = all stages                       ) used by part 0 only
+						//					2 = stage 1 and above (all non-juvs) )
+		short option1	// option1:	0 - development only (when survival is annual)
+						//	  	 		1 - development and survival
+	) {
+		if (part == 0) {
+			return survival0(option0, option1);
+		}
+		else {
+			return survival1();
+		}
+	}
 	void ageIncrement(void);
 	// Find the population of a given species in a given patch
 	Population* findPop(Species*,Patch*);
@@ -140,10 +161,10 @@ public:
 	);
 	void deleteOccupancy(void);
 
-	bool outPopHeaders( // Open population file and write header record
+	bool outPopFinishLandscape(); // Close population file
+	bool outPopStartLandscape( // Open population file and write header record
 		Landscape*,	// pointer to Landscape
-		Species*,		// pointer to Species
-		int					// option: -999 to close the file
+		Species*		// pointer to Species
 	);
 	void outPop( // Write records to population file
 		Landscape*,	// pointer to Landscape
@@ -152,25 +173,32 @@ public:
 		int					// generation
 	);
 
-	void outInds( // Write records to individuals file
+	void outIndsFinishReplicate(); // Close individuals file
+	void outIndsStartReplicate( // Open individuals file and write header record
+		Landscape*,	// pointer to Landscape
+		int,				// replicate
+		int					// Landscape number
+	);
+	void outIndividuals( // Write records to individuals file
 		Landscape*,	// pointer to Landscape
 		int,				// replicate
 		int,				// year
-		int,				// generation
-		int					// Landscape number (>= 0 to open the file, -999 to close the file
-								//									 -1 to write data records)
+		int				// generation
+	);
+	void outGenFinishReplicate(); // Close genetics file
+	void outGenStartReplicate( // Open genetics file and write header record
+		int,				// replicate
+		int					// Landscape number
 	);
 	void outGenetics( // Write records to genetics file
 		int,				// replicate
-		int,				// year
-		int,				// generation
-		int					// Landscape number (>= 0 to open the file, -999 to close the file
-								//									 -1 to write data records)
+		int				// year
 	);
-	bool outTraitsHeaders( // Open traits file and write header record
+	bool outTraitsFinishLandscape(); // Close traits file
+	bool outTraitsStartLandscape( // Open traits file and write header record
 		Landscape*,	// pointer to Landscape
 		Species*,		// pointer to Species
-		int					// Landscape number (-999 to close the file)
+		int					// Landscape number
 	);
 	traitsums outTraits( // Write records to traits file and return aggregated sums
 		Landscape*, 	// pointer to Landscape
@@ -184,7 +212,7 @@ public:
 	);
 
 private:
-	intptr subCommNum;	// SubCommunity number
+	int subCommNum;	// SubCommunity number
 		// 0 is reserved for the SubCommunity in the inter-patch matrix
 	Patch *pPatch;
 	int *occupancy;	// pointer to occupancy array
