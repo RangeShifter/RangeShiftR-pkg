@@ -10,7 +10,10 @@ OBJECTS = Rinterface.o RcppExports.o $(SOURCES:.cpp=.o)
 
 OBJECTS = Rinterface.o RcppExports.o $(SOURCES:.cpp=.o)
 
-CXX_STD = CXX11
+CXX_STD = CXX17
 PKG_CXXFLAGS = -DRSWIN64 -DRS_RCPP -DBATCH -w
 #PKG_CXXFLAGS = -DRSDEBUG
 #PKG_CXXFLAGS = -H
+#Optional for activating OpenMP
+#PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS)
+#PKG_LIBS = $(SHLIB_OPENMP_CXXFLAGS)

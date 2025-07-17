@@ -158,7 +158,7 @@ Rcpp::List BatchMainFile(string dirpath, Rcpp::S4 ParMaster)
 	paramsSim->setDir(dirpath); // full path name of directory passed as a parameter
 	// NOT IMPLEMENTED: // control file number also passed as a parameter:
 	// int i = atoi(argv[2]);
-	// cname = paramsSim->getDir(0) + "Inputs/CONTROL" + Int2Str(i) + ".txt";
+	// cname = paramsSim->getDir(0) + "Inputs/CONTROL" + to_string(i) + ".txt";
 	cname = paramsSim->getDir(0) + "Inputs/CONTROL.txt";
 
 #if RSDEBUG
@@ -3229,7 +3229,7 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 
 	// int batch_line = 0;
 
-	string name = paramsSim->getDir(2) + "Batch" + Int2Str(sim.batchNum) + "_RS_log.csv";
+	string name = paramsSim->getDir(2) + "Batch" + to_string(sim.batchNum) + "_RS_log.csv";
 	if(rsLog.is_open()) {
 		rsLog.close();
 		rsLog.clear();
@@ -3273,7 +3273,7 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 			Rcpp::Rcout << "Error reading landscape ASCII haeders - aborting" << endl;
 		} else {
 
-			MemoLine(("Starting landscape " + Int2Str(land_nr) + "...").c_str());
+			MemoLine(("Starting landscape " + to_string(land_nr) + "...").c_str());
 
 #if RSDEBUG
 			DEBUGLOG << endl << "RunBatchR(): j=" << j << " land_nr=" << land_nr << " landtype=" << landtype;
@@ -3405,7 +3405,7 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 				}
 				if(params_ok) {
 #if RSDEBUG
-					DebugGUI("RunBatchR(): simulation i=" + Int2Str(i));
+					DebugGUI("RunBatchR(): simulation i=" + to_string(i));
 #endif
 					pSpecies->setNChromosomes(0);
 					pSpecies->setTraits();
@@ -3449,11 +3449,11 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 #endif
 
 					Rcpp::Rcout << endl
-					            << "Running simulation nr. " << Int2Str(sim.simulation)
-					            //<< " on landscape no. " << Int2Str(land_nr)
+					            << "Running simulation nr. " << to_string(sim.simulation)
+					            //<< " on landscape no. " << to_string(land_nr)
 					            << endl;
 
-					MemoLine(("Starting simulation " + Int2Str(sim.simulation) + "...").c_str());
+					MemoLine(("Starting simulation " + to_string(sim.simulation) + "...").c_str());
 
 					// for batch processing, include landscape number in parameter file name
 					OutParameters(pLandscape);

@@ -7,7 +7,10 @@ SOURCES = RScore/Cell.cpp RScore/Community.cpp RScore/FractalGenerator.cpp \
 
 OBJECTS = Rinterface.o RcppExports.o $(SOURCES:.cpp=.o)
 
-CXX_STD = CXX11
+CXX_STD = CXX17
 PKG_CXXFLAGS = -O2 -DRS_RCPP -DBATCH
 #PKG_CXXFLAGS = -DRSDEBUG
 # PKG_CXXFLAGS = -Wall -pedantic
+#Optional for activating OpenMP
+#PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS)
+#PKG_LIBS = $(SHLIB_OPENMP_CXXFLAGS)
