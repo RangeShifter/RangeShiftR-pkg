@@ -50,7 +50,14 @@ using namespace std;
 
 #include "Parameters.h"
 
+#ifdef _OPENMP
+#include <atomic>
+#include <mutex>
+#endif
+
 //---------------------------------------------------------------------------
+
+class Patch; // Forward-declaration of the Patch class
 
 struct array3x3f { float cell[3][3]; }; 	// neighbourhood cell array (SMS)
 struct smscosts { int cost; array3x3f* effcosts; };	// cell costs for SMS
@@ -62,13 +69,13 @@ public:
 	Cell( // Constructor for habitat codes
 		int,				// x co-ordinate
 		int,				// y co-ordinate
-		intptr,			// pointer (cast as integer) to the Patch to which Cell belongs
+		Patch *,			// pointer to the Patch to which Cell belongs
 		int					// habitat index number
 	);
 	Cell( // Constructor for habitat % cover or habitat quality
 		int,				// x co-ordinate
 		int,				// y co-ordinate
-		intptr,			// pointer (cast as integer) to the Patch to which Cell belongs
+		Patch *,			// pointer to the Patch to which Cell belongs
 		float				// habitat proportion or cell quality score
 	);
 	~Cell();
@@ -90,9 +97,9 @@ public:
 		int		// habitat index number / landscape change number
 	);
 	void setPatch(
-		intptr		// pointer (cast as integer) to the Patch to which Cell belongs
+		Patch *		// pointer to the Patch to which Cell belongs
 	);
-	intptr getPatch(void);
+	Patch *getPatch(void);
 	locn getLocn(void);
 	void setEnvDev(
 		float	// local environmental deviation
@@ -110,6 +117,9 @@ public:
 	void setCost(
 		int		// cost value for SMS
 	);
+#ifdef _OPENMP
+	std::unique_lock<std::mutex> lockCost(void);
+#endif
 	int getCost(void);
 	void resetCost(void);
 	array3x3f getEffCosts(void);
@@ -122,21 +132,29 @@ public:
 	unsigned long int getVisits(void);
 
 private:
-	int x, y;			// cell co-ordinates
-	intptr pPatch; 	// pointer (cast as integer) to the Patch to which cell belongs
+	int x,y;			// cell co-ordinates
+	Patch *pPatch; 	// pointer to the Patch to which cell belongs
 	// NOTE: THE FOLLOWING ENVIRONMENTAL VARIABLES COULD BE COMBINED IN A STRUCTURE
 	// AND ACCESSED BY A POINTER ...
 	float envVal; // environmental value, representing one of:
 	// gradient in K, r or extinction probability
 	float envDev;	// local environmental deviation (static, in range -1.0 to +1.0)
 	float eps;		// local environmental stochasticity (epsilon) (dynamic, from N(0,std))
+#ifdef _OPENMP
+	std::atomic<unsigned long int> visits; // no. of times square is visited by dispersers
+#else
 	unsigned long int visits; // no. of times square is visited by dispersers
-	smscosts* smsData;
+#endif
+	smscosts *smsData;
 
 	vector <short> habIxx; 		// habitat indices (rasterType=0)
 	// NB initially, habitat codes are loaded, then converted to index nos.
 	//    once landscape is fully loaded
 	vector <float> habitats;	// habitat proportions (rasterType=1) or quality (rasterType=2)
+
+#ifdef _OPENMP
+	std::mutex cost_mutex;
+#endif
 };
 
 //---------------------------------------------------------------------------

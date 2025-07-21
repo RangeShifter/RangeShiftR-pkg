@@ -23,16 +23,92 @@
  //---------------------------------------------------------------------------
 
 #include "Individual.h"
+
+#ifdef _OPENMP
+#include <mutex>
+#endif
+
 //---------------------------------------------------------------------------
 
+template <typename T>
+MemoryQueue<T>::MemoryQueue(std::size_t size):
+	space(size),
+	data(new T[size]),
+	begin_idx(0),
+	nb_elts(0)
+{ }
+
+template <typename T>
+T &MemoryQueue<T>::front() {
+	return data[begin_idx];
+}
+
+template <typename T>
+T const &MemoryQueue<T>::front() const {
+	return data[begin_idx];
+}
+
+template <typename T>
+T &MemoryQueue<T>::back() {
+	return data[(begin_idx + nb_elts - 1) % space];
+}
+
+template <typename T>
+T const &MemoryQueue<T>::back() const {
+	return data[(begin_idx + nb_elts - 1) % space];
+}
+
+template <typename T>
+void MemoryQueue<T>::push(const T& value) {
+	size_t end_idx = (begin_idx + nb_elts) % space;
+	data[end_idx] = value;
+	nb_elts++;
+}
+
+template <typename T>
+void MemoryQueue<T>::push(T&& value) {
+	size_t end_idx = (begin_idx + nb_elts) % space;
+	data[end_idx] = std::move(value);
+	nb_elts++;
+}
+
+template <typename T>
+void MemoryQueue<T>::pop() {
+	begin_idx++;
+	begin_idx %= space;
+	nb_elts--;
+}
+
+template <typename T>
+std::size_t MemoryQueue<T>::size() const {
+	return nb_elts;
+}
+
+template <typename T>
+bool MemoryQueue<T>::empty() const {
+	return nb_elts == 0;
+}
+
+template <typename T>
+bool MemoryQueue<T>::full() const {
+	return nb_elts == space;
+}
+
+//---------------------------------------------------------------------------
+
+#ifdef _OPENMP
+std::atomic<int> Individual::indCounter = 0;
+#else // _OPENMP
 int Individual::indCounter = 0;
+#endif // _OPENMP
 TraitFactory Individual::traitFactory = TraitFactory();
 
 //---------------------------------------------------------------------------
 
 // Individual constructor
-Individual::Individual(Cell* pCell, Patch* pPatch, short stg, short a, short repInt,
-	float probmale, bool movt, short moveType)
+Individual::Individual(Species* pSpecies, Cell* pCell, Patch* pPatch, short stg, short a, short repInt,
+	float probmale, bool movt, short moveType):
+	memory(pSpecies->getSMSTraits().memSize)
 {
 	indId = indCounter; indCounter++; // unique identifier for each individual
 	geneticFitness = 1.0;
@@ -333,13 +409,12 @@ indStats Individual::getStats(void) {
 	return s;
 }
 
-Cell* Individual::getLocn(const short option) {
-	if (option == 0) { // return previous location
-		return pPrevCell;
-	}
-	else { // return current location
-		return pCurrCell;
-	}
+Cell* Individual::getPrevCell() {
+	return pPrevCell;
+}
+
+Cell* Individual::getCurrCell() {
+	return pCurrCell;
 }
 
 Patch* Individual::getNatalPatch(void) { return pNatalPatch; }
@@ -652,6 +727,7 @@ void Individual::moveto(Cell* newCell) {
 int Individual::moveKernel(Landscape* pLandscape, Species* pSpecies, const bool absorbing)
 {
 	intptr patch;
+	intptr patch;
 	int patchNum = 0;
 	int newX = 0, newY = 0;
 	int dispersing = 1;
@@ -761,29 +837,27 @@ int Individual::moveKernel(Landscape* pLandscape, Species* pSpecies, const bool 
 					|| newY < land.minY || newY > land.maxY) { // beyond absorbing boundary
 					// this cannot be reached if not absorbing?
 					pCell = 0;
-					patch = 0;
+					pPatch = nullptr;
 					patchNum = -1;
 				}
 				else {
 					pCell = pLandscape->findCell(newX, newY);
 					if (pCell == 0) { // no-data cell
-						patch = 0;
+						pPatch = nullptr;
 						patchNum = -1;
 					}
 					else {
-						patch = pCell->getPatch();
-						if (patch == 0) { // matrix
-							pPatch = 0;
+						pPatch = pCell->getPatch();
+						if (pPatch == nullptr) { // matrix
 							patchNum = 0;
 						}
 						else {
-							pPatch = (Patch*)patch;
 							patchNum = pPatch->getPatchNum();
 						}
 					}
 				}
-			}
 			else { // exceeded 1000 attempts
+				pPatch = nullptr;
 				patch = 0;
 				patchNum = -1;
 			}
@@ -853,7 +927,6 @@ int Individual::moveStep(Landscape* pLandscape, Species* pSpecies,
 {
 	if (status != 1) return 0; // not currently dispersing
 
-	intptr patch;
 	int patchNum;
 	int newX, newY;
 	locn loc;
@@ -862,7 +935,7 @@ int Individual::moveStep(Landscape* pLandscape, Species* pSpecies,
 	double angle;
 	double mortprob, rho, steplen;
 	movedata move;
-	Patch* pPatch = 0;
+	Patch* pPatch = nullptr;
 	bool absorbed = false;
 	//int popsize;
 
@@ -873,14 +946,12 @@ int Individual::moveStep(Landscape* pLandscape, Species* pSpecies,
 	trfrCRWTraits movt = pSpecies->getSpCRWTraits();
 	settleSteps settsteps = pSpecies->getSteps(stage, sex);
 
-	patch = pCurrCell->getPatch();
+	pPatch = pCurrCell->getPatch();
 
-	if (patch == 0) { // matrix
-		pPatch = 0;
+	if (pPatch == nullptr) { // matrix
 		patchNum = 0;
 	}
 	else {
-		pPatch = (Patch*)patch;
 		patchNum = pPatch->getPatchNum();
 	}
 	// apply step-dependent mortality risk ...
@@ -903,9 +974,7 @@ int Individual::moveStep(Landscape* pLandscape, Species* pSpecies,
 	}
 	else { // take a step
 		(path->year)++;
-		(path->total)++;
-		//	if (pPatch != pNatalPatch || path->out > 0) (path->out)++;
-		if (patch == 0 || pPatch == 0 || patchNum == 0) { // not in a patch
+		if (pPatch == nullptr || patchNum == 0) { // not in a patch
 			if (path != 0) path->settleStatus = 0; // reset path settlement status
 			(path->out)++;
 		}
@@ -926,16 +995,7 @@ int Individual::moveStep(Landscape* pLandscape, Species* pSpecies,
 			else {
 
 				// WOULD IT BE MORE EFFICIENT FOR smsMove TO RETURN A POINTER TO THE NEW CELL? ...
-
-				patch = pCurrCell->getPatch();
-				//int patchnum;
-				if (patch == 0) {
-					pPatch = 0;
-					//patchnum = 0;
-				}
-				else {
-					pPatch = (Patch*)patch;
-					//patchnum = pPatch->getPatchNum();
+				pPatch = pCurrCell->getPatch();
 				}
 				if (sim.saveVisits && pPatch != pNatalPatch) {
 					pCurrCell->incrVisits();
@@ -988,11 +1048,11 @@ int Individual::moveStep(Landscape* pLandscape, Species* pSpecies,
 				else
 					pCurrCell = pLandscape->findCell(newX, newY);
 				if (pCurrCell == 0) { // no-data cell or beyond absorbing boundary
-					patch = 0;
+					pPatch = nullptr;
 					if (absorbing) absorbed = true;
 				}
 				else
-					patch = pCurrCell->getPatch();
+					pPatch = pCurrCell->getPatch();
 			} while (!absorbing && pCurrCell == 0 && loopsteps < 1000);
 			pCRW.prevdrn = (float)angle;
 			pCRW.xc = (float)xcnew; pCRW.yc = (float)ycnew;
@@ -1015,11 +1075,9 @@ int Individual::moveStep(Landscape* pLandscape, Species* pSpecies,
 			break;
 
 		} // end of switch (trfr.moveType)
-
-		if (dispersing==1 && // only if it is still dispersing and did not die during the last step, it should make this decision!
-            patch > 0  // not no-data area or matrix
+		if (dispersing == 1 &&
+            pPatch != nullptr  // not no-data area or matrix
 			&& path->total >= settsteps.minSteps) {
-			pPatch = (Patch*)patch;
 			if (pPatch != pNatalPatch)
 			{
 				// determine whether the new patch is potentially suitable
@@ -1054,7 +1112,6 @@ movedata Individual::smsMove(Landscape* pLand, Species* pSpecies,
 	array3x3d nbr; 	// to hold weights/costs/probs of moving to neighbouring cells
 	array3x3d goal;	// to hold weights for moving towards a goal location
 	array3x3f hab;	// to hold weights for habitat (includes percep range)
-	int x2, y2; 			// x index from 0=W to 2=E, y index from 0=N to 2=S
 	int newX = -9, newY = -9; // BUGFIX: must not be 0 because 0,0 is a valid landscape cell
 	Cell* pCell;
 	Cell* pNewCell = NULL;
@@ -1117,7 +1174,10 @@ movedata Individual::smsMove(Landscape* pLand, Species* pSpecies,
 
 	// get habitat-dependent weights (mean effective costs, given perceptual range)
 	// first check if costs have already been calculated
-
+	{
+#ifdef _OPENMP
+	const std::unique_lock<std::mutex> lock = pCurrCell->lockCost();
+#endif
 	hab = pCurrCell->getEffCosts();
 	if (hab.cell[0][0] < 0.0) { // costs have not already been calculated
 		hab = getHabMatrix(pLand, pSpecies, current.x, current.y, movt.pr, movt.prMethod,
@@ -1126,6 +1186,7 @@ movedata Individual::smsMove(Landscape* pLand, Species* pSpecies,
 	}
 	else { // they have already been calculated - no action required
 
+	}
 	}
 
 	// determine weighted effective cost for the 8 neighbours
@@ -1235,7 +1296,7 @@ movedata Individual::smsMove(Landscape* pLand, Species* pSpecies,
 		newcellcost = pNewCell->getCost();
 		move.cost = move.dist * 0.5f * ((float)cellcost + (float)newcellcost);
 		// make the selected move
-		if ((short)memory.size() == movt.memSize) {
+		if (memory.full()) {
 			memory.pop(); // remove oldest memory element
 		}
 		memory.push(current); // record previous location in memory
@@ -1528,6 +1589,10 @@ array3x3f Individual::getHabMatrix(Landscape* pLand, Species* pSpecies,
 }
 
 #if RS_RCPP
+#ifdef _OPENMP
+std::mutex outMovePaths_mutex;
+#endif
+
 //---------------------------------------------------------------------------
 // Write records to movement paths file
 void Individual::outMovePath(const int year)
@@ -1536,6 +1601,9 @@ void Individual::outMovePath(const int year)
 
 	//if (pPatch != pNatalPatch) {
 	loc = pCurrCell->getLocn();
+#ifdef _OPENMP
+	const std::lock_guard<std::mutex> lock(outMovePaths_mutex);
+#endif
 	// if still dispersing...
 	if (status == 1) {
 		// at first step, record start cell first
@@ -1605,10 +1673,50 @@ double cauchy(double location, double scale) {
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
+#if RSDEBUG
 
-#ifndef NDEBUG
-// Testing utilities
 
+void testIndividual() {
+
+	Species* pSpecies = new Species();
+
+	Patch* pPatch = new Patch(0, 0);
+	int cell_x = 2;
+	int cell_y = 5;
+	int cell_hab = 2;
+	Cell* pCell = new Cell(cell_x, cell_y, pPatch, cell_hab);
+
+	// Create an individual
+	short stg = 0;
+	short age = 0;
+	short repInt = 0;
+	float probmale = 0;
+	bool uses_movt_process = true;
+	short moveType = 1;
+	Individual ind(pSpecies, pCell, pPatch, stg, age, repInt, probmale, uses_movt_process, moveType);
+
+	// An individual can move to a neighbouring cell
+	//ind.moveto();
+
+	// Gets its sex drawn from pmale
+	
+	// Can age or develop
+	// Reproduces
+	// depending on whether it is sexual or not
+	// depending on the stage
+	// depending on the trait inheritance
+
+
+	// Disperses
+	// Emigrates
+	// Transfers
+	// Settles
+
+	// Survives
+
+	// Develops
+
+}
 Cell* Individual::getCurrCell() const {
 	return pCurrCell;
 }

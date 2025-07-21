@@ -29,14 +29,14 @@
 
 Patch::Patch(int seqnum, int num)
 {
-	patchSeqNum = seqnum; patchNum = num; nCells = 0;
-	xMin = yMin = 999999999; xMax = yMax = 0; x = y = 0;
-	subCommPtr = 0;
-	localK = 0.0;
-	for (int sex = 0; sex < gMaxNbSexes; sex++) {
-		nTemp[sex] = 0;
-	}
-	changed = false;
+patchSeqNum = seqnum; patchNum = num; nCells = 0;
+xMin = yMin = 999999999; xMax = yMax = 0; x = y = 0;
+subCommPtr = nullptr;
+localK = 0.0;
+for (int sex = 0; sex < gMaxNbSexes; sex++) {
+	nTemp[sex] = 0;
+}
+changed = false;
 }
 
 Patch::~Patch() {
@@ -257,23 +257,27 @@ void Patch::removeCell(Cell* pCell) {
 	}
 }
 
-void Patch::setSubComm(intptr sc)
-{
-	subCommPtr = sc;
+void Patch::setSubComm(SubCommunity* sc)
+{ 
+	subCommPtr = sc; 
 }
 
-// Get pointer to corresponding Sub-community (cast as an integer)
-intptr Patch::getSubComm(void)
-{
-	return subCommPtr;
+// Get pointer to corresponding Sub-community
+SubCommunity *Patch::getSubComm(void)
+{ return subCommPtr; }
+
+#ifdef _OPENMP
+std::unique_lock<std::mutex> Patch::lockPopns() {
+	return std::unique_lock<std::mutex>(popns_mutex);
 }
+#endif
 
 void Patch::addPopn(patchPopn pop) {
 	popns.push_back(pop);
 }
 
-// Return pointer (cast as integer) to the Population of the specified Species
-intptr Patch::getPopn(intptr sp)
+// Return pointer to the Population of the specified Species
+Population *Patch::getPopn(Species *sp)
 {
 	int npops = (int)popns.size();
 	for (int i = 0; i < npops; i++) {

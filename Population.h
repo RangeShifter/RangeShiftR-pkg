@@ -60,6 +60,11 @@ using namespace std;
 #include "Cell.h"
 #include "NeutralStatsManager.h"
 
+#ifdef _OPENMP
+#include <atomic>
+#include <mutex>
+#endif
+
 //---------------------------------------------------------------------------
 
 struct popStats {
@@ -155,6 +160,9 @@ public:
 	void sampleIndsWithoutReplacement(string n, const set<int>& sampleStages);
 	int sampleSize() const;
 	vector<Individual*> getIndividualsInStage(int stage);
+	void recruitMany( // Add specified individuals to the population
+		std::vector<Individual*>&	// vector of pointers to Individuals
+	);
 #if RS_RCPP
 	int transfer( // Executed for the Population(s) in the matrix only
 		Landscape*,	// pointer to Landscape
@@ -192,8 +200,9 @@ public:
 	);
 	void survival1(void); // Apply survival changes to the population
 	void ageIncrement(void);
-	bool outPopHeaders( // Open population file and write header record
-		int,	// Landscape number (-999 to close the file)
+	bool outPopFinishLandscape(); // Close population file
+	bool outPopStartLandscape( // Open population file and write header record
+		int,	// Landscape number
 		bool	// TRUE for a patch-based model, FALSE for a cell-based model
 	);
 	void outPopulation( // Write record to population file
@@ -206,9 +215,10 @@ public:
 		bool		// TRUE if there is a gradient in carrying capacity
 	);
 
-	void outIndsHeaders( // Open individuals file and write header record
+	void outIndsFinishReplicate(); // Close individuals file
+	void outIndsStartReplicate( // Open individuals file and write header record
 		int,	// replicate
-		int,	// Landscape number (-999 to close the file)
+		int,	// Landscape number
 		bool	// TRUE for a patch-based model, FALSE for a cell-based model
 	);
 	void outIndividual( // Write records to individuals file
@@ -237,9 +247,13 @@ public:
 private:
 	short nStages;
 	short nSexes;
-	Species* pSpecies;	// pointer to the species
-	Patch* pPatch;			// pointer to the patch
+	Species *pSpecies;	// pointer to the species
+	Patch *pPatch;			// pointer to the patch
+#ifdef _OPENMP
+	std::atomic<int> nInds[gMaxNbStages][gMaxNbSexes];		// no. of individuals in each stage/sex
+#else
 	int nInds[gMaxNbStages][gMaxNbSexes];		// no. of individuals in each stage/sex
+#endif // _OPENMP
 
 	vector <Individual*> inds; // all individuals in population except ...
 	vector <Individual*> juvs; // ... juveniles until reproduction of ALL species
@@ -248,6 +262,9 @@ private:
 	vector<Individual*> sampledInds;
 	vector<NeutralCountsTable> popNeutralCountTables;
 	void resetPopNeutralTables();
+#ifdef _OPENMP
+	std::mutex inds_mutex;
+#endif // _OPENMP
 };
 
 //---------------------------------------------------------------------------
