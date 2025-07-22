@@ -79,6 +79,7 @@ public:
 	seed_t getSeed() const { return RS_random_seed; };
 
 	private:
+		seed_t RS_random_seed;
 		std::vector<mt19937> gens;
 		std::uniform_real_distribution<>* pRandom01;
 		std::normal_distribution<>* pNormal;

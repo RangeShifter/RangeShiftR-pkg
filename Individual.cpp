@@ -726,8 +726,6 @@ void Individual::moveto(Cell* newCell) {
 // Returns 1 if still dispersing (including having found a potential patch), otherwise 0
 int Individual::moveKernel(Landscape* pLandscape, Species* pSpecies, const bool absorbing)
 {
-	intptr patch;
-	intptr patch;
 	int patchNum = 0;
 	int newX = 0, newY = 0;
 	int dispersing = 1;
@@ -860,7 +858,6 @@ int Individual::moveKernel(Landscape* pLandscape, Species* pSpecies, const bool 
 			}
 			else { // exceeded 1000 attempts
 				pPatch = nullptr;
-				patch = 0;
 				patchNum = -1;
 			}
 		} while (!absorbing && patchNum < 0 && loopsteps < 1000); 			 // in a no-data region

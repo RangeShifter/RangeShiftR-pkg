@@ -85,10 +85,11 @@ RSrandom::RSrandom() {
 	gens.reserve(nb_generators);
 	for (int i = 0; i < nb_generators; i++)
 		gens.emplace_back(RS_random_seed + i);
-#else // _OPENMP
+#else
 	gens.reserve(1);
 	gens.emplace_back(RS_random_seed);
 #endif // _OPENMP	
+
 	// Set up standard uniform distribution
 	pRandom01 = new uniform_real_distribution<double>(0.0, 1.0);
 	// Set up standard normal distribution
@@ -116,7 +117,7 @@ double RSrandom::Random() {
     // return random number between 0 and 1
 #ifdef _OPENMP
 	return pRandom01->operator()(gens[omp_get_thread_num() % gens.size()]);
-#else // _OPENMP
+#else
 	return pRandom01->operator()(gens[0]);
 #endif // _OPENMP
 }
@@ -129,17 +130,21 @@ int RSrandom::IRandom(int min, int max) {
     uniform_int_distribution<int> unif(min, max);
 #ifdef _OPENMP
 	return unif(gens[omp_get_thread_num() % gens.size()]);
-#else // _OPENMP
+#else
 	return unif(gens[0]);
 #endif // _OPENMP
 }
 
 float RSrandom::FRandom(float min, float max) {
-    if (min == max)
-        return min;
+    if (min == max) return min;
     // return random double in the interval min <= x <= max
     uniform_real_distribution<float> unif(min, max);
-    return unif(*gen);
+
+#ifdef _OPENMP
+	return unif(gens[omp_get_thread_num() % gens.size()]);
+#else
+	return unif(gens[0]);
+#endif
 }
 
 int RSrandom::Bernoulli(double p) {
@@ -154,13 +159,17 @@ int RSrandom::Bernoulli(double p) {
 
 int RSrandom::Binomial(const int& n, const double& p) {
 	binomial_distribution<int> binom(n, p);
-	return binom(*gen);
+#ifdef _OPENMP
+	return binom(gens[omp_get_thread_num() % gens.size()]);
+#else
+	return binom(gens[0]);
+#endif
 }
 
 double RSrandom::Normal(double mean, double sd) {
 #ifdef _OPENMP
 	return mean + sd * pNormal->operator()(gens[omp_get_thread_num() % gens.size()]);
-#else // _OPENMP
+#else
 	return mean + sd * pNormal->operator()(gens[0]);
 #endif // _OPENMP
 }
@@ -169,7 +178,7 @@ int RSrandom::Poisson(double mean) {
     poisson_distribution<int> poiss(mean);
 #ifdef _OPENMP
 	return poiss(gens[omp_get_thread_num() % gens.size()]);
-#else // _OPENMP
+#else
 	return poiss(gens[0]);
 #endif // _OPENMP
 }
@@ -180,7 +189,7 @@ double RSrandom::Gamma(double shape, double scale) { //scale  = mean/shape, shap
 
 #ifdef _OPENMP
 	double x = poiss(gens[omp_get_thread_num() % gens.size()]);
-#else // _OPENMP
+#else
 	double x = gamma(gens[0]);
 #endif // _OPENMP
     if (scale < 0) x = -x;
@@ -194,7 +203,12 @@ double RSrandom::NegExp(double mean) {
 }
 
 void RSrandom::fixNewSeed(int seed) {
-    gen->seed(seed);
+#ifdef _OPENMP
+	for (int i = 0; i < omp_get_max_threads(); i++)
+		gens[i].seed(seed + i);
+#else
+	gens[0].seed(seed);
+#endif // _OPENMP
 }
 
 //--------------------------------------------------------------------------------------------------

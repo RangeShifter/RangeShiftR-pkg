@@ -325,7 +325,7 @@ void Community::addManuallySelected(void) {
 				if (pCell != 0) { // not no-data cell
 					pPatch = pCell->getPatch();
 					if (pPatch != nullptr) {
-						pSubcomm = pPatch->getSubComm();
+						pSubComm = pPatch->getSubComm();
 						if (pSubComm != nullptr) {
 							pSubComm->setInitial(true);
 						}
@@ -1553,7 +1553,7 @@ void Community::outputGeneValues(const int& year, const int& gen, Species* pSpec
 		if (patch == 0) {
 			throw runtime_error("Sampled patch does not exist");
 		}
-		const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
+		const auto pPop = patch->getPopn(pSpecies);
 		if (pPop != 0) { 
 			pPop->outputGeneValues(ofsGenes, year, gen);
 		}
@@ -1575,7 +1575,7 @@ void Community::sampleIndividuals(Species* pSpecies) {
 		if (patch == 0) {
 			throw runtime_error("Can't sample individuals: patch" + to_string(patchId) + "doesn't exist.");
 		}
-		auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
+		auto pPop = patch->getPopn(pSpecies);
 		if (pPop != 0) {
 			pPop->sampleIndsWithoutReplacement(nbIndsToSample, stagesToSampleFrom);
 		}
@@ -1783,7 +1783,7 @@ void Community::writePerLocusFstatFile(Species* pSpecies, const int yr, const in
 // = number of heterozygous individuals at this locus / nb individuals in patch
 float Community::getPatchHet(Species* pSpecies, int patchId, int whichLocus) const {
 	const auto patch = pLandscape->findPatch(patchId);
-	const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
+	const auto pPop = patch->getPopn(pSpecies);
 	int nAlleles = pSpecies->getSpTrait(NEUTRAL)->getNbNeutralAlleles();
 	int popSize = 0;
 	float het = 0;
@@ -1850,7 +1850,7 @@ void Community::outNeutralGenetics(Species* pSpecies, int rep, int yr, int gen, 
 		if (patch == 0) {
 			throw runtime_error("Sampled patch does not exist");
 		}
-		const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
+		const auto pPop = patch->getPopn(pSpecies);
 		if (pPop != 0) { // empty patches do not contribute
 			nInds += pPop->sampleSize();
 			nbPops++;

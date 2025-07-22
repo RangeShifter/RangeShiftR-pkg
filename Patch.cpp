@@ -263,7 +263,7 @@ void Patch::setSubComm(SubCommunity* sc)
 }
 
 // Get pointer to corresponding Sub-community
-SubCommunity *Patch::getSubComm(void)
+SubCommunity* Patch::getSubComm(void)
 { return subCommPtr; }
 
 #ifdef _OPENMP
@@ -277,7 +277,7 @@ void Patch::addPopn(patchPopn pop) {
 }
 
 // Return pointer to the Population of the specified Species
-Population *Patch::getPopn(Species *sp)
+Population* Patch::getPopn(Species *sp)
 {
 	int npops = (int)popns.size();
 	for (int i = 0; i < npops; i++) {
