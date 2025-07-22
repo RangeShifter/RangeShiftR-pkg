@@ -156,11 +156,6 @@ public:
 		int,	// year
 		int	// generation
 	);
-	void outGenFinishReplicate(); // Close genetics file
-	void outGenStartReplicate( // Open genetics file and write header record
-		int,	// replicate
-		int		// Landscape number
-	);
 	// Close occupancy file
 	bool outOccupancyFinishLandscape();
 	// Open occupancy file, write header record and set up occupancy array

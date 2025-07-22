@@ -177,11 +177,6 @@ public:
 		int,				// year
 		int				// generation
 	);
-	void outGenFinishReplicate(); // Close genetics file
-	void outGenStartReplicate( // Open genetics file and write header record
-		int,				// replicate
-		int					// Landscape number
-	);
 	bool outTraitsHeaders( // Open traits file and write header record
 		Landscape*,	// pointer to Landscape
 		Species*,		// pointer to Species

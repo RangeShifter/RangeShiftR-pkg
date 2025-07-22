@@ -575,7 +575,6 @@ void Community::outPop(int rep, int yr, int gen)
 
 }
 
-
 // Close individuals file
 void Community::outIndsFinishReplicate() {
 	subComms[0]->outIndsFinishReplicate();
@@ -594,17 +593,6 @@ void Community::outIndividuals(int rep, int yr, int gen) {
 		subComms[i]->outIndividuals(pLandscape, rep, yr, gen);
 	}
 }
-
-// Close genetics file
-void Community::outGenFinishReplicate() {
-	subComms[0]->outGenFinishReplicate();
-}
-
-// Open genetics file and write header record
-void Community::outGenStartReplicate(int rep, int landNr) {
-	subComms[0]->outGenStartReplicate(rep, landNr);
-}
-
 
 // Close range file
 bool Community::outRangeFinishLandscape()

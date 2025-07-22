@@ -583,7 +583,11 @@ void SubCommunity::outPop(Landscape* pLandscape, int rep, int yr, int gen)
 
 // Close individuals file
 void SubCommunity::outIndsFinishReplicate() {
-	popns[0]->outIndsFinishReplicate();
+	// as all populations have been deleted, set up a dummy one
+	Population* pPop = new Population();
+	pPop->outIndsFinishReplicate();
+	delete pPop;
+	return;
 }
 
 // Open individuals file and write header record

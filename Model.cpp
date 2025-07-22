@@ -124,7 +124,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 			for (int i = 0; i < npatches; i++) {
 				ppp = pLandscape->getPatchData(i);
 				pComm->addSubComm(ppp.pPatch, ppp.patchNum); // SET UP ALL SUB-COMMUNITIES
-				pComm->addSubComm(ppp.pPatch, ppp.patchNum); // SET UP ALL SUB-COMMUNITIES
 			}
 			if (sim.patchSamplingOption == "random") {
 				// Then patches must be resampled for new landscape
@@ -459,6 +458,28 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				// output Individuals
 				if (sim.outInds && yr >= sim.outStartInd && yr % sim.outIntInd == 0)
 					pComm->outIndividuals(rep, yr, gen);
+
+				if ((sim.outputGeneValues || sim.outputWeirCockerham || sim.outputWeirHill)
+					&& yr >= sim.outStartGenetics
+					&& yr % sim.outputGeneticInterval == 0) {
+
+					simParams sim = paramsSim->getSim();
+					if (sim.patchSamplingOption != "list" && sim.patchSamplingOption != "random") {
+						// then patches must be re-sampled every gen
+						int nbToSample = pSpecies->getNbPatchesToSample();
+						auto patchesToSample = pLandscape->samplePatches(sim.patchSamplingOption, nbToSample, pSpecies);
+						pSpecies->setSamplePatchList(patchesToSample);
+					}
+					// otherwise always use the user-specified list (even if patches are empty)
+					pComm->sampleIndividuals(pSpecies);
+
+					if (sim.outputGeneValues) {
+						pComm->outputGeneValues(yr, gen, pSpecies);
+					}
+					if (sim.outputWeirCockerham || sim.outputWeirHill) {
+						pComm->outNeutralGenetics(pSpecies, rep, yr, gen, sim.outputWeirCockerham, sim.outputWeirHill);
+					}
+				}
 
 				// Resolve survival and devlpt
 				pComm->survival1();
