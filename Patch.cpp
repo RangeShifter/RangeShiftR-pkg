@@ -312,7 +312,7 @@ int Patch::getPossSettlers(Species* pSpecies, int sex) {
 }
 
 bool Patch::speciesIsPresent(Species* pSpecies) {
-	const auto pPop = this->getPopn((intptr)pSpecies);
+	const auto pPop = this->getPopn(pSpecies);
 	return pPop != 0;
 }
 

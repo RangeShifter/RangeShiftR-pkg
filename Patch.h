@@ -153,6 +153,7 @@ public:
 		bool					// TRUE if there is a gradient in carrying capacity across the Landscape
 	);
 	float getK(void);
+	bool speciesIsPresent(Species* pSpecies);
 
 private:
 	int patchSeqNum;// sequential patch number - patch 0 is reserved for the inter-patch matrix

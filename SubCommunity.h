@@ -123,22 +123,20 @@ public:
 		Landscape*,	// pointer to Landscape
 		bool				// TRUE to increment connectivity totals
 	);
+
+	void survival0(short option0, short option1);
+	void survival1();
+
 	void survival(
-		short,	// part:		0 = determine survival & development,
+		short,	// part:	0 = determine survival & development,
 		//		 			1 = apply survival changes to the population
 		short,	// option0:	0 = stage 0 (juveniles) only         )
 		//					1 = all stages                       ) used by part 0 only
 		//					2 = stage 1 and above (all non-juvs) )
 		short 	// option1:	0 - development only (when survival is annual)
-						//	  	 		1 - development and survival
-	) {
-		if (part == 0) {
-			return survival0(option0, option1);
-		}
-		else {
-			return survival1();
-		}
-	}
+			//	  	 		1 - development and survival
+	);
+
 	void ageIncrement(void);
 
 	// Find the population of a given species in a given patch
@@ -189,6 +187,14 @@ public:
 		Species*,		// pointer to Species
 		int					// Landscape number
 	);
+
+
+	// Close traits file
+	bool outTraitsFinishLandscape();
+
+	// Open traits file and write header record
+	bool outTraitsStartLandscape(Landscape* pLandscape, Species* pSpecies, int landNr);
+
 	traitsums outTraits( // Write records to traits file and return aggregated sums
 		Landscape*, 	// pointer to Landscape
 		int,					// replicate

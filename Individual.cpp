@@ -108,7 +108,7 @@ TraitFactory Individual::traitFactory = TraitFactory();
 // Individual constructor
 Individual::Individual(Species* pSpecies, Cell* pCell, Patch* pPatch, short stg, short a, short repInt,
 	float probmale, bool movt, short moveType):
-	memory(pSpecies->getSMSTraits().memSize)
+	memory(pSpecies->getSpSMSTraits().memSize)
 {
 	indId = indCounter; indCounter++; // unique identifier for each individual
 	geneticFitness = 1.0;
@@ -828,10 +828,11 @@ int Individual::moveKernel(Landscape* pLandscape, Species* pSpecies, const bool 
 				loopsteps++;
 			} while (loopsteps < 1000 &&
 				// keep drawing if out of bounds of landscape or same cell
-				((!absorbing && (newX < land.minX || newX > land.maxX
-					|| newY < land.minY || newY > land.maxY))
+				((!absorbing 
+					&& (newX < land.minX || newX > land.maxX || newY < land.minY || newY > land.maxY))
 					|| (!usefullkernel && newX == loc.x && newY == loc.y))
 				);
+
 			if (loopsteps < 1000) {
 				if (newX < land.minX || newX > land.maxX
 					|| newY < land.minY || newY > land.maxY) { // beyond absorbing boundary
@@ -856,6 +857,7 @@ int Individual::moveKernel(Landscape* pLandscape, Species* pSpecies, const bool 
 						}
 					}
 				}
+			}
 			else { // exceeded 1000 attempts
 				pPatch = nullptr;
 				patch = 0;
@@ -993,10 +995,8 @@ int Individual::moveStep(Landscape* pLandscape, Species* pSpecies,
 				dispersing = 0;
 			}
 			else {
-
 				// WOULD IT BE MORE EFFICIENT FOR smsMove TO RETURN A POINTER TO THE NEW CELL? ...
 				pPatch = pCurrCell->getPatch();
-				}
 				if (sim.saveVisits && pPatch != pNatalPatch) {
 					pCurrCell->incrVisits();
 				}
@@ -1176,23 +1176,23 @@ movedata Individual::smsMove(Landscape* pLand, Species* pSpecies,
 	// first check if costs have already been calculated
 	{
 #ifdef _OPENMP
-	const std::unique_lock<std::mutex> lock = pCurrCell->lockCost();
+		const std::unique_lock<std::mutex> lock = pCurrCell->lockCost();
 #endif
-	hab = pCurrCell->getEffCosts();
-	if (hab.cell[0][0] < 0.0) { // costs have not already been calculated
-		hab = getHabMatrix(pLand, pSpecies, current.x, current.y, movt.pr, movt.prMethod,
-			landIx, absorbing);
-		pCurrCell->setEffCosts(hab);
-	}
-	else { // they have already been calculated - no action required
+		hab = pCurrCell->getEffCosts();
+		if (hab.cell[0][0] < 0.0) { // costs have not already been calculated
+			hab = getHabMatrix(pLand, pSpecies, current.x, current.y, movt.pr, movt.prMethod,
+				landIx, absorbing);
+			pCurrCell->setEffCosts(hab);
+		}
+		else { // they have already been calculated - no action required
 
-	}
+		}
 	}
 
 	// determine weighted effective cost for the 8 neighbours
 	// multiply directional persistence, goal bias and habitat habitat-dependent weights
-	for (y2 = 2; y2 > -1; y2--) {
-		for (x2 = 0; x2 < 3; x2++) {
+	for (int y2 = 2; y2 > -1; y2--) {
+		for (int x2 = 0; x2 < 3; x2++) {
 			if (x2 == 1 && y2 == 1) nbr.cell[x2][y2] = 0.0;
 			else {
 				if (x2 == 1 || y2 == 1) //not diagonal
@@ -1204,8 +1204,8 @@ movedata Individual::smsMove(Landscape* pLand, Species* pSpecies,
 	}
 
 	// determine reciprocal of effective cost for the 8 neighbours
-	for (y2 = 2; y2 > -1; y2--) {
-		for (x2 = 0; x2 < 3; x2++) {
+	for (int y2 = 2; y2 > -1; y2--) {
+		for (int x2 = 0; x2 < 3; x2++) {
 			if (nbr.cell[x2][y2] > 0.0) nbr.cell[x2][y2] = 1.0f / nbr.cell[x2][y2];
 		}
 	}
@@ -1214,8 +1214,8 @@ movedata Individual::smsMove(Landscape* pLand, Species* pSpecies,
 	// to have zero probability
 	// increment total for re-scaling to sum to unity
 
-	for (y2 = 2; y2 > -1; y2--) {
-		for (x2 = 0; x2 < 3; x2++) {
+	for (int y2 = 2; y2 > -1; y2--) {
+		for (int x2 = 0; x2 < 3; x2++) {
 			if (!absorbing) {
 				if ((current.y + y2 - 1) < land.minY || (current.y + y2 - 1) > land.maxY
 					|| (current.x + x2 - 1) < land.minX || (current.x + x2 - 1) > land.maxX)
@@ -1232,8 +1232,8 @@ movedata Individual::smsMove(Landscape* pLand, Species* pSpecies,
 
 	// scale effective costs as probabilities summing to 1
 	if (sum_nbrs > 0.0) { // should always be the case, but safest to check...
-		for (y2 = 2; y2 > -1; y2--) {
-			for (x2 = 0; x2 < 3; x2++) {
+		for (int y2 = 2; y2 > -1; y2--) {
+			for (int x2 = 0; x2 < 3; x2++) {
 				nbr.cell[x2][y2] = nbr.cell[x2][y2] / (float)sum_nbrs;
 			}
 		}
@@ -1243,8 +1243,8 @@ movedata Individual::smsMove(Landscape* pLand, Species* pSpecies,
 	double cumulative[9];
 	int j = 0;
 	cumulative[0] = nbr.cell[0][0];
-	for (y2 = 0; y2 < 3; y2++) {
-		for (x2 = 0; x2 < 3; x2++) {
+	for (int y2 = 0; y2 < 3; y2++) {
+		for (int x2 = 0; x2 < 3; x2++) {
 			if (j != 0) cumulative[j] = cumulative[j - 1] + nbr.cell[x2][y2];
 			j++;
 		}
@@ -1260,8 +1260,8 @@ movedata Individual::smsMove(Landscape* pLand, Species* pSpecies,
 		do {
 			double rnd = pRandom->Random();
 			j = 0;
-			for (y2 = 0; y2 < 3; y2++) {
-				for (x2 = 0; x2 < 3; x2++) {
+			for (int y2 = 0; y2 < 3; y2++) {
+				for (int x2 = 0; x2 < 3; x2++) {
 					if (rnd < cumulative[j]) {
 						newX = current.x + x2 - 1;
 						newY = current.y + y2 - 1;
@@ -1673,8 +1673,7 @@ double cauchy(double location, double scale) {
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-#if RSDEBUG
-
+#ifndef NDEBUG
 
 void testIndividual() {
 

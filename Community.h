@@ -166,9 +166,7 @@ public:
 	// Open occupancy file, write header record and set up occupancy array
 	bool outOccupancyStartLandscape();
 	void outOccupancy(void);
-	void outOccSuit(
-		bool	// TRUE if occupancy graph is to be viewed on screen
-	);
+	void outOccSuit();
 	bool outTraitsFinishLandscape(); // Close traits file
 	bool outTraitsStartLandscape( // Open traits file and write header record
 		Species*,	// pointer to Species

@@ -458,21 +458,10 @@ int RunModel(Landscape* pLandscape, int seqsim)
 
 				// output Individuals
 				if (sim.outInds && yr >= sim.outStartInd && yr % sim.outIntInd == 0)
-					pComm->outInds(rep, yr, gen, -1);
-
-				// survival part 1
-				if (dem.stageStruct) {
-					pComm->survival(1, 0, 1);
-				}
-				else { // non-structured population
-					pComm->survival(1, 0, 1);
-				}
-#if RSDEBUG
-				DEBUGLOG << "RunModel(): yr=" << yr << " gen=" << gen << " completed survival part 1" << endl;
-#endif
+					pComm->outIndividuals(rep, yr, gen);
 
 				// Resolve survival and devlpt
-				pComm->survival(1, 0, 1);
+				pComm->survival1();
 
 			} // end of the generation loop
 

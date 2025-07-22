@@ -134,7 +134,7 @@ void SubCommunity::initialInd(Landscape* pLandscape, Species* pSpecies,
 	else {
 		if (iind.sex == 1) probmale = 1.0; else probmale = 0.0;
 	}
-	pInd = new Individual(pSpecies, pCell, pPatch, stg, age, repInt, probmale, trfr.moveModel, trfr.moveType);
+	pInd = new Individual(pSpecies, pCell, pPatch, stg, age, repInt, probmale, trfr.usesMovtProc, trfr.moveType);
 
 	if (pSpecies->getNTraits() > 0) {
 		// individual variation - set up genetics
@@ -433,6 +433,16 @@ void SubCommunity::survival1()
 	int npops = (int)popns.size();
 	for (int i = 0; i < npops; i++) { // all populations
 		popns[i]->survival1();
+	}
+}
+
+void SubCommunity::survival(short part, short option0, short option1
+) {
+	if (part == 0) {
+		return survival0(option0, option1);
+	}
+	else {
+		return survival1();
 	}
 }
 
