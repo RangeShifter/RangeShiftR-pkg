@@ -55,7 +55,17 @@ RSrandom::RSrandom(std::int64_t seed)
 
 	// set up Mersenne Twister random number generator with seed sequence
 	std::seed_seq seq(random_seed.begin(), random_seed.end());
-	gen = new mt19937(seq);
+
+#ifdef _OPENMP
+	int nb_generators = omp_get_max_threads();
+	gens.reserve(nb_generators);
+	for (int i = 0; i < nb_generators; i++)
+		gens.emplace_back(seq);
+#else
+	gens.reserve(1);
+	gens.emplace_back(seq);
+#endif // _OPENMP
+
 
 	// Set up standard uniform distribution
 	pRandom01 = new uniform_real_distribution<double>(0.0, 1.0);
