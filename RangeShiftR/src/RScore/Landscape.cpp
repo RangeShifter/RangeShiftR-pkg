@@ -1372,7 +1372,7 @@ int Landscape::readLandChange(int filenum, Rcpp::NumericMatrix habfile, Rcpp::Nu
 #endif
 
 #if RS_RCPP && !R_CMD // normal file input
-int Landscape::readLandChange(int filenum, bool costs, wifstream& hfile, wifstream& pfile, wifstream& cfile, int habnodata, int pchnodata, int costnodata)
+int Landscape::readLandChange(int filenum, bool costs, wifstream& hfile, wifstream& pfile, wifstream& cfile, int habnodata, int pchnodata, int costnodata, vector <string>  scalinglayers)
 #else
 int Landscape::readLandChange(int filenum, bool costs)
 #endif
@@ -2323,7 +2323,7 @@ int Landscape::readLandscape(int fileNum, Rcpp::NumericMatrix habfile, Rcpp::Num
 }
 #endif
 
-int Landscape::readLandscape(int fileNum, string habfile, string pchfile, string costfile)
+int Landscape::readLandscape(int fileNum, string habfile, string pchfile, string costfile, vector <string> scalinglayers) // vector <string> scalinglayers is the vector of filenames for spatial demography of year 1
 {
 	// fileNum == 0 for (first) habitat file and optional patch file
 	// fileNum > 0  for subsequent habitat files under the %cover option
@@ -2816,6 +2816,12 @@ default:
 		if (costfile != "NULL") {
 			int retcode = readCosts(costfile);
 			if (retcode < 0) return 54;
+        }
+        if (scalinglayers.size() > 0) {
+            if (scalinglayers.size() == nDSlayer) {
+                int retcode = readDemographicScaling(scalinglayers);
+                if (retcode < 0) return 54; //change number
+            }
 		}
 	}
 
@@ -2942,6 +2948,134 @@ costs.close(); costs.clear();
 return maxcost;
 
 }
+
+    //---------------------------------------------------------------------------
+    int Landscape::readDemographicScaling(vector <string> scalinglayers){
+        // Create a temporary landscape to store the vectors for each cell
+        // I bet there is a better way to implement it, but I couldn't think of it for now
+        // each cell will contain a vector of three floats
+        std::vector<std::vector<std::vector<float>>> landscape(dimY,
+                                                               std::vector<std::vector<float>>(dimX,
+                                                                                               std::vector<float>(scalinglayers.size(), 0.0f))); //length of string is determined by DSlayer
+
+#if RS_RCPP
+        wstring header;
+#else
+        string header;
+#endif
+
+        int DSnb = 0; // first position is 0
+        int DS;
+        int DSnodata;
+        float DSfloat;   // float for reading in data from file
+
+#if RS_RCPP
+        wifstream DSfile; // DS file input stream
+#else
+        ifstream DSfile; // DS file input stream
+#endif
+
+
+
+        // for each element of scalinglayers
+        for (const auto& DSlayer : scalinglayers) { //DSlayer is a reference to file string
+            // open file
+            DSfile.open(DSlayer.c_str());
+            // if file couldn't be opened, return a failure message (and the readLandscape function: close all file connections and exit)
+            if (!DSfile.is_open()) return -11; // might need to change the code number
+
+            // if it opened
+            // skip header, but store no data value
+            for (int i = 0; i < 5; i++)
+                DSfile >> header >> DSfloat;
+            DSfile >> header >> DSnodata; // 6th line
+
+#if RS_RCPP
+            if (!DSfile.good()) {
+                // corrupt file stream
+                StreamErrorR(DSlayer);
+                DSfile.close();
+                DSfile.clear();
+                //do I also need to close the habitat, and potentially patchfile? or is this taken care of?
+                return -181; // need to change the code
+            }
+#endif
+
+            // set badfloat
+            float badDSfloat = -9.0; if (DSnodata == -9) DSfloat = -99.0;
+
+            // loop over landscape x+y
+            for (int y = dimY - 1; y >= 0; y--) {
+                for (int x = 0; x < dimX; x++) {
+                    // read in cell value
+                    DSfloat = badDSfloat; // set to bad float value
+                    // do I need to check this value for any inconsistencies? -> better safe than sorry
+#if RS_RCPP
+                    if (DSfile >> DSfloat) {
+#else
+                        DSfile >> DSfloat;
+#endif
+                        //  DS = (int)DSfloat; I guess non integer values are totally fine?
+#if RS_RCPP
+                    }
+                    else {
+                        // corrupt file stream
+#if RS_RCPP && !R_CMD
+                        Rcpp::Rcout << "At (x,y) = " << x << "," << y << " :" << std::endl;
+#endif
+                        StreamErrorR(DSlayer);
+                        DSfile.close();
+                        DSfile.clear();
+                        return -134; // need to change number code
+                    }
+#endif
+                    // check if the value is a no data value
+                    if (DSfloat == DSnodata) {
+                        // if it is, do I need to do anything?
+                    }
+                    else {
+                        if (DSfloat < 0.0 || DSfloat > 100.0) { // check for negative values or values above 100
+#if RS_RCPP && !R_CMD
+                            Rcpp::Rcout << "Found invalid demographic scaling score." << std::endl;
+#endif
+                            DSfile.close(); DSfile.clear();
+                            return -17; // need to change code
+                        }
+                        else {
+                            // if the value is ok,
+                            // set the vector value of this cell at this location to the float value read in:
+                            landscape[y][x][DSnb] = DSfloat; // Assignment to specific cell's vector
+                        }
+                    }
+                } // end x loop
+            } // end y loop
+
+            // use Rcpp::Rcout to print the landscape at DSnb=0:
+            // close file connection
+#if RS_RCPP
+            DSfile >> DSfloat;
+            if (!DSfile.eof()) EOFerrorR(DSlayer);
+            else {
+#if RS_RCPP && !R_CMD
+                Rcpp::Rcout << "Demographic scaling layer " << DSnb + 1 << " loaded." << endl;
+#endif
+            }
+#endif
+            if (DSfile.is_open()) { DSfile.close(); DSfile.clear(); }
+            DSnb ++; // increase the reference number and read in next file
+        }; // end loop over scalinglayers
+
+        // add the cells' vector of DSfloats to the actual landscape using the function addchgDemoScaling
+        // loop over all cells
+        for (int y = dimY - 1; y >= 0; y--) {
+            for (int x = 0; x < dimX; x++) {
+                // extract the vector in landscape at x, y
+                std::vector<float> localDS = landscape[y][x];
+                cells[y][x]->addchgDemoScaling(localDS); // add the vector to the cell
+            }
+        }
+        return 0; // return success code
+    };
 
 //---------------------------------------------------------------------------
 

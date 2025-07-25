@@ -98,10 +98,6 @@ int RunModel(Landscape* pLandscape, int seqsim)
 
 		cout << "Running replicate " << rep + 1 << " / " << sim.reps << endl;
 
-#if RS_RCPP && !R_CMD
-		Rcpp::Rcout << endl << "starting replicate " << rep << endl;
-#endif
-
 		if (sim.saveVisits && !ppLand.generated) {
 			pLandscape->resetVisits();
 		}
