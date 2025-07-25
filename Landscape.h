@@ -373,7 +373,8 @@ public:
 		wifstream&, // cost file stream
 		int,		// habnodata
 		int,		// pchnodata
-		int			// costnodata
+		int,			// costnodata
+		vector <string>  // vector of demographic scaling layers
 // TODO: add spatial demography with normal file input
 	);
 #else
@@ -509,12 +510,14 @@ public:
 						// fileNum > 0  for subsequent habitat files under the %cover option
 		string,	// habitat file name
 		string,	// patch file name
-		string	// cost file name (may be NULL)
+		string,	// cost file name (may be NULL)
+		vector <string> // demographic scaling layers (may be empty)
 	);
 	void listPatches(void);
 	int readCosts(
 		string	// costs file name
 	);
+	int readDemographicScaling(vector <string>);
 	void resetVisits(void);
 	void outVisits(int,int);	// save SMS path visits map to raster text file
 
