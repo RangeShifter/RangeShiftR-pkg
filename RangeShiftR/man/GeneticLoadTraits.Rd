@@ -6,6 +6,7 @@
 \title{Set genetic structure for genetic fitness traits}
 \usage{
 GeneticLoadTraits(NbGeneticLoads = 1, Positions = list("random"), NbOfPositions = 10,
+InitialPositions = list("all"), InitialNbOfPositions = NULL,
 InitialDistribution = "normal", InitialParameters = matrix(c(0.5,0.1), nrow=1),
 InitialDomDistribution = "normal", InitialDomParameters = matrix(c(0.5,0.1), nrow=1),
 DominanceDistribution = "normal", DominanceParameters = matrix(c(0.5,0.1), nrow=1),
@@ -17,7 +18,12 @@ MutationRate = 0.0001, OutputValues = FALSE)
 
 \item{Positions}{Loci positions coding for that trait within genome. Should be provided as a list of strings (if random) and/or vectors of integers (if not random)}
 
-\item{NbOfPositions}{Only specify when the \code{Positions} of a genetic load trait are set to \code{"random"}, else must be blank (\code{NULL})}
+\item{NbOfPositions}{Number of positions to randomly sample from across the genome for each specified genetic load. Only specify when the \code{Positions} of a genetic load trait are set to \code{"random"}, else must be blank (\code{NULL})}
+
+\item{InitialPositions}{Specify which positions should be initialised. Should be provided as a list of strings ("random" or "all") and/or vectors of integers (if not random). If enabled, the remaining initial value parameters will only be applied to the selected positions,
+and all other positions will be set to 0. Must be in the range  of \code{Positions}.}
+
+\item{InitialNbOfPositions}{Only specify if \code{InitialPositions} for a genetic load is set to \code{"random"}, else must be blank (\code{NULL}). Cannot be greater than \code{NbOfPositions}}
 
 \item{InitialDistribution}{Distribution from which to draw initial allele values from. Can be \code{gamma}, \code{uniform}, \code{normal}, \code{negExp}. Should be provided as a vector of strings if \code{NbGeneticLoads > 1}}
 

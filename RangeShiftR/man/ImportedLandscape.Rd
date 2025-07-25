@@ -19,7 +19,8 @@ ImportedLandscape(LandscapeFile,
                  SpDistFile = NULL,
                  SpDistMatrix = list(),
                  SpDistResolution,
-                 demogScaleLayers, nrDemogScaleLayers)
+                 demogScaleLayersFile,
+                 demogScaleLayersMatrix, nrDemogScaleLayers)
 }
 \arguments{
 \item{LandscapeFile}{Filename(s) of the landscape habitat map(s) which shall be imported from the Inputs-folder. See the Details for information on the required format.}
@@ -62,7 +63,12 @@ maps (in \code{PatchFile},\code{CostsFile}) are loaded and used in the simulatio
 
 \item{SpDistResolution}{Required if \code{SpDistFile} is given: Cell size of the distribution map in meters. (integer) Must be an integer multiple of the landscape resolution.}
 
-\item{demogScaleLayers}{List of arrays that describe additional landscape layers which can be used to locally scale certain demographic rates and thus allow them to vary spatially.
+\item{demogScaleLayersFile}{List of vectors with file names of additional landscape layers which can be used to locally scale certain demographic rates and thus allow them to vary spatially.
+The list must contain equally sized vectors providing file names, one vector for each element in \code{DynamicLandYears}, which are interpreted as stacked layers.
+The files must match the landscape in resolution and dimension. The size of each vector corresponds to the various layers (of which there are \code{nrDemogScaleLayers}).
+Can only be used in combination with habitat quality maps, i.e. when \code{HabPercent=TRUE}. It must contain percentage values ranging from \eqn{0.0} to \eqn{100.0}.}
+
+\item{demogScaleLayersMatrix}{List of arrays that describe additional landscape layers which can be used to locally scale certain demographic rates and thus allow them to vary spatially.
 The list must contain equally sized 3D-arrays, one for each element in \code{DynamicLandYears}, which are interpreted as stacked layers.
 The arrays' first two dimensions correspond to the x- and y-dimensions of the maps in \code{LandscapeMatrix} and must match in resolution and offset;
 the third dimension indexes the various layers (of which there are \code{nrDemogScaleLayers}).
@@ -127,7 +133,7 @@ the same as the landscape. The resolution can be the same or coarser, provided t
 Each cell of the species distribution map must contain either \eqn{0} (species absent or not recorded) or \eqn{1} (species present).
 
  \emph{Demographic scaling layers} \cr
-A number of additional landscape layers can be provided in \code{demogScaleLayers} to locally scale certain demographic rates and thus allow them to vary spatially.
+A number of additional landscape layers can be provided in \code{demogScaleLayersMatrix} or \code{demogScaleLayersFiles}, depending on what input type you choose, to locally scale certain demographic rates and thus allow them to vary spatially.
 This can only be used in combination with habitat quality maps, i.e. when \code{HabPercent=TRUE}, and with a stage-structured population model.
 The additional layers contain percentage values ranging from \eqn{0.0} to \eqn{100.0}. Chosen demographic rates for a specified stage and sex can be mapped to one of these scaling layers using the
 parameters \code{FecLayer}, \code{DevLayer}, and \code{SurvLayer} in \code{\link[RangeShiftR]{StageStructure}}. If a demographic rate varies spatially, its value in the transition matrix \code{TransMatrix})

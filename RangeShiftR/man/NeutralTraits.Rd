@@ -9,7 +9,12 @@
 range 0-(\code{GenomeSize}-1), specified in \code{\link[RangeShiftR]{Genetics}}. Positions can overlap across
 traits - there will be no pleiotropy, but this will influence genetic linkage.,}
 
-\item{NbOfPositions}{Only specify if above is set to \code{"random"}, else must be blank (\code{NULL})}
+\item{NbOfPositions}{Only specify if \code{Positions} is set to \code{"random"}, else must be blank (\code{NULL})}
+
+\item{InitialPositions}{Specify which positions should be initialised. Must be "all", "random" or a vector of integers. If enabled, the remaining initial value parameters will only be applied to the selected positions,
+and all other positions will be set to 0. Must be in the range  of \code{Positions}.}
+
+\item{InitialNbOfPositions}{Only specify if \code{InitialPositions} is set to \code{"random"}, else must be blank (\code{NULL}). Cannot be greater than \code{NbOfPositions}}
 
 \item{InitialDistribution}{Distribution from which to draw initial allele values from.
 If \code{uniform}. Initialise with random characters between 0 – \code{max}. Note that possible values start at 0, so \code{max=0}
@@ -38,6 +43,8 @@ A method to specify neutral traits in the genetic module.
 #' @usage NeutralTraits(Positions = "random", NbOfPositions = 10,
 Positions = "random", # "random" or list of integer values
 NbOfPositions = 10, # numeric, only of positions random
+InitialPositions = "all", # "random" or list of integer values
+InitialNbOfPositions = NULL, # numeric, only of positions random
 InitialDistribution = NULL, # uniform (neutral + dispersal), normal (dispersal)
 InitialParameters = 2, # neutral traits: only max value; dispersal: two values: either min/max oder mean+sd, not applicable for genetic load
 MutationDistribution = "KAM", # neutral: "KAM" or "SSM", genetic load: "gamma", "uniform", "normal", "negExp", dispersal: uniform or normal

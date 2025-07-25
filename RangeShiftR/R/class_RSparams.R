@@ -104,7 +104,7 @@ setValidity("RSparams", function(object) {
     validObject(object@demog)
     if (object@control@landtype == 2L){ # habitat quality
         varydemogixs <- (length(object@demog@StageStruct@FecLayer)+length(object@demog@StageStruct@DevLayer)+length(object@demog@StageStruct@SurvLayer)>0)
-        varydemoglyr <- (length(object@land@demogScaleLayers)>0)
+        varydemoglyr <- (length(object@land@demogScaleLayersMatrix)>0 || length(object@land@demogScaleLayersFile)>0)
         if(varydemogixs & !varydemoglyr){
             msg <- c(msg, "RSsim(): If FecLayer, DevLayer and/or SurvLayer are used, the demographic scaling layers must be given in ImportedLandscape.")
         }
