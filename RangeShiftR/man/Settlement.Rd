@@ -159,14 +159,14 @@ An additional rule that can be set constitutes a minimum number of steps (\code{
 place. This is useful for simulating situations where animals, in a ‘dispersal mode’, will keep moving and not consider settling even
 if suitable conditions are available \insertCite{@e.g. @barton2012risky}{RangeShiftR}.
 
-Each of the three parameters \code{MinSteps, MaxSteps, MaxStepsYr} need to be provided as single integer (if \code{StageDep=FALSE} and \code{SexDep=FALSE}) or numeric matrix, providing the stage (if \code{StageDep=TRUE}) and sex (if \code{SexDep=TRUE}).
+Each of the three parameters \code{MinSteps, MaxSteps, MaxStepsYear} need to be provided as single integer (if \code{StageDep=FALSE} and \code{SexDep=FALSE}) or numeric matrix, providing the stage (if \code{StageDep=TRUE}) and sex (if \code{SexDep=TRUE}).
 The rows require no particular order, but there must be exactly one row for each stage/sex combination.
 
 \tabular{ccccc}{StageDep \tab SexDep \tab columns \cr
 F \tab F \tab - not applicable only provide single numeric value - \cr
-T \tab F \tab stage, \code{MinSteps/MaxSteps/MaxStepsYr} \cr
-F \tab T \tab sex, \code{MinSteps/MaxSteps/MaxStepsYr}\cr
-T \tab T \tab stage, sex, \code{MinSteps/MaxSteps/MaxStepsYr} \cr
+T \tab F \tab stage, \code{MinSteps/MaxSteps/MaxStepsYear} \cr
+F \tab T \tab sex, \code{MinSteps/MaxSteps/MaxStepsYear}\cr
+T \tab T \tab stage, sex, \code{MinSteps/MaxSteps/MaxStepsYear} \cr
  }
 
 \emph{Mating requirements}\cr
@@ -174,7 +174,7 @@ Sexual species may be required to find a mate, i.e. there has to be at least one
 Density-dependence and mating requirements can also be combined together to determine the settlement decision.
 
 The application of this mating condition can be switched on or off using the parameter \code{FindMate}, which takes either a single
-logical if \code{StageDep=FALSE} and \code{SexDep=FALSE} or, otherwise, a matrix of the similar structure as for \code{MinSteps, MaxSteps} and \code{MaxStepsYr}.
+logical if \code{StageDep=FALSE} and \code{SexDep=FALSE} or, otherwise, a matrix of the similar structure as for \code{MinSteps, MaxSteps} and \code{MaxStepsYear}.
 
 #' \tabular{ccccc}{StageDep \tab SexDep \tab columns \cr
 F \tab F \tab - not applicable only provide single logical value - \cr

@@ -7,7 +7,7 @@
 \usage{
 Genetics(GenomeSize = 10,
          ChromosomeEnds = 1, RecombinationRate = 0.0,
-         OutputGeneValues = FALSE, OutputNeutralStatistics = FALSE,
+         OutputGeneValues = FALSE,
          OutputFstatsWeirCockerham = FALSE, OutputFstatsWeirHill = FALSE,
          OutputStartGenetics = NULL, OutputInterval = NULL,
          PatchList = NULL, NbrPatchesToSample = NULL,
