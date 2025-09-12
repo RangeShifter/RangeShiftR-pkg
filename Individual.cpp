@@ -976,6 +976,7 @@ int Individual::moveStep(Landscape* pLandscape, Species* pSpecies,
 	}
 	else { // take a step
 		(path->year)++;
+	    (path->total)++;
 		if (pPatch == nullptr || patchNum == 0) { // not in a patch
 			if (path != 0) path->settleStatus = 0; // reset path settlement status
 			(path->out)++;
