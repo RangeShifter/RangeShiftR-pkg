@@ -16,7 +16,7 @@ Settlement(StageDep = FALSE, SexDep = FALSE,
 
 \item{SexDep}{Sex-dependent settlement requirements? (default: \code{FALSE})}
 
-\item{Settle}{Settlement codes (for \code{DispersalKernel}) or settlement probability parameters (for \emph{Movement process} if \code{IndVar=TRUE}) for all
+\item{Settle}{Settlement codes (for \code{DispersalKernel}) or settlement probability parameters (for \emph{Movement process} if \code{DensDep=TRUE}) for all
 stages/sexes, defaults to \eqn{0} (i.e. 'die when unsuitable' for \emph{DispersalKernel} and
 'always settle when suitable' for \emph{Movement process}). See the Details below.}
 
@@ -129,15 +129,16 @@ The following table lists the required columns and their correct order for diffe
 
 \tabular{ccccc}{DensDep \tab IndVar \tab StageDep \tab SexDep \tab columns \cr
  F \tab F \tab F \tab F \tab - not applicable - \cr
- F \tab F \tab T \tab F \tab stage \cr
- F \tab F \tab F \tab T \tab sex \cr
- F \tab F \tab T \tab T \tab stage, sex \cr
+ F \tab F \tab T \tab F \tab stage, \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}} \cr
+ F \tab F \tab F \tab T \tab sex, \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}} \cr
+ F \tab F \tab T \tab T \tab stage, sex, \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}} \cr
  T \tab F \tab F \tab F \tab \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}}, \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{α_S}}, \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}} \cr
  \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \cr
  T \tab F \tab T \tab T \tab stage, sex, \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}}, \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{α_S}}, \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}} \cr
  }
 
-The column headings need not be included, only the numeric matrix is required. The rows require no particular order, but there must be exactly one row for each stage/sex combination.
+The column headings need not be included, only the numeric matrix is required. The rows require no particular order, but they must match with the matrices provided for \code{FindMate, MaxSteps, MinSteps, MaxStepsYr}. There must be exactly one row for each stage/sex combination.
+
 For example, in the case of density-, stage- and sex-dependent settlement with no individual variability:
 \tabular{ccccc}{ \out{&emsp;} 0 \tab \out{&emsp;} 0 \tab \out{&emsp;} 1.0 \tab \out{&emsp;} 0.2 \tab \out{&emsp;} 4.0 \cr
  \out{&emsp;} 0 \tab \out{&emsp;} 1 \tab \out{&emsp;} 1.0 \tab \out{&emsp;} 0.1 \tab \out{&emsp;} 6.0 \cr
@@ -160,7 +161,7 @@ place. This is useful for simulating situations where animals, in a ‘dispersal
 if suitable conditions are available \insertCite{@e.g. @barton2012risky}{RangeShiftR}.
 
 Each of the three parameters \code{MinSteps, MaxSteps, MaxStepsYear} need to be provided as single integer (if \code{StageDep=FALSE} and \code{SexDep=FALSE}) or numeric matrix, providing the stage (if \code{StageDep=TRUE}) and sex (if \code{SexDep=TRUE}).
-The rows require no particular order, but there must be exactly one row for each stage/sex combination.
+The rows require the same order as in \code{Settle}.There must be exactly one row for each stage/sex combination.
 
 \tabular{ccccc}{StageDep \tab SexDep \tab columns \cr
 F \tab F \tab - not applicable only provide single numeric value - \cr
@@ -174,7 +175,7 @@ Sexual species may be required to find a mate, i.e. there has to be at least one
 Density-dependence and mating requirements can also be combined together to determine the settlement decision.
 
 The application of this mating condition can be switched on or off using the parameter \code{FindMate}, which takes either a single
-logical if \code{StageDep=FALSE} and \code{SexDep=FALSE} or, otherwise, a matrix of the similar structure as for \code{MinSteps, MaxSteps} and \code{MaxStepsYear}.
+logical if \code{StageDep=FALSE} and \code{SexDep=FALSE} or, otherwise, a matrix of the similar structure as for \code{Settle, MinSteps, MaxSteps} and \code{MaxStepsYear}.
 
 #' \tabular{ccccc}{StageDep \tab SexDep \tab columns \cr
 F \tab F \tab - not applicable only provide single logical value - \cr

@@ -1060,8 +1060,10 @@ int ReadDynLandR(Landscape *pLandscape, Rcpp::S4 LandParamsR)
         if (patchmodel) {
             patchmaps = Rcpp::as<Rcpp::StringVector>(LandParamsR.slot("PatchFile"));
         }
+        if(LandParamsR.slot("CostsFile") != R_NilValue){
         costmaps = Rcpp::as<Rcpp::StringVector>(LandParamsR.slot("CostsFile"));
         if (costmaps(0) != "NULL") costs = true;
+    }
     }
 
 
@@ -2518,8 +2520,8 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
     transferRules trfr = pSpecies->getTransferRules();
     settleType sett = pSpecies->getSettle();
     settleRules srules;
-    settleSteps ssteps = pSpecies->getSteps(0,0);
-    settleTraits settleDD; // = pSpecies->getSettTraits(0,0);
+    settleSteps ssteps; // = pSpecies->getSteps(0,0);
+    settleTraits settleDD; // = pSpecies->getSpSettTraits(0,0);
     sett.stgDep = Rcpp::as<bool>(SettleParamsR.slot("StageDep")); // Stage-dependent settlement.
     sett.sexDep = Rcpp::as<bool>(SettleParamsR.slot("SexDep"));   // Sex-dependent settlement.
     if ( gTransferType == 0) {
@@ -2570,15 +2572,14 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
              << ", sett.indVar = " << sett.indVar << endl;
 #endif
     // check if SettleParamsR.slots are single values or a matrix and assign them accordingly:
-    Rcpp::NumericMatrix mat(1,1); // temporary storage for single value
-
     Rcpp::NumericMatrix FindMate;
     bool constFindMate = false;
     if(Rf_isMatrix(SettleParamsR.slot("FindMate"))){
         FindMate = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("FindMate"));
     } else {
-        mat(0,0) = Rcpp::as<int>(SettleParamsR.slot("FindMate"));
-        FindMate = mat;
+        int singleValue = Rcpp::as<int>(SettleParamsR.slot("FindMate"));
+        FindMate = Rcpp::NumericMatrix(1, 1);
+        FindMate(0, 0) = singleValue;
         constFindMate = true;
     }
 
@@ -2587,8 +2588,9 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
     if(Rf_isMatrix(SettleParamsR.slot("MinSteps"))){
         MinSteps = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("MinSteps"));
     } else {
-        mat(0,0) = Rcpp::as<int>(SettleParamsR.slot("MinSteps"));
-        MinSteps = mat;
+        int singleValue = Rcpp::as<int>(SettleParamsR.slot("MinSteps"));
+        MinSteps = Rcpp::NumericMatrix(1, 1);
+        MinSteps(0, 0) = singleValue;
         constMinSteps = true;
     }
 
@@ -2598,8 +2600,9 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
     if(Rf_isMatrix(SettleParamsR.slot("MaxSteps"))){
         MaxSteps = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("MaxSteps"));
     } else {
-        mat(0,0) = Rcpp::as<int>(SettleParamsR.slot("MaxSteps"));
-        MaxSteps = mat;
+        int singleValue = Rcpp::as<int>(SettleParamsR.slot("MaxSteps"));
+        MaxSteps = Rcpp::NumericMatrix(1, 1);
+        MaxSteps(0, 0) = singleValue;
         constMaxSteps = true;
     }
 
@@ -2608,24 +2611,25 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
     if(Rf_isMatrix(SettleParamsR.slot("MaxStepsYear"))){
         MaxStepsYr = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("MaxStepsYear"));
     } else {
-        mat(0,0) = Rcpp::as<int>(SettleParamsR.slot("MaxStepsYear"));
-        MaxStepsYr = mat;
+        int singleValue = Rcpp::as<int>(SettleParamsR.slot("MaxStepsYear"));
+        MaxStepsYr = Rcpp::NumericMatrix(1, 1);
+        MaxStepsYr(0, 0) = singleValue;
         constMaxStepsYr = true;
     }
-
-    sexSettle = 2 * sett.stgDep + sett.sexDep;
 
     Rcpp::NumericMatrix SettleCondMatrix;
 
     if(Rf_isMatrix(SettleParamsR.slot("Settle"))){
         SettleCondMatrix = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("Settle"));
     } else {
-        mat(0,0) = Rcpp::as<int>(SettleParamsR.slot("Settle"));
-        SettleCondMatrix = mat;
+        int singleValue = Rcpp::as<int>(SettleParamsR.slot("Settle"));
+        SettleCondMatrix = Rcpp::NumericMatrix(1, 1);
+        SettleCondMatrix(0, 0) = singleValue;
     }
 
+    sexSettle = 2 * sett.stgDep + sett.sexDep;
+
     for(int line = 0; line < Nlines; line++) {
-        // FindMate
         // determine stage and sex of this line
         if(sett.stgDep) {
             if(sett.sexDep) {
@@ -2646,6 +2650,7 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
         }
 
         if(trfr.usesMovtProc) { // ...movement process
+            // FindMate
             if(constFindMate) {
                 findmate = (bool)FindMate(0, 0);
             } else {
@@ -2654,39 +2659,117 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
             if(findmate && dem.repType == 0)
                 error = 504;
 
+           // MinSteps
+                if(constMinSteps) {
+                ssteps.minSteps = (int)MinSteps(0, 0);
+            } else {
+                ssteps.minSteps = (int)MinSteps(line, offset);
+            }
+
+           // MaxSteps
+                  if(constMaxSteps) {
+                ssteps.maxSteps = (int)MaxSteps(0, 0);
+            } else {
+                ssteps.maxSteps = (int)MaxSteps(line, offset);
+            }
+
+                  // MaxStepsYr
+                   if(constMaxStepsYr) {
+                ssteps.maxStepsYr = (int)MaxStepsYr(0, 0);
+            } else {
+                ssteps.maxStepsYr = (int)MaxStepsYr(line, offset);
+            }
+
+            // SettleCondMatrix
+            if(densdep) {
+                if (sett.indVar) { // values are provided via SettleTraits
+                    gHasGenetics = true;
+                    settleDD.s0 = -9;
+                    settleDD.alpha = -9;
+                    settleDD.beta = -9;
+                } else{
+                    settleDD.s0 = (float)SettleCondMatrix(
+                        line, offset + 0); // Max. settlement probability for density reaction norm. Required for
+                    // DensDep = 1 and IndVar = 0; 0.0 < S0 <= 1.0
+                    settleDD.alpha =
+                        (float)SettleCondMatrix(line, offset + 1); // Required for DensDep = 1 and IndVar = 0
+                    settleDD.beta =
+                        (float)SettleCondMatrix(line, offset + 2); // Required for DensDep = 1 and IndVar = 0
+                }
+            } else { // only s0 needs to be provided
+                settleDD.s0 = (float)SettleCondMatrix(
+                    line, offset + 0); // Max. settlement probability for density reaction norm. Required for
+                // DensDep = 1 and IndVar = 0; 0.0 < S0 <= 1.0
+                settleDD.alpha = -9;
+                settleDD.beta = -9;
+            }
+
             switch(sexSettle) {
 
             case 0: { // no sex- / stage-dependence
-                    srules = pSpecies->getSettRules(0, 0);
-                    srules.densDep = densdep;
-                    srules.findMate = findmate;
-                    pSpecies->setSettRules(0, 0, srules);
+                srules = pSpecies->getSettRules(0, 0);
+                srules.densDep = densdep;
+                srules.findMate = findmate;
 
-                    if(dem.stageStruct) { // model is structured - also set parameters for all stages
-                        for(int i = 1; i < sstruct.nStages; i++) {
-                            pSpecies->setSettRules(i, 0, srules);
+                if(dem.stageStruct) { // model is structured - also set parameters for all stages
+                    for(int i = 0; i < sstruct.nStages; i++) {
+                        pSpecies->setSettRules(i, 0, srules);
+                        pSpecies->setSteps(i, 0, ssteps);
+                if(srules.densDep) {
+                            pSpecies->setSpSettTraits(i, 0, settleDD);
+                        }
                             if(dem.repType > 0) {                        // model is sexual - also set parameters for males
-                                pSpecies->setSettRules(i, 1, srules);
+                            pSpecies->setSettRules(i, 1, srules);
+                            pSpecies->setSteps(i, 1, ssteps);
+                            if (srules.densDep) {
+                                pSpecies->setSpSettTraits(i, 1, settleDD);
                             }
                         }
+                    }
                     } else {                  // see comment above (at case label)
-                        if(dem.repType > 0) { // model is sexual - also set parameters for males
-                            pSpecies->setSettRules(0, 1, srules);
+                    if(dem.repType > 0) { // model is sexual - set parameters for both sexes
+                        pSpecies->setSettRules(0, 0, srules);
+                        pSpecies->setSteps(0, 0, ssteps);
+                        if (srules.densDep) {
+                            pSpecies->setSpSettTraits(0, 0, settleDD);
+                        }
+                        pSpecies->setSettRules(0, 1, srules);
+                        pSpecies->setSteps(0, 1, ssteps);
+                        if (srules.densDep) {
+                            pSpecies->setSpSettTraits(0, 1, settleDD);
+                        }
+                    } else { // asexual - set parameters only for females
+                        pSpecies->setSettRules(0, 0, srules);
+                        pSpecies->setSteps(0, 0, ssteps);
+                        if (srules.densDep) {
+                            pSpecies->setSpSettTraits(0, 0, settleDD);
                         }
                     }
                 }
+            }
                 break;
 
             case 1: { // sex-dependent
                 srules = pSpecies->getSettRules(0, sex);
                 srules.densDep = densdep;
                 srules.findMate = findmate;
+
                 pSpecies->setSettRules(0, sex, srules);
-                if(dem.stageStruct) { // model is structured - also set parameters for all stages
-                    for(int i = 1; i < sstruct.nStages; i++) {
+                pSpecies->setSteps(0, sex, ssteps);
+                if(srules.densDep) {
+                    pSpecies->setSpSettTraits(0, sex, settleDD);
+                }
+
+                    if(dem.stageStruct) { // model is structured - also set parameters for all stages
+                        for(int i = 1; i < sstruct.nStages; i++) {
                         pSpecies->setSettRules(i, sex, srules);
+                        pSpecies->setSteps(i, sex, ssteps);
+                        if (srules.densDep) {
+                            pSpecies->setSpSettTraits(i, sex, settleDD);
+                        }
                     }
                 }
+
             }
                 break;
 
@@ -2694,10 +2777,20 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
                 srules = pSpecies->getSettRules(stage, 0);
                 srules.densDep = densdep;
                 srules.findMate = findmate;
+
                 pSpecies->setSettRules(stage, 0, srules);
-                if(dem.repType > 0) { // model is sexual - also set parameters for males
-                    pSpecies->setSettRules(stage, 1, srules);
+                pSpecies->setSteps(stage, 0, ssteps);
+                if(srules.densDep) {
+                    pSpecies->setSpSettTraits(stage, 0, settleDD);
                 }
+                    if(dem.repType > 0) { // model is sexual - also set parameters for males
+                    pSpecies->setSettRules(stage, 1, srules);
+                    pSpecies->setSteps(stage, 1, ssteps);
+                    if(srules.densDep) {
+                        pSpecies->setSpSettTraits(stage, 0, settleDD);
+                    }
+                }
+
             }
                 break;
 
@@ -2706,12 +2799,14 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
                 srules.densDep = densdep;
                 srules.findMate = findmate;
                 pSpecies->setSettRules(stage, sex, srules);
+                pSpecies->setSteps(stage, sex, ssteps);
+                if(srules.densDep) {
+                    pSpecies->setSpSettTraits(stage, sex, settleDD);
+                }
             }
                 break;
-            } // end sexSettle for FindMate
-
+            } // end sexSettle
         }
-        // read find mate conditions for...
         else { // ...dispersal kernel
             if(constFindMate) {
                 findmate = (bool)FindMate(0, 0);
@@ -2722,31 +2817,82 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
             if(findmate && dem.repType == 0)
                 error = 504;
 
+            settType = (int)SettleCondMatrix(line,
+                        offset); // Settlement rule if the arrival cell/patch is unsuitable: 0 = die, 1 = wait, 2 = randomly choose a suitable cell/patch or die, 3 = randomly choose a suitable cell/patch or wait.
+            // Options 1 and 3 may be chosen for a stage-structured population only
+
+
             switch(sexSettle) {
             case 0: { // no sex / stage dependence
                     if(findmate && dem.repType == 0)
                         error = 504;
                     srules = pSpecies->getSettRules(0, 0);
                     srules.findMate = findmate;
-                    if(dem.stageStruct) { // model is structured - also set parameters for all stages
-                        for(int i = 0; i < sstruct.nStages; i++) {
-                            pSpecies->setSettRules(i, 0, srules);
-                            if(dem.repType > 0) { // model is sexual - also set parameters for males
-                                pSpecies->setSettRules(i, 1, srules);
-                            }
-                        }
-                    } else {
-                        pSpecies->setSettRules(0, 0, srules);
+
+                if((settType == 1 || settType == 3) && !dem.stageStruct)
+                    error = 503;
+                switch(settType) {
+                case 0:
+                    srules.wait = false;
+                    srules.go2nbrLocn = false;
+                    break;
+                case 1:
+                    srules.wait = true;
+                    srules.go2nbrLocn = false;
+                    break;
+                case 2:
+                    srules.wait = false;
+                    srules.go2nbrLocn = true;
+                    break;
+                case 3:
+                    srules.wait = true;
+                    srules.go2nbrLocn = true;
+                    break;
+                }
+
+                if(dem.stageStruct) { // model is structured - also set parameters for all stages
+                    for(int i = 0; i < sstruct.nStages; i++) {
+                        pSpecies->setSettRules(i, 0, srules);
                         if(dem.repType > 0) { // model is sexual - also set parameters for males
-                            pSpecies->setSettRules(0, 1, srules);
+                            pSpecies->setSettRules(i, 1, srules);
                         }
                     }
+                } else {
+                    pSpecies->setSettRules(0, 0, srules);
+                    if(dem.repType > 0) { // model is sexual - also set parameters for males
+                        pSpecies->setSettRules(0, 1, srules);
+                    }
                 }
+
+            }
                 break;
 
             case 1: { // sex dependent
                 srules = pSpecies->getSettRules(0, sex);
                 srules.findMate = findmate;
+
+                if((settType == 1 || settType == 3) && dem.stageStruct == false)
+                    error = 505;
+
+                switch(settType) {
+                case 0:
+                    srules.wait = false;
+                    srules.go2nbrLocn = false;
+                    break;
+                case 1:
+                    srules.wait = true;
+                    srules.go2nbrLocn = false;
+                    break;
+                case 2:
+                    srules.wait = false;
+                    srules.go2nbrLocn = true;
+                    break;
+                case 3:
+                    srules.wait = true;
+                    srules.go2nbrLocn = true;
+                    break;
+                }
+
                 pSpecies->setSettRules(0, sex, srules);
                 if(dem.stageStruct) { // model is structured - also set parameters for all stages
                     for(int i = 1; i < sstruct.nStages; i++) {
@@ -2761,6 +2907,26 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
                     error = 507;
                 srules = pSpecies->getSettRules(stage, 0);
                 srules.findMate = findmate;
+
+                switch(settType) {
+                case 0:
+                    srules.wait = false;
+                    srules.go2nbrLocn = false;
+                    break;
+                case 1:
+                    srules.wait = true;
+                    srules.go2nbrLocn = false;
+                    break;
+                case 2:
+                    srules.wait = false;
+                    srules.go2nbrLocn = true;
+                    break;
+                case 3:
+                    srules.wait = true;
+                    srules.go2nbrLocn = true;
+                    break;
+                }
+
                 pSpecies->setSettRules(stage, 0, srules);
                 if(dem.repType > 0) { // model is sexual - also set parameters for males
                     pSpecies->setSettRules(stage, 1, srules);
@@ -2771,471 +2937,6 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
             case 3: { // sex & stage dependent
                 srules = pSpecies->getSettRules(stage, sex);
                 srules.findMate = findmate;
-                pSpecies->setSettRules(stage, sex, srules);
-            }
-                break;
-
-            } // end of switch (sexSettle)
-
-        } // end of dispersal kernel
-
-
-
-
-        // MinSteps
-        // determine stage and sex of this line
-        if(sett.stgDep) {
-            if(sett.sexDep) {
-                stage = (int)MinSteps(line, 0);
-                sex = (int)MinSteps(line, 1);
-            } else {
-                stage = (int)MinSteps(line, 0);
-                sex = 0;
-            }
-        } else {
-            if(sett.sexDep) {
-                stage = 0;
-                sex = (int)MinSteps(line, 0);
-            } else {
-                stage = 0;
-                sex = 0;
-            }
-        }
-
-        if(trfr.usesMovtProc) { // ...movement process
-            if(constMinSteps) {
-                ssteps.minSteps = (int)MinSteps(0, 0);
-            } else {
-                ssteps.minSteps = (int)MinSteps(line, offset);
-            }
-
-            switch(sexSettle) {
-
-            case 0: { // no sex- / stage-dependence
-                srules = pSpecies->getSettRules(0, 0);
-                pSpecies->setSteps(0, 0, ssteps);
-
-                if(dem.stageStruct) { // model is structured - also set parameters for all stages
-                    for(int i = 1; i < sstruct.nStages; i++) {
-                        pSpecies->setSteps(i, 0, ssteps);
-                        if(dem.repType > 0) {                        // model is sexual - also set parameters for males
-                            pSpecies->setSteps(i, 1, ssteps);
-                        }
-                    }
-                } else {                  // see comment above (at case label)
-                    if(dem.repType > 0) { // model is sexual - also set parameters for males
-                        pSpecies->setSteps(0, 1, ssteps);
-                    }
-                }
-            }
-                break;
-
-            case 1: { // sex-dependent
-                srules = pSpecies->getSettRules(0, sex);
-                pSpecies->setSteps(0, sex, ssteps);
-                if(dem.stageStruct) { // model is structured - also set parameters for all stages
-                    for(int i = 1; i < sstruct.nStages; i++) {
-                        pSpecies->setSteps(i, sex, ssteps);
-                    }
-                }
-
-
-            }
-                break;
-
-            case 2: { // stage-dependent
-                srules = pSpecies->getSettRules(stage, 0);
-                pSpecies->setSteps(stage, 0, ssteps);
-                if(dem.repType > 0) { // model is sexual - also set parameters for males
-                    pSpecies->setSteps(stage, 1, ssteps);
-                }
-            }
-                break;
-
-            case 3: { // sex- & stage-dependent
-                srules = pSpecies->getSettRules(stage, sex);
-                pSpecies->setSteps(stage, sex, ssteps);
-            }
-                break;
-            } // end sexSettle
-        } // end if MovementModel for MinSteps
-
-        // MaxSteps
-        // determine stage and sex of this line
-        if(sett.stgDep) {
-            if(sett.sexDep) {
-                stage = (int)MaxSteps(line, 0);
-                sex = (int)MaxSteps(line, 1);
-            } else {
-                stage = (int)MaxSteps(line, 0);
-                sex = 0;
-            }
-        } else {
-            if(sett.sexDep) {
-                stage = 0;
-                sex = (int)MaxSteps(line, 0);
-            } else {
-                stage = 0;
-                sex = 0;
-            }
-        }
-
-        if(trfr.usesMovtProc) { // ...movement process
-            if(constMaxSteps) {
-                ssteps.maxSteps = (int)MaxSteps(0, 0);
-            } else {
-                ssteps.maxSteps = (int)MaxSteps(line, offset);
-            }
-
-            switch(sexSettle) {
-
-            case 0: { // no sex- / stage-dependence
-                srules = pSpecies->getSettRules(0, 0);
-                pSpecies->setSteps(0, 0, ssteps);
-
-                if(dem.stageStruct) { // model is structured - also set parameters for all stages
-                    for(int i = 1; i < sstruct.nStages; i++) {
-                        pSpecies->setSteps(i, 0, ssteps);
-                        if(dem.repType > 0) {                        // model is sexual - also set parameters for males
-                            pSpecies->setSteps(i, 1, ssteps);
-                        }
-                    }
-                } else {                  // see comment above (at case label)
-                    if(dem.repType > 0) { // model is sexual - also set parameters for males
-                        pSpecies->setSteps(0, 1, ssteps);
-                    }
-                }
-            }
-                break;
-
-            case 1: { // sex-dependent
-                srules = pSpecies->getSettRules(0, sex);
-                pSpecies->setSteps(0, sex, ssteps);
-                if(dem.stageStruct) { // model is structured - also set parameters for all stages
-                    for(int i = 1; i < sstruct.nStages; i++) {
-                        pSpecies->setSteps(i, sex, ssteps);
-                    }
-                }
-
-
-            }
-                break;
-
-            case 2: { // stage-dependent
-                srules = pSpecies->getSettRules(stage, 0);
-                pSpecies->setSteps(stage, 0, ssteps);
-                if(dem.repType > 0) { // model is sexual - also set parameters for males
-                    pSpecies->setSteps(stage, 1, ssteps);
-                }
-            }
-                break;
-
-            case 3: { // sex- & stage-dependent
-                srules = pSpecies->getSettRules(stage, sex);
-                pSpecies->setSteps(stage, sex, ssteps);
-            }
-                break;
-            } // end sexSettle
-
-        } // End Movement model for MaxSteps
-
-        // MaxStepsYr
-        // determine stage and sex of this line
-        if(sett.stgDep) {
-            if(sett.sexDep) {
-                stage = (int)MaxStepsYr(line, 0);
-                sex = (int)MaxStepsYr(line, 1);
-            } else {
-                stage = (int)MaxStepsYr(line, 0);
-                sex = 0;
-            }
-        } else {
-            if(sett.sexDep) {
-                stage = 0;
-                sex = (int)MaxStepsYr(line, 0);
-            } else {
-                stage = 0;
-                sex = 0;
-            }
-        }
-
-        if(trfr.usesMovtProc) { // ...movement process
-            if(constMaxStepsYr) {
-                ssteps.maxStepsYr = (int)MaxStepsYr(0, 0);
-            } else {
-                ssteps.maxStepsYr = (int)MaxStepsYr(line, offset);
-            }
-
-            switch(sexSettle) {
-
-            case 0: { // no sex- / stage-dependence
-                srules = pSpecies->getSettRules(0, 0);
-                pSpecies->setSteps(0, 0, ssteps);
-
-                if(dem.stageStruct) { // model is structured - also set parameters for all stages
-                    for(int i = 1; i < sstruct.nStages; i++) {
-                        pSpecies->setSteps(i, 0, ssteps);
-                        if(dem.repType > 0) {                        // model is sexual - also set parameters for males
-                            pSpecies->setSteps(i, 1, ssteps);
-                        }
-                    }
-                } else {                  // see comment above (at case label)
-                    if(dem.repType > 0) { // model is sexual - also set parameters for males
-                        pSpecies->setSteps(0, 1, ssteps);
-                    }
-                }
-            }
-                break;
-
-            case 1: { // sex-dependent
-                srules = pSpecies->getSettRules(0, sex);
-                pSpecies->setSteps(0, sex, ssteps);
-                if(dem.stageStruct) { // model is structured - also set parameters for all stages
-                    for(int i = 1; i < sstruct.nStages; i++) {
-                        pSpecies->setSteps(i, sex, ssteps);
-                    }
-                }
-            }
-                break;
-
-            case 2: { // stage-dependent
-                srules = pSpecies->getSettRules(stage, 0);
-                pSpecies->setSteps(stage, 0, ssteps);
-                if(dem.repType > 0) { // model is sexual - also set parameters for males
-                    pSpecies->setSteps(stage, 1, ssteps);
-                }
-            }
-                break;
-
-            case 3: { // sex- & stage-dependent
-                srules = pSpecies->getSettRules(stage, sex);
-                pSpecies->setSteps(stage, sex, ssteps);
-            }
-                break;
-            } // end sexSettle
-
-        } // End Movement model
-
-        // Settle
-        // determine stage and sex of this line
-        if(!sett.indVar){
-            if(sett.stgDep) {
-                if(sett.sexDep) {
-                    stage = (int)SettleCondMatrix(line, 0);
-                    sex = (int)SettleCondMatrix(line, 1);
-                } else {
-                    stage = (int)SettleCondMatrix(line, 0);
-                    sex = 0;
-                }
-            } else {
-                if(sett.sexDep) {
-                    stage = 0;
-                    sex = (int)SettleCondMatrix(line, 0);
-                } else {
-                    stage = 0;
-                    sex = 0;
-                }
-            }
-        }
-
-        if(trfr.usesMovtProc) { // ...movement process
-            if(densdep) {
-                if (sett.indVar) {
-                    gHasGenetics = true;
-                    settleDD.s0 = -9;
-                    settleDD.alpha = -9;
-                    settleDD.beta = -9;
-                } else{
-                    settleDD.s0 = (float)SettleCondMatrix(
-                        line, offset + 0); // Max. settlement probability for density reaction norm. Required for
-                    // DensDep = 1 and IndVar = 0; 0.0 < S0 <= 1.0
-                    settleDD.alpha =
-                        (float)SettleCondMatrix(line, offset + 1); // Required for DensDep = 1 and IndVar = 0
-                    settleDD.beta =
-                        (float)SettleCondMatrix(line, offset + 2); // Required for DensDep = 1 and IndVar = 0
-                }
-            }
-
-            switch(sexSettle) {
-
-            case 0: { // no sex- / stage-dependence
-                srules = pSpecies->getSettRules(0, 0);
-                // Loops vereinfachen indem ich direkt zu Anfang die densDep Bedingung überprüfe?
-                if(srules.densDep) {
-                    pSpecies->setSpSettTraits(0, 0, settleDD);
-                    if(dem.stageStruct) { // model is structured - also set parameters for all stages
-                        for(int i = 1; i < sstruct.nStages; i++) {
-                            pSpecies->setSpSettTraits(i, 0, settleDD); //  /!\ different to ReadSettlement()
-                            if(dem.repType > 0) {                        // model is sexual - also set parameters for males
-                                pSpecies->setSpSettTraits(i, 1, settleDD);
-                            }
-                        }
-                    } else {                  // see comment above (at case label)
-                        if(dem.repType > 0) { // model is sexual - also set parameters for males
-                            pSpecies->setSpSettTraits(0, 1, settleDD);
-                        }
-                    }
-                }
-            }
-                break;
-
-            case 1: { // sex-dependent
-
-                if(sett.indVar){
-                for (int s = 0; s < gNbSexesDisp; s++){
-                    pSpecies->setSpSettTraits(0, s, settleDD);
-                    if(dem.stageStruct) { // model is structured - also set parameters for all stages
-                        for(int i = 1; i < sstruct.nStages; i++) {
-                            pSpecies->setSpSettTraits(i, s, settleDD);
-                        }
-                    }
-                }
-            } else {
-                srules = pSpecies->getSettRules(0, sex);
-                // s. Kommentar oben
-                if(srules.densDep) {
-                    pSpecies->setSpSettTraits(0, sex, settleDD);
-                    if(dem.stageStruct) { // model is structured - also set parameters for all stages
-                        for(int i = 1; i < sstruct.nStages; i++) {
-                            pSpecies->setSpSettTraits(i, sex, settleDD);
-                        }
-                    }
-                }
-            }
-
-            }
-                break;
-
-            case 2: { // stage-dependent (cannot include individual variablility, so no need to account for that)
-                srules = pSpecies->getSettRules(stage, 0);
-                if(srules.densDep) {
-                    pSpecies->setSpSettTraits(stage, 0, settleDD);
-                    if(dem.repType > 0) { // model is sexual - also set parameters for males
-                        pSpecies->setSpSettTraits(stage, 1, settleDD);
-                    }
-                }
-            }
-                break;
-
-            case 3: { // sex- & stage-dependent (cannot include individual variablility, so no need to account for that)
-                srules = pSpecies->getSettRules(stage, sex);
-                if(srules.densDep) {
-                    pSpecies->setSpSettTraits(stage, sex, settleDD);
-                }
-            }
-                break;
-            } // end sexSettle
-
-        } // end of movement model for SettleCondMatrix
-
-        // read settlement conditions for...
-        else { // ...dispersal kernel
-
-            settType = (int)SettleCondMatrix(line,
-                        offset); // Settlement rule if the arrival cell/patch is unsuitable: 0 = die, 1 = wait, 2 = randomly
-            // choose a suitable cell/patch or die, 3 = randomly choose a suitable cell/patch or wait.
-            // Options 1 and 3 may be chosen for a stage-structured population only
-
-            switch(sexSettle) {
-            case 0: { // no sex / stage dependence
-                if((settType == 1 || settType == 3) && !dem.stageStruct)
-                    error = 503;
-                srules = pSpecies->getSettRules(0, 0);
-                switch(settType) {
-                case 0:
-                    srules.wait = false;
-                    srules.go2nbrLocn = false;
-                    break;
-                case 1:
-                    srules.wait = true;
-                    srules.go2nbrLocn = false;
-                    break;
-                case 2:
-                    srules.wait = false;
-                    srules.go2nbrLocn = true;
-                    break;
-                case 3:
-                    srules.wait = true;
-                    srules.go2nbrLocn = true;
-                    break;
-                }
-                if(dem.stageStruct) { // model is structured - also set parameters for all stages
-                    for(int i = 0; i < sstruct.nStages; i++) {
-                        pSpecies->setSettRules(i, 0, srules);
-                        if(dem.repType > 0) { // model is sexual - also set parameters for males
-                            pSpecies->setSettRules(i, 1, srules);
-                        }
-                    }
-                } else {
-                    pSpecies->setSettRules(0, 0, srules);
-                    if(dem.repType > 0) { // model is sexual - also set parameters for males
-                        pSpecies->setSettRules(0, 1, srules);
-                    }
-                }
-            }
-                break;
-
-            case 1: { // sex dependent
-                if((settType == 1 || settType == 3) && dem.stageStruct == false)
-                    error = 505;
-                srules = pSpecies->getSettRules(0, sex);
-                switch(settType) {
-                case 0:
-                    srules.wait = false;
-                    srules.go2nbrLocn = false;
-                    break;
-                case 1:
-                    srules.wait = true;
-                    srules.go2nbrLocn = false;
-                    break;
-                case 2:
-                    srules.wait = false;
-                    srules.go2nbrLocn = true;
-                    break;
-                case 3:
-                    srules.wait = true;
-                    srules.go2nbrLocn = true;
-                    break;
-                }
-                pSpecies->setSettRules(0, sex, srules);
-                if(dem.stageStruct) { // model is structured - also set parameters for all stages
-                    for(int i = 1; i < sstruct.nStages; i++) {
-                        pSpecies->setSettRules(i, sex, srules);
-                    }
-                }
-            }
-                break;
-
-            case 2: { // stage dependent
-                srules = pSpecies->getSettRules(stage, 0);
-                switch(settType) {
-                case 0:
-                    srules.wait = false;
-                    srules.go2nbrLocn = false;
-                    break;
-                case 1:
-                    srules.wait = true;
-                    srules.go2nbrLocn = false;
-                    break;
-                case 2:
-                    srules.wait = false;
-                    srules.go2nbrLocn = true;
-                    break;
-                case 3:
-                    srules.wait = true;
-                    srules.go2nbrLocn = true;
-                    break;
-                }
-                srules.findMate = findmate;
-                pSpecies->setSettRules(stage, 0, srules);
-                if(dem.repType > 0) { // model is sexual - also set parameters for males
-                    pSpecies->setSettRules(stage, 1, srules);
-                }
-            }
-                break;
-
-            case 3: { // sex & stage dependent
-                srules = pSpecies->getSettRules(stage, sex);
                 switch(settType) {
                 case 0:
                     srules.wait = false;
@@ -3597,10 +3298,10 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
         // initial Positions
         set<int> initialPositions;
         int NbOfInitialPositionsR = -9;
-        if(Rf_isString(NeutralTraitsParamsR.slot("initialPositions"))){
-            string initialPositionsR = Rcpp::as<string>(NeutralTraitsParamsR.slot("initialPositions"));
+        if(Rf_isString(NeutralTraitsParamsR.slot("InitialPositions"))){
+            string initialPositionsR = Rcpp::as<string>(NeutralTraitsParamsR.slot("InitialPositions"));
             if(initialPositionsR == "random"){
-                NbOfInitialPositionsR = Rcpp::as<int>(NeutralTraitsParamsR.slot("NbOfInitialPositions"));
+                NbOfInitialPositionsR = Rcpp::as<int>(NeutralTraitsParamsR.slot("InitialNbOfPositions"));
                 if(NbOfPositionsR > 0){
                     initialPositions = selectRandomLociPositions(NbOfInitialPositionsR, genomeSize);
                 }
@@ -3612,7 +3313,7 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
             }
         }
         else {
-            Rcpp::NumericVector initialPositionsR = Rcpp::as<Rcpp::NumericVector>(NeutralTraitsParamsR.slot("initialPositions")); // Positions are provided as numeric vector
+            Rcpp::NumericVector initialPositionsR = Rcpp::as<Rcpp::NumericVector>(NeutralTraitsParamsR.slot("InitialPositions")); // Positions are provided as numeric vector
             // use a for loop to insert the values at initialPositionsR into the set positions
             for (int i = 0; i < initialPositionsR.size(); i++) {
                 if (static_cast<int>(initialPositionsR[i]) <= genomeSize) { // not sure if this is needed; initial positions should be checked beforehand and be within positons range
@@ -3688,10 +3389,10 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
         string ExpressionTypeR = "multiplicative"; // not applicable for genetic loads
 
         // initial Positions and number of Positions
-        Rcpp::List initialPositionsRList = Rcpp::as<Rcpp::List>(GeneticLoadParamsR.slot("initialPositions"));
+        Rcpp::List initialPositionsRList = Rcpp::as<Rcpp::List>(GeneticLoadParamsR.slot("InitialPositions"));
         Rcpp::NumericVector NbOfInitialPositionsRvec;
-        if (GeneticLoadParamsR.slot("NbOfInitialPositions")!= R_NilValue){
-            NbOfInitialPositionsRvec = Rcpp::as<Rcpp::NumericVector> (GeneticLoadParamsR.slot("NbOfInitialPositions"));
+        if (GeneticLoadParamsR.slot("InitialNbOfPositions")!= R_NilValue){
+            NbOfInitialPositionsRvec = Rcpp::as<Rcpp::NumericVector> (GeneticLoadParamsR.slot("InitialNbOfPositions"));
         }
 
         // Initial distribution parameters

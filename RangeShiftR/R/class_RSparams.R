@@ -461,6 +461,7 @@ setValidity("RSparams", function(object) {
     ## Settlement:
     # check StageDep and SexDep
     dim_ok = TRUE
+    rows = 0 # if no dependency, there are only single values
     if (object@dispersal@Settlement@StageDep) {
         if (object@control@stagestruct) {
             rows = object@control@stages
@@ -472,11 +473,12 @@ setValidity("RSparams", function(object) {
         }
     }
     else {
-        rows = 1
+        # rows = 1
         offset = 0
     }
     if (object@dispersal@Settlement@SexDep) {
         if (object@control@reproductn) {
+            if (rows==0) rows=1
             rows = 2*rows
             offset = 1+offset
         }
@@ -489,12 +491,14 @@ setValidity("RSparams", function(object) {
         }
     }
     #check dimensions and values of matrix Settle:
+    # if there is some kind of dependency:
+    if (rows != 0){
     if (dim_ok && !object@dispersal@Settlement@IndVar) {
         if (object@dispersal@Settlement@DensDep) {
             cols = 3
         }
         else {
-            if (object@control@transfer) cols = 0
+                if (object@control@transfer) cols = 1
             else  cols = 1
         }
         if (dim(object@dispersal@Settlement@Settle)[1]!=rows) {
@@ -561,12 +565,10 @@ setValidity("RSparams", function(object) {
         if(!object@dispersal@Settlement@IndVar){
             # check value columns of Settle
             if (object@control@transfer) {          #if Movemodel:
-                if (object@dispersal@Settlement@DensDep) {
                     if(any(object@dispersal@Settlement@Settle[,(offset+1)]<=0 | object@dispersal@Settlement@Settle[,(offset+1)]>1)){
                         msg <- c(msg, paste0("Column ", (offset+1), " of settlement traits matrix (Settle) must contain the maximum settlement probability S0, with values in the half-open inerval (0,1] !"))
                     }
                     #// NB alpha and beta may take any value
-                }
                 #else {}  // no more columns required other than stage and sex if applicable
             }
             else {      # DispersalKernel
@@ -587,24 +589,73 @@ setValidity("RSparams", function(object) {
         if (object@control@transfer) {
             if (!is.null(nrow(object@dispersal@Settlement@MinSteps))){
                 if (nrow(object@dispersal@Settlement@MinSteps)!= rows){
-                    msg <- c(msg, paste0("Settlement(): MinSteps must have either 1 value or ", rows ," rows (with the current settings)!"))
+                        msg <- c(msg, paste0("Settlement(): MinSteps must have ", rows ," rows (with the current settings)!"))
                 }
             }
 
             if (!is.null(nrow(object@dispersal@Settlement@MaxSteps))){
                 if(nrow(object@dispersal@Settlement@MaxSteps) != rows ){
-                    msg <- c(msg, paste0("Settlement(): MaxSteps must have either 1 value or ", rows ," rows (with the current settings)!"))
+                        msg <- c(msg, paste0("Settlement(): MaxSteps must have ", rows ," rows (with the current settings)!"))
                 }
             }
             if (object@dispersal@Settlement@StageDep) {
                 if (!is.null(nrow(object@dispersal@Settlement@MaxStepsYear))){
                     if(nrow(object@dispersal@Settlement@MaxStepsYear) != rows ){
-                        msg <- c(msg, paste0("Settlement(): MaxStepsYear must have either 1 or ", rows ," rows (with the current settings)!"))
+                            msg <- c(msg, paste0("Settlement(): MaxStepsYear must have ", rows ," rows (with the current settings)!"))
                     }
                 }
             }
         }
     }
+    } else {
+        if(object@dispersal@Settlement@DensDep){
+            rows = 1
+            cols = 3
+            if (dim(object@dispersal@Settlement@Settle)[1]!=rows) {
+                dim_ok = FALSE
+                msg <- c(msg, paste0("Matrix of Settlement traits (Settle) must have ", rows ," rows (with the current settings)!"))
+            }
+            if (dim(object@dispersal@Settlement@Settle)[2]!=(offset+cols)) {
+                dim_ok = FALSE
+                msg <- c(msg, paste0("Matrix of Settlement traits (Settle) must have ", (offset+cols) ," columns (with the current settings)!"))
+            }
+            if(any(object@dispersal@Settlement@Settle[,(offset+1)]<=0 | object@dispersal@Settlement@Settle[,(offset+1)]>1)){
+                msg <- c(msg, paste0("Column ", (offset+1), " of settlement traits matrix (Settle) must contain the maximum settlement probability S0, with values in the half-open interval (0,1] !"))
+            }
+            #// NB alpha and beta may take any value
+        } else {
+            if(length(object@dispersal@Settlement@Settle) != 1) {
+                dim_ok = FALSE
+                msg <- c(msg, paste0("Settle must only have one value (with the current settings)!"))
+            } else {
+                if (object@control@transfer) {
+                    # Settle between 0 and 1
+                    if(object@dispersal@Settlement@Settle<0 | object@dispersal@Settlement@Settle>1){
+                        msg <- c(msg, "Settle must be between 0 and 1!")
+                    }
+                } else {
+                    if (object@control@stagestruct) {
+                        if(!(object@dispersal@Settlement@Settle %in% c(0,1,2,3))){
+                            msg <- c(msg, "Settle must contain the settlement condition codes, with valid values: 0, 1, 2 or 3.")
+                        }
+                    }
+                    else{
+                        if(!(object@dispersal@Settlement@Settle %in% c(0,2))){
+                            msg <- c(msg, "Settle must contain the settlement condition codes; for a non-StageStructured population the only valid values are 0 and 2.")
+                        }
+                    }
+                }
+            }
+        }
+        # Settle, FindMate, MinSteps, MaxSteps, MaxStepsYear must be one single value
+
+        if(object@control@transfer){
+            if(any(c(length(object@dispersal@Settlement@MinSteps) != 1, length(object@dispersal@Settlement@MaxSteps) != 1, length(object@dispersal@Settlement@MaxStepsYear) != 1, length(object@dispersal@Settlement@FindMate) != 1))){
+                msg <- c(msg, "MinSteps, MaxSteps, MaxStepsYear and FindMate must be a single value with the current settings.")
+            }
+        }
+    }
+
 
     #GENETICS
     validObject(object@gene)
