@@ -78,12 +78,12 @@ public:
 	void fixNewSeed(int);
 	seed_t getSeed() const { return RS_random_seed; };
 
-private:
-	seed_t RS_random_seed;
-	mt19937* gen;
-	std::uniform_real_distribution<>* pRandom01;
-	std::normal_distribution<>* pNormal;
-};
+	private:
+		seed_t RS_random_seed;
+		std::vector<mt19937> gens;
+		std::uniform_real_distribution<>* pRandom01;
+		std::normal_distribution<>* pNormal;
+	};
 
 #ifndef NDEBUG
 	void testRSrandom();

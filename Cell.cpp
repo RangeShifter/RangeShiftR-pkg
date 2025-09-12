@@ -30,7 +30,7 @@
 
 // Cell functions
 
-Cell::Cell(int xx,int yy,intptr patch,int hab)
+Cell::Cell(int xx,int yy,Patch *patch,int hab)
 {
 	x = xx; y = yy;
 	pPatch = patch;
@@ -41,7 +41,7 @@ Cell::Cell(int xx,int yy,intptr patch,int hab)
 	smsData = 0;
 }
 
-Cell::Cell(int xx,int yy,intptr patch,float hab)
+Cell::Cell(int xx,int yy,Patch *patch,float hab)
 {
 	x = xx; y = yy;
 	pPatch = patch;
@@ -100,10 +100,10 @@ float Cell::getHabitat(int ix) {
 	else return habitats[ix];
 }
 
-void Cell::setPatch(intptr p) {
+void Cell::setPatch(Patch *p) {
 	pPatch = p;
 }
-intptr Cell::getPatch(void)
+Patch *Cell::getPatch(void)
 {
 	return pPatch;
 }
@@ -127,6 +127,12 @@ void Cell::updateEps(float ac,float randpart) {
 float Cell::getEps(void) { return eps; }
 
 // Functions to handle costs for SMS
+
+#ifdef _OPENMP
+std::unique_lock<std::mutex> Cell::lockCost() {
+	return std::unique_lock<std::mutex>(cost_mutex);
+}
+#endif
 
 int Cell::getCost(void) {
 	int c;

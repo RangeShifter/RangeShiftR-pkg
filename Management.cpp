@@ -132,10 +132,10 @@ void Management::translocate(int yr
 #endif
 
                 s_patch = pLandscape->findPatch(source_it->second[e].x);
-                if (s_patch != 0) {
+                if (s_patch) { // if it is not a nullpointer
                     // test if population in patch is not zero
-                    s_pPop = (Population*)s_patch->getPopn((intptr)pSpecies); // returns the population of the species in that cell
-                    if (s_pPop != 0 && s_pPop->getNInds() > 0){
+                    s_pPop = s_patch->getPopn(pSpecies); // returns the population of the species in that cell
+                    if (s_pPop && s_pPop->getNInds() > 0){
                     } else {
 #if RS_RCPP
                         Rcpp::Rcout << "Population does not exist in source patch or is 0! skipping translocation event." << endl;
@@ -174,12 +174,12 @@ void Management::translocate(int yr
 #ifndef NDEBUG
     cout << "Source cell was found" << endl;
 #endif
-               intptr s_ppatch = pCell->getPatch();
-               if (s_ppatch != 0) {
-                   s_patch = (Patch*)s_ppatch;
+               Patch *s_ppatch = pCell->getPatch();
+               if (s_ppatch) {
+                   s_patch = s_ppatch;
                    // test if population in patch is not zero
-                   s_pPop = (Population*)s_patch->getPopn((intptr)pSpecies); // returns the population of the species in that cell
-                   if (s_pPop != 0 && s_pPop->getNInds() > 0){
+                   s_pPop = s_patch->getPopn(pSpecies); // returns the population of the species in that cell
+                   if (s_pPop && s_pPop->getNInds() > 0){
                    } else {
 #if RS_RCPP
                        Rcpp::Rcout << "Population does not exist in source cell or is 0! skipping translocation event." << endl;
@@ -240,9 +240,9 @@ void Management::translocate(int yr
 #ifndef NDEBUG
     cout << "Target cell was found" << endl;
 #endif
-               intptr t_ppatch = pCell->getPatch();
-               if (t_ppatch != 0) {
-                   t_patch = (Patch*)t_ppatch;
+               Patch *t_ppatch = pCell->getPatch();
+               if (t_ppatch) {
+                   t_patch = t_ppatch;
                } else {
 #if RS_RCPP
                    Rcpp::Rcout << "Target cell does not exist! skipping translocation event." << endl;
@@ -284,8 +284,8 @@ void Management::translocate(int yr
                 catched_individual = s_pPop->catchIndividual(catching_rate, j); // catch individual in the source patch
                 if (catched_individual !=NULL) { // translocated individual - has already been removed from natal population
                     // Check if a population of this species already exists in target patch t_patch
-                    t_pPop = (Population*)t_patch->getPopn((intptr)pSpecies);
-                    if (t_pPop == 0) { // translocated individual is the first in a previously uninhabited patch
+                    t_pPop = t_patch->getPopn(pSpecies);
+                    if (!t_pPop) { // translocated individual is the first in a previously uninhabited patch
 #if RS_RCPP
                         Rcpp::Rcout << "Population does not exist in target patch. Creating new population." << endl;
 #endif
