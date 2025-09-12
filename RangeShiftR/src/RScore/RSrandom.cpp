@@ -20,6 +20,9 @@
  --------------------------------------------------------------------------*/
 
 #include "RSrandom.h"
+#ifdef _OPENMP
+#include <omp.h>
+#endif // _OPENMP
 #ifndef NDEBUG
 #include "Parameters.h"
 extern paramSim* paramsSim;
@@ -58,7 +61,17 @@ RSrandom::RSrandom(std::int64_t seed)
 
 	// set up Mersenne Twister random number generator with seed sequence
 	std::seed_seq seq(random_seed.begin(), random_seed.end());
-	gen = new mt19937(seq);
+
+#ifdef _OPENMP
+	int nb_generators = omp_get_max_threads();
+	gens.reserve(nb_generators);
+	for (int i = 0; i < nb_generators; i++)
+		gens.emplace_back(seq);
+#else
+	gens.reserve(1);
+	gens.emplace_back(seq);
+#endif // _OPENMP
+
 
 	// Set up standard uniform distribution
 	pRandom01 = new uniform_real_distribution<double>(0.0, 1.0);
@@ -83,7 +96,16 @@ RSrandom::RSrandom() {
 #endif // NDEBUG
 
 	// set up Mersenne Twister RNG
-	gen = new mt19937(RS_random_seed);
+#ifdef _OPENMP
+	int nb_generators = omp_get_max_threads();
+	gens.reserve(nb_generators);
+	for (int i = 0; i < nb_generators; i++)
+		gens.emplace_back(RS_random_seed + i);
+#else
+	gens.reserve(1);
+	gens.emplace_back(RS_random_seed);
+#endif // _OPENMP	
+
 	// Set up standard uniform distribution
 	pRandom01 = new uniform_real_distribution<double>(0.0, 1.0);
 	// Set up standard normal distribution
@@ -92,20 +114,28 @@ RSrandom::RSrandom() {
 #endif // RS_RCPP
 
 RSrandom::~RSrandom(void) {
-    delete gen;
+    gens.clear();
     if (pRandom01 != 0)
         delete pRandom01;
     if (pNormal != 0)
         delete pNormal;
 }
 
-mt19937 RSrandom::getRNG(void) {
-    return *gen;
+mt19937 RSrandom::getRNG() {
+#ifdef _OPENMP
+	return gens[omp_get_thread_num() % gens.size()];
+#else
+	return gens[0];
+#endif // _OPENMP
 }
 
-double RSrandom::Random(void) {
+double RSrandom::Random() {
     // return random number between 0 and 1
-    return pRandom01->operator()(*gen);
+#ifdef _OPENMP
+	return pRandom01->operator()(gens[omp_get_thread_num() % gens.size()]);
+#else
+	return pRandom01->operator()(gens[0]);
+#endif // _OPENMP
 }
 
 int RSrandom::IRandom(int min, int max) {
@@ -114,15 +144,23 @@ int RSrandom::IRandom(int min, int max) {
         return min;
 
     uniform_int_distribution<int> unif(min, max);
-    return unif(*gen);
+#ifdef _OPENMP
+	return unif(gens[omp_get_thread_num() % gens.size()]);
+#else
+	return unif(gens[0]);
+#endif // _OPENMP
 }
 
 float RSrandom::FRandom(float min, float max) {
-    if (min == max)
-        return min;
+    if (min == max) return min;
     // return random double in the interval min <= x <= max
     uniform_real_distribution<float> unif(min, max);
-    return unif(*gen);
+
+#ifdef _OPENMP
+	return unif(gens[omp_get_thread_num() % gens.size()]);
+#else
+	return unif(gens[0]);
+#endif
 }
 
 int RSrandom::Bernoulli(double p) {
@@ -137,23 +175,39 @@ int RSrandom::Bernoulli(double p) {
 
 int RSrandom::Binomial(const int& n, const double& p) {
 	binomial_distribution<int> binom(n, p);
-	return binom(*gen);
+#ifdef _OPENMP
+	return binom(gens[omp_get_thread_num() % gens.size()]);
+#else
+	return binom(gens[0]);
+#endif
 }
 
 double RSrandom::Normal(double mean, double sd) {
-    return mean + sd * pNormal->operator()(*gen);
+#ifdef _OPENMP
+	return mean + sd * pNormal->operator()(gens[omp_get_thread_num() % gens.size()]);
+#else
+	return mean + sd * pNormal->operator()(gens[0]);
+#endif // _OPENMP
 }
 
 int RSrandom::Poisson(double mean) {
     poisson_distribution<int> poiss(mean);
-    return poiss(*gen);
+#ifdef _OPENMP
+	return poiss(gens[omp_get_thread_num() % gens.size()]);
+#else
+	return poiss(gens[0]);
+#endif // _OPENMP
 }
 
 double RSrandom::Gamma(double shape, double scale) { //scale  = mean/shape, shape must be positive and scale can be positive or negative
 
     gamma_distribution<> gamma(shape, abs(scale));
 
-    double x = gamma(*gen);
+#ifdef _OPENMP
+	double x = poiss(gens[omp_get_thread_num() % gens.size()]);
+#else
+	double x = gamma(gens[0]);
+#endif // _OPENMP
     if (scale < 0) x = -x;
     return x;
 }
@@ -165,7 +219,12 @@ double RSrandom::NegExp(double mean) {
 }
 
 void RSrandom::fixNewSeed(int seed) {
-    gen->seed(seed);
+#ifdef _OPENMP
+	for (int i = 0; i < omp_get_max_threads(); i++)
+		gens[i].seed(seed + i);
+#else
+	gens[0].seed(seed);
+#endif // _OPENMP
 }
 
 //--------------------------------------------------------------------------------------------------

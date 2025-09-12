@@ -23,6 +23,8 @@
  //---------------------------------------------------------------------------
 
 #include "Population.h"
+
+#include <algorithm>
 //---------------------------------------------------------------------------
 
 ofstream outPop;
@@ -56,9 +58,8 @@ Population::Population(Species* pSp, Patch* pPch, int ninds, int resol)
 	pSpecies = pSp;
 	pPatch = pPch;
 	// record the new population in the patch
-	patchPopn pp = patchPopn();
-	pp.pSp = (intptr)pSpecies;
-	pp.pPop = (intptr)this;
+	patchPopn pp;
+	pp.pSp = pSpecies; pp.pPop = this;
 	pPatch->addPopn(pp);
 
 	demogrParams dem = pSpecies->getDemogrParams();
@@ -175,7 +176,7 @@ Population::Population(Species* pSp, Patch* pPch, int ninds, int resol)
 			}
 			else age = stg;
 
-			Individual* newInd = new Individual(pCell, pPatch, stg, age, sstruct.repInterval,
+			Individual* newInd = new Individual(pSpecies, pCell, pPatch, stg, age, sstruct.repInterval,
 				probmale, trfr.usesMovtProc, trfr.moveType);
 
 			if (pSpecies->getNTraits() > 0) {
@@ -676,7 +677,7 @@ void Population::reproduction(const float localK, const float envval, const int 
 					for (int j = 0; j < njuvs; j++) {
 
 						Individual* newJuv;
-						newJuv = new Individual(pCell, pPatch, 0, 0, 0, dem.propMales, trfr.usesMovtProc, trfr.moveType);
+						newJuv = new Individual(pSpecies, pCell, pPatch, 0, 0, 0, dem.propMales, trfr.usesMovtProc, trfr.moveType);
 
 						if (pSpecies->getNTraits() > 0) {
 							newJuv->inheritTraits(pSpecies, inds[i], resol);
@@ -754,7 +755,7 @@ void Population::reproduction(const float localK, const float envval, const int 
 							for (int j = 0; j < njuvs; j++) {
 								Individual* newJuv;
 
-								newJuv = new Individual(pCell, pPatch, 0, 0, 0, dem.propMales, trfr.usesMovtProc, trfr.moveType);
+								newJuv = new Individual(pSpecies, pCell, pPatch, 0, 0, 0, dem.propMales, trfr.usesMovtProc, trfr.moveType);
 
 								if (pSpecies->getNTraits() > 0) {
 									newJuv->inheritTraits(pSpecies, inds[i], father, resol);
@@ -800,7 +801,7 @@ void Population::fledge(void)
 		for (int sex = 0; sex < nSexes; sex++) {
 			nInds[1][sex] = 0; // set count of adults to zero
 		}
-		inds = juvs;
+		inds = std::move(juvs);
 	}
 	juvs.clear();
 
@@ -1032,7 +1033,8 @@ disperser Population::extractSettler(int ix) {
 	Cell* pCell;
 
 	indStats ind = inds[ix]->getStats();
-	pCell = inds[ix]->getLocn(1);
+
+	pCell = inds[ix]->getCurrCell();
 	d.pInd = inds[ix];  d.pCell = pCell; d.yes = false;
 	if (ind.status == 4 || ind.status == 5) { // settled
 		d.yes = true;
@@ -1045,9 +1047,26 @@ disperser Population::extractSettler(int ix) {
 // Add a specified individual to the new/current dispersal group
 // Add a specified individual to the population
 void Population::recruit(Individual* pInd) {
+	indStats ind = pInd->getStats(); // potentially I need to add localscalings or so?
+	nInds[ind.stage][ind.sex]++;
+#ifdef _OPENMP
+	const std::lock_guard<std::mutex> lock(inds_mutex);
+#endif // _OPENMP
 	inds.push_back(pInd);
+}
+
+// Add specified individuals to the new/current dispersal group
+// Add specified individuals to the population
+void Population::recruitMany(std::vector<Individual*>& new_inds) {
+	if (new_inds.empty()) return;
+	for (Individual* pInd : new_inds) {
 	indStats ind = pInd->getStats();
 	nInds[ind.stage][ind.sex]++;
+}
+#ifdef _OPENMP
+	const std::lock_guard<std::mutex> lock(inds_mutex);
+#endif // _OPENMP
+	inds.insert(inds.end(), new_inds.begin(), new_inds.end());
 }
 
 //---------------------------------------------------------------------------
@@ -1063,7 +1082,6 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 	int disperser;
 	short othersex;
 	bool mateOK, densdepOK;
-	intptr patch, popn;
 	int patchnum;
 	double localK, popsize, settprob;
 	Patch* pPatch = 0;
@@ -1084,7 +1102,7 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 	// each individual takes one step
 	// for dispersal by kernel, this should be the only step taken
 	int ninds = (int)inds.size();
-
+	#pragma omp parallel for reduction(+:ndispersers) private(disperser, pCell, pPatch) schedule(static,128)
 	for (int i = 0; i < ninds; i++) {
 		if (trfr.usesMovtProc) {
 
@@ -1099,10 +1117,9 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 			{ // sexual species - record as potential settler in new patch
 				if (inds[i]->getStatus() == 2)
 				{ // disperser has found a patch
-					pCell = inds[i]->getLocn(1);
-					patch = pCell->getPatch();
-					if (patch != 0) { // not no-data area
-						pPatch = (Patch*)patch;
+					pCell = inds[i]->getCurrCell();
+					pPatch = pCell->getPatch();
+					if (pPatch != nullptr) { // not no-data area
 						pPatch->incrPossSettler(pSpecies, inds[i]->getSex());
 					}
 				}
@@ -1110,6 +1127,8 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 		}
 	}
 
+// each individual which has reached a potential patch decides whether to settle
+	#pragma omp parallel for reduction(-:ndispersers) default(none) shared(ninds, settletype, pRandom, trfr, ppLand, pLandscape) private(ind, othersex, sett, pCell, mateOK, densdepOK, settle, pPatch, localK, popsize, pNewPopn, settDD, settprob, newloc, nbrloc, patchnum) schedule(static)
 	for (int i = 0; i < ninds; i++) {
 		ind = inds[i]->getStats();
 		if (ind.sex == 0) othersex = 1; else othersex = 0;
@@ -1123,7 +1142,7 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 		}
 		if (ind.status == 2)
 		{ // awaiting settlement
-			pCell = inds[i]->getLocn(1);
+			pCell = inds[i]->getCurrCell();
 			if (pCell == 0) {
 				// this condition can occur in a patch-based model at the time of a dynamic landscape
 				// change when there is a range restriction in place, since a patch can straddle the
@@ -1146,9 +1165,8 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 				settle = inds[i]->getSettPatch();
 				if (sett.densDep)
 				{
-					patch = pCell->getPatch();
-					if (patch != 0) { // not no-data area
-						pPatch = (Patch*)patch;
+					pPatch = pCell->getPatch();
+					if (pPatch != nullptr) { // not no-data area
 						if (settle.settleStatus == 0
 							|| settle.pSettPatch != pPatch)
 							// note: second condition allows for having moved from one patch to another
@@ -1156,13 +1174,11 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 						{
 							// determine whether settlement occurs in the (new) patch
 							localK = (double)pPatch->getK();
-							popn = pPatch->getPopn((intptr)pSpecies);
-
-							if (popn == 0) { // population has not been set up in the new patch
+							pNewPopn = pPatch->getPopn(pSpecies);
+							if (pNewPopn == nullptr) { // population has not been set up in the new patch
 								popsize = 0.0;
 							}
 							else {
-								pNewPopn = (Population*)popn;
 								popsize = (double)pNewPopn->totalPop();
 							}
 							if (localK > 0.0) {
@@ -1239,7 +1255,8 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 		{
 			// for kernel-based transfer only ...
 			// determine whether recruitment to a neighbouring cell is possible
-			pCell = inds[i]->getLocn(1);
+
+			pCell = inds[i]->getCurrCell();
 			newloc = pCell->getLocn();
 			vector <Cell*> nbrlist;
 			for (int dx = -1; dx < 2; dx++) {
@@ -1251,9 +1268,8 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 							// add to list of potential neighbouring cells if suitable, etc.
 							pCell = pLandscape->findCell(nbrloc.x, nbrloc.y);
 							if (pCell != 0) { // not no-data area
-								patch = pCell->getPatch();
-								if (patch != 0) { // not no-data area
-									pPatch = (Patch*)patch;
+								pPatch = pCell->getPatch();
+								if (pPatch != nullptr) { // not no-data area
 									patchnum = pPatch->getPatchNum();
 									if (patchnum > 0 && pPatch != inds[i]->getNatalPatch())
 									{ // not the matrix or natal patch
@@ -1292,20 +1308,18 @@ int Population::transfer(Landscape* pLandscape, short landIx)
 // settler has reached
 bool Population::matePresent(Cell* pCell, short othersex)
 {
-	int patch;
 	Patch* pPatch;
 	Population* pNewPopn;
 	int popsize = 0;
 	bool matefound = false;
 
-	patch = (int)pCell->getPatch();
-	if (patch != 0) {
-		pPatch = (Patch*)pCell->getPatch();
+	pPatch = pCell->getPatch();
+	if (pPatch != nullptr) {
 		if (pPatch->getPatchNum() > 0) { // not the matrix patch
 			if (pPatch->getK() > 0.0)
 			{ // suitable
-				pNewPopn = (Population*)pPatch->getPopn((intptr)pSpecies);
-				if (pNewPopn != 0) {
+				pNewPopn = pPatch->getPopn(pSpecies);
+				if (pNewPopn != nullptr) {
 					// count members of other sex already resident in the patch
 					for (int stg = 0; stg < nStages; stg++) {
 						popsize += pNewPopn->nInds[stg][othersex];
@@ -1518,15 +1532,7 @@ void Population::clean(void)
 {
 	int ninds = (int)inds.size();
 	if (ninds > 0) {
-			// ALTERNATIVE METHOD: AVOIDS SLOW SORTING OF POPULATION
-		std::vector <Individual*> survivors; // all surviving individuals
-		for (int i = 0; i < ninds; i++) {
-			if (inds[i] != NULL) {
-				survivors.push_back(inds[i]);
-			}
-		}
-		inds.clear();
-		inds = survivors;
+		inds.erase(std::remove(inds.begin(), inds.end(), (Individual *)NULL), inds.end());
 #if RS_RCPP
 		shuffle(inds.begin(), inds.end(), pRandom->getRNG());
 #else
@@ -1542,14 +1548,17 @@ void Population::clean(void)
 }
 
 //---------------------------------------------------------------------------
-// Open population file and write header record
-bool Population::outPopHeaders(int landNr, bool patchModel) {
-
-	if (landNr == -999) { // close file
+// Close population file
+bool Population::outPopFinishLandscape() {
 		if (outPop.is_open()) outPop.close();
 		outPop.clear();
 		return true;
 	}
+
+//---------------------------------------------------------------------------
+// Open population file and write header record
+bool Population::outPopStartLandscape(int landNr, bool patchModel) {
+
 	string name;
 	simParams sim = paramsSim->getSim();
 	envGradParams grad = paramsGrad->getGradient();
@@ -1562,6 +1571,14 @@ bool Population::outPopHeaders(int landNr, bool patchModel) {
 		+ (sim.batchMode ? "Batch" + to_string(sim.batchNum) + "_" : "")
 			+ "Sim" + to_string(sim.simulation) + "_Land" + to_string(landNr) + "_Pop.txt";
 
+	if (sim.batchMode) {
+		name = paramsSim->getDir(2)
+			+ "Batch" + to_string(sim.batchNum) + "_"
+			+ "Sim" + to_string(sim.simulation) + "_Land" + to_string(landNr) + "_Pop.txt";
+	}
+	else {
+		name = paramsSim->getDir(2) + "Sim" + to_string(sim.simulation) + "_Pop.txt";
+	}
 	outPop.open(name.c_str());
 	outPop << "Rep\tYear\tRepSeason";
 	if (patchModel) outPop << "\tPatchID\tNcells";
@@ -1651,16 +1668,19 @@ void Population::outPopulation(int rep, int yr, int gen, float eps,
 //---------------------------------------------------------------------------
 
 //---------------------------------------------------------------------------
-// Open individuals file and write header record
-void Population::outIndsHeaders(int rep, int landNr, bool patchModel)
+// Close individuals file
+void Population::outIndsFinishReplicate()
 {
-	if (landNr == -999) { // close file
 		if (outInds.is_open()) {
 			outInds.close(); outInds.clear();
 		}
 		return;
 	}
 
+//---------------------------------------------------------------------------
+// Open individuals file and write header record
+void Population::outIndsStartReplicate(int rep, int landNr, bool patchModel)
+{
 	string name;
 	demogrParams dem = pSpecies->getDemogrParams();
 	emigRules emig = pSpecies->getEmigRules();
@@ -1751,11 +1771,11 @@ void Population::outIndividual(Landscape* pLandscape, int rep, int yr, int gen,
 			else { // non-structured population
 				outInds << "\t" << ind.status;
 			}
-			pCell = inds[i]->getLocn(1);
-			locn loc = locn();
+			pCell = inds[i]->getCurrCell();
+			locn loc;
 			if (pCell == 0) loc.x = loc.y = -1; // beyond boundary or in no-data cell
 			else loc = pCell->getLocn();
-			pCell = inds[i]->getLocn(0);
+			pCell = inds[i]->getPrevCell();
 			locn natalloc = pCell->getLocn();
 			if (ppLand.patchModel) {
 				outInds << "\t" << inds[i]->getNatalPatch()->getPatchNum();

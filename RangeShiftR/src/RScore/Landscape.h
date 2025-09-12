@@ -249,8 +249,6 @@ public:
 	// functions to handle patches and cells
 
 	void setCellArray(void);
-	void addPatchNum(int);
-	std::vector<int> getPatchNums() const { return patchnums; }
 	void generatePatches(); 		// create an artificial landscape
 	void allocatePatches(Species*);	// create patches for a cell-based landscape
 	Patch* newPatch(
@@ -309,6 +307,7 @@ public:
 	Patch* findPatch(
 		int   // Patch id no.
 	);
+	set<int> getPatchNbs() const;
 	set<int> samplePatches(const string& samplingOption, int nbToSample, Species* pSpecies);
 	int checkTotalCover(void);
 	void resetPatchPopns(void);
@@ -483,11 +482,11 @@ public:
 		int   // sequential no. of settlement Patch
 	);
 	void deleteConnectMatrix(void);
-	bool outConnectHeaders( // Write connectivity file headers
-		int		// option - set to -999 to close the connectivity file
-	);
+	bool outConnectFinishLandscape(); // Close connectivity file
+	bool outConnectStartLandscape(); // Open connectivity file and write header record
 #if RS_RCPP
-	void outPathsHeaders(int, int);
+	void outPathsFinishReplicate();
+	void outPathsStartReplicate(int);
 #endif
 	void outConnect(
 		int,	// replicate no.
@@ -556,9 +555,6 @@ private:
 
 	// list of patches in the landscape - can be in any sequence
 	std::vector <Patch*> patches;
-
-	// list of patch numbers in the landscape
-	std::vector <int> patchnums;
 
 	// list of habitat codes
 	std::vector <int> habCodes;

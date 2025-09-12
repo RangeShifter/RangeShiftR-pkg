@@ -61,7 +61,7 @@ void NeutralStatsManager::updateAllNeutralTables(Species* pSpecies, Landscape* p
 	// Update counts for each population
 	for (int patchId : patchList) {
 		const auto patch = pLandscape->findPatch(patchId);
-		const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
+		const auto pPop = patch->getPopn(pSpecies);
 		if (pPop != 0) {
 			// Update this population's NEUTRAL counts tables
 			pPop->updatePopNeutralTables();
@@ -121,7 +121,7 @@ void NeutralStatsManager::calcAllelicDiversityMetrics(set<int> const& patchList,
 	// Compute mean nb alleles per locus per patch
 	for (int patchId : patchList) {
 		const auto patch = pLandscape->findPatch(patchId);
-		const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
+		const auto pPop = patch->getPopn(pSpecies);
 		if (pPop != 0) {
 			if (pPop->sampleSize() > 0) {
 				nbPops++;
@@ -152,7 +152,7 @@ void NeutralStatsManager::calcAllelicDiversityMetrics(set<int> const& patchList,
 	if (nbPops > 0) {
 		for (int patchId : patchList) {
 			const auto patch = pLandscape->findPatch(patchId);
-			const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
+			const auto pPop = patch->getPopn(pSpecies);
 			if (pPop != 0) {
 				for (i = 0; i < nLoci; ++i)
 					for (j = 0; j < nAlleles; ++j)
@@ -181,7 +181,7 @@ void NeutralStatsManager::calculateHo(set<int> const& patchList, const int nbInd
 	if (nbInds != 0 && pSpecies->isDiploid()) {
 		for (int patchId : patchList) {
 			const auto patch = pLandscape->findPatch(patchId);
-			const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
+			const auto pPop = patch->getPopn(pSpecies);
 			if (pPop != 0) nbHetero += pPop->countHeterozygoteLoci();
 		}
 		ho = static_cast<double>(nbHetero) / (nbInds * nbrLoci);
@@ -201,7 +201,7 @@ void NeutralStatsManager::calculateHs(set<int> const& patchList, const int nbrLo
 
 	for (int patchId : patchList) {
 		const auto patch = pLandscape->findPatch(patchId);
-		const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
+		const auto pPop = patch->getPopn(pSpecies);
 		if (pPop->sampleSize() > 0) {
 			nPatches++;
 			hs += pPop->computeHs();
@@ -246,7 +246,7 @@ void NeutralStatsManager::calculatePerLocusHo(set<int> const& patchList, const i
 	if (pSpecies->isDiploid()) {
 		for (int patchId : patchList) {
 			const auto patch = pLandscape->findPatch(patchId);
-			const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
+			const auto pPop = patch->getPopn(pSpecies);
 			if (pPop != 0) {
 				if (pPop->sampleSize() > 0) {
 					nbHeterosInPop = pPop->countNbHeterozygotesEachLocus();
@@ -282,7 +282,7 @@ void NeutralStatsManager::calculateFstatWC(set<int> const& patchList, const int 
 
 	for (int patchId : patchList) {
 		const auto patch = pLandscape->findPatch(patchId);
-		const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
+		const auto pPop = patch->getPopn(pSpecies);
 		if (pPop != 0) {
 			int popSampleSize = pPop->sampleSize(); // n_i
 			if (popSampleSize > 0) {
@@ -324,7 +324,7 @@ void NeutralStatsManager::calculateFstatWC(set<int> const& patchList, const int 
 				pBar = commNeutralCountTables[l].getFrequency(u);
 				for (int patchId : patchList) {
 					const auto patch = pLandscape->findPatch(patchId);
-					const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
+					const auto pPop = patch->getPopn(pSpecies);
 					if (pPop != 0) {
 						var = pPop->getAlleleFrequency(l, u) - pBar;
 						var *= var;
@@ -411,7 +411,7 @@ void NeutralStatsManager::calcPairwiseWeightedFst(set<int> const& patchList, con
 	// Calculate weight (n_ic) terms
 	for (int i = 0; i < nPatches; ++i) {
 		const auto patch = pLandscape->findPatch(patchVect[i]);
-		const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
+		const auto pPop = patch->getPopn(pSpecies);
 		if (pPop != 0) {
 			popSizes[i] = pPop->sampleSize();
 		} // else popSizes[i] remain default init value 0, safe
@@ -432,7 +432,7 @@ void NeutralStatsManager::calcPairwiseWeightedFst(set<int> const& patchList, con
 		for (int i = 0; i < nPatches; ++i) {
 			if (popSizes[i] == 0) continue;
 			const auto patch = pLandscape->findPatch(patchVect[i]);
-			const auto pPop = (Population*)patch->getPopn((intptr)pSpecies);
+			const auto pPop = patch->getPopn(pSpecies);
 
 			for (int l = 0; l < nLoci; ++l) {
 				for (int u = 0; u < nAlleles; ++u) {
@@ -471,12 +471,12 @@ void NeutralStatsManager::calcPairwiseWeightedFst(set<int> const& patchList, con
 				for (int i = 0; i < nPatches - 1; ++i) { // nPatches-1 bc bottom row not filled
 					if (popSizes[i] == 0) continue;
 					const auto patch = pLandscape->findPatch(patchVect[i]);
-					const auto pPopI = (Population*)patch->getPopn((intptr)pSpecies);
+					const auto pPopI = patch->getPopn(pSpecies);
 
 					for (int j = i + 1; j < nPatches; ++j) { // fill only upper half of matrix
 						if (popSizes[j] == 0) continue;
 						const auto patch = pLandscape->findPatch(patchVect[j]);
-						const auto pPopJ = (Population*)patch->getPopn((intptr)pSpecies);
+						const auto pPopJ = patch->getPopn(pSpecies);
 
 						pi = pPopI->getAlleleFrequency(l, u);
 						pj = pPopJ->getAlleleFrequency(l, u);

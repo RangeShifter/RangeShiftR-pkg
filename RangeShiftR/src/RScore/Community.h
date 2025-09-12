@@ -100,15 +100,14 @@ public:
 	);
 #endif // SEASONAL || RS_RCPP
 
-	void survival(
-		short,	// part:		0 = determine survival & development,
-			//		 			1 = apply survival changes to the population
+	void survival0( // Determine survival & development
 		short,	// option0:	0 = stage 0 (juveniles) only         )
 		//					1 = all stages                       ) used by part 0 only
 		//					2 = stage 1 and above (all non-juvs) )
 		short 	// option1:	0 - development only (when survival is annual)
 		//		  	 		1 - development and survival
 	);
+	void survival1(); // Apply survival changes to the population
 	void ageIncrement(void);
 	int totalInds(void);
 	Population* findPop( // Find the population of a given species in a given patch
@@ -128,9 +127,10 @@ public:
 		int		// no. of rows (as above)
 	);
 
-	bool outRangeHeaders( // Open range file and write header record
+	bool outRangeFinishLandscape(); // Close range file
+	bool outRangeStartLandscape( // Open range file and write header record
 		Species*,	// pointer to Species
-		int				// Landscape number (-999 to close the file)
+		int				// Landscape number
 	);
 	void outRange( // Write record to range file
 		Species*, // pointer to Species
@@ -138,9 +138,9 @@ public:
 		int,			// year
 		int				// generation
 	);
-	bool outPopHeaders( // Open population file and write header record
-		Species*, // pointer to Species
-		int       // option: -999 to close the file
+	bool outPopFinishLandscape(); // Close population file
+	bool outPopStartLandscape( // Open population file and write header record
+		Species* // pointer to Species
 	);
 	void outPop( // Write records to population file
 		int,	// replicate
@@ -148,26 +148,31 @@ public:
 		int		// generation
 	);
 
-	void outInds( // Write records to individuals file
+	void outIndsFinishReplicate(); // Close individuals file
+	void outIndsStartReplicate( // Open individuals file and write header record
+		int,	// replicate
+		int		// Landscape number
+	);
+	void outIndividuals( // Write records to individuals file
 		int,	// replicate
 		int,	// year
-		int,	// generation
-		int		// Landscape number (>= 0 to open the file, -999 to close the file
-					//									 -1 to write data records)
+		int	// generation
 	);
+	// Close occupancy file
+	bool outOccupancyFinishLandscape();
 	// Open occupancy file, write header record and set up occupancy array
-	bool outOccupancyHeaders(
-		int		// option: -999 to close the file
-	);
+	bool outOccupancyStartLandscape();
 	void outOccupancy(void);
 	void outOccSuit();
-	bool outTraitsHeaders( // Open traits file and write header record
+	bool outTraitsFinishLandscape(); // Close traits file
+	bool outTraitsStartLandscape( // Open traits file and write header record
 		Species*,	// pointer to Species
-		int				// Landscape number (-999 to close the file)
+		int				// Landscape number
 	);
-	bool outTraitsRowsHeaders( // Open trait rows file and write header record
+	bool outTraitsRowsFinishLandscape(); // Close trait rows file
+	bool outTraitsRowsStartLandscape( // Open trait rows file and write header record
 		Species*, // pointer to Species
-		int       // Landscape number (-999 to close the file)
+		int       // Landscape number
 	);
 	void outTraits( // Write records to traits file
 		Species*,		// pointer to Species
@@ -203,9 +208,9 @@ public:
 
 	//file writers
 	void writeNeutralOutputFile(int rep, int yr, int gen, bool outWeirCockerham, bool outWeirHill);
-	void writePerLocusFstatFile(Species* pSpecies, const int yr, const int gen, const  int nAlleles, const int nLoci, set<int> const& patchList);
+	void writePerLocusFstatFile(Species* pSpecies, const int yr, const int gen, const int nLoci, set<int> const& patchList);
 	void writePairwiseFstFile(Species* pSpecies, const int yr, const int gen, const  int nAlleles, const int nLoci, set<int> const& patchList);
-
+	float getPatchHet(Species* pSpecies, int patchId, int whichLocus) const;
 private:
 	Landscape *pLandscape;
 	int indIx;				// index used to apply initial individuals
