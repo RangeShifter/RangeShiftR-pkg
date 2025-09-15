@@ -52,7 +52,7 @@ void testTransferKernels() {
 	Patch* init_patch = (Patch*)init_cell->getPatch();
 
 	// Create and set up individual
-	Individual ind1(init_cell, init_patch, 1, 0, 0, 0.0, false, 0);
+	Individual ind1(&sp,init_cell, init_patch, 1, 0, 0, 0.0, false, 0);
 	int isDispersing = ind1.moveKernel(&ls, &sp, false);
 
 	// After moving, individual should be in the only available cell
@@ -64,7 +64,7 @@ void testTransferKernels() {
 	// If no cell within reasonable dispersal reach, individual does not move and dies
 	kern.meanDist1 = 1.0;
 	sp.setSpKernTraits(0, 0, kern, ls_params.resol);
-	Individual ind2(init_cell, init_patch, 1, 0, 0, 0.0, false, 0); // reset individual
+	Individual ind2(&sp, init_cell, init_patch, 1, 0, 0, 0.0, false, 0); // reset individual
 	isDispersing = ind2.moveKernel(&ls, &sp, false);
 	curr_cell = ind2.getCurrCell();
 	assert(ind2.getStatus() == 6); // RIP in peace
@@ -77,12 +77,12 @@ void testTransferKernels() {
 	kern.meanDist2 = 5.0; // easily reaches suitable cell...
 	kern.probKern1 = 1.0; // ... but never used
 	sp.setSpKernTraits(0, 0, kern, ls_params.resol);
-	Individual ind3(init_cell, init_patch, 1, 0, 0, 0.0, false, 0);
+	Individual ind3(&sp, init_cell, init_patch, 1, 0, 0, 0.0, false, 0);
 	isDispersing = ind3.moveKernel(&ls, &sp, false);
 	assert(ind3.getStatus() == 6); // dead, could not reach destination cell
 	kern.probKern1 = 0.0; // always use second kernel
 	sp.setSpKernTraits(0, 0, kern, ls_params.resol);
-	Individual ind4(init_cell, init_patch, 1, 0, 0, 0.0, false, 0);
+	Individual ind4(&sp, init_cell, init_patch, 1, 0, 0, 0.0, false, 0);
 	isDispersing = ind4.moveKernel(&ls, &sp, false);
 	assert(ind4.getStatus() == 2);
 	// reset
@@ -101,11 +101,11 @@ void testTransferKernels() {
 	kern_m.meanDist1 = 5.0; // male easily reaches suitable cell
 	sp.setSpKernTraits(0, 1, kern_m, ls_params.resol);
 
-	Individual ind5(init_cell, init_patch, 1, 0, 0, 0.0, false, 0); // female as default
+	Individual ind5(&sp, init_cell, init_patch, 1, 0, 0, 0.0, false, 0); // female as default
 	isDispersing = ind5.moveKernel(&ls, &sp, false);
 	assert(ind5.getStatus() == 6); // dead, could not reach destination
 
-	Individual ind6(init_cell, init_patch, 1, 0, 0, 1.0, false, 0); // male
+	Individual ind6(&sp, init_cell, init_patch, 1, 0, 0, 1.0, false, 0); // male
 	assert(ind6.getSex() == 1);
 	isDispersing = ind6.moveKernel(&ls, &sp, false);
 	assert(ind6.getStatus() == 2);
@@ -123,11 +123,11 @@ void testTransferKernels() {
 	kern_adult.meanDist1 = 5.0; // adults easily reach suitable cell
 	sp.setSpKernTraits(1, 0, kern_adult, ls_params.resol);
 
-	Individual ind7(init_cell, init_patch, 0, 0, 0, 0.0, false, 0); // juvenile
+	Individual ind7(&sp, init_cell, init_patch, 0, 0, 0, 0.0, false, 0); // juvenile
 	isDispersing = ind7.moveKernel(&ls, &sp, false);
 	assert(ind7.getStatus() == 6);
 
-	Individual ind8(init_cell, init_patch, 1, 0, 0, 0.0, false, 0); // adult by default
+	Individual ind8(&sp, init_cell, init_patch, 1, 0, 0, 0.0, false, 0); // adult by default
 	isDispersing = ind8.moveKernel(&ls, &sp, false);
 	assert(ind8.getStatus() == 2);
 	// reset
@@ -159,7 +159,7 @@ void testTransferKernels() {
 
 	kern.meanDist1 = 10; // overshoots *most* of the time...
 	sp.setSpKernTraits(0, 0, kern, ls_params.resol);
-	Individual ind9(init_cell, init_patch, 1, 0, 0, 0.0, false, 0); // reset individual
+	Individual ind9(&sp, init_cell, init_patch, 1, 0, 0, 0.0, false, 0); // reset individual
 
 	// Non-absorbing boundaries
 	bool absorbing_boundaries{ false };
@@ -170,7 +170,7 @@ void testTransferKernels() {
 
 	// Absorbing boundaries
 	absorbing_boundaries = true;
-	Individual ind10(init_cell, init_patch, 1, 0, 0, 0.0, false, 0); // reset individual
+	Individual ind10(&sp, init_cell, init_patch, 1, 0, 0, 0.0, false, 0); // reset individual
 	isDispersing = ind10.moveKernel(&ls, &sp, absorbing_boundaries);
 	curr_cell = ind10.getCurrCell();
 	assert(ind10.getStatus() == 6);
@@ -182,23 +182,23 @@ void testTransferKernels() {
 	sp.setMortParams(mort);
 	trfr.distMort = false;
 	sp.setTrfrRules(trfr);
-	Individual ind11(init_cell, init_patch, 1, 0, 0, 0.0, false, 0);
+	Individual ind11(&sp, init_cell, init_patch, 1, 0, 0, 0.0, false, 0);
 	isDispersing = ind11.moveKernel(&ls, &sp, false);
 	assert(ind11.getStatus() == 7);
 	// Distance-dependent mortality
 	trfr.distMort = true;
 	sp.setTrfrRules(trfr);
 	mort.mortAlpha = 1000.0; // very steep threshold
-	mort.mortBeta = 0.5; // very small distance 
+	mort.mortBeta = 0.5; // very small distance
 	sp.setMortParams(mort);
 	kern.meanDist1 = 5; // very likely to go over threshold
 	sp.setSpKernTraits(0, 0, kern, ls_params.resol);
-	Individual ind12(init_cell, init_patch, 1, 0, 0, 0.0, false, 0);
+	Individual ind12(&sp, init_cell, init_patch, 1, 0, 0, 0.0, false, 0);
 	isDispersing = ind12.moveKernel(&ls, &sp, false);
 	assert(ind12.getStatus() == 7);
 	mort.mortBeta = 30; // very large distance, unlikely to draw
 	sp.setMortParams(mort);
-	Individual ind13(init_cell, init_patch, 1, 0, 0, 0.0, false, 0);
+	Individual ind13(&sp, init_cell, init_patch, 1, 0, 0, 0.0, false, 0);
 	isDispersing = ind13.moveKernel(&ls, &sp, false);
 	assert(ind13.getStatus() != 7);
 
@@ -271,7 +271,7 @@ void testTransferCRW() {
 	Patch* init_patch = (Patch*)init_cell->getPatch();
 
 	// Create and set up individual
-	Individual ind0(init_cell, init_patch, 1, 0, 0, 0.0, true, 2);
+	Individual ind0(&sp, init_cell, init_patch, 1, 0, 0, 0.0, true, 2);
 
 	// Set status
 	assert(ind0.getStatus() == 0); // default status, not emigrating
@@ -280,9 +280,9 @@ void testTransferCRW() {
 	assert(ind0.getCurrCell() == init_cell); // not emigrating so didn't move
 
 	// Per-step mortality
-	m.stepMort = 1.0; // should die 
+	m.stepMort = 1.0; // should die
 	sp.setSpMovtTraits(m);
-	Individual ind1(init_cell, init_patch, 0, 0, 0, 0.0, true, 2);
+	Individual ind1(&sp, init_cell, init_patch, 0, 0, 0, 0.0, true, 2);
 	// force set path bc for some reason path gets deallocated upon exiting constructor??
 	ind1.setStatus(1);
 	isDispersing = ind1.moveStep(&ls, &sp, hab_index, false);
@@ -335,7 +335,7 @@ void testTransferCRW() {
 	steps.maxStepsYr = 2;
 	steps.maxSteps = 3;
 	sp.setSteps(0, 0, steps);
-	Individual ind2(init_cell, natalPatch, 0, 0, 0, 0.0, true, 2);
+	Individual ind2(&sp, init_cell, natalPatch, 0, 0, 0, 0.0, true, 2);
 	ind2.setStatus(1); // dispersing
 	// First step - still in unsuitable cell so still dispersing
 	isDispersing = ind2.moveStep(&ls, &sp, hab_index, false);
@@ -354,7 +354,7 @@ void testTransferCRW() {
 	// Step length too long
 	m.stepLength = ls_params.dimX * SQRT2 * 1.5; // overshoots
 	sp.setSpMovtTraits(m);
-	Individual ind3(init_cell, init_patch, 0, 0, 0, 0.0, true, 2);
+	Individual ind3(&sp, init_cell, init_patch, 0, 0, 0, 0.0, true, 2);
 	ind3.setStatus(1); // dispersing
 	steps.minSteps = 1;
 	steps.maxStepsYr = 1;
@@ -367,7 +367,7 @@ void testTransferCRW() {
 	// Adequate step length
 	m.stepLength = (ls_params.dimX - 1) * SQRT2;
 	sp.setSpMovtTraits(m);
-	Individual ind4(init_cell, natalPatch, 0, 0, 0, 0.0, true, 2);
+	Individual ind4(&sp, init_cell, natalPatch, 0, 0, 0, 0.0, true, 2);
 	ind4.setStatus(1); // dispersing
 	// Initial angle still random but should eventually reach the suitable cell
 	isDispersing = ind4.moveStep(&ls, &sp, hab_index, false);
@@ -375,7 +375,7 @@ void testTransferCRW() {
 	assert(ind4.getCurrCell() == final_cell);
 
 	// If boundaries are absorbing however, most likely to die
-	Individual ind5(init_cell, natalPatch, 0, 0, 0, 0.0, true, 2);
+	Individual ind5(&sp, init_cell, natalPatch, 0, 0, 0, 0.0, true, 2);
 	ind5.setStatus(1); // dispersing
 	bool absorbing_boundaries = true;
 	isDispersing = ind5.moveStep(&ls, &sp, hab_index, absorbing_boundaries);
@@ -405,7 +405,7 @@ void testTransferCRW() {
 	sp.setSpMovtTraits(m);
 	steps.maxStepsYr = steps.maxSteps = ls_params.dimX;
 	sp.setSteps(0, 0, steps);
-	Individual ind6(cell_vec[0], natalPatch, 0, 0, 0, 0.0, true, 2);
+	Individual ind6(&sp, cell_vec[0], natalPatch, 0, 0, 0, 0.0, true, 2);
 	const float diag_angle = PI / 4.0; // 45 degrees
 	ind6.setInitAngle(diag_angle);
 	// Individual moves only along diagonal cells
@@ -514,7 +514,7 @@ void testGenetics() {
 			for (int i = 0; i < genomeSz; i++) {
 				valMotherAllele = dispTrChild.getAlleleValueAtLocus(0, i);
 				assert(valMotherAllele == (i <= site ? valAlleleA : valAlleleB));
-				// don't check other chromosome, empty bc we did not resolve father inheritance 
+				// don't check other chromosome, empty bc we did not resolve father inheritance
 			}
 		}
 	}
@@ -577,7 +577,7 @@ void testGenetics() {
 			// Most likely (~96%) to sample a mutation > 1
 			const float gammaMutShapeParam = 5.0;
 			const float gammaMutScaleParam = 1.0;
-			//  Normal centered on 0 : ~50% of sampling negative dominance coefficient 
+			//  Normal centered on 0 : ~50% of sampling negative dominance coefficient
 			const float dominanceMeanParam = 0.0;
 			const float dominanceSdParam = 1.0;
 
@@ -687,7 +687,7 @@ void testIndividual() {
 	// We simulate 100 inheritance + recombination processes and expect that:
 		// 1. freq(A,B have same alleles) >> freq(A,C have same alleles)
 		// 2. 0.65 > freq(C,D have same alleles) > 0.35 despite being adjacent because of chrom. break
-		// (both freq. have p < 0.001 from a binomial with p 0.5 and 100 trials) 
+		// (both freq. have p < 0.001 from a binomial with p 0.5 and 100 trials)
 	{
 		Patch* pPatch = new Patch(0, 0);
 		Cell* pCell = new Cell(0, 0, (intptr)pPatch, 0);
@@ -711,7 +711,7 @@ void testIndividual() {
 		const bool isDiploid{ true };
 		SpeciesTrait* spTr = createTestEmigSpTrait(genePositions, isDiploid);
 		pSpecies->addTrait(TraitType::E_D0, *spTr);
-		
+
 		Individual indMother = Individual(pCell, pPatch, 0, 0, 0, 0.0, false, 0);
 		Individual indFather = Individual(pCell, pPatch, 0, 0, 0, 1.0, false, 0);
 		indMother.setUpGenes(pSpecies, 1.0);
@@ -760,7 +760,7 @@ void testIndividual() {
 			set<int>{}, "none", set<int>{}, 0 // no output so no sampling
 		);
 		emigRules emig;
-		emig.indVar = true; 
+		emig.indVar = true;
 		emig.sexDep = true;
 		emig.densDep = false;
 		pSpecies->setEmigRules(emig);
@@ -826,7 +826,7 @@ void testIndividual() {
 		indMale.setUpGenes(pSpecies, 1.0);
 		indFemale.triggerMutations(pSpecies);
 		indMale.triggerMutations(pSpecies);
-		
+
 		// Male should use male trait, still 1
 		// Female should use female trait, has mutated
 		emigTraits femaleEmig = indFemale.getIndEmigTraits();
@@ -854,7 +854,7 @@ void testIndividual() {
 			set<int>{}, "none", set<int>{}, 0 // no output so no sampling
 		);
 		emigRules emig;
-		emig.indVar = false; 
+		emig.indVar = false;
 		emig.stgDep = false; emig.sexDep = false; emig.densDep = false;
 		pSpecies->setEmigRules(emig);
 
@@ -893,7 +893,7 @@ void testIndividual() {
 		assert(ind.getStatus() == 0);
 		pop.emigration(100.0);
 
-		// Individual is using the species-wide emigration prob, 
+		// Individual is using the species-wide emigration prob,
 		// so should be selected to emigrate (status 1)
 		assert(ind.getStatus() == 1);
 
@@ -1228,7 +1228,7 @@ void testIndividual() {
 			ind.overrideGenotype(CRW_STEPCORRELATION, crwCorrGenoType);
 
 			ind.triggerMutations(pSpecies); // no mutations, but trigger expression
-			
+
 			crwData trfrTr = *(static_cast<crwData*>(ind.getTrfrData()));
 			assert(trfrTr.stepLength >= 0.0);
 			assert(trfrTr.rho <= 1.0);
@@ -1352,7 +1352,7 @@ void testIndividual() {
 			assert(trfrTr.alphaDB > 0.0);
 		}
 	}
-	
+
 }
 
 #endif //NDEBUG
