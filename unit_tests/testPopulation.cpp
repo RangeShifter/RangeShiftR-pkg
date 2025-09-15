@@ -191,7 +191,7 @@ void testPopulation()
 		// Initialise population with 
 		Population pop = Population(pSpecies, pPatch, 0, 1);
 		for (int i = 0; i < initialNbInds; i++) {
-			Individual* pInd = new Individual(pCell, pPatch, 1, 0, 0, 0.5, false, 1);
+			Individual* pInd = new Individual(pSpecies, pCell, pPatch, 1, 0, 0, 0.5, false, 1);
 			pInd->setUpGenes(pSpecies, 1.0);
 			if (i < initialNbInds * initFreqA)
 				pInd->overrideGenotype(NEUTRAL, genotypeAA);
@@ -265,7 +265,7 @@ void testPopulation()
 		// Initialise population with 
 		Population pop = Population(pSpecies, pPatch, 0, 1);
 		for (int i = 0; i < initialNbInds; i++) {
-			Individual* pInd = new Individual(pCell, pPatch, 1, 0, 0, 0.5, false, 1);
+			Individual* pInd = new Individual(pSpecies, pCell, pPatch, 1, 0, 0, 0.5, false, 1);
 			pInd->setUpGenes(pSpecies, 1.0);
 			if (i < initialNbInds * initFreqA)
 				pInd->overrideGenotype(GENETIC_LOAD1, genotypeAA);
