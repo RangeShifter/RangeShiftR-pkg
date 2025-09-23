@@ -12,6 +12,7 @@ void testPopulation()
 		vector<int> survivingInds;
 		const int initialNbInds = 1000;
 		const float localK = 10000; // not limiting
+		vector <float> localScaling = {1.0};
 
 		// Simple genetic layout
 		const bool isDiploid{ false }; // haploid suffices
@@ -31,7 +32,7 @@ void testPopulation()
 		for (float mutationRate : mutationRates) {
 			Landscape* pLandscape = new Landscape;
 			Patch* pPatch = pLandscape->newPatch(1);
-			Cell* pCell = new Cell(0, 0, (intptr)pPatch, 0);
+			Cell* pCell = new Cell(0, 0, pPatch, 0);
 			pPatch->addCell(pCell, 0, 0);
 
 			Species* pSpecies = createDefaultSpecies();
@@ -47,6 +48,7 @@ void testPopulation()
 				sex_t::NA,
 				genePositions,
 				ExpressionType::MULTIPLICATIVE,
+				genePositions, // initial positions (all)
 				DistributionType::NONE, map<GenParamType, float>{},
 				DistributionType::UNIFORM, domParams,
 				true, // isInherited
@@ -59,7 +61,7 @@ void testPopulation()
 			pSpecies->addTrait(TraitType::GENETIC_LOAD, *spTr);
 
 			Population pop = Population(pSpecies, pPatch, initialNbInds, 1);
-			pop.reproduction(localK, 1, 1); // juveniles are checked for viability at birth
+			pop.reproduction(localK, 1, 1, localScaling); // juveniles are checked for viability at birth
 			pop.fledge(); // non-overlapping: adults are replaced with juveniles
 			survivingInds.push_back(pop.getNInds());
 		}
@@ -73,6 +75,7 @@ void testPopulation()
 		vector<int> emigratingInds;
 		const int initialNbInds = 1000;
 		const float localK = 10000; // not limiting
+		vector <float> localScaling = {1.0};
 
 		// Simple genetic layout
 		const bool isDiploid{ false }; // haploid suffices
@@ -92,7 +95,7 @@ void testPopulation()
 		for (float mutationRate : mutationRates) {
 			Landscape* pLandscape = new Landscape;
 			Patch* pPatch = pLandscape->newPatch(1);
-			Cell* pCell = new Cell(0, 0, (intptr)pPatch, 0);
+			Cell* pCell = new Cell(0, 0, pPatch, 0);
 			pPatch->addCell(pCell, 0, 0);
 
 			Species* pSpecies = createDefaultSpecies();
@@ -117,11 +120,12 @@ void testPopulation()
 				sex_t::NA,
 				genePositions,
 				ExpressionType::ADDITIVE,
-				DistributionType::UNIFORM, initParams,
-				DistributionType::NONE, map<GenParamType, float>{}, // no dominance
+				genePositions, // initial positions (all)
+				DistributionType::UNIFORM, initParams, // initial distribution and params
+				DistributionType::NONE, map<GenParamType, float>{}, // initial dominance (none)
 				true, // isInherited
 				mutationRate, // mutation rate
-				DistributionType::UNIFORM, mutParams,
+				DistributionType::UNIFORM, mutParams, // mutation dist and params
 				DistributionType::NONE, map<GenParamType, float>{}, // no dominance
 				isDiploid ? 2 : 1,
 				false
@@ -129,7 +133,7 @@ void testPopulation()
 			pSpecies->addTrait(TraitType::E_D0, *spTr);
 
 			Population pop = Population(pSpecies, pPatch, initialNbInds, 1);
-			pop.reproduction(localK, 1, 1);
+			pop.reproduction(localK, 1, 1, localScaling);
 			pop.fledge(); // replace initial pop with juveniles
 			pop.emigration(localK); // select and flag emigrants
 			int popSize = pop.totalPop();
@@ -151,6 +155,7 @@ void testPopulation()
 	{
 		float mutationRate = 0.0;
 		const float localK = 10000.0;
+		vector <float> localScaling = {1.0};
 		const int initialNbInds = localK;
 		const float initFreqA = 0.7;
 		const float exptdFreqA = initFreqA; // Allelic freqs are constant under HW
@@ -174,7 +179,7 @@ void testPopulation()
 
 		Landscape* pLandscape = new Landscape;
 		Patch* pPatch = pLandscape->newPatch(1);
-		Cell* pCell = new Cell(0, 0, (intptr)pPatch, 0);
+		Cell* pCell = new Cell(0, 0, pPatch, 0);
 		pPatch->addCell(pCell, 0, 0);
 
 		Species* pSpecies = new Species();
@@ -191,7 +196,7 @@ void testPopulation()
 		// Initialise population with 
 		Population pop = Population(pSpecies, pPatch, 0, 1);
 		for (int i = 0; i < initialNbInds; i++) {
-			Individual* pInd = new Individual(pCell, pPatch, 1, 0, 0, 0.5, false, 1);
+			Individual* pInd = new Individual(pSpecies, pCell, pPatch, 1, 0, 0, 0.5, false, 1);
 			pInd->setUpGenes(pSpecies, 1.0);
 			if (i < initialNbInds * initFreqA)
 				pInd->overrideGenotype(NEUTRAL, genotypeAA);
@@ -202,9 +207,9 @@ void testPopulation()
 
 		// Check allele frequencies conform to HW through generations
 		for (int yr = 0; yr < nbGens; yr++) {
-			pop.reproduction(localK, 1, 1);
+			pop.reproduction(localK, 1, 1, localScaling);
 			pop.fledge(); // replace initial pop with juveniles
-			pop.survival0(localK, 0, 0); // flag juveniles for development
+			pop.survival0(localK, 0, 0, localScaling); // flag juveniles for development
 			pop.survival1(); // develop to stage 1 (breeders)
 
 			// Count allele and heterozygote frequencies
@@ -232,6 +237,8 @@ void testPopulation()
 		const float hB = 1.0; // fully dominant
 		float mutationRate = 0.0;
 		const float localK = 10000.0;
+		vector <float> localScaling = {1.0};
+
 		const int initialNbInds = localK;
 		const float tolerance = 0.02; // high tolerance, still a lot of stochasticity
 		const float expectedFreqAA = initFreqA * initFreqA;
@@ -248,7 +255,7 @@ void testPopulation()
 
 		Landscape* pLandscape = new Landscape;
 		Patch* pPatch = pLandscape->newPatch(1);
-		Cell* pCell = new Cell(0, 0, (intptr)pPatch, 0);
+		Cell* pCell = new Cell(0, 0, pPatch, 0);
 		pPatch->addCell(pCell, 0, 0);
 
 		Species* pSpecies = new Species();
@@ -265,7 +272,7 @@ void testPopulation()
 		// Initialise population with 
 		Population pop = Population(pSpecies, pPatch, 0, 1);
 		for (int i = 0; i < initialNbInds; i++) {
-			Individual* pInd = new Individual(pCell, pPatch, 1, 0, 0, 0.5, false, 1);
+			Individual* pInd = new Individual(pSpecies, pCell, pPatch, 1, 0, 0, 0.5, false, 1);
 			pInd->setUpGenes(pSpecies, 1.0);
 			if (i < initialNbInds * initFreqA)
 				pInd->overrideGenotype(GENETIC_LOAD1, genotypeAA);
@@ -275,7 +282,7 @@ void testPopulation()
 		}
 
 		// Check allele frequencies conform to HW
-		pop.reproduction(localK, 1, 1);
+		pop.reproduction(localK, 1, 1, localScaling);
 		pop.fledge(); // replace initial pop with juveniles
 		double obsFreqUnviable = 1 - pop.getNInds() / localK;
 		assert(abs(obsFreqUnviable - expectedFreqAA) < tolerance);
