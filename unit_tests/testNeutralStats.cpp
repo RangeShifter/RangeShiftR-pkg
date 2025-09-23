@@ -12,7 +12,7 @@ void testNeutralStats() {
 		const set<int> patchList{ pPatch->getPatchNum() };
 		const string indSampling = "all";
 		const set<int> stgToSample = { 1 };
-		Cell* pCell = new Cell(0, 0, (intptr)pPatch, 0);
+		Cell* pCell = new Cell(0, 0, pPatch, 0);
 		pPatch->addCell(pCell, 0, 0);
 
 		// Create genetic structure
@@ -59,7 +59,7 @@ void testNeutralStats() {
 		const set<int> patchList{ pPatch->getPatchNum() };
 		const string indSampling = "all";
 		const set<int> stgToSample = { 1 };
-		Cell* pCell = new Cell(0, 0, (intptr)pPatch, 0);
+		Cell* pCell = new Cell(0, 0, pPatch, 0);
 		pPatch->addCell(pCell, 0, 0);
 
 		// Create genetic structure
@@ -106,7 +106,7 @@ void testNeutralStats() {
 		const set<int> patchList{ pPatch->getPatchNum() };
 		const string indSampling = "all";
 		const set<int> stgToSample = { 1 };
-		Cell* pCell = new Cell(0, 0, (intptr)pPatch, 0);
+		Cell* pCell = new Cell(0, 0, pPatch, 0);
 		pPatch->addCell(pCell, 0, 0);
 
 		// Create genetic structure
@@ -167,7 +167,7 @@ void testNeutralStats() {
 		set<int> patchList;
 		for (int i = 0; i < nbPatches; i++) {
 			patches[i] = pLandscape->newPatch(i);
-			cells[i] = new Cell(0, 0, (intptr)patches[i], 0);
+			cells[i] = new Cell(0, 0, patches[i], 0);
 			patches[i]->addCell(cells[i], 0, 0);
 			patchList.insert(patches[i]->getPatchNum());
 		}
@@ -214,7 +214,7 @@ void testNeutralStats() {
 			set<int> patchList;
 			for (int i = 0; i < nbPatches; i++) {
 				patches[i] = pLandscape->newPatch(i);
-				cells[i] = new Cell(0, 0, (intptr)patches[i], 0);
+				cells[i] = new Cell(0, 0, patches[i], 0);
 				patches[i]->addCell(cells[i], 0, 0);
 				patchList.insert(patches[i]->getPatchNum());
 			}
@@ -267,7 +267,7 @@ void testNeutralStats() {
 			set<int> patchList;
 			for (int i = 0; i < nbPatches; i++) {
 				patches[i] = pLandscape->newPatch(i);
-				cells[i] = new Cell(0, 0, (intptr)patches[i], 0);
+				cells[i] = new Cell(0, 0, patches[i], 0);
 				patches[i]->addCell(cells[i], 0, 0);
 				patchList.insert(patches[i]->getPatchNum());
 			}
@@ -296,7 +296,7 @@ void testNeutralStats() {
 				Population* pPop = new Population(pSpecies, patches[p], 0, 1);
 				// create individuals and add to pop 
 				for (int i = 0; i < nbIndsPerPop; i++) {
-					Individual* pInd = new Individual(cells[p], patches[p], indStg, 0, 0, 0.0, false, 1);
+					Individual* pInd = new Individual(pSpecies, cells[p], patches[p], indStg, 0, 0, 0.0, false, 1);
 					pInd->setUpGenes(pSpecies, 1.0);
 					pPop->recruit(pInd);
 				}
@@ -341,7 +341,7 @@ void testNeutralStats() {
 			set<int> patchList;
 			for (int i = 0; i < nbPatches; i++) {
 				patches[i] = pLandscape->newPatch(i);
-				cells[i] = new Cell(0, 0, (intptr)patches[i], 0);
+				cells[i] = new Cell(0, 0, patches[i], 0);
 				patches[i]->addCell(cells[i], 0, 0);
 				patchList.insert(patches[i]->getPatchNum());
 			}
@@ -415,7 +415,7 @@ void testNeutralStats() {
 		set<int> patchList;
 		for (int i = 0; i < nbPatches; i++) {
 			patches[i] = pLandscape->newPatch(i);
-			cells[i] = new Cell(0, 0, (intptr)patches[i], 0);
+			cells[i] = new Cell(0, 0, patches[i], 0);
 			patches[i]->addCell(cells[i], 0, 0);
 			patchList.insert(patches[i]->getPatchNum());
 		}
@@ -445,7 +445,7 @@ void testNeutralStats() {
 			Population* pPop = new Population(pSpecies, patches[p], 0, 1);
 			// create individuals and add to pop 
 			for (int i = 0; i < nbIndsPerPop; i++) {
-				Individual* pInd = new Individual(cells[p], patches[p], indStg, 0, 0, 0.0, false, 1);
+				Individual* pInd = new Individual(pSpecies, cells[p], patches[p], indStg, 0, 0, 0.0, false, 1);
 				pInd->setUpGenes(pSpecies, 1.0);
 				pInd->overrideGenotype(NEUTRAL, genotypes[p]);
 				pPop->recruit(pInd);
@@ -517,7 +517,7 @@ void testNeutralStats() {
 			set<int> patchList;
 			for (int i = 0; i < nbPatches; i++) {
 				patches[i] = pLandscape->newPatch(i);
-				cells[i] = new Cell(0, 0, (intptr)patches[i], 0);
+				cells[i] = new Cell(0, 0, patches[i], 0);
 				patches[i]->addCell(cells[i], 0, 0);
 				patchList.insert(patches[i]->getPatchNum());
 			}
@@ -546,7 +546,7 @@ void testNeutralStats() {
 				Population* pPop = new Population(pSpecies, patches[p], 0, 1);
 				// create individuals and add to pop 
 				for (int i = 0; i < nbIndsPerPop; i++) {
-					Individual* pInd = new Individual(cells[p], patches[p], indStg, 0, 0, 0.0, false, 1);
+					Individual* pInd = new Individual(pSpecies, cells[p], patches[p], indStg, 0, 0, 0.0, false, 1);
 					pInd->setUpGenes(pSpecies, 1.0);
 					pInd->overrideGenotype(NEUTRAL, genotypes[i]);
 					pPop->recruit(pInd);
@@ -620,7 +620,7 @@ void testNeutralStats() {
 			set<int> patchList;
 			for (int i = 0; i < nbPatches; i++) {
 				patches[i] = pLandscape->newPatch(i);
-				cells[i] = new Cell(0, 0, (intptr)patches[i], 0);
+				cells[i] = new Cell(0, 0, patches[i], 0);
 				patches[i]->addCell(cells[i], 0, 0);
 				patchList.insert(patches[i]->getPatchNum());
 			}
@@ -649,7 +649,7 @@ void testNeutralStats() {
 				Population* pPop = new Population(pSpecies, patches[p], 0, 1);
 				// create individuals and add to pop 
 				for (int i = 0; i < nbIndsPerPop; i++) {
-					Individual* pInd = new Individual(cells[p], patches[p], indStg, 0, 0, 0.0, false, 1);
+					Individual* pInd = new Individual(pSpecies, cells[p], patches[p], indStg, 0, 0, 0.0, false, 1);
 					pInd->setUpGenes(pSpecies, 1.0);
 					pInd->overrideGenotype(NEUTRAL, genotypeList[p][i]);
 					pPop->recruit(pInd);
@@ -716,7 +716,7 @@ void testNeutralStats() {
 		set<int> patchList;
 		for (int i = 0; i < nbPatches; i++) {
 			patches[i] = pLandscape->newPatch(i);
-			cells[i] = new Cell(0, 0, (intptr)patches[i], 0);
+			cells[i] = new Cell(0, 0, patches[i], 0);
 			patches[i]->addCell(cells[i], 0, 0);
 			patchList.insert(patches[i]->getPatchNum());
 		}
@@ -745,7 +745,7 @@ void testNeutralStats() {
 			Population* pPop = new Population(pSpecies, patches[p], 0, 1);
 			// create individuals and add to pop 
 			for (int i = 0; i < nbIndsPerPop; i++) {
-				Individual* pInd = new Individual(cells[p], patches[p], indStg, 0, 0, 0.0, false, 1);
+				Individual* pInd = new Individual(pSpecies, cells[p], patches[p], indStg, 0, 0, 0.0, false, 1);
 				pInd->setUpGenes(pSpecies, 1.0);
 				pInd->overrideGenotype(NEUTRAL, genotypeAB);
 				pPop->recruit(pInd);
@@ -827,7 +827,7 @@ void testNeutralStats() {
 		set<int> patchList;
 		for (int i = 0; i < nbPatches; i++) {
 			patches[i] = pLandscape->newPatch(i);
-			cells[i] = new Cell(0, 0, (intptr)patches[i], 0);
+			cells[i] = new Cell(0, 0, patches[i], 0);
 			patches[i]->addCell(cells[i], 0, 0);
 			patchList.insert(patches[i]->getPatchNum());
 		}
@@ -856,7 +856,7 @@ void testNeutralStats() {
 			Population* pPop = new Population(pSpecies, patches[p], 0, 1);
 			// create individuals and add to pop 
 			for (int i = 0; i < nbIndsPerPop; i++) {
-				Individual* pInd = new Individual(cells[p], patches[p], indStg, 0, 0, 0.0, false, 1);
+				Individual* pInd = new Individual(pSpecies, cells[p], patches[p], indStg, 0, 0, 0.0, false, 1);
 				pInd->setUpGenes(pSpecies, 1.0);
 				pInd->overrideGenotype(NEUTRAL, genotypeList[p][i]);
 				pPop->recruit(pInd);
@@ -915,7 +915,7 @@ void testNeutralStats() {
 		set<int> patchList;
 		for (int i = 0; i < nbPatches; i++) {
 			patches[i] = pLandscape->newPatch(i);
-			cells[i] = new Cell(0, 0, (intptr)patches[i], 0);
+			cells[i] = new Cell(0, 0, patches[i], 0);
 			patches[i]->addCell(cells[i], 0, 0);
 			patchList.insert(patches[i]->getPatchNum());
 		}
@@ -944,7 +944,7 @@ void testNeutralStats() {
 			Population* pPop = new Population(pSpecies, patches[p], 0, 1);
 			// create individuals and add to pop 
 			for (int i = 0; i < nbIndsPerPop; i++) {
-				Individual* pInd = new Individual(cells[p], patches[p], indStg, 0, 0, 0.0, false, 1);
+				Individual* pInd = new Individual(pSpecies, cells[p], patches[p], indStg, 0, 0, 0.0, false, 1);
 				pInd->setUpGenes(pSpecies, 1.0);
 				pInd->overrideGenotype(NEUTRAL, genotypes[i]);
 				pPop->recruit(pInd);
@@ -1001,7 +1001,7 @@ void testNeutralStats() {
 		set<int> patchList;
 		for (int i = 0; i < nbPatches; i++) {
 			patches[i] = pLandscape->newPatch(i);
-			cells[i] = new Cell(0, 0, (intptr)patches[i], 0);
+			cells[i] = new Cell(0, 0, patches[i], 0);
 			patches[i]->addCell(cells[i], 0, 0);
 			patchList.insert(patches[i]->getPatchNum());
 		}
@@ -1030,7 +1030,7 @@ void testNeutralStats() {
 			Population* pPop = new Population(pSpecies, patches[p], 0, 1);
 			// create individuals and add to pop 
 			for (int i = 0; i < nbIndsPerPop; i++) {
-				Individual* pInd = new Individual(cells[p], patches[p], indStg, 0, 0, 0.0, false, 1);
+				Individual* pInd = new Individual(pSpecies, cells[p], patches[p], indStg, 0, 0, 0.0, false, 1);
 				pInd->setUpGenes(pSpecies, 1.0);
 				pInd->overrideGenotype(NEUTRAL, p == 0 ? genotypePop1 : genotypePop2);
 				pPop->recruit(pInd);

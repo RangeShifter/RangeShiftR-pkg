@@ -31,7 +31,7 @@ void testPopulation()
 		for (float mutationRate : mutationRates) {
 			Landscape* pLandscape = new Landscape;
 			Patch* pPatch = pLandscape->newPatch(1);
-			Cell* pCell = new Cell(0, 0, (intptr)pPatch, 0);
+			Cell* pCell = new Cell(0, 0, pPatch, 0);
 			pPatch->addCell(pCell, 0, 0);
 
 			Species* pSpecies = createDefaultSpecies();
@@ -47,6 +47,7 @@ void testPopulation()
 				sex_t::NA,
 				genePositions,
 				ExpressionType::MULTIPLICATIVE,
+				genePositions, // initial positions (all)
 				DistributionType::NONE, map<GenParamType, float>{},
 				DistributionType::UNIFORM, domParams,
 				true, // isInherited
@@ -92,7 +93,7 @@ void testPopulation()
 		for (float mutationRate : mutationRates) {
 			Landscape* pLandscape = new Landscape;
 			Patch* pPatch = pLandscape->newPatch(1);
-			Cell* pCell = new Cell(0, 0, (intptr)pPatch, 0);
+			Cell* pCell = new Cell(0, 0, pPatch, 0);
 			pPatch->addCell(pCell, 0, 0);
 
 			Species* pSpecies = createDefaultSpecies();
@@ -117,11 +118,12 @@ void testPopulation()
 				sex_t::NA,
 				genePositions,
 				ExpressionType::ADDITIVE,
-				DistributionType::UNIFORM, initParams,
-				DistributionType::NONE, map<GenParamType, float>{}, // no dominance
+				genePositions, // initial positions (all)
+				DistributionType::UNIFORM, initParams, // initial distribution and params
+				DistributionType::NONE, map<GenParamType, float>{}, // initial dominance (none)
 				true, // isInherited
 				mutationRate, // mutation rate
-				DistributionType::UNIFORM, mutParams,
+				DistributionType::UNIFORM, mutParams, // mutation dist and params
 				DistributionType::NONE, map<GenParamType, float>{}, // no dominance
 				isDiploid ? 2 : 1,
 				false
@@ -174,7 +176,7 @@ void testPopulation()
 
 		Landscape* pLandscape = new Landscape;
 		Patch* pPatch = pLandscape->newPatch(1);
-		Cell* pCell = new Cell(0, 0, (intptr)pPatch, 0);
+		Cell* pCell = new Cell(0, 0, pPatch, 0);
 		pPatch->addCell(pCell, 0, 0);
 
 		Species* pSpecies = new Species();
@@ -248,7 +250,7 @@ void testPopulation()
 
 		Landscape* pLandscape = new Landscape;
 		Patch* pPatch = pLandscape->newPatch(1);
-		Cell* pCell = new Cell(0, 0, (intptr)pPatch, 0);
+		Cell* pCell = new Cell(0, 0, pPatch, 0);
 		pPatch->addCell(pCell, 0, 0);
 
 		Species* pSpecies = new Species();

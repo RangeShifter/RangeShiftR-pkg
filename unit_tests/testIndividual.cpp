@@ -210,6 +210,7 @@ void testTransferKernels() {
 }
 
 void testTransferCRW() {
+
 	// Simple 5*5 cell-based landscape layout
 	int lsDim = 5;
 	landParams ls_params = createDefaultLandParams(lsDim);
@@ -279,11 +280,14 @@ void testTransferCRW() {
 	assert(ind0.getStatus() == 0); // status didn't change
 	assert(ind0.getCurrCell() == init_cell); // not emigrating so didn't move
 
-	// Per-step mortality
+	//---------------------//
+	// Test per-step mortality
+	//---------------------//
+
 	m.stepMort = 1.0; // should die
 	sp.setSpMovtTraits(m);
 	Individual ind1(&sp, init_cell, init_patch, 0, 0, 0, 0.0, true, 2);
-	// force set path bc for some reason path gets deallocated upon exiting constructor??
+	// force-set path bc for some reason path gets deallocated upon exiting constructor??
 	ind1.setStatus(1);
 	isDispersing = ind1.moveStep(&ls, &sp, hab_index, false);
 	// Individual begins in natal patch so mortality is disabled
@@ -291,8 +295,8 @@ void testTransferCRW() {
 	// Individual should be in a different patch
 	Cell* first_step_cell = ind1.getCurrCell();
 	assert(first_step_cell != init_cell);
+	assert(first_step_cell->getPatch() != init_patch);
 
-	assert((Patch*)first_step_cell->getPatch() != init_patch);
 	ind1.setStatus(1); // emigrating again
 
 	// Individual should die on second step
@@ -302,10 +306,12 @@ void testTransferCRW() {
 	m.stepMort = 0.0; // not dying
 	sp.setSpMovtTraits(m);
 
-	// Habitat-dep mortality
+	// Test habitat-depdt mortality
 	// ...
 
-	// Step size
+	//----------------//
+	// Test step size
+	//----------------//
 
 	ls = Landscape();
 	ls.setLandParams(ls_params, true);
@@ -325,9 +331,9 @@ void testTransferCRW() {
 	ls.updateCarryingCapacity(&sp, 0, 0);
 	// Init cell is NOT in natal patch
 	Patch* natalPatch = new Patch(0, 0);
-	init_patch = (Patch*)init_cell->getPatch();
+	init_patch = init_cell->getPatch();
 
-	// Step length too short
+	// Step length is too short
 	m.stepLength = 0.1; // will not reach final cell
 	m.rho = 0.0; // random angle
 	sp.setSpMovtTraits(m);
@@ -340,16 +346,16 @@ void testTransferCRW() {
 	// First step - still in unsuitable cell so still dispersing
 	isDispersing = ind2.moveStep(&ls, &sp, hab_index, false);
 	assert(ind2.getCurrCell() == init_cell);
-	assert(ind2.getStatus() == 1);
+	assert(ind2.getStatus() == 1); // still dispersing
 	// Second step - reaching max steps this year, wait next year
 	isDispersing = ind2.moveStep(&ls, &sp, hab_index, false);
 	assert(ind2.getCurrCell() == init_cell);
-	assert(ind2.getStatus() == 3);
+	assert(ind2.getStatus() == 3); // waiting for next year
 	ind2.setStatus(1); // dispersing again
 	// Third step - reaching max steps, dies in unsuitable cell
 	isDispersing = ind2.moveStep(&ls, &sp, hab_index, false);
 	assert(ind2.getCurrCell() == init_cell);
-	assert(ind2.getStatus() == 6);
+	assert(ind2.getStatus() == 6); // died while dispersing
 
 	// Step length too long
 	m.stepLength = ls_params.dimX * SQRT2 * 1.5; // overshoots
@@ -534,11 +540,15 @@ void testGenetics() {
 			pair<GenParamType, float>{GenParamType::MIN, initialAlleleVal},
 			pair<GenParamType, float>{GenParamType::MAX, initialAlleleVal}
 		};
+
+		const set<int> genePositions = createTestGenePositions(genomeSz);
+
 		SpeciesTrait* spTr = new SpeciesTrait(
 			TraitType::E_D0,
 			sex_t::NA,
-			createTestGenePositions(genomeSz),
+			genePositions,
 			ExpressionType::ADDITIVE,
+			genePositions, // initial positions (all)
 			DistributionType::UNIFORM, distParams,
 			DistributionType::NONE, distParams, // no dominance, not used
 			isInherited,
@@ -595,11 +605,14 @@ void testGenetics() {
 			};
 			const map<GenParamType, float> placeholderParams = mutationParams;
 
+			const set<int> genePositions = createTestGenePositions(genomeSz);
+
 			SpeciesTrait* spTr = new SpeciesTrait(
 				TraitType::GENETIC_LOAD1,
 				sex_t::NA,
-				createTestGenePositions(genomeSz),
+				genePositions,
 				ExpressionType::MULTIPLICATIVE,
+				genePositions,
 				DistributionType::NONE, placeholderParams, // not used for genetic load
 				DistributionType::NONE, dominanceParams,
 				true,
@@ -637,11 +650,14 @@ void testGenetics() {
 			};
 			const map<GenParamType, float> placeholderParams = mutationParams;
 
+			const set<int> genePositions = createTestGenePositions(genomeSz);
+
 			SpeciesTrait* spTr = new SpeciesTrait(
 				TraitType::GENETIC_LOAD1,
 				sex_t::NA,
-				createTestGenePositions(genomeSz),
+				genePositions,
 				ExpressionType::MULTIPLICATIVE,
+				genePositions,
 				DistributionType::NONE, placeholderParams, // not used for genetic load
 				DistributionType::NONE, placeholderParams, // doesn't matter for this test
 				true,
@@ -690,7 +706,7 @@ void testIndividual() {
 		// (both freq. have p < 0.001 from a binomial with p 0.5 and 100 trials)
 	{
 		Patch* pPatch = new Patch(0, 0);
-		Cell* pCell = new Cell(0, 0, (intptr)pPatch, 0);
+		Cell* pCell = new Cell(0, 0, pPatch, 0);
 
 		const float recombinationRate = 0.01;
 		const int genomeSz = 10;
@@ -712,8 +728,8 @@ void testIndividual() {
 		SpeciesTrait* spTr = createTestEmigSpTrait(genePositions, isDiploid);
 		pSpecies->addTrait(TraitType::E_D0, *spTr);
 
-		Individual indMother = Individual(pCell, pPatch, 0, 0, 0, 0.0, false, 0);
-		Individual indFather = Individual(pCell, pPatch, 0, 0, 0, 1.0, false, 0);
+		Individual indMother = Individual(pSpecies, pCell, pPatch, 0, 0, 0, 0.0, false, 0);
+		Individual indFather = Individual(pSpecies, pCell, pPatch, 0, 0, 0, 1.0, false, 0);
 		indMother.setUpGenes(pSpecies, 1.0);
 		indFather.setUpGenes(pSpecies, 1.0);
 
@@ -724,7 +740,7 @@ void testIndividual() {
 		const int nbTrials = 100;
 		for (int i = 0; i < nbTrials; ++i)
 		{
-			Individual indChild = Individual(pCell, pPatch, 0, 0, 0, 0.0, false, 0);
+			Individual indChild = Individual(pSpecies, pCell, pPatch, 0, 0, 0, 0.0, false, 0);
 			indChild.inheritTraits(pSpecies, &indMother, &indFather, 1.0);
 
 			bool hasInheritedA0 = haveSameEmigD0Allele(indChild, indMother, posA);
@@ -748,7 +764,7 @@ void testIndividual() {
 	/// Emigration probability is 1 initially, but female trait mutates.
 	{
 		Patch* pPatch = new Patch(0, 0);
-		Cell* pCell = new Cell(0, 0, (intptr)pPatch, 0);
+		Cell* pCell = new Cell(0, 0, pPatch, 0);
 
 		// Species-level paramters
 		const int genomeSz = 6;
@@ -790,6 +806,7 @@ void testIndividual() {
 			sex_t::MAL,
 			maleGenePositions,
 			ExpressionType::AVERAGE,
+			maleGenePositions,
 			// Set all initial alleles values to 1
 			DistributionType::UNIFORM, initParams,
 			DistributionType::NONE, initParams, // no dominance, params are ignored
@@ -807,6 +824,7 @@ void testIndividual() {
 			sex_t::FEM,
 			femaleGenePositions,
 			ExpressionType::AVERAGE,
+			femaleGenePositions,
 			// Set all initial alleles values to 1
 			DistributionType::UNIFORM, initParams,
 			DistributionType::NONE, initParams, // no dominance, params are ignored
@@ -820,8 +838,8 @@ void testIndividual() {
 		pSpecies->addTrait(TraitType::E_D0_F, *spTrF);
 
 		// Set up male and female individuals, trigger mutations
-		Individual indFemale = Individual(pCell, pPatch, 0, 0, 0, 0.0, false, 0);
-		Individual indMale = Individual(pCell, pPatch, 0, 0, 0, 1.0, false, 0);
+		Individual indFemale = Individual(pSpecies, pCell, pPatch, 0, 0, 0, 0.0, false, 0);
+		Individual indMale = Individual(pSpecies, pCell, pPatch, 0, 0, 0, 1.0, false, 0);
 		indFemale.setUpGenes(pSpecies, 1.0);
 		indMale.setUpGenes(pSpecies, 1.0);
 		indFemale.triggerMutations(pSpecies);
@@ -842,7 +860,7 @@ void testIndividual() {
 		float indEmigProb = 0.0;
 
 		Patch* pPatch = new Patch(0, 0);
-		Cell* pCell = new Cell(0, 0, (intptr)pPatch, 0);
+		Cell* pCell = new Cell(0, 0, pPatch, 0);
 
 		// Species-level paramters
 		const int genomeSz = 1;
@@ -873,6 +891,7 @@ void testIndividual() {
 			sex_t::NA,
 			set<int>{ 0 }, // only one locus
 			ExpressionType::AVERAGE,
+			set<int>{ 0 }, // initial positions
 			DistributionType::UNIFORM, initParams,
 			DistributionType::NONE, initParams, // no dominance, params are ignored
 			true, // isInherited
@@ -884,7 +903,7 @@ void testIndividual() {
 		);
 		pSpecies->addTrait(TraitType::E_D0, *spTr);
 
-		Individual ind = Individual(pCell, pPatch, 0, 0, 0, 0.0, false, 0);
+		Individual ind = Individual(pSpecies, pCell, pPatch, 0, 0, 0, 0.0, false, 0);
 		ind.setUpGenes(pSpecies, 1.0);
 
 		// Create population to trigger emigration selection
@@ -913,7 +932,7 @@ void testIndividual() {
 	// Individuals with genetic fitness = 0 are never viable
 	{
 		Patch* pPatch = new Patch(0, 0);
-		Cell* pCell = new Cell(0, 0, (intptr)pPatch, 0);
+		Cell* pCell = new Cell(0, 0, pPatch, 0);
 
 		// Species-level paramters
 		const int genomeSz = 1;
@@ -939,18 +958,20 @@ void testIndividual() {
 			sex_t::NA,
 			set<int>{ 0 }, // only one locus
 			ExpressionType::MULTIPLICATIVE,
+			set<int>{ 0 },
 			DistributionType::NONE, initParams,
-			DistributionType::UNIFORM, domParams, // no dominance, params are ignored
+			DistributionType::UNIFORM, domParams,
 			true, // isInherited
 			1.0, // will mutate
 			DistributionType::UNIFORM, mutationParams, // lethal mutation
-			DistributionType::NONE, initParams,
+			DistributionType::UNIFORM, domParams,
 			2, // diploid
 			false
 		);
+		
 		pSpecies->addTrait(TraitType::GENETIC_LOAD1, *spTr);
 
-		Individual ind = Individual(pCell, pPatch, 0, 0, 0, 0.0, false, 0);
+		Individual ind = Individual(pSpecies, pCell, pPatch, 0, 0, 0, 0.0, false, 0);
 		ind.setUpGenes(pSpecies, 1.0);
 
 		// By default, all loci are initialised at 0 so individual is viable
@@ -964,10 +985,10 @@ void testIndividual() {
 		assert(!ind.isViable());
 	}
 
-	// A largely dominant alleles overrides the expression of its homologue
+	// A largely dominant allele overrides the expression of its homologue
 	{
 		Patch* pPatch = new Patch(0, 0);
-		Cell* pCell = new Cell(0, 0, (intptr)pPatch, 0);
+		Cell* pCell = new Cell(0, 0, pPatch, 0);
 
 		// Species-level paramters
 		const int genomeSz = 1;
@@ -979,29 +1000,30 @@ void testIndividual() {
 			set<int>{}, "none", set<int>{}, 0 // no output so no sampling
 		);
 
-		// Create species trait
+		// Create template species trait
 		const map<GenParamType, float> distParams{
 			pair<GenParamType, float>{GenParamType::MIN, 0.0},
 			pair<GenParamType, float>{GenParamType::MAX, 0.0}
 		};
-
+		// Pretty empty, actual values are set below
 		SpeciesTrait* spTr = new SpeciesTrait(
 			TraitType::GENETIC_LOAD1,
 			sex_t::NA,
 			set<int>{ 0 }, // only one locus
 			ExpressionType::MULTIPLICATIVE,
+			set<int>{ 0 },
 			DistributionType::NONE, distParams,
-			DistributionType::UNIFORM, distParams, // no dominance, params are ignored
+			DistributionType::UNIFORM, distParams,
 			true, // isInherited
 			0.0, // no mutation
-			DistributionType::UNIFORM, distParams, // lethal mutation
-			DistributionType::NONE, distParams,
+			DistributionType::UNIFORM, distParams,
+			DistributionType::UNIFORM, distParams,
 			2, // diploid
 			false
 		);
 		pSpecies->addTrait(TraitType::GENETIC_LOAD1, *spTr);
 
-		Individual ind = Individual(pCell, pPatch, 0, 0, 0, 0.0, false, 0);
+		Individual ind = Individual(pSpecies, pCell, pPatch, 0, 0, 0, 0.0, false, 0);
 		ind.setUpGenes(pSpecies, 1.0);
 
 		const float valAlleleA = 1.0; // lethal
@@ -1031,7 +1053,7 @@ void testIndividual() {
 			const float mutationRate = 0.0; // no mutations
 
 			Patch* pPatch = new Patch(0, 0);
-			Cell* pCell = new Cell(0, 0, (intptr)pPatch, 0);
+			Cell* pCell = new Cell(0, 0, pPatch, 0);
 
 			// Genome-level settings
 			Species* pSpecies = createDefaultSpecies();
@@ -1071,6 +1093,7 @@ void testIndividual() {
 				sex_t::NA,
 				set<int>{ 0 },
 				ExpressionType::AVERAGE,
+				set<int>{ 0 },
 				DistributionType::UNIFORM, distParams,
 				DistributionType::NONE, distParams, // no dominance, params are ignored
 				true, // isInherited
@@ -1085,6 +1108,7 @@ void testIndividual() {
 				sex_t::NA,
 				set<int>{ 1 },
 				ExpressionType::AVERAGE,
+				set<int>{ 1 },
 				DistributionType::UNIFORM, distParams,
 				DistributionType::NONE, distParams, // no dominance, params are ignored
 				true, // isInherited
@@ -1099,6 +1123,7 @@ void testIndividual() {
 				sex_t::NA,
 				set<int>{ 2 },
 				ExpressionType::AVERAGE,
+				set<int>{ 2 },
 				DistributionType::UNIFORM, distParams,
 				DistributionType::NONE, distParams, // no dominance, params are ignored
 				true, // isInherited
@@ -1113,6 +1138,7 @@ void testIndividual() {
 				sex_t::NA,
 				set<int>{ 3 },
 				ExpressionType::ADDITIVE,
+				set<int>{ 3 },
 				DistributionType::UNIFORM, distParams,
 				DistributionType::NONE, distParams, // no dominance, params are ignored
 				true, // isInherited
@@ -1128,7 +1154,7 @@ void testIndividual() {
 			pSpecies->addTrait(TraitType::S_BETA, *trSettBeta);
 			pSpecies->addTrait(TraitType::KERNEL_MEANDIST_1, *trMeanKern);
 
-			Individual ind = Individual(pCell, pPatch, 0, 0, 0, 0.0, false, 0);
+			Individual ind = Individual(pSpecies, pCell, pPatch, 0, 0, 0, 0.0, false, 0);
 			ind.setUpGenes(pSpecies, 1.0);
 
 			// Overwrite genotypes with alleles resulting in invalid phenotypes
@@ -1157,7 +1183,7 @@ void testIndividual() {
 			const float mutationRate = 0.0; // no mutations
 
 			Patch* pPatch = new Patch(0, 0);
-			Cell* pCell = new Cell(0, 0, (intptr)pPatch, 0);
+			Cell* pCell = new Cell(0, 0, pPatch, 0);
 
 			// Genome-level settings
 			Species* pSpecies = createDefaultSpecies();
@@ -1189,6 +1215,7 @@ void testIndividual() {
 				sex_t::NA,
 				set<int>{ 0 },
 				ExpressionType::ADDITIVE,
+				set<int>{ 0 },
 				DistributionType::UNIFORM, distParams,
 				DistributionType::NONE, distParams, // no dominance, params are ignored
 				true, // isInherited
@@ -1203,6 +1230,7 @@ void testIndividual() {
 				sex_t::NA,
 				set<int>{ 1 },
 				ExpressionType::AVERAGE,
+				set<int>{ 1 },
 				DistributionType::UNIFORM, distParams,
 				DistributionType::NONE, distParams, // no dominance, params are ignored
 				true, // isInherited
@@ -1218,7 +1246,7 @@ void testIndividual() {
 
 			bool usesMovtProcess = true;
 			short whichMovtProcess = 2; // CRW
-			Individual ind = Individual(pCell, pPatch, 0, 0, 0, 0.0, usesMovtProcess, whichMovtProcess);
+			Individual ind = Individual(pSpecies, pCell, pPatch, 0, 0, 0, 0.0, usesMovtProcess, whichMovtProcess);
 			ind.setUpGenes(pSpecies, 1.0);
 
 			// Overwrite genotypes with alleles resulting in invalid phenotypes
@@ -1241,7 +1269,7 @@ void testIndividual() {
 			const float mutationRate = 0.0; // no mutations
 
 			Patch* pPatch = new Patch(0, 0);
-			Cell* pCell = new Cell(0, 0, (intptr)pPatch, 0);
+			Cell* pCell = new Cell(0, 0, pPatch, 0);
 
 			// Genome-level settings
 			Species* pSpecies = createDefaultSpecies();
@@ -1273,6 +1301,7 @@ void testIndividual() {
 				sex_t::NA,
 				set<int>{ 0 },
 				ExpressionType::ADDITIVE,
+				set<int>{ 0 },
 				DistributionType::UNIFORM, distParams,
 				DistributionType::NONE, distParams, // no dominance, params are ignored
 				true, // isInherited
@@ -1287,6 +1316,7 @@ void testIndividual() {
 				sex_t::NA,
 				set<int>{ 1 },
 				ExpressionType::AVERAGE,
+				set<int>{ 1 },
 				DistributionType::UNIFORM, distParams,
 				DistributionType::NONE, distParams, // no dominance, params are ignored
 				true, // isInherited
@@ -1301,6 +1331,7 @@ void testIndividual() {
 				sex_t::NA,
 				set<int>{ 0 },
 				ExpressionType::ADDITIVE,
+				set<int>{ 0 },
 				DistributionType::UNIFORM, distParams,
 				DistributionType::NONE, distParams, // no dominance, params are ignored
 				true, // isInherited
@@ -1315,6 +1346,7 @@ void testIndividual() {
 				sex_t::NA,
 				set<int>{ 1 },
 				ExpressionType::AVERAGE,
+				set<int>{ 1 },
 				DistributionType::UNIFORM, distParams,
 				DistributionType::NONE, distParams, // no dominance, params are ignored
 				true, // isInherited
@@ -1332,7 +1364,7 @@ void testIndividual() {
 
 			bool usesMovtProcess = true;
 			short whichMovtProcess = 1; // SMS
-			Individual ind = Individual(pCell, pPatch, 0, 0, 0, 0.0, usesMovtProcess, whichMovtProcess);
+			Individual ind = Individual(pSpecies, pCell, pPatch, 0, 0, 0, 0.0, usesMovtProcess, whichMovtProcess);
 			ind.setUpGenes(pSpecies, 1.0);
 
 			// Overwrite genotypes with alleles resulting in invalid phenotypes
