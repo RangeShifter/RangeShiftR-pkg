@@ -1896,9 +1896,23 @@ setValidity("DispersalParams", function(object) {
             msg <- c(msg, "Dispersal(): Settlement can only be density-dependent (DensDep = TRUE) if a movement process is used as transfer method!")
         }
     }else{
+        if (length(object@Settlement@MaxSteps) == 0){#MaxStep not provided
+            if(all(object@Transfer@StepMort<=0)){
+                msg <- c(msg, "Dispersal(): If MaxSteps is not provided, StepMort must be set (>0) if a movement process is used as transfer method!")
+            }
+        } else {
+            if (length(object@Settlement@MaxSteps) == 1){ # MaxSteps only one value
+                if (object@Settlement@MaxSteps<=0 && all(object@Transfer@StepMort<=0) ) {
+                    msg <- c(msg, "Dispersal(): At least one of the two options MaxSteps and StepMort must be set (>0) if a movement process is used as transfer method!")
+                }
+
+            } else {
         if (any(object@Settlement@MaxSteps[,ncol(object@Settlement@MaxSteps)]<=0) && all(object@Transfer@StepMort<=0) ) {
             msg <- c(msg, "Dispersal(): At least one of the two options MaxSteps and StepMort must be set (>0) if a movement process is used as transfer method!")
         }
+            }
+        }
+
     }
     if (is.null(msg)) TRUE else msg}
 )

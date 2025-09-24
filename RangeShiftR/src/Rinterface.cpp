@@ -2178,15 +2178,14 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
              << ", sett.indVar = " << sett.indVar << endl;
 #endif
     // check if SettleParamsR.slots are single values or a matrix and assign them accordingly:
-    Rcpp::NumericMatrix mat(1,1); // temporary storage for single value
-
     Rcpp::NumericMatrix FindMate;
     bool constFindMate = false;
     if(Rf_isMatrix(SettleParamsR.slot("FindMate"))){
         FindMate = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("FindMate"));
     } else {
-        mat(0,0) = Rcpp::as<int>(SettleParamsR.slot("FindMate"));
-        FindMate = mat;
+        int singleValue = Rcpp::as<int>(SettleParamsR.slot("FindMate"));
+        FindMate = Rcpp::NumericMatrix(1, 1);
+        FindMate(0, 0) = singleValue;
         constFindMate = true;
     }
 
@@ -2195,10 +2194,13 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
     if(Rf_isMatrix(SettleParamsR.slot("MinSteps"))){
         MinSteps = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("MinSteps"));
     } else {
-        mat(0,0) = Rcpp::as<int>(SettleParamsR.slot("MinSteps"));
-        MinSteps = mat;
+        int singleValue = Rcpp::as<int>(SettleParamsR.slot("MinSteps"));
+        MinSteps = Rcpp::NumericMatrix(1, 1);
+        MinSteps(0, 0) = singleValue;
         constMinSteps = true;
     }
+
+    Rcpp::Rcout << "FindMate(0,0) after MinSteps " << FindMate(0,0) << endl;
 
 
     Rcpp::NumericMatrix MaxSteps;
@@ -2206,8 +2208,9 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
     if(Rf_isMatrix(SettleParamsR.slot("MaxSteps"))){
         MaxSteps = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("MaxSteps"));
     } else {
-        mat(0,0) = Rcpp::as<int>(SettleParamsR.slot("MaxSteps"));
-        MaxSteps = mat;
+        int singleValue = Rcpp::as<int>(SettleParamsR.slot("MaxSteps"));
+        MaxSteps = Rcpp::NumericMatrix(1, 1);
+        MaxSteps(0, 0) = singleValue;
         constMaxSteps = true;
     }
 
@@ -2216,8 +2219,9 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
     if(Rf_isMatrix(SettleParamsR.slot("MaxStepsYear"))){
         MaxStepsYr = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("MaxStepsYear"));
     } else {
-        mat(0,0) = Rcpp::as<int>(SettleParamsR.slot("MaxStepsYear"));
-        MaxStepsYr = mat;
+        int singleValue = Rcpp::as<int>(SettleParamsR.slot("MaxStepsYear"));
+        MaxStepsYr = Rcpp::NumericMatrix(1, 1);
+        MaxStepsYr(0, 0) = singleValue;
         constMaxStepsYr = true;
     }
 
@@ -2228,8 +2232,9 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
     if(Rf_isMatrix(SettleParamsR.slot("Settle"))){
         SettleCondMatrix = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("Settle"));
     } else {
-        mat(0,0) = Rcpp::as<int>(SettleParamsR.slot("Settle"));
-        SettleCondMatrix = mat;
+        int singleValue = Rcpp::as<int>(SettleParamsR.slot("Settle"));
+        SettleCondMatrix = Rcpp::NumericMatrix(1, 1);
+        SettleCondMatrix(0, 0) = singleValue;
     }
 
     for(int line = 0; line < Nlines; line++) {
