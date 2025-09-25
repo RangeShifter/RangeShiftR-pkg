@@ -2527,12 +2527,21 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
 				srules.findMate = findmate;
 				pSpecies->setSettRules(0, 0, srules);
 				pSpecies->setSteps(0, 0, ssteps);
-				if(srules.densDep) {
-					if(sett.indVar)
-						pSpecies->setSettParams(0, 0, sparams);
-					else
-						pSpecies->setSettTraits(0, 0, settleDD);
+				if (dem.repType > 0) {
+				    pSpecies->setSettRules(0, 1, srules);
+				    pSpecies->setSteps(0, 1, ssteps);
 				}
+				if(srules.densDep) {
+					if(sett.indVar){
+					    pSpecies->setSettParams(0, 0, sparams);
+					    if (dem.repType > 0) pSpecies->setSettParams(0, 1, sparams);
+					}
+					else {
+					    pSpecies->setSettTraits(0, 0, settleDD);
+					    if (dem.repType > 0) pSpecies->setSettTraits(0, 1, settleDD);
+					}
+				}
+
 				if(dem.stageStruct) { // model is structured - also set parameters for all stages
 					for(int i = 1; i < sstruct.nStages; i++) {
 						pSpecies->setSettRules(i, 0, srules);
