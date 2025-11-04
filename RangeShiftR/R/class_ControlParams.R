@@ -45,7 +45,8 @@ ControlParams <- setClass("ControlParams", slots = c(
                                    spatial_demography = "logical",          # set via +Land
                                    neutralgenetics = "logical",                    # set via +Genetics
                                    geneticload = "logical",                        # set via +Genetics
-                                   seed = "integer_OR_numeric")
+                                   seed = "integer_OR_numeric",
+                                   fixreplicateseed = "logical")
                          ,prototype = list(#nSimuls = 1L,
                                   #nLandscapes = 1L,
                                   batchnum = 0L,
@@ -65,7 +66,8 @@ ControlParams <- setClass("ControlParams", slots = c(
                                   spatial_demography = FALSE,
                                   neutralgenetics = FALSE,
                                   geneticload = FALSE,
-                                  seed = 0L)
+                                  seed = 0L,
+                                  fixreplicateseed = FALSE)
 )
 setValidity("ControlParams", function(object){
     msg <- NULL
@@ -85,6 +87,7 @@ setMethod("show", "ControlParams", function(object){
         cat(" Seed =", object@seed)
         if(object@seed<0) cat("  (generate random seed)")
         if(object@seed>0) cat("  (fixed seed)")
+        if(object@fixreplicateseed==TRUE) cat(" all replicates use the same seed")
         cat("\n")
     }
 })

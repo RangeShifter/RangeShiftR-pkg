@@ -69,6 +69,7 @@ ofstream rsLog; // performance log for recording simulation times, etc.
 
 // global variables passed between parsing functions...
 int batchnum;
+int fixreplicateseed;
 int patchmodel, resolution, landtype, maxNhab, speciesdist, distresolution;
 int reproductn;
 int repseasons;
@@ -360,6 +361,7 @@ Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
         simParams sim = paramsSim->getSim();
         sim.batchMode = true;
         sim.batchNum = batchnum;
+        sim.fixReplicateSeed = fixreplicateseed;
         paramsSim->setSim(sim);
         Rcpp::Rcout << endl << "Control Parameters checked" << endl;
     } else {
@@ -5267,6 +5269,7 @@ void setglobalvarsR(Rcpp::S4 control)
     gHasGenetics = gHasNeutralGenetics || gHasGeneticLoad;
     threadsafe = Rcpp::as<int>(control.slot("threadsafe"));
     spatial_demography = Rcpp::as<int>(control.slot("spatial_demography"));
+    fixreplicateseed = Rcpp::as<int>(control.slot("fixreplicateseed"));
 
 #if RSDEBUG
     /*
