@@ -3,23 +3,27 @@
 \docType{class}
 \name{Management}
 \alias{Management}
-\title{Set Management Parameters}
+\title{Management Parameters}
 \usage{
 Management(Translocation = Translocation())
 }
 \arguments{
-\item{Translocation}{Individuals are selected in one location and then transfered to a new location. You can define the year(s) of the translocation event(s),
-the source and target location, the number of individuals to be translocated and characteristics of individuals to be sampled from. The catching rate defines the success catching an individual.
-See \code{\link{Translocation}} for more details.}
+\item{Translocation}{Set translocation events. See \code{\link{Translocation}} for more details.}
 }
 \value{
 a parameter object of class "ManagementParams"
 }
 \description{
-Set all management parameters you wish to apply on your simulations. This includes for now only the translocation of individuals.
+With this function you can set all management strategies you wish to apply to your simulations.
+This function includes for now only the translocation of individuals (see details below).
 }
 \details{
-TODO: Add general information on management options and translocations
+\strong{Translocation}
+
+Translocation is a conservation management strategy to reintroduce species in areas where they have been extirpated,
+stabilize metapopulations or enhance (genetic) connectivity between fragmented habitats. Translocations are applied
+to increase survival probabilities of species, increase genetic diversity or restore ecological balance.The selection of
+suitable source and destination sites as well as selection of suitable individuals is crucial for the success of the strategy.
 }
 \references{
 \insertAllCited{}
