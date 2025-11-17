@@ -525,7 +525,7 @@ int SubCommunity::resolveSettlement(std::map<Species*, vector<Individual*>>& dis
 									// make settlement decision
 									if (settletype.indVar) settDD = pInd->getIndSettTraits();
 #if RS_RCPP
-									else settDD = pSpecies->getSettTraits(ind.stage, ind.sex);
+									else settDD = pSpecies->getSpSettTraits(ind.stage, ind.sex);
 #else
 									else {
 										if (settletype.sexDep) {
@@ -603,7 +603,7 @@ int SubCommunity::resolveSettlement(std::map<Species*, vector<Individual*>>& dis
 			}
 #if RS_RCPP
 			// write each individuals current movement step and status to paths file
-			if (trfr.moveModel && sim.outPaths) {
+			if (trfr.usesMovtProc && sim.outPaths) {
 				if (nextseason >= sim.outStartPaths && nextseason % sim.outIntPaths == 0) {
 					pInd->outMovePath(nextseason);
 				}

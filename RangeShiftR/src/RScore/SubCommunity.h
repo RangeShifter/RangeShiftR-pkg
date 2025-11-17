@@ -128,7 +128,7 @@ public:
 #if RS_RCPP
 	static int resolveSettlement( // Executed for a given vector of individuals
 		std::map<Species*, vector<Individual*>>& dispersingInds, 
-		Landscape* pLandscape
+		Landscape* pLandscape,
 		short				// year
 	);
 #else
