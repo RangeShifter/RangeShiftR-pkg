@@ -374,7 +374,7 @@ public:
 		const int		 	// year
 	);
 #endif
-#ifndef NDEBUG
+#ifdef UNIT_TESTS
 	// Testing utilities
 	Cell* getCurrCell() const;
 	void setInitAngle(const float angle);

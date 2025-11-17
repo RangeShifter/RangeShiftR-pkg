@@ -91,8 +91,13 @@ public:
 		bool		// TRUE for a patch-based model, FALSE for a cell-based model
 	);
 	void emigration(void);
+	
+	// Remove emigrants from the matrix subcommunity and add to a map of vectors
+	void disperseMatrix(
+		std::map<Species*,std::vector<Individual*>>&
+	);
 	// Remove emigrants from their natal patch and add to a map of vectors
-	void initiateDispersal(
+	void recruitDispersers(
 		std::map<Species*,std::vector<Individual*>>&
 	);
 	// Add an individual into the local population of its species in the patch
@@ -105,21 +110,38 @@ public:
 		std::vector<Individual*>&,	// vector of pointers to Individuals
 		Species*			// pointer to Species
 	);
-#if RS_RCPP
-	int transfer( // Transfer through matrix - run for matrix SubCommunity only
-		Landscape*,	// pointer to Landscape
-		short,			// landscape change index
-		short				// season / year
+
+	// Determine whether there is a potential mate present in a patch which a potential
+	// settler has reached
+	static bool matePresent(
+		Species* pSpecies,
+		Cell*,	// pointer to the Cell which the potential settler has reached
+		short		// sex of the required mate (0 = female, 1 = male)
 	);
-#else
-	int transfer( // Transfer through matrix - run for matrix SubCommunity only
+
+	static int resolveTransfer( // Executed for a given vector of individuals
+		std::map<Species*, vector<Individual*>>& dispersingInds,
 		Landscape*,	// pointer to Landscape
 		short				// landscape change index
 	);
+
+#if RS_RCPP
+	static int resolveSettlement( // Executed for a given vector of individuals
+		std::map<Species*, vector<Individual*>>& dispersingInds, 
+		Landscape* pLandscape
+		short				// year
+	);
+#else
+	static int resolveSettlement( // Executed for a given vector of individuals
+		std::map<Species*, vector<Individual*>>& dispersingInds, 
+		Landscape* pLandscape
+	);
 #endif // RS_RCPP
-	// Remove emigrants from patch 0 (matrix) and transfer to SubCommunity in which
-	// their destination co-ordinates fall (executed for the matrix patch only)
-	void completeDispersal(
+
+	// Remove emigrants from the vectors map and transfer to SubCommunity in which
+	// their destination co-ordinates fall
+	static void completeDispersal(
+		std::map<Species*,vector<Individual*>>&, 	// per-species map of vectors of individuals
 		Landscape*,	// pointer to Landscape
 		bool				// TRUE to increment connectivity totals
 	);
@@ -197,9 +219,9 @@ public:
 		int,					// generation
 		bool					// true if called to summarise data at community level
 	);
-	int stagePop( // Population size of a specified stage
+	int getNbInds( // Population size of a specified stage
 		int	// stage
-	);
+	) const;
 
 private:
 	int subCommNum;	// SubCommunity number

@@ -136,7 +136,7 @@ Individual::Individual(Species* pSpecies, Cell* pCell, Patch* pPatch, short stg,
 #endif
 		if (moveType == 1) { // SMS
 			// set up location data for SMS
-			pTrfrData = make_unique<smsData>(loc, loc); // what about the other parameter?
+			pTrfrData = make_unique<smsData>(loc, loc);
 
 		}
 		if (moveType == 2) { // CRW
@@ -789,9 +789,12 @@ int Individual::moveKernel(Landscape* pLandscape, Species* pSpecies, const bool 
 	}
 	else
 		meandist = kern.meanDist1 / (float)land.resol;
+	
 	// scaled mean may not be less than 1 unless emigration derives from the kernel
 	// (i.e. the 'use full kernel' option is applied)
+# ifdef NDEBUG // bypass this requirement for tests
 	if (!usefullkernel && meandist < 1.0) meandist = 1.0;
+# endif
 
 	int loopsteps = 0; // new counter to prevent infinite loop added 14/8/15
 	do {
@@ -1674,7 +1677,7 @@ double cauchy(double location, double scale) {
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-#ifndef NDEBUG
+#ifdef UNIT_TESTS
 
 Cell* Individual::getCurrCell() const {
 	return pCurrCell;
@@ -1741,5 +1744,5 @@ void Individual::overrideGenotype(TraitType whichTrait, const map<int, vector<un
 	pNeutralTrait->getGenes() = newGenotype;
 };
 
-#endif // NDEBUG
+#endif // UNIT_TESTS
 

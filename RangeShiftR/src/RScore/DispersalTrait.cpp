@@ -437,7 +437,7 @@ float DispersalTrait::getDomCoefAtLocus(short whichChromosome, int position) con
 	return it->second[whichChromosome]->getDominanceCoef();
 }
 
-#ifndef NDEBUG
+#ifdef UNIT_TESTS
 
 // Create a default set of alleles for testing
 //
@@ -464,4 +464,4 @@ map<int, vector<shared_ptr<Allele>>> createTestGenotype(
 	}
 	return genotype;
 }
-#endif // NDEBUG
+#endif // UNIT_TESTS

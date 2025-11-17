@@ -2378,7 +2378,7 @@ resol = (int) tmpresol;
 
 	dimX = ncols;
 	dimY = nrows;
-	minX = maxY = 0;
+	minX = maxY = 0; // bottom-left / south-west corner
 	maxX = dimX - 1;
 	maxY = dimY - 1;
 
@@ -2437,15 +2437,11 @@ resol = (int) tmpresol;
 				habFloat = badHabFloat;
 #if RS_RCPP
 				if (ifsHabMap >> habFloat) {
-					habCode = static_cast<int>(habFloat);
-				if (patchModel) {
+					habCode = (int)habFloat;
+					if (patchModel) {
 						patchFloat = badPatchFloat;
-// #if RS_RCPP
 						if (ifsPatchMap >> patchFloat) {
-// #else
-//						ifsPatchMap >> patchFloat;
-// #endif
-							patchCode = static_cast<int>(patchFloat);
+							patchCode = (int)patchFloat;
 						}
 						else { // corrupt file stream
 #if !R_CMD
@@ -3327,8 +3323,8 @@ void Landscape::outVisits(int rep, int landNr) {
 
 //---------------------------------------------------------------------------
 
-#ifndef NDEBUG
-// Debug only: shortcut setup utilities
+#ifdef UNIT_TESTS
+// Tests only: shortcut setup utilities
 
 Landscape createLandscapeFromCells(vector<Cell*> cells, const landParams& lp, Species sp) {
 	// Set up landscape
@@ -3364,7 +3360,7 @@ landParams createDefaultLandParams(const int& dim) {
 void testLandscape() {
 	// test coordinate system...
 }
-#endif // NDEBUG
+#endif // UNIT_TESTS
 
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------

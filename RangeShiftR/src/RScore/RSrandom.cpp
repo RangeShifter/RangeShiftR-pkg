@@ -83,7 +83,7 @@ RSrandom::RSrandom() {
 
 #ifndef NDEBUG
 	// fixed seed
-	RS_random_seed = 666;
+	RS_random_seed = 11011;
 #else
 	// random seed
 #if LINUX_CLUSTER
@@ -230,7 +230,7 @@ void RSrandom::fixNewSeed(int seed) {
 //--------------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------------
 
-#ifndef NDEBUG
+#ifdef UNIT_TESTS
 #if !RS_RCPP
 	void testRSrandom() {
 
@@ -254,5 +254,5 @@ void RSrandom::fixNewSeed(int seed) {
 		}
 	}
 #endif
-#endif // NDEBUG
+#endif // UNIT_TESTS
 //---------------------------------------------------------------------------

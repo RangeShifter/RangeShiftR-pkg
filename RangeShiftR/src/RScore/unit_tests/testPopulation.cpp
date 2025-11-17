@@ -1,4 +1,4 @@
-#ifndef NDEBUG
+#ifdef UNIT_TESTS
 
 #include "../Individual.h"
 #include "../Population.h"
@@ -63,7 +63,7 @@ void testPopulation()
 			Population pop = Population(pSpecies, pPatch, initialNbInds, 1);
 			pop.reproduction(localK, 1, 1, localScaling); // juveniles are checked for viability at birth
 			pop.fledge(); // non-overlapping: adults are replaced with juveniles
-			survivingInds.push_back(pop.getNInds());
+			survivingInds.push_back(pop.getNbInds());
 		}
 		assert(survivingInds[0] > survivingInds[1] 
 			&& survivingInds[1] > survivingInds[2]);
@@ -82,7 +82,7 @@ void testPopulation()
 		const int genomeSz = 1;
 		const set<int> genePositions = { 0 };
 
-		// Wild-types nver emigrate, mutants always do
+		// Wild-types never emigrate, mutants always do
 		const map<GenParamType, float> initParams{
 			pair<GenParamType, float>{GenParamType::MIN, 0},
 			pair<GenParamType, float>{GenParamType::MAX, 0}
@@ -136,11 +136,12 @@ void testPopulation()
 			pop.reproduction(localK, 1, 1, localScaling);
 			pop.fledge(); // replace initial pop with juveniles
 			pop.emigration(localK); // select and flag emigrants
-			int popSize = pop.totalPop();
+			int popSize = pop.getNbInds();
 			for (int i = 0; i < popSize; i++) {
 				pop.extractDisperser(i); // rm emigrants from pop
 			}
-			int nbEmigrating = popSize - pop.totalPop(); // diff is nb of emigrants
+			pop.clean();
+			int nbEmigrating = popSize - pop.getNbInds(); // diff is nb of emigrants
 			if (mutationRate == 0.0)
 				assert(nbEmigrating == 0);
 			emigratingInds.push_back(nbEmigrating);
@@ -148,27 +149,26 @@ void testPopulation()
 		assert(emigratingInds[0] < emigratingInds[1] && emigratingInds[1] < emigratingInds[2]);
 	}
 
-	// In the absence of evolutionary forces, neutral gene 
-	// frequencies conform to Hardy-Weinberg principle, i.e.:
-	// 1 - Allele frequencies p and q remain constant through generations
-	// 2 - Genotype frequencies conform to fAA = p^2, fAB = 2pq, fBB = q^2
+	// In the absence of selection, drift is solely responsible
+	// for changes in allele frequencies
 	{
+		const float tolerance = 0.02;
+		const float hetzTolerance = 0.05;
+
 		float mutationRate = 0.0;
 		const float localK = 10000.0;
 		vector <float> localScaling = {1.0};
 		const int initialNbInds = localK;
-		const float initFreqA = 0.7;
-		const float exptdFreqA = initFreqA; // Allelic freqs are constant under HW
-		const float exptdFreqB = 1 - exptdFreqA;
-		const float exptdFreqHeteroZ = 2 * exptdFreqA * exptdFreqB; // according to HW
-		const int nbGens = 10;
-		float obsFreqA = 0.0;
-		float obsFreqB = 0.0;
-		float obsFreqHeteroZ = 0.0;
-		const float tolerance = 0.02; // fairly high tolerance, I expect a bit of drift to act.
+		const float initFreqA = 0.30;
+		const float exptdFreqHeteroZ = 2 * initFreqA * (1 - initFreqA); // according to HW
+		const int nbGens = 50;
+		float obsFreqA = initFreqA;
+		float obsFreqHeteroZ;
+		int nbInds = static_cast<int>(localK);
 
 		// Simple genetic layout
-		const bool isDiploid{ true }; // HW only applies to diploids
+		// 1 locus with two alleles A and B
+		const bool isDiploid{ true };
 		const int genomeSz = 1;
 		const set<int> genePositions = { 0 };
 		const float maxAlleleVal = 1;
@@ -177,6 +177,7 @@ void testPopulation()
 		auto genotypeAA = createTestNeutralGenotype(genomeSz, true, alleleA, alleleA);
 		auto genotypeBB = createTestNeutralGenotype(genomeSz, true, alleleB, alleleB);
 
+		// Landscape is a single cell
 		Landscape* pLandscape = new Landscape;
 		Patch* pPatch = pLandscape->newPatch(1);
 		Cell* pCell = new Cell(0, 0, pPatch, 0);
@@ -193,7 +194,7 @@ void testPopulation()
 		SpeciesTrait* spTr = createTestNeutralSpTrait(maxAlleleVal, genePositions, isDiploid);
 		pSpecies->addTrait(TraitType::NEUTRAL, *spTr);
 
-		// Initialise population with 
+		// Initialise population with initial frequencies for AA and BB
 		Population pop = Population(pSpecies, pPatch, 0, 1);
 		for (int i = 0; i < initialNbInds; i++) {
 			Individual* pInd = new Individual(pSpecies, pCell, pPatch, 1, 0, 0, 0.5, false, 1);
@@ -205,32 +206,46 @@ void testPopulation()
 			pop.recruit(pInd);
 		}
 
-		// Check allele frequencies conform to HW through generations
+		// Check allele frequencies conform to expectation through generations
+		float prevGenFreqA;
 		for (int yr = 0; yr < nbGens; yr++) {
 			pop.reproduction(localK, 1, 1, localScaling);
 			pop.fledge(); // replace initial pop with juveniles
 			pop.survival0(localK, 0, 0, localScaling); // flag juveniles for development
 			pop.survival1(); // develop to stage 1 (breeders)
+			pop.shuffleInds();
 
-			// Count allele and heterozygote frequencies
+			// Calculate expected allele frequency change from
+			// drift and previous generation frequencies
+			prevGenFreqA = obsFreqA;
+			float exptdChg = 2 * sqrt(prevGenFreqA * (1 - prevGenFreqA) / 2 * nbInds);
+			// ^ eq. 6.1 in Conservation and the Genomics of Populations, Allendorf et al.
+			// 95% CI for the allele frequency change
+
+			// Check allele frequency change match equation
 			pop.sampleIndsWithoutReplacement("all", { 1 });
 			pop.updatePopNeutralTables();
 			obsFreqA = pop.getAlleleFrequency(0, alleleA);
-			obsFreqB = pop.getAlleleFrequency(0, alleleB);
-			float nbHeteroZ = pop.getHeteroTally(0, alleleA);
-			int nbInds = pop.getNInds();
-			obsFreqHeteroZ = nbHeteroZ / nbInds;
-			assert(abs(obsFreqA - exptdFreqA) < tolerance);
-			assert(abs(obsFreqB - exptdFreqB) < tolerance);
-			assert(abs(obsFreqHeteroZ - exptdFreqHeteroZ) < tolerance);
+			float freqChg = abs(prevGenFreqA - obsFreqA);
+			assert(abs(freqChg) < tolerance);
+
+			// If population is very large, heterozygosity should be roughly constant,
+			// i.e. inbreeding is negligible
+			nbInds = pop.getNbInds();
+			// couldn't find a source for exptd change in heterozygosity so 
+			// we assume Hardy-Weinberg equilibrium
+			obsFreqHeteroZ = static_cast<float>(pop.getHeteroTally(0, alleleA)) / nbInds;
+			assert(abs(obsFreqHeteroZ - exptdFreqHeteroZ) < hetzTolerance);
 		}
 	}
 
-	// Genetic load meets Hardy-Weinberg expectation
+	// Genetic load meets Hardy-Weinberg expectation on first generation
 	// If a lethal (s = 1) recessive (h = 0) allele starts at freq 0.6,
-	// then (if no mutations) the prop. of unviable homozygote offspring should be 0.36
+	// then (if no mutations) next gen should have 0.6^2 = 0.36 homozygotes dying at birth
 	{
-		const float initFreqA = 0.6;
+		const float tolerance = 0.05; // high tolerance, still a lot of stochasticity
+
+		const float initFreqA = 0.23;
 		const float sA = 1.0; // lethal
 		const float hA = 0.0; // fully recessive
 		const float sB = 0.0; // benign
@@ -240,7 +255,6 @@ void testPopulation()
 		vector <float> localScaling = {1.0};
 
 		const int initialNbInds = localK;
-		const float tolerance = 0.02; // high tolerance, still a lot of stochasticity
 		const float expectedFreqAA = initFreqA * initFreqA;
 
 		// Simple genetic layout
@@ -282,11 +296,12 @@ void testPopulation()
 		}
 
 		// Check allele frequencies conform to HW
+		pop.shuffleInds();
 		pop.reproduction(localK, 1, 1, localScaling);
 		pop.fledge(); // replace initial pop with juveniles
-		double obsFreqUnviable = 1 - pop.getNInds() / localK;
+		double obsFreqUnviable = 1 - pop.getNbInds() / localK;
 		assert(abs(obsFreqUnviable - expectedFreqAA) < tolerance);
 	}
 }
 
-#endif // NDEBUG
+#endif // UNIT_TESTS

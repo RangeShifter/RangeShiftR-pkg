@@ -194,7 +194,7 @@ void NeutralTrait::inheritDiploid(const bool& fromMother, map<int, vector<unsign
 	
 	// Is the first parent gene position already recombinant?
 	auto distance = std::distance(recomPositions.begin(), recomIt);
-	if (distance - 1 % 2 != 0)
+	if (distance % 2 != 0)
 		parentChromosome = 1 - parentChromosome; //switch chromosome
 
 	for (auto const& [locus, allelePair] : parentGenes) {
@@ -294,7 +294,7 @@ float NeutralTrait::getAlleleValueAtLocus(short whichChromosome, int position) c
 	return it->second[whichChromosome];
 }
 
-#ifndef NDEBUG // Testing only
+#ifdef UNIT_TESTS // Testing only
 
 // Create a default set of neutral alleles for testing
 //
@@ -316,4 +316,4 @@ map<int, vector<unsigned char>> createTestNeutralGenotype(
 	return genotype;
 }
 
-#endif // NDEBUG
+#endif // UNIT_TESTS

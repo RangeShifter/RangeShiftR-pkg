@@ -83,7 +83,7 @@ private:
 
 };
 
-#ifndef NDEBUG // for testing purposes only
+#ifdef UNIT_TESTS // for testing purposes only
 map<int, vector<unsigned char>> createTestNeutralGenotype(
 	const int genomeSz, const bool isDiploid,
 	const unsigned char valAlleleA,

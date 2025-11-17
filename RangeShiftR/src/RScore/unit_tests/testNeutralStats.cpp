@@ -1,4 +1,4 @@
-#ifndef NDEBUG
+#ifdef UNIT_TESTS
 
 #include "../Community.h"
 
@@ -1059,4 +1059,4 @@ void testNeutralStats() {
 	}
 }
 
-#endif // NDEBUG
+#endif // UNIT_TESTS

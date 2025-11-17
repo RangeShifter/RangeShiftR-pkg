@@ -521,7 +521,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				}
 
 				// Resolve survival and devlpt
-				pComm->survival1(); // why without parsing 0 and 1?
+				pComm->survival1();
 
 			} // end of the generation loop
 

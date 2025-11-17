@@ -44,7 +44,7 @@ public:
 	float getAlleleValueAtLocus(short chromosome, int i) const override;
 	float getDomCoefAtLocus(short chromosome, int position) const override;
 
-#ifndef NDEBUG // for testing only
+#ifdef UNIT_TESTS // for testing only
 	void overwriteGenes(map<int, vector<shared_ptr<Allele>>> genSeq) {
 		genes = genSeq;
 	}
@@ -92,7 +92,7 @@ private:
 	float expressAdditive();
 };
 
-#ifndef NDEBUG
+#ifdef UNIT_TESTS
 // Test utilities
 
 map<int, vector<shared_ptr<Allele>>> createTestGenotype(
@@ -102,6 +102,6 @@ map<int, vector<shared_ptr<Allele>>> createTestGenotype(
 	const float domCoeffA = 1.0, // default for dispersal traits
 	const float domCoeffB = 1.0
 );
-#endif // NDEBUG
+#endif // UNIT_TESTS
 
 #endif // DISPTRAITH

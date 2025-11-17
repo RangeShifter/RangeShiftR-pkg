@@ -202,7 +202,7 @@ bool SpeciesTrait::isValidTraitVal(const float& val) const {
 	}
 }
 
-#ifndef NDEBUG // Testing only
+#ifdef UNIT_TESTS // Testing only
 
 // Create a default set of gene positions ranging from zero to genome size
 set<int> createTestGenePositions(const int genomeSz) {
@@ -296,4 +296,4 @@ SpeciesTrait* createTestNeutralSpTrait(const float& maxAlleleVal, const set<int>
 	return spTr;
 }
 
-#endif // NDEBUG
+#endif // UNIT_TESTS

@@ -135,7 +135,7 @@ void Management::translocate(int yr
                 if (s_patch) { // if it is not a nullpointer
                     // test if population in patch is not zero
                     s_pPop = s_patch->getPopn(pSpecies); // returns the population of the species in that cell
-                    if (s_pPop && s_pPop->getNInds() > 0){
+                    if (s_pPop && s_pPop->getNbInds() > 0){
                     } else {
 #if RS_RCPP
                         Rcpp::Rcout << "Population does not exist in source patch or is 0! skipping translocation event." << endl;
@@ -179,7 +179,7 @@ void Management::translocate(int yr
                    s_patch = s_ppatch;
                    // test if population in patch is not zero
                    s_pPop = s_patch->getPopn(pSpecies); // returns the population of the species in that cell
-                   if (s_pPop && s_pPop->getNInds() > 0){
+                   if (s_pPop && s_pPop->getNbInds() > 0){
                    } else {
 #if RS_RCPP
                        Rcpp::Rcout << "Population does not exist in source cell or is 0! skipping translocation event." << endl;

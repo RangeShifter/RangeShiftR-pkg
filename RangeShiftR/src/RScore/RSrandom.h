@@ -85,9 +85,9 @@ public:
 		std::normal_distribution<>* pNormal;
 	};
 
-#ifndef NDEBUG
+#ifdef UNIT_TESTS
 	void testRSrandom();
-#endif // NDEBUG
+#endif // UNIT_TESTS
 
 //---------------------------------------------------------------------------
 

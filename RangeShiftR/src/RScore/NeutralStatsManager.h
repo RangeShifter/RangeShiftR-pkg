@@ -60,7 +60,9 @@ public:
 	// Getters
 	int getTally(int whichAllele) { return alleleTallies[whichAllele]; };
 	double getFrequency(int whichAllele) { return alleleFrequencies[whichAllele]; };
-	int getHeteroTally(int whichAllele) { return alleleHeterozygoteTallies[whichAllele]; };
+	int getHeteroTally(int whichAllele) { 
+		return alleleHeterozygoteTallies[whichAllele]; 
+	};
 
 	// Setters / increments
 	void incrementTally(int whichAllele) { alleleTallies[whichAllele]++; };
