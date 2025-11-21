@@ -1360,7 +1360,7 @@ int Landscape::readLandChange(int filenum, Rcpp::NumericMatrix habfile, Rcpp::Nu
 #if RS_RCPP && !R_CMD // normal file input
 int Landscape::readLandChange(int filenum, bool costs, wifstream& hfile, wifstream& pfile, wifstream& cfile, int habnodata, int pchnodata, int costnodata, vector <string>  scalinglayers)
 #else
-int Landscape::readLandChange(int filenum, bool costs)
+int Landscape::readLandChange(int filenum, bool costs, vector <string>  scalinglayers)
 #endif
 {
 
@@ -1718,6 +1718,13 @@ default:
 	if (hfile.is_open()) { hfile.close(); hfile.clear(); }
 	if (pfile.is_open()) { pfile.close(); pfile.clear(); }
 	if (cfile.is_open()) { cfile.close(); cfile.clear(); }
+
+	// add here the reading of demographic scaling layers
+	if(scalinglayers.size()>0){
+		int retcode = readDemographicScaling(scalinglayers);
+		if (retcode < 0) return 54; //change number
+	}
+
 	return 0;
 
 }

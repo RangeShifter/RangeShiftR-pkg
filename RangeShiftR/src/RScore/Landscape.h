@@ -199,7 +199,7 @@ struct patchData {
 };
 struct landChange {
 	int chgNb, chgYear; 
-	string pathHabFile, pathPatchFile, pathCostFile;
+	string pathHabFile, pathPatchFile, pathCostFile, pathSpatDemogFile;
 };
 struct patchChange {
 	int chgnum, x, y, oldpatch, newpatch;
@@ -379,8 +379,9 @@ public:
 #else
 	// TODO: add spatial demography for batch version
 	int readLandChange(
-		int,	// change file number
-		bool	// change SMS costs?
+		int,	// change file numbers
+		bool,	// change SMS costs?
+		vector <string> // vector of demographic scaling layers
 	);
 #endif
 	void createPatchChgMatrix(void);
