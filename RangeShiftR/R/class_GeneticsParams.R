@@ -80,7 +80,7 @@
 #'@references
 #'         \insertAllCited{}
 #' @return a parameter object of class "NeutralTraitsParams"
-#' @author Jette Reeg
+#' @author Jette Wolff
 #' @name NeutralTraits
 #' @export NeutralTraits
 NeutralTraits<- setClass("NeutralTraitsParams", slots = c(Positions = "ANY", # vector of numbers or "random"
@@ -299,7 +299,7 @@ setMethod("show", "NeutralTraitsParams", function(object){
 #' Initial values and inheritance is not applicable for genetic load traits.
 #'
 #' @return a parameter object of class "GeneticLoadParams"
-#' @author Jette Reeg
+#' @author Jette Wolff
 #' @name GeneticLoadTraits
 #' @export GeneticLoadTraits
 GeneticLoadTraits<- setClass("GeneticLoadParams", slots = c(
@@ -786,7 +786,7 @@ setMethod("show", "GeneticLoadParams", function(object){
 
 #'
 #' @return a parameter object of class "EmigrationTraitsParams"
-#' @author Jette Reeg
+#' @author Jette Wolff
 #' @name EmigrationTraits
 #' @export EmigrationTraits
 EmigrationTraits<- setClass("EmigrationTraitsParams", slots = c(Positions = "list", #
@@ -1025,7 +1025,7 @@ setMethod("show", "EmigrationTraitsParams", function(object){
 #'
 #'
 #' @return a parameter object of class "SettlementTraitsParams"
-#' @author Jette Reeg
+#' @author Jette Wolff
 #' @name SettlementTraits
 #' @export SettlementTraits
 SettlementTraits<- setClass("SettlementTraitsParams", slots = c(Positions = "list", #
@@ -1254,7 +1254,7 @@ setMethod("show", "SettlementTraitsParams", function(object){
 #' The length must be equal to the number of required kernel traits (see above) and the sequence must match the sequence of the kernel traits listed above.
 #'
 #' @return a parameter object of class "KernelTraitsParams"
-#' @author Jette Reeg
+#' @author Jette Wolff
 #' @name KernelTraits
 #' @export KernelTraits
 KernelTraits<- setClass("KernelTraitsParams", slots = c(Positions = "list", #
@@ -1496,7 +1496,7 @@ setMethod("show", "KernelTraitsParams", function(object){
 #'
 #'
 #' @return a parameter object of class "SMSTraitsParams"
-#' @author Jette Reeg
+#' @author Jette Wolff
 #' @name SMSTraits
 #' @export SMSTraits
 SMSTraits<- setClass("SMSTraitsParams", slots = c(Positions = "list", #
@@ -1717,7 +1717,7 @@ setMethod("show", "SMSTraitsParams", function(object){
 #'
 #'
 #' @return a parameter object of class "CorrRWTraitsParams"
-#' @author Jette Reeg
+#' @author Jette Wolff
 #' @name CorrRWTraits
 #' @export CorrRWTraits
 CorrRWTraits<- setClass("CorrRWTraitsParams", slots = c(Positions = "list", #
@@ -1937,7 +1937,7 @@ setClassUnion("KernelTraitsSlot", c("logical", "KernelTraitsParams"))
 #'
 #'
 #' @return a parameter object of class "TraitsParams"
-#' @author Jette Reeg
+#' @author Jette Wolff
 #' @name Traits
 #' @export Traits
 Traits <- setClass("TraitsParams", slots = c(Neutral = "NeutralSlot",
@@ -2156,7 +2156,7 @@ setMethod("show", "TraitsParams", function(object){
 #'         \insertAllCited{}
 #'
 #' @return a parameter object of class "GeneticsParams"
-#' @author Jette Reeg
+#' @author Jette Wolff
 #' @name Genetics
 #' @export Genetics
 Genetics <- setClass("GeneticsParams", slots = c(GenomeSize = "integer_OR_numeric",

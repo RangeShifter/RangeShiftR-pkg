@@ -1,6 +1,6 @@
 #---------------------------------------------------------------------------
 #
-#	Copyright (C) 2024 Jette Reeg, Anne-Kathleen Malchow, Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Damaris Zurell
+#	Copyright (C) 2024 Jette Wolff, Anne-Kathleen Malchow, Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Damaris Zurell
 #
 #	This file is part of RangeShiftR.
 #
@@ -103,7 +103,7 @@
 #' @references
 #'         \insertAllCited{}
 #' @return a parameter object of class "ManagementParams"
-#' @author Jette Reeg
+#' @author Jette Wolff
 #' @name Translocation
 #' @export Translocation
 Translocation <- setClass("TranslocationParams", slots = c(years = "numeric",
@@ -209,7 +209,7 @@ setClassUnion("TranslocationSlot", c("logical", "TranslocationParams"))
 #' @references
 #'         \insertAllCited{}
 #' @return a parameter object of class "ManagementParams"
-#' @author Jette Reeg
+#' @author Jette Wolff
 #' @name Management
 #' @export Management
 Management <- setClass("ManagementParams", slots = c(Translocation = "TranslocationSlot")

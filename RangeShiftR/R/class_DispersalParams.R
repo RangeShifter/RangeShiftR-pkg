@@ -131,7 +131,7 @@
 #' @references
 #'         \insertAllCited{}
 #' @return a parameter object of class "EmigrationParams"
-#' @author Anne-Kathleen Malchow and Jette Reeg
+#' @author Anne-Kathleen Malchow and Jette Wolff
 #' @name Emigration
 #' @export Emigration
 Emigration <- setClass("EmigrationParams", slots = c(DensDep = "logical",

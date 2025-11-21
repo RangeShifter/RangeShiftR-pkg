@@ -432,7 +432,7 @@ setMethod("show", "ArtificialLandscape", function(object){
 #' that years and maps can be matched. If a specific map is used multiple times, it must be listed each time nevertheless.
 #'
 #' @return A parameter object of class ImportedLandscape
-#' @author Anne-Kathleen Malchow, Jette Reeg
+#' @author Anne-Kathleen Malchow, Jette Wolff
 #' @name ImportedLandscape
 #' @export ImportedLandscape
 ImportedLandscape <- setClass("ImportedLandscape", slots = c(LandscapeFile = "character",

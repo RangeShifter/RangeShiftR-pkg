@@ -86,7 +86,7 @@ In each \code{year} of a translocation event, individuals matching the given cri
 are sampled from this subset. The success of catching one of these sampled individuals in the source location is defined by the \code{catching_rate}.
 Successfully catched individuals are then translocated to the destination site and the individual will be assigned the status 10 (translocated) and will not further disperse.
 
-The source as well as the destination site are required to be habitat patches or cells of the landscape. Otherwise the translocation event will be skipped.
+The source as well as the destination sites are required to be habitat patches or cells of the landscape. Otherwise the translocation event will be skipped.
 }
 \references{
 \insertAllCited{}

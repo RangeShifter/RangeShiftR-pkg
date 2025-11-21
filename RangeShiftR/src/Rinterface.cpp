@@ -35,7 +35,7 @@
  Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
  Author: Anne-Kathleen Malchow, Humboldt University Berlin
- Jette Reeg, University of Potsdam
+ Jette Wolff, University of Potsdam
  large parts modified from 'Main.cpp' and 'BatchMode.cpp' created by
  Steve Palmer, Roslyn Henry and Théo Pannetier, University of Aberdeen
 
@@ -1437,8 +1437,11 @@ int ReadDynLandR(Landscape *pLandscape, Rcpp::S4 LandParamsR)
             } else {
                 // file input
                 std::vector<std::string> scaling_vec;
-                for (auto& s : yearLayers_fname) {
-                    scaling_vec.push_back(Rcpp::as<std::string>(s));
+
+                for (int i = 0; i < yearLayers_fname.size(); ++i) {
+                    string scaling_fname =Rcpp::as<std::string>(yearLayers_fname[i]);
+                    scaling_fname = paramsSim->getDir(1) + scaling_fname; // prepend input directory to the file name
+                    scaling_vec.push_back(scaling_fname);
                 }
 
                 imported = pLandscape->readLandChange(i-1, costs, hfile, pfile, cfile, habnodata, pchnodata, costnodata, scaling_vec);
