@@ -24,6 +24,24 @@
 
 #include "Community.h"
 
+#ifdef _OPENMP
+#ifdef __has_include
+#if __has_include(<version>)
+#include <version>
+#endif
+#endif
+#include <atomic>
+#if __cpp_lib_barrier >= 201907L && __cpp_lib_optional >= 201606L
+#define HAS_BARRIER_LIB
+#include <barrier>
+#include <optional>
+#else
+#include <condition_variable>
+#include <mutex>
+#endif
+#include <omp.h>
+#endif // _OPENMP
+
 //---------------------------------------------------------------------------
 
 
@@ -434,12 +452,70 @@ void Community::emigration(void)
 #endif
 }
 
-#if RS_RCPP // included also SEASONAL
+#ifdef _OPENMP
+#ifdef HAS_BARRIER_LIB
+typedef std::optional<std::barrier<>> split_barrier;
+#else
+class split_barrier {
+private:
+	std::mutex m;
+	std::condition_variable cv;
+	int threads_in_section;
+	int total_threads;
+	bool may_enter;
+	bool may_leave;
+
+public:
+	split_barrier():
+		threads_in_section(0),
+		may_enter(false),
+		may_leave(false)
+	{}
+
+	void emplace(int threads) {
+		std::lock_guard<std::mutex> lock(m);
+		total_threads = threads;
+		may_enter = true;
+	}
+
+	void enter() {
+		std::unique_lock lock(m);
+		cv.wait(lock, [this]{return may_enter;});
+		if (++threads_in_section == total_threads) {
+			may_enter = false;
+			may_leave = true;
+			lock.unlock();
+			cv.notify_all();
+		}
+	}
+
+	void leave() {
+		std::unique_lock lock(m);
+		cv.wait(lock, [this]{return may_leave;});
+		if (--threads_in_section == 0) {
+			may_leave = false;
+			may_enter = true;
+			lock.unlock();
+			cv.notify_all();
+		}
+	}
+};
+#endif // HAS_BARRIER_LIB
+#endif // _OPENMP
+
+#if RS_RCPP
 void Community::dispersal(short landIx, short nextseason)
 #else
 void Community::dispersal(short landIx)
-#endif // SEASONAL || RS_RCPP
+#endif
 {
+#ifdef _OPENMP
+	std::atomic<int> nbStillDispersing;
+	split_barrier barrier;
+#else
+	int nbStillDispersing;
+#endif // _OPENMP
+
 #if RSDEBUG
 	int t0, t1, t2;
 	t0 = time(0);
@@ -452,37 +528,76 @@ void Community::dispersal(short landIx)
 	SubCommunity* matrix = subComms[0]; // matrix community is always the first
 #pragma omp parallel
 	{
-		std::map<Species*, vector<Individual*>> inds_map;
+		std::map<Species*, vector<Individual*>> disperserPool;
+
+		// All individuals in the matrix disperse again
+		// (= unsettled dispersers from previous generation)
+		matrix->disperseMatrix(disperserPool);
+
+		// Recruit new emigrants
 #pragma omp for schedule(static,128) nowait
-		for (int i = 0; i < nsubcomms; i++) { // all populations
-			subComms[i]->initiateDispersal(inds_map);
+		for (int i = 0; i < nsubcomms; i++) {
+			subComms[i]->recruitDispersers(disperserPool);
 		}
-		for (std::pair<Species* const, std::vector<Individual*>>& item : inds_map) {
-			// add to matrix population
-			matrix->recruitMany(item.second, item.first);
+
+#ifdef _OPENMP
+#pragma omp single
+		barrier.emplace(omp_get_num_threads());
+#endif // _OPENMP
+
+#if RSDEBUG
+#pragma omp master
+		{
+			t1 = time(0);
+			DEBUGLOG << "Community::dispersal(): this=" << this
+				<< " nsubcomms=" << nsubcomms << " initiation time=" << t1 - t0 << endl;
+		}
+#endif // RSDEBUG
+
+		// 
+		do {
+#pragma omp for schedule(guided)
+			for (int i = 0; i < nsubcomms; i++) {
+				subComms[i]->resetPossSettlers();
+			}
+			int localNbDispersers = matrix->resolveTransfer(disperserPool, pLandscape, landIx);
+#pragma omp single nowait
+			nbStillDispersing = 0;
+#pragma omp barrier
+#if RS_RCPP
+			localNbDispersers += matrix->resolveSettlement(disperserPool, pLandscape, nextseason);
+#else
+			localNbDispersers += matrix->resolveSettlement(disperserPool, pLandscape);
+#endif // RS_RCPP
+			nbStillDispersing += localNbDispersers;
+
+#ifdef _OPENMP
+#ifdef HAS_BARRIER_LIB
+			std::barrier<>::arrival_token token = barrier->arrive();
+#else
+			barrier.enter();
+#endif // HAS_BARRIER_LIB
+#endif // _OPENMP
+
+			matrix->completeDispersal(disperserPool, pLandscape, sim.outConnect);
+
+#ifdef _OPENMP
+#ifdef HAS_BARRIER_LIB
+			barrier->wait(std::move(token));
+#else
+			barrier.leave();
+#endif // HAS_BARRIER_LIB
+#endif // _OPENMP
+
+		} while (nbStillDispersing > 0);
+
+		// All unsettled dispersers are stored in matrix until next generation
+		for (auto & it : disperserPool) {
+			Species* const& pSpecies = it.first;
+			vector<Individual*>& inds = it.second;
+			matrix->recruitMany(inds, pSpecies);
 		}
 	}
-#if RSDEBUG
-	t1 = time(0);
-	DEBUGLOG << "Community::dispersal(): this=" << this
-		<< " nsubcomms=" << nsubcomms << " initiation time=" << t1 - t0 << endl;
-#endif
-
-	// dispersal is undertaken by all individuals now in the matrix patch
-	// (even if not physically in the matrix)
-	int ndispersers = 0;
-	do {
-		#pragma omp parallel for schedule(static)
-		for (int i = 0; i < nsubcomms; i++) { // all populations
-			subComms[i]->resetPossSettlers();
-		}
-#if RS_RCPP // included also SEASONAL
-		ndispersers = matrix->transfer(pLandscape, landIx, nextseason);
-#else
-		ndispersers = matrix->transfer(pLandscape, landIx);
-#endif // SEASONAL || RS_RCPP
-		matrix->completeDispersal(pLandscape, sim.outConnect);
-	} while (ndispersers > 0);
 
 #if RSDEBUG
 	DEBUGLOG << "Community::dispersal(): matrix=" << matrix << endl;
@@ -841,14 +956,14 @@ void Community::outRange(Species* pSpecies, int rep, int yr, int gen)
 		for (int stg = 1; stg < sstruct.nStages; stg++) {
 			stagepop = 0;
 			for (int i = 0; i < nsubcomms; i++) { // all sub-communities
-				stagepop += subComms[i]->stagePop(stg);
+				stagepop += subComms[i]->getNbInds(stg);
 			}
 			outrange << "\t" << stagepop;
 		}
 		// juveniles born in current reproductive season
 		stagepop = 0;
 		for (int i = 0; i < nsubcomms; i++) { // all sub-communities
-			stagepop += subComms[i]->stagePop(0);
+			stagepop += subComms[i]->getNbInds(0);
 		}
 		outrange << "\t" << stagepop;
 	}

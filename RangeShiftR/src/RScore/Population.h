@@ -120,11 +120,9 @@ public:
 	traitsums getTraits(Species*);
 	popStats getStats(void);
 	Species* getSpecies(void);
-	int getNInds(void);
-	int totalPop(void);
-	int stagePop( // return no. of Individuals in a specified stage
-		int	// stage
-	);
+	int getNbInds() const;
+	int getNbInds(int stg) const ;
+	int getNbInds(int stg, int sex) const;
 	void extirpate(void); // Remove all individuals
 	void reproduction(
 		const float,	// local carrying capacity
@@ -137,6 +135,10 @@ public:
 		float   // local carrying capacity
 	);
 	void allEmigrate(void); // All individuals emigrate after patch destruction
+	// Remove an individual from the Population
+	Individual* extractIndividual(
+		int		// index no. to the Individual in the inds vector
+	);
 	// If an individual has been identified as an emigrant, remove it from the Population
 	disperser extractDisperser(
 		int		// index no. to the Individual in the inds vector
@@ -153,30 +155,7 @@ public:
 	void recruitMany( // Add specified individuals to the population
 		std::vector<Individual*>&	// vector of pointers to Individuals
 	);
-#if RS_RCPP
-	int transfer( // Executed for the Population(s) in the matrix only
-		Landscape*,	// pointer to Landscape
-		short,				// landscape change index
-		short				// year
-	);
-	// Determine whether there is a potential mate present in a patch which a potential
-	// settler has reached
-	bool matePresent(
-		Cell*,	// pointer to the Cell which the potential settler has reached
-		short		// sex of the required mate (0 = female, 1 = male)
-	);
-#else
-	int transfer( // Executed for the Population(s) in the matrix only
-		Landscape*,	// pointer to Landscape
-		short				// landscape change index
-	);
-	// Determine whether there is a potential mate present in a patch which a potential
-	// settler has reached
-	bool matePresent(
-		Cell*,	// pointer to the Cell which the potential settler has reached
-		short		// sex of the required mate (0 = female, 1 = male)
-	);
-#endif // RS_RCPP
+	
 	// Determine survival and development and record in individual's status code
 	// Changes are NOT applied to the Population at this stage
 	void survival0(
