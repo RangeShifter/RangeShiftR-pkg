@@ -39,7 +39,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 26 October 2021 by Steve Palmer
+ Last updated: 25 June 2021 by Greta Bocedi
 
 ------------------------------------------------------------------------------*/
 
@@ -128,7 +128,7 @@ public:
 #if RS_RCPP
 	static int resolveSettlement( // Executed for a given vector of individuals
 		std::map<Species*, vector<Individual*>>& dispersingInds, 
-		Landscape* pLandscape
+		Landscape* pLandscape,
 		short				// year
 	);
 #else
@@ -145,33 +145,25 @@ public:
 		Landscape*,	// pointer to Landscape
 		bool				// TRUE to increment connectivity totals
 	);
-	void survival0(	// Determine survival & development
-		short,	// option0:	0 = stage 0 (juveniles) only
-						//					1 = all stages
-						//					2 = stage 1 and above (all non-juvs)
+
+	void survival0(short option0, short option1);
+	void survival1();
+
+	void survival(
+		short,	// part:	0 = determine survival & development,
+						//		 			1 = apply survival changes to the population
+		short,	// option0:	0 = stage 0 (juveniles) only         )
+						//					1 = all stages                       ) used by part 0 only
+						//					2 = stage 1 and above (all non-juvs) )
 		short 	// option1:	0 - development only (when survival is annual)
 						//	  	 		1 - development and survival
 	);
-	void survival1();	// Apply survival changes to the population
-	inline void survival(
-		short part,	// part:		0 = determine survival & development,
-						//		 			1 = apply survival changes to the population
-		short option0,	// option0:	0 = stage 0 (juveniles) only         )
-						//					1 = all stages                       ) used by part 0 only
-						//					2 = stage 1 and above (all non-juvs) )
-		short option1	// option1:	0 - development only (when survival is annual)
-						//	  	 		1 - development and survival
-	) {
-		if (part == 0) {
-			return survival0(option0, option1);
-		}
-		else {
-			return survival1();
-		}
-	}
+
 	void ageIncrement(void);
+
 	// Find the population of a given species in a given patch
 	Population* findPop(Species*,Patch*);
+
 	void createOccupancy(
 		int	// no. of rows = (no. of years / interval) + 1
 	);
@@ -207,21 +199,19 @@ public:
 		int,				// year
 		int				// generation
 	);
-	void outGenFinishReplicate(); // Close genetics file
-	void outGenStartReplicate( // Open genetics file and write header record
-		int,				// replicate
-		int					// Landscape number
-	);
-	void outGenetics( // Write records to genetics file
-		int,				// replicate
-		int				// year
-	);
-	bool outTraitsFinishLandscape(); // Close traits file
-	bool outTraitsStartLandscape( // Open traits file and write header record
+	bool outTraitsHeaders( // Open traits file and write header record
 		Landscape*,	// pointer to Landscape
 		Species*,		// pointer to Species
 		int					// Landscape number
 	);
+
+
+	// Close traits file
+	bool outTraitsFinishLandscape();
+
+	// Open traits file and write header record
+	bool outTraitsStartLandscape(Landscape* pLandscape, Species* pSpecies, int landNr);
+
 	traitsums outTraits( // Write records to traits file and return aggregated sums
 		Landscape*, 	// pointer to Landscape
 		int,					// replicate

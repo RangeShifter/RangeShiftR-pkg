@@ -34,33 +34,41 @@
 #include "RSrandom.h"
 #include "Utils.h"
 #include "Parameters.h"
+#include "Population.h"
 #include "Landscape.h"
 #include "Species.h"
 #include "SubCommunity.h"
+#include "Management.h"
 
 using namespace std;
+
+#ifdef UNIT_TESTS
+void testIndividual();
+void testNeutralStats();
+void testPopulation();
 
 void run_unit_tests() {
 	cout << "******* Unit test output *******" << endl;
 	testRSrandom();
+	testLandscape();
 	testIndividual();
+	testPopulation();
+	testNeutralStats();
 	cout << endl << "************************" << endl;
 }
+#endif // UNIT_TESTS
 
 // Global vars
-string habmapname, patchmapname, distnmapname;
-string costmapname, genfilename;
 string landFile;
 paramGrad* paramsGrad;
 paramStoch* paramsStoch;
 paramInit* paramsInit;
 paramSim* paramsSim;
 RSrandom* pRandom;
-ofstream DEBUGLOG;
-ofstream MUTNLOG;
-vector <string> hfnames;
+Management* pManagement; // pointer to management routines
 Species* pSpecies;
 Community* pComm;
+short nDSlayer=gMaxNbLayers;
 
 #if LINUX_CLUSTER || RS_RCPP
 int main(int argc, char* argv[])
@@ -68,10 +76,18 @@ int main(int argc, char* argv[])
 int _tmain(int argc, _TCHAR* argv[])
 #endif
 {
-#ifdef NDEBUG
-	cout << "This code is only for running tests and not meant to run in release." << endl;
+#ifndef UNIT_TESTS
+	cout << "This version is only for running unit tests." << endl;
 	return 1;
-# else
+#else
+
+	// Initialise globals
+	paramsGrad = new paramGrad;
+	paramsStoch = new paramStoch;
+	paramsInit = new paramInit;
+	paramsSim = new paramSim;
+	pRandom = new RSrandom;
+
 	assert(0.1 > 0.0); // assert does run correctly
 	try
 	{
@@ -82,6 +98,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		cerr << endl << "Error: " << e.what() << endl;
 	}
 	cout << "All tests have completed." << endl;
+
 	return 0; // if tests succeed, we are happy
 # endif // NDEBUG
 }

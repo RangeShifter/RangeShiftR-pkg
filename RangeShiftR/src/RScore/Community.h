@@ -1,25 +1,25 @@
 /*----------------------------------------------------------------------------
- *	
- *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell 
- *	
+ *
+ *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell
+ *
  *	This file is part of RangeShifter.
- *	
+ *
  *	RangeShifter is free software: you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation, either version 3 of the License, or
  *	(at your option) any later version.
- *	
+ *
  *	RangeShifter is distributed in the hope that it will be useful,
  *	but WITHOUT ANY WARRANTY; without even the implied warranty of
  *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *	GNU General Public License for more details.
- *	
+ *
  *	You should have received a copy of the GNU General Public License
  *	along with RangeShifter. If not, see <https://www.gnu.org/licenses/>.
- *	
+ *
  --------------------------------------------------------------------------*/
- 
- 
+
+
 /*------------------------------------------------------------------------------
 
 RangeShifter v2.0 Community
@@ -35,9 +35,9 @@ Optionally, the Community maintains a record of the occupancy of suitable cells
 or patches during the course of simulation of multiple replicates.
 
 For full details of RangeShifter, please see:
-Bocedi G., Palmer S.C.F., Pe’er G., Heikkinen R.K., Matsinos Y.G., Watts K.
+ Bocedi G., Palmer S.C.F., Peâ€™er G., Heikkinen R.K., Matsinos Y.G., Watts K.
 and Travis J.M.J. (2014). RangeShifter: a platform for modelling spatial
-eco-evolutionary dynamics and species’ responses to environmental changes.
+ eco-evolutionary dynamics and speciesâ€™ responses to environmental changes.
 Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
@@ -51,6 +51,8 @@ Last updated: 25 June 2021 by Anne-Kathleen Malchow
 
 #include <vector>
 #include <algorithm>
+#include <memory>
+#include <ranges>
 using namespace std;
 
 #include "SubCommunity.h"
@@ -58,6 +60,7 @@ using namespace std;
 #include "Patch.h"
 #include "Cell.h"
 #include "Species.h"
+#include "NeutralStatsManager.h"
 
 //---------------------------------------------------------------------------
 struct commStats {
@@ -153,23 +156,12 @@ public:
 		int,	// year
 		int	// generation
 	);
-	void outGenFinishReplicate(); // Close genetics file
-	void outGenStartReplicate( // Open genetics file and write header record
-		int,	// replicate
-		int		// Landscape number
-	);
-	void outGenetics( // Write records to genetics file
-		int,	// replicate
-		int	// year
-	);
 	// Close occupancy file
 	bool outOccupancyFinishLandscape();
 	// Open occupancy file, write header record and set up occupancy array
 	bool outOccupancyStartLandscape();
 	void outOccupancy(void);
-	void outOccSuit(
-		bool	// TRUE if occupancy graph is to be viewed on screen
-	);
+	void outOccSuit();
 	bool outTraitsFinishLandscape(); // Close traits file
 	bool outTraitsStartLandscape( // Open traits file and write header record
 		Species*,	// pointer to Species
@@ -198,12 +190,33 @@ public:
     Rcpp::IntegerMatrix addYearToPopList(int,int);
 #endif
 
+	//sample individuals for genetics (or could be used for anything)
+	void sampleIndividuals(Species* pSpecies);
+
+	bool openOutGenesFile(const bool& isDiploid, const int landNr, const int rep);
+	void outputGeneValues(const int& year, const int& gen, Species* pSpecies);
+
+	//control neutral stat output
+	void outNeutralGenetics(Species* pSpecies, int rep, int yr, int gen, bool outWeirCockerham, bool outWeirHill);
+
+	//file openers
+	bool openNeutralOutputFile(Species* pSpecies, const int landNr);
+	bool openPerLocusFstFile(Species* pSpecies, Landscape* pLandscape, const int landNr, const int rep);
+	bool openPairwiseFstFile(Species* pSpecies, Landscape* pLandscape, const int landNr, const int rep);
+
+	//file writers
+	void writeNeutralOutputFile(int rep, int yr, int gen, bool outWeirCockerham, bool outWeirHill);
+	void writePerLocusFstatFile(Species* pSpecies, const int yr, const int gen, const int nLoci, set<int> const& patchList);
+	void writePairwiseFstFile(Species* pSpecies, const int yr, const int gen, const  int nAlleles, const int nLoci, set<int> const& patchList);
+	float getPatchHet(Species* pSpecies, int patchId, int whichLocus) const;
 private:
 	Landscape *pLandscape;
 	int indIx;				// index used to apply initial individuals
 	float **occSuit;	// occupancy of suitable cells / patches
 	std::vector <SubCommunity*> subComms;
 
+	//below won't work for multispecies
+	unique_ptr<NeutralStatsManager> pNeutralStatistics;
 };
 
 extern paramSim *paramsSim;

@@ -1,37 +1,37 @@
 /*----------------------------------------------------------------------------
- *	
- *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell 
- *	
+ *
+ *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell
+ *
  *	This file is part of RangeShifter.
- *	
+ *
  *	RangeShifter is free software: you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation, either version 3 of the License, or
  *	(at your option) any later version.
- *	
+ *
  *	RangeShifter is distributed in the hope that it will be useful,
  *	but WITHOUT ANY WARRANTY; without even the implied warranty of
  *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *	GNU General Public License for more details.
- *	
+ *
  *	You should have received a copy of the GNU General Public License
  *	along with RangeShifter. If not, see <https://www.gnu.org/licenses/>.
- *	
+ *
  --------------------------------------------------------------------------*/
- 
- 
-/*------------------------------------------------------------------------------
 
-RangeShifter v2.0 RSrandom
 
-Implements the RSrandom class
+ /*------------------------------------------------------------------------------
 
-Authors: Steve Palmer, University of Aberdeen
-				 Anne-Kathleen Malchow, Potsdam University
+ RangeShifter v2.0 RSrandom
 
-Last updated: 12 January 2021 by Steve Palmer
+ Implements the RSrandom class
 
-------------------------------------------------------------------------------*/
+ Authors: Steve Palmer, University of Aberdeen
+				  Anne-Kathleen Malchow, Potsdam University
+
+ Last updated: 12 January 2021 by Steve Palmer
+
+ ------------------------------------------------------------------------------*/
 
 #ifndef RSrandomH
 #define RSrandomH
@@ -39,90 +39,55 @@ Last updated: 12 January 2021 by Steve Palmer
 #include <stdlib.h>
 #include <fstream>
 #include <cassert>
-#include <vector>
+#include <cmath>
+#include <random>
+#include <set>
 #include "Utils.h"
+#if !LINUX_CLUSTER
+#include <ctime>
+#endif
 
 using namespace std;
 
-#if RSDEBUG
-extern ofstream DEBUGLOG;
+#if RS_RCPP
+typedef uint32_t seed_t;
+#else
+typedef int seed_t;
 #endif
 
+class RSrandom
+{
+
+public:
 #if !RS_RCPP
-//--------------- 2.) New version of RSrandom.cpp
-	#include <cmath>
-	#include <random>
-	#if !LINUX_CLUSTER
-	#include <ctime>
-	#endif
-
-	class RSrandom
-	{
-
-	public:
-		RSrandom(void);
-		~RSrandom(void);
-		double Random(void);
-		int IRandom(int, int);
-		int Bernoulli(double);
-		double Normal(double, double);
-		int Poisson(double);
-		mt19937 getRNG(void);
+	RSrandom(void);
+#else
+	RSrandom(std::int64_t);       // if int is negative, a random seed will be generated, else it is used as seed
+#endif
+	~RSrandom(void);
+	double Random(void);
+	int IRandom(int, int);
+	float FRandom(float, float);
+	int Bernoulli(double);
+	int Binomial(const int& n, const double& p);
+	double Normal(double, double);
+	double Gamma(double, double);
+	double NegExp(double);
+	int Poisson(double);
+	mt19937 getRNG(void);
+	void fixNewSeed(int);
+	seed_t getSeed() const { return RS_random_seed; };
 
 	private:
+		seed_t RS_random_seed;
 		std::vector<mt19937> gens;
 		std::uniform_real_distribution<>* pRandom01;
 		std::normal_distribution<>* pNormal;
 	};
 
-
-//--------------------------------------------------------------------------------------------------
-//--------------------------------------------------------------------------------------------------
-
-
-
-//--------------- 3.) R package version of RSrandom.cpp
-
-
-#else // if RS_RCPP 
-
-
-	#include <cmath>
-	#include <random>
-	#if RSWIN64
-	#include <ctime>
-	#endif
-
-	class RSrandom {
-
-	public:
-		RSrandom(std::int64_t);       // if int is negative, a random seed will be generated, else it is used as seed
-		~RSrandom(void);
-		mt19937 getRNG(void);
-		double Random(void);
-		int IRandom(int,int);
-		int Bernoulli(double);
-		double Normal(double,double);
-		int Poisson(double);
-	/* ADDITIONAL DISTRIBUTIONS
-		double Beta(double,double);
-		double Gamma(double,double); // !! make sure correct definition is used: using shape and scale (as defined here) OR using shape/alpha and rate/beta (=1/scale)
-		double Cauchy(double,double);
-	*/
-
-	private:
-		mt19937 *gen;
-		std::uniform_real_distribution<> *pRandom01;
-		std::normal_distribution<> *pNormal;
-	};
-
-
-
-#endif // !RS_RCPP
-
-#if RSDEBUG
+#ifdef UNIT_TESTS
 	void testRSrandom();
-#endif // RSDEBUG
+#endif // UNIT_TESTS
 
 //---------------------------------------------------------------------------
 

@@ -128,7 +128,7 @@ paramInit::paramInit(void) {
 	minSeedX = 0; maxSeedX = 99999999; minSeedY = 0; maxSeedY = 99999999;
 	nSeedPatches = 1; nSpDistPatches = 1;
 	indsFile = "NULL";
-	for (int i = 0; i < NSTAGES; i++) {
+	for (int i = 0; i < gMaxNbStages; i++) {
 		initProp[i] = 0.0;
 	}
 }
@@ -176,12 +176,12 @@ initParams paramInit::getInit(void) {
 }
 
 void paramInit::setProp(short stg, float p) {
-	if (stg >= 0 && stg < NSTAGES && p >= 0.0 && p <= 1.0) initProp[stg] = p;
+	if (stg >= 0 && stg < gMaxNbStages && p >= 0.0 && p <= 1.0) initProp[stg] = p;
 }
 
 float paramInit::getProp(short stg) {
 	float p = 0.0;
-	if (stg >= 0 && stg < NSTAGES) p = initProp[stg];
+	if (stg >= 0 && stg < gMaxNbStages) p = initProp[stg];
 	return p;
 }
 
@@ -210,29 +210,26 @@ int paramInit::numInitInds(void) { return (int)initinds.size(); }
 
 // Simulation parameters
 
-paramSim::paramSim(void) {
+paramSim::paramSim(const string& pathToProjDir) :
+	dir{pathToProjDir}
+{
 	simulation = 0;
 	reps = years = 1;
 	outIntRange = 1;
-	outStartPop = outStartInd = outStartGenetic = 0;
+	outStartPop = outStartInd = 0;
 	outStartTraitCell = outStartTraitRow = outStartConn = 0;
-	outIntOcc = outIntPop = outIntInd = outIntGenetic = 10;
+	outIntOcc = outIntPop = outIntInd = outputGeneticInterval = 10;
 	outIntTraitCell = outIntTraitRow = outIntConn = 10;
-	mapInt = traitInt = 10;
-	slowFactor = 1;
+	traitInt = 10;
 	batchMode = absorbing = false;
 	outRange = outOccup = outPop = outInds = false;
-	outGenetics = outGenXtab = false; outGenType = 0;
 	outTraitsCells = outTraitsRows = outConnect = false;
-	saveMaps = false; saveTraitMaps = false;
+	outputGenes = outputWeirCockerham = outputWeirHill = false;
 	saveVisits = false;
 #if RS_RCPP
 	outStartPaths = 0; outIntPaths = 0;
 	outPaths = false; ReturnPopRaster = false; CreatePopFile = true;
 #endif
-	viewLand = false; viewPatch = false; viewGrad = false; viewCosts = false;
-	viewPop = false; viewTraits = false; viewPaths = false; viewGraph = false;
-	dir = ' ';
 }
 
 paramSim::~paramSim(void) { }
@@ -242,21 +239,14 @@ void paramSim::setSim(simParams s) {
 	if (s.simulation >= 0) simulation = s.simulation;
 	if (s.reps >= 1) reps = s.reps;
 	if (s.years >= 1) years = s.years;
-	if (s.mapInt >= 1) mapInt = s.mapInt;
 	if (s.traitInt >= 1) traitInt = s.traitInt;
 	batchMode = s.batchMode; absorbing = s.absorbing;
 	outRange = s.outRange; outOccup = s.outOccup;
 	outPop = s.outPop; outInds = s.outInds;
-	outGenetics = s.outGenetics;
-	if (s.outGenType >= 0 && s.outGenType <= 2) {
-		outGenType = s.outGenType;
-	}
-	outGenXtab = s.outGenXtab;
 	outTraitsCells = s.outTraitsCells; outTraitsRows = s.outTraitsRows;
 	outConnect = s.outConnect;
 	if (s.outStartPop >= 0) outStartPop = s.outStartPop;
 	if (s.outStartInd >= 0) outStartInd = s.outStartInd;
-	if (s.outStartGenetic >= 0) outStartGenetic = s.outStartGenetic;
 	if (s.outStartTraitCell >= 0) outStartTraitCell = s.outStartTraitCell;
 	if (s.outStartTraitRow >= 0) outStartTraitRow = s.outStartTraitRow;
 	if (s.outStartConn >= 0) outStartConn = s.outStartConn;
@@ -264,11 +254,9 @@ void paramSim::setSim(simParams s) {
 	if (s.outIntOcc >= 1) outIntOcc = s.outIntOcc;
 	if (s.outIntPop >= 1) outIntPop = s.outIntPop;
 	if (s.outIntInd >= 1) outIntInd = s.outIntInd;
-	if (s.outIntGenetic >= 1) outIntGenetic = s.outIntGenetic;
 	if (s.outIntTraitCell >= 1) outIntTraitCell = s.outIntTraitCell;
 	if (s.outIntTraitRow >= 1) outIntTraitRow = s.outIntTraitRow;
 	if (s.outIntConn >= 1) outIntConn = s.outIntConn;
-	saveMaps = s.saveMaps; saveTraitMaps = s.saveTraitMaps;
 	saveVisits = s.saveVisits;
 #if RS_RCPP
 	outStartPaths = s.outStartPaths;
@@ -277,62 +265,55 @@ void paramSim::setSim(simParams s) {
 	ReturnPopRaster = s.ReturnPopRaster;
 	CreatePopFile = s.CreatePopFile;
 #endif
+	fixReplicateSeed = s.fixReplicateSeed;
 }
 
-simParams paramSim::getSim(void) {
+void paramSim::setGeneticSim(string patchSamplingOption, bool outputGeneticValues, bool outputWeirCockerham, bool outputWeirHill, int outputStartGenetics, int outputGeneticInterval) {
+	this->patchSamplingOption = patchSamplingOption;
+	this->outputGenes = outputGeneticValues;
+	this->outputWeirCockerham = outputWeirCockerham;
+	this->outputWeirHill = outputWeirHill;
+	this->outputStartGenetics = outputStartGenetics;
+	this->outputGeneticInterval = outputGeneticInterval;
+}
+
+simParams paramSim::getSim() {
 	simParams s;
 	s.batchNum = batchNum;
 	s.simulation = simulation; s.reps = reps; s.years = years;
 	s.outRange = outRange; s.outOccup = outOccup; s.outPop = outPop; s.outInds = outInds;
-	s.outGenetics = outGenetics; s.outGenType = outGenType; s.outGenXtab = outGenXtab;
 	s.outTraitsCells = outTraitsCells; s.outTraitsRows = outTraitsRows; s.outConnect = outConnect;
-	s.outStartPop = outStartPop; s.outStartInd = outStartInd; s.outStartGenetic = outStartGenetic;
+	s.outStartPop = outStartPop; s.outStartInd = outStartInd;
 	s.outStartTraitCell = outStartTraitCell; s.outStartTraitRow = outStartTraitRow;
 	s.outStartConn = outStartConn;
 	s.outIntRange = outIntRange;
 	s.outIntOcc = outIntOcc; s.outIntPop = outIntPop;
-	s.outIntInd = outIntInd; s.outIntGenetic = outIntGenetic;
+	s.outIntInd = outIntInd;
 	s.outIntTraitCell = outIntTraitCell;
 	s.outIntTraitRow = outIntTraitRow;
 	s.outIntConn = outIntConn;
 	s.batchMode = batchMode;
 	s.absorbing = absorbing;
-	s.saveMaps = saveMaps; s.saveTraitMaps = saveTraitMaps;
-	s.saveVisits = saveVisits;
-	s.mapInt = mapInt; s.traitInt = traitInt;
+	s.traitInt = traitInt;
 #if RS_RCPP
+	s.saveVisits = saveVisits;
 	s.outStartPaths = outStartPaths;
 	s.outIntPaths = outIntPaths;
 	s.outPaths = outPaths;
 	s.ReturnPopRaster = ReturnPopRaster;
 	s.CreatePopFile = CreatePopFile;
 #endif
+	s.patchSamplingOption = patchSamplingOption;
+	s.outputGeneValues = outputGenes;
+	s.outputWeirCockerham = outputWeirCockerham;
+	s.outputWeirHill = outputWeirHill;
+	s.outStartGenetics = outputStartGenetics;
+	s.outputGeneticInterval = outputGeneticInterval;
+
 	return s;
 }
 
 int paramSim::getSimNum(void) { return simulation; }
-
-void paramSim::setViews(simView v) {
-	viewLand = v.viewLand; viewPatch = v.viewPatch;
-	viewGrad = v.viewGrad; viewCosts = v.viewCosts;
-	viewPop = v.viewPop; viewTraits = v.viewTraits;
-	viewPaths = v.viewPaths; viewGraph = v.viewGraph;
-	if (v.slowFactor > 0) slowFactor = v.slowFactor;
-}
-
-simView paramSim::getViews(void) {
-	simView v;
-	v.viewLand = viewLand; v.viewPatch = viewPatch;
-	v.viewGrad = viewGrad; v.viewCosts = viewCosts;
-	v.viewPop = viewPop; v.viewTraits = viewTraits;
-	v.viewPaths = viewPaths; v.viewGraph = viewGraph;
-	v.slowFactor = slowFactor;
-	return v;
-}
-
-void paramSim::setDir(string s) {
-	dir = s;
-}
 
 // return directory name depending on option specified
 string paramSim::getDir(int option) {
@@ -368,12 +349,102 @@ string paramSim::getDir(int option) {
 	return s;
 }
 
+string to_string(const TraitType& tr) {
+	switch (tr)
+	{
+	case NEUTRAL: return "NEUTRAL";
+	case GENETIC_LOAD: return "GENETIC_LOAD";
+	case GENETIC_LOAD1: return "GENETIC_LOAD1";
+	case GENETIC_LOAD2: return "GENETIC_LOAD2";
+	case GENETIC_LOAD3: return "GENETIC_LOAD3";
+	case GENETIC_LOAD4: return "GENETIC_LOAD4";
+	case GENETIC_LOAD5: return "GENETIC_LOAD5";
+
+	case E_D0: return "E_D0";
+	case E_D0_M: return "E_D0_M";
+	case E_D0_F: return "E_D0_F";
+	case E_ALPHA: return "E_ALPHA";
+	case E_ALPHA_M: return "E_ALPHA_M";
+	case E_ALPHA_F: return "E_ALPHA_F";
+	case E_BETA: return "E_BETA";
+	case E_BETA_M: return "E_BETA_M";
+	case E_BETA_F: return "E_BETA_F";
+
+	case S_S0: return "S_S0";
+	case S_S0_M: return "S_S0_M";
+	case S_S0_F: return "S_S0_F";
+	case S_ALPHA: return "S_ALPHA";
+	case S_ALPHA_M: return "S_ALPHA_M";
+	case S_ALPHA_F: return "S_ALPHA_F";
+	case S_BETA: return "S_BETA";
+	case S_BETA_M: return "S_BETA_M";
+	case S_BETA_F: return "S_BETA_F";
+
+	case CRW_STEPLENGTH: return "CRW_STEPLENGTH";
+	case CRW_STEPCORRELATION: return "CRW_STEPCORRELATION";
+	case KERNEL_MEANDIST_1: return "KERNEL_MEANDIST_1";
+	case KERNEL_MEANDIST_2: return "KERNEL_MEANDIST_2";
+	case KERNEL_MEANDIST_1_F: return "KERNEL_MEANDIST_1_F";
+	case KERNEL_MEANDIST_2_F: return "KERNEL_MEANDIST_2_F";
+	case KERNEL_MEANDIST_1_M: return "KERNEL_MEANDIST_1_M";
+	case KERNEL_MEANDIST_2_M: return "KERNEL_MEANDIST_2_M";
+	case KERNEL_PROBABILITY: return "KERNEL_PROBABILITY";
+	case KERNEL_PROBABILITY_F: return "KERNEL_PROBABILITY_F";
+	case KERNEL_PROBABILITY_M: return "KERNEL_PROBABILITY_M";
+
+	case SMS_DP: return "SMS_DP";
+	case SMS_GB: return "SMS_GB";
+	case SMS_ALPHADB: return "SMS_ALPHADB";
+	case SMS_BETADB: return "SMS_BETADB";
+	case INVALID_TRAIT: return "INVALID_TRAIT";
+	default: return "";
+	}
+}
+
+string to_string(const GenParamType& param) {
+	switch (param)
+	{
+	case MEAN: return "MEAN";
+	case SD: return "SD";
+	case MIN: return "MIN";
+	case MAX: return "MAX";
+	case SHAPE: return "SHAPE";
+	case SCALE: return "SCALE";
+	case INVALID: return "INVALID";
+	default: return "";
+	}
+}
+
+string to_string(const DistributionType& dist) {
+	switch (dist)
+	{
+	case UNIFORM: return "UNIFORM";
+	case NORMAL: return "NORMAL";
+	case GAMMA: return "GAMMA";
+	case NEGEXP: return "NEGEXP";
+	case SCALED: return "SCALED";
+	case KAM: return "KAM";
+	case SSM: return "SSM";
+	case NONE: return "NONE";
+	default: return "";
+	}
+}
+
+string to_string(const ExpressionType& expr) {
+	switch (expr)
+	{
+	case AVERAGE: return "AVERAGE";
+	case ADDITIVE: return "ADDITIVE";
+	case NOTEXPR: return "NOTEXPR";
+	case MULTIPLICATIVE: return "MULTIPLICATIVE";
+	default: return "";
+	}
+}
+
 #if RS_RCPP
 bool paramSim::getReturnPopRaster(void) { return ReturnPopRaster; }
 bool paramSim::getCreatePopFile(void) { return CreatePopFile; }
 #endif
 
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 
