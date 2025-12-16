@@ -77,5 +77,5 @@ Dispersal kernel traits can also be **not** inherited, that is, allele values ar
 Dominance values are not applicable for dispersal kernel traits.
 }
 \author{
-Jette Reeg
+Jette Wolff
 }

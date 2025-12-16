@@ -55,5 +55,5 @@ They follow a similar structure, but some parameters and their specific options 
 -	A distribution to sample dominance coefficients from (restricted to genetic fitness traits). \cr
 }
 \author{
-Jette Reeg
+Jette Wolff
 }

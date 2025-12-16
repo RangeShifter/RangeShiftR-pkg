@@ -78,5 +78,5 @@ Settlement traits can also be **not** inherited, that is, allele values are resa
 Dominance values are not applicable for settlement traits.
 }
 \author{
-Jette Reeg
+Jette Wolff
 }

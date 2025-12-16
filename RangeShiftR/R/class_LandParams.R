@@ -300,7 +300,8 @@ setMethod("show", "ArtificialLandscape", function(object){
 #' Other, optional input maps are:\cr
 #' - Patch map(s) to define habitat patches - as filenames or matrices,\cr
 #' - SMS cost map(s) to define landscape resistance to - as filenames or matrices,\cr
-#' - a distribution map to define an initial species distribution - as filenames or matrices.
+#' - a distribution map to define an initial species distribution - as filenames or matrices, \cr
+#' - demographic scaling layers - as filenames or matrices.
 #'
 #' @usage ImportedLandscape(LandscapeFile,
 #'                  LandscapeMatrix,

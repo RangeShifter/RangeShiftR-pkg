@@ -89,7 +89,8 @@ For a dynamic landscape, the year in which each landscape is loaded has to be pr
 Other, optional input maps are:\cr
 - Patch map(s) to define habitat patches - as filenames or matrices,\cr
 - SMS cost map(s) to define landscape resistance to - as filenames or matrices,\cr
-- a distribution map to define an initial species distribution - as filenames or matrices.
+- a distribution map to define an initial species distribution - as filenames or matrices, \cr
+- demographic scaling layers - as filenames or matrices.
 }
 \details{
 \emph{RangeShiftR} requires all landscape related inputs to be either text files in ESRI ASCII raster format or matrices.
@@ -169,5 +170,5 @@ All provided maps must agree in resolution, extent and origin. \code{DynamicLand
 that years and maps can be matched. If a specific map is used multiple times, it must be listed each time nevertheless.
 }
 \author{
-Anne-Kathleen Malchow, Jette Reeg
+Anne-Kathleen Malchow, Jette Wolff
 }

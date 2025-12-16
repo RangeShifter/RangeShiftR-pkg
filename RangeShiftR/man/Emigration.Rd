@@ -123,5 +123,5 @@ emig_3 <- Emigration(DensDep = TRUE, IndVar = TRUE, SexDep = TRUE, EmigProb = 0)
 \insertAllCited{}
 }
 \author{
-Anne-Kathleen Malchow and Jette Reeg
+Anne-Kathleen Malchow and Jette Wolff
 }

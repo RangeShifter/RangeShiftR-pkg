@@ -102,5 +102,5 @@ The expression type of genetic load traits is always multiplicative.
 Initial values and inheritance is not applicable for genetic load traits.
 }
 \author{
-Jette Reeg
+Jette Wolff
 }

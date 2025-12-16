@@ -582,6 +582,7 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
                 Rcpp::Rcout << "Detected spatial demog:" << nDSlayer << " layers." << endl;
             }
             else ppLand.spatialdemog = false; // just to be sure
+            nDSlayer = 0;
         }
 
         if (nrDemogScaleLayers && !stagestruct) {
@@ -1437,11 +1438,12 @@ int ReadDynLandR(Landscape *pLandscape, Rcpp::S4 LandParamsR)
             } else {
                 // file input
                 std::vector<std::string> scaling_vec;
-
-                for (int i = 0; i < yearLayers_fname.size(); ++i) {
-                    string scaling_fname =Rcpp::as<std::string>(yearLayers_fname[i]);
-                    scaling_fname = paramsSim->getDir(1) + scaling_fname; // prepend input directory to the file name
-                    scaling_vec.push_back(scaling_fname);
+                if(nrDemogScaleLayers){
+                    for (int i = 0; i < yearLayers_fname.size(); ++i) {
+                        string scaling_fname =Rcpp::as<std::string>(yearLayers_fname[i]);
+                        scaling_fname = paramsSim->getDir(1) + scaling_fname; // prepend input directory to the file name
+                        scaling_vec.push_back(scaling_fname);
+                    }
                 }
 
                 imported = pLandscape->readLandChange(i-1, costs, hfile, pfile, cfile, habnodata, pchnodata, costnodata, scaling_vec);

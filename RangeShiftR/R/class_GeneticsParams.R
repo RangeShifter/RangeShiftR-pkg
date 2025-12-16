@@ -29,16 +29,16 @@
 #'
 #' A method to specify neutral traits in the genetic module.
 #'
-#' #' @usage NeutralTraits(Positions = "random", NbOfPositions = 10,
-#' Positions = "random", # "random" or list of integer values
-#' NbOfPositions = 10, # numeric, only of positions random
-#' InitialPositions = "all", # "random" or list of integer values
-#' InitialNbOfPositions = NULL, # numeric, only of positions random
-#' InitialDistribution = NULL, # uniform (neutral + dispersal), normal (dispersal)
-#' InitialParameters = 2, # neutral traits: only max value; dispersal: two values: either min/max oder mean+sd, not applicable for genetic load
-#' MutationDistribution = "KAM", # neutral: "KAM" or "SSM", genetic load: "gamma", "uniform", "normal", "negExp", dispersal: uniform or normal
-#' MutationParameters = 2, # single value or 2 values
-#' MutationRate = 0.0, # numeric
+#' @usage NeutralTraits(Positions = "random", NbOfPositions = 10,
+#' Positions = "random",
+#' NbOfPositions = 10,
+#' InitialPositions = "all",
+#' InitialNbOfPositions = NULL,
+#' InitialDistribution = NULL,
+#' InitialParameters = 2,
+#' MutationDistribution = "KAM",
+#' MutationParameters = 2,
+#' MutationRate = 0.0,
 #' OutputValues = FALSE)
 #'
 #' @param Positions Loci positions coding for trait within genome. Must be in the

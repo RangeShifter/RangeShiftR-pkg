@@ -92,5 +92,5 @@ The source as well as the destination sites are required to be habitat patches o
 \insertAllCited{}
 }
 \author{
-Jette Reeg
+Jette Wolff
 }

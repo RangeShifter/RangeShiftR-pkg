@@ -79,5 +79,5 @@ SMS traits can also be **not** inherited, that is, allele values are resampled f
 Dominance values are not applicable for SMS traits.
 }
 \author{
-Jette Reeg
+Jette Wolff
 }

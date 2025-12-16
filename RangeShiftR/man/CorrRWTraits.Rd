@@ -68,5 +68,5 @@ CorrRW traits can also be **not** inherited, that is, allele values are resample
 Dominance values are not applicable for CorrRW traits.
 }
 \author{
-Jette Reeg
+Jette Wolff
 }
