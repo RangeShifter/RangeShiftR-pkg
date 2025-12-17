@@ -39,7 +39,7 @@ setMethod("+", signature(e1 = "RSparams", e2 = "SimulationParams"), function(e1,
 setMethod("+", signature(e1 = "RSparams", e2 = "LandParams"), function(e1, e2) {
     validObject(e2)
     if (class(e2)[1] == "ImportedLandscape") {
-        if (any(e2@PatchFile=="NULL")) {
+        if (any(is.null(e2@PatchFile)) && length(e2@PatchMatrix)==0) {
             e1@control@patchmodel = FALSE
         }
         else {
@@ -54,13 +54,19 @@ setMethod("+", signature(e1 = "RSparams", e2 = "LandParams"), function(e1, e2) {
             e1@control@landtype = 0L
             e1@control@maxNhab = e2@Nhabitats
         }
-        if (e2@SpDistFile=="NULL") {
+        if (is.null(e2@SpDistFile) && length(e2@SpDistMatrix)==0) {
             e1@control@speciesdist = FALSE
             e1@control@distresolution = -9L
         }
         else {
             e1@control@speciesdist = TRUE
             e1@control@distresolution = e2@SpDistResolution
+        }
+        if(length(e2@LandscapeMatrix)>0){
+            e1@control@threadsafe = TRUE
+        }
+        if(e2@nrDemogScaleLayers>0){
+            e1@control@spatial_demography = TRUE
         }
     }
     if (class(e2)[1] == "ArtificialLandscape") {
@@ -154,6 +160,33 @@ setMethod("+", signature(e1 = "DispersalParams", e2 = "SettlementParams"), funct
 setMethod("+", signature(e1 = "RSparams", e2 = "GeneticsParams"), function(e1, e2) {
     validObject(e2)
     e1@gene <- e2
+    if (e2@OutputFstatsWeirCockerham || e2@OutputFstatsWeirHill) { # neutral traits are true as soon as the output is activated
+        # if(class(e2@Traits@Neutral)[1] == "NeutralTraitsParams") {
+            e1@control@neutralgenetics = TRUE
+        # }
+    }
+    else {
+        e1@control@neutralgenetics = FALSE
+    }
+    if (class(e2@Traits@GeneticLoad)[1] == "GeneticLoadParams") { # dispersal traits are checked later
+        e1@control@geneticload = TRUE
+    }
+    else {
+        e1@control@geneticload = FALSE
+    }
+
+    return(e1)}
+)
+
+setMethod("+", signature(e1 = "RSparams", e2 = "ManagementParams"), function(e1, e2) {
+    validObject(e2)
+    if (class(e2@Translocation)[1] == "TranslocationParams") {
+        e1@control@translocation = TRUE
+    }
+    else {
+        e1@control@translocation = FALSE
+    }
+    e1@management <- e2
     return(e1)}
 )
 

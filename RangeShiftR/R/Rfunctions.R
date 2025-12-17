@@ -37,6 +37,9 @@ setClassUnion("integer_OR_numeric", c("integer", "numeric"))
 #for Matrix and Numerical so that 'Matrix'-slots can also accept 'Numerical' input when 1x1-Matrix is expected
 setClassUnion("matrix_OR_numeric", c("matrix", "numeric"))
 
+#for Matrix and Logical so that 'Matrix'-slots can also accept 'Logical' input when 1x1-Matrix is expected
+setClassUnion("matrix_OR_logical", c("matrix", "logical"))
+
 #for cost layer to accept habitat codes or raster map file
 setClassUnion("numeric_OR_character", c("numeric", "character"))
 

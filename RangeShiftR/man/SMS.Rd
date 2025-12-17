@@ -23,28 +23,25 @@ mean\cr \eqn{3 = }Weighted arithmetic mean}
 (\code{DP}). A maximum of \eqn{14} steps is supported, default is \eqn{1}. (integer)}
 
 \item{DP}{Directional persistence. Corresponds to the tendency to follow a correlated random walk, must be \eqn{\ge 1.0}, defaults to \eqn{1.0}.\cr
-If \code{IndVar=TRUE}, expects a vector of length three specifying (Mean, SD, TraitScaleFactor) of \code{DP}.}
+If \code{IndVar=TRUE}, set to NULL and specify the SMSTraits in \code{\link[RangeShiftR]{SMSTraits}}.}
 
 \item{GoalType}{Goal bias type: \eqn{0 = } None (default), \eqn{2 = } Dispersal bias.}
 
-\item{GoalBias}{Only if \code{GoalType=2}: Goal bias strength. Must be must be \eqn{\ge 1.0}, defaults to \eqn{1.0}. \cr If \code{IndVar=TRUE}, expects a vector of length three
-specifying (Mean, SD, TraitScaleFactor) of \code{GoalBias}.}
+\item{GoalBias}{Only if \code{GoalType=2}: Goal bias strength. Must be must be \eqn{\ge 1.0}, defaults to \eqn{1.0}. \cr If \code{IndVar=TRUE},  set to NULL and specify the SMSTraits in \code{\link[RangeShiftR]{SMSTraits}}.}
 
-\item{AlphaDB}{Required if \code{GoalType=2}: Dispersal bias decay rate. Must be must be \eqn{> 0.0}.\cr If \code{IndVar=TRUE}, expects a vector of length three
-specifying (Mean, SD, TraitScaleFactor) of \code{AlphaDB}.}
+\item{AlphaDB}{Required if \code{GoalType=2}: Dispersal bias decay rate. Must be must be \eqn{> 0.0}.\cr If \code{IndVar=TRUE},  set to NULL and specify the SMSTraits in \code{\link[RangeShiftR]{SMSTraits}}.}
 
-\item{BetaDB}{Required if \code{GoalType=2}: Dispersal bias decay inflection point (given in number of steps). Must be must be \eqn{> 0.0}.\cr If \code{IndVar=TRUE},
-expects a vector of length three specifying (Mean, SD, TraitScaleFactor) of \code{BetaDB}.}
+\item{BetaDB}{Required if \code{GoalType=2}: Dispersal bias decay inflection point (given in number of steps). Must be must be \eqn{> 0.0}.\cr If \code{IndVar=TRUE},  set to NULL and specify the SMSTraits in \code{\link[RangeShiftR]{SMSTraits}}.}
 
-\item{IndVar}{Individual variability in SMS traits (i.e. \code{DP}, \code{GoalBias}, \code{AlphaDB} and \code{BetaDB})? Defaults to \code{FALSE}.}
+\item{IndVar}{Individual variability in SMS traits (i.e. \code{DP}, \code{GoalBias}, \code{AlphaDB} and \code{BetaDB})? Defaults to \code{FALSE}. If \code{TRUE}, specify the SMSTraits in \code{\link[RangeShiftR]{SMSTraits}}.}
 
 \item{Costs}{Describes the landscapes resistance to movement. Set either: \cr
  - \emph{habitat-specific} costs for each habitat type, or\cr
- - \code{"file"}, to indictae to use the \emph{cost raster} map(s) specified in the landscape module and import the cost values from them.\cr
+ - \code{"file" or "matrix"}, to indicate to use the \emph{cost raster} map(s) specified in the landscape module and import the cost values from them.\cr
 In the first case of \emph{habitat-specific} costs a numeric vector is expected with, respectively, length \code{Nhabitats} for an \code{\link[RangeShiftR]{ImportedLandscape}}
 with habitat codes (i.e. \code{HabPercent=FALSE})) or length \eqn{2} for an \code{\link[RangeShiftR]{ArtificialLandscape}} (matrix and habitat costs).\cr
-In the second case of importing a \emph{cost raster} file, specify the file name(s) in the \code{\link[RangeShiftR]{ImportedLandscape}} module.
-The specified map has to match the landscape raster in extent, coordinates and resolution, and each cell contains a cost value (\eqn{\ge 1}).
+In the second case of importing a \emph{cost raster} file or matrix, specify the file name(s) or matrices in the \code{\link[RangeShiftR]{ImportedLandscape}} module.
+The specified map or matrix has to match the landscape raster/matrix in extent, coordinates and resolution, and each cell contains a cost value (\eqn{\ge 1}).
 This is the only option for an imported landscape with habitat qualities / cover percentage (i.e. \code{HabPercent=TRUE}).}
 
 \item{StepMort}{Per-step mortality probability. Can be either \emph{constant}, in which case a single numeric is expected (the default, with
@@ -112,8 +109,7 @@ advisable to disable the feature (\code{StraightenPath=FALSE}), although care mu
 surrounded by very high cost matrix.
 
 When inter-individual variability is activated (set \code{IndVar=TRUE}), the four SMS movement traits \code{DP}, as well as - if dispersal goal bias
-is enabled - \code{GB}, \code{AlphaDB} and \code{BetaDB} can evolve.
-For each trait the population initial mean and standard deviations must be set (instead of the constant value), as well as its scaling factor
+is enabled - \code{GB}, \code{AlphaDB} and \code{BetaDB} can evolve. In this case, you must set the corresponding traits to \code{NULL} here and must specify them in the \code{\link[RangeShiftR]{SMSTraits}} module and set up the genetics
 (see \code{\link[RangeShiftR]{Genetics}}).\cr
 
 As currently implemented, there is no sex- or stage- dependence of SMS traits.
@@ -125,8 +121,8 @@ single replicate simulation, can be enabled with the option \code{SMSHeatMap} in
 Critical for the outcomes of SMS are the relative costs assigned to the different habitats (as it is also the case for
 the LCP approach). Habitat costs or resistance to movement can be set manually for each habitat code or imported as a raster map, which
 allows for costs to be a function of multiple variables instead of a simple value associated to the habitat type.
-In the latter case, the file names are provided in the \code{\link[RangeShiftR]{ImportedLandscape}} module.
-The specified map has to match the landscape raster in extent, coordinates and resolution, and each cell contains a cost value, with the minimal possible cost being \eqn{1}.
+In the latter case, the file names/matrices are provided in the \code{\link[RangeShiftR]{ImportedLandscape}} module.
+The specified map has to match the landscape raster/matrix in extent, coordinates and resolution, and each cell contains a cost value, with the minimal possible cost being \eqn{1}.
 Importing a cost layer is the only option when the landscape comprises habitat coverage or quality.
 
 \emph{Mortality} \cr

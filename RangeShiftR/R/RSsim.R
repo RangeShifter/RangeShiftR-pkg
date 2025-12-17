@@ -38,8 +38,10 @@
 #'       demog = Demography(Rmax = 1.5),
 #'       dispersal = Dispersal(),
 #'       gene = Genetics(),
+#'       management = Management(),
 #'       init = Initialise(),
-#'       seed = 0)
+#'       seed = 0,
+#'       fixreplicateseed = FALSE)
 #' @include class_RSparams.R
 #' @param batchnum Batch ID is part of output files names and can be used to prevent overwriting.
 #' @param simul Set \code{\link[RangeShiftR]{Simulation}} parameters
@@ -47,8 +49,10 @@
 #' @param demog Set \code{\link[RangeShiftR]{Demography}} parameters
 #' @param dispersal Set \code{\link[RangeShiftR]{Dispersal}} parameters
 #' @param gene Set \code{\link[RangeShiftR]{Genetics}} parameters
+#' @param management Set \code{\link[RangeShiftR]{Management}} parameters
 #' @param init Set \code{\link[RangeShiftR]{Initialise}} parameters
 #' @param seed Set seed for random number generator. If non-positive, a random seed will be generated.
+#' @param fixreplicateseed Use the same seed for all replicates.
 #' @return returns a \emph{RangeShiftR} parameter master object (class 'RSparams')
 #' @details
 #' \emph{Demographic stochasticity} \cr Demographic stochasticity is fundamentally important for the dynamics of populations that are naturally small or have declined to low abundances owing to
@@ -112,22 +116,26 @@ RSsim <- function(batchnum = 1L,
                   demog = NULL,
                   dispersal = NULL,
                   gene = NULL,
+                  management = NULL,
                   init = NULL,
-                  seed = 0L){
+                  seed = 0L,
+                  fixreplicateseed = FALSE){
     args <- as.list(match.call())
     # filter for names in ... that are also in slots(ControlParams) and pass them on
-    s <- RSparams(control = ControlParams(batchnum = batchnum, seed = seed),
+    s <- RSparams(control = ControlParams(batchnum = batchnum, seed = seed, fixreplicateseed = fixreplicateseed),
                   simul = Simulation(),
                   land = ArtificialLandscape(),
                   demog = Demography(Rmax = 1.5),
                   dispersal = Dispersal(),
                   gene = Genetics(),
+                  management = Management(),
                   init = Initialise())
     if (!is.null(args$land))  s <- s + land
     if (!is.null(args$simul)) s <- s + simul
     if (!is.null(args$demog)) s <- s + demog
     if (!is.null(args$dispersal))  s <- s + dispersal
     if (!is.null(args$gene))  s <- s + gene
+    if (!is.null(args$management))  s <- s + management
     if (!is.null(args$init))  s <- s + init
     # check validity
     if(validObject(s)) return(s)
