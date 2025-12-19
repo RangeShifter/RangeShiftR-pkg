@@ -7,7 +7,7 @@
 \usage{
 GeneticLoadTraits(NbGeneticLoads = 1, Positions = list("random"), NbOfPositions = 10,
 InitialPositions = list("all"), InitialNbOfPositions = NULL,
-InitialDistribution = "normal", InitialParameters = matrix(c(0.5,0.1), nrow=1),
+InitialAlleleDistribution = "normal", InitialAlleleParameters = matrix(c(0.5,0.1), nrow=1),
 InitialDomDistribution = "normal", InitialDomParameters = matrix(c(0.5,0.1), nrow=1),
 DominanceDistribution = "normal", DominanceParameters = matrix(c(0.5,0.1), nrow=1),
 MutationDistribution = "normal", MutationParameters = matrix(c(0.5,0.2), nrow=1),
@@ -25,11 +25,11 @@ and all other positions will be set to 0. Must be in the range  of \code{Positio
 
 \item{InitialNbOfPositions}{Only specify if \code{InitialPositions} for a genetic load is set to \code{"random"}, else must be blank (\code{NULL}). Cannot be greater than \code{NbOfPositions}}
 
-\item{InitialDistribution}{Distribution from which to draw initial allele values from. Can be \code{gamma}, \code{uniform}, \code{normal}, \code{negExp}. Should be provided as a vector of strings if \code{NbGeneticLoads > 1}}
+\item{InitialAlleleDistribution}{Distribution from which to draw initial allele values from. Can be \code{gamma}, \code{uniform}, \code{normal}, \code{negExp}. Should be provided as a vector of strings if \code{NbGeneticLoads > 1}}
 
-\item{InitialParameters}{Parameters for the initial distribution: You must provide two colums for \code{uniform}, \code{normal} and \code{gamma} distributions:
+\item{InitialAlleleParameters}{Parameters for the initial distribution: You must provide two colums for \code{uniform}, \code{normal} and \code{gamma} distributions:
 min and max (\code{uniform}), mean and sd (\code{normal}) or shape and scale (\code{gamma}) or one column for \code{negExp}: mean
-If genetic loads have different \code{InitialDistribution} and one requires two columns you need to set the second value to \code{NA} in case of \code{negExp} distribution.
+If genetic loads have different \code{InitialAlleleDistribution} and one requires two columns you need to set the second value to \code{NA} in case of \code{negExp} distribution.
 Each row in the matrix corresponds to a genetic load trait.}
 
 \item{InitialDomDistribution}{Distribution from which to draw initial dominance values. Can be \code{gamma}, \code{uniform}, \code{normal}, \code{negExp}, \code{scaled}. Should be provided as a vector of strings if \code{NbGeneticLoads > 1}}
@@ -99,7 +99,7 @@ of mutations and/or dominance distribution and associated parameters.
 
 The expression type of genetic load traits is always multiplicative.
 
-Initial values and inheritance is not applicable for genetic load traits.
+Inheritance is not applicable for genetic load traits.
 }
 \author{
 Jette Wolff

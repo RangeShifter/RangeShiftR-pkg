@@ -29,13 +29,13 @@
 #'
 #' A method to specify neutral traits in the genetic module.
 #'
-#' @usage NeutralTraits(Positions = "random", NbOfPositions = 10,
+#' @usage NeutralTraits(
 #' Positions = "random",
 #' NbOfPositions = 10,
 #' InitialPositions = "all",
 #' InitialNbOfPositions = NULL,
-#' InitialDistribution = NULL,
-#' InitialParameters = 2,
+#' InitialAlleleDistribution = NULL,
+#' InitialAlleleParameters = 2,
 #' MutationDistribution = "KAM",
 #' MutationParameters = 2,
 #' MutationRate = 0.0,
@@ -48,10 +48,10 @@
 #' @param InitialPositions  Specify which positions should be initialised. Must be "all", "random" or a vector of integers. If enabled, the remaining initial value parameters will only be applied to the selected positions,
 #' and all other positions will be set to 0. Must be in the range  of \code{Positions}.
 #' @param InitialNbOfPositions Only specify if \code{InitialPositions} is set to \code{"random"}, else must be blank (\code{NULL}). Cannot be greater than \code{NbOfPositions}
-#' @param InitialDistribution Distribution from which to draw initial allele values from.
+#' @param InitialAlleleDistribution Distribution from which to draw initial allele values from.
 #' If \code{uniform}. Initialise with random characters between 0 – \code{max}. Note that possible values start at 0, so \code{max=0}
 #' specifies a monomorphic initial population.
-#' @param InitialParameters Maximal value for the uniform distribution.
+#' @param InitialAlleleParameters Maximal value for the uniform distribution.
 #' @param MutationDistribution Distribution for mutations to draw from. Can be either \code{"KAM"} or \code{"SSM"}. \code{KAM} (k-alleles model) is randomly
 #' draw a value between 0 and \code{max} (see \code{MutationParameters}).
 #' \code{SSM} (single-step mutation) is to move in a stepwise manner, A to B, B to C.
@@ -62,13 +62,17 @@
 #'
 #' @details
 #'
-#' Neutral trait does not have any phenotypic effect during the simulation. It is used to compute F-statistics and other measures of neutral variation.
+#' A neutral trait can be specified to track the evolution of population structure and neutral variation.
+#' It is not expressed, and only used to compute neutral statistics.
+#'
 #' For neutral trait you must specify:
 #'
 #' -	The number and positions of genes controlling the trait: \code{Positions} and \code{NbOfPositions} \cr
-#' -	A distribution to sample initial values from: \code{InitialDistribution} and \code{InitialParameters} \cr
+#' -	Which positions should be initialized \code{InitialPositions} and in case of random positions the number of initial positions \code{InitialNbOfPositions}? \cr
+#' -    A distribution to sample initial allele values from: \code{InitialAlleleDistribution} and \code{InitialAlleleParameters} \cr
 #' -	A mutation rate for all genes controlling the trait. \code{MutationRate} \cr
 #' -	A distribution to sample mutations from. \code{MutationDistribution} and \code{MutationParameters} \cr
+#' -    Whether or not the allele values should be written to the output \code{OutputValues} \cr
 #'
 #' The user specifies the number of possible alleles for neutral loci (up to 256), via the maximum parameter of the mutation distribution.
 #' Initial values are either identical for all sites (equal to the max value) or sampled in a uniform distribution (between 0 and the maximum value).
@@ -87,8 +91,8 @@ NeutralTraits<- setClass("NeutralTraitsParams", slots = c(Positions = "ANY", # v
                                                          NbOfPositions = "ANY", # integer value or NULL
                                                          InitialPositions = "ANY", # vector of numbers or "random"
                                                          InitialNbOfPositions = "ANY", # integer value or NULL
-                                                         InitialDistribution = "character", # uniform
-                                                         InitialParameters = "integer_OR_numeric", # max value
+                                                         InitialAlleleDistribution = "character", # uniform
+                                                         InitialAlleleParameters = "integer_OR_numeric", # max value
                                                          MutationDistribution = "character", # KAM or SSM
                                                          MutationParameters = "integer_OR_numeric", # max
                                                          MutationRate = "integer_OR_numeric", # float
@@ -97,8 +101,8 @@ NeutralTraits<- setClass("NeutralTraitsParams", slots = c(Positions = "ANY", # v
                                       NbOfPositions = 10, # numeric, only if positions random
                                       InitialPositions = "all", # "random" or list of integer values
                                       InitialNbOfPositions = NULL, # numeric, only if positions random
-                                      InitialDistribution = NULL, # uniform
-                                      InitialParameters = 2, # neutral traits: only max value;
+                                      InitialAlleleDistribution = NULL, # uniform
+                                      InitialAlleleParameters = 2, # neutral traits: only max value;
                                       MutationDistribution = "KAM", # neutral: "KAM" or "SSM"
                                       MutationParameters = 2, # single value or 2 values
                                       MutationRate = 0.0, # numeric
@@ -145,25 +149,25 @@ setValidity("NeutralTraitsParams", function(object) {
         msg <- c(msg, "If InitialPositions is not random, InitialNbrOfPositions must not be set (NULL).")
     }
 
-    # Check InitialDistribution
-    if (object@InitialDistribution != "uniform") {
-        msg <- c(msg,"InitialDistribution must be uniform for the neutral trait.")
+    # Check InitialAlleleDistribution
+    if (object@InitialAlleleDistribution != "uniform") {
+        msg <- c(msg,"InitialAlleleDistribution must be uniform for the neutral trait.")
     }
-    # Check InitialParameters
-    if (object@InitialDistribution == "uniform") {
+    # Check InitialAlleleParameters
+    if (object@InitialAlleleDistribution == "uniform") {
         # should only be one value (max)
-        if (length(object@InitialParameters)!=1) {
-            msg <- c(msg, "For neutral traits with uniform initialisation, InitialParameters must only supply the maximal value")
+        if (length(object@InitialAlleleParameters)!=1) {
+            msg <- c(msg, "For neutral traits with uniform initialisation, InitialAlleleParameters must only supply the maximal value")
             }
             else {
-                if (object@InitialParameters > 255) {
+                if (object@InitialAlleleParameters > 255) {
                     msg <- c(msg, "For neutral trait with uniform initialisation, max parameter must be between 0 and 255.")
                 }
             }
         }
     ## if not uniform then initDist must be blank, no params
-    else if (is.null(object@InitialDistribution)) {
-        msg <- c(msg, "For neutral trait InitialDistribution must be uniform.")
+    else if (is.null(object@InitialAlleleDistribution)) {
+        msg <- c(msg, "For neutral trait InitialAlleleDistribution must be uniform.")
 
     }
     # Check mutation rate
@@ -206,8 +210,8 @@ setMethod("show", "NeutralTraitsParams", function(object){
     if(is.numeric(object@InitialPositions)) cat("     Initial loci positions coding for trait: ", object@Positions, "\n")
     if(!is.numeric(object@InitialPositions) && object@InitialPositions=="random") cat("    Initial loci positions coding for trait randomly chosen with ", object@NbOfPositions, " positions\n")
     if(!is.numeric(object@InitialPositions) && object@InitialPositions=="all") cat("    All loci positions chosen for initial loci positions\n")
-    cat("     Initial distribution: ", object@InitialDistribution, "\n")
-    cat("     Initial parameters: ", object@InitialParameters, "\n")
+    cat("     Initial distribution: ", object@InitialAlleleDistribution, "\n")
+    cat("     Initial parameters: ", object@InitialAlleleParameters, "\n")
     cat("     Mutation distribution: ", object@MutationDistribution, "\n")
     cat("     Mutation parameters: ", object@MutationParameters, "\n")
     cat("     Mutation rate: ", object@MutationRate, "\n")
@@ -225,7 +229,7 @@ setMethod("show", "NeutralTraitsParams", function(object){
 #'
 #' @usage GeneticLoadTraits(NbGeneticLoads = 1, Positions = list("random"), NbOfPositions = 10,
 #' InitialPositions = list("all"), InitialNbOfPositions = NULL,
-#' InitialDistribution = "normal", InitialParameters = matrix(c(0.5,0.1), nrow=1),
+#' InitialAlleleDistribution = "normal", InitialAlleleParameters = matrix(c(0.5,0.1), nrow=1),
 #' InitialDomDistribution = "normal", InitialDomParameters = matrix(c(0.5,0.1), nrow=1),
 #' DominanceDistribution = "normal", DominanceParameters = matrix(c(0.5,0.1), nrow=1),
 #' MutationDistribution = "normal", MutationParameters = matrix(c(0.5,0.2), nrow=1),
@@ -237,10 +241,10 @@ setMethod("show", "NeutralTraitsParams", function(object){
 #' @param InitialPositions Specify which positions should be initialised. Should be provided as a list of strings ("random" or "all") and/or vectors of integers (if not random). If enabled, the remaining initial value parameters will only be applied to the selected positions,
 #' and all other positions will be set to 0. Must be in the range  of \code{Positions}.
 #' @param InitialNbOfPositions Only specify if \code{InitialPositions} for a genetic load is set to \code{"random"}, else must be blank (\code{NULL}). Cannot be greater than \code{NbOfPositions}
-#' @param InitialDistribution Distribution from which to draw initial allele values from. Can be \code{gamma}, \code{uniform}, \code{normal}, \code{negExp}. Should be provided as a vector of strings if \code{NbGeneticLoads > 1}
-#' @param InitialParameters Parameters for the initial distribution: You must provide two colums for \code{uniform}, \code{normal} and \code{gamma} distributions:
+#' @param InitialAlleleDistribution Distribution from which to draw initial allele values from. Can be \code{gamma}, \code{uniform}, \code{normal}, \code{negExp}. Should be provided as a vector of strings if \code{NbGeneticLoads > 1}
+#' @param InitialAlleleParameters Parameters for the initial distribution: You must provide two colums for \code{uniform}, \code{normal} and \code{gamma} distributions:
 #' min and max (\code{uniform}), mean and sd (\code{normal}) or shape and scale (\code{gamma}) or one column for \code{negExp}: mean
-#' If genetic loads have different \code{InitialDistribution} and one requires two columns you need to set the second value to \code{NA} in case of \code{negExp} distribution.
+#' If genetic loads have different \code{InitialAlleleDistribution} and one requires two columns you need to set the second value to \code{NA} in case of \code{negExp} distribution.
 #' Each row in the matrix corresponds to a genetic load trait.
 #' @param InitialDomDistribution Distribution from which to draw initial dominance values. Can be \code{gamma}, \code{uniform}, \code{normal}, \code{negExp}, \code{scaled}. Should be provided as a vector of strings if \code{NbGeneticLoads > 1}
 #' @param InitialDomParameters Parameters for the initial dominance distribution: You must provide two colums for \code{uniform}, \code{normal} and \code{gamma} distributions:
@@ -296,7 +300,7 @@ setMethod("show", "NeutralTraitsParams", function(object){
 #'
 #' The expression type of genetic load traits is always multiplicative.
 #'
-#' Initial values and inheritance is not applicable for genetic load traits.
+#' Inheritance is not applicable for genetic load traits.
 #'
 #' @return a parameter object of class "GeneticLoadParams"
 #' @author Jette Wolff
@@ -308,8 +312,8 @@ GeneticLoadTraits<- setClass("GeneticLoadParams", slots = c(
     NbOfPositions = "ANY", # numeric, only where positions are random; otherwise NULL
     InitialPositions = "list", # "random" or list of integer values
     InitialNbOfPositions = "ANY", # numeric, only where initial positions are random; otherwise NULL
-    InitialDistribution = "ANY", #‘gamma’, ‘uniform’, ‘normal’,‘negExp’
-    InitialParameters = "ANY", # 2 values for min/max, mean/sd, shape/scale or one value: mean
+    InitialAlleleDistribution = "ANY", #‘gamma’, ‘uniform’, ‘normal’,‘negExp’
+    InitialAlleleParameters = "ANY", # 2 values for min/max, mean/sd, shape/scale or one value: mean
     InitialDomDistribution = "ANY", #  ‘gamma’, ‘uniform’, ‘normal’, ‘negExp’, ‘scaled’
     InitialDomParameters = "ANY", # 2 values for min/max, mean/sd, shape/scale or one value: mean
     DominanceDistribution = "character", # ‘gamma’, ‘uniform’, ‘normal’, ‘negExp’, ‘scaled’ # character vector
@@ -324,8 +328,8 @@ GeneticLoadTraits<- setClass("GeneticLoadParams", slots = c(
         NbOfPositions = 2L,
         InitialPositions = list("all"),
         InitialNbOfPositions = NULL, #
-        InitialDistribution = NULL, # "normal",
-        InitialParameters = NULL, # matrix(c(0.5,0.1), nrow=1),
+        InitialAlleleDistribution = NULL, # "normal",
+        InitialAlleleParameters = NULL, # matrix(c(0.5,0.1), nrow=1),
         InitialDomDistribution = NULL, # "normal",
         InitialDomParameters = NULL, # matrix(c(0.5,0.1), nrow=1),
         DominanceDistribution = "normal",
@@ -419,66 +423,66 @@ setValidity("GeneticLoadParams", function(object) {
         }
     }
 
-    # Check InitialDistribution given or NA
-    if (!is.null(object@InitialDistribution)){
+    # Check InitialAlleleDistribution given or NA
+    if (!is.null(object@InitialAlleleDistribution)){
         # if it is given, it should be character
-        if (class(object@InitialDistribution) != "character") {
-            msg <- c(msg, "InitialDistribution must be a character vector.")
+        if (class(object@InitialAlleleDistribution) != "character") {
+            msg <- c(msg, "InitialAlleleDistribution must be a character vector.")
         }
-        # and also InitialParameters should be numeric
-        if (class(object@InitialParameters)[1] != "matrix") {
-            msg <- c(msg, "InitialParameters must be a matrix.")
+        # and also InitialAlleleParameters should be numeric
+        if (class(object@InitialAlleleParameters)[1] != "matrix") {
+            msg <- c(msg, "InitialAlleleParameters must be a matrix.")
         }
-        if(length(object@InitialDistribution) != object@NbGeneticLoads) {
+        if(length(object@InitialAlleleDistribution) != object@NbGeneticLoads) {
             msg <- c(msg, "If you want to have initial allel distribution for one genetic load, you must provide it for all genetic load. If you don't want to set the initial allel value for some genetic loads, set it to NA for those.")
-        } else if (nrow(object@InitialParameters) != object@NbGeneticLoads) {
-            msg <- c(msg, "If you have set InitialDistributions for at least one genetic load you must provide the InitialParameters for each genetic load. Use one row for each genetic load.")
+        } else if (nrow(object@InitialAlleleParameters) != object@NbGeneticLoads) {
+            msg <- c(msg, "If you have set InitialAlleleDistributions for at least one genetic load you must provide the InitialAlleleParameters for each genetic load. Use one row for each genetic load.")
         } else {
-            # if any InitialDistribution is not 'normal', 'gamma', 'uniform', 'negExp' or 'scaled' OR NA
-            if (!all(object@InitialDistribution %in% c("uniform", "normal", "gamma", "negExp", NA))) {
-                msg <- c(msg, "InitialDistribution must be either normal, gamma, uniform, negExp, scaled or NA (if not initialized for a genetic load) for genetic load traits.")
+            # if any InitialAlleleDistribution is not 'normal', 'gamma', 'uniform', 'negExp' or 'scaled' OR NA
+            if (!all(object@InitialAlleleDistribution %in% c("uniform", "normal", "gamma", "negExp", NA))) {
+                msg <- c(msg, "InitialAlleleDistribution must be either normal, gamma, uniform, negExp, scaled or NA (if not initialized for a genetic load) for genetic load traits.")
             }
-            if (any(object@InitialDistribution[!is.na(object@InitialDistribution)] == "normal")) { # if any distribution is normal
+            if (any(object@InitialAlleleDistribution[!is.na(object@InitialAlleleDistribution)] == "normal")) { # if any distribution is normal
                 # two values for mean and sd
-                if (ncol(object@InitialParameters) !=2 || # if DominanceParameters has not 2 columns OR
-                    any(!is.numeric(object@InitialParameters[which(object@InitialDistribution=="normal"),])) || # if entries are not numeric
-                    any(is.na(object@InitialParameters[which(object@InitialDistribution=="normal"),]))) { # if entries are NA
+                if (ncol(object@InitialAlleleParameters) !=2 || # if DominanceParameters has not 2 columns OR
+                    any(!is.numeric(object@InitialAlleleParameters[which(object@InitialAlleleDistribution=="normal"),])) || # if entries are not numeric
+                    any(is.na(object@InitialAlleleParameters[which(object@InitialAlleleDistribution=="normal"),]))) { # if entries are NA
                     msg <- c(msg,"For a normal initial distribution, InitialParams must provide two values for mean (first column) and sd (second column)")
                 }
             }
-            if (any(object@InitialDistribution[!is.na(object@InitialDistribution)] == "gamma")) {
+            if (any(object@InitialAlleleDistribution[!is.na(object@InitialAlleleDistribution)] == "gamma")) {
                 # two values for shape and scale
-                if (ncol(object@InitialParameters) !=2 || # if DominanceParameters has not 2 columns OR
-                    any(!is.numeric(object@InitialParameters[which(object@InitialDistribution=="gamma"),])) || # if entries are not numeric
-                    any(is.na(object@InitialParameters[which(object@InitialDistribution=="gamma"),]))) { # if entries are NA
+                if (ncol(object@InitialAlleleParameters) !=2 || # if DominanceParameters has not 2 columns OR
+                    any(!is.numeric(object@InitialAlleleParameters[which(object@InitialAlleleDistribution=="gamma"),])) || # if entries are not numeric
+                    any(is.na(object@InitialAlleleParameters[which(object@InitialAlleleDistribution=="gamma"),]))) { # if entries are NA
                     msg <- c(msg,"For a gamma initial distribution, InitialParams must provide two values for shape (first column) and scale (second column)")
                 }
             }
-            if (any(object@InitialDistribution[!is.na(object@InitialDistribution)] == "uniform")) {
+            if (any(object@InitialAlleleDistribution[!is.na(object@InitialAlleleDistribution)] == "uniform")) {
                 # two values for min and max
-                if (ncol(object@InitialParameters) !=2 || # if DominanceParameters has not 2 columns OR
-                    any(!is.numeric(object@InitialParameters[which(object@InitialDistribution=="uniform"),])) || # if entries are not numeric
-                    any(is.na(object@InitialParameters[which(object@InitialDistribution=="uniform"),]))) { # if entries are NA
+                if (ncol(object@InitialAlleleParameters) !=2 || # if DominanceParameters has not 2 columns OR
+                    any(!is.numeric(object@InitialAlleleParameters[which(object@InitialAlleleDistribution=="uniform"),])) || # if entries are not numeric
+                    any(is.na(object@InitialAlleleParameters[which(object@InitialAlleleDistribution=="uniform"),]))) { # if entries are NA
                     msg <- c(msg,"For a uniform initial distribution, InitialParams must provide two values for min (first column) and max (second column)")
                 }
             }
-            if (all(object@InitialDistribution[!is.na(object@InitialDistribution)] == "negExp")) { # if it is only negExp or scaled
+            if (all(object@InitialAlleleDistribution[!is.na(object@InitialAlleleDistribution)] == "negExp")) { # if it is only negExp or scaled
                 # one value for mean and one NA
-                if (ncol(object@InitialParameters) !=1 || # if DominanceParameters has more than 1 column
-                    !is.numeric(object@InitialParameters[which(object@InitialDistribution == "negExp"),]) ||
-                    any(is.na(object@InitialParameters[which(object@InitialDistribution == "negExp"),]))
+                if (ncol(object@InitialAlleleParameters) !=1 || # if DominanceParameters has more than 1 column
+                    !is.numeric(object@InitialAlleleParameters[which(object@InitialAlleleDistribution == "negExp"),]) ||
+                    any(is.na(object@InitialAlleleParameters[which(object@InitialAlleleDistribution == "negExp"),]))
                 ) {
                     msg <- c(msg,"For negative exponential and scaled initial distribution, InitialParams must provide only one column for mean.")
                 }
             } else{
-                if (any(object@InitialDistribution[!is.na(object@InitialDistribution)] == "negExp")) { # if only some are scaled or negative exponential
+                if (any(object@InitialAlleleDistribution[!is.na(object@InitialAlleleDistribution)] == "negExp")) { # if only some are scaled or negative exponential
                     # one value for mean and one NA if other distributions need 2 values
-                    if (ncol(object@InitialParameters) !=2 || # if DominanceParameters has not 2 columns OR
-                        !is.numeric(object@InitialParameters) || # if entries are not numeric
-                        !all(is.na(object@InitialParameters[which(object@InitialDistribution=="negExp"),2])) || # second column is not NA
-                        any(is.na(object@InitialParameters[which(object@InitialDistribution=="negExp"),1])) # first column is NA
+                    if (ncol(object@InitialAlleleParameters) !=2 || # if DominanceParameters has not 2 columns OR
+                        !is.numeric(object@InitialAlleleParameters) || # if entries are not numeric
+                        !all(is.na(object@InitialAlleleParameters[which(object@InitialAlleleDistribution=="negExp"),2])) || # second column is not NA
+                        any(is.na(object@InitialAlleleParameters[which(object@InitialAlleleDistribution=="negExp"),1])) # first column is NA
                     ) {
-                        msg <- c(msg,"For the negative exponential initial distribution, InitialParameters must provide only one value for mean (first column) and the second column need to be NA if other genetic loads use other initial distributions.")
+                        msg <- c(msg,"For the negative exponential initial distribution, InitialAlleleParameters must provide only one value for mean (first column) and the second column need to be NA if other genetic loads use other initial distributions.")
                     }
                 }
             }
@@ -488,11 +492,11 @@ setValidity("GeneticLoadParams", function(object) {
     # Check InitialDomDistribution
     if (!is.null(object@InitialDomDistribution)){
         if (class(object@InitialDomDistribution) != "character") {
-            msg <- c(msg, "InitialDistribution must be a character vector.")
+            msg <- c(msg, "InitialAlleleDistribution must be a character vector.")
         }
-        # and also InitialParameters should be numeric
+        # and also InitialAlleleParameters should be numeric
         if (class(object@InitialDomParameters)[1] != "matrix") {
-            msg <- c(msg, "InitialParameters must be a matrix.")
+            msg <- c(msg, "InitialAlleleParameters must be a matrix.")
         }
         if(length(object@InitialDomDistribution) != object@NbGeneticLoads) {
             msg <- c(msg, "If you want to have initial dominance distribution for one genetic load, you must provide it for all genetic load. If you don't want to set the initial dominance value for some genetic loads, set it to NA for those.")
@@ -534,7 +538,7 @@ setValidity("GeneticLoadParams", function(object) {
                     !is.numeric(object@InitialDomParameters[which(object@InitialDomDistribution %in% c("negExp", "scaled")),]) ||
                     any(is.na(object@InitialDomParameters[which(object@InitialDomDistribution %in% c("negExp", "scaled")),]))
                 ) {
-                    msg <- c(msg,"For negative exponential and scaled initial dominance distribution, InitialParameters must provide only one column for mean.")
+                    msg <- c(msg,"For negative exponential and scaled initial dominance distribution, InitialAlleleParameters must provide only one column for mean.")
                 }
             } else{
                 if (any(object@InitialDomDistribution[!is.na(object@InitialDomDistribution)] == "scaled" %in% c("negExp", "scaled"))) { # if only some are scaled or negative exponential
@@ -546,7 +550,7 @@ setValidity("GeneticLoadParams", function(object) {
                         any(is.na(object@InitialDomParameters[which(object@InitialDomDistribution=="scaled"),1])) || # first column is NA
                         any(is.na(object@InitialDomParameters[which(object@InitialDomDistribution=="negExp"),1])) # first column is NA
                     ) {
-                        msg <- c(msg,"For the scaled or negative exponential initial dominance distribution, InitialParameters must provide only one value for mean (first column) and the second column need to be NA if other genetic loads use other initial dominance distributions.")
+                        msg <- c(msg,"For the scaled or negative exponential initial dominance distribution, InitialAlleleParameters must provide only one value for mean (first column) and the second column need to be NA if other genetic loads use other initial dominance distributions.")
                     }
                 }
             }
@@ -705,8 +709,8 @@ setMethod("show", "GeneticLoadParams", function(object){
         cat("     Configuration of genetic load ", i, ": \n")
         if(is.numeric(object@Positions[i])) cat("          Loci positions coding for trait: ", object@Positions[i], "\n")
         if(!is.numeric(object@Positions[i]) && object@Positions[i]=="random") cat("    Loci positions coding for trait randomly chosen with ", object@NbOfPositions[i], " positions\n")
-        cat("       Initial allel distribution: ", object@InitialDistribution[i], "\n")
-        cat("       Initial allel distribution parameter: ", object@InitialParameters[i,], "\n")
+        cat("       Initial allel distribution: ", object@InitialAlleleDistribution[i], "\n")
+        cat("       Initial allel distribution parameter: ", object@InitialAlleleParameters[i,], "\n")
         cat("       Initial dominance distribution: ", object@InitialDomDistribution[i], "\n")
         cat("       Initial dominance parameter: ", object@InitialDomParameters[i,], "\n")
         cat("       Dominance distribution: ", object@DominanceDistribution[i], "\n")
@@ -740,7 +744,9 @@ setMethod("show", "GeneticLoadParams", function(object){
 #' - 3 entries if emigration probability is only density dependent \code{DensDep=TRUE}:  \ifelse{html}{\out{D<sub>0</sub>}}{\eqn{D_0}}, \ifelse{html}{\out{&alpha;}}{\eqn{α}} and \ifelse{html}{\out{&beta;}}{\eqn{β}} \cr
 #' - 6 entries if emigration probability is both density dependent (\code{DensDep=TRUE}) and sex dependent (\code{SexDep=TRUE}): \ifelse{html}{\out{D<sub>0</sub>(f), D<sub>0</sub>(m)}}{\eqn{D_0(f),D_0(m)}}, \ifelse{html}{\out{&alpha;(f), &alpha;(m)}}{\eqn{α(f), α(m)}} and \ifelse{html}{\out{&beta;(f), &beta;(m)}}{\eqn{β(f), β(m)}} \cr
 #'
-#' The entries of the trait parameters must be provided in the same order as the emigration traits are listed above. If parameters expect a matrix, the rows must match the order of kernel traits listed above.
+#' The entries of the trait parameters must be provided in the same order as the emigration traits are listed above. If parameters expect a matrix, the rows must match the order of emigration traits listed above.
+#'
+#'
 #' @details
 #'
 #' Traits set to evolve cannot simultaneously be stage-dependent.
@@ -755,12 +761,16 @@ setMethod("show", "GeneticLoadParams", function(object){
 #'
 #' Dominance values are not applicable for emigration traits.
 #'
-#' @usage EmigrationTraits(Positions = list("random"), NbOfPositions = 10,
+#' @usage EmigrationTraits(Positions = list("random"),
+#' NbOfPositions = 10,
 #' ExpressionType = "additive",
-#' InitialDistribution = "normal", InitialParameters = matrix(c(0.5,0.1), nrow=1),
+#' InitialAlleleDistribution = "normal",
+#' InitialAlleleParameters = matrix(c(0.5,0.1), nrow=1),
 #' IsInherited = FALSE,
-#' MutationDistribution = "normal", MutationParameters = matrix(c(0.5,0.2), nrow=1),
-#' MutationRate = 0.0001, OutputValues = FALSE)
+#' MutationDistribution = "normal",
+#' MutationParameters = matrix(c(0.5,0.2), nrow=1),
+#' MutationRate = 0.0001,
+#' OutputValues = FALSE)
 #'
 #' @param Positions Loci positions coding for the trait within genome. Should be provided as a list. Entries can either be a string (\code{"random"}) and/or vectors of integers.
 #' The length must be equal to the number of required emigration traits (see above) and the sequence must match the sequence of the emigration traits listed above.
@@ -768,9 +778,9 @@ setMethod("show", "GeneticLoadParams", function(object){
 #' The length must be equal to the number of required emigration traits (see above) and the sequence must match the sequence of the emigration traits listed above.
 #' @param ExpressionType Type of expression for the emigration trait. Can be either \code{additive} or \code{average}.
 #' The length must be equal to the number of required emigration traits (see above) and the sequence must match the sequence of the emigration traits listed above.
-#' @param InitialDistribution Distribution of the initial values. Can be \code{uniform} or \code{normal}. Should be provided as a vector of strings.
+#' @param InitialAlleleDistribution Distribution of the initial values. Can be \code{uniform} or \code{normal}. Should be provided as a vector of strings.
 #' The length must be equal to the number of required emigration traits (see above) and the sequence must match the sequence of the emigration traits listed above.
-#' @param InitialParameters Parameters for the initial distribution: You must provide two colums min and max for \code{uniform} distribution and mean and sd for \code{normal} distribution.
+#' @param InitialAlleleParameters Parameters for the initial distribution: You must provide two colums min and max for \code{uniform} distribution and mean and sd for \code{normal} distribution.
 #' Each row in the matrix corresponds to an emigration trait. The number of rows must be equal to the number of required emigration traits (see above) and the sequence must match the sequence of the emigration traits listed above.
 #' @param IsInherited Should the emigration trait be inherited? Can be either \code{TRUE} or \code{FALSE}.
 #' The length must be equal to the number of required emigration traits (see above) and the sequence must match the sequence of the emigration traits listed above.
@@ -792,8 +802,8 @@ setMethod("show", "GeneticLoadParams", function(object){
 EmigrationTraits<- setClass("EmigrationTraitsParams", slots = c(Positions = "list", #
                                                                 NbOfPositions = "ANY", # random or list of integer values
                                                                 ExpressionType = "character", # additive or average
-                                                                InitialDistribution = "character", # uniform or normal
-                                                                InitialParameters = "matrix", # min and max value or mean and sd
+                                                                InitialAlleleDistribution = "character", # uniform or normal
+                                                                InitialAlleleParameters = "matrix", # min and max value or mean and sd
                                                                 IsInherited = "logical", # T/F
                                                                 MutationDistribution = "character", # uniform or normal
                                                                 MutationParameters = "matrix", # min mx or mean sd
@@ -805,8 +815,8 @@ EmigrationTraits<- setClass("EmigrationTraitsParams", slots = c(Positions = "lis
                                                                     Positions = list("random"), # "random" or list of integer values
                                                                     NbOfPositions = 2L, # numeric, only of positions random
                                                                     ExpressionType = "average", # dispersal: "additive" or "average"
-                                                                    InitialDistribution = "uniform", # uniform , normal (dispersal)
-                                                                    InitialParameters = matrix(c(0.5,0.1), nrow=1), # dispersal: two values: either min/max oder mean+sd
+                                                                    InitialAlleleDistribution = "uniform", # uniform , normal (dispersal)
+                                                                    InitialAlleleParameters = matrix(c(0.5,0.1), nrow=1), # dispersal: two values: either min/max oder mean+sd
                                                                     IsInherited = FALSE, # only for dispersal
                                                                     MutationDistribution = "uniform", # dispersal: uniform or normal
                                                                     MutationParameters = matrix(c(0.5,0.1), nrow=1), # single value or 2 values
@@ -857,20 +867,20 @@ setValidity("EmigrationTraitsParams", function(object) {
         msg <- c(msg, "In EmigrationTraits(): ExpressionType must be either additive or average.")
     }
 
-    # Check InitialDistribution and InitialParameter: Distribution must be uniform or normal and the length of the list must be the same as the number of positions
-    if (!all(object@InitialDistribution %in% c("uniform", "normal"))) {
-        msg <- c(msg, "In EmigrationTraits(): InitialDistribution must be either normal, or uniform.")
+    # Check InitialAlleleDistribution and InitialParameter: Distribution must be uniform or normal and the length of the list must be the same as the number of positions
+    if (!all(object@InitialAlleleDistribution %in% c("uniform", "normal"))) {
+        msg <- c(msg, "In EmigrationTraits(): InitialAlleleDistribution must be either normal, or uniform.")
     }
 
-    if(length(object@InitialDistribution) != length(object@Positions)) {
-        msg <- c(msg, "In EmigrationTraits(): For each emigration parameter you must provide the InitialDistribution.")
-    } else if (nrow(object@InitialParameters) != length(object@Positions)) {
-        msg <- c(msg, "In EmigrationTraits(): For each emigration parameter you must provide the InitialParameters. Use one row for each emigration parameter. Check the R help file ?EmigrationTraits for the structure of the matrix.")
+    if(length(object@InitialAlleleDistribution) != length(object@Positions)) {
+        msg <- c(msg, "In EmigrationTraits(): For each emigration parameter you must provide the InitialAlleleDistribution.")
+    } else if (nrow(object@InitialAlleleParameters) != length(object@Positions)) {
+        msg <- c(msg, "In EmigrationTraits(): For each emigration parameter you must provide the InitialAlleleParameters. Use one row for each emigration parameter. Check the R help file ?EmigrationTraits for the structure of the matrix.")
     } else {
         # two columns are necessary for mean and sd or min and max
-        if (ncol(object@InitialParameters) !=2 || # if DominanceParameters has not 2 columns OR
-            any(!is.numeric(object@InitialParameters)) || # if entries are not numeric
-            any(is.na(object@InitialParameters))) { # if entries are NA
+        if (ncol(object@InitialAlleleParameters) !=2 || # if DominanceParameters has not 2 columns OR
+            any(!is.numeric(object@InitialAlleleParameters)) || # if entries are not numeric
+            any(is.na(object@InitialAlleleParameters))) { # if entries are NA
             msg <- c(msg,"In EmigrationTraits(): For the initial distributions, InitialParams must provide two values for mean (normal) or min (uniform) (first column) and sd (normal) or max (uniform) (second column)")
         }
     }
@@ -948,8 +958,8 @@ setMethod("show", "EmigrationTraitsParams", function(object){
         if(is.numeric(object@Positions[i])) cat("     Loci positions coding for trait: ", object@Positions[i], "\n")
         if(!is.numeric(object@Positions[i]) && object@Positions[i]=="random") cat("    Loci positions coding for trait randomly chosen with ", object@NbOfPositions[i], " positions\n")
         cat("       Expression type: ", object@ExpressionType[i], "\n")
-        cat("       Initial distribution: ", object@InitialDistribution[i], "\n")
-        cat("       Initial parameter: ", object@InitialParameters[i,], "\n")
+        cat("       Initial distribution: ", object@InitialAlleleDistribution[i], "\n")
+        cat("       Initial parameter: ", object@InitialAlleleParameters[i,], "\n")
         cat("       IsInherited: ", object@IsInherited[i], "\n")
         cat("       Mutation distribution: ", object@MutationDistribution[i], "\n")
         cat("       Mutation parameters: ", object@MutationParameters[i,], "\n")
@@ -978,7 +988,7 @@ setMethod("show", "EmigrationTraitsParams", function(object){
 #' - 3 entries/rows if settlement probability is not sex dependent \code{SexDep=FALSE}:  \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}}, \eqn{α} and \eqn{β} \cr
 #' - 6 entries/rows if settlement probability is sex dependent (\code{SexDep=TRUE}): \ifelse{html}{\out{S<sub>0</sub>(f), S<sub>0</sub>(m)}}{\eqn{S_0(f),S_0(m)}}, \ifelse{html}{\out{&alpha;(f), &alpha;(m)}}{\eqn{α(f), α(m)}} and \ifelse{html}{\out{&beta;(f), &beta;(m)}}{\eqn{β(f), β(m)}} \cr
 #'
-#' The entries of the trait parameters must be provided in the same order as the kernel traits are listed above. If parameters expect a matrix, the rows must match the order of kernel traits listed above.
+#' The entries of the trait parameters must be provided in the same order as the kernel traits are listed above. If parameters expect a matrix, the rows must match the order of settlement traits listed above.
 #'
 #' @details
 #'
@@ -995,12 +1005,16 @@ setMethod("show", "EmigrationTraitsParams", function(object){
 #' Dominance values are not applicable for settlement traits.
 #'
 #'
-#' @usage SettlementTraits(Positions = list("random","random","random"), NbOfPositions = c(10, 10, 10),
+#' @usage SettlementTraits(Positions = list("random","random","random"),
+#' NbOfPositions = c(10, 10, 10),
 #' ExpressionType = rep("additive",3),
-#' InitialDistribution = rep("normal",3), InitialParameters = matrix(c(rep(0.5,3),(rep(0.1,3), nrow=3),
+#' InitialAlleleDistribution = rep("normal",3),
+#' InitialAlleleParameters = matrix(c(rep(0.5,3),(rep(0.1,3), nrow=3),
 #' IsInherited = rep(FALSE,3),
-#' MutationDistribution = rep("normal",3), MutationParameters = matrix(c(rep(0.5,3),(rep(0.2,3), nrow=3),
-#' MutationRate = rep(0.0001,3), OutputValues = rep(FALSE,3))
+#' MutationDistribution = rep("normal",3),
+#' MutationParameters = matrix(c(rep(0.5,3),(rep(0.2,3), nrow=3),
+#' MutationRate = rep(0.0001,3),
+#' OutputValues = rep(FALSE,3))
 #'
 #' @param Positions Loci positions coding for the trait within genome. Should be provided as a list. Entries can either be a string (\code{"random"}) and/or vectors of integers.
 #' The length must be equal to the number of required settlement traits (see above) and the sequence must match the sequence of the settlement traits listed above.
@@ -1008,9 +1022,9 @@ setMethod("show", "EmigrationTraitsParams", function(object){
 #' The length must be equal to the number of required settlement traits (see above) and the sequence must match the sequence of the settlement traits listed above.
 #' @param ExpressionType Type of expression for the settlement trait. Can be either \code{additive} or \code{average}.
 #' The length must be equal to the number of required settlement traits (see above) and the sequence must match the sequence of the settlement traits listed above.
-#' @param InitialDistribution Distribution of the initial values. Can be \code{uniform} or \code{normal}. Should be provided as a vector of strings.
+#' @param InitialAlleleDistribution Distribution of the initial values. Can be \code{uniform} or \code{normal}. Should be provided as a vector of strings.
 #' The length must be equal to the number of required settlement traits (see above) and the sequence must match the sequence of the settlement traits listed above.
-#' @param InitialParameters Parameters for the initial distribution: You must provide two colums min and max  for \code{uniform} distribution and mean and sd for \code{normal} distribution.
+#' @param InitialAlleleParameters Parameters for the initial distribution: You must provide two colums min and max  for \code{uniform} distribution and mean and sd for \code{normal} distribution.
 #' Each row in the matrix corresponds to an settlement trait. The number of rows must be equal to the number of required settlement traits (see above) and the sequence must match the sequence of the settlement traits listed above.
 #' @param IsInherited Should the settlement trait be inherited? Can be either TRUE or FALSE.
 #' The length must be equal to the number of required settlement traits (see above) and the sequence must match the sequence of the settlement traits listed above.
@@ -1031,8 +1045,8 @@ setMethod("show", "EmigrationTraitsParams", function(object){
 SettlementTraits<- setClass("SettlementTraitsParams", slots = c(Positions = "list", #
                                                                 NbOfPositions = "ANY", # random or list of integer values
                                                                 ExpressionType = "character", # additive or average
-                                                                InitialDistribution = "character", # uniform or normal
-                                                                InitialParameters = "matrix", # min and max value or mean and sd
+                                                                InitialAlleleDistribution = "character", # uniform or normal
+                                                                InitialAlleleParameters = "matrix", # min and max value or mean and sd
                                                                 IsInherited = "logical", # T/F
                                                                 MutationDistribution = "character", # uniform or normal
                                                                 MutationParameters = "matrix", # min mx or mean sd
@@ -1042,8 +1056,8 @@ SettlementTraits<- setClass("SettlementTraitsParams", slots = c(Positions = "lis
                                 Positions = list("random", "random", "random"), # "random" or list of integer values
                                 NbOfPositions = c(2, 2, 2), # numeric, only of positions random
                                 ExpressionType = rep("additive",3), # dispersal: "additive" or "average"
-                                InitialDistribution = rep("uniform",3), # uniform , normal (dispersal)
-                                InitialParameters = matrix(c(0.5,0.5,0.5,0.1,0.1,0.1), nrow=3), # dispersal: two values: either min/max oder mean+sd
+                                InitialAlleleDistribution = rep("uniform",3), # uniform , normal (dispersal)
+                                InitialAlleleParameters = matrix(c(0.5,0.5,0.5,0.1,0.1,0.1), nrow=3), # dispersal: two values: either min/max oder mean+sd
                                 IsInherited = rep(FALSE, 3), # only for dispersal
                                 MutationDistribution = rep("uniform",3), # dispersal: uniform or normal
                                 MutationParameters = matrix(c(0.5,0.5,0.5,0.1,0.1,0.1), nrow=3), # single value or 2 values
@@ -1094,20 +1108,20 @@ setValidity("SettlementTraitsParams", function(object) {
         msg <- c(msg, "In SettlementTraits(): ExpressionType must be either additive or average.")
     }
 
-    # Check InitialDistribution and InitialParameter: Distribution must be uniform or normal and the length of the list must be the same as the number of positions
-    if (!all(object@InitialDistribution %in% c("uniform", "normal"))) {
-        msg <- c(msg, "In SettlementTraits(): InitialDistribution must be either normal, or uniform.")
+    # Check InitialAlleleDistribution and InitialParameter: Distribution must be uniform or normal and the length of the list must be the same as the number of positions
+    if (!all(object@InitialAlleleDistribution %in% c("uniform", "normal"))) {
+        msg <- c(msg, "In SettlementTraits(): InitialAlleleDistribution must be either normal, or uniform.")
     }
 
-    if(length(object@InitialDistribution) != length(object@Positions)) {
-        msg <- c(msg, "In SettlementTraits(): For each settlement parameter you must provide the InitialDistribution.")
-    } else if (nrow(object@InitialParameters) != length(object@Positions)) {
-        msg <- c(msg, "In SettlementTraits(): For each settlement parameter you must provide the InitialParameters. Use one row for each settlement parameter. Check the R help file ?SettlementTraits for the structure of the matrix.")
+    if(length(object@InitialAlleleDistribution) != length(object@Positions)) {
+        msg <- c(msg, "In SettlementTraits(): For each settlement parameter you must provide the InitialAlleleDistribution.")
+    } else if (nrow(object@InitialAlleleParameters) != length(object@Positions)) {
+        msg <- c(msg, "In SettlementTraits(): For each settlement parameter you must provide the InitialAlleleParameters. Use one row for each settlement parameter. Check the R help file ?SettlementTraits for the structure of the matrix.")
     } else {
         # two columns are necessary for mean and sd or min and max
-        if (ncol(object@InitialParameters) !=2 || # if DominanceParameters has not 2 columns OR
-            any(!is.numeric(object@InitialParameters)) || # if entries are not numeric
-            any(is.na(object@InitialParameters))) { # if entries are NA
+        if (ncol(object@InitialAlleleParameters) !=2 || # if DominanceParameters has not 2 columns OR
+            any(!is.numeric(object@InitialAlleleParameters)) || # if entries are not numeric
+            any(is.na(object@InitialAlleleParameters))) { # if entries are NA
             msg <- c(msg,"In SettlementTraits(): For the initial distributions, InitialParams must provide two values for mean (normal) or min (uniform) (first column) and sd (normal) or max (uniform) (second column)")
         }
     }
@@ -1179,8 +1193,8 @@ setMethod("show", "SettlementTraitsParams", function(object){
         if(is.numeric(object@Positions[i])) cat("     Loci positions coding for trait: ", object@Positions[i], "\n")
         if(!is.numeric(object@Positions[i]) && object@Positions[i]=="random") cat("    Loci positions coding for trait randomly chosen with ", object@NbOfPositions[i], " positions\n")
         cat("       Expression type: ", object@ExpressionType[i], "\n")
-        cat("       Initial distribution: ", object@InitialDistribution[i], "\n")
-        cat("       Initial parameter: ", object@InitialParameters[i,], "\n")
+        cat("       Initial distribution: ", object@InitialAlleleDistribution[i], "\n")
+        cat("       Initial parameter: ", object@InitialAlleleParameters[i,], "\n")
         cat("       IsInherited: ", object@IsInherited[i], "\n")
         cat("       Mutation distribution: ", object@MutationDistribution[i], "\n")
         cat("       Mutation parameters: ", object@MutationParameters[i,], "\n")
@@ -1225,12 +1239,16 @@ setMethod("show", "SettlementTraitsParams", function(object){
 #'
 #' Dominance values are not applicable for dispersal kernel traits.
 #'
-#' @usage KernelTraits(Positions = list("random"), NbOfPositions = c(10),
+#' @usage KernelTraits(Positions = list("random"),
+#' NbOfPositions = c(10),
 #' ExpressionType = rep("additive",1),
-#' InitialDistribution = rep("normal",1), InitialParameters = matrix(c(rep(0.5,1),(rep(0.1,1), nrow=1),
+#' InitialAlleleDistribution = rep("normal",1),
+#' InitialAlleleParameters = matrix(c(rep(0.5,1),(rep(0.1,1), nrow=1),
 #' IsInherited = rep(FALSE,1),
-#' MutationDistribution = rep("normal",1), MutationParameters = matrix(c(rep(0.5,1),(rep(0.2,1), nrow=1),
-#' MutationRate = rep(0.0001,1), OutputValues = rep(FALSE,1))
+#' MutationDistribution = rep("normal",1),
+#' MutationParameters = matrix(c(rep(0.5,1),(rep(0.2,1), nrow=1),
+#' MutationRate = rep(0.0001,1),
+#' OutputValues = rep(FALSE,1))
 #'
 #' @param Positions Loci positions coding for the trait within genome. Should be provided as a list. Entries can either be a string (\code{"random"}) and/or vectors of integers.
 #' The length must be equal to the number of required kernel traits (see above) and the sequence must match the sequence of the kernel traits listed above.
@@ -1238,9 +1256,9 @@ setMethod("show", "SettlementTraitsParams", function(object){
 #' The length must be equal to the number of required kernel traits (see above) and the sequence must match the sequence of the kernel traits listed above.
 #' @param ExpressionType Type of expression for the emigration trait. Can be either \code{additive} or \code{average}.
 #' The length must be equal to the number of required kernel traits (see above) and the sequence must match the sequence of the kernel traits listed above.
-#' @param InitialDistribution Distribution of the initial values. Can be \code{uniform} or \code{normal}. Should be provided as a vector of strings.
+#' @param InitialAlleleDistribution Distribution of the initial values. Can be \code{uniform} or \code{normal}. Should be provided as a vector of strings.
 #' The length must be equal to the number of required kernel traits (see above) and the sequence must match the sequence of the kernel traits listed above.
-#' @param InitialParameters Parameters for the initial distribution: You must provide two colums min and max  for \code{uniform} distribution and mean and sd for \code{normal} distribution.
+#' @param InitialAlleleParameters Parameters for the initial distribution: You must provide two colums min and max  for \code{uniform} distribution and mean and sd for \code{normal} distribution.
 #' Each row in the matrix corresponds to an emigration trait. The number of rows must be equal to the number of required emigration traits (see above) and the sequence must match the sequence of the emigration traits listed above.
 #' @param IsInherited Should the emigration trait be inherited? Can be either \code{TRUE} or \code{FALSE}.
 #' The length must be equal to the number of required kernel traits (see above) and the sequence must match the sequence of the kernel traits listed above.
@@ -1260,8 +1278,8 @@ setMethod("show", "SettlementTraitsParams", function(object){
 KernelTraits<- setClass("KernelTraitsParams", slots = c(Positions = "list", #
                                                         NbOfPositions = "ANY", # random or list of integer values
                                                         ExpressionType = "character", # additive or average
-                                                        InitialDistribution = "character", # uniform or normal
-                                                        InitialParameters = "matrix", # min and max value or mean and sd
+                                                        InitialAlleleDistribution = "character", # uniform or normal
+                                                        InitialAlleleParameters = "matrix", # min and max value or mean and sd
                                                         IsInherited = "logical", # T/F
                                                         MutationDistribution = "character", # uniform or normal
                                                         MutationParameters = "matrix", # min mx or mean sd
@@ -1271,8 +1289,8 @@ KernelTraits<- setClass("KernelTraitsParams", slots = c(Positions = "list", #
                             Positions = list("random"), # "random" or list of integer values
                             NbOfPositions = 2L, # numeric, only of positions random
                             ExpressionType = "additive", # dispersal: "additive" or "average"
-                            InitialDistribution = "uniform", # uniform , normal (dispersal)
-                            InitialParameters = matrix(c(0.5,0.1), nrow=1), # dispersal: two values: either min/max oder mean+sd
+                            InitialAlleleDistribution = "uniform", # uniform , normal (dispersal)
+                            InitialAlleleParameters = matrix(c(0.5,0.1), nrow=1), # dispersal: two values: either min/max oder mean+sd
                             IsInherited = FALSE, # only for dispersal
                             MutationDistribution = "uniform", # dispersal: uniform or normal
                             MutationParameters = matrix(c(0.5,0.1), nrow=1), # single value or 2 values
@@ -1325,21 +1343,21 @@ setValidity("KernelTraitsParams", function(object) {
         msg <- c(msg, "In KernelTraits(): ExpressionType must be either additive or average.")
     }
 
-    # Check InitialDistribution and InitialParameter: Distribution must be uniform or normal and the length of the list must be the same as the number of positions
-    if (!(length(object@InitialDistribution) %in% c(1,2,3,6))){
-        msg <- c(msg, "In KernelTraits(): You must provide the InitialDistribution for each kernel trait.")
+    # Check InitialAlleleDistribution and InitialParameter: Distribution must be uniform or normal and the length of the list must be the same as the number of positions
+    if (!(length(object@InitialAlleleDistribution) %in% c(1,2,3,6))){
+        msg <- c(msg, "In KernelTraits(): You must provide the InitialAlleleDistribution for each kernel trait.")
     }
-    if (!all(object@InitialDistribution %in% c("uniform", "normal"))) {
-        msg <- c(msg, "In KernelTraits(): InitialDistribution must be either normal, or uniform.")
+    if (!all(object@InitialAlleleDistribution %in% c("uniform", "normal"))) {
+        msg <- c(msg, "In KernelTraits(): InitialAlleleDistribution must be either normal, or uniform.")
     }
 
-    if (!(nrow(object@InitialParameters) %in% c(1,2,3,6))) {
-        msg <- c(msg, "In KernelTraits(): For each kernel parameter you must provide the InitialParameters. Use one row for each kernel parameter.")
+    if (!(nrow(object@InitialAlleleParameters) %in% c(1,2,3,6))) {
+        msg <- c(msg, "In KernelTraits(): For each kernel parameter you must provide the InitialAlleleParameters. Use one row for each kernel parameter.")
     } else {
         # two columns are necessary for mean and sd or min and max
-        if (ncol(object@InitialParameters) !=2 || # if DominanceParameters has not 2 columns OR
-            any(!is.numeric(object@InitialParameters)) || # if entries are not numeric
-            any(is.na(object@InitialParameters))) { # if entries are NA
+        if (ncol(object@InitialAlleleParameters) !=2 || # if DominanceParameters has not 2 columns OR
+            any(!is.numeric(object@InitialAlleleParameters)) || # if entries are not numeric
+            any(is.na(object@InitialAlleleParameters))) { # if entries are NA
             msg <- c(msg,"In KernelTraits(): For the initial distributions, InitialParams must provide two values for mean (normal) or min (uniform) (first column) and sd (normal) or max (uniform) (second column)")
         }
     }
@@ -1417,8 +1435,8 @@ setMethod("show", "KernelTraitsParams", function(object){
         if(is.numeric(object@Positions[i])) cat("     Loci positions coding for trait: ", object@Positions[i], "\n")
         if(!is.numeric(object@Positions[i]) && object@Positions[i]=="random") cat("    Loci positions coding for trait randomly chosen with ", object@NbOfPositions[i], " positions\n")
         cat("       Expression type: ", object@ExpressionType[i], "\n")
-        cat("       Initial distribution: ", object@InitialDistribution[i], "\n")
-        cat("       Initial parameter: ", object@InitialParameters[i,], "\n")
+        cat("       Initial distribution: ", object@InitialAlleleDistribution[i], "\n")
+        cat("       Initial parameter: ", object@InitialAlleleParameters[i,], "\n")
         cat("       IsInherited: ", object@IsInherited[i], "\n")
         cat("       Mutation distribution: ", object@MutationDistribution[i], "\n")
         cat("       Mutation parameters: ", object@MutationParameters[i,], "\n")
@@ -1464,12 +1482,16 @@ setMethod("show", "KernelTraitsParams", function(object){
 #'
 #' Dominance values are not applicable for SMS traits.
 #'
-#' @usage SMSTraits(Positions = list("random"), NbOfPositions = c(10),
+#' @usage SMSTraits(Positions = list("random"),
+#' NbOfPositions = c(10),
 #' ExpressionType = rep("additive",1),
-#' InitialDistribution = rep("normal",1), InitialParameters = matrix(c(rep(0.5,1),(rep(0.1,1), nrow=1),
+#' InitialAlleleDistribution = rep("normal",1),
+#' InitialAlleleParameters = matrix(c(rep(0.5,1),(rep(0.1,1), nrow=1),
 #' IsInherited = rep(FALSE,1),
-#' MutationDistribution = rep("normal",1), MutationParameters = matrix(c(rep(0.5,1),(rep(0.2,1), nrow=1),
-#' MutationRate = rep(0.0001,1), OutputValues = rep(FALSE,1))
+#' MutationDistribution = rep("normal",1),
+#' MutationParameters = matrix(c(rep(0.5,1),(rep(0.2,1), nrow=1),
+#' MutationRate = rep(0.0001,1),
+#' OutputValues = rep(FALSE,1))
 #'
 #' @param Positions Loci positions coding for the trait within genome. Should be provided as a list. Entries can either be a string (\code{"random"}) and/or vectors of integers.
 #' The length must be 1 (\code{GoalType=0}) or 4 (\code{GoalType=2}) for the required SMS traits \code{DP} and, if \code{GoalType=2} \code{GoalBias}, , \code{AlphaDB} and , \code{BetaDB}.
@@ -1477,9 +1499,9 @@ setMethod("show", "KernelTraitsParams", function(object){
 #' The length must be 1 (\code{GoalType=0}) or 4 (\code{GoalType=2}) for the required SMS traits \code{DP} and, if \code{GoalType=2} \code{GoalBias}, , \code{AlphaDB} and , \code{BetaDB}.
 #' @param ExpressionType Type of expression for the emigration trait. Can be either \code{additive} or \code{average}.
 #' The length must be 1 (\code{GoalType=0}) or 4 (\code{GoalType=2}) for the required SMS traits \code{DP} and, if \code{GoalType=2} \code{GoalBias}, , \code{AlphaDB} and , \code{BetaDB}.
-#' @param InitialDistribution Distribution of the initial values. Can be \code{uniform} or \code{normal}. Should be provided as a vector of strings.
+#' @param InitialAlleleDistribution Distribution of the initial values. Can be \code{uniform} or \code{normal}. Should be provided as a vector of strings.
 #' The length must be 1 (\code{GoalType=0}) or 4 (\code{GoalType=2}) for the required SMS traits \code{DP} and, if \code{GoalType=2} \code{GoalBias}, , \code{AlphaDB} and , \code{BetaDB}.
-#' @param InitialParameters Parameters for the initial distribution: You must provide two colums min and max  for \code{uniform} distribution and mean and sd for \code{normal} distribution.
+#' @param InitialAlleleParameters Parameters for the initial distribution: You must provide two colums min and max  for \code{uniform} distribution and mean and sd for \code{normal} distribution.
 #' Each row in the matrix corresponds to an SMS trait.
 #' The number of rows must be 1 (\code{GoalType=0}) or 4 (\code{GoalType=2}) for the required SMS traits \code{DP} and, if \code{GoalType=2} \code{GoalBias}, , \code{AlphaDB} and , \code{BetaDB}.
 #' @param IsInherited Should the emigration trait be inherited? Can be either \code{TRUE} or \code{FALSE}.
@@ -1502,8 +1524,8 @@ setMethod("show", "KernelTraitsParams", function(object){
 SMSTraits<- setClass("SMSTraitsParams", slots = c(Positions = "list", #
                                                         NbOfPositions = "ANY", # random or list of integer values
                                                         ExpressionType = "character", # additive or average
-                                                        InitialDistribution = "character", # uniform or normal
-                                                        InitialParameters = "matrix", # min and max value or mean and sd
+                                                        InitialAlleleDistribution = "character", # uniform or normal
+                                                        InitialAlleleParameters = "matrix", # min and max value or mean and sd
                                                         IsInherited = "logical", # T/F
                                                         MutationDistribution = "character", # uniform or normal
                                                         MutationParameters = "matrix", # min mx or mean sd
@@ -1513,8 +1535,8 @@ SMSTraits<- setClass("SMSTraitsParams", slots = c(Positions = "list", #
                             Positions = list("random"), # "random" or list of integer values
                             NbOfPositions = 2L, # numeric, only of positions random
                             ExpressionType = "additive", # dispersal: "additive" or "average"
-                            InitialDistribution = "uniform", # uniform , normal (dispersal)
-                            InitialParameters = matrix(c(0.5,0.1), nrow=1), # dispersal: two values: either min/max oder mean+sd
+                            InitialAlleleDistribution = "uniform", # uniform , normal (dispersal)
+                            InitialAlleleParameters = matrix(c(0.5,0.1), nrow=1), # dispersal: two values: either min/max oder mean+sd
                             IsInherited = FALSE, # only for dispersal
                             MutationDistribution = "uniform", # dispersal: uniform or normal
                             MutationParameters = matrix(c(0.5,0.1), nrow=1), # single value or 2 values
@@ -1567,21 +1589,21 @@ setValidity("SMSTraitsParams", function(object) {
         msg <- c(msg, "In SMSTraits(): ExpressionType must be either additive or average.")
     }
 
-    # Check InitialDistribution and InitialParameter: Distribution must be uniform or normal and the length of the list must be the same as the number of positions
-    if (!(length(object@InitialDistribution) %in% c(1,4))){
-        msg <- c(msg, "In SMSTraits(): You must provide the InitialDistribution for each SMS trait.")
+    # Check InitialAlleleDistribution and InitialParameter: Distribution must be uniform or normal and the length of the list must be the same as the number of positions
+    if (!(length(object@InitialAlleleDistribution) %in% c(1,4))){
+        msg <- c(msg, "In SMSTraits(): You must provide the InitialAlleleDistribution for each SMS trait.")
     }
-    if (!all(object@InitialDistribution %in% c("uniform", "normal"))) {
-        msg <- c(msg, "In SMSTraits(): InitialDistribution must be either normal, or uniform.")
+    if (!all(object@InitialAlleleDistribution %in% c("uniform", "normal"))) {
+        msg <- c(msg, "In SMSTraits(): InitialAlleleDistribution must be either normal, or uniform.")
     }
 
-    if (!(nrow(object@InitialParameters) %in% c(1,4))) {
-        msg <- c(msg, "In SMSTraits(): For each SMS parameter you must provide the InitialParameters. Use one row for each SMS parameter.")
+    if (!(nrow(object@InitialAlleleParameters) %in% c(1,4))) {
+        msg <- c(msg, "In SMSTraits(): For each SMS parameter you must provide the InitialAlleleParameters. Use one row for each SMS parameter.")
     } else {
         # two columns are necessary for mean and sd or min and max
-        if (ncol(object@InitialParameters) !=2 || # if DominanceParameters has not 2 columns OR
-            any(!is.numeric(object@InitialParameters)) || # if entries are not numeric
-            any(is.na(object@InitialParameters))) { # if entries are NA
+        if (ncol(object@InitialAlleleParameters) !=2 || # if DominanceParameters has not 2 columns OR
+            any(!is.numeric(object@InitialAlleleParameters)) || # if entries are not numeric
+            any(is.na(object@InitialAlleleParameters))) { # if entries are NA
             msg <- c(msg,"In SMSTraits(): For the initial distributions, InitialParams must provide two values for mean (normal) or min (uniform) (first column) and sd (normal) or max (uniform) (second column)")
         }
     }
@@ -1650,8 +1672,8 @@ setMethod("show", "SMSTraitsParams", function(object){
         if(is.numeric(object@Positions[i])) cat("     Loci positions coding for trait: ", object@Positions[i], "\n")
         if(!is.numeric(object@Positions[i]) && object@Positions[i]=="random") cat("    Loci positions coding for trait randomly chosen with ", object@NbOfPositions[i], " positions\n")
         cat("       Expression type: ", object@ExpressionType[i], "\n")
-        cat("       Initial distribution: ", object@InitialDistribution[i], "\n")
-        cat("       Initial parameter: ", object@InitialParameters[i,], "\n")
+        cat("       Initial distribution: ", object@InitialAlleleDistribution[i], "\n")
+        cat("       Initial parameter: ", object@InitialAlleleParameters[i,], "\n")
         cat("       IsInherited: ", object@IsInherited[i], "\n")
         cat("       Mutation distribution: ", object@MutationDistribution[i], "\n")
         cat("       Mutation parameters: ", object@MutationParameters[i,], "\n")
@@ -1687,12 +1709,16 @@ setMethod("show", "SMSTraitsParams", function(object){
 #'
 #' Dominance values are not applicable for CorrRW traits.
 #'
-#' @usage CorrRWTraits(Positions = list("random","random"), NbOfPositions = c(10, 10),
+#' @usage CorrRWTraits(Positions = list("random","random"),
+#' NbOfPositions = c(10, 10),
 #' ExpressionType = rep("additive",2),
-#' InitialDistribution = rep("normal",2), InitialParameters = matrix(c(rep(0.5,2),(rep(0.1,2), nrow=2),
+#' InitialAlleleDistribution = rep("normal",2),
+#' InitialAlleleParameters = matrix(c(rep(0.5,2),(rep(0.1,2), nrow=2),
 #' IsInherited = rep(FALSE,2),
-#' MutationDistribution = rep("normal",2), MutationParameters = matrix(c(rep(0.5,2),(rep(0.2,2), nrow=2),
-#' MutationRate = rep(0.0001,2), OutputValues = rep(FALSE,2))
+#' MutationDistribution = rep("normal",2),
+#' MutationParameters = matrix(c(rep(0.5,2),(rep(0.2,2), nrow=2),
+#' MutationRate = rep(0.0001,2),
+#' OutputValues = rep(FALSE,2))
 #'
 #' @param Positions Loci positions coding for the trait within genome. Should be provided as a list. Entries can either be a string (\code{"random"}) and/or vectors of integers.
 #' The length must be 2 for the required CorrRW traits \code{Steplength} and \code{Rho}.
@@ -1700,9 +1726,9 @@ setMethod("show", "SMSTraitsParams", function(object){
 #' The length must be 2 for the required CorrRW traits \code{Steplength} and \code{Rho}.
 #' @param ExpressionType Type of expression for the emigration trait. Can be either \code{additive} or \code{average}.
 #' The length must be 2 for the required CorrRW traits \code{Steplength} and \code{Rho}.
-#' @param InitialDistribution Distribution of the initial values. Can be \code{uniform} or \code{normal}. Should be provided as a vector of strings.
+#' @param InitialAlleleDistribution Distribution of the initial values. Can be \code{uniform} or \code{normal}. Should be provided as a vector of strings.
 #' The length must be 2 for the required CorrRW traits \code{Steplength} and \code{Rho}.
-#' @param InitialParameters Parameters for the initial distribution: You must provide two colums min and max  for \code{uniform} distribution and mean and sd for \code{normal} distribution.
+#' @param InitialAlleleParameters Parameters for the initial distribution: You must provide two colums min and max  for \code{uniform} distribution and mean and sd for \code{normal} distribution.
 #' Each row in the matrix corresponds to an CorrRW trait. The number of rows must be 2 for the required CorrRW traits \code{Steplength} and \code{Rho}.
 #' @param IsInherited Should the emigration trait be inherited? Can be either \code{TRUE} or \code{FALSE}.
 #' The length must be 2 for the required CorrRW traits \code{Steplength} and \code{Rho}.
@@ -1723,8 +1749,8 @@ setMethod("show", "SMSTraitsParams", function(object){
 CorrRWTraits<- setClass("CorrRWTraitsParams", slots = c(Positions = "list", #
                                                         NbOfPositions = "ANY", # random or list of integer values
                                                         ExpressionType = "character", # additive or average
-                                                        InitialDistribution = "character", # uniform or normal
-                                                        InitialParameters = "matrix", # min and max value or mean and sd
+                                                        InitialAlleleDistribution = "character", # uniform or normal
+                                                        InitialAlleleParameters = "matrix", # min and max value or mean and sd
                                                         IsInherited = "logical", # T/F
                                                         MutationDistribution = "character", # uniform or normal
                                                         MutationParameters = "matrix", # min mx or mean sd
@@ -1734,8 +1760,8 @@ CorrRWTraits<- setClass("CorrRWTraitsParams", slots = c(Positions = "list", #
                             Positions = list("random", "random"), # "random" or list of integer values
                             NbOfPositions = rep(2,2), # numeric, only of positions random
                             ExpressionType = rep("additive",2), # dispersal: "additive" or "average"
-                            InitialDistribution = rep("uniform",2), # uniform , normal (dispersal)
-                            InitialParameters = matrix(c(0.5,0.5,0.1,0.1), nrow=2), # dispersal: two values: either min/max oder mean+sd
+                            InitialAlleleDistribution = rep("uniform",2), # uniform , normal (dispersal)
+                            InitialAlleleParameters = matrix(c(0.5,0.5,0.1,0.1), nrow=2), # dispersal: two values: either min/max oder mean+sd
                             IsInherited = rep(FALSE,2), # only for dispersal
                             MutationDistribution = rep("uniform",2), # dispersal: uniform or normal
                             MutationParameters = matrix(c(0.5,0.5,0.1,0.1), nrow=2), # single value or 2 values
@@ -1788,21 +1814,21 @@ setValidity("CorrRWTraitsParams", function(object) {
         msg <- c(msg, "In CorrRWTraits(): ExpressionType must be either additive or average.")
     }
 
-    # Check InitialDistribution and InitialParameter: Distribution must be uniform or normal and the length of the list must be the same as the number of positions
-    if (length(object@InitialDistribution) != 2){
-        msg <- c(msg, "In CorrRWTraits(): You must provide the InitialDistribution for each CorrRW trait.")
+    # Check InitialAlleleDistribution and InitialParameter: Distribution must be uniform or normal and the length of the list must be the same as the number of positions
+    if (length(object@InitialAlleleDistribution) != 2){
+        msg <- c(msg, "In CorrRWTraits(): You must provide the InitialAlleleDistribution for each CorrRW trait.")
     }
-    if (!all(object@InitialDistribution %in% c("uniform", "normal"))) {
-        msg <- c(msg, "In CorrRWTraits(): InitialDistribution must be either normal, or uniform.")
+    if (!all(object@InitialAlleleDistribution %in% c("uniform", "normal"))) {
+        msg <- c(msg, "In CorrRWTraits(): InitialAlleleDistribution must be either normal, or uniform.")
     }
 
-    if (nrow(object@InitialParameters) != 2) {
-        msg <- c(msg, "In CorrRWTraits(): For each CorrRW parameter you must provide the InitialParameters. Use one row for each CorrRW parameter.")
+    if (nrow(object@InitialAlleleParameters) != 2) {
+        msg <- c(msg, "In CorrRWTraits(): For each CorrRW parameter you must provide the InitialAlleleParameters. Use one row for each CorrRW parameter.")
     } else {
         # two columns are necessary for mean and sd or min and max
-        if (ncol(object@InitialParameters) !=2 || # if DominanceParameters has not 2 columns OR
-            any(!is.numeric(object@InitialParameters)) || # if entries are not numeric
-            any(is.na(object@InitialParameters))) { # if entries are NA
+        if (ncol(object@InitialAlleleParameters) !=2 || # if DominanceParameters has not 2 columns OR
+            any(!is.numeric(object@InitialAlleleParameters)) || # if entries are not numeric
+            any(is.na(object@InitialAlleleParameters))) { # if entries are NA
             msg <- c(msg,"In CorrRWTraits(): For the initial distributions, InitialParams must provide two values for mean (normal) or min (uniform) (first column) and sd (normal) or max (uniform) (second column)")
         }
     }
@@ -1870,8 +1896,8 @@ setMethod("show", "CorrRWTraitsParams", function(object){
         if(is.numeric(object@Positions[i])) cat("     Loci positions coding for trait: ", object@Positions[i], "\n")
         if(!is.numeric(object@Positions[i]) && object@Positions[i]=="random") cat("    Loci positions coding for trait randomly chosen with ", object@NbOfPositions[i], " positions\n")
         cat("       Expression type: ", object@ExpressionType[i], "\n")
-        cat("       Initial distribution: ", object@InitialDistribution[i], "\n")
-        cat("       Initial parameter: ", object@InitialParameters[i,], "\n")
+        cat("       Initial distribution: ", object@InitialAlleleDistribution[i], "\n")
+        cat("       Initial parameter: ", object@InitialAlleleParameters[i,], "\n")
         cat("       IsInherited: ", object@IsInherited[i], "\n")
         cat("       Mutation distribution: ", object@MutationDistribution[i], "\n")
         cat("       Mutation parameters: ", object@MutationParameters[i,], "\n")
@@ -1927,13 +1953,17 @@ setClassUnion("KernelTraitsSlot", c("logical", "KernelTraitsParams"))
 #'
 #' They follow a similar structure, but some parameters and their specific options are specific to the type of trait.
 #'
+#' Parameters that need to be defined:
+#'
 #' -	The number and positions of genes controlling the trait. \cr
 #' -	A rule for expression (restricted to dispersal traits) \cr
-#' -	A mutation rate for all genes controlling the trait. \cr
+#' -    Initialized positions (restricted to neutral traits and genetic fitness traits) \cr
+#' -	Option for inter-individual variability in without inheritance (restricted to dispersal traits) \cr
+#' -    A mutation rate for all genes controlling the trait. \cr
 #' -	A distribution to sample mutations from. \cr
-#' -	A distribution to sample initial values from. \cr
+#' -	A distribution to sample initial allele values and dominance coefficients (restricted to genetic fitness traits) from from. \cr
 #' -	A distribution to sample dominance coefficients from (restricted to genetic fitness traits). \cr
-#'
+#' -    Whether allele values should be written to output.
 #'
 #'
 #' @return a parameter object of class "TraitsParams"

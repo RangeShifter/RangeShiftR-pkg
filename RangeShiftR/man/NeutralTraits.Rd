@@ -5,13 +5,13 @@
 \alias{NeutralTraits}
 \title{Set up structure of neutral traits}
 \usage{
-NeutralTraits(Positions = "random", NbOfPositions = 10,
+NeutralTraits(
 Positions = "random",
 NbOfPositions = 10,
 InitialPositions = "all",
 InitialNbOfPositions = NULL,
-InitialDistribution = NULL,
-InitialParameters = 2,
+InitialAlleleDistribution = NULL,
+InitialAlleleParameters = 2,
 MutationDistribution = "KAM",
 MutationParameters = 2,
 MutationRate = 0.0,
@@ -29,11 +29,11 @@ and all other positions will be set to 0. Must be in the range  of \code{Positio
 
 \item{InitialNbOfPositions}{Only specify if \code{InitialPositions} is set to \code{"random"}, else must be blank (\code{NULL}). Cannot be greater than \code{NbOfPositions}}
 
-\item{InitialDistribution}{Distribution from which to draw initial allele values from.
+\item{InitialAlleleDistribution}{Distribution from which to draw initial allele values from.
 If \code{uniform}. Initialise with random characters between 0 – \code{max}. Note that possible values start at 0, so \code{max=0}
 specifies a monomorphic initial population.}
 
-\item{InitialParameters}{Maximal value for the uniform distribution.}
+\item{InitialAlleleParameters}{Maximal value for the uniform distribution.}
 
 \item{MutationDistribution}{Distribution for mutations to draw from. Can be either \code{"KAM"} or \code{"SSM"}. \code{KAM} (k-alleles model) is randomly
 draw a value between 0 and \code{max} (see \code{MutationParameters}).
@@ -53,13 +53,17 @@ a parameter object of class "NeutralTraitsParams"
 A method to specify neutral traits in the genetic module.
 }
 \details{
-Neutral trait does not have any phenotypic effect during the simulation. It is used to compute F-statistics and other measures of neutral variation.
+A neutral trait can be specified to track the evolution of population structure and neutral variation.
+It is not expressed, and only used to compute neutral statistics.
+
 For neutral trait you must specify:
 
 -	The number and positions of genes controlling the trait: \code{Positions} and \code{NbOfPositions} \cr
--	A distribution to sample initial values from: \code{InitialDistribution} and \code{InitialParameters} \cr
+-	Which positions should be initialized \code{InitialPositions} and in case of random positions the number of initial positions \code{InitialNbOfPositions}? \cr
+-    A distribution to sample initial allele values from: \code{InitialAlleleDistribution} and \code{InitialAlleleParameters} \cr
 -	A mutation rate for all genes controlling the trait. \code{MutationRate} \cr
 -	A distribution to sample mutations from. \code{MutationDistribution} and \code{MutationParameters} \cr
+-    Whether or not the allele values should be written to the output \code{OutputValues} \cr
 
 The user specifies the number of possible alleles for neutral loci (up to 256), via the maximum parameter of the mutation distribution.
 Initial values are either identical for all sites (equal to the max value) or sampled in a uniform distribution (between 0 and the maximum value).

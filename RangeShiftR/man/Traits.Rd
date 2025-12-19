@@ -47,12 +47,17 @@ The parameterisation structure for each type of trait is defined in the correspo
 
 They follow a similar structure, but some parameters and their specific options are specific to the type of trait.
 
+Parameters that need to be defined:
+
 -	The number and positions of genes controlling the trait. \cr
 -	A rule for expression (restricted to dispersal traits) \cr
--	A mutation rate for all genes controlling the trait. \cr
+-    Initialized positions (restricted to neutral traits and genetic fitness traits) \cr
+-	Option for inter-individual variability in without inheritance (restricted to dispersal traits) \cr
+-    A mutation rate for all genes controlling the trait. \cr
 -	A distribution to sample mutations from. \cr
--	A distribution to sample initial values from. \cr
+-	A distribution to sample initial allele values and dominance coefficients (restricted to genetic fitness traits) from from. \cr
 -	A distribution to sample dominance coefficients from (restricted to genetic fitness traits). \cr
+-    Whether allele values should be written to output.
 }
 \author{
 Jette Wolff

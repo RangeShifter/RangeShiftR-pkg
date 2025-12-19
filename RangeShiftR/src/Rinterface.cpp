@@ -581,8 +581,10 @@ bool ReadLandParamsR(Landscape* pLandscape, Rcpp::S4 ParMaster)
                     demogScaleLayers = Rcpp::as<Rcpp::List>(LandParamsR.slot("demogScaleLayersFile"));
                 Rcpp::Rcout << "Detected spatial demog:" << nDSlayer << " layers." << endl;
             }
-            else ppLand.spatialdemog = false; // just to be sure
-            nDSlayer = 0;
+            else {
+               ppLand.spatialdemog = false; // just to be sure
+               nDSlayer = 0;
+            }
         }
 
         if (nrDemogScaleLayers && !stagestruct) {
@@ -3332,10 +3334,10 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
 
 
         // Initial distribution parameters
-        string initDistR = Rcpp::as<string>(NeutralTraitsParamsR.slot("InitialDistribution"));
+        string initDistR = Rcpp::as<string>(NeutralTraitsParamsR.slot("InitialAlleleDistribution"));
         if(initDistR != "uniform") initDistR == "#";
 
-        Rcpp::NumericVector initParamsR = {0,Rcpp::as<int>(NeutralTraitsParamsR.slot("InitialParameters"))};
+        Rcpp::NumericVector initParamsR = {0,Rcpp::as<int>(NeutralTraitsParamsR.slot("InitialAlleleParameters"))};
 
         // Initial dominance distribution parameters not applicable for neutral traits
         string initDomDistR = "#";
@@ -3404,19 +3406,17 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
 
         // Initial distribution parameters
         Rcpp::StringVector initDistRvec;
-        if (GeneticLoadParamsR.slot("InitialDistribution")!= R_NilValue){
-            initDistRvec =  Rcpp::as<Rcpp::StringVector>(GeneticLoadParamsR.slot("InitialDistribution"));
+        if (GeneticLoadParamsR.slot("InitialAlleleDistribution")!= R_NilValue){
+            initDistRvec =  Rcpp::as<Rcpp::StringVector>(GeneticLoadParamsR.slot("InitialAlleleDistribution"));
 	} else {
             initDistRvec = {"#"};
 	}
-        Rcpp::Rcout << "initDistRvec read..." << endl;
         Rcpp::NumericMatrix initParamsRmat;
-        if(GeneticLoadParamsR.slot("InitialParameters")!= R_NilValue){
-            initParamsRmat = Rcpp::as<Rcpp::NumericMatrix>(GeneticLoadParamsR.slot("InitialParameters")); // as a matrix: columns for parameter, rows for load nb
+        if(GeneticLoadParamsR.slot("InitialAlleleParameters")!= R_NilValue){
+            initParamsRmat = Rcpp::as<Rcpp::NumericMatrix>(GeneticLoadParamsR.slot("InitialAlleleParameters")); // as a matrix: columns for parameter, rows for load nb
         } else {
             initParamsRmat = Rcpp::NumericMatrix(0, 0);// empty matrix
         }
-        Rcpp::Rcout << "initParamsRmat read..." << endl;
 
         // Initial dominance distribution parameters applicable for genetic loads
         Rcpp::StringVector initDomDistRvec;
@@ -3425,7 +3425,6 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
         } else {
             initDomDistRvec = {"#"};
 		    }
-        Rcpp::Rcout << "initDomDistRvec read..." << endl;
 
         Rcpp::NumericMatrix initDomParamsRmat;
         if(GeneticLoadParamsR.slot("InitialDomParameters")!= R_NilValue){
@@ -3433,7 +3432,6 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
         } else {
             initDomParamsRmat = Rcpp::NumericMatrix(0, 0);
 	}
-        Rcpp::Rcout << "initDomParamsRmat read..." << endl;
 
         // Dominance distribution parameters
         Rcpp::StringVector DominanceDistRvec = Rcpp::as<Rcpp::StringVector>(GeneticLoadParamsR.slot("DominanceDistribution")); // check if values are NA -> then '#'
@@ -3576,8 +3574,8 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
         Rcpp::StringVector ExpressionTypeRvec = Rcpp::as<Rcpp::StringVector> (EmigrationTraitsParamsR.slot("ExpressionType")); // not applicable for genetic loads
 
         // Initial distribution
-        Rcpp::StringVector InitialDistRvec = Rcpp::as<Rcpp::StringVector>(EmigrationTraitsParamsR.slot("InitialDistribution"));
-        Rcpp::NumericMatrix InitialParamsRmat = Rcpp::as<Rcpp::NumericMatrix>(EmigrationTraitsParamsR.slot("InitialParameters")); // as a matrix: columns for parameter, rows for emigration trait
+        Rcpp::StringVector InitialDistRvec = Rcpp::as<Rcpp::StringVector>(EmigrationTraitsParamsR.slot("InitialAlleleDistribution"));
+        Rcpp::NumericMatrix InitialParamsRmat = Rcpp::as<Rcpp::NumericMatrix>(EmigrationTraitsParamsR.slot("InitialAlleleParameters")); // as a matrix: columns for parameter, rows for emigration trait
 
         Rcpp::LogicalVector isInheritedRvec = Rcpp::as<Rcpp::LogicalVector>(EmigrationTraitsParamsR.slot("IsInherited"));
 
@@ -3712,8 +3710,8 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
         Rcpp::StringVector ExpressionTypeRvec = Rcpp::as<Rcpp::StringVector> (SettlementTraitsParamsR.slot("ExpressionType")); // not applicable for genetic loads
 
         // Initial distribution
-        Rcpp::StringVector InitialDistRvec = Rcpp::as<Rcpp::StringVector>(SettlementTraitsParamsR.slot("InitialDistribution"));
-        Rcpp::NumericMatrix InitialParamsRmat = Rcpp::as<Rcpp::NumericMatrix>(SettlementTraitsParamsR.slot("InitialParameters")); // as a matrix: columns for parameter, rows for Settlement trait
+        Rcpp::StringVector InitialDistRvec = Rcpp::as<Rcpp::StringVector>(SettlementTraitsParamsR.slot("InitialAlleleDistribution"));
+        Rcpp::NumericMatrix InitialParamsRmat = Rcpp::as<Rcpp::NumericMatrix>(SettlementTraitsParamsR.slot("InitialAlleleParameters")); // as a matrix: columns for parameter, rows for Settlement trait
 
         Rcpp::LogicalVector isInheritedRvec = Rcpp::as<Rcpp::LogicalVector>(SettlementTraitsParamsR.slot("IsInherited"));
 
@@ -3842,8 +3840,8 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
         Rcpp::StringVector ExpressionTypeRvec = Rcpp::as<Rcpp::StringVector> (KernelTraitsParamsR.slot("ExpressionType")); // not applicable for genetic loads
 
         // Initial distribution
-        Rcpp::StringVector InitialDistRvec = Rcpp::as<Rcpp::StringVector>(KernelTraitsParamsR.slot("InitialDistribution"));
-        Rcpp::NumericMatrix InitialParamsRmat = Rcpp::as<Rcpp::NumericMatrix>(KernelTraitsParamsR.slot("InitialParameters")); // as a matrix: columns for parameter, rows for Settlement trait
+        Rcpp::StringVector InitialDistRvec = Rcpp::as<Rcpp::StringVector>(KernelTraitsParamsR.slot("InitialAlleleDistribution"));
+        Rcpp::NumericMatrix InitialParamsRmat = Rcpp::as<Rcpp::NumericMatrix>(KernelTraitsParamsR.slot("InitialAlleleParameters")); // as a matrix: columns for parameter, rows for Settlement trait
 
         Rcpp::LogicalVector isInheritedRvec = Rcpp::as<Rcpp::LogicalVector>(KernelTraitsParamsR.slot("IsInherited"));
 
@@ -3981,8 +3979,8 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
             Rcpp::StringVector ExpressionTypeRvec = Rcpp::as<Rcpp::StringVector> (SMSTraitsParamsR.slot("ExpressionType")); // not applicable for genetic loads
 
             // Initial distribution
-            Rcpp::StringVector InitialDistRvec = Rcpp::as<Rcpp::StringVector>(SMSTraitsParamsR.slot("InitialDistribution"));
-            Rcpp::NumericMatrix InitialParamsRmat = Rcpp::as<Rcpp::NumericMatrix>(SMSTraitsParamsR.slot("InitialParameters")); // as a matrix: columns for parameter, rows for Settlement trait
+            Rcpp::StringVector InitialDistRvec = Rcpp::as<Rcpp::StringVector>(SMSTraitsParamsR.slot("InitialAlleleDistribution"));
+            Rcpp::NumericMatrix InitialParamsRmat = Rcpp::as<Rcpp::NumericMatrix>(SMSTraitsParamsR.slot("InitialAlleleParameters")); // as a matrix: columns for parameter, rows for Settlement trait
 
             Rcpp::LogicalVector isInheritedRvec = Rcpp::as<Rcpp::LogicalVector>(SMSTraitsParamsR.slot("IsInherited"));
 
@@ -4102,8 +4100,8 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
         Rcpp::StringVector ExpressionTypeRvec = Rcpp::as<Rcpp::StringVector> (CorrRWTraitsParamsR.slot("ExpressionType")); // not applicable for genetic loads
 
         // Initial distribution
-        Rcpp::StringVector InitialDistRvec = Rcpp::as<Rcpp::StringVector>(CorrRWTraitsParamsR.slot("InitialDistribution"));
-        Rcpp::NumericMatrix InitialParamsRmat = Rcpp::as<Rcpp::NumericMatrix>(CorrRWTraitsParamsR.slot("InitialParameters")); // as a matrix: columns for parameter, rows for Settlement trait
+        Rcpp::StringVector InitialDistRvec = Rcpp::as<Rcpp::StringVector>(CorrRWTraitsParamsR.slot("InitialAlleleDistribution"));
+        Rcpp::NumericMatrix InitialParamsRmat = Rcpp::as<Rcpp::NumericMatrix>(CorrRWTraitsParamsR.slot("InitialAlleleParameters")); // as a matrix: columns for parameter, rows for Settlement trait
 
         Rcpp::LogicalVector isInheritedRvec = Rcpp::as<Rcpp::LogicalVector>(CorrRWTraitsParamsR.slot("IsInherited"));
 

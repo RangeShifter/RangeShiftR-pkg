@@ -5,12 +5,16 @@
 \alias{SMSTraits}
 \title{Set genetic traits structure for SMS traits}
 \usage{
-SMSTraits(Positions = list("random"), NbOfPositions = c(10),
+SMSTraits(Positions = list("random"),
+NbOfPositions = c(10),
 ExpressionType = rep("additive",1),
-InitialDistribution = rep("normal",1), InitialParameters = matrix(c(rep(0.5,1),(rep(0.1,1), nrow=1),
+InitialAlleleDistribution = rep("normal",1),
+InitialAlleleParameters = matrix(c(rep(0.5,1),(rep(0.1,1), nrow=1),
 IsInherited = rep(FALSE,1),
-MutationDistribution = rep("normal",1), MutationParameters = matrix(c(rep(0.5,1),(rep(0.2,1), nrow=1),
-MutationRate = rep(0.0001,1), OutputValues = rep(FALSE,1))
+MutationDistribution = rep("normal",1),
+MutationParameters = matrix(c(rep(0.5,1),(rep(0.2,1), nrow=1),
+MutationRate = rep(0.0001,1),
+OutputValues = rep(FALSE,1))
 }
 \arguments{
 \item{Positions}{Loci positions coding for the trait within genome. Should be provided as a list. Entries can either be a string (\code{"random"}) and/or vectors of integers.
@@ -22,10 +26,10 @@ The length must be 1 (\code{GoalType=0}) or 4 (\code{GoalType=2}) for the requir
 \item{ExpressionType}{Type of expression for the emigration trait. Can be either \code{additive} or \code{average}.
 The length must be 1 (\code{GoalType=0}) or 4 (\code{GoalType=2}) for the required SMS traits \code{DP} and, if \code{GoalType=2} \code{GoalBias}, , \code{AlphaDB} and , \code{BetaDB}.}
 
-\item{InitialDistribution}{Distribution of the initial values. Can be \code{uniform} or \code{normal}. Should be provided as a vector of strings.
+\item{InitialAlleleDistribution}{Distribution of the initial values. Can be \code{uniform} or \code{normal}. Should be provided as a vector of strings.
 The length must be 1 (\code{GoalType=0}) or 4 (\code{GoalType=2}) for the required SMS traits \code{DP} and, if \code{GoalType=2} \code{GoalBias}, , \code{AlphaDB} and , \code{BetaDB}.}
 
-\item{InitialParameters}{Parameters for the initial distribution: You must provide two colums min and max  for \code{uniform} distribution and mean and sd for \code{normal} distribution.
+\item{InitialAlleleParameters}{Parameters for the initial distribution: You must provide two colums min and max  for \code{uniform} distribution and mean and sd for \code{normal} distribution.
 Each row in the matrix corresponds to an SMS trait.
 The number of rows must be 1 (\code{GoalType=0}) or 4 (\code{GoalType=2}) for the required SMS traits \code{DP} and, if \code{GoalType=2} \code{GoalBias}, , \code{AlphaDB} and , \code{BetaDB}.}
 

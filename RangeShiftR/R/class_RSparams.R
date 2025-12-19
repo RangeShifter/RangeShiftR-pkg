@@ -666,7 +666,7 @@ setValidity("RSparams", function(object) {
         }
     }
 
-    if(class(object@gene@Traits@Neutral)[1] == "NeutralTraitsParams" && all(object@gene@OutputFstatsWeirCockerham, object@gene@OutputFstatsWeirHill)){
+    if(class(object@gene@Traits@Neutral)[1] == "NeutralTraitsParams" && (!object@gene@OutputFstatsWeirCockerham && !object@gene@OutputFstatsWeirHill)){
             msg <- c(msg, "If NeutralTraits are set, at least one of the neutrall stats outputs (FstatsWeirCockerham or FStatsWeirHill) must be true!")
     }
 
@@ -709,14 +709,14 @@ setValidity("RSparams", function(object) {
                 msg <- c(msg, paste0("EmigrationGenes(): ExpressionType must have ", nbrows ," entries with the current settings!"))
             }
 
-            # InitialDistribution
-            if(length(object@gene@Traits@EmigrationGenes@InitialDistribution)!=nbrows){
-                msg <- c(msg, paste0("EmigrationGenes(): InitialDistribution must have ", nbrow ," entries with the current settings!"))
+            # InitialAlleleDistribution
+            if(length(object@gene@Traits@EmigrationGenes@InitialAlleleDistribution)!=nbrows){
+                msg <- c(msg, paste0("EmigrationGenes(): InitialAlleleDistribution must have ", nbrow ," entries with the current settings!"))
             }
 
-            # InitialParameters
-            if(nrow(object@gene@Traits@EmigrationGenes@InitialParameters)!=nbrows){
-                msg <- c(msg, paste0("EmigrationGenes(): InitialParameters matrix must have ", nbrow ," rows with the current settings!"))
+            # InitialAlleleParameters
+            if(nrow(object@gene@Traits@EmigrationGenes@InitialAlleleParameters)!=nbrows){
+                msg <- c(msg, paste0("EmigrationGenes(): InitialAlleleParameters matrix must have ", nbrow ," rows with the current settings!"))
             }
 
             # IsInherited
@@ -775,14 +775,14 @@ setValidity("RSparams", function(object) {
                     msg <- c(msg, paste0("CorrRWGenes(): ExpressionType must have ", nbrows ," entries!"))
                 }
 
-                # InitialDistribution
-                if(length(object@gene@Traits@CorrRWGenes@InitialDistribution)!=nbrows){
-                    msg <- c(msg, paste0("CorrRWGenes(): InitialDistribution must have ", nbrow ," entries!"))
+                # InitialAlleleDistribution
+                if(length(object@gene@Traits@CorrRWGenes@InitialAlleleDistribution)!=nbrows){
+                    msg <- c(msg, paste0("CorrRWGenes(): InitialAlleleDistribution must have ", nbrow ," entries!"))
                 }
 
-                # InitialParameters
-                if(nrow(object@gene@Traits@CorrRWGenes@InitialParameters)!=nbrows){
-                    msg <- c(msg, paste0("CorrRWGenes(): InitialParameters matrix must have ", nbrow ," rows!"))
+                # InitialAlleleParameters
+                if(nrow(object@gene@Traits@CorrRWGenes@InitialAlleleParameters)!=nbrows){
+                    msg <- c(msg, paste0("CorrRWGenes(): InitialAlleleParameters matrix must have ", nbrow ," rows!"))
                 }
 
                 # IsInherited
@@ -842,14 +842,14 @@ setValidity("RSparams", function(object) {
                     msg <- c(msg, paste0("SMSGenes(): ExpressionType must have ", nbrows ," entries with the current settings!"))
                 }
 
-                # InitialDistribution
-                if(length(object@gene@Traits@SMSGenes@InitialDistribution)!=nbrows){
-                    msg <- c(msg, paste0("SMSGenes(): InitialDistribution must have ", nbrow ," entries with the current settings!"))
+                # InitialAlleleDistribution
+                if(length(object@gene@Traits@SMSGenes@InitialAlleleDistribution)!=nbrows){
+                    msg <- c(msg, paste0("SMSGenes(): InitialAlleleDistribution must have ", nbrow ," entries with the current settings!"))
                 }
 
-                # InitialParameters
-                if(nrow(object@gene@Traits@SMSGenes@InitialParameters)!=nbrows){
-                    msg <- c(msg, paste0("SMSGenes(): InitialParameters matrix must have ", nbrow ," rows with the current settings!"))
+                # InitialAlleleParameters
+                if(nrow(object@gene@Traits@SMSGenes@InitialAlleleParameters)!=nbrows){
+                    msg <- c(msg, paste0("SMSGenes(): InitialAlleleParameters matrix must have ", nbrow ," rows with the current settings!"))
                 }
 
                 # IsInherited
@@ -915,14 +915,14 @@ setValidity("RSparams", function(object) {
                     msg <- c(msg, paste0("KernelGenes(): ExpressionType must have ", nbrows ," entries with the current settings!"))
                 }
 
-                # InitialDistribution
-                if(length(object@gene@Traits@KernelGenes@InitialDistribution)!=nbrows){
-                    msg <- c(msg, paste0("KernelGenes(): InitialDistribution must have ", nbrow ," entries with the current settings!"))
+                # InitialAlleleDistribution
+                if(length(object@gene@Traits@KernelGenes@InitialAlleleDistribution)!=nbrows){
+                    msg <- c(msg, paste0("KernelGenes(): InitialAlleleDistribution must have ", nbrow ," entries with the current settings!"))
                 }
 
-                # InitialParameters
-                if(nrow(object@gene@Traits@KernelGenes@InitialParameters)!=nbrows){
-                    msg <- c(msg, paste0("KernelGenes(): InitialParameters matrix must have ", nbrow ," rows with the current settings!"))
+                # InitialAlleleParameters
+                if(nrow(object@gene@Traits@KernelGenes@InitialAlleleParameters)!=nbrows){
+                    msg <- c(msg, paste0("KernelGenes(): InitialAlleleParameters matrix must have ", nbrow ," rows with the current settings!"))
                 }
 
                 # IsInherited
@@ -986,14 +986,14 @@ setValidity("RSparams", function(object) {
                 msg <- c(msg, paste0("SettlementGenes(): ExpressionType must have ", nbrows ," entries with the current settings!"))
             }
 
-            # InitialDistribution
-            if(length(object@gene@Traits@SettlementGenes@InitialDistribution)!=nbrows){
-                msg <- c(msg, paste0("SettlementGenes(): InitialDistribution must have ", nbrow ," entries with the current settings!"))
+            # InitialAlleleDistribution
+            if(length(object@gene@Traits@SettlementGenes@InitialAlleleDistribution)!=nbrows){
+                msg <- c(msg, paste0("SettlementGenes(): InitialAlleleDistribution must have ", nbrow ," entries with the current settings!"))
             }
 
-            # InitialParameters
-            if(nrow(object@gene@Traits@SettlementGenes@InitialParameters)!=nbrows){
-                msg <- c(msg, paste0("SettlementGenes(): InitialParameters matrix must have ", nbrow ," rows with the current settings!"))
+            # InitialAlleleParameters
+            if(nrow(object@gene@Traits@SettlementGenes@InitialAlleleParameters)!=nbrows){
+                msg <- c(msg, paste0("SettlementGenes(): InitialAlleleParameters matrix must have ", nbrow ," rows with the current settings!"))
             }
 
             # IsInherited

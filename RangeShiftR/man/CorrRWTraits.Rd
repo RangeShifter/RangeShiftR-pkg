@@ -5,12 +5,16 @@
 \alias{CorrRWTraits}
 \title{Set genetic traits structure for CorrRW traits}
 \usage{
-CorrRWTraits(Positions = list("random","random"), NbOfPositions = c(10, 10),
+CorrRWTraits(Positions = list("random","random"),
+NbOfPositions = c(10, 10),
 ExpressionType = rep("additive",2),
-InitialDistribution = rep("normal",2), InitialParameters = matrix(c(rep(0.5,2),(rep(0.1,2), nrow=2),
+InitialAlleleDistribution = rep("normal",2),
+InitialAlleleParameters = matrix(c(rep(0.5,2),(rep(0.1,2), nrow=2),
 IsInherited = rep(FALSE,2),
-MutationDistribution = rep("normal",2), MutationParameters = matrix(c(rep(0.5,2),(rep(0.2,2), nrow=2),
-MutationRate = rep(0.0001,2), OutputValues = rep(FALSE,2))
+MutationDistribution = rep("normal",2),
+MutationParameters = matrix(c(rep(0.5,2),(rep(0.2,2), nrow=2),
+MutationRate = rep(0.0001,2),
+OutputValues = rep(FALSE,2))
 }
 \arguments{
 \item{Positions}{Loci positions coding for the trait within genome. Should be provided as a list. Entries can either be a string (\code{"random"}) and/or vectors of integers.
@@ -22,10 +26,10 @@ The length must be 2 for the required CorrRW traits \code{Steplength} and \code{
 \item{ExpressionType}{Type of expression for the emigration trait. Can be either \code{additive} or \code{average}.
 The length must be 2 for the required CorrRW traits \code{Steplength} and \code{Rho}.}
 
-\item{InitialDistribution}{Distribution of the initial values. Can be \code{uniform} or \code{normal}. Should be provided as a vector of strings.
+\item{InitialAlleleDistribution}{Distribution of the initial values. Can be \code{uniform} or \code{normal}. Should be provided as a vector of strings.
 The length must be 2 for the required CorrRW traits \code{Steplength} and \code{Rho}.}
 
-\item{InitialParameters}{Parameters for the initial distribution: You must provide two colums min and max  for \code{uniform} distribution and mean and sd for \code{normal} distribution.
+\item{InitialAlleleParameters}{Parameters for the initial distribution: You must provide two colums min and max  for \code{uniform} distribution and mean and sd for \code{normal} distribution.
 Each row in the matrix corresponds to an CorrRW trait. The number of rows must be 2 for the required CorrRW traits \code{Steplength} and \code{Rho}.}
 
 \item{IsInherited}{Should the emigration trait be inherited? Can be either \code{TRUE} or \code{FALSE}.

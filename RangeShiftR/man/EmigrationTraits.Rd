@@ -5,12 +5,16 @@
 \alias{EmigrationTraits}
 \title{Set genetic traits structure for emigration traits}
 \usage{
-EmigrationTraits(Positions = list("random"), NbOfPositions = 10,
+EmigrationTraits(Positions = list("random"),
+NbOfPositions = 10,
 ExpressionType = "additive",
-InitialDistribution = "normal", InitialParameters = matrix(c(0.5,0.1), nrow=1),
+InitialAlleleDistribution = "normal",
+InitialAlleleParameters = matrix(c(0.5,0.1), nrow=1),
 IsInherited = FALSE,
-MutationDistribution = "normal", MutationParameters = matrix(c(0.5,0.2), nrow=1),
-MutationRate = 0.0001, OutputValues = FALSE)
+MutationDistribution = "normal",
+MutationParameters = matrix(c(0.5,0.2), nrow=1),
+MutationRate = 0.0001,
+OutputValues = FALSE)
 }
 \arguments{
 \item{Positions}{Loci positions coding for the trait within genome. Should be provided as a list. Entries can either be a string (\code{"random"}) and/or vectors of integers.
@@ -22,10 +26,10 @@ The length must be equal to the number of required emigration traits (see above)
 \item{ExpressionType}{Type of expression for the emigration trait. Can be either \code{additive} or \code{average}.
 The length must be equal to the number of required emigration traits (see above) and the sequence must match the sequence of the emigration traits listed above.}
 
-\item{InitialDistribution}{Distribution of the initial values. Can be \code{uniform} or \code{normal}. Should be provided as a vector of strings.
+\item{InitialAlleleDistribution}{Distribution of the initial values. Can be \code{uniform} or \code{normal}. Should be provided as a vector of strings.
 The length must be equal to the number of required emigration traits (see above) and the sequence must match the sequence of the emigration traits listed above.}
 
-\item{InitialParameters}{Parameters for the initial distribution: You must provide two colums min and max for \code{uniform} distribution and mean and sd for \code{normal} distribution.
+\item{InitialAlleleParameters}{Parameters for the initial distribution: You must provide two colums min and max for \code{uniform} distribution and mean and sd for \code{normal} distribution.
 Each row in the matrix corresponds to an emigration trait. The number of rows must be equal to the number of required emigration traits (see above) and the sequence must match the sequence of the emigration traits listed above.}
 
 \item{IsInherited}{Should the emigration trait be inherited? Can be either \code{TRUE} or \code{FALSE}.
@@ -62,7 +66,7 @@ This results in following number of emigration traits that need to be specifed:
 - 3 entries if emigration probability is only density dependent \code{DensDep=TRUE}:  \ifelse{html}{\out{D<sub>0</sub>}}{\eqn{D_0}}, \ifelse{html}{\out{&alpha;}}{\eqn{α}} and \ifelse{html}{\out{&beta;}}{\eqn{β}} \cr
 - 6 entries if emigration probability is both density dependent (\code{DensDep=TRUE}) and sex dependent (\code{SexDep=TRUE}): \ifelse{html}{\out{D<sub>0</sub>(f), D<sub>0</sub>(m)}}{\eqn{D_0(f),D_0(m)}}, \ifelse{html}{\out{&alpha;(f), &alpha;(m)}}{\eqn{α(f), α(m)}} and \ifelse{html}{\out{&beta;(f), &beta;(m)}}{\eqn{β(f), β(m)}} \cr
 
-The entries of the trait parameters must be provided in the same order as the emigration traits are listed above. If parameters expect a matrix, the rows must match the order of kernel traits listed above.
+The entries of the trait parameters must be provided in the same order as the emigration traits are listed above. If parameters expect a matrix, the rows must match the order of emigration traits listed above.
 }
 \details{
 Traits set to evolve cannot simultaneously be stage-dependent.
