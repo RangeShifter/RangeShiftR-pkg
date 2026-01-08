@@ -18,7 +18,7 @@ Translocation(years = 1,
  - the year of the event,\cr
  - the source location (\code{Patch_ID} in case of cell-based models or \code{X} and \code{Y} location in case of cell-based models),\cr
  - the destination location (\code{Patch_ID} in case of cell-based models or \code{X} and \code{Y} location in case of cell-based models),\cr
- - the number of individuals which are tried to be catched,\cr
+ - the number of individuals which are tried to be caught,\cr
  - minimal age of each individual,\cr
  - maximal age of the individual,\cr
  - stage of the individual,\cr
@@ -62,9 +62,9 @@ In the columns of the \code{TransLocMat} the year, source and destination site a
 defined in the following order:
 
 - \code{year} of the translocation event \cr
-- \code{Patch_ID} or \code{X} and \code{Y} location of the source site from which individuals are catched. \cr
+- \code{Patch_ID} or \code{X} and \code{Y} location of the source site from which individuals are caught. \cr
 - \code{Patch_ID} or \code{X} and \code{Y} location of the destintation site to which individuals are relocated. \cr
-- \code{nb_catch} how many individuals of the given set of characteristics are tried to be catched \cr
+- \code{nb_catch} how many individuals of the given set of characteristics are tried to be caught \cr
 - \code{min_age} minimal age of the individual in the interval of 0-MaxAge. Set to -9 to ignore. \cr
 - \code{max_age} maximal age of the individual in the interval of \code{min_age}-MaxAge. Set to -9 to ignore.\cr
 - \code{stage} of the individual. Set to -9 to ignore. \cr
@@ -84,7 +84,7 @@ event or multiple individual characteristics for a certain pair of source and de
 
 In each \code{year} of a translocation event, individuals matching the given criteria in the source site are collected and a given number of individuals \code{nb_catch}
 are sampled from this subset. The success of catching one of these sampled individuals in the source location is defined by the \code{catching_rate}.
-Successfully catched individuals are then translocated to the destination site and the individual will be assigned the status 10 (translocated) and will not further disperse.
+Successfully caught individuals are then translocated to the destination site and the individual will be assigned the status 10 (translocated) and will not further disperse.
 
 The source as well as the destination sites are required to be habitat patches or cells of the landscape. Otherwise the translocation event will be skipped.
 }
