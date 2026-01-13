@@ -1810,7 +1810,7 @@ bool Community::openPairwiseFstFile(Species* pSpecies, Landscape* pLandscape, co
 // Write population level FST results file
 // ----------------------------------------------------------------------------------------
 
-void Community::writeNeutralOutputFile(int rep, int yr, int gen, bool outWeirCockerham, bool outWeirHill) {
+void Community::writeNeutralOutputFile(int rep, int yr, int gen, bool outWeirCockerham, bool outPairwiseFst) {
 
 	outwcfstat << rep << "\t" << yr << "\t" << gen << "\t";
 	outwcfstat << pNeutralStatistics->getNbPopulatedSampledPatches() 
@@ -1823,7 +1823,7 @@ void Community::writeNeutralOutputFile(int rep, int yr, int gen, bool outWeirCoc
 	}
 	else outwcfstat << "NA" << "\t" << "NA" << "\t" << "NA" << "\t";
 
-	//if (outWeirHill) outwcfstat << pNeutralStatistics->getWeightedFst() << "\t";
+	//if (outPairwiseFst) outwcfstat << pNeutralStatistics->getWeightedFst() << "\t";
 	//else outwcfstat << "NA" << "\t";
 	
 	outwcfstat << pNeutralStatistics->getMeanNbAllPerLocus() << "\t"
