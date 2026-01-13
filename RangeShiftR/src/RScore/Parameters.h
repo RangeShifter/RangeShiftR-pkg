@@ -335,7 +335,7 @@ struct simParams {
 	bool fixReplicateSeed;
 	string patchSamplingOption;
 	bool outputGeneValues;
-	bool outputWeirCockerham, outputWeirHill;
+	bool outputWeirCockerham, outPairwiseFst;
 	int outputGeneticInterval, outStartGenetics;
 };
 
@@ -351,7 +351,7 @@ public:
 	paramSim(const string& pathToProjDir = "");
 	~paramSim(void);
 	void setSim(simParams);
-	void setGeneticSim(string patchSamplingOption, bool outputGeneticValues, bool outputWeirCockerham, bool outputWeirHill, int outputStartGenetics, int outputGeneticInterval);
+	void setGeneticSim(string patchSamplingOption, bool outputGeneticValues, bool outputWeirCockerham, bool outPairwiseFst, int outputStartGenetics, int outputGeneticInterval);
 	simParams getSim(void);
 	int getSimNum(void);
 	string getDir(int);
@@ -404,7 +404,7 @@ private:
 	string patchSamplingOption;
 	bool outputGenes;
 	bool outputWeirCockerham;
-	bool outputWeirHill;
+	bool outPairwiseFst;
 	int outputStartGenetics;
 	int outputGeneticInterval;
 };

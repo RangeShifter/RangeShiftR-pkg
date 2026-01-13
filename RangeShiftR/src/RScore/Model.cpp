@@ -193,7 +193,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				if (!pLandscape->outConnectStartLandscape()) {
 					filesOK = false;
 				}
-			if (sim.outputWeirCockerham || sim.outputWeirHill) { // open neutral genetics file
+			if (sim.outputWeirCockerham || sim.outPairwiseFst) { // open neutral genetics file
 				if (!pComm->openNeutralOutputFile(pSpecies, ppLand.landNum)) {
 					filesOK = false;
 		}
@@ -215,7 +215,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				pComm->outTraitsRowsFinishLandscape();
 			if (sim.outConnect && ppLand.patchModel)
 				pLandscape->outConnectFinishLandscape();
-			if (sim.outputWeirCockerham || sim.outputWeirHill) {
+			if (sim.outputWeirCockerham || sim.outPairwiseFst) {
 				pComm->openNeutralOutputFile(pSpecies, -999);
 			}
 #if RS_RCPP && !R_CMD
@@ -271,7 +271,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 		if (sim.outputWeirCockerham) {
 			pComm->openPerLocusFstFile(pSpecies, pLandscape, ppLand.landNum, rep);
 		}
-		if (sim.outputWeirHill) {
+		if (sim.outPairwiseFst) {
 			pComm->openPairwiseFstFile(pSpecies, pLandscape, ppLand.landNum, rep);
 		}
 #if RS_RCPP
@@ -498,7 +498,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				if (sim.outInds && yr >= sim.outStartInd && yr % sim.outIntInd == 0)
 					pComm->outIndividuals(rep, yr, gen);
 
-				if ((sim.outputGeneValues || sim.outputWeirCockerham || sim.outputWeirHill)
+				if ((sim.outputGeneValues || sim.outputWeirCockerham || sim.outPairwiseFst)
 					&& yr >= sim.outStartGenetics
 					&& yr % sim.outputGeneticInterval == 0) {
 
@@ -515,8 +515,8 @@ int RunModel(Landscape* pLandscape, int seqsim)
 					if (sim.outputGeneValues) {
 						pComm->outputGeneValues(yr, gen, pSpecies);
 					}
-					if (sim.outputWeirCockerham || sim.outputWeirHill) {
-						pComm->outNeutralGenetics(pSpecies, rep, yr, gen, sim.outputWeirCockerham, sim.outputWeirHill);
+					if (sim.outputWeirCockerham || sim.outPairwiseFst) {
+						pComm->outNeutralGenetics(pSpecies, rep, yr, gen, sim.outputWeirCockerham, sim.outPairwiseFst);
 					}
 				}
 
@@ -632,7 +632,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 
 		if (sim.outputWeirCockerham) //close per locus file
 			pComm->openPerLocusFstFile(pSpecies, pLandscape, -999, rep);
-		if (sim.outputWeirHill) //close per locus file
+		if (sim.outPairwiseFst) //close per locus file 
 			pComm->openPairwiseFstFile(pSpecies, pLandscape, -999, rep);
 
 		if (sim.saveVisits) {
@@ -678,13 +678,13 @@ int RunModel(Landscape* pLandscape, int seqsim)
 	// they can still be open if the simulation was stopped by the user
 	if (sim.outInds) pComm->outIndsFinishReplicate();
 	if (sim.outputGeneValues) pComm->openOutGenesFile(0, -999, 0);
-	if (sim.outputWeirCockerham || sim.outputWeirHill) {
+	if (sim.outputWeirCockerham || sim.outPairwiseFst) {
 		pComm->openNeutralOutputFile(pSpecies, -999);
 	}
 	if (sim.outputWeirCockerham) {
 		pComm->openPerLocusFstFile(pSpecies, pLandscape, -999, 0);
 	}
-	if (sim.outputWeirHill) pComm->openPairwiseFstFile(pSpecies, pLandscape, -999, 0);
+	if (sim.outPairwiseFst) pComm->openPairwiseFstFile(pSpecies, pLandscape, -999, 0);
 
 	delete pComm;
 	pComm = 0;
@@ -1804,10 +1804,10 @@ void OutParameters(Landscape* pLandscape)
 		if (sim.outStartInd > 0) outPar << " starting year " << sim.outStartInd;
 		outPar << endl;
 	}
-	if (sim.outputWeirCockerham || sim.outputWeirHill) {
+	if (sim.outputWeirCockerham || sim.outPairwiseFst) {
 		outPar << "Neutral genetics - every " << sim.outputGeneticInterval << " year";
 		if (sim.outputGeneticInterval > 1) outPar << "s";
-		if (sim.outputWeirHill) outPar << " outputting pairwise patch fst";
+		if (sim.outPairwiseFst) outPar << " outputting pairwise patch fst";
 		if (sim.outputWeirCockerham) outPar << " outputting per locus fst ";
 		outPar << endl;
 	}

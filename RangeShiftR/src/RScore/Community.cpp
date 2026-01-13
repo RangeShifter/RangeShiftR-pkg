@@ -1714,7 +1714,7 @@ bool Community::openNeutralOutputFile(Species* pSpecies, int landNr)
 		name = paramsSim->getDir(2) + "Sim" + to_string(sim.simulation) + "_neutralGenetics.txt";
 	}
 	outwcfstat.open(name.c_str());
-	outwcfstat << "Rep\tYear\tRepSeason\tnExtantPatches\tnIndividuals\tFstWC\tFisWC\tFitWC\tFstWH\tmeanAllelePerLocus\tmeanAllelePerLocusPatches\tmeanFixedLoci\tmeanFixedLociPatches\tmeanObHeterozygosity";
+	outwcfstat << "Rep\tYear\tRepSeason\tnExtantPatches\tnIndividuals\tFstWC\tFisWC\tFitWC\tmeanAllelePerLocus\tmeanAllelePerLocusPatches\tmeanFixedLoci\tmeanFixedLociPatches\tmeanObHeterozygosity";
 	outwcfstat << endl;
 
 	return outwcfstat.is_open();
@@ -1800,7 +1800,7 @@ bool Community::openPairwiseFstFile(Species* pSpecies, Landscape* pLandscape, co
 		name = paramsSim->getDir(2) + "Sim" + to_string(sim.simulation) + "_Rep" + to_string(rep) + "_pairwisePatchNeutralGenetics.txt";
 	}
 	outpairwisefst.open(name.c_str());
-	outpairwisefst << "Year\tRepSeason\tpatchA\tpatchB\tFst";
+	outpairwisefst << "Year\tRepSeason\tpatchA\tpatchA_x\tpatchA_y\tpatchB\tpatchB_x\tpatchB_y\tFst";
 	outpairwisefst << endl;
 
 	return outpairwisefst.is_open();
@@ -1823,8 +1823,8 @@ void Community::writeNeutralOutputFile(int rep, int yr, int gen, bool outWeirCoc
 	}
 	else outwcfstat << "NA" << "\t" << "NA" << "\t" << "NA" << "\t";
 
-	if (outWeirHill) outwcfstat << pNeutralStatistics->getWeightedFst() << "\t";
-	else outwcfstat << "NA" << "\t";
+	//if (outWeirHill) outwcfstat << pNeutralStatistics->getWeightedFst() << "\t";
+	//else outwcfstat << "NA" << "\t";
 	
 	outwcfstat << pNeutralStatistics->getMeanNbAllPerLocus() << "\t"
 		<< pNeutralStatistics->getMeanNbAllPerLocusPerPatch() << "\t"
@@ -1869,7 +1869,7 @@ void Community::writePerLocusFstatFile(Species* pSpecies, const int yr, const in
 					}
 		else { // sampling may change between generations, must produce output for all patches in Landscape
 			for (auto patchId : pLandscape->getPatchNbs()) {
-				if (patchList.contains(patchId)) {
+				if (patchList.find(patchId) != patchList.end()) {
 					float het = getPatchHet(pSpecies, patchId, thisLocus);
 					if (het < 0) // patch empty
 						outperlocusfstat << "\t" << "NA";
@@ -1911,31 +1911,36 @@ float Community::getPatchHet(Species* pSpecies, int patchId, int whichLocus) con
 // ----------------------------------------------------------------------------------------
 // Write pairwise FST results file
 // ----------------------------------------------------------------------------------------
-void Community::writePairwiseFstFile(Species* pSpecies, const int yr, const int gen, const  int nAlleles, const int nLoci, set<int> const& patchList) {
+void Community::writePairwiseFstFile(Species* pSpecies, const int yr, const int gen, set<int> const& patchList) {
 
-	// within patch fst (diagonal of matrix)
-	int i = 0;
-	for (int patchId : patchList) {
-		outpairwisefst << yr << "\t" << gen << "\t";
-		outpairwisefst << patchId << "\t" << patchId << "\t" 
-			<< pNeutralStatistics->getPairwiseFst(i, i) 
-			<< endl;
-		++i;
-	}
+	const int nPatches = static_cast<int>(patchList.size());
+	// Convert set to vector for index-based access
+	vector<int> patchVect;
+	copy(patchList.begin(), patchList.end(), back_inserter(patchVect));
 
-	// between patch fst
-	i = 0;
-	for (int patchIdA : patchList | std::views::take(patchList.size() - 1)) {
-		int j = i + 1;
-		for (int patchIdB : patchList | std::views::drop(j)) {
-			outpairwisefst << yr << "\t" << gen << "\t";
-			outpairwisefst << patchIdA << "\t" << patchIdB << "\t" 
+	for (int i = 0; i < nPatches; ++i)
+	{
+		const auto patchA = pLandscape->findPatch(patchVect[i]);
+
+		for (int j = i; j < nPatches; ++j)
+		{
+
+			const auto patchB = pLandscape->findPatch(patchVect[j]);
+
+			outpairwisefst << yr << "\t"
+				<< gen << "\t"
+				<< patchVect[i] << "\t"
+				<< patchA->getSubComm()->getLocn().x << "\t"
+				<< patchA->getSubComm()->getLocn().y << "\t"
+				<< patchVect[j] << "\t"
+				<< patchB->getSubComm()->getLocn().x << "\t"
+				<< patchB->getSubComm()->getLocn().y << "\t"
 				<< pNeutralStatistics->getPairwiseFst(i, j) 
-				<< endl;
-			++j;
+				<< "\n";
 		}
-		++i;
 	}
+
+
 }
 
 
@@ -1944,7 +1949,7 @@ void Community::writePairwiseFstFile(Species* pSpecies, const int yr, const int 
 // ----------------------------------------------------------------------------------------
 
 
-void Community::outNeutralGenetics(Species* pSpecies, int rep, int yr, int gen, bool outWeirCockerham, bool outWeirHill) {
+void Community::outNeutralGenetics(Species* pSpecies, int rep, int yr, int gen, bool outWeirCockerham, bool outPairwiseFst) {
 
 	const int maxNbNeutralAlleles = pSpecies->getSpTrait(NEUTRAL)->getNbNeutralAlleles();
 	const int nLoci = (int)pSpecies->getNPositionsForTrait(NEUTRAL);
@@ -1971,21 +1976,23 @@ void Community::outNeutralGenetics(Species* pSpecies, int rep, int yr, int gen, 
 	pNeutralStatistics->calculatePerLocusHo(patchList, nInds, nLoci, pSpecies, pLandscape);
 	pNeutralStatistics->calcAllelicDiversityMetrics(patchList, nInds, pSpecies, pLandscape);
 
+	if (outPairwiseFst) {
+		pNeutralStatistics->calculatePairwiseFst(patchList, nLoci, maxNbNeutralAlleles, pSpecies, pLandscape);
+	}
 	if (outWeirCockerham) {
-		pNeutralStatistics->calculateFstatWC(patchList, nInds, nLoci, maxNbNeutralAlleles, pSpecies, pLandscape);
-	}
-	if (outWeirHill) {
-		pNeutralStatistics->calcPairwiseWeightedFst(patchList, nInds, nLoci, pSpecies, pLandscape);
+		pNeutralStatistics->calculateFstatWC(patchList, nInds, nLoci, maxNbNeutralAlleles, pSpecies, pLandscape, false);
 	}
 
-	writeNeutralOutputFile(rep, yr, gen, outWeirCockerham, outWeirHill);
 
+	writeNeutralOutputFile(rep, yr, gen, outWeirCockerham, outPairwiseFst);
+
+	if (outPairwiseFst) {
+		writePairwiseFstFile(pSpecies, yr, gen, patchList);
+	}
 	if (outWeirCockerham) {
 		writePerLocusFstatFile(pSpecies, yr, gen, nLoci, patchList);
 	}
-	if (outWeirHill) {
-		writePairwiseFstFile(pSpecies, yr, gen, maxNbNeutralAlleles, nLoci, patchList);
-	}
+
 }
 
 //---------------------------------------------------------------------------

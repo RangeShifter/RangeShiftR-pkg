@@ -224,7 +224,7 @@ paramSim::paramSim(const string& pathToProjDir) :
 	batchMode = absorbing = false;
 	outRange = outOccup = outPop = outInds = false;
 	outTraitsCells = outTraitsRows = outConnect = false;
-	outputGenes = outputWeirCockerham = outputWeirHill = false;
+	outputGenes = outputWeirCockerham = outPairwiseFst = false;
 	saveVisits = false;
 #if RS_RCPP
 	outStartPaths = 0; outIntPaths = 0;
@@ -272,7 +272,7 @@ void paramSim::setGeneticSim(string patchSamplingOption, bool outputGeneticValue
 	this->patchSamplingOption = patchSamplingOption;
 	this->outputGenes = outputGeneticValues;
 	this->outputWeirCockerham = outputWeirCockerham;
-	this->outputWeirHill = outputWeirHill;
+	this->outPairwiseFst = outputWeirHill;
 	this->outputStartGenetics = outputStartGenetics;
 	this->outputGeneticInterval = outputGeneticInterval;
 }
@@ -306,7 +306,7 @@ simParams paramSim::getSim() {
 	s.patchSamplingOption = patchSamplingOption;
 	s.outputGeneValues = outputGenes;
 	s.outputWeirCockerham = outputWeirCockerham;
-	s.outputWeirHill = outputWeirHill;
+	s.outPairwiseFst = outPairwiseFst;
 	s.outStartGenetics = outputStartGenetics;
 	s.outputGeneticInterval = outputGeneticInterval;
 
