@@ -2049,7 +2049,7 @@ setMethod("show", "TraitsParams", function(object){
 #' @usage Genetics(GenomeSize = 10,
 #'          ChromosomeEnds = 1, RecombinationRate = 0.0,
 #'          OutputGeneValues = FALSE,
-#'          OutputFstatsWeirCockerham = FALSE, OutputFstatsWeirHill = FALSE,
+#'          OutputFstatsWeirCockerham = FALSE, OutputPairwiseFst = FALSE,
 #'          OutputStartGenetics = NULL, OutputInterval = NULL,
 #'          PatchList = NULL, NbrPatchesToSample = NULL,
 #'          nIndividualsToSample = NULL, Stages = NULL, Traits = Traits()
@@ -2066,7 +2066,7 @@ setMethod("show", "TraitsParams", function(object){
 #' output in the TraitsXPatch, TraitsXCell and/or TraitsXrow output files. Enables the geneValues output files.
 #' @param OutputFstatsWeirCockerham Calculate F-statistics. Enables the neutralGenetics and
 #' perLocusNeutralGenetics output files.
-#' @param OutputFstatsWeirHill Calculate F-statistics. Enables the neutralGenetics and pairwisePatchNeutralGenetics output files.
+#' @param OutputPairwiseFst Calculate F-statistics. Enables the neutralGenetics and pairwisePatchNeutralGenetics output files.
 #' @param OutputStartGenetics Which year should RangeShifter start to produce the output files listed above?
 #' @param OutputInterval How frequently to output genetic output, including gene values and neutral statistics.
 #' @param PatchList Which patches are to be sampled for output.  Patches can be
@@ -2136,7 +2136,7 @@ setMethod("show", "TraitsParams", function(object){
 #' 13.	Observed heterozygosity Ho, calculated as the mean number of heterozygous loci per individual per locus. \cr
 #'
 #' RangeShifter estimates standard F-statistics as \insertCite{cockerham1969}{RangeShiftR}’s \ifelse{html}{\out{&theta;}}{\eqn{θ}} statistics, using 1) the classic method-of-moments estimator of \insertCite{weir1984}{RangeShiftR} (\code{OutputFstatsWeirCockerham=TRUE}) and/or
-#' 2) the unequal sample-size generalization and extensions from \insertCite{weir2002}{RangeShiftR} (\code{OutputFstatsWeirHill=TRUE}). \cr
+#' 2) the unequal sample-size generalization and extensions from \insertCite{weir2002}{RangeShiftR} (\code{OutputPairwiseFst=TRUE}). \cr
 #'
 #' In short, \ifelse{html}{\out{&theta;}}{\eqn{θ}} (Fst) measures the correlation between alleles within sub-populations (patches) relative to the complete sampled population,
 #' f (Fis) the correlation between alleles within individuals relative to the sub-population and F (Fit) the correlation between alleles
@@ -2159,7 +2159,7 @@ setMethod("show", "TraitsParams", function(object){
 #'
 #' \emph{Pairwise patch neutral genetics}\cr
 #'
-#' If the Weir and Hill method is enabled (\code{OutputFstatsWeirHill=TRUE}), a pairwise \ifelse{html}{\out{F<sub>st</sub>}}{\eqn{F_st}} matrix is constituted and filled with the corresponding
+#' If the Weir and Hill method is enabled (\code{OutputPairwiseFst=TRUE}), a pairwise \ifelse{html}{\out{F<sub>st</sub>}}{\eqn{F_st}} matrix is constituted and filled with the corresponding
 #' values of \ifelse{html}{\out{&beta;<sub>ii’</sub>}}{\eqn{β_ii’}} for each pair of patches in the sample. Values of ifelse{html}{\out{&beta;<sub>i</sub>}}{\eqn{β_i}} are also computed along the diagonal. \cr
 #'
 #' In this case, there is one row of output for each pair: \cr
@@ -2194,7 +2194,7 @@ Genetics <- setClass("GeneticsParams", slots = c(GenomeSize = "integer_OR_numeri
                                                  RecombinationRate = "integer_OR_numeric", # NULL or numeric
                                                  OutputGeneValues = "logical",
                                                  OutputFstatsWeirCockerham = "logical",
-                                                 OutputFstatsWeirHill = "logical",
+                                                 OutputPairwiseFst = "logical",
                                                  OutputStartGenetics = "ANY", # positive integer if any output is TRUE or NULL
                                                  OutputInterval = "ANY",
                                                  PatchList = "ANY", # vector of integers or a string
@@ -2207,7 +2207,7 @@ Genetics <- setClass("GeneticsParams", slots = c(GenomeSize = "integer_OR_numeri
                                                         RecombinationRate = 0.0, # NULL or numeric
                                                         OutputGeneValues = FALSE,
                                                         OutputFstatsWeirCockerham = FALSE,
-                                                        OutputFstatsWeirHill = FALSE,
+                                                        OutputPairwiseFst = FALSE,
                                                         OutputStartGenetics = NULL, # positive integer if any output is TRUE or NULL
                                                         OutputInterval = NULL,
                                                         PatchList = NULL, #"all", # vector or string
@@ -2249,13 +2249,13 @@ setValidity('GeneticsParams', function(object){
         msg <- c(msg, "In Genetics(): OutputFstatsWeirCockerham must be true or false.")
     }
 
-    # OutputFstatsWeirHill
+    # OutputPairwiseFst
     # must be a boolean
-    if (!is.logical(object@OutputFstatsWeirHill)) {
-        msg <- c(msg, "In Genetics(): OutputFstatsWeirHill must be true or false.")
+    if (!is.logical(object@OutputPairwiseFst)) {
+        msg <- c(msg, "In Genetics(): OutputPairwiseFst must be true or false.")
     }
 
-    anyNeutral = object@OutputFstatsWeirCockerham || object@OutputFstatsWeirHill
+    anyNeutral = object@OutputFstatsWeirCockerham || object@OutputPairwiseFst
 
     anyGeneticsOutput = object@OutputGeneValues == "TRUE" || anyNeutral
 
@@ -2356,8 +2356,8 @@ setMethod("show", "GeneticsParams", function(object){
     cat("   Recombination rate: ", object@RecombinationRate, "\n")
     cat("   Output genetic values: ", object@OutputGeneValues, "\n")
     cat("   Output Fstats after Weir Cockerham: ", object@OutputFstatsWeirCockerham, "\n")
-    cat("   Output Fstats after Weir Hill: ", object@OutputFstatsWeirHill, "\n")
-    if(any(object@OutputGeneValues || object@OutputFstatsWeirCockerham || object@OutputFstatsWeirHill)){
+    cat("   Output Pairwise Fst: ", object@OutputPairwiseFst, "\n")
+    if(any(object@OutputGeneValues || object@OutputFstatsWeirCockerham || object@OutputPairwiseFst)){
         cat("   Start genetic output at year: ", object@OutputStartGenetics, "and output every ",object@OutputInterval ," year \n")
         cat("     Patches to sample: ", object@PatchList, "\n")
         if(object@PatchList=="random" || object@PatchList=="random_occupied"){

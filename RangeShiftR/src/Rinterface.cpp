@@ -3141,7 +3141,7 @@ int ReadInitialisationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 
 int ReadGeneticsR(Rcpp::S4 GeneParamsR, Landscape* pLandscape)
 {
-    bool outputGeneValues, outputWeirCockerham, outputWeirHill; // what should be calculated in the output?
+    bool outputGeneValues, outputWeirCockerham, outputPairwiseFst; // what should be calculated in the output?
     int outputStartGenetics, outputGeneticInterval; // when should the output be calculated?
     set<int>patchList; // for which patches should the output be calculated?
 
@@ -3167,7 +3167,7 @@ int ReadGeneticsR(Rcpp::S4 GeneParamsR, Landscape* pLandscape)
 
     outputGeneValues = Rcpp::as<bool>(GeneParamsR.slot("OutputGeneValues"));
     outputWeirCockerham = Rcpp::as<bool>(GeneParamsR.slot("OutputFstatsWeirCockerham"));
-    outputWeirHill = Rcpp::as<bool>(GeneParamsR.slot("OutputFstatsWeirHill"));
+    outputPairwiseFst = Rcpp::as<bool>(GeneParamsR.slot("OutputPairwiseFst"));
 
 
     if(GeneParamsR.slot("OutputStartGenetics") != R_NilValue){
@@ -3243,7 +3243,7 @@ int ReadGeneticsR(Rcpp::S4 GeneParamsR, Landscape* pLandscape)
     pSpecies->setGeneticParameters(chrEnds, genomeSize, recombinationRate,
                                    patchList, strNbInds, stagesToSampleFrom, nPatchesToSample);
 
-    paramsSim->setGeneticSim(patchSamplingOption, outputGeneValues, outputWeirCockerham, outputWeirHill, outputStartGenetics, outputGeneticInterval);
+    paramsSim->setGeneticSim(patchSamplingOption, outputGeneValues, outputWeirCockerham, outputPairwiseFst, outputStartGenetics, outputGeneticInterval);
     return 0;
 }
 

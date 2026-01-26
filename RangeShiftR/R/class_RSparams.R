@@ -660,14 +660,14 @@ setValidity("RSparams", function(object) {
     #GENETICS
     validObject(object@gene)
     # Check if output is correct: Fstats should only be activated if neutral genetics is set
-    if(object@gene@OutputFstatsWeirCockerham || object@gene@OutputFstatsWeirHill){
+    if(object@gene@OutputFstatsWeirCockerham || object@gene@OutputPairwiseFst){
         if(class(object@gene@Traits@Neutral)[1] != "NeutralTraitsParams"){
-            msg <- c(msg, "FstatsWeirCockerham or FStatsWeitHill can only be activated if NeutralTraits is set!")
+            msg <- c(msg, "FstatsWeirCockerham or PairwiseFst can only be activated if NeutralTraits is set!")
         }
     }
 
-    if(class(object@gene@Traits@Neutral)[1] == "NeutralTraitsParams" && (!object@gene@OutputFstatsWeirCockerham && !object@gene@OutputFstatsWeirHill)){
-            msg <- c(msg, "If NeutralTraits are set, at least one of the neutrall stats outputs (FstatsWeirCockerham or FStatsWeirHill) must be true!")
+    if(class(object@gene@Traits@Neutral)[1] == "NeutralTraitsParams" && (!object@gene@OutputFstatsWeirCockerham && !object@gene@OutputPairwiseFst)){
+            msg <- c(msg, "If NeutralTraits are set, at least one of the neutrall stats outputs (FstatsWeirCockerham or PairwiseFst) must be true!")
     }
 
     # Dispersal Traits

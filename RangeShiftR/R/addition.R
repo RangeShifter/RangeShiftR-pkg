@@ -160,7 +160,7 @@ setMethod("+", signature(e1 = "DispersalParams", e2 = "SettlementParams"), funct
 setMethod("+", signature(e1 = "RSparams", e2 = "GeneticsParams"), function(e1, e2) {
     validObject(e2)
     e1@gene <- e2
-    if (e2@OutputFstatsWeirCockerham || e2@OutputFstatsWeirHill) { # neutral traits are true as soon as the output is activated
+    if (e2@OutputFstatsWeirCockerham || e2@OutputPairwiseFst) { # neutral traits are true as soon as the output is activated
         # if(class(e2@Traits@Neutral)[1] == "NeutralTraitsParams") {
             e1@control@neutralgenetics = TRUE
         # }

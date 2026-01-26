@@ -8,7 +8,7 @@
 Genetics(GenomeSize = 10,
          ChromosomeEnds = 1, RecombinationRate = 0.0,
          OutputGeneValues = FALSE,
-         OutputFstatsWeirCockerham = FALSE, OutputFstatsWeirHill = FALSE,
+         OutputFstatsWeirCockerham = FALSE, OutputPairwiseFst = FALSE,
          OutputStartGenetics = NULL, OutputInterval = NULL,
          PatchList = NULL, NbrPatchesToSample = NULL,
          nIndividualsToSample = NULL, Stages = NULL, Traits = Traits()
@@ -31,7 +31,7 @@ output in the TraitsXPatch, TraitsXCell and/or TraitsXrow output files. Enables 
 \item{OutputFstatsWeirCockerham}{Calculate F-statistics. Enables the neutralGenetics and
 perLocusNeutralGenetics output files.}
 
-\item{OutputFstatsWeirHill}{Calculate F-statistics. Enables the neutralGenetics and pairwisePatchNeutralGenetics output files.}
+\item{OutputPairwiseFst}{Calculate F-statistics. Enables the neutralGenetics and pairwisePatchNeutralGenetics output files.}
 
 \item{OutputStartGenetics}{Which year should RangeShifter start to produce the output files listed above?}
 
@@ -115,7 +115,7 @@ The standard neutral genetics output, Sim<sim_nb>_Land<landscape_nb>_neutralGene
 13.	Observed heterozygosity Ho, calculated as the mean number of heterozygous loci per individual per locus. \cr
 
 RangeShifter estimates standard F-statistics as \insertCite{cockerham1969}{RangeShiftR}’s \ifelse{html}{\out{&theta;}}{\eqn{θ}} statistics, using 1) the classic method-of-moments estimator of \insertCite{weir1984}{RangeShiftR} (\code{OutputFstatsWeirCockerham=TRUE}) and/or
-2) the unequal sample-size generalization and extensions from \insertCite{weir2002}{RangeShiftR} (\code{OutputFstatsWeirHill=TRUE}). \cr
+2) the unequal sample-size generalization and extensions from \insertCite{weir2002}{RangeShiftR} (\code{OutputPairwiseFst=TRUE}). \cr
 
 In short, \ifelse{html}{\out{&theta;}}{\eqn{θ}} (Fst) measures the correlation between alleles within sub-populations (patches) relative to the complete sampled population,
 f (Fis) the correlation between alleles within individuals relative to the sub-population and F (Fit) the correlation between alleles
@@ -138,7 +138,7 @@ If the Weir and Cockerham method is enabled (\code{OutputFstatsWeirCockerham=TRU
 
 \emph{Pairwise patch neutral genetics}\cr
 
-If the Weir and Hill method is enabled (\code{OutputFstatsWeirHill=TRUE}), a pairwise \ifelse{html}{\out{F<sub>st</sub>}}{\eqn{F_st}} matrix is constituted and filled with the corresponding
+If the Weir and Hill method is enabled (\code{OutputPairwiseFst=TRUE}), a pairwise \ifelse{html}{\out{F<sub>st</sub>}}{\eqn{F_st}} matrix is constituted and filled with the corresponding
 values of \ifelse{html}{\out{&beta;<sub>ii’</sub>}}{\eqn{β_ii’}} for each pair of patches in the sample. Values of ifelse{html}{\out{&beta;<sub>i</sub>}}{\eqn{β_i}} are also computed along the diagonal. \cr
 
 In this case, there is one row of output for each pair: \cr
