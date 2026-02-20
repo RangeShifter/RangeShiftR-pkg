@@ -1279,10 +1279,12 @@ int Landscape::readLandChange(int filenum, Rcpp::NumericMatrix habfile, Rcpp::Nu
 
 				if (cells[y][x] != 0) { // not a no data cell (in initial landscape)
 					if ( R_IsNA(hfloat) ){ // invalid no data cell in change map
+					    Rcpp::Rcout << "Found NA in valid habitat cell. For landscape nb "<< filenum + 2 <<  std::endl;
 						return 36;
 					}
 					else {
 						if (hfloat < 0.0 || hfloat > 100.0) { // invalid quality score
+						    Rcpp::Rcout << "Found invalid habitat quality value " << hfloat << " in valid habitat cell." <<  std::endl;
 							return 37;
 						}
 						else {

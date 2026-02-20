@@ -328,7 +328,7 @@ void NeutralStatsManager::calculateFstatWC(set<int> const& patchList, const int 
 
 				//if global wc approach use this
 				if (!isPairwise) {
-				pBar = commNeutralCountTables[l].getFrequency(u);
+					pBar = commNeutralCountTables[l].getFrequency(u);
 				}
 				//else calculate total frequencies just in pair of patches for pairwise 
 				else {
@@ -437,17 +437,17 @@ void NeutralStatsManager::calculatePairwiseFst(set<int> const& patchList, const 
 
 			// Total individuals in the pair
 			int nbSampledIndsInPair = pPopA->sampleSize() + pPopB->sampleSize();
-					
+
 			//NB this overwrites global fst variable so be careful!!
 			calculateFstatWC(pairofPatchesList, nbSampledIndsInPair,
 				 nLoci, nAlleles,pSpecies, pLandscape, true);
 
 			pairwiseFstMatrix.set(i, j, fst);
 			// else remain 0
-					}
-				}
-
 		}
+	}
+	
+}
 
 
 

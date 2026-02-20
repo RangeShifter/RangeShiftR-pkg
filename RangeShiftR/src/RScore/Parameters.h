@@ -78,6 +78,7 @@ typedef unsigned long long intptr;
         #define M_2PI 6.283185307179586
         const double PI = 3.141592653589793238462643383279502884197169399375;
     #endif
+#include <Rcpp.h>
 #else
     #define M_2PI 6.283185307179586
     const double PI = 3.141592654;
@@ -330,13 +331,17 @@ struct simParams {
 	bool outConnect;
 #if RS_RCPP
 	int outStartPaths; int outIntPaths;
-	bool outPaths;	bool ReturnPopRaster; bool CreatePopFile;
+	bool outPaths;	bool ReturnPopRaster; bool ReturnPopMatrix; bool CreatePopFile;
+	Rcpp::LogicalVector ReturnStages;
 #endif
 	bool fixReplicateSeed;
 	string patchSamplingOption;
-	bool outputGeneValues;
-	bool outputWeirCockerham, outPairwiseFst;
-	int outputGeneticInterval, outStartGenetics;
+	bool outputGenes;
+	bool outputGlobalFst, outPairwiseFst;
+	bool outputPerLocusFst;
+	int outputGenesStart, outputGenesInterval;
+	int outputGlobalFstStart, outputGlobalFstInterval;
+	int outputPairwiseFstStart, outputPairwiseFstInterval;
 };
 
 struct simView {
@@ -351,7 +356,8 @@ public:
 	paramSim(const string& pathToProjDir = "");
 	~paramSim(void);
 	void setSim(simParams);
-	void setGeneticSim(string patchSamplingOption, bool outputGeneticValues, bool outputWeirCockerham, bool outPairwiseFst, int outputStartGenetics, int outputGeneticInterval);
+	void setGeneticSim(string patchSamplingOption, bool outputGenes, int outputGenesStart, int outputGenesInterval, bool outPairwiseFst,
+		int outputGlobalFst, int outputStartGlobalFst, int outputGlobalFstInterval, int outputStartPairwiseFst, int outputPairwiseFstIntervals, bool outputPerLocusFst);
 	simParams getSim(void);
 	int getSimNum(void);
 	string getDir(int);
@@ -397,16 +403,23 @@ private:
 	int outIntPaths;
 	bool outPaths;
 	bool ReturnPopRaster;
+	bool ReturnPopMatrix;
 	bool CreatePopFile;
+	Rcpp::LogicalVector ReturnStages;
 #endif
 	string dir;					// full name of working directory
 	bool fixReplicateSeed;
 	string patchSamplingOption;
 	bool outputGenes;
-	bool outputWeirCockerham;
+	int outputGenesStart;
+	int outputGenesInterval;
+	bool outputGlobalFst;
 	bool outPairwiseFst;
-	int outputStartGenetics;
-	int outputGeneticInterval;
+	bool outputPerLocusFst;
+	int outputPairwiseFstStart;
+	int outputGlobalFstStart;
+	int outputPairwiseFstInterval;
+	int outputGlobalFstInterval;
 };
 
 extern RSrandom* pRandom;

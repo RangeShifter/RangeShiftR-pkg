@@ -301,7 +301,6 @@ traitsums Population::getIndTraitsSums(Species* pSpecies) {
 	}
 	return ts;
 }
-
 //int Population::getNInds() { return static_cast<int>(inds.size()); }
 
 // ----------------------------------------------------------------------------------------
@@ -803,7 +802,6 @@ void Population::fledge(void)
 		inds = std::move(juvs);
 	}
 	juvs.clear();
-
 }
 
 Individual* Population::sampleInd() const {

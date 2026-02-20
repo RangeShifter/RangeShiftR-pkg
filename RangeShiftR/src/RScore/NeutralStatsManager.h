@@ -100,6 +100,7 @@ public:
 	void calculateHs(set<int> const& patchList, const int nbrLoci, Species* pSpecies, Landscape* pLandscape);
 	void calculateHt(Species* pSpecies, Landscape* pLandscape, const int nLoci, const int nAlleles);
 	void calculatePerLocusHo(set<int> const& patchList, const int totalNbSampledInds, const int nbrLoci, Species* pSpecies, Landscape* pLandscape);
+
 	
 	
 	

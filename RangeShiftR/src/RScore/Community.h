@@ -68,6 +68,14 @@ int ninds,nnonjuvs,suitable,occupied;
 int minX,maxX,minY,maxY;
 };
 
+#if RS_RCPP// For raster output only: which type of population output should be stored?
+enum class PopOutType {
+    NInd,    // total abundance
+    Stage,   // specific stages
+    Juvs     // juvenile stage
+};
+#endif
+
 class Community {
 
 public:
@@ -187,7 +195,9 @@ public:
 		traitsums	// structure holding sums of trait genes for dispersal (see Population.h)
 	);
 #if RS_RCPP && !R_CMD
-    Rcpp::IntegerMatrix addYearToPopList(int,int);
+    Rcpp::IntegerMatrix addYearToPopList(int,int,PopOutType,int);
+
+    Rcpp::IntegerMatrix addYearToPopListPatchBased(int,int,Rcpp::LogicalVector);
 #endif
 
 	//sample individuals for genetics (or could be used for anything)
@@ -197,7 +207,10 @@ public:
 	void outputGeneValues(const int& year, const int& gen, Species* pSpecies);
 
 	//control neutral stat output
-	void outNeutralGenetics(Species* pSpecies, int rep, int yr, int gen, bool outWeirCockerham, bool outWeirHill);
+
+	void calculateNeutralGenetics(Species* pSpecies, int rep, int yr, int gen, bool outPairwiseFst, int outputPairwiseFstStart, int outputPairwiseFstInterval,
+		bool outputGlobalFst, int outputGlobalFstStart, int outputGlobalFstInterval, bool outputPerLocusFst);
+
 
 	//file openers
 	bool openNeutralOutputFile(Species* pSpecies, const int landNr);
@@ -205,7 +218,7 @@ public:
 	bool openPairwiseFstFile(Species* pSpecies, Landscape* pLandscape, const int landNr, const int rep);
 
 	//file writers
-	void writeNeutralOutputFile(int rep, int yr, int gen, bool outWeirCockerham, bool pairwiseFst);
+	void writeNeutralOutputFile(int rep, int yr, int gen);
 	void writePerLocusFstatFile(Species* pSpecies, const int yr, const int gen, const int nLoci, set<int> const& patchList);
 	void writePairwiseFstFile(Species* pSpecies, const int yr, const int gen, set<int> const& patchList);
 	float getPatchHet(Species* pSpecies, int patchId, int whichLocus) const;
