@@ -2047,12 +2047,23 @@ setMethod("show", "TraitsParams", function(object){
 #' Provides control over the genome size, the number of loci, the recombination rate, output options and the genetic traits to be modelled
 #'
 #' @usage Genetics(GenomeSize = 10,
-#'          ChromosomeEnds = 1, RecombinationRate = 0.0,
+#'          ChromosomeEnds = 1,
+#'          RecombinationRate = 0.0,
 #'          OutputGeneValues = FALSE,
-#'          OutputFstatsWeirCockerham = FALSE, OutputPairwiseFst = FALSE,
-#'          OutputStartGenetics = NULL, OutputInterval = NULL,
-#'          PatchList = NULL, NbrPatchesToSample = NULL,
-#'          nIndividualsToSample = NULL, Stages = NULL, Traits = Traits()
+#'          OutputGenesStart = NULL,
+#'          OutputGenesInterval = NULL,
+#'          OutputGlobalFst = NULL,
+#'          OutputGlobalFstStart = NULL,
+#'          OutputGlobalFstInterval = NULL,
+#'          OutputPairwiseFst = NULL,
+#'          OutputPairwiseFstStart = NULL,
+#'          OutputPairwiseFstInterval = NULL,
+#'          OutputPerLocusFst = NULL,
+#'          PatchList = NULL,
+#'          NbrPatchesToSample = NULL,
+#'          nIndividualsToSample = NULL,
+#'          Stages = NULL,
+#'          Traits = Traits()
 #'          )
 #'
 #' @param GenomeSize Maximum size of genome (number of loci). Should be an integer number.
@@ -2064,11 +2075,15 @@ setMethod("show", "TraitsParams", function(object){
 #' @param OutputGeneValues TRUE or FALSE. Output the values of all alleles for all genes of all sampled individuals.
 #' Does not output the resulting trait values: mean and SD of dispersal and genetic fitness traits are
 #' output in the TraitsXPatch, TraitsXCell and/or TraitsXrow output files. Enables the geneValues output files.
-#' @param OutputFstatsWeirCockerham TRUE or FALSE. Calculate F-statistics. Enables the neutralGenetics and
-#' perLocusNeutralGenetics output files.
-#' @param OutputPairwiseFst TRUE or FALSE. Calculate F-statistics. Enables the neutralGenetics and pairwisePatchNeutralGenetics output files.
-#' @param OutputStartGenetics Which year should RangeShifter start to produce the output files listed above?
-#' @param OutputInterval How frequently to output genetic output, including gene values and neutral statistics.
+#' @param OutputGenesStart Which year should RangeShifter start to produce the output files listed above? Positive integer if any output is \code{TRUE}, otherwise \code{NULL}.
+#' @param OutputGenesInterval How frequently to output gene values output. Positive integer if any output is \code{TRUE}, otherwise \code{NULL}.
+#' @param OutputGlobalFst Calculate global F-statistics according to Weir & Cockerham (1984)'s method-of-moments approach. Enables the neutralGenetics output file. \code{TRUE} or \code{FALSE}.
+#' @param OutputGlobalFstStart Which year should RangeShifter start to produce the global Fst output? Positive integer if \code{OutputGlobalFst} is \code{TRUE}, otherwise \code{NULL}.
+#' @param OutputGlobalFstInterval How frequently to output global F-statistics. Positive integer if \code{OutputGlobalFst} is \code{TRUE}, otherwise \code{NULL}.
+#' @param OutputPairwiseFst Calculate pairwise F-statistics according to Weir & Cockerham (1984)'s method-of-moments approach. Enables the pairwisePatchNeutralGenetics output files. \code{TRUE} or \code{FALSE}.
+#' @param OutputPairwiseFstStart Which year should RangeShifter start to produce the pairwise Fst output? Positive integer if \code{OutputPairwiseFst} is \code{TRUE}, otherwise \code{NULL}.
+#' @param OutputPairwiseFstInterval How frequently to output pairwise F-statistics? Positive integer if \code{OutputPairwiseFst} is \code{TRUE}, otherwise \code{NULL}.
+#' @param OutputPerLocusFst Calculate F-statistics per-locus estimates according to Weir & Cockerham (1984)'s method-of-moments approach, only if \code{OutputGlobalFst} is \code{TRUE}, for the same interval as the global fst. Enables the perLocusNeutralGenetics output files. \code{TRUE} or \code{FALSE}.
 #' @param PatchList Which patches are to be sampled for output.  Patches can be
 #' specified according to their patch number, as per the patch layer in a patch-based
 #' model. Or sampled randomly or all patches can be chosen. In a cell-based landscape
@@ -2094,12 +2109,14 @@ setMethod("show", "TraitsParams", function(object){
 #' \emph{Output} \cr
 #'
 #' \emph{Sampling} \cr
-#' The volume of genetic output grows quickly with the number of individuals in the simulation, and it is therefore crucial to first constitute an appropriate sample of the community. \cr
+#' The volume of genetic output grows quickly with the number of individuals in the simulation,
+#' and it is therefore crucial to first constitute an appropriate sample of the community.
 #' First, a set of patches is sampled from either a random subset of all patches in the landscape, or a pre-specified list of patches.
-#' In either case, the same patches will be sampled through the simulation, and no check is conducted to verify if each patch does contain a population or is empty.
-#' There is an additional option to sample patches from a random subset of occupied patches, which will change from one generation to the next. \cr
+#' In either case, the same patches will be sampled through the simulation, and no check is conducted to verify if each patch does contain a
+#' population or is empty. There is an additional option to sample patches from a random subset of occupied patches,
+#' which will change from one generation to the next.
 #' Second, a number of individuals are sampled from the population of each sampled patch. In stage-structured populations,
-#' it is possible to select only certain stages to be sampled.\cr
+#' it is possible to select only certain stages to be sampled. \cr
 #'
 #' \emph{Allele values}\cr
 #'
@@ -2114,60 +2131,72 @@ setMethod("show", "TraitsParams", function(object){
 #'     4.	Trait type (e.g. “kernel_meanDist1”, matching the value given as input)\cr
 #'     5.	Position in the genome\cr
 #'     6.	Value of the allele on the first chromosome\cr
-#'     7.	 Dominance coefficient for the allele on the first chromosome (this will be 0 except for genetic fitness traits)\cr
+#'     7.	Dominance coefficient for the allele on the first chromosome (this will be 0 except for genetic fitness traits)\cr
 #'     8.	(If diploid) Value of the allele on the second chromosome\cr
-#'     9.	 (If diploid) Dominance coefficient for the allele on the second chromosome\cr
+#'     9.	(If diploid) Dominance coefficient for the allele on the second chromosome\cr
 #'
 #' \emph{Neutral genetics} \cr
 #'
-#' The standard neutral genetics output, Sim<sim_nb>_Land<landscape_nb>_neutralGenetics, writes the following entries (one row per generation): \cr
+#' The standard neutral genetics output, \emph{Sim<sim_nb>_Land<landscape_nb>_neutralGenetics}, writes the following entries (one row per generation): \cr
 #' 1.	Replicate number \cr
 #' 2.	Year \cr
 #' 3.	Generation \cr
 #' 4.	Number of sampled patches with a non-zero population \cr
 #' 5.	Total number of sampled individuals \cr
-#' 6.	Standard Fst  (Cockerham’s θ) \cr
-#' 7.	Standard Fis (Cockerham’s f) \cr
-#' 8.	Standard Fit (Cockerham’s F) \cr
-#' 9.	Global allelic diversity, calculated as the mean number of neutral alleles per locus for the entire sample. \cr
-#' 10.	Local allelic diversity, calculated as the mean number of neutral alleles per locus for each sampled patch, then averaged over patches. \cr
+#' 6.	Weir & Cockerham’s 	\emph{\ifelse{html}{\out{F<sub>st</sub>}}{\eqn{F_st}}}  (if enabled) \cr
+#' 7.	Weir & Cockerham’s 	\emph{\ifelse{html}{\out{F<sub>is</sub>}}{\eqn{F_is}}} (if enabled) \cr
+#' 8.	Weir & Cockerham’s 	\emph{\ifelse{html}{\out{F<sub>it</sub>}}{\eqn{F_it}}} (if enabled) \cr
+#' 9.	Global allelic diversity, calculated as the mean number of alleles per locus for the entire sample. \cr
+#' 10.	Local allelic diversity, calculated as the mean number of alleles per locus for each sampled patch, then averaged over patches. \cr
 #' 11.	Number of globally fixed alleles. \cr
-#' 12.	Mean number of fixed alleles per patch. Note that this may differ from the number of globally fixed alleles, for example if one allele is fixed in a given patch but polymorphism exists in other patches. \cr
+#' 12.	Mean number of fixed alleles per patch. Note that this may differ from the number of globally fixed alleles, for example if an allele is fixed in one patch but polymorphism exists in other patches. \cr
 #' 13.	Observed heterozygosity Ho, calculated as the mean number of heterozygous loci per individual per locus. \cr
+
 #'
-#' RangeShifter estimates standard F-statistics as \insertCite{cockerham1969}{RangeShiftR}’s \ifelse{html}{\out{&theta;}}{\eqn{θ}} statistics, using 1) the classic method-of-moments estimator of \insertCite{weir1984}{RangeShiftR} (\code{OutputFstatsWeirCockerham=TRUE}) and/or
-#' 2) the unequal sample-size generalization and extensions from \insertCite{weir2002}{RangeShiftR} (\code{OutputPairwiseFst=TRUE}). \cr
+#' RangeShifter estimates standard F-statistics as \insertCite{cockerham1969}{RangeShiftR}’s \ifelse{html}{\out{&theta;}}{\eqn{θ}} statistics, using the classic method-of-moments estimator
+#' of \insertCite{weir1984}{RangeShiftR}. \cr
 #'
-#' In short, \ifelse{html}{\out{&theta;}}{\eqn{θ}} (Fst) measures the correlation between alleles within sub-populations (patches) relative to the complete sampled population,
-#' f (Fis) the correlation between alleles within individuals relative to the sub-population and F (Fit) the correlation between alleles
+#' In short, \emph{\ifelse{html}{\out{&theta;}}{\eqn{θ}}} \emph{(\ifelse{html}{\out{F<sub>st</sub>}}{\eqn{F_st}})} measures the correlation between alleles within sub-populations (patches)
+#' relative to the complete sampled population,
+#' \emph{f(\ifelse{html}{\out{F<sub>is</sub>}}{\eqn{F_is}})} the correlation between alleles within individuals relative to the sub-population and \emph{F(\ifelse{html}{\out{F<sub>it</sub>}}{\eqn{F_it}})} the correlation between alleles
 #' within individuals relative to the complete sampled population (see \insertCite{holsinger2009}{RangeShiftR} for an introduction). \cr
+#'
+#' While the methods are designed for diploid systems, it is possible to compute F-stats for haploid organisms – in this case,
+#' heterozygosity terms evaluate to zero. Reminder: in RangeShifter, asexual species are always haploid, and sexual organisms are always diploid!
 #'
 #' See the RangeShifter manual for more details on the calculation of these statistics. \cr
 #'
 #' \emph{Per-locus neutral genetics} \cr
 #'
-#' If the Weir and Cockerham method is enabled (\code{OutputFstatsWeirCockerham=TRUE}), RangeShifter outputs an additional file \emph{Sim<sim_nb>_Land<landscape_nb>_perLocusNeutralGenetics} with one entry for each neutral locus:\cr
+#' If the per locus  \emph{\ifelse{html}{\out{F<sub>st</sub>}}{\eqn{F_st}}} parameter is enabled \code{OutputPerLocusFst==TRUE}, RangeShifter outputs an additional file
+#' \emph{Sim<sim_nb>_Land<landscape_nb>_perLocusNeutralGenetics} with one entry for each neutral locus: \cr
 #'
 #' 1.	Year \cr
 #' 2.	RepSeason \cr
 #' 3.	Locus, the ID of locus \eqn{l} \cr
-#' 4.	\ifelse{html}{\out{F<sub>st</sub>}}{\eqn{F_st}}, the value of \ifelse{html}{\out{F<sub>st,l</sub>}}{\eqn{F_st,l}} for locus \eqn{l} \cr
-#' 5.	\ifelse{html}{\out{F<sub>is</sub>}}{\eqn{F_is}}, the value of \ifelse{html}{\out{F<sub>is</sub>}}{\eqn{F_is,l}} for locus \eqn{l} \cr
-#' 6.	\ifelse{html}{\out{F<sub>it</sub>}}{\eqn{F_it}}, the value of \ifelse{html}{\out{F<sub>it</sub>}}{\eqn{F_it,l}} for locus \eqn{l} \cr
-#' 7.	Het, the sample-level observed heterozygosity (\ifelse{html}{\out{H<sub>o</sub>}}{\eqn{H_o}}) for locus \eqn{l} \cr
-#' 8.	One column \emph{patch_<i>_het} for each patch \emph{i} in the sample, indicating \ifelse{html}{\out{H<sub>o</sub>}}{\eqn{H_o}} for patch \emph{i} and locus \eqn{l} \cr
+#' 4.	\emph{\ifelse{html}{\out{F<sub>st</sub>}}{\eqn{F_st}}}, the value of \emph{\ifelse{html}{\out{F<sub>st,l</sub>}}{\eqn{F_st,l}}} for locus \emph{l} \cr
+#' 5.	\emph{\ifelse{html}{\out{F<sub>is</sub>}}{\eqn{F_is}}}, the value of \emph{\ifelse{html}{\out{F<sub>is</sub>}}{\eqn{F_is,l}}} for locus \emph{l} \cr
+#' 6.	\emph{\ifelse{html}{\out{F<sub>it</sub>}}{\eqn{F_it}}}, the value of \emph{\ifelse{html}{\out{F<sub>it</sub>}}{\eqn{F_it,l}}} for locus \emph{l} \cr
+#' 7.	Het, the sample-level observed heterozygosity (\emph{\ifelse{html}{\out{H<sub>o</sub>}}{\eqn{H_o}}}) for locus \eqn{l} \cr
+#' 8.	One column \emph{patch_<i>_het} for each patch \emph{i} in the sample, indicating \emph{\ifelse{html}{\out{H<sub>o</sub>}}{\eqn{H_o}}} for patch \emph{i} and locus \emph{l}.
+#' If patches have been sampled with the “random_occupied” option, then the patches number will not correspond to the sampled patches, instead ranging from 1 to the number
+#'  of patches sampled. This is because it is not known which patches will be sampled (and they may change) at the time of writing the headers.\cr
 #'
 #' \emph{Pairwise patch neutral genetics}\cr
 #'
-#' If the Weir and Hill method is enabled (\code{OutputPairwiseFst=TRUE}), a pairwise \ifelse{html}{\out{F<sub>st</sub>}}{\eqn{F_st}} matrix is constituted and filled with the corresponding
-#' values of \ifelse{html}{\out{&beta;<sub>ii’</sub>}}{\eqn{β_ii’}} for each pair of patches in the sample. Values of ifelse{html}{\out{&beta;<sub>i</sub>}}{\eqn{β_i}} are also computed along the diagonal. \cr
+#' If the pariwise 	\emph{\ifelse{html}{\out{F<sub>st</sub>}}{\eqn{F_st}}} parameter is enabled (\code{OutputPairwiseFst=TRUE}), a pairwise \emph{\ifelse{html}{\out{F<sub>st</sub>}}{\eqn{F_st}}} matrix is constituted and filled with the corresponding
+#' values of \emph{\ifelse{html}{\out{&beta;<sub>ii’</sub>}}{\eqn{β_ii’}}} for each pair of patches in the sample. Values along the diagonal are set to zero. \cr
 #'
 #' In this case, there is one row of output for each pair: \cr
 #'     1.	Year\cr
 #'     2.	Generation\cr
-#'     3.	Patch ID of the first patch\cr
-#'     4.	Patch ID of the second patch (same as 3. along the diagonal of the matrix) \cr
-#'     5.	Pairwise \ifelse{html}{\out{F<sub>st</sub>}}{\eqn{F_st}} \cr
+#'     3.	Patch ID of the first patch \cr
+#'     4.   X coordinate of first patch \cr
+#'     5.   Y coordinate of first patch \cr
+#'     6.	Patch ID of the second patch (same as 3. along the diagonal of the matrix) \cr
+#'     7.   X coordinate of second patch \cr
+#'     8.   Y coordinate of second patch \cr
+#'     9.	Pairwise \emph{\ifelse{html}{\out{F<sub>st</sub>}}{\eqn{F_st}}} \cr
 #'
 #' \emph{Traits} \cr
 #'
@@ -2193,10 +2222,15 @@ Genetics <- setClass("GeneticsParams", slots = c(GenomeSize = "integer_OR_numeri
                                                  ChromosomeEnds = "ANY", # NULL or vector
                                                  RecombinationRate = "integer_OR_numeric", # NULL or numeric
                                                  OutputGeneValues = "logical",
-                                                 OutputFstatsWeirCockerham = "logical",
+                                                 OutputGenesStart = "ANY", # positive integer if OutputGeneValues is TRUE or NULL
+                                                 OutputGenesInterval = "ANY", # positive integer if OutputGeneValues is TRUE or NULL
+                                                 OutputGlobalFst = "logical",
+                                                 OutputGlobalFstStart = "ANY", # positive integer if OutputGlobalFst is TRUE or NULL
+                                                 OutputGlobalFstInterval = "ANY", # positive integer if OutputGlobalFst is TRUE or NULL
                                                  OutputPairwiseFst = "logical",
-                                                 OutputStartGenetics = "ANY", # positive integer if any output is TRUE or NULL
-                                                 OutputInterval = "ANY",
+                                                 OutputPairwiseFstStart = "ANY", # positive integer if OutputPairwiseFst is TRUE or NULL
+                                                 OutputPairwiseFstInterval = "ANY", # positive integer if OutputPairwiseFst is TRUE or NULL
+                                                 OutputPerLocusFst = "logical",
                                                  PatchList = "ANY", # vector of integers or a string
                                                  NbrPatchesToSample = "ANY", # NULL or integer
                                                  nIndividualsToSample = "ANY", # "character_OR_integer", # character or integer
@@ -2206,10 +2240,15 @@ Genetics <- setClass("GeneticsParams", slots = c(GenomeSize = "integer_OR_numeri
                                                         ChromosomeEnds = 0L, # NULL or vector
                                                         RecombinationRate = 0.0, # NULL or numeric
                                                         OutputGeneValues = FALSE,
-                                                        OutputFstatsWeirCockerham = FALSE,
+                                                        OutputGenesStart = NULL, # positive integer if OutputGeneValues is TRUE or NULL
+                                                        OutputGenesInterval = NULL, # positive integer if OutputGeneValues is TRUE or NULL
+                                                        OutputGlobalFst = FALSE,
+                                                        OutputGlobalFstStart = NULL, # positive integer if OutputGlobalFst is TRUE
+                                                        OutputGlobalFstInterval = NULL, # positive integer if OutputGlobalFst is TRUE
                                                         OutputPairwiseFst = FALSE,
-                                                        OutputStartGenetics = NULL, # positive integer if any output is TRUE or NULL
-                                                        OutputInterval = NULL,
+                                                        OutputPairwiseFstStart = NULL, # positive integer if OutputPairwiseFst is TRUE
+                                                        OutputPairwiseFstInterval = NULL, # positive integer if OutputPairwiseFst
+                                                        OutputPerLocusFst = FALSE,
                                                         PatchList = NULL, #"all", # vector or string
                                                         NbrPatchesToSample = NULL, #0L, # NULL or integer
                                                         nIndividualsToSample = NULL, # "all", # NULL or integer
@@ -2243,10 +2282,20 @@ setValidity('GeneticsParams', function(object){
         msg <- c(msg, "In Genetics(): OutputGeneValues must be true or false.")
     }
 
-    # OutputFstatsWeirCockerham
+    # OutputGlobalFst
     # must be a boolean
-    if (!is.logical(object@OutputFstatsWeirCockerham)) {
-        msg <- c(msg, "In Genetics(): OutputFstatsWeirCockerham must be true or false.")
+    if (!is.logical(object@OutputGlobalFst)) {
+        msg <- c(msg, "In Genetics(): OutputGlobalFst must be true or false.")
+    }
+
+    # if TRUE, OutputGlobalFstStart and OutputGlobalFstInterval must be positive integers
+    if (object@OutputGlobalFst) {
+        if (is.null(object@OutputGlobalFstStart) || object@OutputGlobalFstStart <= 0) {
+            msg <- c(msg, "OutputGlobalFstStart must be a positive integer if OutputGlobalFst is TRUE.")
+        }
+        if (is.null(object@OutputGlobalFstInterval) || object@OutputGlobalFstInterval <= 0) {
+            msg <- c(msg, "OutputGlobalFstInterval must be a positive integer if OutputGlobalFst is TRUE.")
+        }
     }
 
     # OutputPairwiseFst
@@ -2255,21 +2304,42 @@ setValidity('GeneticsParams', function(object){
         msg <- c(msg, "In Genetics(): OutputPairwiseFst must be true or false.")
     }
 
-    anyNeutral = object@OutputFstatsWeirCockerham || object@OutputPairwiseFst
+    # if true, OutputPairwiseFstStart and OutputPairwiseFstInterval must be positive integers
+    if (object@OutputPairwiseFst) {
+        if (is.null(object@OutputPairwiseFstStart) || object@OutputPairwiseFstStart <= 0) {
+            msg <- c(msg, "OutputPairwiseFstStart must be a positive integer if OutputPairwiseFst is TRUE.")
+        }
+        if (is.null(object@OutputPairwiseFstInterval) || object@OutputPairwiseFstInterval <= 0) {
+            msg <- c(msg, "OutputPairwiseFstInterval must be a positive integer if OutputPairwiseFst is TRUE.")
+        }
+    }
+
+    # OutputPerLocusFst
+    if(!is.logical(object@OutputPerLocusFst)) {
+        msg <- c(msg, "In Genetics(): OutputPerLocusFst must be true or false.")
+    }
+
+    # if OutputGlobalFst is false, OutputPerLocusFst must be false
+    if (object@OutputPerLocusFst && !object@OutputGlobalFst) {
+        msg <- c(msg, "OutputPerLocusFst cannot be TRUE if OutputGlobalFst is FALSE.")
+    }
+
+
+    anyNeutral = object@OutputGlobalFst || object@OutputPairwiseFst
 
     anyGeneticsOutput = object@OutputGeneValues == "TRUE" || anyNeutral
 
     if (anyGeneticsOutput) {
-        if (is.null(object@OutputStartGenetics) || object@OutputStartGenetics < 0) {
-            msg <- c(msg, "OutStartGenetics be greater than 0 if any genetic output option is TRUE.")
+        if (is.null(object@OutputGenesStart) || object@OutputGenesStart < 0) {
+            msg <- c(msg, "OutputGenesStart must be greateror equal to 0 if any genetic output option is TRUE.")
         }
 
-        if (is.null(object@OutputInterval) || object@OutputInterval <= 0) { # check whether is.null()
+        if (is.null(object@OutputGenesInterval) || object@OutputGenesInterval <= 0) { # check whether is.null()
             msg <- c(msg,"OutputInterval must be at least 1 if any genetic output option is TRUE.")
         }
     }
-    else if (!is.null(object@OutputInterval) || !is.null(object@OutputStartGenetics)){
-        msg <- c(msg, "OutStartGenetics and OutputInterval should be NULL if all genetic output options are FALSE.")
+    else if (!is.null(object@OutputGenesInterval) || !is.null(object@OutputGenesStart)){
+        msg <- c(msg, "OutputGenesStart and OutputGenesInterval should be NULL if all genetic output options are FALSE.")
     }
 
     # Check PatchList
@@ -2355,10 +2425,19 @@ setMethod("show", "GeneticsParams", function(object){
 
     cat("   Recombination rate: ", object@RecombinationRate, "\n")
     cat("   Output genetic values: ", object@OutputGeneValues, "\n")
-    cat("   Output Fstats after Weir Cockerham: ", object@OutputFstatsWeirCockerham, "\n")
+    cat("   Output global Fst: ", object@OutputGlobalFst, "\n")
     cat("   Output Pairwise Fst: ", object@OutputPairwiseFst, "\n")
     if(any(object@OutputGeneValues || object@OutputFstatsWeirCockerham || object@OutputPairwiseFst)){
-        cat("   Start genetic output at year: ", object@OutputStartGenetics, "and output every ",object@OutputInterval ," year \n")
+        if(object@OutputGeneValues){
+             cat("     Start gene values output at year: ", object@OutputGenesStart, "and output every ",object@OutputGenesInterval ," year \n")
+        }
+        if(object@OutputGlobalFst){
+             cat("     Start global Fst output at year: ", object@OutputGlobalFstStart, "and output every ",object@OutputGlobalFstInterval ," year \n")
+        }
+        if(object@OutputPairwiseFst){
+             cat("     Start pairwise Fst output at year: ", object@OutputPairwiseFstStart, "and output every ",object@OutputPairwiseFstInterval ," year \n")
+        }
+
         cat("     Patches to sample: ", object@PatchList, "\n")
         if(object@PatchList=="random" || object@PatchList=="random_occupied"){
             cat("     Number of patches to sample: ", object@NbrPatchesToSample, "\n")

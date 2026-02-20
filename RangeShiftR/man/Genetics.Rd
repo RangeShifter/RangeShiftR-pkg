@@ -6,12 +6,23 @@
 \title{Set Genetics parameters}
 \usage{
 Genetics(GenomeSize = 10,
-         ChromosomeEnds = 1, RecombinationRate = 0.0,
+         ChromosomeEnds = 1,
+         RecombinationRate = 0.0,
          OutputGeneValues = FALSE,
-         OutputFstatsWeirCockerham = FALSE, OutputPairwiseFst = FALSE,
-         OutputStartGenetics = NULL, OutputInterval = NULL,
-         PatchList = NULL, NbrPatchesToSample = NULL,
-         nIndividualsToSample = NULL, Stages = NULL, Traits = Traits()
+         OutputGenesStart = NULL,
+         OutputGenesInterval = NULL,
+         OutputGlobalFst = NULL,
+         OutputGlobalFstStart = NULL,
+         OutputGlobalFstInterval = NULL,
+         OutputPairwiseFst = NULL,
+         OutputPairwiseFstStart = NULL,
+         OutputPairwiseFstInterval = NULL,
+         OutputPerLocusFst = NULL,
+         PatchList = NULL,
+         NbrPatchesToSample = NULL,
+         nIndividualsToSample = NULL,
+         Stages = NULL,
+         Traits = Traits()
          )
 }
 \arguments{
@@ -28,14 +39,23 @@ across the whole genome (in addition to the chromosomeEnds above). Disabled for 
 Does not output the resulting trait values: mean and SD of dispersal and genetic fitness traits are
 output in the TraitsXPatch, TraitsXCell and/or TraitsXrow output files. Enables the geneValues output files.}
 
-\item{OutputFstatsWeirCockerham}{TRUE or FALSE. Calculate F-statistics. Enables the neutralGenetics and
-perLocusNeutralGenetics output files.}
+\item{OutputGenesStart}{Which year should RangeShifter start to produce the output files listed above? Positive integer if any output is \code{TRUE}, otherwise \code{NULL}.}
 
-\item{OutputPairwiseFst}{TRUE or FALSE. Calculate F-statistics. Enables the neutralGenetics and pairwisePatchNeutralGenetics output files.}
+\item{OutputGenesInterval}{How frequently to output gene values output. Positive integer if any output is \code{TRUE}, otherwise \code{NULL}.}
 
-\item{OutputStartGenetics}{Which year should RangeShifter start to produce the output files listed above?}
+\item{OutputGlobalFst}{Calculate global F-statistics according to Weir & Cockerham (1984)'s method-of-moments approach. Enables the neutralGenetics output file. \code{TRUE} or \code{FALSE}.}
 
-\item{OutputInterval}{How frequently to output genetic output, including gene values and neutral statistics.}
+\item{OutputGlobalFstStart}{Which year should RangeShifter start to produce the global Fst output? Positive integer if \code{OutputGlobalFst} is \code{TRUE}, otherwise \code{NULL}.}
+
+\item{OutputGlobalFstInterval}{How frequently to output global F-statistics. Positive integer if \code{OutputGlobalFst} is \code{TRUE}, otherwise \code{NULL}.}
+
+\item{OutputPairwiseFst}{Calculate pairwise F-statistics according to Weir & Cockerham (1984)'s method-of-moments approach. Enables the pairwisePatchNeutralGenetics output files. \code{TRUE} or \code{FALSE}.}
+
+\item{OutputPairwiseFstStart}{Which year should RangeShifter start to produce the pairwise Fst output? Positive integer if \code{OutputPairwiseFst} is \code{TRUE}, otherwise \code{NULL}.}
+
+\item{OutputPairwiseFstInterval}{How frequently to output pairwise F-statistics? Positive integer if \code{OutputPairwiseFst} is \code{TRUE}, otherwise \code{NULL}.}
+
+\item{OutputPerLocusFst}{Calculate F-statistics per-locus estimates according to Weir & Cockerham (1984)'s method-of-moments approach, only if \code{OutputGlobalFst} is \code{TRUE}, for the same interval as the global fst. Enables the perLocusNeutralGenetics output files. \code{TRUE} or \code{FALSE}.}
 
 \item{PatchList}{Which patches are to be sampled for output.  Patches can be
 specified according to their patch number, as per the patch layer in a patch-based
@@ -73,12 +93,14 @@ If either option for sexual reproduction is selected, all individuals are diploi
 \emph{Output} \cr
 
 \emph{Sampling} \cr
-The volume of genetic output grows quickly with the number of individuals in the simulation, and it is therefore crucial to first constitute an appropriate sample of the community. \cr
+The volume of genetic output grows quickly with the number of individuals in the simulation,
+and it is therefore crucial to first constitute an appropriate sample of the community.
 First, a set of patches is sampled from either a random subset of all patches in the landscape, or a pre-specified list of patches.
-In either case, the same patches will be sampled through the simulation, and no check is conducted to verify if each patch does contain a population or is empty.
-There is an additional option to sample patches from a random subset of occupied patches, which will change from one generation to the next. \cr
+In either case, the same patches will be sampled through the simulation, and no check is conducted to verify if each patch does contain a
+population or is empty. There is an additional option to sample patches from a random subset of occupied patches,
+which will change from one generation to the next.
 Second, a number of individuals are sampled from the population of each sampled patch. In stage-structured populations,
-it is possible to select only certain stages to be sampled.\cr
+it is possible to select only certain stages to be sampled. \cr
 
 \emph{Allele values}\cr
 
@@ -93,60 +115,71 @@ Each row corresponds to a single gene:\cr
     4.	Trait type (e.g. “kernel_meanDist1”, matching the value given as input)\cr
     5.	Position in the genome\cr
     6.	Value of the allele on the first chromosome\cr
-    7.	 Dominance coefficient for the allele on the first chromosome (this will be 0 except for genetic fitness traits)\cr
+    7.	Dominance coefficient for the allele on the first chromosome (this will be 0 except for genetic fitness traits)\cr
     8.	(If diploid) Value of the allele on the second chromosome\cr
-    9.	 (If diploid) Dominance coefficient for the allele on the second chromosome\cr
+    9.	(If diploid) Dominance coefficient for the allele on the second chromosome\cr
 
 \emph{Neutral genetics} \cr
 
-The standard neutral genetics output, Sim<sim_nb>_Land<landscape_nb>_neutralGenetics, writes the following entries (one row per generation): \cr
+The standard neutral genetics output, \emph{Sim<sim_nb>_Land<landscape_nb>_neutralGenetics}, writes the following entries (one row per generation): \cr
 1.	Replicate number \cr
 2.	Year \cr
 3.	Generation \cr
 4.	Number of sampled patches with a non-zero population \cr
 5.	Total number of sampled individuals \cr
-6.	Standard Fst  (Cockerham’s θ) \cr
-7.	Standard Fis (Cockerham’s f) \cr
-8.	Standard Fit (Cockerham’s F) \cr
-9.	Global allelic diversity, calculated as the mean number of neutral alleles per locus for the entire sample. \cr
-10.	Local allelic diversity, calculated as the mean number of neutral alleles per locus for each sampled patch, then averaged over patches. \cr
+6.	Weir & Cockerham’s 	\emph{\ifelse{html}{\out{F<sub>st</sub>}}{\eqn{F_st}}}  (if enabled) \cr
+7.	Weir & Cockerham’s 	\emph{\ifelse{html}{\out{F<sub>is</sub>}}{\eqn{F_is}}} (if enabled) \cr
+8.	Weir & Cockerham’s 	\emph{\ifelse{html}{\out{F<sub>it</sub>}}{\eqn{F_it}}} (if enabled) \cr
+9.	Global allelic diversity, calculated as the mean number of alleles per locus for the entire sample. \cr
+10.	Local allelic diversity, calculated as the mean number of alleles per locus for each sampled patch, then averaged over patches. \cr
 11.	Number of globally fixed alleles. \cr
-12.	Mean number of fixed alleles per patch. Note that this may differ from the number of globally fixed alleles, for example if one allele is fixed in a given patch but polymorphism exists in other patches. \cr
+12.	Mean number of fixed alleles per patch. Note that this may differ from the number of globally fixed alleles, for example if an allele is fixed in one patch but polymorphism exists in other patches. \cr
 13.	Observed heterozygosity Ho, calculated as the mean number of heterozygous loci per individual per locus. \cr
 
-RangeShifter estimates standard F-statistics as \insertCite{cockerham1969}{RangeShiftR}’s \ifelse{html}{\out{&theta;}}{\eqn{θ}} statistics, using 1) the classic method-of-moments estimator of \insertCite{weir1984}{RangeShiftR} (\code{OutputFstatsWeirCockerham=TRUE}) and/or
-2) the unequal sample-size generalization and extensions from \insertCite{weir2002}{RangeShiftR} (\code{OutputPairwiseFst=TRUE}). \cr
+RangeShifter estimates standard F-statistics as \insertCite{cockerham1969}{RangeShiftR}’s \ifelse{html}{\out{&theta;}}{\eqn{θ}} statistics, using the classic method-of-moments estimator
+of \insertCite{weir1984}{RangeShiftR}. \cr
 
-In short, \ifelse{html}{\out{&theta;}}{\eqn{θ}} (Fst) measures the correlation between alleles within sub-populations (patches) relative to the complete sampled population,
-f (Fis) the correlation between alleles within individuals relative to the sub-population and F (Fit) the correlation between alleles
+In short, \emph{\ifelse{html}{\out{&theta;}}{\eqn{θ}}} \emph{(\ifelse{html}{\out{F<sub>st</sub>}}{\eqn{F_st}})} measures the correlation between alleles within sub-populations (patches)
+relative to the complete sampled population,
+\emph{f(\ifelse{html}{\out{F<sub>is</sub>}}{\eqn{F_is}})} the correlation between alleles within individuals relative to the sub-population and \emph{F(\ifelse{html}{\out{F<sub>it</sub>}}{\eqn{F_it}})} the correlation between alleles
 within individuals relative to the complete sampled population (see \insertCite{holsinger2009}{RangeShiftR} for an introduction). \cr
+
+While the methods are designed for diploid systems, it is possible to compute F-stats for haploid organisms – in this case,
+heterozygosity terms evaluate to zero. Reminder: in RangeShifter, asexual species are always haploid, and sexual organisms are always diploid!
 
 See the RangeShifter manual for more details on the calculation of these statistics. \cr
 
 \emph{Per-locus neutral genetics} \cr
 
-If the Weir and Cockerham method is enabled (\code{OutputFstatsWeirCockerham=TRUE}), RangeShifter outputs an additional file \emph{Sim<sim_nb>_Land<landscape_nb>_perLocusNeutralGenetics} with one entry for each neutral locus:\cr
+If the per locus  \emph{\ifelse{html}{\out{F<sub>st</sub>}}{\eqn{F_st}}} parameter is enabled \code{OutputPerLocusFst==TRUE}, RangeShifter outputs an additional file
+\emph{Sim<sim_nb>_Land<landscape_nb>_perLocusNeutralGenetics} with one entry for each neutral locus: \cr
 
 1.	Year \cr
 2.	RepSeason \cr
 3.	Locus, the ID of locus \eqn{l} \cr
-4.	\ifelse{html}{\out{F<sub>st</sub>}}{\eqn{F_st}}, the value of \ifelse{html}{\out{F<sub>st,l</sub>}}{\eqn{F_st,l}} for locus \eqn{l} \cr
-5.	\ifelse{html}{\out{F<sub>is</sub>}}{\eqn{F_is}}, the value of \ifelse{html}{\out{F<sub>is</sub>}}{\eqn{F_is,l}} for locus \eqn{l} \cr
-6.	\ifelse{html}{\out{F<sub>it</sub>}}{\eqn{F_it}}, the value of \ifelse{html}{\out{F<sub>it</sub>}}{\eqn{F_it,l}} for locus \eqn{l} \cr
-7.	Het, the sample-level observed heterozygosity (\ifelse{html}{\out{H<sub>o</sub>}}{\eqn{H_o}}) for locus \eqn{l} \cr
-8.	One column \emph{patch_<i>_het} for each patch \emph{i} in the sample, indicating \ifelse{html}{\out{H<sub>o</sub>}}{\eqn{H_o}} for patch \emph{i} and locus \eqn{l} \cr
+4.	\emph{\ifelse{html}{\out{F<sub>st</sub>}}{\eqn{F_st}}}, the value of \emph{\ifelse{html}{\out{F<sub>st,l</sub>}}{\eqn{F_st,l}}} for locus \emph{l} \cr
+5.	\emph{\ifelse{html}{\out{F<sub>is</sub>}}{\eqn{F_is}}}, the value of \emph{\ifelse{html}{\out{F<sub>is</sub>}}{\eqn{F_is,l}}} for locus \emph{l} \cr
+6.	\emph{\ifelse{html}{\out{F<sub>it</sub>}}{\eqn{F_it}}}, the value of \emph{\ifelse{html}{\out{F<sub>it</sub>}}{\eqn{F_it,l}}} for locus \emph{l} \cr
+7.	Het, the sample-level observed heterozygosity (\emph{\ifelse{html}{\out{H<sub>o</sub>}}{\eqn{H_o}}}) for locus \eqn{l} \cr
+8.	One column \emph{patch_<i>_het} for each patch \emph{i} in the sample, indicating \emph{\ifelse{html}{\out{H<sub>o</sub>}}{\eqn{H_o}}} for patch \emph{i} and locus \emph{l}.
+If patches have been sampled with the “random_occupied” option, then the patches number will not correspond to the sampled patches, instead ranging from 1 to the number
+ of patches sampled. This is because it is not known which patches will be sampled (and they may change) at the time of writing the headers.\cr
 
 \emph{Pairwise patch neutral genetics}\cr
 
-If the Weir and Hill method is enabled (\code{OutputPairwiseFst=TRUE}), a pairwise \ifelse{html}{\out{F<sub>st</sub>}}{\eqn{F_st}} matrix is constituted and filled with the corresponding
-values of \ifelse{html}{\out{&beta;<sub>ii’</sub>}}{\eqn{β_ii’}} for each pair of patches in the sample. Values of ifelse{html}{\out{&beta;<sub>i</sub>}}{\eqn{β_i}} are also computed along the diagonal. \cr
+If the pariwise 	\emph{\ifelse{html}{\out{F<sub>st</sub>}}{\eqn{F_st}}} parameter is enabled (\code{OutputPairwiseFst=TRUE}), a pairwise \emph{\ifelse{html}{\out{F<sub>st</sub>}}{\eqn{F_st}}} matrix is constituted and filled with the corresponding
+values of \emph{\ifelse{html}{\out{&beta;<sub>ii’</sub>}}{\eqn{β_ii’}}} for each pair of patches in the sample. Values along the diagonal are set to zero. \cr
 
 In this case, there is one row of output for each pair: \cr
     1.	Year\cr
     2.	Generation\cr
-    3.	Patch ID of the first patch\cr
-    4.	Patch ID of the second patch (same as 3. along the diagonal of the matrix) \cr
-    5.	Pairwise \ifelse{html}{\out{F<sub>st</sub>}}{\eqn{F_st}} \cr
+    3.	Patch ID of the first patch \cr
+    4.   X coordinate of first patch \cr
+    5.   Y coordinate of first patch \cr
+    6.	Patch ID of the second patch (same as 3. along the diagonal of the matrix) \cr
+    7.   X coordinate of second patch \cr
+    8.   Y coordinate of second patch \cr
+    9.	Pairwise \emph{\ifelse{html}{\out{F<sub>st</sub>}}{\eqn{F_st}}} \cr
 
 \emph{Traits} \cr
 

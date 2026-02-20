@@ -3166,8 +3166,11 @@ int ReadInitialisationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 
 int ReadGeneticsR(Rcpp::S4 GeneParamsR, Landscape* pLandscape)
 {
-    bool outputGeneValues, outputWeirCockerham, outputPairwiseFst; // what should be calculated in the output?
-    int outputStartGenetics, outputGeneticInterval; // when should the output be calculated?
+    bool outputGeneValues, outputGlobalFst, outputPairwiseFst, outputPerLocusFst; // what should be calculated in the output?
+    int outputGenesStart, outputGenesInterval; // when should the output be calculated?
+    int outputGlobalFstStart, outputGlobalFstInterval; // when should global Fst be calculated?
+    int outputPairwiseFstStart, outputPairwiseFstInterval; // when should pairwise Fst be calculated?
+
     set<int>patchList; // for which patches should the output be calculated?
 
     //not ideal to reset these in here
@@ -3191,20 +3194,44 @@ int ReadGeneticsR(Rcpp::S4 GeneParamsR, Landscape* pLandscape)
     float recombinationRate = Rcpp::as<float>(GeneParamsR.slot("RecombinationRate"));
 
     outputGeneValues = Rcpp::as<bool>(GeneParamsR.slot("OutputGeneValues"));
-    outputWeirCockerham = Rcpp::as<bool>(GeneParamsR.slot("OutputFstatsWeirCockerham"));
+    outputGlobalFst = Rcpp::as<bool>(GeneParamsR.slot("OutputGlobalFst"));
     outputPairwiseFst = Rcpp::as<bool>(GeneParamsR.slot("OutputPairwiseFst"));
+    outputPerLocusFst = Rcpp::as<bool>(GeneParamsR.slot("OutputPerLocusFst"));
 
 
-    if(GeneParamsR.slot("OutputStartGenetics") != R_NilValue){
-        outputStartGenetics = Rcpp::as<int>(GeneParamsR.slot("OutputStartGenetics"));
+    if(GeneParamsR.slot("OutputGenesStart") != R_NilValue){
+        outputGenesStart = Rcpp::as<int>(GeneParamsR.slot("OutputGenesStart"));
     } else {
-        outputStartGenetics = -9;
+        outputGenesStart = -9;
 		}
-    if(GeneParamsR.slot("OutputInterval") != R_NilValue){
-        outputGeneticInterval = Rcpp::as<int>(GeneParamsR.slot("OutputInterval"));
+    if(GeneParamsR.slot("OutputGenesInterval") != R_NilValue){
+        outputGenesInterval = Rcpp::as<int>(GeneParamsR.slot("OutputGenesInterval"));
 		} else {
-        outputGeneticInterval = -9;
+        outputGenesInterval = -9;
     }
+
+	if(GeneParamsR.slot("OutputGlobalFstStart") != R_NilValue){
+	    outputGlobalFstStart = Rcpp::as<int>(GeneParamsR.slot("OutputGlobalFstStart"));
+	} else {
+	    outputGlobalFstStart = -9;
+	}
+	if(GeneParamsR.slot("OutputGlobalFstInterval") != R_NilValue){
+	    outputGlobalFstInterval = Rcpp::as<int>(GeneParamsR.slot("OutputGlobalFstInterval"));
+	} else {
+	    outputGlobalFstInterval = -9;
+	}
+
+	if(GeneParamsR.slot("OutputPairwiseFstStart") != R_NilValue){
+	    outputPairwiseFstStart = Rcpp::as<int>(GeneParamsR.slot("OutputPairwiseFstStart"));
+	} else {
+	    outputPairwiseFstStart = -9;
+	}
+	if(GeneParamsR.slot("OutputPairwiseFstInterval") != R_NilValue){
+	    outputPairwiseFstInterval = Rcpp::as<int>(GeneParamsR.slot("OutputPairwiseFstInterval"));
+	} else {
+	    outputPairwiseFstInterval = -9;
+	}
+
 
     Rcpp::StringVector inPatches;
     string patchSamplingOption;
@@ -3268,7 +3295,8 @@ int ReadGeneticsR(Rcpp::S4 GeneParamsR, Landscape* pLandscape)
     pSpecies->setGeneticParameters(chrEnds, genomeSize, recombinationRate,
                                    patchList, strNbInds, stagesToSampleFrom, nPatchesToSample);
 
-    paramsSim->setGeneticSim(patchSamplingOption, outputGeneValues, outputWeirCockerham, outputPairwiseFst, outputStartGenetics, outputGeneticInterval);
+    paramsSim->setGeneticSim(patchSamplingOption, outputGeneValues, outputGenesStart, outputGenesInterval, outputPairwiseFst, outputGlobalFst, outputGlobalFstStart, outputGlobalFstInterval,
+                             outputPairwiseFstStart, outputPairwiseFstInterval, outputPerLocusFst);
     return 0;
 }
 
