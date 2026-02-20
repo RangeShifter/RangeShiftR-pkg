@@ -15,23 +15,23 @@ Genetics(GenomeSize = 10,
          )
 }
 \arguments{
-\item{GenomeSize}{Maximum size of genome (number of loci)}
+\item{GenomeSize}{Maximum size of genome (number of loci). Should be an integer number.}
 
-\item{ChromosomeEnds}{Where the genome is split into chromosomes, if empty
-assumed one chromosome is equal to GenomeSize. These areas recombine with a
-probability of 0.5. Disabled for haploid organisms (no recombination).}
+\item{ChromosomeEnds}{Where the genome is split into chromosomes, if empty it is
+assumed that one chromosome is equal to GenomeSize. These areas recombine with a
+probability of 0.5. Disabled for haploid organisms (no recombination). It should be a vector of integers.}
 
 \item{RecombinationRate}{Recombination rate (through chromosomal crossover)
 across the whole genome (in addition to the chromosomeEnds above). Disabled for haploid organisms (no recombination).}
 
-\item{OutputGeneValues}{Output the values of all alleles for all genes of all sampled individuals.
+\item{OutputGeneValues}{TRUE or FALSE. Output the values of all alleles for all genes of all sampled individuals.
 Does not output the resulting trait values: mean and SD of dispersal and genetic fitness traits are
 output in the TraitsXPatch, TraitsXCell and/or TraitsXrow output files. Enables the geneValues output files.}
 
-\item{OutputFstatsWeirCockerham}{Calculate F-statistics. Enables the neutralGenetics and
+\item{OutputFstatsWeirCockerham}{TRUE or FALSE. Calculate F-statistics. Enables the neutralGenetics and
 perLocusNeutralGenetics output files.}
 
-\item{OutputPairwiseFst}{Calculate F-statistics. Enables the neutralGenetics and pairwisePatchNeutralGenetics output files.}
+\item{OutputPairwiseFst}{TRUE or FALSE. Calculate F-statistics. Enables the neutralGenetics and pairwisePatchNeutralGenetics output files.}
 
 \item{OutputStartGenetics}{Which year should RangeShifter start to produce the output files listed above?}
 
@@ -40,7 +40,7 @@ perLocusNeutralGenetics output files.}
 \item{PatchList}{Which patches are to be sampled for output.  Patches can be
 specified according to their patch number, as per the patch layer in a patch-based
 model. Or sampled randomly or all patches can be chosen. In a cell-based landscape
-random is the only option with number of patches (=cells) specified.}
+random is the only option with number of patches (=cells) specified. Can take "all", "random", "random_occupied" or a vector of integers.}
 
 \item{NbrPatchesToSample}{If PatchList=random or random_occupied then this specifies
 the number of patches to sample randomly. Random: The chosen sample patches remain
@@ -50,7 +50,7 @@ Random_occupied: patches are re-sampled every generation among all patches conta
 
 \item{nIndividualsToSample}{The number of individuals to sample in a patch. If nInds < nIndividualsToSample then sampled individuals = nInds}
 
-\item{Stages}{The age stages to sample from.}
+\item{Stages}{The age stages to sample from. Should be a vector of integers. Should be a vector of integers or "all". If NULL, all stages are sampled.}
 
 \item{Traits}{The genetic traits to be modelled. See \code{\link[RangeShiftR]{Traits}} for more information.}
 }

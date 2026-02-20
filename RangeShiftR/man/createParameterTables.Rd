@@ -4,16 +4,19 @@
 \alias{createParameterTables}
 \title{Creating parameter table file for a specific RangeShiftR parameter master object}
 \usage{
-createParameterTables(filename, s, type)
+createParameterTables(filename, s, type, title)
 }
 \arguments{
 \item{filename}{Name of the R markdown file and document to be created, e.g. 'Parameter_table.rmd'}
 
 \item{s}{RangeShiftR parameter object}
 
-\item{type}{file type of the rendering process output. Can be either "pdf_document", "word_document" or "md_document"}
+\item{type}{file type of the rendering process output. Can be either "pdf_document", "word_document" or "md_document" We recommend using "word_document" to refine the layout.}
+
+\item{title}{Title of the study if possible including authors, e.g. "'Study title ABC' by author ABC}
 }
 \description{
-This function creates template file including tables of the parameter set for a specific RangeShiftR parameter master object \code{s}. It only creates a new file, if the \code{filename} doesn't exist in the folder.
+This function creates a file with tables of the parameter set for a specific RangeShiftR parameter master object \code{s}.
+It only creates a new file, if the \code{filename} doesn't exist in the folder.
 If the \code{filename} already exists, it only renders the document to either pdf, word or md.
 }

@@ -428,7 +428,7 @@ Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
 	Rcpp::Rcout << "***** Outputs folder: " << outdir << endl;
 	Rcpp::Rcout << "*****" << endl;
 
-	if(sim.ReturnPopRaster && sim.outIntPop > 0) {
+	if((sim.ReturnPopRaster || sim.ReturnPopMatrix) && sim.outIntPop > 0) {
 		// return Rcpp::List::create(Rcpp::Named("runs") = errors);
 		return list_outPop;
 	} else {
@@ -1708,6 +1708,31 @@ int ReadParametersR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 // sim.saveInitMap = false;
 #if RS_RCPP
 	sim.ReturnPopRaster = Rcpp::as<bool>(ParamParamsR.slot("ReturnPopRaster"));
+	sim.ReturnPopMatrix = Rcpp::as<bool>(ParamParamsR.slot("ReturnPopMatrix"));
+	sim.ReturnStages =
+	    Rcpp::as<Rcpp::LogicalVector>(
+	        ParamParamsR.slot("ReturnStages")
+	    );
+	// sim.ReturnStages =  Rcpp::LogicalVector(ParamParamsR.slot("ReturnStages"));
+	// loop over sim.ReturnStages to check if it is a logical vector
+	for(int i = 0; i < sim.ReturnStages.length(); i++) {
+	    bool ReturnStage = sim.ReturnStages[i] == 1;
+		if(ReturnStage) {
+			Rcpp::Rcout << "Return Stage Nb. " << i << endl;
+		}
+	}
+	if(stagestruct){
+	    // size of sim.ReturnStages should not be larger than the number of stages
+	    if(sim.ReturnStages.length() > stages){
+	        Rcpp::Rcout << "Error: ReturnStages should not have more entries than the number of stages." << endl;
+	        error++;
+	    }
+	}else {
+	    if(sim.ReturnStages.length() != 1 || sim.ReturnStages[0] != false){
+	        Rcpp::Rcout << "Error: ReturnStages should be FALSE" << endl;
+	        error++;
+	    }
+	}
 	sim.CreatePopFile = Rcpp::as<bool>(ParamParamsR.slot("CreatePopFile"));
 #endif
 
@@ -4936,7 +4961,7 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
                         if(paramsLand.dynamic) {
                             landcode = ReadDynLandR(pLandscape, LandParamsR);
                             if(landcode != 0) {
-                                Rcpp::Rcout << endl << "Error reading landscape " << land_nr << " - aborting" << endl;
+                                Rcpp::Rcout << endl << "Error reading dynamic landscape - aborting" << endl;
                                 landOK = false;
                             } else {
                                 Rcpp::Rcout << "ReadDynLandR() done" << std::endl;

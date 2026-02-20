@@ -17,7 +17,9 @@ Simulation(Simulation = 1, Replicates = 2, Years = 50, Absorbing = FALSE,
            OutStartPop = 0, OutStartInd = 0,
            OutStartTraitCell = 0, OutStartTraitRow = 0,
            OutStartConn = 0, OutStartPaths = 0,
-           ReturnPopRaster = FALSE, CreatePopFile = TRUE
+           ReturnPopRaster = FALSE, ReturnPopMatrix = FALSE, ReturnStages = FALSE,
+           CreatePopFile = TRUE,
+           ReturnStages = FALSE,
            SMSHeatMap = FALSE)
 }
 \arguments{
@@ -101,7 +103,11 @@ Instead, genetic data output is controlled within the \code{\link[RangeShiftR]{G
 
 \item{SMSHeatMap}{Produce SMS heat map raster as output? Defaults to \code{FALSE}.}
 
-\item{ReturnPopRaster}{Return population data to R (as data frame)? Defaults to \code{TRUE}.}
+\item{ReturnPopRaster}{Return population data to R as SpatRaster for cell-based models? Defaults to \code{FALSE}.}
+
+\item{ReturnPopMatrix}{Return population data to R as matrix (for patch based models)? Defaults to \code{FALSE}.}
+
+\item{ReturnStages}{Return also stage-specific population data? Only applicable for stage-structured models if \code{ReturnPopRaster = TRUE} or \code{ReturnPopMatrix = TRUE}. If \code{FALSE} only total abundance is recorded.}
 
 \item{CreatePopFile}{Create population output file? Defaults to \code{TRUE}.}
 }

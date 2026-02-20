@@ -54,24 +54,63 @@ RunRS <- function(RSparams, dirpath = getwd()){
 
     if (class(out)=="list" && is.null(out$Errors)) {
         if ( length(out)>0 ) {
-            resol = RSparams@control@resolution
-		if (RSparams@control@threadsafe){
-			 if(class(RSparams@land)=="ImportedLandscape") llcorner = RSparams@land@OriginCoords
-				    else  llcorner = c(0,0)
-				    raster_list <- lapply(out, function(x) {
+            if(RSparams@simul@ReturnPopRaster){
+                resol = RSparams@control@resolution
+		        if (RSparams@control@threadsafe){
+			        if(class(RSparams@land)=="ImportedLandscape") llcorner = RSparams@land@OriginCoords
+				        else  llcorner = c(0,0)
+			        raster_list <- lapply(out, function(x) {
 				        r <- terra::rast(x)
 				        ext(r) <- c(llcorner[1], ncol(out[[1]])*resol+llcorner[1], llcorner[2], nrow(out[[1]])*resol+llcorner[2])
 				        return(r)
 				    })
 				    return(terra::rast(raster_list))
-		} else {
-    		    raster_list <- lapply(out, function(x) {
-    		        r <- terra::rast(x)
-    		        ext(r) <- c(0, ncol(out[[1]])*resol, 0, nrow(out[[1]])*resol)
-    		        return(r)
-    		    })
-			    return(terra::rast(raster_list))
-		}
+		        } else {
+        		    raster_list <- lapply(out, function(x) {
+        		        r <- terra::rast(x)
+        		        ext(r) <- c(0, ncol(out[[1]])*resol, 0, nrow(out[[1]])*resol)
+        		        return(r)
+    		        })
+			        return(terra::rast(raster_list))
+		        }
+            }
+            if(RSparams@simul@ReturnPopMatrix){
+                stage_idx <- which(RSparams@simul@ReturnStages)
+                df <- do.call(
+                    rbind,
+                    lapply(names(out), function(nm) {
+
+                        mat <- out[[nm]]
+
+                        # extract Rep and Year from list name
+                        rep  <- as.integer(sub(".*rep([0-9]+).*", "\\1", nm))
+                        year <- as.integer(sub(".*year([0-9]+).*", "\\1", nm))
+
+                        # matrix -> data.frame
+                        d <- as.data.frame(mat, stringsAsFactors = FALSE)
+
+                        # base column names
+                        colnames(d)[1:2] <- c("PatchID", "totalAbundance")
+
+                        # stage column names based on ReturnStages
+                        if (ncol(d) > 2) {
+                            colnames(d)[3:ncol(d)] <- paste0(
+                                "NInd_Stage",
+                                stage_idx[seq_len(ncol(d) - 2)]
+                            )
+                        }
+
+                        # add Rep and Year
+                        d$Rep  <- rep
+                        d$Year <- year
+
+                        # reorder columns
+                        d[, c("Rep", "Year", colnames(d)[!colnames(d) %in% c("Rep", "Year")])]
+                    })
+                )
+                return(df)
+            }
+
         }
         else return(NULL)
     }

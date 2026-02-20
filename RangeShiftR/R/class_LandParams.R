@@ -513,9 +513,9 @@ setValidity("ImportedLandscape", function(object) {
         if (!is.numeric(object@OriginCoords) || anyNA(object@OriginCoords) || length(object@OriginCoords)!=2) {
             msg <- c(msg, "Origin coordinates must be set and of length 2!")
         } else{
-            if ( any(object@OriginCoords < 0) ) {
-                msg <- c(msg, "OriginCoords of landscape must be positive.")
-            }
+            # if ( any(object@OriginCoords < 0) ) {
+            #     msg <- c(msg, "OriginCoords of landscape must be positive.")
+            # }
         }
     }else{
         if (!is.null(object@OriginCoords)) {

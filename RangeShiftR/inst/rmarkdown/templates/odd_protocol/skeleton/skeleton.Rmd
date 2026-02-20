@@ -1,5 +1,6 @@
 ---
 title: "ODD protocol"
+subtitle: "automatically generated for the study entitled `r params$subtitle`"
 output: 
   md_document:
     toc: TRUE
@@ -15,6 +16,7 @@ output:
     keep_tex: TRUE
 params:
   format: "word"
+  subtitle: "Your study title here"
 bibliography: RS_ODD.json
 csl: ecography.csl
 ---
@@ -23,6 +25,37 @@ csl: ecography.csl
 body {
 text-align: justify}
 </style>"}`
+
+
+```{r, echo=FALSE, results='asis'}
+if (params$format == "pdf") {
+  cat("\\newpage\n")
+} else if (params$format == "word" || params$format == "rtf") {
+  cat("\\pagebreak\n")
+} else {
+  cat("<div style='page-break-after: always;'></div>\n")
+}
+```
+
+---
+
+# Disclaimer {.unnumbered .unlisted}
+
+This ODD protocol is derived from the *RangeShifter* user manual written by Greta Bocedi, Stephen C. F. Palmer, and Justin M. J. Travis (published at <https://github.com/RangeShifter/RangeShifter-software-and-documentation/blob/master/RangeShifter_v2.0_UserManual.pdf>). The protocol text describing model structure, processes, and assumptions is therefore authored by the developers of the *RangeShifter* platform, not by the authors of the present case study.
+
+The ODD protocol was generated automatically from the parameter configuration used in this study and includes only those conceptual options and parameter settings selected by the user. No new model components or mechanisms were introduced beyond those documented in the *RangeShifter* manual.
+
+---
+
+```{r, echo=FALSE, results='asis'}
+if (params$format == "pdf") {
+  cat("\\newpage\n")
+} else if (params$format == "word" || params$format == "rtf") {
+  cat("\\pagebreak\n")
+} else {
+  cat("<div style='page-break-after: always;'></div>\n")
+}
+```
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -79,6 +112,8 @@ develop_stagedep <- F
 dispersal_kernel <- F
 dispersal_kernel_simple <- F
 dispersal_kernel_mixed <- F
+movement_sexdep <- F
+movement_stagedep <- F
 movement_model <- F
 movement_SMS <- F
 movement_corrRW <- F
@@ -92,6 +127,8 @@ max_steps <- F
 min_steps <- F
 step_mortality <- F
 mate_finding <- F
+maleFindMate <- F
+femaleFindMate <- F
 settlement_densdep <- F
 settlement_stagedep <- F
 settlement_sexdep <- F
@@ -102,6 +139,7 @@ emigration_sexdep <- F
 emigration_stagedep <- F
 
 # management
+management <- F
 translocation <- F
 ```
 
@@ -163,6 +201,8 @@ if(s@dispersal@Emigration@StageDep) emigration_stagedep <- T
 if(class(s@dispersal@Transfer)=="DispersalKernel") {
   dispersal_kernel <- T
   if(s@dispersal@Transfer@DoubleKernel) {dispersal_kernel_mixed <- T} else {dispersal_kernel_simple <- T}
+  if(s@dispersal@Transfer@SexDep) movement_sexdep <- T
+  if(s@dispersal@Transfer@StageDep) movement_stagedep <- T
 }
 if(class(s@dispersal@Transfer)=="CorrRW") {
   movement_model <- T
@@ -172,16 +212,18 @@ if(class(s@dispersal@Transfer)=="CorrRW") {
   } else if (s@dispersal@Transfer@StepMort>0){
     step_mortality <- T
   }
-  if(s@dispersal@Settlement@MinSteps>0) min_steps <- T
-  if(s@dispersal@Settlement@MaxSteps>0) max_steps <- T
+  if(any(s@dispersal@Settlement@MinSteps>0)) min_steps <- T
+  if(any(s@dispersal@Settlement@MaxSteps>0)) max_steps <- T
 } 
 
 if(class(s@dispersal@Transfer)=="StochMove"){
   movement_model <- T
   movement_SMS <- T
   goal_type <- s@dispersal@Transfer@GoalType
-  if(sum(s@dispersal@Transfer@Costs)>0) movement_cost <- T
-  if(!is.null(s@land@CostsFile)) {movement_cost_file <- T; movement_cost <- T}
+  if(is.numeric(s@dispersal@Transfer@Costs)){
+  	if(sum(s@dispersal@Transfer@Costs)>0) movement_cost <- T
+  }
+  if(!is.null(s@land@CostsFile) || length(s@land@CostsMatrix)>0) {movement_cost_file <- T; movement_cost <- T}
   if(length(s@dispersal@Transfer@StepMort)>1){
     step_mortality <- T
   } else if (s@dispersal@Transfer@StepMort>0){
@@ -196,22 +238,53 @@ if(class(s@dispersal@Transfer)=="StochMove"){
 if(s@dispersal@Settlement@DensDep) settlement_densdep <- T
 if(s@dispersal@Settlement@SexDep) settlement_sexdep <- T
 if(s@dispersal@Settlement@StageDep) settlement_stagedep <- T
-if(any(s@dispersal@Settlement@FindMate)) mate_finding <- T
+if(any(s@dispersal@Settlement@FindMate)){
+    mate_finding <- T
+    # check if this is sex dependent, and if so which sex depend on the existence of the other to settle
+    if(settlement_sexdep){
+        # the second column of s@dispersal@Settlement@Settle holds the code for female (0) and male (1), 
+        # the s@dispersal@Settlement@FindMate vector holds the code for whether settlement depends on the presence of mates (TRUE) or not (FALSE)
+        # I need to check if in any cells where s@dispersal@Settlement@Settle[,2]==1, there is a TRUE in s@dispersal@Settlement@FindMate and if so, set maleFindMate to TRUE
+        if(any(s@dispersal@Settlement@FindMate[s@dispersal@Settlement@Settle[,2]==1])) {
+            maleFindMate <- T
+        } else {
+            maleFindMate <- F
+        }
+        # same for females
+        if(any(s@dispersal@Settlement@FindMate[s@dispersal@Settlement@Settle[,2]==0])) {
+            femaleFindMate <- T
+        } else {
+            femaleFindMate <- F
+        }
+    }
+} 
 
 # Management
+
 if(!is.logical(s@management@Translocation)){
     translocation <- T
 } 
- 
 
+if(translocation) management <- T
+
+# general settings
+dispersal_densdep <- if(emigration_densdep | settlement_densdep) T else F
+dispersal_sexdep <- if(emigration_sexdep | settlement_sexdep | movement_sexdep) T else F
+dispersal_stagedep <- if(emigration_stagedep | settlement_stagedep | movement_stagedep) T else F
+# genetics?
+if(s@dispersal@Emigration@IndVar | s@dispersal@Transfer@IndVar | s@dispersal@Settlement@IndVar | s@gene@Architecture) {
+  genetics <- T
+} else {
+  genetics <- F
+}
 ```
 
 
 
 # Purpose and patterns
 
-The RangeShifter model is a single species, spatially-explicit and stochastic individual-based model (IBM), built around the integration of two fundamental components: population dynamics and dispersal behaviour. 
-In this specific use case, population dynamics, represented as `r if(stage_structured){"stage-structured, "}` `r if(only_female){"only-female populations, "}` `r if(stage_structured){"with overlapping generations, "}` and dispersal (explicitly modeled in its three phases of emigration, transfer and settlement`r if(settlement_densdep | emigration_densdep | settlement_sexdep | emigration_sexdep | settlement_sexdep | emigration_sexdep){" accounting for  "}``r if(settlement_densdep | emigration_densdep){"context dependency, "}``r if(settlement_sexdep | emigration_sexdep){"sex specificity, "}``r if(settlement_stagedep | emigration_stagedep){"stage specificity"}`) are played out on top of gridded multi-habitat landscape. 
+The RangeShifter model is a single-species, spatially-explicit and stochastic individual-based model (IBM), built around the integration of two fundamental components: population dynamics and dispersal behaviour. 
+In this specific use case, population dynamics, represented as `r if(stage_structured){"stage-structured, "}` `r if(only_female){"only-female populations, "}` `r if(stage_structured){"with overlapping generations, "}` and dispersal (explicitly modeled in its three phases of emigration, transfer and settlement`r if(dispersal_densdep | dispersal_sexdep | dispersal_stagedep){" accounting for  "}``r if(dispersal_densdep & !dispersal_sexdep & !dispersal_stagedep){" context dependency"}``r if(!dispersal_densdep & dispersal_sexdep & !dispersal_stagedep){" sex specificity"}``r if(!dispersal_densdep & !dispersal_sexdep & dispersal_stagedep){" stage specificity"}``r if(!dispersal_densdep & dispersal_sexdep & dispersal_stagedep){" sex and stage specificity"}``r if(dispersal_densdep & !dispersal_sexdep & dispersal_stagedep){" context dependency and stage specificity"}``r if(dispersal_densdep & dispersal_sexdep & !dispersal_stagedep){" context dependency and sex specificity"}``r if(dispersal_densdep & dispersal_sexdep & dispersal_stagedep){" context dependency, sex specificity, and stage specificity"}`) are played out on top of gridded multi-habitat landscape. 
 
 `r if(environmental_stochasticity){"This landscape includes environmental stochasticity."}`
 
@@ -230,7 +303,7 @@ Individuals are the basic entities of the RangeShifter model. Each individual ha
 `r if (sexual){"* sex   \n"}`
 * age `r if(stage_structured){" and stage"}`   
 
-## Popuations
+## Populations
 
 Populations are defined by the individuals occupying `r if (cell_based){"a single cell"}``r if(patch_based){"a single patch"}` and they represent the scale at which individuals interact and density dependencies act. Populations are characterized by their size and location`r if(sexual){" and by the number of individuals of each sex"}``r if(stage_structured){" and the number in each stage class"}`.
 
@@ -241,25 +314,13 @@ In this specific use case, each cell stores `r if(habitat_type){"a particular la
 `r if(environmental_stochasticity & !movement_cost & !local_ext_prob){"An additional state variable is an environmental noise value $\\epsilon$."}`
 `r if(!environmental_stochasticity & movement_cost & !local_ext_prob){"An additional state variable is the cost of movement through the cell."}`
 `r if(!environmental_stochasticity & !movement_cost & local_ext_prob){"An additional state variable is the local extinction probability."}`
-`r if(environmental_stochasticity & movement_cost & !local_ext_prob){"Additional state variables are: an environmental noise value $\\epsilon$, the cost of movement through the cell."}`
+`r if(environmental_stochasticity & movement_cost & !local_ext_prob){"Additional state variables are: an environmental noise value $\\epsilon$, and the cost of movement through the cell."}`
 `r if(!environmental_stochasticity & movement_cost  & local_ext_prob){"Additional state variables are: the cost of movement through the cell and local extinction probability."}`
 `r if(!environmental_stochasticity & !movement_cost  & local_ext_prob){"Additional state variables are: an environmental noise value $\\epsilon$ and local extinction probability."}`
 `r if(environmental_stochasticity & movement_cost  & local_ext_prob){"Additional state variables are:an environmental noise value $\\epsilon$, the cost of movement through the cell and local extinction probability."}`
 
 
 `r if(patch_based){"The model is patch-based. Each patch is a higher-level entity composed of a group of one or more cells (typically adjacent, although that is not a necessary condition). A patch is characterized by a unique ID number, the number of cells that it contains, a list of these cells’ coordinates and its maximum and minimum x and y coordinates. The species’ demographic density dependence is a characteristic of the patch and not of the cell."}`
-
-`r if(habitat_type & output_format=="pdf"){"
-$\\color{red}{\\text{You might want to add the land cover types here.}}$
-"}`
-
-`r if(habitat_type & output_format=="word"){
- "**You might want to add the land cover types here.**"
-}`
-
-`r if(habitat_type & output_format=="md"){
- "**You might want to add the land cover types here.**"
-}`
 
 ## Spatial and temporal scales
 
@@ -271,13 +332,13 @@ There are three distinct temporal scales. The highest-level one has years as uni
 
 # Process overview and scheduling
 
-![General model workflow and schedule. The core of the model highlighted in blue is expanded in the flow chart in Fig. 2](./RSflowchart_big.png){height=70%}
+![General model workflow and schedule. The settings of this specific use case may not include all available submodules. Only relevant submodules are described in this document. The core of the model highlighted in blue is expanded in the flow chart in Fig. 2](./RSflowchart_big.png){height=60%}
 
 \newpage
 
-![General flowchart of the core model](./RSflowchart_detail.png){height=70%}
+![General flowchart of the core model. `r if(!genetics){"The settings of this studies' specific use case do not include genetics, i.e. individual variability o trait evolution. "}`Only relevant submodules are described in this document.](./RSflowchart_detail.png){height=60%}
 
-\newpage
+
 
 `r if(stage_structured){"At the beginning of each year, reproduction is the first process to be modelled."}` `r if(stage_structured & survival_schedule==0){"Survival and development of all the stages (apart from stage 0) occur simultaneously with reproduction, followed by dispersal and finally survival and development of stage 0. Individuals age at the end of each year."}` `r if(stage_structured & survival_schedule==1){"Reproduction is followed by dispersal. After each reproductive season, survival and successive development of all the stages are modelled. Aging occurs at the end of the year."}` `r if(stage_structured & survival_schedule==2){"Reproduction is followed by dispersal after each reproductive event. Survival and development of all stages happen only at the end of all reproductive seasons, followed by aging at the end of the year."}`
 
@@ -309,7 +370,7 @@ A cell-based model provides an excellent abstraction of space for many theoretic
 
 `r if(patch_based & repro_densdep & emigration_densdep & settlement_densdep & develop_densdep & !survival_densdep){"regarding reproduction, development, emigration and settlement "}``r if(patch_based & repro_densdep & emigration_densdep & settlement_densdep & !develop_densdep & survival_densdep){"regarding reproduction, emigration, settlement and survival "}``r if(patch_based & repro_densdep & emigration_densdep & settlement_densdep & develop_densdep & survival_densdep){"regarding reproduction, development, emigration, settlement and survival "}``r if(patch_based & repro_densdep & emigration_densdep & !settlement_densdep & !develop_densdep & survival_densdep){"regarding reproduction, emigration and survival "}``r if(patch_based & repro_densdep & emigration_densdep & !settlement_densdep & develop_densdep & !survival_densdep){"regarding reproduction, development and emigration "}``r if(patch_based & repro_densdep & emigration_densdep & !settlement_densdep & develop_densdep & survival_densdep){"regarding reproduction, development, emigration and survival "}``r if(patch_based & repro_densdep & !emigration_densdep & settlement_densdep & develop_densdep & !survival_densdep){"regarding reproduction,development and settlement "}``r if(patch_based & repro_densdep & !emigration_densdep & settlement_densdep & !develop_densdep & survival_densdep){"regarding reproduction, settlement and survival "}``r if(patch_based & repro_densdep & !emigration_densdep & settlement_densdep & develop_densdep & survival_densdep){"regarding reproduction, development, settlement and survival "}``r if(patch_based & !repro_densdep & emigration_densdep & settlement_densdep & !develop_densdep & survival_densdep){"regarding development, emigration and settlement "}``r if(patch_based & !repro_densdep & emigration_densdep & settlement_densdep & develop_densdep & !survival_densdep){"regarding emigration, settlement and survival "}``r if(patch_based & !repro_densdep & emigration_densdep & settlement_densdep & develop_densdep & survival_densdep){"regarding development, emigration, settlement and survival "}``r if(patch_based & repro_densdep & !emigration_densdep & !settlement_densdep & !develop_densdep & survival_densdep){"regarding reproduction and survival "}``r if(patch_based & repro_densdep & !emigration_densdep & !settlement_densdep & develop_densdep & !survival_densdep){"regarding reproduction and development "}``r if(patch_based & repro_densdep & !emigration_densdep & !settlement_densdep & develop_densdep & survival_densdep){"regarding reproduction, development and survival "}``r if(patch_based & !repro_densdep & emigration_densdep & !settlement_densdep & !develop_densdep & survival_densdep){"regarding emigration and survival "}``r if(patch_based & !repro_densdep & emigration_densdep & !settlement_densdep & develop_densdep & !survival_densdep){"regarding development and emigration "}``r if(patch_based & !repro_densdep & emigration_densdep & !settlement_densdep & develop_densdep & survival_densdep){"regarding development, emigration and survival "}``r if(patch_based & !repro_densdep & !emigration_densdep & settlement_densdep & !develop_densdep & survival_densdep){"regarding settlement and survival "}``r if(patch_based & !repro_densdep & !emigration_densdep & settlement_densdep & develop_densdep & !survival_densdep){"regarding development and settlement "}``r if(patch_based & !repro_densdep & !emigration_densdep & settlement_densdep & develop_densdep & survival_densdep){"regarding development, settlement and survival "}``r if(patch_based){"will depend on the density of individuals in a patch. However, discrete step-wise movements during the transfer phase will always use the cell as the resolution at which steps occur, thus retaining important information about the landscape heterogeneity.
 
-The patch-based implementation allows separating the scales used for population dynamics and movements. In this case, the landscape can be modelled at very fine resolution in order to capture the features that are likely to influence movements (e.g. narrow linear features) without constraining the local population dynamics to operate at too small a scale."}`
+The patch-based implementation allows separating the scales used for population dynamics and movements. In this case, the landscape can be modelled at very fine resolution in order to capture the features that are likely to influence movements without constraining the local population dynamics to operate at too small a scale."}`
 
 `r if(!stage_structured){"### Population structure
 
@@ -349,7 +410,7 @@ Particular emphasis has been placed during the last decade on rare long-distance
 There are many possible statistical distributions that have been fitted to dispersal data, which in many cases perform better than the negative exponential [@nathanDispersalKernelsReview2012]. However, the negative exponential is still commonly used, has been found useful for describing dispersal patterns of certain organisms."}``r if(dispersal_kernel_mixed){", and the combination of two different negative exponentials has been demonstrated to be a valuable method for discerning between common short-distance and rare long-distance dispersal [@hovestadtAllInterpatchMovements2011]. "}`
 
 `r if(movement_model){"
-It is increasingly acknowledged that individual movements within and between habitat patches, and consequently also population dynamics, are strongly affected by the behavioural and physical traits of individuals and by the landscape structure and composition [@moralesScalingAnimalMovements2002; @hawkesLinkingMovementBehaviour2009; @stevensLandscapeEffectsSpatial2012; @baguetteIndividualDispersalLandscape2013]. This has led to the development of mechanistic models where movement behaviour and its interaction with the environment is explicitly described [@nathanMovementEcologyParadigm2008a; @revillaIndividualMovementBehavior2008a; @moralesBuildingBridgeAnimal2010a; @palmerIntroducingStochasticMovement2011; @peerBreakingFunctionalConnectivity2011]. The classical method to represent individuals’ movements mechanistically is to use a random walk [@codlingRandomWalkModels2008], or its diffusion approximation, assuming that individuals are moving randomly in a homogeneous landscape and that they are all following the same rules. From this basis, there have been recent developments in diffusion models for including landscape heterogeneity and some behavioural responses, like reaction to habitat boundaries, directly derived from empirical data through state-space models [@ovaskainenBiasedMovementBoundary2003; @ovaskainenHabitatSpecificMovementParameters2004; @ovaskainenEmpiricalTestDiffusion2008; @pattersonStateSpaceModels2008; @zhengModellingDispersalDiffusion2009a; @ovaskainenModelingAnimalMovement2009]. Yet, these models do not account for individual variability or for many behavioural components including memory, perceptual range and movement modes. Despite this simplicity, diffusion models, and especially their recent developments, can still be satisfactory at large temporal and spatial scales and serve as a null hypothesis against which to test more complex movement models. Moreover they can provide basis for building blocks for population dynamics models.
+It is increasingly acknowledged that individual movements within and between habitat patches, and consequently also population dynamics, are strongly affected by the behavioural and physical traits of individuals and by the landscape structure and composition [@moralesScalingAnimalMovements2002; @hawkesLinkingMovementBehaviour2009; @stevensLandscapeEffectsSpatial2012; @baguetteIndividualDispersalLandscape2013]. This has led to the development of mechanistic models where movement behaviour and its interaction with the environment is explicitly described [@nathanMovementEcologyParadigm2008a; @revillaIndividualMovementBehavior2008a; @moralesBuildingBridgeAnimal2010a; @palmerIntroducingStochasticMovement2011; @peerBreakingFunctionalConnectivity2011]. The classical method to represent individuals’ movements mechanistically is to use a random walk [@codlingRandomWalkModels2008], or its diffusion approximation, assuming that individuals are moving randomly in a homogeneous landscape and that they are all following the same rules. From this basis, there have been recent developments in diffusion models for including landscape heterogeneity and some behavioural responses, like reaction to habitat boundaries, directly derived from empirical data through state-space models [@ovaskainenBiasedMovementBoundary2003; @ovaskainenHabitatSpecificMovementParameters2004; @ovaskainenEmpiricalTestDiffusion2008; @pattersonStateSpaceModels2008; @zhengModellingDispersalDiffusion2009a; @ovaskainenModelingAnimalMovement2009]. Yet, these models do not account for individual variability or for many behavioural components including memory, perceptual range and movement modes. Despite this simplicity, diffusion models, and especially their recent developments, can still be satisfactory at large temporal and spatial scales and serve as a null hypothesis against which to test more complex movement models. Moreover they can provide a basis for building blocks for population dynamics models.
 
 Mechanistic IBMs allow extending the “random paradigm” by incorporating behavioural elements that are likely to be crucial in affecting species’ spatial dynamics [@limaBehavioralEcologyEcological1996; @baguetteLandscapeConnectivityAnimal2007; @knowltonUsingBehavioralLandscape2010; @shreeveLandscapeScaleConservation2011]. These elements can be assigned into six main categories: (i) the switching between different movement modes [for example foraging within the home range vs. dispersal [@fryxellMultipleMovementModes2008; @delattreDispersalMoodRevealed2010; @peerBreakingFunctionalConnectivity2011]]; (ii) the individuals’ perceptual range [@zollnerLandscapelevelPerceptualAbilities1997; @zollnerBehavioralTradeoffsWhen2005; @gardnerSimulatingDispersalReintroduced2004b; @oldenContextdependentPerceptualRanges2004; @vuilleumierAnimalDispersalModelling2006; @vuilleumierEffectsCognitiveAbilities2006; @peerIncorporatingPerceptualRange2008; @palmerIntroducingStochasticMovement2011]; (iii) the use of information in movement choices [@clobertInformedDispersalHeterogeneity2009] and the memory of previous experience [@smouseStochasticModellingAnimal2010]; (iv) the influence of habitat fragmentation and matrix heterogeneity on movement behaviours [@rickettsMatrixMattersEffective2001; @vandermeerMetapopulationDynamicsQuality2001; @schtickzelleBehaviouralResponsesHabitat2003; @revillaEffectsMatrixHeterogeneity2004; @wiegandEffectsHabitatLoss2005; @fahrigNonoptimalAnimalMovement2007a; @doverInfluencesLandscapeStructure2009]; (v) the individual responses to habitat boundaries [@schultzEdgeMediatedDispersalBehavior2001; @moralesBehaviorHabitatBoundaries2002; @merckxEvolutionMovementsBehaviour2003; @ovaskainenHabitatSpecificMovementParameters2004; @stevensQuantifyingFunctionalConnectivity2006; @peerBreakingFunctionalConnectivity2011]; and (vi) the period of activity [@revillaEffectsMatrixHeterogeneity2004] and the time scale of movements [@lambinHighConnectivityHigh2012].
 
@@ -357,7 +418,7 @@ A general framework for a mechanistic representation of movements has been outli
 
 Movement behaviours during the transfer phase are a core component of the dispersal strategy of an individual, and therefore they come under selection and they can evolve [@merckxEvolutionMovementsBehaviour2003; @fahrigNonoptimalAnimalMovement2007a; @hawkesLinkingMovementBehaviour2009; @travisModellingDispersalEcoevolutionary2012a]. Ultimately, it is the evolution of movement behaviours that leads to what we consider the evolution of dispersal kernels. A handful of theoretical studies have so far explored the evolution of movement rules. For example, it has been shown how the landscape composition and configuration, in interaction with the ecology of the species, can affect the evolution of movement patterns, such that the greater the costs of dispersal the more highly correlated are the emerging walks [@heinzAdaptivePatchSearching2006; @bartonEvolutionIntelligentDispersal2009]. Moreover, straighter movement paths [@phillipsLifehistoryEvolutionRangeshifting2010a] and riskier strategies seem to be selected during range expansion in such a way that the rate of expansion is maximized at the expense of the survival probability of the single individual [@bartonRiskyMovementIncreases2012]."}`
 
-`r if(movement_SMS){"A Stochastic Movement Simulator (SMS, [@palmerIntroducingStochasticMovement2011]) is implemented. "}``r if(movement_corrRW){"A corelated random walk is implemented."}``r if(movement_model){"The submodel is fully individual-based and explicitly describes the movement behaviour of individuals with a level of detail, and hence parameters, which is probably close to the most parsimonious for a mechanistic movement model. However, it facilitates considerably increasing the complexity and realism with which the transfer phase is modelled."}`
+`r if(movement_SMS){"A Stochastic Movement Simulator (SMS, [@palmerIntroducingStochasticMovement2011]) is implemented in this specific use case. "}``r if(movement_corrRW){"A corelated random walk is implemented."}``r if(movement_model){"The submodel is fully individual-based and explicitly describes the movement behaviour of individuals with a level of detail, and hence parameters, which is probably close to the most parsimonious for a mechanistic movement model. However, it facilitates considerably increasing the complexity and realism with which the transfer phase is modelled."}`
 
 See the submodel description for further details.
 
@@ -376,7 +437,7 @@ For more details, see the description of the submodel.
 #### Dispersal mortality
 
 Dispersal is often a costly process for an organism [@bonteCostsDispersal2012a] and, in some cases, a dispersing individual may suffer mortality. Obtaining a sensible representation of dispersal requires that these mortality costs are described appropriately and, for this, it is important to recognize how dispersal mortality is incorporated in RangeShifter.
-First, dispersal mortality can arise as a result of individuals failing to reach suitable habitat. `r if(dispersal_kernel){"For example, when individuals have no possibility to search for locally-suitable habitat, mortality occurs to all individuals that arrive in unsuitable habitat."}` `r if(movement_model){"Fo example, some individuals may fail to find suitable habitat before they use up a maximum number of movement steps. In this first case, dispersal mortality clearly depends upon the proportion of suitable habitat in the landscape and will increase as the availability of habitat declines."}`
+First, dispersal mortality can arise as a result of individuals failing to reach suitable habitat. `r if(dispersal_kernel){"For example, when individuals have no possibility to search for locally-suitable habitat, mortality occurs to all individuals that arrive in unsuitable habitat."}` `r if(movement_model){"For example, some individuals may fail to find suitable habitat before they use up a maximum number of movement steps. In this first case, dispersal mortality clearly depends upon the proportion of suitable habitat in the landscape and will increase as the availability of habitat declines."}`
 
 `r if(dispersal_kernel){"A second source of dispersal mortality can be a constant or a density-dependent (i.e. individuals that travel further are more likely to die) probability of mortality. The latter may be thought to represent the increased energetic, time or attritional costs that longer-distance dispersers will experience [@bonteCostsDispersal2012a]."}`
 `r if(movement_model){"A second source of dispersal mortality can be a per-step probability of mortality. This can be useful for representing mortality risks that increase with distance or time spent travelling."}``r if(movement_model & movement_cost){"Additionally, movement across a complex landscape is modeled more explicitly: the per-step mortality varies according to the nature of the local environment."}`
@@ -392,7 +453,7 @@ For more details, see the description of the submodel.
 The selection of a suitable source population as well as target location is similar crucial for a successful conservation measure as the selection of the individuals. It needs to be ensured that the source population is healthy and genetically diverse, and that the target location is suitable for the species regarding the resources as well as the size of the patch. The target location should be free of threats that could endanger the new population, and it should be connected to other populations to allow for rang eexpansion in the new region as well as gene flow. 
 
 For more details how translocations were implemented in this model, see the description of the submodel.
-"}`
+"}` 
 
 
 ## Emergence
@@ -421,7 +482,7 @@ Not applicable.
 ## Sensing
 
 `r if(mate_finding){"Individuals of both sexes need to be in the same cell in order to reproduce. Individuals in the same cell are aware of the sex of others."}`
-`r if(movement_SMS){"Dispersing individuals can perceive the sourrounding landscape within their perceptual range $PR$."}`
+`r if(movement_SMS){"Dispersing individuals can perceive the surrounding landscape within their perceptual range $PR$."}`
 `r if(cell_based & dispersal_kernel){ if(s@dispersal@Settlement@Settle>=2){"Dispersing individuals perceive the suitability of cells and might settle in a suitable neighbouring cell if the arrival cell is unsuitable."}}`
 `r if(patch_based & dispersal_kernel){ if(s@dispersal@Settlement@Settle>=2){"Dispersing individuals perceive the suitability of patches and might settle in a suitable neighbouring patch if the arrival patch is unsuitable."}}`
 `r if(cell_based & movement_model & settlement_densdep){"Dispersing individuals can perceive the density in cells and potentially decide to continue dispersing if the density is high."}`
@@ -515,7 +576,7 @@ OutputMaps/Sim0_Land0_Rep0_Visits.txt is a series of maps in ASCII raster format
 
 # Initialization
 
-## Initialization of landscape
+`r if((real_land & habitat_quality) | arti_land) {"## Initialization of landscape "}`
 
 `r if(real_land & habitat_quality){"Landscapes are initialized according to the input raster maps. The density dependence of each cell is set as the respective fraction of the given maximum density dependence."}`
 `r if(real_land & habitat_quality){"Landscapes are initialized according to the input raster maps. The density dependence of each cell is set according the given values for each habitat type."}`
@@ -545,7 +606,7 @@ OutputMaps/Sim0_Land0_Rep0_Visits.txt is a series of maps in ASCII raster format
 
 The model requires the following input data:
 
-`r if(real_land & habitat_quality & !dynamic_landscape){"* The underlying landscape raster map as a text file in ESRI ASCII raster format. The  grid needs to contain values for each cell, one line per row. Each cell in the landscape is assigned a continuous percentage value between 0.0 and 100.0 (of the maximum density dependence "}``r if(real_land & habitat_quality & !dynamic_landscape & stage_structured){"$1/b$"}``r if(real_land & habitat_quality & !dynamic_landscape & !stage_structured){"$K$"}``r if(real_land & habitat_quality & !dynamic_landscape){". There are no explicit habitat or land-cover types. This allows integrating different methods for calculating the habitat suitability for a given species. For example, qualities can result from different methods of suitability modelling, which incorporate multiple variables like habitat types, elevation, climate, etc. In the current version of the program, a straight-line relationship between the habitat quality and the actual density-dependence of the population dynamics is assumed. Therefore, the quality should be scaled accordingly in case of a curvilinear relationship.    "}`
+`r if(real_land & habitat_quality & !dynamic_landscape){"* The underlying landscape raster map as a text file in ESRI ASCII raster format. The  grid needs to contain values for each cell, one line per row. Each cell in the landscape is assigned a continuous percentage value between 0.0 and 100.0 (of the maximum density dependence "}``r if(real_land & habitat_quality & !dynamic_landscape & stage_structured){"$1/b$"}``r if(real_land & habitat_quality & !dynamic_landscape & !stage_structured){"$K$"}``r if(real_land & habitat_quality & !dynamic_landscape){"). There are no explicit habitat or land-cover types. This allows integrating different methods for calculating the habitat suitability for a given species. For example, qualities can result from different methods of suitability modelling, which incorporate multiple variables like habitat types, elevation, climate, etc. In the current version of the program, a straight-line relationship between the habitat quality and the actual density-dependence of the population dynamics is assumed.    "}`
 
 `r if(real_land & habitat_type & !dynamic_landscape){"* The underlying landscape raster map as a text file in ESRI ASCII raster format. The  grid needs to contain values for each cell, one line per row. Each habitat or land-cover type has a unique integer code. Each cell in the file contains a single habitat code and 100 percent coverage is assumed for the cell. The landscape is therefore composed of discrete habitat cells. The codes are required to be sequential integers starting from 1 and ranging to Nhabitats.    "}`
 
@@ -567,7 +628,7 @@ The model requires the following input data:
 
 `r if(real_land & s@init@InitType==1 & s@init@SpType==0){"* A species distribution map as a text file in ESRI ASCII raster format containing the initial destribution. It must be aligned with the landscape map,  i.e. the coordinates of the lower-left corner must be the same. The extent of the map does not have to be necessarily the same as the landscape. The resolution can be the same or coarser, provided that it is a multiple of the landscape resolution. For example, if the landscape cell size is 250m, the species distribution can be at the resolution of 250m, 500m, 750m, 1000m etc. Each cell of the species distribution map must contain either 0 (species absent or not recorded) or 1 (species present).    "}`
 
-`r if(s@init@InitType==2){"* An initial individuals list file. The population is initialised according to a list of specific individuals (of given sex, age and stage, if appropriate) in specified cells/patches. This option allows simulation of a reintroduction scenario. It must be a tab-separated list with explicit column headers and one row for each individual to be initialized. The expected column headers must match the following order exactly: 'Year', 'Species' (must = 0), "}``r if(s@init@InitType==2 & cell_based){"'X', 'Y', "}``r if(s@init@InitType==2 & patch_based){"'PatchID', "}``r if(s@init@InitType==2){"'Ninds', "}``r if(s@init@InitType==2 & sexual){"'Sex', 'Age'"}``r if(s@init@InitType==2 & stage_structured){"', Stage'"}``r if(s@init@InitType==2){"."}``r if(s@init@InitType==2 & sexual){" The sex is specified with 0 for female and 1 for male."}`
+`r if(s@init@InitType==2){"* An initial individuals list file. The population is initialised according to a list of specific individuals (of given sex, age and stage, if appropriate) in specified cells/patches. It must be a tab-separated list with explicit column headers and one row for each individual to be initialized. The expected column headers must match the following order exactly: 'Year', 'Species' (must = 0), "}``r if(s@init@InitType==2 & cell_based){"'X', 'Y', "}``r if(s@init@InitType==2 & patch_based){"'PatchID', "}``r if(s@init@InitType==2){"'Ninds', "}``r if(s@init@InitType==2 & sexual){"'Sex', 'Age'"}``r if(s@init@InitType==2 & stage_structured){"', Stage'"}``r if(s@init@InitType==2){"."}``r if(s@init@InitType==2 & sexual){" The sex is specified with 0 for female and 1 for male."}`
 
 # Submodels
 
@@ -816,8 +877,8 @@ Here, $D_{0}$ is the maximum emigration probability, $\\beta$ is the inflection 
 
 `r if(movement_SMS){"The stochastic movement simulator (SMS) is a stochastic individual-based model where organisms move through the grid-based, landscape. The model uses similar cost surfaces as the least cost path (LCP) [@adriaensenApplicationLeastcostModelling2003; @chardonIncorporatingLandscapeElements2003; @stevensGeneFlowFunctional2006; @driezenEvaluatingLeastcostModel2007], but it relaxes two of the main assumptions/limitations of the latter. Firstly, individuals are not assumed to be omniscient, but move according to what they can perceive of the landscape within their perceptual range. Secondly, individuals do not know a priori their final destination, which is a reasonable assumption for dispersing individuals. Here, the core components of SMS are briefly described; see Palmer et al. [-@palmerIntroducingStochasticMovement2011] for a complete description of the method."}`
 `r if(movement_SMS & habitat_type){"SMS uses cost maps where a relative cost to movement is assigned to each habitat type. Costs are integer numbers and represent the cost of moving through a particular land cover relative to the cost of moving through breeding habitat (conventionally set to a cost of 1). "}``r if(movement_SMS & habitat_quality){"SMS uses cost maps with a relative cost to movement is assigned to each habitat cell. Costs are integer numbers and represent the cost of moving through a particular cell relative to the cost of moving through breeding habitat (conventionally set to a cost of 1). "}`
-`r if(movement_SMS){"Individuals take single-cell steps basing their decisions on three parameters: their perceptual range $PR$, the method used to evaluate the landscape within their perceptual range and their directional persistence $DP$, which corresponds to their tendency to follow a correlated random walk. The $PR$ is defined by a number of cells. At each step, the individual evaluates the surrounding habitat in order to determine the effective cost of taking a particular step to each of the eight neighbouring cells. The effective cost is a mean of the cost of the neighbouring cell and the surrounding cells beyond it within the $PR$, and is calculated by "}``r if(movement_SMS & movement_SMS_PRmethod == 1){"arithmetic mean."}``r if(movement_SMS & movement_SMS_PRmethod == 2){"harmonic mean."}``r if(movement_SMS & movement_SMS_PRmethod == 3){"weighted arithmetic mean."}` `r if(movement_SMS){"The effective cost of each neighbouring cell is weighted by the $DP$, which is lowest in the direction of travel. Specifically, $DP$ is raised to the power 4 in the direction of travel, to the power 3 at 45$^\\circ$  to the direction of travel and so on down to the power 0 at 180$^\\circ$  to the direction of travel. Thus, for example, if $DP$ is set to 3.0, an individual is 9 times more likely to continue in its current direction (assuming homogeneous costs) than it is to make a right-angle turn, and 81 times more likely to go straight on than to turn around and retrace its last move. $DP$ can be calculated over more steps that just the previous one (up to a maximum of 14), controlled by the memory size parameter $MemSize$ [@palmerInterindividualVariabilityDispersal2014; @abenSimpleIndividualbasedModels2014]. Increasing the memory size means that an individual retains for longer its tendency to move in a certain direction, and hence paths tend to become somewhat smoother. "}``r if(movement_SMS & goal_type==2){"A goal bias $GB$ was included, i.e. a tendency to move towards a particular destination [@abenSimpleIndividualbasedModels2014]. It is applied only in the ‘negative’ sense of moving away from the natal location, i.e. as a dispersal bias, which is implemented in a similar way to $DP$ but relative to the direction from the natal site to the current location. Moreover, dispersal bias is subject to a decay in strength as a function of the accumulated number of steps taken. This enables a dispersal path to follow a straighter trajectory initially, and later become more tortuous and responsive to perceived landscape costs. The reciprocals of the product of effective cost, $DP$ and dispersal bias, scaled to sum to one, give the probabilities that the individual will move to each neighbouring cell."}`
-`r if(movement_SMS & goal_type!=2){"The reciprocals of the product of effective cost and $DP$ , scaled to sum to one, give the probabilities that the individual will move to each neighbouring cell. "}``r if(movement_SMS){"All the dispersing individuals move simultaneously, i.e. at each time-step they all make one move."}` `r if(movement_SMS & patch_based){"the individual is forced to leave the natal patch by increasing its $DP$ ten-fold until it has taken a number of steps (equal to twice the perceptual range) outside the natal patch."}`
+`r if(movement_SMS){"Individuals take single-cell steps basing their decisions on three parameters: their perceptual range $PR$, the method used to evaluate the landscape within their perceptual range and their directional persistence $DP$, which corresponds to their tendency to follow a correlated random walk. The $PR$ is defined by a number of cells. At each step, the individual evaluates the surrounding habitat in order to determine the effective cost of taking a particular step to each of the eight neighbouring cells. The effective cost is a mean of the cost of the neighbouring cell and the surrounding cells beyond it within the $PR$, and is calculated by "}``r if(movement_SMS & movement_SMS_PRmethod == 1){"arithmetic mean."}``r if(movement_SMS & movement_SMS_PRmethod == 2){"harmonic mean."}``r if(movement_SMS & movement_SMS_PRmethod == 3){"weighted arithmetic mean."}` `r if(movement_SMS){"The effective cost of each neighbouring cell is weighted by the $DP$, which is lowest in the direction of travel. Specifically, $DP$ is raised to the power 4 in the direction of travel, to the power 3 at 45$^\\circ$  to the direction of travel and so on down to the power 0 at 180$^\\circ$  to the direction of travel. Thus, for example, if $DP$ is set to 3.0, an individual is 9 times more likely to continue in its current direction (assuming homogeneous costs) than it is to make a right-angle turn, and 81 times more likely to go straight on than to turn around and retrace its last move. $DP$ can be calculated over more steps than just the previous one (up to a maximum of 14), controlled by the memory size parameter $MemSize$ [@palmerInterindividualVariabilityDispersal2014; @abenSimpleIndividualbasedModels2014]. Increasing the memory size means that an individual retains for longer its tendency to move in a certain direction, and hence paths tend to become somewhat smoother. "}``r if(movement_SMS & goal_type==2){"A goal bias $GB$ was included, i.e. a tendency to move towards a particular destination [@abenSimpleIndividualbasedModels2014]. It is applied only in the ‘negative’ sense of moving away from the natal location, i.e. as a dispersal bias, which is implemented in a similar way to $DP$ but relative to the direction from the natal site to the current location. Moreover, dispersal bias is subject to a decay in strength as a function of the accumulated number of steps taken. This enables a dispersal path to follow a straighter trajectory initially, and later become more tortuous and responsive to perceived landscape costs. The reciprocals of the product of effective cost, $DP$ and dispersal bias, scaled to sum to one, give the probabilities that the individual will move to each neighbouring cell."}`
+`r if(movement_SMS & goal_type!=2){"The reciprocals of the product of effective cost and $DP$ , scaled to sum to one, give the probabilities that the individual will move to each neighbouring cell. "}``r if(movement_SMS){"All the dispersing individuals move simultaneously, i.e. at each time-step they all make one move."}` `r if(movement_SMS & patch_based){"The individual is forced to leave the natal patch by increasing its $DP$ ten-fold until it has taken a number of steps (equal to twice the perceptual range) outside the natal patch."}`
 
 `r if(movement_corrRW){"A simple correlated random walk without any bias is implemented. This model is implemented in continuous space on the top of the landscape grid. Individuals take steps of a constant step length (metres); the direction is sampled from a wrapped Cauchy distribution having a correlation parameter $\\rho$ in the range 0 to 1 [@zollnerSearchStrategiesLandscapeLevel1999; @bartonEvolutionIntelligentDispersal2009]. All individuals take each step simultaneously."}``r if(movement_corrRW & patch_based){"$\\rho$ is automatically set to 0.99 until the individual steps outside the natal patch, after which the value of $\\rho$ set by the user is restored."}`
 
@@ -848,8 +909,12 @@ Here, $N_{i}$ is the number of individuals of the cell $i$, $b$ represents the s
 $$p_{s} = \\dfrac{S_{0}}{1+e^{-(bN_{i}-\\beta_{i})*\\alpha_{s}}}$$
 
 Here, $N_{i}$ is the number of individuals of the patch $i$, $b$ represents the strength of density dependence used for the population dynamics, $S_{0}$ is the maximum settlement probability, $\\beta_{s}$ is the inflection point and $\\alpha_{s}$ is the slope of the function."}`
-`r if(movement_model & settlement_densdep & cell_based & mate_finding){"Individuals are required to find a mate in order to settle. This requirement is satisfied if there is at least one individual of the opposite sex in the cell."}`
-`r if(movement_model & settlement_densdep & patch_based & mate_finding){"Individuals are required to find a mate in order to settle. This requirement is satisfied if there is at least one individual of the opposite sex in the patch."}`
+`r if(movement_model & settlement_densdep & cell_based & mate_finding & !settlement_sexdep){"Individuals are required to find a mate in order to settle. This requirement is satisfied if there is at least one individual of the opposite sex in the cell."}`
+`r if(movement_model & settlement_densdep & cell_based & mate_finding & maleFindMate){"Males are required to find a mate in order to settle. This requirement is satisfied if there is at least one female in the cell."}`
+`r if(movement_model & settlement_densdep & cell_based & mate_finding & femaleFindMate){"Females are required to find a mate in order to settle. This requirement is satisfied if there is at least one male in the cell."}`
+`r if(movement_model & settlement_densdep & patch_based & mate_finding & maleFindMate){"In this specific use case, males are required to find a mate in order to settle. This requirement is satisfied if there is at least one female in the patch."}`
+`r if(movement_model & settlement_densdep & patch_based & mate_finding & femaleFindMate){"In this specific use case, females are required to find a mate in order to settle. This requirement is satisfied if there is at least one male in the patch."}`
+`r if(movement_model & settlement_densdep & patch_based & mate_finding & !settlement_sexdep){"In this specific use case, individuals are required to find a mate in order to settle. This requirement is satisfied if there is at least one individual of the opposite sex in the patch."}`
 
 `r if(step_mortality | max_steps){"To avoid having individuals moving perpetually because they cannot find suitable conditions to settle, the model includes "}``r if(step_mortality & max_steps){"a per-step mortality and a maximum number of steps."}``r if(step_mortality & !max_steps){"a per-step mortality."}``r if(!step_mortality & max_steps){"a maximum number of steps."}` `r if(max_steps){"The maximum number of steps defines the maximum time length of the transfer period. When an individual reaches the maximum number of steps, it stops where it is regardless of the suitability of the location."}``r if(max_steps & !stage_structured){"This results in automatic death if the individual stops in unsuitable habitat."}``r if(max_steps & stage_structured){"In the next season, if still alive, it will move again."}`
 
@@ -862,9 +927,8 @@ Here, $N_{i}$ is the number of individuals of the patch $i$, $b$ represents the 
 
 Aging occurs at the end of each year.
 
-`r if(management){"## Management
+`r if(management){"## Management"} `
 
-"} 
 `r if(management && translocation){"### Translocation
 
 - Define a translocation event
@@ -876,635 +940,6 @@ For each translocation event, all individuals matching the given characteristics
 
 - individuals which were caught are then translocated to the target patch x
 - add table?
-"}
-
-# Model parameter settings of the specific use case
-
-```{r echo=F, include=T}
-# create a data.frames with all the parameter settings
-# help function to transform any arrays to latex
- array_to_LaTeX <- function(arr){
-  rows <- apply(arr, MARGIN=1, paste, collapse = " & ")
-  matrix_string <- paste(rows, collapse = " \\\\ ")
-  return(paste("$$\\begin{bmatrix}", matrix_string, "\\end{bmatrix}$$"))
- }
- 
-range <- paste(s@init@minX, s@init@maxX, s@init@minY, s@init@maxY)
-PropStages <- as.vector(s@init@PropStages)
-res <- toString(PropStages)
-if(real_land){
-  nb_landscapes <- length(s@land@LandscapeFile)
-  # LandscapeFile <- as.vector(s@land@LandscapeFile)
-    
-  Nhabitats <- as.vector(s@land@Nhabitats)
-  Nhabitats <- toString(Nhabitats)
-  
-  K_or_DensDep <- as.vector(s@land@K_or_DensDep)
-  K_or_DensDep <- toString(K_or_DensDep)
-  
-  PatchFile <- as.vector(s@land@PatchFile)
-  PatchFile <- toString(PatchFile)
-  
-  CostsFile <- as.vector(s@land@CostsFile)
-  CostsFile <- toString(CostsFile)
-  
-  DynamicLandYears <- as.vector(s@land@DynamicLandYears)
-  DynamicLandYears <- toString(DynamicLandYears)
-}
-
-if(stage_structured){
-  # prepare transition matrix for output
-  matrix <- array_to_LaTeX(s@demog@StageStruct@TransMatrix)
-  
-  # prepare minage for output
-  MinAge <-toString(s@demog@StageStruct@MinAge)
-  
-  # prepare weight matrices for output
-  if(s@demog@StageStruct@FecStageWts){
-    FecStageWtsMatrix <- array_to_LaTeX(s@demog@StageStruct@FecStageWtsMatrix)
-  } else {FecStageWtsMatrix="Not selected."}
-
-  if(s@demog@StageStruct@DevStageWts){
-    DevStageWtsMatrix <- array_to_LaTeX(s@demog@StageStruct@DevStageWtsMatrix)
-  } else {DevStageWtsMatrix="Not selected."}
-  
-  if(s@demog@StageStruct@SurvStageWts){
-    SurvStageWtsMatrix <- array_to_LaTeX(s@demog@StageStruct@SurvStageWtsMatrix)
-  } else {SurvStageWtsMatrix="Not selected."}
-}
-
-if(class(s@dispersal@Emigration@EmigProb)[1]=="matrix"){
-  emigprob <- array_to_LaTeX(s@dispersal@Emigration@EmigProb)
-} else emigprob <- s@dispersal@Emigration@EmigProb
-
-if(dispersal_kernel){
-  if(class(s@dispersal@Transfer@Distances=="matrix")){
-    Distances <- array_to_LaTeX(s@dispersal@Transfer@Distances)
-  }else Distances <- s@dispersal@Transfer@Distances
-} 
-  
-
-
-if(movement_SMS){
-  if(class(s@dispersal@Transfer@Costs)=="numeric"){
-    Costs <- toString(s@dispersal@Transfer@Costs)
-  }else Costs <- as.character(s@dispersal@Transfer@Costs)
-  
-  if(length(s@dispersal@Transfer@StepMort)>1){
-    StepMort_SMS <- toString(s@dispersal@Transfer@StepMort)
-  } else StepMort_SMS <- s@dispersal@Transfer@StepMort
-} 
-
-if(movement_corrRW){
-  if(length(s@dispersal@Transfer@StepMort)>1){
-    StepMort_CorrRW <- toString(s@dispersal@Transfer@StepMort)
-  } else StepMort_CorrRW <- s@dispersal@Transfer@StepMort
-} 
-
-Settle<- array_to_LaTeX(s@dispersal@Settlement@Settle)
-
-# Management
-if(!is.logical(s@management@Translocation)){
-    translocation <- T
-    if(length(s@management@Translocation@years)>1){
-        Translocation_years <- toString(s@management@Translocation@years)
-    } else Translocation_years <- s@management@Translocation@years
-    Translocation_matrix <- array_to_LaTeX(s@management@Translocation@TransLocMat)
-} 
-
-Simulation <- data.frame(
-  "Parameter         "=c(
-    "Year",
-    "Replicates",
-    "Absorbing","",
-    "LocalExt",
-    "LocalEctProb",
-    "EnvStoch", "",
-    "EnvStochType",  "", "", 
-    "std",
-    "ac",
-    "minR",
-    "maxR",
-    "minK",
-    "maxK",
-    "OutIntRange",
-    "OutIntOcc",
-    "OutIntPop",
-    "OutIntInd",
-    "OutIntConn",
-    "OutIntPaths",
-    "OutStartPop",
-    "OutStartInd",
-    "OutStartConn",
-    "OutStartPaths",
-    "SMSHeatMap"
-  ),
-  "Description"=c(
-    "Number of simulated years",
-    "Number of simulation iterations",
-    "Whether non-valid cells lead to direct",    "mortality of the individual during transfer",
-    "Local extinction",
-    "Local extinction probability",
-    "Environmental stochasticity", "(0: none, 1: global, 2: local)",
-    "Parameter on which environmental", "stochasticity acts (0: growth rate/fecundity,", "1: demographic density dependence)",
-    "Magnitude of stochastic fluctuations",
-    "Temporal autocorrelation coefficient",
-    "Minimum growth rate",
-    "Maximum growth rate",
-    "Minimum density dependence value",
-    "Maximum density dependence value",
-    "Output of range file",
-    "Output of occupancy file",
-    "Output of population file",
-    "Output of individual file",
-    "Output of connectivity file",
-    "Output of SMS paths file",
-    "Starting year for output population file",
-    "Starting year for output individual file",
-    "Starting year for output connectivity file",
-    "Starting year for output SMS paths file",
-    "Output SMS heat map raster file"
-  ),
-  "Values"=c(
-    as.character(s@simul@Years),
-    as.character(s@simul@Replicates),
-    as.character(s@simul@Absorbing),"",
-    as.character(s@simul@LocalExt),
-    as.character(s@simul@LocalExtProb),
-    as.character(s@simul@EnvStoch), "",
-    as.character(s@simul@EnvStochType), "", "",
-    as.character(s@simul@std),
-    as.character(s@simul@ac),
-    as.character(s@simul@minR),
-    as.character(s@simul@maxR),
-    as.character(s@simul@minK),
-    as.character(s@simul@maxK),
-    as.character(s@simul@OutIntRange),
-    as.character(s@simul@OutIntOcc),
-    as.character(s@simul@OutIntPop),
-    as.character(s@simul@OutIntInd),
-    as.character(s@simul@OutIntConn),
-    as.character(s@simul@OutIntPaths),
-    as.character(s@simul@OutStartPop),
-    as.character(s@simul@OutStartInd),
-    as.character(s@simul@OutStartConn),
-    as.character(s@simul@OutStartPaths),
-    as.character(s@simul@SMSHeatMap))
-  )
-
-Initialisation <- data.frame(
-  "Parameter                     "=c(
-    "InitType", "", "", "", 
-    "FreeType", "", "", 
-    "NrCells",
-    "SpType", "", "", "", "",
-    "InitIndsFile",
-    "InitDens", "", "", "", 
-    "IndsHaCell",
-    "PropStages",
-    "InitAge", "", "", "", "",
-    "minX, maxX, minY, maxY",
-    "InitFreezeYear", "",
-    "RestrictRows", "",
-    "RestrictFreq", "",
-    "FinalFreezeYear", "", ""
-  ),
-  "Description                        "=c(
-    "Type of initialisation", "(0: free initialisation according to habitat map,", "1: from loaded species distribution map, ", "2: from initial individuals list file)",
-    "Option for free initialisation ", "(0: random in given number of cells, ", "1: all suitable cells/patches)",
-    "Number of cells to initialise",
-    "Option for initialisation from ", "species distribution map (0: all suitable cells within ", "all distribution presence cells, ", "1: all suitable cells within given ", "number of randomly chosen presence cells)",
-    "Name if the initial individuals list file",
-    "Number of individuals seeded in each cell/patch ", "(0: at demographic density dependence, ", "1: at half of the demographic density dependence, ", "2: according to quasi-equilibrium distribution)",
-    "Specified number of individuals per hectare",
-    "Proportion of initialised individuals in each stage",
-    "Initial age distribution ","(0: minimum age for the respective stage, ","1: random age between the minimum ","and maximum age for the respective stage, ","2: according to a quasi-equilibrium distribution)",
-    "Restrict initial range",
-    "Year until which species is ","confined to its initial range limits",
-    "Number of rows at northern ","front to restrict range.",
-    "Frequency in years at which ","range is restricted to northern front.",
-    "The year after which species is ","confined to its new, current range limits, ","after a period of range expansion."
-  ),
-  "Values"=c(
-    as.character(s@init@InitType), "", "", "", 
-    as.character(s@init@FreeType), "", "", 
-    as.character(s@init@NrCells),
-    as.character(s@init@SpType), "", "", "", "",
-    as.character(s@init@InitIndsFile),
-    as.character(s@init@InitDens), "", "", "", 
-    as.character(s@init@IndsHaCell),
-    res,
-    as.character(s@init@InitAge), "", "", "", "",
-    range,
-    as.character(s@init@InitFreezeYear), "",
-    as.character(s@init@RestrictRows), "",
-    as.character(s@init@RestrictFreq), "",
-    as.character(s@init@FinalFreezeYear), "", "")
-  )
-
-if(real_land){
-  Landscape <- data.frame(
-    "Parameter         "=c(
-      "Landscape file",
-      rep("", nb_landscapes-1),
-      "Resolution",
-      "HabPercent",
-      "NHabitats",
-      "K_or_DensDep",
-      "PatchFile",
-      "CostsFile",
-      "DynamicLandYears",
-      "SpDistFile",
-      "SpDistResolution"
-    ),
-    "Description                                  "=c(
-      "Filename(s) of the landscape map(s)",
-      rep("", nb_landscapes-1),
-      "Resolution in meters",
-      "Whether habitat types/codes or habitat cover/quality",
-      "Number of different habitat codes",
-      "Demographic density dependence",
-      "Filename(s) of the patch map(s)",
-      "Filename(s) of the SMS cost map(s)",
-      "Years of landscape changes",
-      "Filename of the species initial distribution map",
-      "Resolution of the distribution map in meters"
-    ),
-    "Values"=c(
-      rep("", nb_landscapes),
-      s@land@Resolution,
-      s@land@HabPercent,
-      Nhabitats,
-      K_or_DensDep,
-      "", # PatchFile,
-      "", # CostsFile,
-      DynamicLandYears,
-      "",# s@land@SpDistFile,
-      s@land@SpDistResolution
-    ))
-}
-
-if(arti_land){
-  Landscape <- data.frame(
-    "Parameter             "=c(
-      "propSuit",
-      "K_orDensDep",
-      "Resolution",
-      "dimX",
-      "dimY",
-      "fractal",
-      "hurst",
-      "continuous",
-      "minPct",
-      "maxPct"
-    ),
-    "Description                                  "=c(
-      "Proportion of suitable habitat cells",
-      "Demographic density dependence",
-      "Resolution in meters",
-      "Number of cells along the x-axis",
-      "Number of cells along the y-axis",
-      "Whether a random or fractal landscape is generated",
-      "Hurst exponent",
-      "Continuous or binary habitat",
-      "Minimum percentage of habitat cover within a cell",
-      "Maximum percentage of habitat cover within a cell"
-    ),
-    "Values"=c(
-      s@land@propSuit,
-      s@land@K_or_DensDep,
-      s@land@Resolution,
-      s@land@dimX,
-      s@land@dimY,
-      s@land@fractal,
-      s@land@continuous,
-      s@land@minPct,
-      s@land@maxPct
-    ))
-}
-
-if(s@demog@Rmax>0){
-  Demography <- data.frame(
-    "Parameter"=c(
-      "Rmax", "",
-      "bc", "",
-      "ReproductionType","", "", "",
-      "PropMales",
-      "Harem"
-    ),
-    "Description"=c(
-      "Maximum growth rate ","(number of offspring per female at very low density)",
-      "Competition coefficient ","(describes the type of density regulation)",
-      "Decribes the reproduction type ","(0: asexual/only female; ","1: simple sexual model; ","2: sexual model with explicit mating system)",
-      "Proportion of males in the population",
-      "Maximum harem size"
-    ),
-    "Values"=c(
-      as.character(s@demog@Rmax), "",
-      as.character(s@demog@bc),"",
-      as.character(s@demog@ReproductionType),"", "", "",
-      as.character(s@demog@PropMales),
-      as.character(s@demog@Harem)
-    )
-  )
-}
-
-if(s@demog@Rmax<0){
-  Demography <- data.frame(
-    "Parameter     "=c(
-      "Stages",
-      "TransMatrix","", "", "",
-      "MaxAge",
-      "MinAge","", "",
-      "RepSeasons",
-      "RepInterval","","",
-      "PRep","",
-      "SurvSched","","",
-      "FecDensDep","",
-      "DevDensDep","",
-      "SurvDensDep","",
-      "DevDensCoeff","",
-      "SurvDensCoeff","",
-      "FecStageWtsMatrix","",
-      "DevStageWtsMatrix","",
-      "SurvStageWtsMatrix","",
-      "PostDestrictn","","",
-      "ReproductionType","","",
-      "PropMales",
-      "Harem"
-    ),
-    "Description"=c(
-      "Number of life stages",
-      "Transition matrix. ","Defines the development probabilities ","from each stage into the next as well as the ","respective survival probabilities and fecundities",
-      "Maximum age in years",
-      "Ages which an individual in stage ","i-1 must already have reached before ","it can develop into the next stage i.",
-      "Number of potential reproduction events per year",
-      "Number of reproductive seasons ","which must be missed following a reproduction attempt ","before another reproduction attempt may occur",
-      "Probability of reproducing in ","subsequent reproductive seasons",
-      "Scheduling of survival ","(0: at reproduction, 1: between reproductive events, ","2: annually)",
-      "whether density dependent ","fecundity probability is modelled",
-      "Whether density dependent ","development probability is modelled",
-      "Whether density dependent ","survival probability is modelled",
-      "Relative density dependence ","coefficient for development",
-      "Relative density dependence ","coefficient for survival",
-      "Stage-dependent weights ","in density dependence of fecundity",
-      "Stage-dependent weights ","in density dependence of development",
-      "Stage dependent weights ","in density dependence of survival",
-      "Whether individuals of a population "," die (FALSE) or disperse (TRUE) ","if its patch gets destroyed",
-      "Decribes the reproduction type ","(0: asexual/only female; 1: simple sexual model; ","2: sexual model with explicit mating system)",
-      "Proportion of males in the population",
-      "Maximum harem size"
-    ),
-    "Values"=c(
-      s@demog@StageStruct@Stages,
-      matrix,"", "", "",
-      s@demog@StageStruct@MaxAge,
-      MinAge,"", "",
-      s@demog@StageStruct@RepSeasons,
-      s@demog@StageStruct@RepInterval,"","",
-      s@demog@StageStruct@PRep,"",
-      s@demog@StageStruct@SurvSched,"","",
-      s@demog@StageStruct@FecDensDep,"",
-      s@demog@StageStruct@DevDensDep,"",
-      s@demog@StageStruct@SurvDensDep,"",
-      s@demog@StageStruct@DevDensCoeff,"",
-      s@demog@StageStruct@SurvDensCoeff,"",
-      FecStageWtsMatrix,"",
-      DevStageWtsMatrix,"",
-      SurvStageWtsMatrix,"",
-      s@demog@StageStruct@PostDestructn,"","",
-      s@demog@ReproductionType,"","",
-      s@demog@PropMales,
-      s@demog@Harem
-    )
-  )
-}  
-
-# create df for each type of transfer
-
-# DispersalKernel
-if(dispersal_kernel){
-  transfer <- data.frame("Parameter"=c(
-    "Type",
-    "Distances","","",
-    "DoubleKernel",
-    "SexDep",
-    "StageDep",
-    "DistMort",
-    "MortProb",
-    "InflPoint",
-    "Slope"),
-    "Description"=c(
-      "Type of transfer",
-      "Matrix containing all dispersal kernel parameters","(#columns) for each stage/sex (#rows).", "Its structure depends on the other parameters.",
-      "Use a mixed (i.e. double negative exponential) kernel?",
-      "Sex-dependent dispersal kernel?",
-      "Stage-dependent dispersal kernel?",
-      "Distance-dependent mortality probability?",
-      "Constant mortality probability",
-      "Inflection point for the mortality distance dependence function.",
-      "Slope at inflection point for the mortality distance dependence function."
-    ),
-    "Values"=c(
-      as.character(class(s@dispersal@Transfer)),
-      Distances,"","",
-      as.character(s@dispersal@Transfer@DoubleKernel),
-      as.character(s@dispersal@Transfer@SexDep),
-      as.character(s@dispersal@Transfer@StageDep),
-      as.character(s@dispersal@Transfer@DistMort),
-      as.character(s@dispersal@Transfer@MortProb),
-      as.character(s@dispersal@Transfer@InflPoint),
-      as.character(s@dispersal@Transfer@Slope)
-    )
-  )
-}
-
-if(movement_SMS){
-  transfer <- data.frame("Parameter"=c(
-    "Type",
-    "PR",
-    "PRMethod","","","","","",
-    "MemSize","","",
-    "DP","",
-    "GoalType","",
-    "GoalBias",
-    "AlphaDB",
-    "BetaDB",
-    "Costs","","","",
-    "StepMort",
-    "StraightenPath"
-    ),
-    "Description"=c(
-      "Type of transfer",
-      "Perceptual range",
-      "Method to evaluate the effective cost"," of a particular step from the landdscape"," within the perceptual range:", "1: Arithmetic mean", "2: Harmonic mean", "Weighted arithmetic mean",
-      "Size of memory, given as the number of previous steps"," over which to calculate current direction"," to apply directional persistence",
-      "Directional persistence. Corresponds to the","tendency to follow a correlated random walk.",
-      "Goal bias type","0: None, 2: dispersal bias",
-      "Goal bias strength",
-      "Dispersal bias decay rate",
-      "Dispersal bias decay inflection point (number of steps)",
-      "Describes the landscapes resistance to movement:","Either habitat-specific costs for each habitat type","or 'file', to indictae to use the cost raster map(s)","specified in the landscape module.",
-      "Per-step mortality probability: constant or habitat-specific",
-      "Straighten path after decision not to settle in a patch?"
-    ),
-    "Values"=c(
-      as.character(class(s@dispersal@Transfer)),
-      s@dispersal@Transfer@PR,
-      s@dispersal@Transfer@PRMethod,"","","","","",
-      s@dispersal@Transfer@MemSize,"","",
-      s@dispersal@Transfer@DP,"",
-      s@dispersal@Transfer@GoalType,"",
-      s@dispersal@Transfer@GoalBias,
-      s@dispersal@Transfer@AlphaDB,
-      s@dispersal@Transfer@BetaDB,
-      Costs,"","","",
-      StepMort_SMS,
-      as.character(s@dispersal@Transfer@StraightenPath)
-    ))
-}
-
-if(movement_corrRW) {
-  transfer <- data.frame("Parameter"=c(
-    "Type",
-    "StepLength",
-    "Rho",
-    "StraightenPath",
-    "StepMort"
-  ),
-  "Description"=c(
-    "Type of transfer",
-    "Step length given in meters",
-    "Correlation parameter",
-    "Straighten path after decision not to settle in a patch?",
-    "Per-step mortality probability: constant or habitat-specific"
-  ),
-  "Values"=c(
-    as.character(class(s@dispersal@Transfer)),
-    s@dispersal@Transfer@StepLength,
-    s@dispersal@Transfer@Rho,
-    s@dispersal@Transfer@StraightenPath,
-    StepMort_CorrRW
-  )
-  )
-}
-
-
-Dispersal <- data.frame(
-  "Process                       "=c(
-    "Emigration                  ","", "","","",
-    # "Transfer                    ", rep("",nrow(transfer)-1),
-    "Settlement                  ", if(!dispersal_kernel){rep("",8)} else{rep("",5)}
-  ),
-  "Parameter                     "=c(
-    # Emigration
-    "EmigProb",            # can be Matrix or single value
-    "SexDep",
-    "StageDep",
-    "DensDep", 
-    "UseFullKern",
-    #Transfer
-    # transfer$Parameter,
-    "DensDep",
-    "SexDep",
-    "StageDep",
-    "Settle","",if(dispersal_kernel){rep("",4)},
-    if(!dispersal_kernel){c("MinSteps",
-    "MaxSteps",
-    "MaxStepsYear")},
-    "FindMate"
-  ),
-  "Description                        "=c(
-    #Emigration
-    "Emigration probabilities/parameters for each stage/sex",
-    "Sex-dependent emigration probability?",
-    "Stage-dependent emigration probability?",
-    "Density-dependent emigration probability?",
-    "Shall the emigration probability be derived from dispersal kernel?",
-    #Transfer
-    # transfer$Description,
-    #Settlement
-    "Density-dependent settlement requirements?",
-    "Sex-dependent settlement requirements?",
-    "Stage-dependent settlement requirements?",
-    if(dispersal_kernel){"Settlement codes (for DispersalKernel)"}
-      else {"Settlement probability parameters"}
-      ,"for all stages/sexes.",
-    if(dispersal_kernel){c("0 = die (default)","1 = wait (stage-structured models only)","2 = randomly choose a suitable neighbouring cell or die","3 = randomly choose a suitable neighbouring cell"," or wait (stage-structured models only)")},
-    if(!dispersal_kernel){c("Minimum number of steps",
-    "Maximum number of steps",
-    "Maximum number of steps per year")},
-    "Mating requirements to settle?"
-  ),
-  "Values"=c(
-    #emigration
-    emigprob,
-    as.character(s@dispersal@Emigration@SexDep),
-    as.character(s@dispersal@Emigration@StageDep), 
-    as.character(s@dispersal@Emigration@DensDep),
-    as.character(s@dispersal@Emigration@UseFullKern),
-    #Transfer
-    # transfer$Values,
-    #Settlement
-    as.character(s@dispersal@Settlement@DensDep),
-    as.character(s@dispersal@Settlement@SexDep),
-    as.character(s@dispersal@Settlement@StageDep),
-    Settle, if(dispersal_kernel){rep("",6)} else{""},
-    if(movement_model){c(s@dispersal@Settlement@MinSteps,
-      s@dispersal@Settlement@MaxSteps,
-      s@dispersal@Settlement@MaxStepsYear)
-    },
-    toString(s@dispersal@Settlement@FindMate)
-  )
-)
-if(translocation){
-    # Management
-    Management <- data.frame(
-      "Management                       "=c(
-        "Translocation                  ","", "", "", "", ""
-      ),
-      "Parameter                     "=c(
-        # Translocation
-        "Catching_rate",          
-        "years",
-        "TransLocMat", "", "", ""
-      ),
-      "Description                        "=c(
-        #Translocation
-        "Probability of successfully catching a chosen individual",
-        "Year(s) in which translocation events are implemented",
-        "Translocation matrix with column names ",
-        "year, source (patch ID or XY coordinates), target (patch ID or XY coordinates), ", 
-        "number of selected individual, minimal age, maximal age, stage and sex",
-        "Rows represent one specific translocation event."
-      ),
-      "Values"=c(
-        # Translocation
-        as.character(s@management@Translocation@catching_rate),
-        Translocation_years,
-        Translocation_matrix, "", "", ""
-      )
-    )
-}
-
-
-# delete all off-switches
-Landscape <- Landscape[Landscape$Values!=-9 & Landscape$Values!="NULL",]
-rownames(Landscape) <- NULL
-Demography <- Demography[Demography$Values!=-9 & Demography$Values!="NULL",]
-rownames(Demography) <- NULL
-Initialisation <- Initialisation[Initialisation$Values!=-9 & Initialisation$Values!="NULL" & Initialisation$Values!="-9 -9 -9 -9",]
-rownames(Initialisation) <- NULL
-Simulation <- Simulation[Simulation$Values!=-9,]
-rownames(Simulation) <- NULL
-
-# TODO: delete unset/unused variables
-knitr::kable(Simulation, col.names = gsub("[.]", " ", names(Simulation)), caption = 'Simulation parameters')
-knitr::kable(Landscape, col.names = gsub("[.]", " ", names(Landscape)), caption = 'Landscape parameters')
-knitr::kable(Demography, col.names = gsub("[.]", " ", names(Demography)), caption = 'Demography parameters')
-knitr::kable(Dispersal, col.names = gsub("[.]", " ", names(Dispersal)), caption = 'Dispersal parameters')
-if(translocation) knitr::kable(Management, col.names = gsub("[.]", " ", names(Management)), caption = 'Management parameters')
-knitr::kable(Initialisation, col.names = gsub("[.]", " ", names(Initialisation)), caption = 'Initialisation parameters')
-```
+"}`
 
 # References

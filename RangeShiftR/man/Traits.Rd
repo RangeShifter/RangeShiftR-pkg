@@ -35,7 +35,7 @@ a parameter object of class "TraitsParams"
 Three types of traits can be made evolvable and parameterised with their own genetic architecture:
 
 - Dispersal traits correspond to the main parameters controlling each phase of dispersal (emigration, transfer and settlement). \cr
-- Genetic fitness traits represent genetic load, the accumulation of deleteriousmutations and their effect on the viability of newborn offspring. \cr
+- Genetic fitness traits represent genetic load, the accumulation of deleterious mutations and their effect on the viability of newborn offspring. \cr
 - Neutral trait does not have any phenotypic effect during the simulation. It is used to compute F-statistics and other measures of neutral variation. \cr
 }
 \details{
@@ -50,12 +50,12 @@ They follow a similar structure, but some parameters and their specific options 
 Parameters that need to be defined:
 
 -	The number and positions of genes controlling the trait. \cr
--	A rule for expression (restricted to dispersal traits) \cr
--    Initialized positions (restricted to neutral traits and genetic fitness traits) \cr
+-	A rule for expression (restricted to dispersal traits, for genetic load it is fixed to 'multiplicative') \cr
+-    Initialized positions (restricted to neutral traits and genetic fitness traits, for dispersal traits it is fixed to 'all') \cr
 -	Option for inter-individual variability in without inheritance (restricted to dispersal traits) \cr
 -    A mutation rate for all genes controlling the trait. \cr
 -	A distribution to sample mutations from. \cr
--	A distribution to sample initial allele values and dominance coefficients (restricted to genetic fitness traits) from from. \cr
+-	A distribution to sample initial allele values and dominance coefficients (the latter is restricted to genetic fitness traits) from. \cr
 -	A distribution to sample dominance coefficients from (restricted to genetic fitness traits). \cr
 -    Whether allele values should be written to output.
 }

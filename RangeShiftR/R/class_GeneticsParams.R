@@ -1924,7 +1924,7 @@ setClassUnion("KernelTraitsSlot", c("logical", "KernelTraitsParams"))
 #' Three types of traits can be made evolvable and parameterised with their own genetic architecture:
 #'
 #' - Dispersal traits correspond to the main parameters controlling each phase of dispersal (emigration, transfer and settlement). \cr
-#' - Genetic fitness traits represent genetic load, the accumulation of deleteriousmutations and their effect on the viability of newborn offspring. \cr
+#' - Genetic fitness traits represent genetic load, the accumulation of deleterious mutations and their effect on the viability of newborn offspring. \cr
 #' - Neutral trait does not have any phenotypic effect during the simulation. It is used to compute F-statistics and other measures of neutral variation. \cr
 #'
 #'
@@ -1956,12 +1956,12 @@ setClassUnion("KernelTraitsSlot", c("logical", "KernelTraitsParams"))
 #' Parameters that need to be defined:
 #'
 #' -	The number and positions of genes controlling the trait. \cr
-#' -	A rule for expression (restricted to dispersal traits) \cr
-#' -    Initialized positions (restricted to neutral traits and genetic fitness traits) \cr
+#' -	A rule for expression (restricted to dispersal traits, for genetic load it is fixed to 'multiplicative') \cr
+#' -    Initialized positions (restricted to neutral traits and genetic fitness traits, for dispersal traits it is fixed to 'all') \cr
 #' -	Option for inter-individual variability in without inheritance (restricted to dispersal traits) \cr
 #' -    A mutation rate for all genes controlling the trait. \cr
 #' -	A distribution to sample mutations from. \cr
-#' -	A distribution to sample initial allele values and dominance coefficients (restricted to genetic fitness traits) from from. \cr
+#' -	A distribution to sample initial allele values and dominance coefficients (the latter is restricted to genetic fitness traits) from. \cr
 #' -	A distribution to sample dominance coefficients from (restricted to genetic fitness traits). \cr
 #' -    Whether allele values should be written to output.
 #'
@@ -2055,31 +2055,31 @@ setMethod("show", "TraitsParams", function(object){
 #'          nIndividualsToSample = NULL, Stages = NULL, Traits = Traits()
 #'          )
 #'
-#' @param GenomeSize Maximum size of genome (number of loci)
-#' @param ChromosomeEnds Where the genome is split into chromosomes, if empty
-#' assumed one chromosome is equal to GenomeSize. These areas recombine with a
-#' probability of 0.5. Disabled for haploid organisms (no recombination).
+#' @param GenomeSize Maximum size of genome (number of loci). Should be an integer number.
+#' @param ChromosomeEnds Where the genome is split into chromosomes, if empty it is
+#' assumed that one chromosome is equal to GenomeSize. These areas recombine with a
+#' probability of 0.5. Disabled for haploid organisms (no recombination). It should be a vector of integers.
 #' @param RecombinationRate Recombination rate (through chromosomal crossover)
 #' across the whole genome (in addition to the chromosomeEnds above). Disabled for haploid organisms (no recombination).
-#' @param OutputGeneValues Output the values of all alleles for all genes of all sampled individuals.
+#' @param OutputGeneValues TRUE or FALSE. Output the values of all alleles for all genes of all sampled individuals.
 #' Does not output the resulting trait values: mean and SD of dispersal and genetic fitness traits are
 #' output in the TraitsXPatch, TraitsXCell and/or TraitsXrow output files. Enables the geneValues output files.
-#' @param OutputFstatsWeirCockerham Calculate F-statistics. Enables the neutralGenetics and
+#' @param OutputFstatsWeirCockerham TRUE or FALSE. Calculate F-statistics. Enables the neutralGenetics and
 #' perLocusNeutralGenetics output files.
-#' @param OutputPairwiseFst Calculate F-statistics. Enables the neutralGenetics and pairwisePatchNeutralGenetics output files.
+#' @param OutputPairwiseFst TRUE or FALSE. Calculate F-statistics. Enables the neutralGenetics and pairwisePatchNeutralGenetics output files.
 #' @param OutputStartGenetics Which year should RangeShifter start to produce the output files listed above?
 #' @param OutputInterval How frequently to output genetic output, including gene values and neutral statistics.
 #' @param PatchList Which patches are to be sampled for output.  Patches can be
 #' specified according to their patch number, as per the patch layer in a patch-based
 #' model. Or sampled randomly or all patches can be chosen. In a cell-based landscape
-#' random is the only option with number of patches (=cells) specified.
+#' random is the only option with number of patches (=cells) specified. Can take "all", "random", "random_occupied" or a vector of integers.
 #' @param NbrPatchesToSample If PatchList=random or random_occupied then this specifies
 #' the number of patches to sample randomly. Random: The chosen sample patches remain
 #' the same throughout the simulation, i.e. do not vary between years or replicates
 #' unless artificially generated landscape that is generated afresh between replicates.
 #' Random_occupied: patches are re-sampled every generation among all patches containing at least 1 individual.
 #' @param nIndividualsToSample The number of individuals to sample in a patch. If nInds < nIndividualsToSample then sampled individuals = nInds
-#' @param Stages The age stages to sample from.
+#' @param Stages The age stages to sample from. Should be a vector of integers. Should be a vector of integers or "all". If NULL, all stages are sampled.
 #' @param Traits The genetic traits to be modelled. See \code{\link[RangeShiftR]{Traits}} for more information.
 
 #' @details
