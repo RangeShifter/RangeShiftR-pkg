@@ -1,8 +1,8 @@
 # RangeShifter core code 
 
-This repo contains the core simulation code for RangeShifter v2.0 and is not meant to be compiled or run on its own.
+This repo contains the core simulation code for RangeShifter v3.0 and is not meant to be compiled or run on its own. It is used as a shared codebase for multiple interfaces.
 
-<img src="https://github.com/RangeShifter/RScore/blob/main/RScore_logo.png" align="right" height = 200/>
+<img src="https://github.com/RangeShifter/RScore/blob/main/RScore_logo.png" align="right" height="200/"/>
 
 If you are only interested in using RangeShifter, you can ignore this and head to the repo of one of the interfaces:
 
@@ -14,7 +14,19 @@ If you are only interested in using RangeShifter, you can ignore this and head t
 
 ## Usage: git subtree
 
-In order to ensure that the same version of RangeShifter's core code is used by all three interfaces (RangeShiftR, RangeShifter-batch and the GUI), each interface repo keeps a copy of RScore as a git subtree. In this section, we describe how to use the git subtrees to update the subfolder and copy this repo anew.
+In order to ensure that the same version of RangeShifter's core code is used by all three interfaces (RangeShiftR, RangeShifter-batch and the GUI), each interface repo keeps a copy of RScore as a git subtree.
+
+In this section, we describe how to use the git subtrees to update the subfolder and copy this repo anew.
+
+⚠️Please note:
+
+Modifying files inside the RScore subtree directly in the interface repositories can lead to merge conflicts or broken history, if you do not strictly follow the workflow presented here.
+
+You must ensure that you always push changes on files located in the RScore directory to the git subtree repository RScore using `git subtree push` and must **not** push them to the RangeShiftR-pkg or RangeShifter_batch repository.
+
+The most robust way to avoid merge conflicts and broken history is to modify files directly inside the RScore repository and then pull the changes into the interface repositories by using `git subtree pull`.
+
+### Set up
 
 First, in a local clone of one of the interface repos, add a remote named `RScore` pointing to the RScore repo. This will be convenient as a shortcut for git subtree commands.
 
@@ -44,7 +56,17 @@ while for RangeShiftR, use:
 git subtree pull --prefix RangeShiftR/src/RScore RScore main
 ```
 
+#### Dealing with conflicts
+
+If conflicts occur, the RScore repository should be treated as the source of truth:
+
+```         
+git checkout --theirs <path_to_RScore_subfolder> git add <path_to_RScore_subfolder> git commit
+```
+
 ### Pushing new changes to RScore
+
+If changes were made inside the subtree directory (not recommended, but sometimes unavoidable), they must be pushed back to this repository **before** pushing to the interface repository:
 
 ```bash
 git subtree push --prefix <path_to_RScore_subfolder> RScore <branch>
@@ -55,6 +77,8 @@ e.g., from RangeShifter-batch's `main` to RScore's `main`:
 ```bash
 git subtree push --prefix src/RScore RScore main
 ```
+
+Afterwards, update other interface repositories using `git subtree pull`.
 
 ### Switching the subfolder to a new branch
 
@@ -72,5 +96,5 @@ See [CONTRIBUTING](https://github.com/RangeShifter/RScore/blob/main/CONTRIBUTING
 
 ## Maintainers
 
-- [@JetteReeg](https://github.com/JetteReeg)
-- [@TheoPannetier](https://github.com/TheoPannetier)
+-   [\@JetteReeg](https://github.com/JetteReeg)
+-   [\@TheoPannetier](https://github.com/TheoPannetier)

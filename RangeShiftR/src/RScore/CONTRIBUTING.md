@@ -1,4 +1,4 @@
-﻿# The RangeShifter platform - An eco-evolutionary modelling framework
+# The RangeShifter platform - An eco-evolutionary modelling framework
 
 ## How to contribute
 
@@ -40,13 +40,10 @@ Anyone who whishes to make changes to RangeShifter's code, including regular dev
 
 ## Branching policy
 
-<<<<<<<< HEAD:src/RScore/CONTRIBUTING.md
 ![](branches.png)
 
 *Check out the [Git cheatsheet](https://github.com/RangeShifter/RScore/blob/main/git_cheatsheet.md) for a reminder on the main git commands*
 
-========
->>>>>>>> develop:CONTRIBUTING.md
 This policy applies to RScore and all three RangeShifter interfaces.
 RangeShifter uses the following branching structure:
 
