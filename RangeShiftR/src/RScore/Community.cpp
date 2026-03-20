@@ -1649,51 +1649,78 @@ Rcpp::IntegerMatrix Community::addYearToPopListPatchBased(int rep, int yr, Rcpp:
                 << " yr=" << yr << endl;*/
     int nrows=pLandscape->getPatchNbs().size();
     int ncols = 2; // for patchID + total abundance
+    std::vector<int> stageIndices;
+
     for (int i = 0; i < stages.length(); i++) {
-        if (stages[i] == TRUE) {
-            ncols++;
+        if (stages[i]) {
+            stageIndices.push_back(i);
         }
     }
+    ncols += stageIndices.size();
+
 
 	Rcpp::IntegerMatrix pop_map_year(nrows, ncols); // 2 columns: 1st column is the patch ID, 2nd column is the total abundance (or stage-specific abundance depending on user specification)
 	Patch* pPatch = nullptr;
 	SubCommunity* pSubComm = nullptr;
-	popStats pop;
-	pop.nInds = pop.nAdults = pop.nNonJuvs = 0;
+	int currentRow = 0;
+
 	for (auto patchId : pLandscape->getPatchNbs()) {
+		// pPatch = pLandscape->findPatch(patchId);
+		// if (pPatch == nullptr) { // check if patch exists
+		// 	continue; // skip to next patch
+		// } else{
+		//     pSubComm = pPatch->getSubComm();
+		// 	if (pSubComm == nullptr) { // check if sub-community exists
+		// 	    pop = pSubComm->getPopStats();
+		// 	    pop_map_year(patchId, 0) = patchId; // 1st column is patch ID
+		// 	    pop_map_year(patchId, 1) = 0; // 2nd column is total abundance
+		// 	    // additional columns for stage-specific abundances depending on user specification
+		// 	    for(int i = 0; i < stages.length(); i++) {
+		// 	        int ncol = 0;
+		// 	        if(stages[i]) {
+		// 	            pop_map_year(patchId, 2 + ncol) = 0; // all following columns are stage specific columns depending on the users specifications
+		// 	            ncol++;
+		// 	        }
+		// 	    }
+		// 	} else {
+		// 		pop = pSubComm->getPopStats();
+		// 		pop_map_year(patchId, 0) = patchId; // 1st column is patch ID
+		// 		pop_map_year(patchId, 1) = pop.nInds; // 2nd column is total abundance
+		// 		// additional columns for stage-specific abundances depending on user specification
+		// 		for (int i = 0; i < stages.length(); i++) {
+		// 		    int ncol = 0;
+		// 		    if(stages[i]) {
+		// 		        pop_map_year(patchId, 2 + ncol) = pSubComm->getNbInds(stages[i]); // all following columns are stage specific columns depending on the users specifications
+		// 		        ncol++;
+		// 		    }
+		// 		}
+		// 	}
+		// }
+		pop_map_year(currentRow, 0) = patchId; // 1st column: patch ID
+	    // loop over ncols to fill default to 0
+	    for(int i = 1; i < ncols; i++) {
+	        pop_map_year(currentRow, i) = 0; // 2nd column: default total abundance
+	    }
+
 		pPatch = pLandscape->findPatch(patchId);
-		if (pPatch == nullptr) { // check if patch exists
-			continue; // skip to next patch
-		} else{
+	    if (pPatch != nullptr) { // Valid patch
 		    pSubComm = pPatch->getSubComm();
-			if (pSubComm == nullptr) { // check if sub-community exists
-			    pop = pSubComm->getPopStats();
-			    pop_map_year(patchId, 0) = patchId; // 1st column is patch ID
-			    pop_map_year(patchId, 1) = 0; // 2nd column is total abundance
-			    // additional columns for stage-specific abundances depending on user specification
-			    for(int i = 0; i < stages.length(); i++) {
-			        int ncol = 0;
-			        if(stages[i]) {
-			            pop_map_year(patchId, 2 + ncol) = 0; // all following columns are stage specific columns depending on the users specifications
-			            ncol++;
+	        if (pSubComm != nullptr) { // Valid sub-community
+	            popStats pop = pSubComm->getPopStats();
+	            pop_map_year(currentRow, 1) = pop.nInds; // Actual total abundance
+
+	            for (int idx = 0; idx < stageIndices.size(); ++idx) {
+	                int stage = stageIndices[idx];
+	                pop_map_year(currentRow, 2 + idx) = pSubComm->getNbInds(stage);
 			        }
 			    }
-			} else {
-				pop = pSubComm->getPopStats();
-				pop_map_year(patchId, 0) = patchId; // 1st column is patch ID
-				pop_map_year(patchId, 1) = pop.nInds; // 2nd column is total abundance
-				// additional columns for stage-specific abundances depending on user specification
-				for (int i = 0; i < stages.length(); i++) {
-				    int ncol = 0;
-				    if(stages[i]) {
-				        pop_map_year(patchId, 2 + ncol) = pSubComm->getNbInds(stages[i]); // all following columns are stage specific columns depending on the users specifications
-				        ncol++;
 				    }
+	    currentRow++;
 				}
-			}
-		}
-	}
+
 	return pop_map_year;
+	// }
+	// return pop_map_year;
 }
 
 #endif

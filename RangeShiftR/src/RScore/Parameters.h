@@ -331,7 +331,7 @@ struct simParams {
 	bool outConnect;
 #if RS_RCPP
 	int outStartPaths; int outIntPaths;
-	bool outPaths;	bool ReturnPopRaster; bool ReturnPopMatrix; bool CreatePopFile;
+	bool outPaths;	bool ReturnPopMatrix; bool ReturnPopDataFrame; bool CreatePopFile;
 	Rcpp::LogicalVector ReturnStages;
 #endif
 	bool fixReplicateSeed;
@@ -366,7 +366,8 @@ public:
 		batchMode = true;
 	}
 #if RS_RCPP
-	bool getReturnPopRaster(void);
+	bool getReturnPopDataFrame(void);
+	bool getReturnPopMatrix(void);
 	bool getCreatePopFile(void);
 #endif
 
@@ -402,8 +403,8 @@ private:
 	int outStartPaths;
 	int outIntPaths;
 	bool outPaths;
-	bool ReturnPopRaster;
 	bool ReturnPopMatrix;
+	bool ReturnPopDataFrame;
 	bool CreatePopFile;
 	Rcpp::LogicalVector ReturnStages;
 #endif

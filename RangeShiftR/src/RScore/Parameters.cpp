@@ -229,7 +229,7 @@ paramSim::paramSim(const string& pathToProjDir) :
 	saveVisits = false;
 #if RS_RCPP
 	outStartPaths = 0; outIntPaths = 0;
-	outPaths = false; ReturnPopRaster = false; CreatePopFile = true;
+	outPaths = false; ReturnPopMatrix = false; ReturnPopDataFrame = false; CreatePopFile = true;
 #endif
 }
 
@@ -263,8 +263,8 @@ void paramSim::setSim(simParams s) {
 	outStartPaths = s.outStartPaths;
 	outIntPaths = s.outIntPaths;
 	outPaths = s.outPaths;
-	ReturnPopRaster = s.ReturnPopRaster;
 	ReturnPopMatrix = s.ReturnPopMatrix;
+	ReturnPopDataFrame = s.ReturnPopDataFrame;
 	ReturnStages = s.ReturnStages;
 	CreatePopFile = s.CreatePopFile;
 #endif
@@ -309,8 +309,8 @@ simParams paramSim::getSim() {
 	s.outStartPaths = outStartPaths;
 	s.outIntPaths = outIntPaths;
 	s.outPaths = outPaths;
-	s.ReturnPopRaster = ReturnPopRaster;
 	s.ReturnPopMatrix = ReturnPopMatrix;
+	s.ReturnPopDataFrame = ReturnPopDataFrame;
 	s.ReturnStages = ReturnStages;
 	s.CreatePopFile = CreatePopFile;
 #endif
@@ -462,7 +462,8 @@ string to_string(const ExpressionType& expr) {
 }
 
 #if RS_RCPP
-bool paramSim::getReturnPopRaster(void) { return ReturnPopRaster; }
+bool paramSim::getReturnPopMatrix(void) { return ReturnPopMatrix; }
+bool paramSim::getReturnPopDataFrame(void) { return ReturnPopDataFrame; }
 bool paramSim::getCreatePopFile(void) { return CreatePopFile; }
 #endif
 
