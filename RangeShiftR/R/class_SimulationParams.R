@@ -45,7 +45,7 @@
 #'            OutStartTraitCell = 0, OutStartTraitRow = 0,
 #'            OutStartConn = 0, OutStartPaths = 0,
 # #'            SaveMaps = FALSE, MapsInterval, DrawLoadedSp = FALSE,
-#'            ReturnPopRaster = FALSE, ReturnPopMatrix = FALSE, ReturnStages = FALSE,
+#'            ReturnPopMatrix = FALSE, ReturnPopDataFrame = FALSE, ReturnStages = FALSE,
 #'            CreatePopFile = TRUE,
 #'            ReturnStages = FALSE,
 #'            SMSHeatMap = FALSE)
@@ -112,9 +112,9 @@
 # #' @param DrawLoadedSp If \code{FALSE} (default), only the simulated distribution is drawn into the output map.\cr
 # #' If \code{TRUE}, the initial species distribution is drawn additionally.
 #' @param SMSHeatMap Produce SMS heat map raster as output? Defaults to \code{FALSE}.
-#' @param ReturnPopRaster Return population data to R as SpatRaster for cell-based models? Defaults to \code{FALSE}.
-#' @param ReturnPopMatrix Return population data to R as matrix (for patch based models)? Defaults to \code{FALSE}.
-#' @param ReturnStages Return also stage-specific population data? Only applicable for stage-structured models if \code{ReturnPopRaster = TRUE} or \code{ReturnPopMatrix = TRUE}. If \code{FALSE} only total abundance is recorded.
+#' @param ReturnPopMatrix Return population data to R as matrix (only for cell-based models)? Defaults to \code{FALSE}.
+#' @param ReturnPopDataFrame Return population data to R as data frame (most suitable for patch based models)? Defaults to \code{FALSE}.
+#' @param ReturnStages Return also stage-specific population data? Only applicable for stage-structured models if \code{ReturnPopMatrix = TRUE} or \code{ReturnPopDataFrame = TRUE}. If \code{FALSE} only total abundance is recorded.
 #' @param CreatePopFile Create population output file? Defaults to \code{TRUE}.
 #' @details \emph{Environmental Gradient}\cr
 #' In \emph{RangeShiftR}, it is possible to superimpose an artificial gradient on top of the landscape map (real or artificial).
@@ -343,8 +343,8 @@ Simulation <- setClass("SimulationParams", slots = c(Simulation = "integer_OR_nu
                                                  MapsInterval = "integer_OR_numeric",
                                                  DrawLoadedSp = "logical",
                                                  SMSHeatMap = "logical",
-                                                 ReturnPopRaster = "logical",
                                                  ReturnPopMatrix = "logical",
+                                                 ReturnPopDataFrame = "logical",
                                                  ReturnStages = "logical",
                                                  CreatePopFile = "logical"
                                                  #moved! PropMales = "integer_OR_numeric", #move to Demography
@@ -394,7 +394,7 @@ Simulation <- setClass("SimulationParams", slots = c(Simulation = "integer_OR_nu
                                           #MapsInterval,
                                           DrawLoadedSp = FALSE,
                                           SMSHeatMap = FALSE,
-                                          ReturnPopRaster = FALSE, ReturnPopMatrix = FALSE,
+                                          ReturnPopMatrix = FALSE, ReturnPopDataFrame = FALSE,
                                           ReturnStages = FALSE,
                                           CreatePopFile = TRUE
                                           #moved! PropMales,
@@ -798,8 +798,8 @@ setValidity('SimulationParams', function(object){
         msg <- c(msg, 'SMSHeatMap has to be set')
     }
     # R Output
-    if (anyNA(object@ReturnPopRaster) || length(object@ReturnPopRaster)!=1 || anyNA(object@ReturnPopMatrix) || length(object@ReturnPopMatrix)!=1){
-        msg <- c(msg, 'ReturnPopRaster or ReturnPopMatrix has to be set')
+    if (anyNA(object@ReturnPopMatrix) || length(object@ReturnPopMatrix)!=1 || anyNA(object@ReturnPopDataFrame) || length(object@ReturnPopDataFrame)!=1){
+        msg <- c(msg, 'ReturnPopMatrix or ReturnPopDataFrame has to be set')
     }
 
     # ReturnStages must be logical
@@ -999,8 +999,8 @@ setMethod("show", "SimulationParams", function(object) {
     }
     if (object@OutIntPop) {
         cat("   Populations, every", object@OutIntPop, "years, starting year", object@OutStartPop)
-        if (object@ReturnPopRaster) {
-            cat("\n   R output: SpatRaster of")
+        if (object@ReturnPopMatrix) {
+            cat("\n   R output: Matrix of")
             if (length(object@ReturnStages)==1) {
                 cat("\n   total population size")
             } else {
@@ -1012,7 +1012,7 @@ setMethod("show", "SimulationParams", function(object) {
                 }
             }
         }
-        if (object@ReturnPopMatrix) {
+        if (object@ReturnPopDataFrame) {
             cat("\n   R output: data.frame of")
             if (length(object@ReturnStages)==1) {
                 cat("\n   total population size")

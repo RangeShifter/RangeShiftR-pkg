@@ -2427,7 +2427,7 @@ setMethod("show", "GeneticsParams", function(object){
     cat("   Output genetic values: ", object@OutputGeneValues, "\n")
     cat("   Output global Fst: ", object@OutputGlobalFst, "\n")
     cat("   Output Pairwise Fst: ", object@OutputPairwiseFst, "\n")
-    if(any(object@OutputGeneValues || object@OutputFstatsWeirCockerham || object@OutputPairwiseFst)){
+    if(any(object@OutputGeneValues || object@OutputGlobalFst || object@OutputPairwiseFst)){
         if(object@OutputGeneValues){
              cat("     Start gene values output at year: ", object@OutputGenesStart, "and output every ",object@OutputGenesInterval ," year \n")
         }

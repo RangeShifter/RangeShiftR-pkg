@@ -964,6 +964,76 @@ Management <- data.frame(
 )
 }
 
+# neutral_genetics <- F
+# geneticload <- F
+# dispersal_genes <- F
+# emigration_genes <- F
+# transfer_genes <- F
+# settlement_genes <- F
+# genetics <- F
+
+if(genetics){
+    Genetics <- data.frame(
+        "Genetic parameters"=c(),
+        "Description"=c(),
+        "Values"=c()
+}
+if(neutral_genetics){
+  NeutralGenetics <- data.frame(
+    "Genetic traits"=c(
+
+    ),
+    "Description"=c(
+
+    ),
+    "Values"=c(
+    )
+  )
+}
+if(geneticload){
+  GeneticLoad <- data.frame(
+    "Genetic traits"=c(
+
+    ),
+    "Description"=c(
+
+    ),
+    "Values"=c(
+    )
+  )
+}
+if(emigration_genes){
+  EmigrationGenes <- data.frame(
+    "Genetic traits"=c(
+    ),
+    "Description" = c(
+    ),
+    "Values" = c(
+    )
+}
+if(settlement_genes){
+  SettlementGenes <- data.frame(
+    "Genetic traits"=c(
+    ),
+    "Description" = c(
+    ),
+    "Values" = c(
+    )
+}
+if(transfer_genes){
+  TransferGenes <- data.frame(
+    "Genetic traits"=c(
+    ),
+    "Description" = c(
+    ),
+    "Values" = c(
+    )
+}
+if(dispersal_genes){
+    DispersalGenes <- data.frame(
+        
+}
+
 
 # delete all off-switches
 Landscape <- Landscape[Landscape$Values!=-9 & Landscape$Values!="NULL",]

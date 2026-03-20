@@ -428,7 +428,7 @@ Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
 	Rcpp::Rcout << "***** Outputs folder: " << outdir << endl;
 	Rcpp::Rcout << "*****" << endl;
 
-	if((sim.ReturnPopRaster || sim.ReturnPopMatrix) && sim.outIntPop > 0) {
+	if((sim.ReturnPopMatrix || sim.ReturnPopDataFrame) && sim.outIntPop > 0) {
 		// return Rcpp::List::create(Rcpp::Named("runs") = errors);
 		return list_outPop;
 	} else {
@@ -1707,8 +1707,8 @@ int ReadParametersR(Landscape* pLandscape, Rcpp::S4 ParMaster)
     // sim.drawLoaded = Rcpp::as<bool>(ParamParamsR.slot("DrawLoadedSp"));
 // sim.saveInitMap = false;
 #if RS_RCPP
-	sim.ReturnPopRaster = Rcpp::as<bool>(ParamParamsR.slot("ReturnPopRaster"));
 	sim.ReturnPopMatrix = Rcpp::as<bool>(ParamParamsR.slot("ReturnPopMatrix"));
+	sim.ReturnPopDataFrame = Rcpp::as<bool>(ParamParamsR.slot("ReturnPopDataFrame"));
 	sim.ReturnStages =
 	    Rcpp::as<Rcpp::LogicalVector>(
 	        ParamParamsR.slot("ReturnStages")
