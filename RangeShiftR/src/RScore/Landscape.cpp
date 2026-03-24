@@ -171,15 +171,7 @@ int InitDist::readDistribution(string distfile) {
 #endif
 
 	// open distribution file
-// #if RS_RCPP
-// 	dfile.open(distfile, std::ios::binary);
-// 	if (spdistraster.utf) {
-// 		// apply BOM-sensitive UTF-16 facet
-// 		dfile.imbue(std::locale(dfile.getloc(), new std::codecvt_utf16<wchar_t, 0x10ffff, std::consume_header>));
-// 	}
-// #else
 	dfile.open(distfile.c_str());
-// #endif
 	if (!dfile.is_open()) return 21;
 
 // read landscape data from header records of distribution file

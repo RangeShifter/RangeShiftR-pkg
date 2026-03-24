@@ -61,7 +61,9 @@ git subtree pull --prefix RangeShiftR/src/RScore RScore main
 If conflicts occur, the RScore repository should be treated as the source of truth:
 
 ```         
-git checkout --theirs <path_to_RScore_subfolder> git add <path_to_RScore_subfolder> git commit
+git checkout --theirs <path_to_RScore_subfolder> 
+git add <path_to_RScore_subfolder> 
+git commit
 ```
 
 ### Pushing new changes to RScore
