@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------
  *
- *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell
+ *	Copyright (C) 2026 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Roslyn Henry, Théo Pannetier, Jette Wolff, Damaris Zurell
  *
  *	This file is part of RangeShifter.
  *
@@ -19,245 +19,219 @@
  *
  --------------------------------------------------------------------------*/
 
-
 #include "RSrandom.h"
-
-//--------------- 2.) New version of RSrandom.cpp
-
-#if !RS_RCPP
-
-#if RSDEBUG
+#ifdef _OPENMP
+#include <omp.h>
+#endif // _OPENMP
+#ifndef NDEBUG
 #include "Parameters.h"
 extern paramSim* paramsSim;
-// ofstream RSRANDOMLOG;
 #endif
 
+#if RS_RCPP
+std::uint32_t RS_random_seed = 0;
+#else
 int RS_random_seed = 0;
+#endif
 
 // C'tor
-RSrandom::RSrandom()
+#if RS_RCPP
+// if parameter seed is negative, a random seed will be generated, else it is used as seed
+RSrandom::RSrandom(std::int64_t seed)
 {
-#if RSDEBUG
-    // fixed seed
-    RS_random_seed = 666;
+	// get seed
+	std::vector<std::uint32_t> random_seed(3);
+	random_seed[0] = 1967593562;
+	random_seed[1] = 3271254416;
+	if (seed < 0) {
+		// random seed
+#if RSWIN64
+		random_seed[2] = std::time(NULL) + (seed * (-17));
 #else
-    // random seed
-#if LINUX_CLUSTER
-    std::random_device device;
-    RS_random_seed = device(); // old versions of g++ on Windows return a constant value within a given Windows
-                                   // session; in this case better use time stamp
-#else
-    RS_random_seed = std::time(NULL);
+		std::random_device device;
+		random_seed[2] = device();
 #endif
-#endif // RSDEBUG
+	}
+	else {
+		// fixed seed
+		random_seed[2] = seed;
+	}
 
-#if BATCH && RSDEBUG
-    DEBUGLOG << "RSrandom::RSrandom(): RS_random_seed=" << RS_random_seed << endl;
-#endif // RSDEBUG
+	RS_random_seed = random_seed[2];
 
-    // set up Mersenne Twister RNG
-    gen = new mt19937(RS_random_seed);
+	// set up Mersenne Twister random number generator with seed sequence
+	std::seed_seq seq(random_seed.begin(), random_seed.end());
 
-    // Set up standard uniform distribution
-    pRandom01 = new uniform_real_distribution<double>(0.0, 1.0);
-    // Set up standard normal distribution
-    pNormal = new normal_distribution<double>(0.0, 1.0);
+#ifdef _OPENMP
+	int nb_generators = omp_get_max_threads();
+	gens.reserve(nb_generators);
+	for (int i = 0; i < nb_generators; i++)
+		gens.emplace_back(seq);
+#else
+	gens.reserve(1);
+	gens.emplace_back(seq);
+#endif // _OPENMP
+
+
+	// Set up standard uniform distribution
+	pRandom01 = new uniform_real_distribution<double>(0.0, 1.0);
+	// Set up standard normal distribution
+	pNormal = new normal_distribution<double>(0.0, 1.0);
+}
+#else
+RSrandom::RSrandom() {
+
+#ifndef NDEBUG
+	// fixed seed
+	RS_random_seed = 11011;
+#else
+	// random seed
+#if LINUX_CLUSTER
+	std::random_device device;
+	RS_random_seed = device(); // old versions of g++ on Windows return a constant value within a given Windows
+	// session; in this case better use time stamp
+#else
+	RS_random_seed = std::time(NULL);
+#endif
+#endif // NDEBUG
+
+	// set up Mersenne Twister RNG
+#ifdef _OPENMP
+	int nb_generators = omp_get_max_threads();
+	gens.reserve(nb_generators);
+	for (int i = 0; i < nb_generators; i++)
+		gens.emplace_back(RS_random_seed + i);
+#else
+	gens.reserve(1);
+	gens.emplace_back(RS_random_seed);
+#endif // _OPENMP	
+
+	// Set up standard uniform distribution
+	pRandom01 = new uniform_real_distribution<double>(0.0, 1.0);
+	// Set up standard normal distribution
+	pNormal = new normal_distribution<double>(0.0, 1.0);
+}
+#endif // RS_RCPP
+
+RSrandom::~RSrandom(void) {
+    gens.clear();
+    if (pRandom01 != 0)
+        delete pRandom01;
+    if (pNormal != 0)
+        delete pNormal;
 }
 
-RSrandom::~RSrandom(void)
-{
-    delete gen;
-    if(pRandom01 != 0)
-	delete pRandom01;
-    if(pNormal != 0)
-	delete pNormal;
+mt19937 RSrandom::getRNG() {
+#ifdef _OPENMP
+	return gens[omp_get_thread_num() % gens.size()];
+#else
+	return gens[0];
+#endif // _OPENMP
 }
 
-mt19937 RSrandom::getRNG(void)
-{
-    return *gen;
-}
-
-double RSrandom::Random(void)
-{
+double RSrandom::Random() {
     // return random number between 0 and 1
-    return pRandom01->operator()(*gen);
+#ifdef _OPENMP
+	return pRandom01->operator()(gens[omp_get_thread_num() % gens.size()]);
+#else
+	return pRandom01->operator()(gens[0]);
+#endif // _OPENMP
 }
 
-int RSrandom::IRandom(int min, int max)
-{
+int RSrandom::IRandom(int min, int max) {
     // return random integer in the interval min <= x <= max
+    if (min == max)
+        return min;
+
     uniform_int_distribution<int> unif(min, max);
-    return unif(*gen);
+#ifdef _OPENMP
+	return unif(gens[omp_get_thread_num() % gens.size()]);
+#else
+	return unif(gens[0]);
+#endif // _OPENMP
 }
 
-int RSrandom::Bernoulli(double p)
-{
-	if (p < 0) throw runtime_error("Bernoulli's p cannot be negative.\n");
-	if (p > 1) throw runtime_error("Bernoulli's p cannot be above 1.\n");
+float RSrandom::FRandom(float min, float max) {
+    if (min == max) return min;
+    // return random double in the interval min <= x <= max
+    uniform_real_distribution<float> unif(min, max);
+
+#ifdef _OPENMP
+	return unif(gens[omp_get_thread_num() % gens.size()]);
+#else
+	return unif(gens[0]);
+#endif
+}
+
+int RSrandom::Bernoulli(double p) {
+	if (p < 0) {
+		throw runtime_error("Bernoulli's p cannot be negative.\n");
+	}
+	if (p > 1) {
+		throw runtime_error("Bernoulli's p cannot be above 1.\n");
+	}
     return Random() < p;
 }
 
-double RSrandom::Normal(double mean, double sd)
-{
-    return mean + sd * pNormal->operator()(*gen);
+int RSrandom::Binomial(const int& n, const double& p) {
+	binomial_distribution<int> binom(n, p);
+#ifdef _OPENMP
+	return binom(gens[omp_get_thread_num() % gens.size()]);
+#else
+	return binom(gens[0]);
+#endif
 }
 
-int RSrandom::Poisson(double mean)
-{
+double RSrandom::Normal(double mean, double sd) {
+#ifdef _OPENMP
+	return mean + sd * pNormal->operator()(gens[omp_get_thread_num() % gens.size()]);
+#else
+	return mean + sd * pNormal->operator()(gens[0]);
+#endif // _OPENMP
+}
+
+int RSrandom::Poisson(double mean) {
     poisson_distribution<int> poiss(mean);
-    return poiss(*gen);
+#ifdef _OPENMP
+	return poiss(gens[omp_get_thread_num() % gens.size()]);
+#else
+	return poiss(gens[0]);
+#endif // _OPENMP
 }
 
+double RSrandom::Gamma(double shape, double scale) { //scale  = mean/shape, shape must be positive and scale can be positive or negative
+
+    gamma_distribution<> gamma(shape, abs(scale));
+
+#ifdef _OPENMP
+	double x = poiss(gens[omp_get_thread_num() % gens.size()]);
+#else
+	double x = gamma(gens[0]);
+#endif // _OPENMP
+    if (scale < 0) x = -x;
+    return x;
+}
+
+double RSrandom::NegExp(double mean) {
+    double r1 = 0.0000001 + this->Random() * (1.0 - 0.0000001);
+    double x = (-1.0 * mean) * log(r1);
+    return x;
+}
+
+void RSrandom::fixNewSeed(int seed) {
+#ifdef _OPENMP
+	for (int i = 0; i < omp_get_max_threads(); i++)
+		gens[i].seed(seed + i);
+#else
+	gens[0].seed(seed);
+#endif // _OPENMP
+}
 
 //--------------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------------
 
-#else // if RS_RCPP
-
-//--------------- 3.) R package version of RSrandom.cpp
-
-	#if RSDEBUG
-	#include "Parameters.h"
-	extern paramSim *paramsSim;
-	//ofstream RSRANDOMLOG;
-	#endif
-
-	std::uint32_t RS_random_seed = 0;
-
-	// C'tor
-	// if parameter seed is negative, a random seed will be generated, else it is used as seed
-	RSrandom::RSrandom(std::int64_t seed)
-	{
-		// get seed
-		std::vector<std::uint32_t> random_seed(3);
-		random_seed[0] = 1967593562;
-		random_seed[1] = 3271254416;
-		if (seed < 0) {
-			// random seed
-			#if RSWIN64
-			random_seed[2] = std::time(NULL) + ( seed * (-17) );
-			#else
-			std::random_device device;
-			random_seed[2] = device();
-			#endif
-			#if BATCH && RSDEBUG
-				DEBUGLOG << "RSrandom::RSrandom(): Generated random seed = ";
-			#endif
-		}
-		else{
-			// fixed seed
-			random_seed[2] = seed;
-			#if BATCH && RSDEBUG
-				DEBUGLOG << "RSrandom::RSrandom(): Use fixed seed = ";
-			#endif
-		}
-
-		RS_random_seed = random_seed[2];
-		#if BATCH && RSDEBUG
-			DEBUGLOG << RS_random_seed << endl;
-		#endif
-
-		// set up Mersenne Twister random number generator with seed sequence
-		std::seed_seq seq(random_seed.begin(),random_seed.end());
-		gen = new mt19937(seq);
-
-		// Set up standard uniform distribution
-		pRandom01 = new uniform_real_distribution<double> (0.0,1.0);
-		// Set up standard normal distribution
-		pNormal = new normal_distribution<double> (0.0,1.0);
-	}
-
-	RSrandom::~RSrandom(void) {
-		delete gen;
-		if (pRandom01 != 0) delete pRandom01;
-		if (pNormal != 0) delete pNormal;
-	}
-
-	mt19937 RSrandom::getRNG(void) {
-		// return random number generator
-		return *gen;
-	}
-
-	double RSrandom::Random(void) {
-		// return random number between 0 and 1
-		return pRandom01->operator()(*gen);
-	}
-
-	int RSrandom::IRandom(int min,int max) {
-		// return random integer in the interval min <= x <= max
-		uniform_int_distribution<int> unif(min,max);
-		return unif(*gen);
-	}
-
-	int RSrandom::Bernoulli(double p) {
-		if (p < 0) throw runtime_error("Bernoulli's p cannot be negative.\n");
-		if (p > 1) throw runtime_error("Bernoulli's p cannot be above 1.\n");
-		return Random() < p;
-	}
-
-	double RSrandom::Normal(double mean,double sd) {
-		return mean + sd * pNormal->operator()(*gen);
-	}
-
-	int RSrandom::Poisson(double mean) {
-		poisson_distribution<int> poiss(mean);
-		return poiss(*gen);
-	}
-
-
-	/* ADDITIONAL DISTRIBUTIONS
-
-	// Beta distribution - sample from two gamma distributions
-	double RSrandom::Beta(double p0,double p1) {
-		double g0,g1,beta;
-		if (p0 > 0.0 && p1 > 0.0) { // valid beta parameters
-			gamma_distribution<double> gamma0(p0,1.0);
-			gamma_distribution<double> gamma1(p1,1.0);
-			g0 = gamma0(*gen);
-			g1 = gamma1(*gen);
-			beta = g0 / (g0 + g1);
-		}
-		else { // return invalid value
-			beta = -666.0;
-		}
-		return beta;
-	}
-
-	// Gamma distribution
-	double RSrandom::Gamma(double p0,double p1) {  // using shape (=p0) and scale (=p1)
-		double p2,gamma;
-		if (p0 > 0.0 && p1 > 0.0) { // valid gamma parameters
-			p2 = 1.0 / p1;
-			gamma_distribution<double> gamma0(p0,p2);  // using shape/alpha (=p0) and rate/beta (=p2=1/p1)
-			gamma = gamma0(*gen);
-		}
-		else { // return invalid value
-			gamma = -666.0;
-		}
-	return  gamma;
-	}
-
-	// Cauchy distribution
-	double RSrandom::Cauchy(double loc, double scale) {
-		double res;
-		if (scale > 0.0) { // valid scale parameter
-			cauchy_distribution<double> cauchy(loc,scale);
-			res = cauchy(*gen);
-		}
-		else { // return invalid value
-			res = -666.0;
-		}
-		return res;
-	}
-
-
-	*/
-
-#endif // RS_RCPP
-
-
-#if RSDEBUG && !RS_RCPP
+#ifdef UNIT_TESTS
+#if !RS_RCPP
 	void testRSrandom() {
 
 		{
@@ -279,5 +253,6 @@ int RSrandom::Poisson(double mean)
 			assert(bern_trial == 0 || bern_trial == 1);
 		}
 	}
-#endif // RSDEBUG
+#endif
+#endif // UNIT_TESTS
 //---------------------------------------------------------------------------

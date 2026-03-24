@@ -1,25 +1,25 @@
 /*----------------------------------------------------------------------------
- *	
- *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell 
- *	
+ *
+ *	Copyright (C) 2026 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Roslyn Henry, ThÃ©o Pannetier, Jette Wolff, Damaris Zurell
+ *
  *	This file is part of RangeShifter.
- *	
+ *
  *	RangeShifter is free software: you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation, either version 3 of the License, or
  *	(at your option) any later version.
- *	
+ *
  *	RangeShifter is distributed in the hope that it will be useful,
  *	but WITHOUT ANY WARRANTY; without even the implied warranty of
  *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *	GNU General Public License for more details.
- *	
+ *
  *	You should have received a copy of the GNU General Public License
  *	along with RangeShifter. If not, see <https://www.gnu.org/licenses/>.
- *	
+ *
  --------------------------------------------------------------------------*/
- 
- 
+
+
 /*------------------------------------------------------------------------------
 
 RangeShifter v2.0 Model
@@ -33,14 +33,14 @@ Further functions are declared here, but defined differently in main function of
 GUI and batch versions.
 
 For full details of RangeShifter, please see:
-Bocedi G., Palmer S.C.F., Pe’er G., Heikkinen R.K., Matsinos Y.G., Watts K.
+ Bocedi G., Palmer S.C.F., Peâ€™er G., Heikkinen R.K., Matsinos Y.G., Watts K.
 and Travis J.M.J. (2014). RangeShifter: a platform for modelling spatial
-eco-evolutionary dynamics and species’ responses to environmental changes.
+ eco-evolutionary dynamics and speciesâ€™ responses to environmental changes.
 Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 26 October 2021 by Steve Palmer
+ Last updated: 28 July 2021 by Greta Bocedi
 ------------------------------------------------------------------------------*/
 
 #ifndef ModelH
@@ -48,26 +48,29 @@ Last updated: 26 October 2021 by Steve Palmer
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#if RS_RCPP
+#include <Rcpp.h>
+#include "../Rinterface.h"
+#endif // RS_RCPP
+#include <chrono>
 
 #include "Parameters.h"
 #include "Landscape.h"
 #include "Community.h"
 #include "SubCommunity.h"
 #include "Species.h"
+#include "Management.h"
 
-#if !RS_EMBARCADERO && !LINUX_CLUSTER && !RS_RCPP
+#if !LINUX_CLUSTER && !RS_RCPP
 #include <filesystem>
 using namespace std::filesystem;
-#endif
-
-#if RSDEBUG
-extern ofstream DEBUGLOG;
 #endif
 
 #if RS_RCPP && !R_CMD
 Rcpp::List RunModel(
 	Landscape*,	// pointer to Landscape
-	int					// sequential simulation number
+	int,					// sequential simulation number
+	Rcpp::S4	// parameter master to read initial conditions in each replicate simulation
 );
 #else
 int RunModel(
@@ -75,7 +78,9 @@ int RunModel(
 	int					// sequential simulation number
 );
 #endif // RS_RCPP && !R_CMD
-bool CheckDirectory(void);
+
+bool CheckDirectory(const string& pathToProjDir);
+
 void PreReproductionOutput(
 	Landscape*,	// pointer to Landscape
 	Community*, // pointer to Community
@@ -89,20 +94,7 @@ void RangePopOutput(
 	int,				// year
 	int					// generation
 );
-void Outputs_Visuals_B(
-	int,	// replicate
-	int,	// year
-	int,	// generation
-	int		// Landscape number
-);
-void RefreshVisualCost(void);
-traitCanvas SetupTraitCanvas(void);
-void SetupVisualOutput(void);
-void ResetVisualOutput(void);
-void DrawPopnGraph(
-	Community*,	// pointer to Community
-	int					// year
-);
+
 void OutParameters(
 	Landscape*	// pointer to Landscape
 );
@@ -113,25 +105,10 @@ extern Species *pSpecies;
 extern paramSim *paramsSim;
 extern paramInit *paramsInit;
 extern Community *pComm;
+extern Management *pManagement;
 
-const bool batchMode = true;
 extern string landFile;
-extern vector <string> hfnames;
-extern string habmapname;		// see Main.cpp (batch)
-extern string patchmapname;	// see Main.cpp (batch)
-extern string distnmapname;	// see Main.cpp (batch)
-extern string costmapname;	// see Main.cpp (batch)
-extern string genfilename;	// see Main.cpp (batch)
 extern RSrandom *pRandom;
-
-// these functions to have different version for GUI and batch applications ...
-#if BATCH
-extern void MemoLine(string);
-#endif
-void GUIsetLandScale(
-	int,	// landscape image height (pixels)
-	int		// landscape image width  (pixels)
-);
 
 #if RS_RCPP
 extern std::uint32_t RS_random_seed;

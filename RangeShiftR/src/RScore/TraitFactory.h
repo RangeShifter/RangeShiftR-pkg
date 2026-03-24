@@ -16,18 +16,40 @@
  *
  *	You should have received a copy of the GNU General Public License
  *	along with RangeShifter. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * File Created by Roslyn Henry March 2023. Code adapted from NEMO (https://nemo2.sourceforge.io/)
  --------------------------------------------------------------------------*/
-#ifndef UtilsH
-#define UtilsH
+#ifndef TRAITFACTORYH
+#define TRAITFACTORYH
 
-#include <stdlib.h>
-#include <iostream>
-#include <sstream>
+#include <memory>
 
-#include <cassert>
-using namespace std;
+#include "SpeciesTrait.h"
+#include "NeutralTrait.h"
+#include "DispersalTrait.h"
+#include "GeneticFitnessTrait.h"
 
-// Evaluate a lambda and assert we get the correct error 
-void assert_error(const string& exptd_err_msg, void (*x)(void));
+// Create handled pointers to a new trait
+class TraitFactory
+{
+public:
+	TraitFactory() {};
 
-#endif // UtilsH
+	unique_ptr<QuantitativeTrait> Create(const TraitType traitType, SpeciesTrait* pSpTrait)
+	{
+		if (traitType == NEUTRAL) {
+			return make_unique<NeutralTrait>(pSpTrait);
+		}
+		else if (traitType == GENETIC_LOAD1 
+			|| traitType == GENETIC_LOAD2 
+			|| traitType == GENETIC_LOAD3 
+			|| traitType == GENETIC_LOAD4 
+			|| traitType == GENETIC_LOAD5) {
+			return make_unique<GeneticFitnessTrait>(pSpTrait);
+		}
+		else {
+			return make_unique<DispersalTrait>(pSpTrait);
+		}
+	}
+};
+#endif

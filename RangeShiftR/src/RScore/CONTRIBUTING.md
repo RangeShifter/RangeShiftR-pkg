@@ -17,7 +17,7 @@ RangeShifter is distributed with three user interfaces, each living in their own
 
 All three share the same source code for the core simulation (i.e., the actual model), which lives in this repo (RScore). Each of the interfaces keeps a copy of this core code in a subfolder called RScore, kept in sync with the RScore repo via a git subtree (see Git subtree usage section). 
 
-⚠️ If you wish to propose a change to one of the interfaces, please do so in the corresponding repo: [RangeShifter batch mode](https://github.com/RangeShifter/RangeShifter_batch_dev), [RangeShiftR package](https://github.com/RangeShifter/RangeShiftR-package-dev).
+⚠ If you wish to propose a change to one of the interfaces, please do so in the corresponding repo: [RangeShifter batch mode](https://github.com/RangeShifter/RangeShifter_batch_dev), [RangeShiftR package](https://github.com/RangeShifter/RangeShiftR-package-dev).
 
 *The RangeShifter GUI is currently being rewritten, and is not open source yet.
 
@@ -26,7 +26,7 @@ All three share the same source code for the core simulation (i.e., the actual m
 #### Maintainers
 
 - [@JetteReeg](https://github.com/JetteReeg): RScore repo and lead in R package
-- [@TheoPannetier](https://github.com/TheoPannetier): RScore repo and lead in batch mode
+
 
 Maintainers are responsible for coordinating development efforts and ensuring that RangeShifter keeps building continuously.
 
@@ -61,11 +61,16 @@ In the meantime, we encourage contributors to work in small and frequent commits
 
 Any changes regarding the RangeShifter core code should be done in this repository and can afterwards be synced with all interfaces using the git subtree feature (see [Git subtree](https://github.com/RangeShifter/RScore/tree/main?tab=readme-ov-file#usage-git-subtree) section in the README). 
 
+
 #### Bugs
 
-To report a bug, please [open an issue](https://github.com/RangeShifter/RangeShiftR-package-dev/issues/new), using the Bug Report template. 
-Please do check if a related issue has already open on one of the other interfaces ([here](https://github.com/RangeShifter/RangeShifter_batch-dev/issues) for the batch interface or [here](https://github.com/RangeShifter/RangeShiftR-package-dev) for the R package interface).
+To report a bug, please [open an issue](https://github.com/RangeShifter/RangeShiftR-package/issues/new), using the Bug Report template. 
+Please do check if a related issue has already open on one of the other interfaces ([here](https://github.com/RangeShifter/RangeShifter_batch/issues) for the batch interface or [here](https://github.com/RangeShifter/RangeShiftR-package) for the R package interface).
+
 To propose a bug fix (thank you!!), please create and work on your own branch or fork, from either `main` or `develop` (preferred), and open a pull request when your fix is ready to be merged into the original branch.
+
+As a prerequisite for merging, please ensure that your version passes status check (that is, RScore can still build, and all unit tests are still satisfied). 
+This can be seen in the Actions panel for every commit and at the bottom of the pull request.
 
 Maintainers will review the pull request, possibly request changes, and eventually integrate the bug fix into RScore, and update the subtrees to bring the fix to all interfaces.
 

@@ -16,18 +16,38 @@
  *
  *	You should have received a copy of the GNU General Public License
  *	along with RangeShifter. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * File Created by Roslyn Henry March 2023. Code adapted from NEMO (https://nemo2.sourceforge.io/)
  --------------------------------------------------------------------------*/
-#ifndef UtilsH
-#define UtilsH
 
-#include <stdlib.h>
-#include <iostream>
-#include <sstream>
+#ifndef TRAITTH
+#define TRAITTH
 
-#include <cassert>
+#include <vector>
+#include <set>
+#include <memory>
+
+#include "Parameters.h"
+#include "Allele.h"
+#include "SpeciesTrait.h"
+
 using namespace std;
 
-// Evaluate a lambda and assert we get the correct error 
-void assert_error(const string& exptd_err_msg, void (*x)(void));
+// Base interface for all genetic traits
+class QuantitativeTrait {
+public:
+    virtual void mutate() = 0;
+    virtual unique_ptr<QuantitativeTrait> clone() const = 0; //copies parameters (if not static) not gene seqeunces
+    virtual void inheritGenes(const bool&, QuantitativeTrait*, set<unsigned int> const& , int ) = 0;
+    virtual int getNLoci() const = 0;
+    virtual float getMutationRate() const = 0;
+    virtual bool isInherited() const = 0;
+    virtual float getAlleleValueAtLocus(short chromosome, int i) const = 0;
+    virtual float getDomCoefAtLocus(short whichChromosome, int position) const = 0;
+    virtual float express() = 0;
+    virtual ~QuantitativeTrait() { }
+};
 
-#endif // UtilsH
+extern RSrandom* pRandom;
+
+#endif

@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------
  *	
- *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell 
+ *	Copyright (C) 2026 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Roslyn Henry, Théo Pannetier, Jette Wolff, Damaris Zurell
  *	
  *	This file is part of RangeShifter.
  *	
@@ -39,7 +39,7 @@ Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
-Last updated: 26 October 2021 by Steve Palmer
+ Last updated: 25 June 2021 by Greta Bocedi
 
 ------------------------------------------------------------------------------*/
 
@@ -48,6 +48,7 @@ Last updated: 26 October 2021 by Steve Palmer
 
 #include <vector>
 #include <algorithm>
+#include <map>
 using namespace std;
 
 #include "Parameters.h"
@@ -56,16 +57,12 @@ using namespace std;
 
 //---------------------------------------------------------------------------
 
-struct traitCanvas { // canvases for drawing variable traits
-	int *pcanvas[NTRAITS]; // dummy variables for batch version
-};
-
 class SubCommunity {
 
 public:
 	SubCommunity(Patch*,int);
 	~SubCommunity(void);
-	intptr getNum(void);
+	int getNum(void);
 	Patch* getPatch(void);
 	locn getLocn(void);
 
@@ -94,35 +91,66 @@ public:
 		bool		// TRUE for a patch-based model, FALSE for a cell-based model
 	);
 	void emigration(void);
-	// Remove emigrants from their natal patch and add to patch 0 (matrix)
-	void initiateDispersal(
-		SubCommunity*	// pointer to matrix SubCommunity
+	
+	// Remove emigrants from the matrix subcommunity and add to a map of vectors
+	void disperseMatrix(
+		std::map<Species*,std::vector<Individual*>>&
 	);
-// Add an individual into the local population of its species in the patch
+	// Remove emigrants from their natal patch and add to a map of vectors
+	void recruitDispersers(
+		std::map<Species*,std::vector<Individual*>>&
+	);
+	// Add an individual into the local population of its species in the patch
 	void recruit(
 		Individual*,	// pointer to Individual
 		Species*			// pointer to Species
 	);
-#if RS_RCPP
-	int transfer( // Transfer through matrix - run for matrix SubCommunity only
-		Landscape*,	// pointer to Landscape
-		short,			// landscape change index
-		short				// season / year
+	// Add individuals into the local population of their species in the patch
+	void recruitMany(
+		std::vector<Individual*>&,	// vector of pointers to Individuals
+		Species*			// pointer to Species
 	);
-#else
-	int transfer( // Transfer through matrix - run for matrix SubCommunity only
+
+	// Determine whether there is a potential mate present in a patch which a potential
+	// settler has reached
+	static bool matePresent(
+		Species* pSpecies,
+		Cell*,	// pointer to the Cell which the potential settler has reached
+		short		// sex of the required mate (0 = female, 1 = male)
+	);
+
+	static int resolveTransfer( // Executed for a given vector of individuals
+		std::map<Species*, vector<Individual*>>& dispersingInds,
 		Landscape*,	// pointer to Landscape
 		short				// landscape change index
 	);
+
+#if RS_RCPP
+	static int resolveSettlement( // Executed for a given vector of individuals
+		std::map<Species*, vector<Individual*>>& dispersingInds, 
+		Landscape* pLandscape,
+		short				// year
+	);
+#else
+	static int resolveSettlement( // Executed for a given vector of individuals
+		std::map<Species*, vector<Individual*>>& dispersingInds, 
+		Landscape* pLandscape
+	);
 #endif // RS_RCPP
-	// Remove emigrants from patch 0 (matrix) and transfer to SubCommunity in which
-	// their destination co-ordinates fall (executed for the matrix patch only)
-	void completeDispersal(
+
+	// Remove emigrants from the vectors map and transfer to SubCommunity in which
+	// their destination co-ordinates fall
+	static void completeDispersal(
+		std::map<Species*,vector<Individual*>>&, 	// per-species map of vectors of individuals
 		Landscape*,	// pointer to Landscape
 		bool				// TRUE to increment connectivity totals
 	);
+
+	void survival0(short option0, short option1);
+	void survival1();
+
 	void survival(
-		short,	// part:		0 = determine survival & development,
+		short,	// part:	0 = determine survival & development,
 						//		 			1 = apply survival changes to the population
 		short,	// option0:	0 = stage 0 (juveniles) only         )
 						//					1 = all stages                       ) used by part 0 only
@@ -130,9 +158,12 @@ public:
 		short 	// option1:	0 - development only (when survival is annual)
 						//	  	 		1 - development and survival
 	);
+
 	void ageIncrement(void);
+
 	// Find the population of a given species in a given patch
 	Population* findPop(Species*,Patch*);
+
 	void createOccupancy(
 		int	// no. of rows = (no. of years / interval) + 1
 	);
@@ -144,10 +175,10 @@ public:
 	);
 	void deleteOccupancy(void);
 
-	bool outPopHeaders( // Open population file and write header record
+	bool outPopFinishLandscape(); // Close population file
+	bool outPopStartLandscape( // Open population file and write header record
 		Landscape*,	// pointer to Landscape
-		Species*,		// pointer to Species
-		int					// option: -999 to close the file
+		Species*		// pointer to Species
 	);
 	void outPop( // Write records to population file
 		Landscape*,	// pointer to Landscape
@@ -156,41 +187,44 @@ public:
 		int					// generation
 	);
 
-	void outInds( // Write records to individuals file
+	void outIndsFinishReplicate(); // Close individuals file
+	void outIndsStartReplicate( // Open individuals file and write header record
+		Landscape*,	// pointer to Landscape
+		int,				// replicate
+		int					// Landscape number
+	);
+	void outIndividuals( // Write records to individuals file
 		Landscape*,	// pointer to Landscape
 		int,				// replicate
 		int,				// year
-		int,				// generation
-		int					// Landscape number (>= 0 to open the file, -999 to close the file
-								//									 -1 to write data records)
-	);
-	void outGenetics( // Write records to genetics file
-		int,				// replicate
-		int,				// year
-		int,				// generation
-		int					// Landscape number (>= 0 to open the file, -999 to close the file
-								//									 -1 to write data records)
+		int				// generation
 	);
 	bool outTraitsHeaders( // Open traits file and write header record
 		Landscape*,	// pointer to Landscape
 		Species*,		// pointer to Species
-		int					// Landscape number (-999 to close the file)
+		int					// Landscape number
 	);
+
+
+	// Close traits file
+	bool outTraitsFinishLandscape();
+
+	// Open traits file and write header record
+	bool outTraitsStartLandscape(Landscape* pLandscape, Species* pSpecies, int landNr);
+
 	traitsums outTraits( // Write records to traits file and return aggregated sums
-		traitCanvas,	// pointers to canvases for drawing variable traits		
-									// in the batch version, these are replaced by integers set to zero
 		Landscape*, 	// pointer to Landscape
 		int,					// replicate
 		int,					// year
 		int,					// generation
 		bool					// true if called to summarise data at community level
 	);
-	int stagePop( // Population size of a specified stage
+	int getNbInds( // Population size of a specified stage
 		int	// stage
-	);
+	) const;
 
 private:
-	intptr subCommNum;	// SubCommunity number
+	int subCommNum;	// SubCommunity number
 		// 0 is reserved for the SubCommunity in the inter-patch matrix
 	Patch *pPatch;
 	int *occupancy;	// pointer to occupancy array
