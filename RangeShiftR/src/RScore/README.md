@@ -97,4 +97,3 @@ See [CONTRIBUTING](https://github.com/RangeShifter/RScore/blob/main/CONTRIBUTING
 ## Maintainers
 
 -   [\@JetteReeg](https://github.com/JetteReeg)
--   [\@TheoPannetier](https://github.com/TheoPannetier)
