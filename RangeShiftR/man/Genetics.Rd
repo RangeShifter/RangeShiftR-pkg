@@ -5,177 +5,198 @@
 \alias{Genetics}
 \title{Set Genetics parameters}
 \usage{
-Genetics(Architecture = 0,
-         NLoci = 1, ArchFile = "NULL",
-         ProbMutn = 0.0, MutationSD = 0.1,
-         ProbCross = 0.0,
-         AlleleSD = 0.1)
+Genetics(GenomeSize = 10,
+         ChromosomeEnds = 1,
+         RecombinationRate = 0.0,
+         OutputGeneValues = FALSE,
+         OutputGenesStart = NULL,
+         OutputGenesInterval = NULL,
+         OutputGlobalFst = NULL,
+         OutputGlobalFstStart = NULL,
+         OutputGlobalFstInterval = NULL,
+         OutputPairwiseFst = NULL,
+         OutputPairwiseFstStart = NULL,
+         OutputPairwiseFstInterval = NULL,
+         OutputPerLocusFst = NULL,
+         PatchList = NULL,
+         NbrPatchesToSample = NULL,
+         nIndividualsToSample = NULL,
+         Stages = NULL,
+         Traits = Traits()
+         )
 }
 \arguments{
-\item{Architecture}{Genetic Architecture: \cr 0 = One chromosome per trait (default), \cr 1 = Read from file (set \code{ArchFile}).}
+\item{GenomeSize}{Maximum size of genome (number of loci). Should be an integer number.}
 
-\item{NLoci}{Required if \code{Architecture=0}: Number of loci per chromosome, defaults to \eqn{1} (integer).}
+\item{ChromosomeEnds}{Where the genome is split into chromosomes, if empty it is
+assumed that one chromosome is equal to GenomeSize. These areas recombine with a
+probability of 0.5. Disabled for haploid organisms (no recombination). It should be a vector of integers.}
 
-\item{ArchFile}{Required if \code{Architecture=1}: Name of the genetic architecture file.}
+\item{RecombinationRate}{Recombination rate (through chromosomal crossover)
+across the whole genome (in addition to the chromosomeEnds above). Disabled for haploid organisms (no recombination).}
 
-\item{ProbMutn}{Probability of mutation of each individual allele at meiosis, defaults to \eqn{0.0}.\cr}
+\item{OutputGeneValues}{TRUE or FALSE. Output the values of all alleles for all genes of all sampled individuals.
+Does not output the resulting trait values: mean and SD of dispersal and genetic fitness traits are
+output in the TraitsXPatch, TraitsXCell and/or TraitsXrow output files. Enables the geneValues output files.}
 
-\item{MutationSD}{Standard deviation of mutation magnitude, defaults to \eqn{0.1}.\cr Must be \eqn{> 0}.
-Must be \eqn{0 \le}\code{ProbMutn} \eqn{\le 1}.}
+\item{OutputGenesStart}{Which year should RangeShifter start to produce the output files listed above? Positive integer if any output is \code{TRUE}, otherwise \code{NULL}.}
 
-\item{ProbCross}{Probability of crossover at each individual locus at meiosis, defaults to \eqn{0.0}.\cr
-Must be \eqn{0 \le}\code{ProbCross} \eqn{\le 1}.}
+\item{OutputGenesInterval}{How frequently to output gene values output. Positive integer if any output is \code{TRUE}, otherwise \code{NULL}.}
 
-\item{AlleleSD}{Standard deviation of initial allelic values around phenotypic value, defaults to \eqn{0.1}.\cr Must be \eqn{> 0}.}
+\item{OutputGlobalFst}{Calculate global F-statistics according to Weir & Cockerham (1984)'s method-of-moments approach. Enables the neutralGenetics output file. \code{TRUE} or \code{FALSE}.}
+
+\item{OutputGlobalFstStart}{Which year should RangeShifter start to produce the global Fst output? Positive integer if \code{OutputGlobalFst} is \code{TRUE}, otherwise \code{NULL}.}
+
+\item{OutputGlobalFstInterval}{How frequently to output global F-statistics. Positive integer if \code{OutputGlobalFst} is \code{TRUE}, otherwise \code{NULL}.}
+
+\item{OutputPairwiseFst}{Calculate pairwise F-statistics according to Weir & Cockerham (1984)'s method-of-moments approach. Enables the pairwisePatchNeutralGenetics output files. \code{TRUE} or \code{FALSE}.}
+
+\item{OutputPairwiseFstStart}{Which year should RangeShifter start to produce the pairwise Fst output? Positive integer if \code{OutputPairwiseFst} is \code{TRUE}, otherwise \code{NULL}.}
+
+\item{OutputPairwiseFstInterval}{How frequently to output pairwise F-statistics? Positive integer if \code{OutputPairwiseFst} is \code{TRUE}, otherwise \code{NULL}.}
+
+\item{OutputPerLocusFst}{Calculate F-statistics per-locus estimates according to Weir & Cockerham (1984)'s method-of-moments approach, only if \code{OutputGlobalFst} is \code{TRUE}, for the same interval as the global fst. Enables the perLocusNeutralGenetics output files. \code{TRUE} or \code{FALSE}.}
+
+\item{PatchList}{Which patches are to be sampled for output.  Patches can be
+specified according to their patch number, as per the patch layer in a patch-based
+model. Or sampled randomly or all patches can be chosen. In a cell-based landscape
+random is the only option with number of patches (=cells) specified. Can take "all", "random", "random_occupied" or a vector of integers.}
+
+\item{NbrPatchesToSample}{If PatchList=random or random_occupied then this specifies
+the number of patches to sample randomly. Random: The chosen sample patches remain
+the same throughout the simulation, i.e. do not vary between years or replicates
+unless artificially generated landscape that is generated afresh between replicates.
+Random_occupied: patches are re-sampled every generation among all patches containing at least 1 individual.}
+
+\item{nIndividualsToSample}{The number of individuals to sample in a patch. If nInds < nIndividualsToSample then sampled individuals = nInds}
+
+\item{Stages}{The age stages to sample from. Should be a vector of integers. Should be a vector of integers or "all". If NULL, all stages are sampled.}
+
+\item{Traits}{The genetic traits to be modelled. See \code{\link[RangeShiftR]{Traits}} for more information.}
 }
 \value{
 a parameter object of class "GeneticsParams"
 }
 \description{
-Set genetics parameters and architecture.\cr
-
-Controls heritability and evolution of traits (if inter-individual variability is enabled (\code{IndVar=TRUE}) for at least one (dispersal) trait).
-Provides control over the number of chromosomes, the number of loci on each, the recombination rate (if the species is diploid) and a
-flexible mapping of traits to chromosomes, allowing linkage, pleiotropy and neutral alleles to be incorporated. It is also possible to model
-neutral alleles when no adaptive traits are present.
+Controls heritability and evolution of traits (in case of dispersal traits only if inter-individual variability is enabled (\code{IndVar=TRUE})).
+Provides control over the genome size, the number of loci, the recombination rate, output options and the genetic traits to be modelled
 }
 \details{
-When inter-individual variability in at least one trait (at present limited to dispersal traits)
-is enabled (\code{IndVar=TRUE}), each individual carries a genome coding for the varying trait values.\cr
-If the reproductive model is \emph{asexual/female-only} (\code{ReproductionType} \eqn{=0}), the species is assumed to be haploid and chromosomes
-hold a single allele at each locus. In this case, changes in the genotype, and hence also in the phenotype, can occur only through mutation (see below). \cr
-In the case of \emph{sexual} models(\code{ReproductionType} \eqn{={1,2}}), the species is assumed to be diploid and chromosomes
-hold two alleles at each locus. New-born offspring inherit one set of chromosomes from each of its parents.
-Note that we use the term \emph{chromosome} here to represent both the single chromosomes of a haploid species and
-the chromosome pair of a diploid species.\cr
+The genome itself is not modelled explicitly, and is instead represented by a genome size,
+the set of gene positions and a set of positions for the chromosome breaks (hence determining the number of chromosomes).
 
-\emph{Simple genetic architecture}\cr
-A simple type of architecture may be used by choosing the \emph{one chromosome per trait}
-option (\code{Architecture} \eqn{=0}) and setting the number of loci per chromosome;
-all chromosomes will carry the same number of loci.\cr
+The rate of recombination applies to the entire genome. Genetic linkage does occur, based on the distances between genes controlling different traits.
+Multiple traits can use the same position, making the alleles of such genes completely linked, but mutations and expression of different traits are resolved independently,
+such that pleiotropy is not possible.
+If either option for sexual reproduction is selected, all individuals are diploid. Otherwise, asexual individuals are always haploid (and do not recombine).
 
-In the 1.x versions of \emph{RangeShifter}, the trait value was held by the individual directly
-as a ‘pseudo-gene’ (for diploid species, the mean of two such alleles controlled the phenotype),
-but this did not allow for representation of more complex genetic phenomena, such as linkage
-between traits. This simple type of implementation may still be represented approximately by
-choosing the ‘one chromosome per trait’ option, and setting one locus per chromosome.
+\emph{Output} \cr
 
-\emph{Flexible genetic architecture}\cr
-For a more realistic representation of heritable traits, an explicit genetic architecture
-may be defined, which must be read from a text file (\code{Architecture} \eqn{=1}).
-The file specifies how many chromosomes
-each individual will have, the number of loci on each chromosome and which loci contribute
-to the phenotypic value of each trait. Thus, for example, it is possible to model a species
-exhibiting a single variable trait (e.g. the mean of a negative exponential dispersal kernel)
-dependent on loci spreads across three chromosomes or a species exhibiting three trait (e.g.
-density-dependent emigration) all of which are governed by loci located on a single chromosome.
-In practice, most genetic architectures are likely to fall somewhere between these extremes,
-i.e. there will be several chromosomes and traits will be mapped across them. In contrast to
-\emph{RangeShifter} v1, whenever there are variable traits in a model, evolution is assumed, although
-it can if desired be effectively eliminated for a haploid species by setting a very low mutation
-probability (\code{ProbMutn}).\cr
+\emph{Sampling} \cr
+The volume of genetic output grows quickly with the number of individuals in the simulation,
+and it is therefore crucial to first constitute an appropriate sample of the community.
+First, a set of patches is sampled from either a random subset of all patches in the landscape, or a pre-specified list of patches.
+In either case, the same patches will be sampled through the simulation, and no check is conducted to verify if each patch does contain a
+population or is empty. There is an additional option to sample patches from a random subset of occupied patches,
+which will change from one generation to the next.
+Second, a number of individuals are sampled from the population of each sampled patch. In stage-structured populations,
+it is possible to select only certain stages to be sampled. \cr
 
-Care must be taken to specify the architecture file in the required format. This is an example
-architecture file content:\cr\cr
-NChromosomes	4\cr
-NLoci	5 6 10 2\cr
-Trait 0 NLoci 4 0 0 0 1 0 2 1 5\cr
-Trait 1 NLoci 8 0 4 2 0 2 1 2 2 2 3 2 4 2 9 3 0\cr
-Trait 2 NLoci 2 1 4 3 1 \cr
+\emph{Allele values}\cr
 
-The first line contains the keyword \code{NChromosomes} followed by an integer \eqn{n_C} that
-specifies the number of chromosomes.\cr
-The second line contains the keyword \code{NLoci} followed by \eqn{n_C} integers which specify
-the number of loci on each chromosome.\cr
-Then follows one line for each heritable trait, in the order they are defined in the model
-(emigration / movement / settlement).
-They begin with the keyword \code{Trait} followed by an consecutive (starting with zero) integer
-trait ID. On the same line follows the keyword \code{NLoci} and an integer \eqn{n_Ti} that
-specifies the number of loci the corresponding trait is mapped to. After this follow \eqn{n_Ti}
-integer pairs specifying the respective chromosome and locus. (Note that numbering starts at \eqn{0}.)\cr
+This output, if enabled (\code{OutputGeneValues = TRUE}), will write all alleles values of the sampled individuals for the selected trait(s) to \emph{Sim<sim_nb>_Land<landscape_nb>_Rep<replicate_nb>_geneValues},
+along with some contextual information.\cr
 
-Any loci which do not contribute to at least one trait are treated as neutral loci (see below).
-Neutral loci may also be specified for a model in which there are no adaptive traits:
-Specifying a genetic architecture file for a model having no adaptive traits will result in neutral
-genetics being set up for the species.\cr
+Each row corresponds to a single gene:\cr
 
-\emph{From genotype to phenotype}\cr
-All alleles are represented by integer values (positive or negative),
-and the sum of alleles at all loci contributing to a trait (both alleles at each locus of a diploid
-species) controls the phenotype. However, as phenotypic traits exist on several widely different
-scales (e.g. emigration probability between \eqn{0} and \eqn{1}, dispersal kernel mean typically
-many hundreds or thousands of metres), it is necessary to specify how the allelic scale relates
-to the phenotypic scale. A scaling factor is specified for each trait (the parameter
-\code{TraitScaleFactor} in each dispersal sub-module), which governs how large a
-change of \eqn{100} units (which is the ‘integer base’ of the genome) on the allele scale will be on the
-phenotypic scale. For example, if the scaling factor for density-independent emigration probability
-is \eqn{0.1}, and a juvenile’s sum of all alleles contributing to that trait is \eqn{150} less than
-its parent’s equivalent sum, then the juvenile’s emigration probability phenotype will be \eqn{0.15}
-lower than its parent’s phenotype (but subject in this case to the constraint that it may not be
-less than zero).\cr
+    1.	Year\cr
+    2.	Generation\cr
+    3.	Individual ID\cr
+    4.	Trait type (e.g. “kernel_meanDist1”, matching the value given as input)\cr
+    5.	Position in the genome\cr
+    6.	Value of the allele on the first chromosome\cr
+    7.	Dominance coefficient for the allele on the first chromosome (this will be 0 except for genetic fitness traits)\cr
+    8.	(If diploid) Value of the allele on the second chromosome\cr
+    9.	(If diploid) Dominance coefficient for the allele on the second chromosome\cr
 
-\emph{Mutation and Linkage}\cr
-Mutation can occur when an individual allele is inherited by a new-born individual from its parent.
-It is governed by two genome-level parameters: the mutation probability \code{ProbMutn}
-that a mutation takes place, and standard deviation \code{MutationSD} which sets the typical magnitude.
-Both are applied in a standard way at the level of the individual locus (unlike in version 1, in
-which separate probabilities and magnitudes were applied for separate traits). When a mutation occurs
-at a locus, a random number is drawn from a normal distribution having zero mean and the mutation standard
-deviation. This number is multiplied by the integer base to yield an integer value which is added to the
-allele before it is copied to the juvenile’s chromosome. The default mutation standard deviation of \eqn{0.1}
-will therefore give mutations which mostly range between \eqn{-30} and \eqn{+30} at the allele scale.\cr
+\emph{Neutral genetics} \cr
 
-In a diploid species, traits may be linked if their coding loci are on the same chromosomes; or they can
-evolve independently, if their coding loci are on different chromosomes.
-The degree of linkage, however, also depends on the crossover probability \code{ProbCross} specified for
-the genome. If it is high, the degree of linkage is reduced, and the linked traits tend to evolve more
-independently. \cr
+The standard neutral genetics output, \emph{Sim<sim_nb>_Land<landscape_nb>_neutralGenetics}, writes the following entries (one row per generation): \cr
+1.	Replicate number \cr
+2.	Year \cr
+3.	Generation \cr
+4.	Number of sampled patches with a non-zero population \cr
+5.	Total number of sampled individuals \cr
+6.	Weir & Cockerham’s 	\emph{\ifelse{html}{\out{F<sub>st</sub>}}{\eqn{F_st}}}  (if enabled) \cr
+7.	Weir & Cockerham’s 	\emph{\ifelse{html}{\out{F<sub>is</sub>}}{\eqn{F_is}}} (if enabled) \cr
+8.	Weir & Cockerham’s 	\emph{\ifelse{html}{\out{F<sub>it</sub>}}{\eqn{F_it}}} (if enabled) \cr
+9.	Global allelic diversity, calculated as the mean number of alleles per locus for the entire sample. \cr
+10.	Local allelic diversity, calculated as the mean number of alleles per locus for each sampled patch, then averaged over patches. \cr
+11.	Number of globally fixed alleles. \cr
+12.	Mean number of fixed alleles per patch. Note that this may differ from the number of globally fixed alleles, for example if an allele is fixed in one patch but polymorphism exists in other patches. \cr
+13.	Observed heterozygosity Ho, calculated as the mean number of heterozygous loci per individual per locus. \cr
 
-The crossover probability denoted the probability that,
-when copying a multi-locus chromosome from a parent’s to the offspring’s genome, there will
-be a change at the current locus from copying the parent’s maternally-inherited alleles to the
-parent’s paternally-inherited alleles or vice versa.\cr
-The crossover probability parameter is applied at the scale of the locus, i.e. during meiosis.
-As a parent’s chromosomes are being inherited by its offspring, a crossover occurs at each locus with the
-specified probability \code{ProbCross}. If the crossover probability is high, the degree of linkage is reduced, and two linked
-traits tend to evolve more independently.\cr
+RangeShifter estimates standard F-statistics as \insertCite{cockerham1969}{RangeShiftR}’s \ifelse{html}{\out{&theta;}}{\eqn{θ}} statistics, using the classic method-of-moments estimator
+of \insertCite{weir1984}{RangeShiftR}. \cr
 
-\emph{Pleiotropy and Neutral loci}\cr
-It is possible that a particular locus can be specified more than once for a particular trait; this
-increases its weighting relative to other loci contributing to the trait. A locus may also code for
-more than one trait, i.e. it is pleiotropic. Large positive allele values at that locus will tend to
-lead to larger than average values of both traits (but subject to any other loci coding separately
-for the two traits). Thus the two traits are forced (to some extent) to be positively correlated. It
-is not possible to specify inverse correlation between two traits in this way.\cr
+In short, \emph{\ifelse{html}{\out{&theta;}}{\eqn{θ}}} \emph{(\ifelse{html}{\out{F<sub>st</sub>}}{\eqn{F_st}})} measures the correlation between alleles within sub-populations (patches)
+relative to the complete sampled population,
+\emph{f(\ifelse{html}{\out{F<sub>is</sub>}}{\eqn{F_is}})} the correlation between alleles within individuals relative to the sub-population and \emph{F(\ifelse{html}{\out{F<sub>it</sub>}}{\eqn{F_it}})} the correlation between alleles
+within individuals relative to the complete sampled population (see \insertCite{holsinger2009}{RangeShiftR} for an introduction). \cr
 
-A locus which does not code for any trait is neutral, and therefore not subject directly to
-selection, although the distribution across the population of allele values at that locus may vary
-over time owing to genetic drift and/or linkage to loci which are under selection. Such neutral
-loci may be used as markers for estimating relatedness at the individual or population level.\cr
+While the methods are designed for diploid systems, it is possible to compute F-stats for haploid organisms – in this case,
+heterozygosity terms evaluate to zero. Reminder: in RangeShifter, asexual species are always haploid, and sexual organisms are always diploid!
 
-\emph{Genome initialisation}\cr
-At model initialisation, individuals are assigned phenotypic traits drawn from a normal
-distribution controlled by a specified mean phenotype and standard deviation, but also subject
-to any phenotypic constraints (e.g. a probability must lie between \eqn{0} and \eqn{1}, step length
-must be positive, etc.). The values for the traits initial mean and standard deviation are set in the appropriate
-sub-modules, where they replace the constant values used when \code{IndVar = FALSE}.
-The standard deviation for a trait may not be greater than the corresponding
-scaling factor (\code{TraitScaleFactor}), but it may be substantially less if an initial population which is highly homogeneous
-for a particular trait is required. \cr
+See the RangeShifter manual for more details on the calculation of these statistics. \cr
 
-The genome actually controls individual variation relative to the
-initial population mean value of a trait; thus if the sum of an individual’s alleles is negative, its
-phenotype will be less than the initial mean value, and if its sum is positive, its phenotype will be
-greater than the mean value. However, to prevent all alleles for a multi-loci trait being identical in
-initial individuals, further random variation is applied at the allele scale (i.e. common to all traits),
-which is drawn from a normal distribution having zero mean and a standard deviation specified in \code{AlleleSD}.
-Note that therefore the observed variance in a trait value across the initial population may not match
-exactly the specified variance for the trait.
+\emph{Per-locus neutral genetics} \cr
 
-Side note: This differs from the implementation in version 1.x, which used a uniform distribution; hence
-an initial population cannot be set up in v2.0 to have exactly the same properties as in v1, but a similar
-equilibrium population should arise after a period of sufficiently strong selection for one or more traits.
+If the per locus  \emph{\ifelse{html}{\out{F<sub>st</sub>}}{\eqn{F_st}}} parameter is enabled \code{OutputPerLocusFst==TRUE}, RangeShifter outputs an additional file
+\emph{Sim<sim_nb>_Land<landscape_nb>_perLocusNeutralGenetics} with one entry for each neutral locus: \cr
+
+1.	Year \cr
+2.	RepSeason \cr
+3.	Locus, the ID of locus \eqn{l} \cr
+4.	\emph{\ifelse{html}{\out{F<sub>st</sub>}}{\eqn{F_st}}}, the value of \emph{\ifelse{html}{\out{F<sub>st,l</sub>}}{\eqn{F_st,l}}} for locus \emph{l} \cr
+5.	\emph{\ifelse{html}{\out{F<sub>is</sub>}}{\eqn{F_is}}}, the value of \emph{\ifelse{html}{\out{F<sub>is</sub>}}{\eqn{F_is,l}}} for locus \emph{l} \cr
+6.	\emph{\ifelse{html}{\out{F<sub>it</sub>}}{\eqn{F_it}}}, the value of \emph{\ifelse{html}{\out{F<sub>it</sub>}}{\eqn{F_it,l}}} for locus \emph{l} \cr
+7.	Het, the sample-level observed heterozygosity (\emph{\ifelse{html}{\out{H<sub>o</sub>}}{\eqn{H_o}}}) for locus \eqn{l} \cr
+8.	One column \emph{patch_<i>_het} for each patch \emph{i} in the sample, indicating \emph{\ifelse{html}{\out{H<sub>o</sub>}}{\eqn{H_o}}} for patch \emph{i} and locus \emph{l}.
+If patches have been sampled with the “random_occupied” option, then the patches number will not correspond to the sampled patches, instead ranging from 1 to the number
+ of patches sampled. This is because it is not known which patches will be sampled (and they may change) at the time of writing the headers.\cr
+
+\emph{Pairwise patch neutral genetics}\cr
+
+If the pariwise 	\emph{\ifelse{html}{\out{F<sub>st</sub>}}{\eqn{F_st}}} parameter is enabled (\code{OutputPairwiseFst=TRUE}), a pairwise \emph{\ifelse{html}{\out{F<sub>st</sub>}}{\eqn{F_st}}} matrix is constituted and filled with the corresponding
+values of \emph{\ifelse{html}{\out{&beta;<sub>ii’</sub>}}{\eqn{β_ii’}}} for each pair of patches in the sample. Values along the diagonal are set to zero. \cr
+
+In this case, there is one row of output for each pair: \cr
+    1.	Year\cr
+    2.	Generation\cr
+    3.	Patch ID of the first patch \cr
+    4.   X coordinate of first patch \cr
+    5.   Y coordinate of first patch \cr
+    6.	Patch ID of the second patch (same as 3. along the diagonal of the matrix) \cr
+    7.   X coordinate of second patch \cr
+    8.   Y coordinate of second patch \cr
+    9.	Pairwise \emph{\ifelse{html}{\out{F<sub>st</sub>}}{\eqn{F_st}}} \cr
+
+\emph{Traits} \cr
+
+In the case of inter-individual variability and evolution of the dispersal traits,
+it is possible to output the mean traits of the population. There are two types of traits output:\cr
+
+1.	\emph{Mean traits by cell/patch (Sim0_TraitsXcell.txt or Sim0_TraitsXpatch.txt}). This file reports mean and standard deviation of the varying traits for each cell/patch,
+for each replicate and reproductive season at the set year interval. \cr
+2.	\emph{Mean traits by row (Sim0_TraitsXrow.txt)}. The mean and standard deviation of the varying traits are computed at the row (\emph{y}) level,
+pulling together all the populations occupying cells in \emph{y}. Values are reported for each replicate and reproductive season at the specified yearly interval.
+This is particularly useful for analysing the structuring of traits along latitudinal gradients. It is possible to compute this output only for cell-based models. \cr
+
+Data for these outputs are collected at the same time as for the range and population outputs, i.e. before reproduction at each reproductive season at the set year interval and at the end of the simulation. \cr
+}
+\references{
+\insertAllCited{}
 }
 \author{
-Anne-Kathleen Malchow
+Jette Wolff
 }

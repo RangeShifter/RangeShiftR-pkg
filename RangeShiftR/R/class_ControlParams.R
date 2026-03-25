@@ -35,12 +35,18 @@ ControlParams <- setClass("ControlParams", slots = c(
                                    maxNhab = "integer_OR_numeric",          # set via +Land
                                    speciesdist = "logical",                 # set via +Land
                                    distresolution = "integer_OR_numeric",   # set via +Land
+                                   threadsafe = "logical",                  # set via +Land
                                    reproductn = "integer_OR_numeric",       # set via +Demography
                                    repseasons = "integer_OR_numeric",       # set via +Demography if (StageStruct is Type "StagesParams") {repseasons = 1} else {demo@StageStruct@repseasons}
                                    stagestruct = "logical",                 # set via +Demography
                                    stages = "integer_OR_numeric",           # set via +Demography@StageStruct
                                    transfer = "integer_OR_numeric",         # set via +Dispersal     Transfer method: 0 = dispersal kernels, 1 = SMS, 2 = CRW)
-                                   seed = "integer_OR_numeric")
+                                   translocation = "logical",                # set via +Management
+                                   spatial_demography = "logical",          # set via +Land
+                                   neutralgenetics = "logical",                    # set via +Genetics
+                                   geneticload = "logical",                        # set via +Genetics
+                                   seed = "integer_OR_numeric",
+                                   fixreplicateseed = "logical")
                          ,prototype = list(#nSimuls = 1L,
                                   #nLandscapes = 1L,
                                   batchnum = 0L,
@@ -50,12 +56,18 @@ ControlParams <- setClass("ControlParams", slots = c(
                                   maxNhab = 1L,
                                   speciesdist = FALSE,
                                   distresolution = NA_integer_,
+                                  threadsafe = FALSE,
                                   reproductn = 0L,
                                   repseasons = 1L,
                                   stagestruct = FALSE,
                                   stages = NA_integer_,
                                   transfer = 0L,
-                                  seed = 0L)
+                                  translocation = FALSE,
+                                  spatial_demography = FALSE,
+                                  neutralgenetics = FALSE,
+                                  geneticload = FALSE,
+                                  seed = 0L,
+                                  fixreplicateseed = FALSE)
 )
 setValidity("ControlParams", function(object){
     msg <- NULL
@@ -75,6 +87,7 @@ setMethod("show", "ControlParams", function(object){
         cat(" Seed =", object@seed)
         if(object@seed<0) cat("  (generate random seed)")
         if(object@seed>0) cat("  (fixed seed)")
+        if(object@fixreplicateseed==TRUE) cat(" all replicates use the same seed")
         cat("\n")
     }
 })

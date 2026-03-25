@@ -10,8 +10,10 @@ RSsim(batchnum = 1L,
       demog = Demography(Rmax = 1.5),
       dispersal = Dispersal(),
       gene = Genetics(),
+      management = Management(),
       init = Initialise(),
-      seed = 0)
+      seed = 0,
+      fixreplicateseed = FALSE)
 }
 \arguments{
 \item{batchnum}{Batch ID is part of output files names and can be used to prevent overwriting.}
@@ -26,9 +28,13 @@ RSsim(batchnum = 1L,
 
 \item{gene}{Set \code{\link[RangeShiftR]{Genetics}} parameters}
 
+\item{management}{Set \code{\link[RangeShiftR]{Management}} parameters}
+
 \item{init}{Set \code{\link[RangeShiftR]{Initialise}} parameters}
 
 \item{seed}{Set seed for random number generator. If non-positive, a random seed will be generated.}
+
+\item{fixreplicateseed}{Use the same seed for all replicates.}
 }
 \value{
 returns a \emph{RangeShiftR} parameter master object (class 'RSparams')
