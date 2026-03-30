@@ -351,7 +351,7 @@ setValidity("GeneticLoadParams", function(object) {
         msg <- c(msg, "GeneticLoad(): Positions must be provided as a list.")
     }
     # NbOfPositions must be either numeric, integer or NULL
-    if (!is.null(object@NbOfPositions) && class(object@NbOfPositions) != "integer") {
+    if (!is.null(object@NbOfPositions) && class(object@NbOfPositions) != "integer" && class(object@NbOfPositions) != "numeric") {
         msg <- c(msg, "GeneticLoad(): NbrOfPositions must be either NULL (if all positions are given) or a vector of integers (and NULL) (if at least one genetic load has random positions).")
     }
 
