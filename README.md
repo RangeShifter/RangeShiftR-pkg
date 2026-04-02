@@ -28,7 +28,7 @@ well as a functional C++ compiler toolchain.
 
 ```r
 # Install RangeShiftR from GitHub:
-devtools::install_github("RangeShifter/RangeShiftR-pkg", ref="main", subdir="RangeShiftR")
+pak::pak("RangeShifter/RangeShiftR-pkg/RangeShiftR@main")
 ```
 
 ## Usage and help
