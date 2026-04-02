@@ -87,8 +87,7 @@ using namespace std;
 #if !RSWIN64
 #include <codecvt>
 #endif
-#include <Rcpp.h>
-#include <armadillo>
+#include <RcppArmadillo.h>
 #endif
 
 

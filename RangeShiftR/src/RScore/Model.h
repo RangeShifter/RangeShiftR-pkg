@@ -49,7 +49,7 @@ Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 #include <sys/types.h>
 #include <sys/stat.h>
 #if RS_RCPP
-#include <Rcpp.h>
+#include <RcppArmadillo.h>
 #include "../Rinterface.h"
 #endif // RS_RCPP
 #include <chrono>
