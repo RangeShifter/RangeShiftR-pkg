@@ -29,28 +29,15 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev libsecret-1-dev libfontconfig1-dev
+          sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev
         shell: bash
 
-      - name: Install pak (Windows/macOS)
-        if: runner.os != 'Linux'
+      - name: Install pak
         run: |
           install.packages("pak", repos = "https://r-lib.github.io/p/pak/stable/")
         shell: Rscript {0}
 
-      - name: Install dependencies
-        run: |
-          install.packages(c("Rcpp", "Rdpack", "devtools", "remotes"))
-        shell: Rscript {0}
-
-      - name: Install RangeShiftR (Windows/macOS)
-        if: runner.os != 'Linux'
+      - name: Install RangeShiftR
         run: |
           pak::pak("RangeShifter/RangeShiftR-pkg/RangeShiftR@${{ github.head_ref || github.ref_name }}")
-        shell: Rscript {0}
-
-      - name: Install RangeShiftR (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          devtools::install_github("RangeShifter/RangeShiftR-pkg", ref = "${{ github.head_ref || github.ref_name }}", subdir = "RangeShiftR")
         shell: Rscript {0}
