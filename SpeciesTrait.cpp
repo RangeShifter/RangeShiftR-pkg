@@ -3,24 +3,32 @@
 
 // Species trait constructor
 SpeciesTrait::SpeciesTrait(
-	const TraitType& trType, const sex_t& sx,
-	const set<int>& pos, 
+	const TraitType& trType,
+	const sex_t& sx,
+	const set<int>& pos,
 	const ExpressionType& expr,
-	const DistributionType& initDist, 
+	const set<int>& initialPositions,
+	const DistributionType& initDist,
 	const map<GenParamType, float> initParams,
-	const DistributionType& dominanceDist, 
-	const map<GenParamType, float> dominanceParams,
-	bool isInherited, const float& mutRate,
-	const DistributionType& mutationDist, 
+	const DistributionType& initDomDist,
+	const map<GenParamType, float> initDomParams,
+	bool isInherited,
+	const float& mutRate,
+	const DistributionType& mutationDist,
 	const map<GenParamType, float> mutationParams,
+	const DistributionType& dominanceDist,
+	const map<GenParamType, float> dominanceParams,
 	const int nPloidy,
 	const bool isOutput) :
 	traitType{ trType },
 	sex{ sx },
 	genePositions{ pos },
 	expressionType{ expr },
+	initPositions{ initialPositions },
 	initialDistribution{ initDist },
 	initialParameters{ initParams },
+	initialDomDistribution{ initDomDist },
+	initialDomParameters{ initDomParams },
 	dominanceDistribution{ dominanceDist },
 	dominanceParameters{ dominanceParams },
 	inherited{ isInherited },
@@ -31,7 +39,7 @@ SpeciesTrait::SpeciesTrait(
 	traitIsOutput{ isOutput }
 {
 	// Check distribution parameters
-	// Initial distribution
+	// Initial allele distribution
 	for (auto [paramType, paramVal] : initParams) {
 		switch (paramType)
 		{
@@ -42,6 +50,23 @@ SpeciesTrait::SpeciesTrait(
 		case SD:
 			if (paramVal <= 0.0)
 				throw logic_error("Invalid parameter value: initial parameter " + to_string(paramType) + " must be strictly positive");
+			break;
+		default:
+			break;
+		}
+	}
+
+	// Initial dominance distribution
+	for (auto [paramType, paramVal] : initDomParams) {
+		switch (paramType)
+		{
+		case MIN: case MAX: case MEAN:
+			if (paramVal < 0.0)
+				throw logic_error("Invalid parameter value: initial dominance parameter " + to_string(paramType) + " must not be negative.");
+			break;
+		case SD: case SHAPE: case SCALE:
+			if (paramVal <= 0.0)
+				throw logic_error("Invalid parameter value: initial dominance parameter " + to_string(paramType) + " must be strictly positive");
 			break;
 		default:
 			break;
@@ -177,7 +202,7 @@ bool SpeciesTrait::isValidTraitVal(const float& val) const {
 	}
 }
 
-#ifndef NDEBUG // Testing only
+#ifdef UNIT_TESTS // Testing only
 
 // Create a default set of gene positions ranging from zero to genome size
 set<int> createTestGenePositions(const int genomeSz) {
@@ -197,6 +222,7 @@ SpeciesTrait* createTestEmigSpTrait(const set<int>& genePositions, const bool& i
 		sex_t::NA,
 		genePositions,
 		ExpressionType::ADDITIVE,
+		genePositions,
 		DistributionType::UNIFORM,
 		distParams,
 		DistributionType::NONE, // no dominance
@@ -204,6 +230,8 @@ SpeciesTrait* createTestEmigSpTrait(const set<int>& genePositions, const bool& i
 		true, // isInherited
 		0.0, // mutation rate
 		DistributionType::UNIFORM,
+		distParams,
+		DistributionType::NONE, // no dominance
 		distParams,
 		isDiploid ? 2 : 1,
 		false
@@ -222,12 +250,15 @@ SpeciesTrait* createTestGenLoadTrait(const set<int>& genePositions, const bool& 
 		sex_t::NA,
 		genePositions,
 		ExpressionType::MULTIPLICATIVE,
-		DistributionType::UNIFORM,
+		genePositions,
+		DistributionType::NONE,
 		distParams,
-		DistributionType::UNIFORM,
+		DistributionType::NONE, // initialise dominance to zero
 		distParams,
 		true, // isInherited
 		0.0, // mutation rate
+		DistributionType::UNIFORM,
+		distParams,
 		DistributionType::UNIFORM,
 		distParams,
 		isDiploid ? 2 : 1,
@@ -247,19 +278,22 @@ SpeciesTrait* createTestNeutralSpTrait(const float& maxAlleleVal, const set<int>
 		sex_t::NA,
 		genePositions,
 		ExpressionType::NOTEXPR,
+		genePositions,
 		// Sample initial values from uniform(0, max)
 		DistributionType::UNIFORM, distParams,
-		// No dominance
-		DistributionType::NONE, map<GenParamType, float>{}, 
+		DistributionType::NONE, // No dominance
+		map<GenParamType, float>{}, 
 		true, // isInherited
 		0.0, // mutation rate
 		// Mutation sampled from a uniform(0, max)
 		DistributionType::KAM, 
 		distParams,
+		DistributionType::NONE, // No dominance
+		map<GenParamType, float>{},
 		isDiploid ? 2 : 1,
 		false
 	);
 	return spTr;
 }
 
-#endif // NDEBUG
+#endif // UNIT_TESTS

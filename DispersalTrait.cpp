@@ -1,3 +1,25 @@
+/*----------------------------------------------------------------------------
+ *
+ *	Copyright (C) 2026 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Roslyn Henry, Théo Pannetier, Jette Wolff, Damaris Zurell
+ *
+ *	This file is part of RangeShifter.
+ *
+ *	RangeShifter is free software: you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation, either version 3 of the License, or
+ *	(at your option) any later version.
+ *
+ *	RangeShifter is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with RangeShifter. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * File Created by Roslyn Henry March 2023. Code adapted from NEMO (https://nemo2.sourceforge.io/)
+ --------------------------------------------------------------------------*/
+
 #include "DispersalTrait.h"
 
 // ----------------------------------------------------------------------------------------
@@ -24,24 +46,24 @@ DispersalTrait::DispersalTrait(SpeciesTrait* P)
 		case UNIFORM:
 		{
 			if (mutationParameters.count(MAX) != 1)
-				throw logic_error("Error: mutation uniform distribution parameter must contain max value (e.g. max= ) \n");
+				throw logic_error("mutation uniform distribution parameter must contain max value (e.g. max= ) \n");
 			if (mutationParameters.count(MIN) != 1)
-				throw logic_error("Error: mutation uniform distribution parameter must contain min value (e.g. min= ) \n");
+				throw logic_error("mutation uniform distribution parameter must contain min value (e.g. min= ) \n");
 			_mutate_func_ptr = &DispersalTrait::mutateUniform;
 			break;
 		}
 		case NORMAL:
 		{
 			if (mutationParameters.count(MEAN) != 1)
-				throw logic_error("Error: mutation distribution set to normal so parameters must contain mean value (e.g. mean= ) \n");
+				throw logic_error("mutation distribution set to normal so parameters must contain mean value (e.g. mean= ) \n");
 			if (mutationParameters.count(SD) != 1)
-				throw logic_error("Error: mutation distribution set to normal so parameters must contain sdev value (e.g. sdev= ) \n");
+				throw logic_error("mutation distribution set to normal so parameters must contain sdev value (e.g. sdev= ) \n");
 			_mutate_func_ptr = &DispersalTrait::mutateNormal;
 			break;
 		}
 		default:
 		{
-			throw logic_error("Error: wrong parameter value for mutation model, must be uniform/normal \n"); //unless want to add gamma or negative exp 
+			throw logic_error("wrong parameter value for mutation model, must be uniform/normal \n"); //unless want to add gamma or negative exp 
 			break;
 		}
 		}
@@ -54,9 +76,9 @@ DispersalTrait::DispersalTrait(SpeciesTrait* P)
 	case UNIFORM:
 	{
 		if (initialParameters.count(MAX) != 1)
-			throw logic_error("Error: initial uniform distribution parameter must contain max value (e.g. max= ) \n");
+			throw logic_error("initial uniform distribution parameter must contain max value (e.g. max= ) \n");
 		if (initialParameters.count(MIN) != 1)
-			throw logic_error("Error: initial uniform distribution parameter must contain min value (e.g. min= ) \n");
+			throw logic_error("initial uniform distribution parameter must contain min value (e.g. min= ) \n");
 		float maxD = initialParameters.find(MAX)->second;
 		float minD = initialParameters.find(MIN)->second;
 		initialiseUniform(minD, maxD);
@@ -65,9 +87,9 @@ DispersalTrait::DispersalTrait(SpeciesTrait* P)
 	case NORMAL:
 	{
 		if (initialParameters.count(MEAN) != 1)
-			throw logic_error("Error: initial normal distribution parameter must contain mean value (e.g. mean= ) \n");
+			throw logic_error("initial normal distribution parameter must contain mean value (e.g. mean= ) \n");
 		if (initialParameters.count(SD) != 1)
-			throw logic_error("Error: initial normal distribution parameter must contain sdev value (e.g. sdev= ) \n");
+			throw logic_error("initial normal distribution parameter must contain sdev value (e.g. sdev= ) \n");
 		float mean = initialParameters.find(MEAN)->second;
 		float sd = initialParameters.find(SD)->second;
 		initialiseNormal(mean, sd);
@@ -278,9 +300,9 @@ void DispersalTrait::reInitialiseGenes(const bool& fromMother, map<int, vector<s
 	case UNIFORM:
 	{
 		if (initialParameters.count(MAX) != 1)
-			throw logic_error("Error:: initial uniform distribution parameter must contain max value (e.g. max= ) \n");
+			throw logic_error("initial uniform distribution parameter must contain max value (e.g. max= ) \n");
 		if (initialParameters.count(MIN) != 1)
-			throw logic_error("Error:: initial uniform distribution parameter must contain min value (e.g. min= ) \n");
+			throw logic_error("initial uniform distribution parameter must contain min value (e.g. min= ) \n");
 		float maxD = initialParameters.find(MAX)->second;
 		float minD = initialParameters.find(MIN)->second;
 		initialiseUniform(minD, maxD);
@@ -289,9 +311,9 @@ void DispersalTrait::reInitialiseGenes(const bool& fromMother, map<int, vector<s
 	case NORMAL:
 	{
 		if (initialParameters.count(MEAN) != 1)
-			throw logic_error("Error:: initial normal distribution parameter must contain mean value (e.g. mean= ) \n");
+			throw logic_error("initial normal distribution parameter must contain mean value (e.g. mean= ) \n");
 		if (initialParameters.count(SD) != 1)
-			throw logic_error("Error:: initial normal distribution parameter must contain sdev value (e.g. sdev= ) \n");
+			throw logic_error("initial normal distribution parameter must contain sdev value (e.g. sdev= ) \n");
 		float mean = initialParameters.find(MEAN)->second;
 		float sd = initialParameters.find(SD)->second;
 		initialiseNormal(mean, sd);
@@ -437,7 +459,7 @@ float DispersalTrait::getDomCoefAtLocus(short whichChromosome, int position) con
 	return it->second[whichChromosome]->getDominanceCoef();
 }
 
-#ifndef NDEBUG
+#ifdef UNIT_TESTS
 
 // Create a default set of alleles for testing
 //
@@ -464,4 +486,4 @@ map<int, vector<shared_ptr<Allele>>> createTestGenotype(
 	}
 	return genotype;
 }
-#endif // NDEBUG
+#endif // UNIT_TESTS

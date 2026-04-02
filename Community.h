@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------
  *
- *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell
+ *	Copyright (C) 2026 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Roslyn Henry, Théo Pannetier, Jette Wolff, Damaris Zurell
  *
  *	This file is part of RangeShifter.
  *
@@ -35,9 +35,9 @@ Optionally, the Community maintains a record of the occupancy of suitable cells
 or patches during the course of simulation of multiple replicates.
 
 For full details of RangeShifter, please see:
-Bocedi G., Palmer S.C.F., Pe?er G., Heikkinen R.K., Matsinos Y.G., Watts K.
+ Bocedi G., Palmer S.C.F., Pe’er G., Heikkinen R.K., Matsinos Y.G., Watts K.
 and Travis J.M.J. (2014). RangeShifter: a platform for modelling spatial
-eco-evolutionary dynamics and species? responses to environmental changes.
+ eco-evolutionary dynamics and species’ responses to environmental changes.
 Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
@@ -62,13 +62,19 @@ using namespace std;
 #include "Species.h"
 #include "NeutralStatsManager.h"
 
-// #include "Management.h"
-
 //---------------------------------------------------------------------------
 struct commStats {
 int ninds,nnonjuvs,suitable,occupied;
 int minX,maxX,minY,maxY;
 };
+
+#if RS_RCPP// For raster output only: which type of population output should be stored?
+enum class PopOutType {
+    NInd,    // total abundance
+    Stage,   // specific stages
+    Juvs     // juvenile stage
+};
+#endif
 
 class Community {
 
@@ -100,15 +106,14 @@ public:
 	);
 #endif // SEASONAL || RS_RCPP
 
-	void survival(
-		short,	// part:		0 = determine survival & development,
-			//		 			1 = apply survival changes to the population
+	void survival0( // Determine survival & development
 		short,	// option0:	0 = stage 0 (juveniles) only         )
 		//					1 = all stages                       ) used by part 0 only
 		//					2 = stage 1 and above (all non-juvs) )
 		short 	// option1:	0 - development only (when survival is annual)
 		//		  	 		1 - development and survival
 	);
+	void survival1(); // Apply survival changes to the population
 	void ageIncrement(void);
 	int totalInds(void);
 	Population* findPop( // Find the population of a given species in a given patch
@@ -128,9 +133,10 @@ public:
 		int		// no. of rows (as above)
 	);
 
-	bool outRangeHeaders( // Open range file and write header record
+	bool outRangeFinishLandscape(); // Close range file
+	bool outRangeStartLandscape( // Open range file and write header record
 		Species*,	// pointer to Species
-		int				// Landscape number (-999 to close the file)
+		int				// Landscape number
 	);
 	void outRange( // Write record to range file
 		Species*, // pointer to Species
@@ -138,9 +144,9 @@ public:
 		int,			// year
 		int				// generation
 	);
-	bool outPopHeaders( // Open population file and write header record
-		Species*, // pointer to Species
-		int       // option: -999 to close the file
+	bool outPopFinishLandscape(); // Close population file
+	bool outPopStartLandscape( // Open population file and write header record
+		Species* // pointer to Species
 	);
 	void outPop( // Write records to population file
 		int,	// replicate
@@ -148,28 +154,31 @@ public:
 		int		// generation
 	);
 
-	void outInds( // Write records to individuals file
+	void outIndsFinishReplicate(); // Close individuals file
+	void outIndsStartReplicate( // Open individuals file and write header record
+		int,	// replicate
+		int		// Landscape number
+	);
+	void outIndividuals( // Write records to individuals file
 		int,	// replicate
 		int,	// year
-		int,	// generation
-		int		// Landscape number (>= 0 to open the file, -999 to close the file
-					//									 -1 to write data records)
+		int	// generation
 	);
+	// Close occupancy file
+	bool outOccupancyFinishLandscape();
 	// Open occupancy file, write header record and set up occupancy array
-	bool outOccupancyHeaders(
-		int		// option: -999 to close the file
-	);
+	bool outOccupancyStartLandscape();
 	void outOccupancy(void);
-	void outOccSuit(
-		bool	// TRUE if occupancy graph is to be viewed on screen
-	);
-	bool outTraitsHeaders( // Open traits file and write header record
+	void outOccSuit();
+	bool outTraitsFinishLandscape(); // Close traits file
+	bool outTraitsStartLandscape( // Open traits file and write header record
 		Species*,	// pointer to Species
-		int				// Landscape number (-999 to close the file)
+		int				// Landscape number
 	);
-	bool outTraitsRowsHeaders( // Open trait rows file and write header record
+	bool outTraitsRowsFinishLandscape(); // Close trait rows file
+	bool outTraitsRowsStartLandscape( // Open trait rows file and write header record
 		Species*, // pointer to Species
-		int       // Landscape number (-999 to close the file)
+		int       // Landscape number
 	);
 	void outTraits( // Write records to traits file
 		Species*,		// pointer to Species
@@ -186,7 +195,9 @@ public:
 		traitsums	// structure holding sums of trait genes for dispersal (see Population.h)
 	);
 #if RS_RCPP && !R_CMD
-    Rcpp::IntegerMatrix addYearToPopList(int,int);
+    Rcpp::IntegerMatrix addYearToPopList(int,int,PopOutType,int);
+
+    Rcpp::IntegerMatrix addYearToPopListPatchBased(int,int,Rcpp::LogicalVector);
 #endif
 
 	//sample individuals for genetics (or could be used for anything)
@@ -196,7 +207,10 @@ public:
 	void outputGeneValues(const int& year, const int& gen, Species* pSpecies);
 
 	//control neutral stat output
-	void outNeutralGenetics(Species* pSpecies, int rep, int yr, int gen, bool outWeirCockerham, bool outWeirHill);
+
+	void calculateNeutralGenetics(Species* pSpecies, int rep, int yr, int gen, bool outPairwiseFst, int outputPairwiseFstStart, int outputPairwiseFstInterval,
+		bool outputGlobalFst, int outputGlobalFstStart, int outputGlobalFstInterval, bool outputPerLocusFst);
+
 
 	//file openers
 	bool openNeutralOutputFile(Species* pSpecies, const int landNr);
@@ -204,10 +218,10 @@ public:
 	bool openPairwiseFstFile(Species* pSpecies, Landscape* pLandscape, const int landNr, const int rep);
 
 	//file writers
-	void writeNeutralOutputFile(int rep, int yr, int gen, bool outWeirCockerham, bool outWeirHill);
-	void writePerLocusFstatFile(Species* pSpecies, const int yr, const int gen, const  int nAlleles, const int nLoci, set<int> const& patchList);
-	void writePairwiseFstFile(Species* pSpecies, const int yr, const int gen, const  int nAlleles, const int nLoci, set<int> const& patchList);
-
+	void writeNeutralOutputFile(int rep, int yr, int gen);
+	void writePerLocusFstatFile(Species* pSpecies, const int yr, const int gen, const int nLoci, set<int> const& patchList);
+	void writePairwiseFstFile(Species* pSpecies, const int yr, const int gen, set<int> const& patchList);
+	float getPatchHet(Species* pSpecies, int patchId, int whichLocus) const;
 private:
 	Landscape *pLandscape;
 	int indIx;				// index used to apply initial individuals

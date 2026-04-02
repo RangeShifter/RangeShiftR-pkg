@@ -1,4 +1,4 @@
-﻿# The RangeShifter platform - An eco-evolutionary modelling framework
+# The RangeShifter platform - An eco-evolutionary modelling framework
 
 ## How to contribute
 
@@ -26,7 +26,7 @@ All three share the same source code for the core simulation (i.e., the actual m
 #### Maintainers
 
 - [@JetteReeg](https://github.com/JetteReeg): RScore repo and lead in R package
-- [@TheoPannetier](https://github.com/TheoPannetier): RScore repo and lead in batch mode
+
 
 Maintainers are responsible for coordinating development efforts and ensuring that RangeShifter keeps building continuously.
 
@@ -40,13 +40,10 @@ Anyone who whishes to make changes to RangeShifter's code, including regular dev
 
 ## Branching policy
 
-<<<<<<<< HEAD:src/RScore/CONTRIBUTING.md
 ![](branches.png)
 
 *Check out the [Git cheatsheet](https://github.com/RangeShifter/RScore/blob/main/git_cheatsheet.md) for a reminder on the main git commands*
 
-========
->>>>>>>> develop:CONTRIBUTING.md
 This policy applies to RScore and all three RangeShifter interfaces.
 RangeShifter uses the following branching structure:
 
@@ -87,5 +84,3 @@ Please get in touch with the RangeShifter development team (rangeshiftr@uni-pots
 Alternatively, proceed as with the bug fix above: create your own branch or fork _from `develop`_ and work from there, and submit a pull request when your new features are ready to join the core code. 
 We recommend that you update your branch regularly to new changes on `develop` (using `git merge develop`) to reduce the risk of merge conflicts or your version getting out-of-touch in the late stages of development.
 We also recommend that you work in small commits, as this makes the code easier to debug, and makes it easier for maintainers to understand your contributions when reviewing a pull request.
-
-*Do we welcome independent contributions?

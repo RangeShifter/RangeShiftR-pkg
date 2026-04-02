@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------
  *
- *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell
+ *	Copyright (C) 2026 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Roslyn Henry, Théo Pannetier, Jette Wolff, Damaris Zurell
  *
  *	This file is part of RangeShifter.
  *
@@ -30,7 +30,7 @@
 
 // Cell functions
 
-Cell::Cell(int xx,int yy,intptr patch,int hab)
+Cell::Cell(int xx,int yy,Patch *patch,int hab)
 {
 	x = xx; y = yy;
 	pPatch = patch;
@@ -41,7 +41,7 @@ Cell::Cell(int xx,int yy,intptr patch,int hab)
 	smsData = 0;
 }
 
-Cell::Cell(int xx,int yy,intptr patch,float hab)
+Cell::Cell(int xx,int yy,Patch *patch,float hab)
 {
 	x = xx; y = yy;
 	pPatch = patch;
@@ -59,6 +59,11 @@ Cell::~Cell() {
 		if (smsData->effcosts != 0) delete smsData->effcosts;
 		delete smsData;
 	}
+demoScalings.clear();
+
+#if RSDEBUG
+//DEBUGLOG << "Cell::~Cell(): deleted" << endl;
+#endif
 }
 
 void Cell::setHabIndex(short hx) {
@@ -95,10 +100,10 @@ float Cell::getHabitat(int ix) {
 	else return habitats[ix];
 }
 
-void Cell::setPatch(intptr p) {
+void Cell::setPatch(Patch *p) {
 	pPatch = p;
 }
-intptr Cell::getPatch(void)
+Patch *Cell::getPatch(void)
 {
 	return pPatch;
 }
@@ -122,6 +127,12 @@ void Cell::updateEps(float ac,float randpart) {
 float Cell::getEps(void) { return eps; }
 
 // Functions to handle costs for SMS
+
+#ifdef _OPENMP
+std::unique_lock<std::mutex> Cell::lockCost() {
+	return std::unique_lock<std::mutex>(cost_mutex);
+}
+#endif
 
 int Cell::getCost(void) {
 	int c;
@@ -177,13 +188,30 @@ void Cell::resetVisits(void) { visits = 0; }
 void Cell::incrVisits(void) { visits++; }
 unsigned long int Cell::getVisits(void) { return visits; }
 
+
+void Cell::addchgDemoScaling(std::vector<float> ds) {
+	std::for_each(ds.begin(), ds.end(), [](float& perc){ if(perc < 0.0 || perc > 100.0) perc=100; });
+	demoScalings.push_back(ds);
+	return;
+}
+
+std::vector<float> Cell::getDemoScaling(short chgyear) {
+	if (chgyear < 0 || chgyear >= (int)demoScalings.size()) {
+		std::vector<float> ret(1, -1);
+		return ret;
+	}
+	else return demoScalings[chgyear];
+}
+
+
+
 //---------------------------------------------------------------------------
 
 // Initial species distribution cell functions
 
 DistCell::DistCell(int xx,int yy) {
-	x = xx; 
-	y = yy; 
+	x = xx;
+	y = yy;
 	initialise = false;
 }
 
@@ -203,9 +231,9 @@ bool DistCell::toInitialise(locn loc) {
 bool DistCell::selected(void) { return initialise; }
 
 locn DistCell::getLocn(void) {
-	locn loc; 
-	loc.x = x; 
-	loc.y = y; 
+	locn loc;
+	loc.x = x;
+	loc.y = y;
 	return loc;
 }
 

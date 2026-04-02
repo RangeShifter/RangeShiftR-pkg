@@ -3,6 +3,28 @@
 
 #include "Species.h"
 #include "Landscape.h"
+/*----------------------------------------------------------------------------
+ *
+ *	Copyright (C) 2026 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Roslyn Henry, Théo Pannetier, Jette Wolff, Damaris Zurell
+ *
+ *	This file is part of RangeShifter.
+ *
+ *	RangeShifter is free software: you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation, either version 3 of the License, or
+ *	(at your option) any later version.
+ *
+ *	RangeShifter is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with RangeShifter. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * File Created by Roslyn Henry March 2023. Code adapted from NEMO (https://nemo2.sourceforge.io/)
+ --------------------------------------------------------------------------*/
+
 
 using namespace std;
 
@@ -21,7 +43,7 @@ public:
 	// Get value at specified position
 	double get(unsigned int i, unsigned int j) {
 		if (i >= cols || j >= rows)
-			throw runtime_error("Error: PatchMatrix::get() out of range!\n");
+			throw runtime_error("PatchMatrix::get() out of range!\n");
 		else return value[i * cols + j];
 	}
 
@@ -30,7 +52,7 @@ public:
 	/** Sets element at row i and column j to value val **/
 	void set(unsigned int i, unsigned int j, double val) {
 		if (i >= cols || j >= rows)
-			throw runtime_error("Error: PatchMatrix::set() out of range!\n");
+			throw runtime_error("PatchMatrix::set() out of range!\n");
 		else value[i * cols + j] = val;
 	}
 
@@ -60,7 +82,9 @@ public:
 	// Getters
 	int getTally(int whichAllele) { return alleleTallies[whichAllele]; };
 	double getFrequency(int whichAllele) { return alleleFrequencies[whichAllele]; };
-	int getHeteroTally(int whichAllele) { return alleleHeterozygoteTallies[whichAllele]; };
+	int getHeteroTally(int whichAllele) { 
+		return alleleHeterozygoteTallies[whichAllele]; 
+	};
 
 	// Setters / increments
 	void incrementTally(int whichAllele) { alleleTallies[whichAllele]++; };
@@ -98,10 +122,16 @@ public:
 	void calculateHs(set<int> const& patchList, const int nbrLoci, Species* pSpecies, Landscape* pLandscape);
 	void calculateHt(Species* pSpecies, Landscape* pLandscape, const int nLoci, const int nAlleles);
 	void calculatePerLocusHo(set<int> const& patchList, const int totalNbSampledInds, const int nbrLoci, Species* pSpecies, Landscape* pLandscape);
+
+	
+	
 	
 	// F-stats calculations
-	void calculateFstatWC(set<int> const& patchList, const int nInds, const int nLoci, const int nAlleles, Species* pSpecies, Landscape* pLandscape);
-	void calcPairwiseWeightedFst(set<int> const& patchList, const int nInds, const int nLoci, Species* pSpecies, Landscape* pLandscape);
+	void calculateFstatWC(set<int> const& patchList, const int nbSampledIndsInComm, const int nLoci, const int nAlleles, Species* pSpecies, Landscape* pLandscape, bool isPairwise);
+
+	void calculatePairwiseFst(set<int> const& patchList, const int nLoci, const int nAlleles, Species* pSpecies, Landscape* pLandscape);
+
+	//void calcPairwiseWeightedFst(set<int> const& patchList, const int nInds, const int nLoci, Species* pSpecies, Landscape* pLandscape);
 
 	// Getters
 	int getNbPopulatedSampledPatches() const { return nbExtantPops; }
@@ -122,7 +152,7 @@ public:
 	double getFisWC() const { return fis; }
 	double getFitWC() const { return fit; }
 
-	double getWeightedFst() { return weightedFst; }
+	//double getWeightedFst() { return weightedFst; }
 
 	double getPerLocusFst(int i) const { return perLocusFst[i]; }
 	double getPerLocusFis(int i) const { return perLocusFis[i]; }

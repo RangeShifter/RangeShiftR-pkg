@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------
  *
- *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell
+ *	Copyright (C) 2026 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Roslyn Henry, Théo Pannetier, Jette Wolff, Damaris Zurell
  *
  *	This file is part of RangeShifter.
  *
@@ -16,23 +16,99 @@
  *
  *	You should have received a copy of the GNU General Public License
  *	along with RangeShifter. If not, see <https://www.gnu.org/licenses/>.
- *
  --------------------------------------------------------------------------*/
+
 
 
  //---------------------------------------------------------------------------
 
 #include "Individual.h"
+
+#ifdef _OPENMP
+#include <mutex>
+#endif
+
 //---------------------------------------------------------------------------
 
+template <typename T>
+MemoryQueue<T>::MemoryQueue(std::size_t size):
+	space(size),
+	data(new T[size]),
+	begin_idx(0),
+	nb_elts(0)
+{ }
+
+template <typename T>
+T &MemoryQueue<T>::front() {
+	return data[begin_idx];
+}
+
+template <typename T>
+T const &MemoryQueue<T>::front() const {
+	return data[begin_idx];
+}
+
+template <typename T>
+T &MemoryQueue<T>::back() {
+	return data[(begin_idx + nb_elts - 1) % space];
+}
+
+template <typename T>
+T const &MemoryQueue<T>::back() const {
+	return data[(begin_idx + nb_elts - 1) % space];
+}
+
+template <typename T>
+void MemoryQueue<T>::push(const T& value) {
+	size_t end_idx = (begin_idx + nb_elts) % space;
+	data[end_idx] = value;
+	nb_elts++;
+}
+
+template <typename T>
+void MemoryQueue<T>::push(T&& value) {
+	size_t end_idx = (begin_idx + nb_elts) % space;
+	data[end_idx] = std::move(value);
+	nb_elts++;
+}
+
+template <typename T>
+void MemoryQueue<T>::pop() {
+	begin_idx++;
+	begin_idx %= space;
+	nb_elts--;
+}
+
+template <typename T>
+std::size_t MemoryQueue<T>::size() const {
+	return nb_elts;
+}
+
+template <typename T>
+bool MemoryQueue<T>::empty() const {
+	return nb_elts == 0;
+}
+
+template <typename T>
+bool MemoryQueue<T>::full() const {
+	return nb_elts == space;
+}
+
+//---------------------------------------------------------------------------
+
+#ifdef _OPENMP
+std::atomic<int> Individual::indCounter = 0;
+#else // _OPENMP
 int Individual::indCounter = 0;
+#endif // _OPENMP
 TraitFactory Individual::traitFactory = TraitFactory();
 
 //---------------------------------------------------------------------------
 
 // Individual constructor
-Individual::Individual(Cell* pCell, Patch* pPatch, short stg, short a, short repInt,
-	float probmale, bool movt, short moveType)
+Individual::Individual(Species* pSpecies, Cell* pCell, Patch* pPatch, short stg, short a, short repInt,
+	float probmale, bool movt, short moveType):
+	memory(pSpecies->getSpSMSTraits().memSize)
 {
 	indId = indCounter; indCounter++; // unique identifier for each individual
 	geneticFitness = 1.0;
@@ -60,7 +136,7 @@ Individual::Individual(Cell* pCell, Patch* pPatch, short stg, short a, short rep
 #endif
 		if (moveType == 1) { // SMS
 			// set up location data for SMS
-			pTrfrData = make_unique<smsData>(loc, loc); // what about the other parameter?
+			pTrfrData = make_unique<smsData>(loc, loc);
 
 		}
 		if (moveType == 2) { // CRW
@@ -192,6 +268,7 @@ void Individual::inherit(Species* pSpecies, const Individual* mother) {
 			if (newTrait->getMutationRate() > 0 && pSpecies->areMutationsOn())
 				newTrait->mutate();
 					}
+
 		if (trait == GENETIC_LOAD1 || trait == GENETIC_LOAD2 || trait == GENETIC_LOAD3 || trait == GENETIC_LOAD4 || trait == GENETIC_LOAD5)
 			geneticFitness *= newTrait->express();
 
@@ -211,10 +288,11 @@ void Individual::setUpGenes(Species* pSpecies, int resol) {
 		const auto spTrait = pSpecies->getSpTrait(traitType);
 		this->spTraitTable.emplace(traitType, traitFactory.Create(traitType, spTrait));
 			}
-	setDispersalPhenotypes(pSpecies, resol);
+	expressDispersalPhenotypes(pSpecies, resol);
+	expressGeneticLoad(pSpecies);
 			}
 
-void Individual::setDispersalPhenotypes(Species* pSpecies, int resol) {
+void Individual::expressDispersalPhenotypes(Species* pSpecies, int resol) {
 
 	const emigRules emig = pSpecies->getEmigRules();
 	const transferRules trfr = pSpecies->getTransferRules();
@@ -222,24 +300,30 @@ void Individual::setDispersalPhenotypes(Species* pSpecies, int resol) {
 	const settleRules settRules = pSpecies->getSettRules(stage, sex);
 
 		// record phenotypic traits
-	if (emig.indVar)
-		this->setEmigTraits(pSpecies, emig.sexDep, emig.densDep);
-	if (trfr.indVar)
-		this->setTransferTraits(pSpecies, trfr, resol);
-	if (sett.indVar)
-		this->setSettlementTraits(pSpecies, sett.sexDep, settRules.densDep);
+	if (emig.indVar) setEmigTraits(pSpecies, emig.sexDep, emig.densDep);
+	if (trfr.indVar) setTransferTraits(pSpecies, trfr, resol);
+	if (sett.indVar) setSettlementTraits(pSpecies, sett.sexDep, settRules.densDep);
 	}
+
+// Set the fitness attribute of individuals
+// Only called at initialisation, otherwise probably faster to compute directly during inheritance
+void Individual::expressGeneticLoad(Species* pSpecies) {
+	const int nbGenLoadTraits = pSpecies->getNbGenLoadTraits();
+	const vector<TraitType> whichTrait = { GENETIC_LOAD1 , GENETIC_LOAD2, GENETIC_LOAD3, GENETIC_LOAD4, GENETIC_LOAD5 };
+	for (int i = 0; i < nbGenLoadTraits; i++) {
+		if (spTraitTable.contains(whichTrait[i])) 
+			geneticFitness *= getTrait(whichTrait[i])->express();
+	}
+}
 
 void Individual::setTransferTraits(Species* pSpecies, transferRules trfr, int resol) {
 	if (trfr.usesMovtProc) {
 		if (trfr.moveType == 1) {
 			setIndSMSTraits(pSpecies);
 		}
-		else
-			setIndCRWTraits(pSpecies);
+		else setIndCRWTraits(pSpecies);
 	}
-	else
-		setIndKernelTraits(pSpecies, trfr.sexDep, trfr.twinKern, resol);
+	else setIndKernelTraits(pSpecies, trfr.sexDep, trfr.twinKern, resol);
 }
 
 void Individual::setSettlementTraits(Species* pSpecies, bool sexDep, bool densDep) {
@@ -286,14 +370,14 @@ void Individual::setSettlementTraits(Species* pSpecies, bool sexDep, bool densDe
 void Individual::inheritTraits(Species* pSpecies, Individual* mother, Individual* father, int resol)
 				{
 	inherit(pSpecies, mother, father);
-	setDispersalPhenotypes(pSpecies, resol);
+	expressDispersalPhenotypes(pSpecies, resol);
 				}
 
 // Inherit genome from mother, haploid
 void Individual::inheritTraits(Species* pSpecies, Individual* mother, int resol)
 				{
 	inherit(pSpecies, mother);
-	setDispersalPhenotypes(pSpecies, resol);
+	expressDispersalPhenotypes(pSpecies, resol);
 				}
 
 //---------------------------------------------------------------------------
@@ -328,13 +412,12 @@ indStats Individual::getStats(void) {
 	return s;
 }
 
-Cell* Individual::getLocn(const short option) {
-	if (option == 0) { // return previous location
-		return pPrevCell;
-	}
-	else { // return current location
-		return pCurrCell;
-	}
+Cell* Individual::getPrevCell() {
+	return pPrevCell;
+}
+
+Cell* Individual::getCurrCell() {
+	return pCurrCell;
 }
 
 Patch* Individual::getNatalPatch(void) { return pNatalPatch; }
@@ -646,7 +729,6 @@ void Individual::moveto(Cell* newCell) {
 // Returns 1 if still dispersing (including having found a potential patch), otherwise 0
 int Individual::moveKernel(Landscape* pLandscape, Species* pSpecies, const bool absorbing)
 {
-	intptr patch;
 	int patchNum = 0;
 	int newX = 0, newY = 0;
 	int dispersing = 1;
@@ -707,9 +789,12 @@ int Individual::moveKernel(Landscape* pLandscape, Species* pSpecies, const bool 
 	}
 	else
 		meandist = kern.meanDist1 / (float)land.resol;
+	
 	// scaled mean may not be less than 1 unless emigration derives from the kernel
 	// (i.e. the 'use full kernel' option is applied)
+# ifdef NDEBUG // bypass this requirement for tests
 	if (!usefullkernel && meandist < 1.0) meandist = 1.0;
+# endif
 
 	int loopsteps = 0; // new counter to prevent infinite loop added 14/8/15
 	do {
@@ -747,39 +832,38 @@ int Individual::moveKernel(Landscape* pLandscape, Species* pSpecies, const bool 
 				loopsteps++;
 			} while (loopsteps < 1000 &&
 				// keep drawing if out of bounds of landscape or same cell
-				((!absorbing && (newX < land.minX || newX > land.maxX
-					|| newY < land.minY || newY > land.maxY))
+				((!absorbing 
+					&& (newX < land.minX || newX > land.maxX || newY < land.minY || newY > land.maxY))
 					|| (!usefullkernel && newX == loc.x && newY == loc.y))
 				);
+
 			if (loopsteps < 1000) {
 				if (newX < land.minX || newX > land.maxX
 					|| newY < land.minY || newY > land.maxY) { // beyond absorbing boundary
 					// this cannot be reached if not absorbing?
 					pCell = 0;
-					patch = 0;
+					pPatch = nullptr;
 					patchNum = -1;
 				}
 				else {
 					pCell = pLandscape->findCell(newX, newY);
 					if (pCell == 0) { // no-data cell
-						patch = 0;
+						pPatch = nullptr;
 						patchNum = -1;
 					}
 					else {
-						patch = pCell->getPatch();
-						if (patch == 0) { // matrix
-							pPatch = 0;
+						pPatch = pCell->getPatch();
+						if (pPatch == nullptr) { // matrix
 							patchNum = 0;
 						}
 						else {
-							pPatch = (Patch*)patch;
 							patchNum = pPatch->getPatchNum();
 						}
 					}
 				}
 			}
 			else { // exceeded 1000 attempts
-				patch = 0;
+				pPatch = nullptr;
 				patchNum = -1;
 			}
 		} while (!absorbing && patchNum < 0 && loopsteps < 1000); 			 // in a no-data region
@@ -848,7 +932,6 @@ int Individual::moveStep(Landscape* pLandscape, Species* pSpecies,
 {
 	if (status != 1) return 0; // not currently dispersing
 
-	intptr patch;
 	int patchNum;
 	int newX, newY;
 	locn loc;
@@ -857,7 +940,7 @@ int Individual::moveStep(Landscape* pLandscape, Species* pSpecies,
 	double angle;
 	double mortprob, rho, steplen;
 	movedata move;
-	Patch* pPatch = 0;
+	Patch* pPatch = nullptr;
 	bool absorbed = false;
 	//int popsize;
 
@@ -868,14 +951,12 @@ int Individual::moveStep(Landscape* pLandscape, Species* pSpecies,
 	trfrCRWTraits movt = pSpecies->getSpCRWTraits();
 	settleSteps settsteps = pSpecies->getSteps(stage, sex);
 
-	patch = pCurrCell->getPatch();
+	pPatch = pCurrCell->getPatch();
 
-	if (patch == 0) { // matrix
-		pPatch = 0;
+	if (pPatch == nullptr) { // matrix
 		patchNum = 0;
 	}
 	else {
-		pPatch = (Patch*)patch;
 		patchNum = pPatch->getPatchNum();
 	}
 	// apply step-dependent mortality risk ...
@@ -898,9 +979,8 @@ int Individual::moveStep(Landscape* pLandscape, Species* pSpecies,
 	}
 	else { // take a step
 		(path->year)++;
-		(path->total)++;
-		//	if (pPatch != pNatalPatch || path->out > 0) (path->out)++;
-		if (patch == 0 || pPatch == 0 || patchNum == 0) { // not in a patch
+	    (path->total)++;
+		if (pPatch == nullptr || patchNum == 0) { // not in a patch
 			if (path != 0) path->settleStatus = 0; // reset path settlement status
 			(path->out)++;
 		}
@@ -919,19 +999,8 @@ int Individual::moveStep(Landscape* pLandscape, Species* pSpecies,
 				dispersing = 0;
 			}
 			else {
-
 				// WOULD IT BE MORE EFFICIENT FOR smsMove TO RETURN A POINTER TO THE NEW CELL? ...
-
-				patch = pCurrCell->getPatch();
-				//int patchnum;
-				if (patch == 0) {
-					pPatch = 0;
-					//patchnum = 0;
-				}
-				else {
-					pPatch = (Patch*)patch;
-					//patchnum = pPatch->getPatchNum();
-				}
+				pPatch = pCurrCell->getPatch();
 				if (sim.saveVisits && pPatch != pNatalPatch) {
 					pCurrCell->incrVisits();
 				}
@@ -983,11 +1052,11 @@ int Individual::moveStep(Landscape* pLandscape, Species* pSpecies,
 				else
 					pCurrCell = pLandscape->findCell(newX, newY);
 				if (pCurrCell == 0) { // no-data cell or beyond absorbing boundary
-					patch = 0;
+					pPatch = nullptr;
 					if (absorbing) absorbed = true;
 				}
 				else
-					patch = pCurrCell->getPatch();
+					pPatch = pCurrCell->getPatch();
 			} while (!absorbing && pCurrCell == 0 && loopsteps < 1000);
 			pCRW.prevdrn = (float)angle;
 			pCRW.xc = (float)xcnew; pCRW.yc = (float)ycnew;
@@ -1010,10 +1079,9 @@ int Individual::moveStep(Landscape* pLandscape, Species* pSpecies,
 			break;
 
 		} // end of switch (trfr.moveType)
-
-		if (patch > 0  // not no-data area or matrix
+		if (dispersing == 1 &&
+            pPatch != nullptr  // not no-data area or matrix
 			&& path->total >= settsteps.minSteps) {
-			pPatch = (Patch*)patch;
 			if (pPatch != pNatalPatch)
 			{
 				// determine whether the new patch is potentially suitable
@@ -1048,8 +1116,7 @@ movedata Individual::smsMove(Landscape* pLand, Species* pSpecies,
 	array3x3d nbr; 	// to hold weights/costs/probs of moving to neighbouring cells
 	array3x3d goal;	// to hold weights for moving towards a goal location
 	array3x3f hab;	// to hold weights for habitat (includes percep range)
-	int x2, y2; 			// x index from 0=W to 2=E, y index from 0=N to 2=S
-	int newX = 0, newY = 0;
+	int newX = -9, newY = -9; // BUGFIX: must not be 0 because 0,0 is a valid landscape cell
 	Cell* pCell;
 	Cell* pNewCell = NULL;
 	double sum_nbrs = 0.0;
@@ -1111,21 +1178,25 @@ movedata Individual::smsMove(Landscape* pLand, Species* pSpecies,
 
 	// get habitat-dependent weights (mean effective costs, given perceptual range)
 	// first check if costs have already been calculated
+	{
+#ifdef _OPENMP
+		const std::unique_lock<std::mutex> lock = pCurrCell->lockCost();
+#endif
+		hab = pCurrCell->getEffCosts();
+		if (hab.cell[0][0] < 0.0) { // costs have not already been calculated
+			hab = getHabMatrix(pLand, pSpecies, current.x, current.y, movt.pr, movt.prMethod,
+				landIx, absorbing);
+			pCurrCell->setEffCosts(hab);
+		}
+		else { // they have already been calculated - no action required
 
-	hab = pCurrCell->getEffCosts();
-	if (hab.cell[0][0] < 0.0) { // costs have not already been calculated
-		hab = getHabMatrix(pLand, pSpecies, current.x, current.y, movt.pr, movt.prMethod,
-			landIx, absorbing);
-		pCurrCell->setEffCosts(hab);
-	}
-	else { // they have already been calculated - no action required
-
+		}
 	}
 
 	// determine weighted effective cost for the 8 neighbours
 	// multiply directional persistence, goal bias and habitat habitat-dependent weights
-	for (y2 = 2; y2 > -1; y2--) {
-		for (x2 = 0; x2 < 3; x2++) {
+	for (int y2 = 2; y2 > -1; y2--) {
+		for (int x2 = 0; x2 < 3; x2++) {
 			if (x2 == 1 && y2 == 1) nbr.cell[x2][y2] = 0.0;
 			else {
 				if (x2 == 1 || y2 == 1) //not diagonal
@@ -1137,8 +1208,8 @@ movedata Individual::smsMove(Landscape* pLand, Species* pSpecies,
 	}
 
 	// determine reciprocal of effective cost for the 8 neighbours
-	for (y2 = 2; y2 > -1; y2--) {
-		for (x2 = 0; x2 < 3; x2++) {
+	for (int y2 = 2; y2 > -1; y2--) {
+		for (int x2 = 0; x2 < 3; x2++) {
 			if (nbr.cell[x2][y2] > 0.0) nbr.cell[x2][y2] = 1.0f / nbr.cell[x2][y2];
 		}
 	}
@@ -1147,8 +1218,8 @@ movedata Individual::smsMove(Landscape* pLand, Species* pSpecies,
 	// to have zero probability
 	// increment total for re-scaling to sum to unity
 
-	for (y2 = 2; y2 > -1; y2--) {
-		for (x2 = 0; x2 < 3; x2++) {
+	for (int y2 = 2; y2 > -1; y2--) {
+		for (int x2 = 0; x2 < 3; x2++) {
 			if (!absorbing) {
 				if ((current.y + y2 - 1) < land.minY || (current.y + y2 - 1) > land.maxY
 					|| (current.x + x2 - 1) < land.minX || (current.x + x2 - 1) > land.maxX)
@@ -1165,8 +1236,8 @@ movedata Individual::smsMove(Landscape* pLand, Species* pSpecies,
 
 	// scale effective costs as probabilities summing to 1
 	if (sum_nbrs > 0.0) { // should always be the case, but safest to check...
-		for (y2 = 2; y2 > -1; y2--) {
-			for (x2 = 0; x2 < 3; x2++) {
+		for (int y2 = 2; y2 > -1; y2--) {
+			for (int x2 = 0; x2 < 3; x2++) {
 				nbr.cell[x2][y2] = nbr.cell[x2][y2] / (float)sum_nbrs;
 			}
 		}
@@ -1176,8 +1247,8 @@ movedata Individual::smsMove(Landscape* pLand, Species* pSpecies,
 	double cumulative[9];
 	int j = 0;
 	cumulative[0] = nbr.cell[0][0];
-	for (y2 = 0; y2 < 3; y2++) {
-		for (x2 = 0; x2 < 3; x2++) {
+	for (int y2 = 0; y2 < 3; y2++) {
+		for (int x2 = 0; x2 < 3; x2++) {
 			if (j != 0) cumulative[j] = cumulative[j - 1] + nbr.cell[x2][y2];
 			j++;
 		}
@@ -1193,8 +1264,8 @@ movedata Individual::smsMove(Landscape* pLand, Species* pSpecies,
 		do {
 			double rnd = pRandom->Random();
 			j = 0;
-			for (y2 = 0; y2 < 3; y2++) {
-				for (x2 = 0; x2 < 3; x2++) {
+			for (int y2 = 0; y2 < 3; y2++) {
+				for (int x2 = 0; x2 < 3; x2++) {
 					if (rnd < cumulative[j]) {
 						newX = current.x + x2 - 1;
 						newY = current.y + y2 - 1;
@@ -1214,11 +1285,12 @@ movedata Individual::smsMove(Landscape* pLand, Species* pSpecies,
 			if (newX < land.minX || newX > land.maxX
 				|| newY < land.minY || newY > land.maxY) {
 				pNewCell = 0;
+			} else{
+			   pNewCell = pLand->findCell(newX, newY); // would also return 0 if outside boundary
 			}
-			pNewCell = pLand->findCell(newX, newY);
 		}
 	} while (!absorbing && pNewCell == 0 && loopsteps < 1000); // no-data cell
-	if (loopsteps >= 1000 || pNewCell == 0) {
+	if (loopsteps >= 1000 || pNewCell == 0 || (newX == -9 || newY== -9)) { // if no cell was found
 		// unable to make a move or crossed absorbing boundary
 		// flag individual to die
 		move.dist = -123.0;
@@ -1228,7 +1300,7 @@ movedata Individual::smsMove(Landscape* pLand, Species* pSpecies,
 		newcellcost = pNewCell->getCost();
 		move.cost = move.dist * 0.5f * ((float)cellcost + (float)newcellcost);
 		// make the selected move
-		if ((short)memory.size() == movt.memSize) {
+		if (memory.full()) {
 			memory.pop(); // remove oldest memory element
 		}
 		memory.push(current); // record previous location in memory
@@ -1521,6 +1593,10 @@ array3x3f Individual::getHabMatrix(Landscape* pLand, Species* pSpecies,
 }
 
 #if RS_RCPP
+#ifdef _OPENMP
+std::mutex outMovePaths_mutex;
+#endif
+
 //---------------------------------------------------------------------------
 // Write records to movement paths file
 void Individual::outMovePath(const int year)
@@ -1529,6 +1605,9 @@ void Individual::outMovePath(const int year)
 
 	//if (pPatch != pNatalPatch) {
 	loc = pCurrCell->getLocn();
+#ifdef _OPENMP
+	const std::lock_guard<std::mutex> lock(outMovePaths_mutex);
+#endif
 	// if still dispersing...
 	if (status == 1) {
 		// at first step, record start cell first
@@ -1598,9 +1677,7 @@ double cauchy(double location, double scale) {
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-
-#ifndef NDEBUG
-// Testing utilities
+#ifdef UNIT_TESTS
 
 Cell* Individual::getCurrCell() const {
 	return pCurrCell;
@@ -1622,7 +1699,7 @@ void Individual::triggerMutations(Species* pSp) {
 			|| trType == GENETIC_LOAD5)
 			geneticFitness *= indTrait->express();
 	}
-	this->setDispersalPhenotypes(pSp, 1.0);
+	this->expressDispersalPhenotypes(pSp, 1.0);
 }
 
 // Shorthand function to edit a genotype with custom values
@@ -1667,5 +1744,5 @@ void Individual::overrideGenotype(TraitType whichTrait, const map<int, vector<un
 	pNeutralTrait->getGenes() = newGenotype;
 };
 
-#endif // NDEBUG
+#endif // UNIT_TESTS
 

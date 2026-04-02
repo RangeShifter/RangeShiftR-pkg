@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------
  *
- *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell
+ *	Copyright (C) 2026 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Roslyn Henry, Théo Pannetier, Jette Wolff, Damaris Zurell
  *
  *	This file is part of RangeShifter.
  *
@@ -78,16 +78,16 @@ public:
 	void fixNewSeed(int);
 	seed_t getSeed() const { return RS_random_seed; };
 
-private:
-	seed_t RS_random_seed;
-	mt19937* gen;
-	std::uniform_real_distribution<>* pRandom01;
-	std::normal_distribution<>* pNormal;
-};
+	private:
+		seed_t RS_random_seed;
+		std::vector<mt19937> gens;
+		std::uniform_real_distribution<>* pRandom01;
+		std::normal_distribution<>* pNormal;
+	};
 
-#ifndef NDEBUG
+#ifdef UNIT_TESTS
 	void testRSrandom();
-#endif // NDEBUG
+#endif // UNIT_TESTS
 
 //---------------------------------------------------------------------------
 

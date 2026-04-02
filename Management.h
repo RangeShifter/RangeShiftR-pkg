@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------
  *
- *	Copyright (C) 2024 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell, Jette Reeg
+ *	Copyright (C) 2026 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Roslyn Henry, Théo Pannetier, Jette Wolff, Damaris Zurell
  *
  *	This file is part of RangeShifter.
  *
@@ -17,6 +17,7 @@
  *	You should have received a copy of the GNU General Public License
  *	along with RangeShifter. If not, see <https://www.gnu.org/licenses/>.
  *
+ * File Created by Jette Wolff
  --------------------------------------------------------------------------*/
 
 
@@ -47,7 +48,7 @@
 #include <map>
 using namespace std;
 #if RS_RCPP
-#include <Rcpp.h> // for Rcpp::Rcout
+#include <RcppArmadillo.h>
 #endif
 #include "Parameters.h"
 #include "Species.h"

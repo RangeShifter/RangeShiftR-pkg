@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------
  *
- *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell
+ *	Copyright (C) 2026 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Roslyn Henry, Théo Pannetier, Jette Wolff, Damaris Zurell
  *
  *	This file is part of RangeShifter.
  *
@@ -33,9 +33,9 @@ Further functions are declared here, but defined differently in main function of
 GUI and batch versions.
 
 For full details of RangeShifter, please see:
-Bocedi G., Palmer S.C.F., Pe?er G., Heikkinen R.K., Matsinos Y.G., Watts K.
+ Bocedi G., Palmer S.C.F., Pe’er G., Heikkinen R.K., Matsinos Y.G., Watts K.
 and Travis J.M.J. (2014). RangeShifter: a platform for modelling spatial
-eco-evolutionary dynamics and species? responses to environmental changes.
+ eco-evolutionary dynamics and species’ responses to environmental changes.
 Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
@@ -48,6 +48,10 @@ Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#if RS_RCPP
+#include <RcppArmadillo.h>
+#include "../Rinterface.h"
+#endif // RS_RCPP
 #include <chrono>
 
 #include "Parameters.h"
@@ -65,7 +69,8 @@ using namespace std::filesystem;
 #if RS_RCPP && !R_CMD
 Rcpp::List RunModel(
 	Landscape*,	// pointer to Landscape
-	int					// sequential simulation number
+	int,					// sequential simulation number
+	Rcpp::S4	// parameter master to read initial conditions in each replicate simulation
 );
 #else
 int RunModel(

@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------
  *
- *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell
+ *	Copyright (C) 2026 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Roslyn Henry, ThÃ©o Pannetier, Jette Wolff, Damaris Zurell
  *
  *	This file is part of RangeShifter.
  *
@@ -31,9 +31,9 @@
  DistCell - Initial species distribution cell
 
  For full details of RangeShifter, please see:
- Bocedi G., Palmer S.C.F., Pe’er G., Heikkinen R.K., Matsinos Y.G., Watts K.
+ Bocedi G., Palmer S.C.F., Peâ€™er G., Heikkinen R.K., Matsinos Y.G., Watts K.
  and Travis J.M.J. (2014). RangeShifter: a platform for modelling spatial
- eco-evolutionary dynamics and species’ responses to environmental changes.
+ eco-evolutionary dynamics and speciesâ€™ responses to environmental changes.
  Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
  Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
@@ -45,12 +45,22 @@
 #ifndef CellH
 #define CellH
 
+
+#include <algorithm>
+
 #include <vector>
 using namespace std;
 
 #include "Parameters.h"
 
+#ifdef _OPENMP
+#include <atomic>
+#include <mutex>
+#endif
+
 //---------------------------------------------------------------------------
+
+class Patch; // Forward-declaration of the Patch class
 
 struct array3x3f { float cell[3][3]; }; 	// neighbourhood cell array (SMS)
 struct smscosts { int cost; array3x3f* effcosts; };	// cell costs for SMS
@@ -62,13 +72,13 @@ public:
 	Cell( // Constructor for habitat codes
 		int,				// x co-ordinate
 		int,				// y co-ordinate
-		intptr,			// pointer (cast as integer) to the Patch to which Cell belongs
+		Patch *,			// pointer to the Patch to which Cell belongs
 		int					// habitat index number
 	);
 	Cell( // Constructor for habitat % cover or habitat quality
 		int,				// x co-ordinate
 		int,				// y co-ordinate
-		intptr,			// pointer (cast as integer) to the Patch to which Cell belongs
+		Patch *,			// pointer to the Patch to which Cell belongs
 		float				// habitat proportion or cell quality score
 	);
 	~Cell();
@@ -90,9 +100,9 @@ public:
 		int		// habitat index number / landscape change number
 	);
 	void setPatch(
-		intptr		// pointer (cast as integer) to the Patch to which Cell belongs
+		Patch *		// pointer to the Patch to which Cell belongs
 	);
-	intptr getPatch(void);
+	Patch *getPatch(void);
 	locn getLocn(void);
 	void setEnvDev(
 		float	// local environmental deviation
@@ -110,6 +120,9 @@ public:
 	void setCost(
 		int		// cost value for SMS
 	);
+#ifdef _OPENMP
+	std::unique_lock<std::mutex> lockCost(void);
+#endif
 	int getCost(void);
 	void resetCost(void);
 	array3x3f getEffCosts(void);
@@ -121,22 +134,37 @@ public:
 	void incrVisits(void);
 	unsigned long int getVisits(void);
 
+	void addchgDemoScaling(std::vector<float>);
+	void setDemoScaling(std::vector<float>, short);
+	std::vector<float> getDemoScaling(short);
+
+
 private:
 	int x, y;			// cell co-ordinates
-	intptr pPatch; 	// pointer (cast as integer) to the Patch to which cell belongs
+	Patch *pPatch; 	// pointer to the Patch to which cell belongs
 	// NOTE: THE FOLLOWING ENVIRONMENTAL VARIABLES COULD BE COMBINED IN A STRUCTURE
 	// AND ACCESSED BY A POINTER ...
 	float envVal; // environmental value, representing one of:
 	// gradient in K, r or extinction probability
 	float envDev;	// local environmental deviation (static, in range -1.0 to +1.0)
 	float eps;		// local environmental stochasticity (epsilon) (dynamic, from N(0,std))
+#ifdef _OPENMP
+	std::atomic<unsigned long int> visits; // no. of times square is visited by dispersers
+#else
 	unsigned long int visits; // no. of times square is visited by dispersers
+#endif
 	smscosts* smsData;
 
 	vector <short> habIxx; 		// habitat indices (rasterType=0)
 	// NB initially, habitat codes are loaded, then converted to index nos.
 	//    once landscape is fully loaded
 	vector <float> habitats;	// habitat proportions (rasterType=1) or quality (rasterType=2)
+
+	std::vector<std::vector<float>> demoScalings;	// demographic scaling layers (only if rasterType==2)
+
+#ifdef _OPENMP
+	std::mutex cost_mutex;
+#endif
 };
 
 //---------------------------------------------------------------------------
