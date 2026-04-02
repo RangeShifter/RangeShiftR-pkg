@@ -884,37 +884,37 @@ setMethod("getLocalisedEquilPop", "DemogParams", function(demog, DensDep_values,
 })
 
 
-## ---- ODD documentation -----
-
-#' Creating ODD template file for a specific RangeShiftR parameter master object
+#' ## ---- ODD documentation -----
 #'
-#' This function creates an ODD template file for a specific RangeShiftR parameter master object \code{s}.
-#' It only creates a new file, if the \code{filename} doesn't exist in the folder.
-#' If the \code{filename} already exists, it only renders the document to the given type.
+#' #' Creating ODD template file for a specific RangeShiftR parameter master object
+#' #'
+#' #' This function creates an ODD template file for a specific RangeShiftR parameter master object \code{s}.
+#' #' It only creates a new file, if the \code{filename} doesn't exist in the folder.
+#' #' If the \code{filename} already exists, it only renders the document to the given type.
+#' #'
+#' #' @usage createODD(filename, s, type, title)
+#' #'
+#' #' @param filename Name of the R markdown file and document to be created, must have ending ".Rmd", e.g. 'ODD_protocol.Rmd'
+#' #' @param s RangeShiftR parameter object
+#' #' @param type file type of the rendering process output. Can currently only be "pdf_document"
+#' #' @param title Title of the study if possible including authors, e.g. "'Study title ABC' by author ABC
+#' #' @export
+#' setGeneric("createODD", function(filename, s, type, title,...) standardGeneric("createODD") )
 #'
-#' @usage createODD(filename, s, type, title)
+#' setMethod("createODD", c(filename = "character", s="RSparams", type="character", title="character"), function(filename="ODD_protocol_template.Rmd", s, type="pdf_document", title = "'Study ABC' by author ABC"){
+#'     if(!file.exists(filename)) {
+#'         unlink(c("RSflowchart_big.pdf", "RSflowchart_detail.pdf", "RSflowchart_big.svg", "RSflowchart_detail.svg", "style-template.docx", "RS_ODD.json", "ecography.csl", "RS_ODD.bib"))
+#'         rmarkdown::draft(filename, template = "odd_protocol", package = "RangeShiftR", edit = FALSE)
+#'     }
+#'     if (type=="pdf_document") format <- "pdf"
+#'     if (type=="md_document") format <- "md"
+#'     if (type=="rtf_document") format <- "word"
+#'     if (type=="word_document") format <- "word"
 #'
-#' @param filename Name of the R markdown file and document to be created, must have ending ".Rmd", e.g. 'ODD_protocol.Rmd'
-#' @param s RangeShiftR parameter object
-#' @param type file type of the rendering process output. Can currently only be "pdf_document"
-#' @param title Title of the study if possible including authors, e.g. "'Study title ABC' by author ABC
-#' @export
-setGeneric("createODD", function(filename, s, type, title,...) standardGeneric("createODD") )
-
-setMethod("createODD", c(filename = "character", s="RSparams", type="character", title="character"), function(filename="ODD_protocol_template.Rmd", s, type="pdf_document", title = "'Study ABC' by author ABC"){
-    if(!file.exists(filename)) {
-        unlink(c("RSflowchart_big.pdf", "RSflowchart_detail.pdf", "RSflowchart_big.svg", "RSflowchart_detail.svg", "style-template.docx", "RS_ODD.json", "ecography.csl", "RS_ODD.bib"))
-        rmarkdown::draft(filename, template = "odd_protocol", package = "RangeShiftR", edit = FALSE)
-    }
-    if (type=="pdf_document") format <- "pdf"
-    if (type=="md_document") format <- "md"
-    if (type=="rtf_document") format <- "word"
-    if (type=="word_document") format <- "word"
-
-    subtitle <- title
-
-    rmarkdown::render(input = filename, output_format = type, params=list(format = format, subtitle = title))
-})
+#'     subtitle <- title
+#'
+#'     rmarkdown::render(input = filename, output_format = type, params=list(format = format, subtitle = title))
+#' })
 
 
 ## ---- Parameter table function -----
@@ -945,6 +945,10 @@ setMethod("createParameterTables", c(filename = "character", s="RSparams", type=
 
     subtitle <- title
 
-    rmarkdown::render(input = filename, output_format = type, params=list(format = format, subtitle=subtitle))
+    rmarkdown::render(
+        input = filename,
+        output_format = type,
+        params = list(format = format, subtitle = subtitle)
+    )
 })
 

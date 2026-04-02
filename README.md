@@ -28,7 +28,7 @@ well as a functional C++ compiler toolchain.
 
 ```r
 # Install RangeShiftR from GitHub:
-devtools::install_github("RangeShifter/RangeShiftR-pkg", ref="main", subdir="RangeShiftR")
+pak::pak("RangeShifter/RangeShiftR-pkg/RangeShiftR@main")
 ```
 
 ## Usage and help
@@ -36,9 +36,9 @@ devtools::install_github("RangeShifter/RangeShiftR-pkg", ref="main", subdir="Ran
 Please refer to our [website](https://rangeshifter.github.io/) for more information about RangeShifter simulation 
 platform. RangeShifter is accompanied by extensive documentation. 
 
-For getting acquainted with the software, we recommend to first read the [manual](https://raw.githubusercontent.com/RangeShifter/RangeShifter-software-and-documentation/master/RangeShifter_v2.0_UserManual.pdf) to understand the conceptual underpinnings of RangeShifter.
+For getting acquainted with the software, we recommend to first read the [manual](https://github.com/RangeShifter/RangeShifter-documentation-and-tutorial/blob/master/RangeShifter_v3.0_UserManual.pdf) to understand the conceptual underpinnings of RangeShifter.
 
-Analogous to the RangeShifter GUI, we provide [tutorials](https://rangeshifter.github.io/RangeshiftR-tutorials/) to learn the different features of RangeshiftR using example applications from Bocedi et al. (2014, 2021) and Malchow et al. (2021). These cover some of the main features of RangeShifter, and help becoming familiar with the software.
+Analogous to the RangeShifter GUI and batchmode, we provide [tutorials](https://rangeshifter.github.io/RangeshiftR-tutorials/) to learn the different features of RangeshiftR using example applications from Bocedi et al. (2014, 2021) and Malchow et al. (2021). These cover some of the main features of RangeShifter, and help becoming familiar with the software.
 
 If you have any further question related to the general concepts and usage of RangeShifter, please browse earlier topics in the [forum pages](https://github.com/RangeShifter/RangeshiftR-tutorials/discussions) or add a new one. Often it is also helpful to review [published studies](https://rangeshifter.github.io/site/references/) using the RangeShifter modelling platform.
 
@@ -46,13 +46,13 @@ For technical questions related to the RangeShiftR package interface and which c
 
 ## Contributing
 
-See [Contributing guidelines](https://github.com/RangeShifter/RangeShiftR-package-dev/blob/main/CONTRIBUTING.md)
+See [Contributing guidelines](https://github.com/RangeShifter/RangeShiftR-pkg/blob/main/CONTRIBUTING.md)
 
 ## See also
 
--    [Compiled software and documentation](https://github.com/RangeShifter/RangeShifter-software-and-documentation)
+-    [Documentation and tutorials](https://github.com/RangeShifter/RangeShifter-documentation-and-tutorial)
 -    [RScore](https://github.com/RangeShifter/RScore), source for RangeShifter's core code
--    [RangeShifter batch mode](https://github.com/RangeShifter/RangeShifter_batch_dev), source for the batch mode interface
+-    [RangeShifter batch mode](https://github.com/RangeShifter/RangeShifter_batch), source for the batch mode interface
 
 ## Maintainer
 

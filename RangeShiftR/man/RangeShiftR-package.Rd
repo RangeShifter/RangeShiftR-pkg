@@ -43,6 +43,7 @@ Authors:
   \item Greta Bocedi
   \item Stephen C.F. Palmer
   \item Justin M.J. Travis
+  \item Jette Wolff
   \item Damaris Zurell
 }
 

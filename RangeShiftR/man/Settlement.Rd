@@ -8,7 +8,7 @@
 Settlement(StageDep = FALSE, SexDep = FALSE,
           Settle = 0, FindMate = FALSE,
           DensDep = FALSE,
-          IndVar = FALSE, TraitScaleFactor,
+          IndVar = FALSE,
           MinSteps = 0, MaxSteps = 0, MaxStepsYear = 0)
 }
 \arguments{

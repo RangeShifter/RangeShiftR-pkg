@@ -1,6 +1,6 @@
 #---------------------------------------------------------------------------
 #
-#	Copyright (C) 2020-2022 Anne-Kathleen Malchow, Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Damaris Zurell
+#	Copyright (C) 2020-2026 Anne-Kathleen Malchow, Jette Wolff, Théo Pannetier, Roslyn Henry, Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Damaris Zurell
 #
 #	This file is part of RangeShiftR.
 #
@@ -51,8 +51,8 @@ NULL
 
 # Show start-up message upon loading the package
 .onAttach <- function(libname, pkgname) {
-    packageStartupMessage("RangeshiftR version 3.0.0 (21.11.2025)\n",
-                          "Copyright (C) 2020-2025 Anne-Kathleen Malchow, Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Jette Wolff, Damaris Zurell\n\n",
+    packageStartupMessage("RangeshiftR version 3.0.0 (24.03.2026)\n",
+                          "Copyright (C) 2020-2026 Anne-Kathleen Malchow, Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Jette Wolff, Damaris Zurell\n\n",
                           "This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.\n",
                           "You are welcome to redistribute it and/or modify it under certain conditions;\n",
                           "type 'RangeShiftR_license()' for details.\n")
@@ -69,8 +69,8 @@ NULL
 #' @export
 RangeShiftR_license <- function ()
 {
-    cat("\nRangeshiftR version 3.0.0 (21.11.2025)\n")
-    cat("Copyright (C) 2020-2025 Anne-Kathleen Malchow, Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Jette Wolff, Damaris Zurell\n\n")
+    cat("\nRangeshiftR version 3.0.0 (24.03.2026)\n")
+    cat("Copyright (C) 2020-2026 Anne-Kathleen Malchow, Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Jette Wolff, Damaris Zurell\n\n")
     cat("This program is free software: you can redistribute it and/or modify\n")
     cat("it under the terms of the GNU General Public License as published by\n")
     cat("the Free Software Foundation, either version 3 of the License, or\n")

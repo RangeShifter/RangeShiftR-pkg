@@ -108,9 +108,6 @@ transfer_genes <- F
 settlement_genes <- F
 genetics <- F
 
-# neutral genetics
-# genetic load
-# dispersal genetics
 
 
 
@@ -213,6 +210,27 @@ if(s@dispersal@Settlement@SexDep) settlement_sexdep <- T
 if(s@dispersal@Settlement@StageDep) settlement_stagedep <- T
 if(any(s@dispersal@Settlement@FindMate)) mate_finding <- T
 
+# # Genetics
+# if(isVirtualClass(class(s@gene)) || is.logical(s@gene)) {
+#   genetics <<- F
+# } else {
+#   genetics <<- T
+#   gen <<- s@gene  # shorthand
+#  
+#   # Neutral genetics
+#   if(!is.logical(gen@Traits@Neutral)) neutral_genetics <<- T
+#  
+#   # Genetic load
+#   if(!is.logical(gen@Traits@GeneticLoad)) geneticload <<- T
+#  
+#   # Dispersal-related genes
+#   if(!is.logical(gen@Traits@EmigrationGenes)) emigration_genes <<- T
+#   if(!is.logical(gen@Traits@SettlementGenes)) settlement_genes <<- T
+#   if(!is.logical(gen@Traits@CorrRWGenes) ||
+#      !is.logical(gen@Traits@SMSGenes) ||
+#      !is.logical(gen@Traits@KernelGenes)) transfer_genes <<- T
+# }
+
 # create a data.frame with all the parameter settings
 # help function to transform any arrays to latex
  array_to_LaTeX <- function(arr){
@@ -241,8 +259,19 @@ list_to_LaTeX_array <- function(lst, align = "l") {
     " \\end{array}$"
   )
 }
+# help with empty character fields
+safe_char <- function(x, default = "-9") {
+  if(length(x) == 0 || is.null(x)) return(default)
+  as.character(x)
+}
+# # help function for genetics
+#   fmt <<- function(x) {
+#     if(is.null(x)) return("NULL")
+#     if(is.logical(x)) return(as.character(x))
+#     if(is.matrix(x)) return(paste(apply(x, 1, paste, collapse=" "), collapse=" | "))
+#     paste(x, collapse=", ")
+#   }
 
- 
 range <- paste(s@init@minX, s@init@maxX, s@init@minY, s@init@maxY)
 PropStages <- as.vector(s@init@PropStages)
 res <- toString(PropStages)
@@ -336,12 +365,10 @@ if(class(s@dispersal@Emigration@EmigProb)[1]=="matrix"){
 } else emigprob <- s@dispersal@Emigration@EmigProb
 
 if(dispersal_kernel){
-  if(class(s@dispersal@Transfer@Distances=="matrix")){
+  if(class(s@dispersal@Transfer@Distances)[1]=="matrix"){
     Distances <- array_to_LaTeX(s@dispersal@Transfer@Distances)
   }else Distances <- s@dispersal@Transfer@Distances
 } 
-  
-
 
 if(movement_SMS){
   if(class(s@dispersal@Transfer@Costs)=="numeric"){
@@ -361,43 +388,23 @@ if(movement_corrRW){
 
 if(length(s@dispersal@Settlement@Settle)>1) Settle<- array_to_LaTeX(s@dispersal@Settlement@Settle) else Settle <-  s@dispersal@Settlement@Settle
 
-Min_steps <- as.vector(s@dispersal@Settlement@MinSteps)
-Min_steps <- toString(Min_steps)
- 
-Max_steps <- as.vector(s@dispersal@Settlement@MaxSteps)
-Max_steps <- toString(Max_steps)
-
-Max_steps_year <- toString(s@dispersal@Settlement@MaxStepsYear)
-
-# Genetics
-if(s@gene@Traits@Neutral) neutral_genetics <- T else neutral_genetics <- F
-if(s@gene@Traits@GeneticLoad) geneticload <- T else geneticload <- F
-if(s@gene@Traits@EmigrationGenes) emigration_genes <- T else emigration_genes <- F
-if(s@gene@Traits@KernelGenes) kernel_genes <- T else kernel_genes <- F
-if(s@gene@Traits@CorrRWGenes) corrRW_genes <- T else corrRW_genes <- F
-if(s@gene@Traits@SMSGenes) SMS_genes <- T else SMS_genes <- F
-if(s@gene@Traits@SettlementGenes) settlement_genes <- T else settlement_genes <- F
-if(any(c(neutral_genetics, geneticload, emigration_genes, kernel_genes, corrRW_genes, SMS_genes, settlement_genes))) genetics <- T else genetics <- F
-if(any(c(kernel_genes, corrRW_genes, SMS_genes))) transfer_genes <- T else transfer_genes <- F
-
-if(!is.character(s@gene@PatchList)){
-    PatchList <- toString(s@gene@PatchList)
-} else PatchList <- s@gene@PatchList
-
-if(neutral_genetics){
-    # Positions: if numeric, array to string
-    if(is.numeric(s@gene@NeutralGenes@Positions)){
-        Neutral_positions <- toString(s@gene@NeutralGenes@Positions)
-    } else Neutral_positions <- s@gene@NeutralTraits@Positions
-    
-    # Initial positions
-    if(is.numeric(s@gene@NeutralGenes@InitialPositions)){
-        Neutral_initpositions <- toString(s@gene@NeutralGenes@InitialPositions)
-    } else Neutral_initpositions <- s@gene@NeutralGenes@InitialPositions
+if(is.matrix(s@dispersal@Settlement@MinSteps)) {
+    Min_steps <- array_to_LaTeX(s@dispersal@Settlement@MinSteps)
+} else {
+    Min_steps <- toString(as.vector(s@dispersal@Settlement@MinSteps))
 }
 
+if(is.matrix(s@dispersal@Settlement@MaxSteps)) {
+    Max_steps <- array_to_LaTeX(s@dispersal@Settlement@MaxSteps)
+} else {
+    Max_steps <- toString(as.vector(s@dispersal@Settlement@MaxSteps))
+}
 
-
+if(is.matrix(s@dispersal@Settlement@MaxStepsYear)) {
+    Max_steps_year <- array_to_LaTeX(s@dispersal@Settlement@MaxStepsYear)
+} else {
+    Max_steps_year <- toString(as.vector(s@dispersal@Settlement@MaxStepsYear))
+}
 # Management
 if(!is.logical(s@management@Translocation)){
     translocation <- T
@@ -529,7 +536,7 @@ Initialisation <- data.frame(
     as.character(s@init@FreeType), 
     as.character(s@init@NrCells),
     as.character(s@init@SpType), 
-    as.character(s@init@InitIndsFile),
+    safe_char(s@init@InitIndsFile),
     as.character(s@init@InitDens), 
     as.character(s@init@IndsHaCell),
     res,
@@ -588,10 +595,10 @@ if(real_land){
       PatchFile,
       CostsFile,
       DynamicLandYears,
-      if(matrix_input) "provided as matrix" else s@land@SpDistFile,
+      if(matrix_input) "provided as matrix" else safe_char(s@land@SpDistFile),
       s@land@SpDistResolution,
       if(spatiotemporal_demography && matrix_input) "provided as matrices",
-      if(spatiotemporal_demography && !matrix_input) demogScaleMatrix,
+      if(spatiotemporal_demography && !matrix_input) demogScaleFile,
       if(spatiotemporal_demography) s@land@nrDemogScaleLayers
     ))
 }
@@ -758,7 +765,7 @@ if(dispersal_kernel){
     "Slope"),
     "Description"=c(
       "Type of transfer",
-      "Matrix containing all dispersal kernel parameters","(#columns) for each stage/sex (#rows).", "Its structure depends on the other parameters.",
+      "Matrix containing all dispersal kernel parameters (#columns) for each stage/sex (#rows). Its structure depends on the other parameters.",
       "Use a mixed (i.e. double negative exponential) kernel?",
       "Sex-dependent dispersal kernel?",
       "Stage-dependent dispersal kernel?",
@@ -770,7 +777,7 @@ if(dispersal_kernel){
     ),
     "Values"=c(
       as.character(class(s@dispersal@Transfer)),
-      Distances,"","",
+      Distances,
       as.character(s@dispersal@Transfer@DoubleKernel),
       as.character(s@dispersal@Transfer@SexDep),
       as.character(s@dispersal@Transfer@StageDep),
@@ -864,14 +871,14 @@ Dispersal <- data.frame(
   "Process                       "=c(
     "Emigration                  ","", "","","","",
     "Transfer                    ", rep("",nrow(transfer)-1),
-    "Settlement                  ", if(!dispersal_kernel){rep("",9)} else{rep("",6)}
+    "Settlement                  ", if(!dispersal_kernel){rep("",8)} else{rep("",5)}
   ),
   "Parameter                     "=c(
     # Emigration
     "EmigProb",            # can be Matrix or single value
     "SexDep",
     "StageDep",
-    "DensDep", 
+    "DensDep",
     "IndVar",
     "UseFullKern",
     #Transfer
@@ -880,7 +887,7 @@ Dispersal <- data.frame(
     "SexDep",
     "StageDep",
     "IndVar",
-    "Settle","",if(dispersal_kernel){rep("",4)},
+    "Settle",
     if(!dispersal_kernel){c("MinSteps",
     "MaxSteps",
     "MaxStepsYear")},
@@ -901,10 +908,8 @@ Dispersal <- data.frame(
     "Sex-dependent settlement requirements?",
     "Stage-dependent settlement requirements?",
     "Individual variability in settlement traits?",
-    if(dispersal_kernel){"Settlement codes (for DispersalKernel)"}
-      else {"Settlement probability parameters"}
-      ,"for all stages/sexes.",
-    if(dispersal_kernel){c("0 = die (default)","1 = wait (stage-structured models only)","2 = randomly choose a suitable neighbouring cell or die","3 = randomly choose a suitable neighbouring cell"," or wait (stage-structured models only)")},
+    if(dispersal_kernel){"Settlement codes (for DispersalKernel) for all stages/sexes.0 = die (default) 1 = wait (stage-structured models only) 2 = randomly choose a suitable neighbouring cell or die 3 = randomly choose a suitable neighbouring cell or wait (stage-structured models only)"}
+      else {"Settlement probability parameters for all stages/sexes."},
     if(!dispersal_kernel){c("Minimum number of steps",
     "Maximum number of steps",
     "Maximum number of steps per year")},
@@ -914,7 +919,7 @@ Dispersal <- data.frame(
     #emigration
     emigprob,
     as.character(s@dispersal@Emigration@SexDep),
-    as.character(s@dispersal@Emigration@StageDep), 
+    as.character(s@dispersal@Emigration@StageDep),
     as.character(s@dispersal@Emigration@DensDep),
     as.character(s@dispersal@Emigration@IndVar),
     as.character(s@dispersal@Emigration@UseFullKern),
@@ -925,7 +930,7 @@ Dispersal <- data.frame(
     as.character(s@dispersal@Settlement@SexDep),
     as.character(s@dispersal@Settlement@StageDep),
     as.character(s@dispersal@Settlement@IndVar),
-    Settle, if(dispersal_kernel){rep("",6)} else{""},
+    Settle,
     if(movement_model){c(Min_steps,
       Max_steps,
       Max_steps_year)
@@ -964,76 +969,316 @@ Management <- data.frame(
 )
 }
 
-# neutral_genetics <- F
-# geneticload <- F
-# dispersal_genes <- F
-# emigration_genes <- F
-# transfer_genes <- F
-# settlement_genes <- F
-# genetics <- F
-
-if(genetics){
-    Genetics <- data.frame(
-        "Genetic parameters"=c(),
-        "Description"=c(),
-        "Values"=c()
-}
-if(neutral_genetics){
-  NeutralGenetics <- data.frame(
-    "Genetic traits"=c(
-
-    ),
-    "Description"=c(
-
-    ),
-    "Values"=c(
-    )
-  )
-}
-if(geneticload){
-  GeneticLoad <- data.frame(
-    "Genetic traits"=c(
-
-    ),
-    "Description"=c(
-
-    ),
-    "Values"=c(
-    )
-  )
-}
-if(emigration_genes){
-  EmigrationGenes <- data.frame(
-    "Genetic traits"=c(
-    ),
-    "Description" = c(
-    ),
-    "Values" = c(
-    )
-}
-if(settlement_genes){
-  SettlementGenes <- data.frame(
-    "Genetic traits"=c(
-    ),
-    "Description" = c(
-    ),
-    "Values" = c(
-    )
-}
-if(transfer_genes){
-  TransferGenes <- data.frame(
-    "Genetic traits"=c(
-    ),
-    "Description" = c(
-    ),
-    "Values" = c(
-    )
-}
-if(dispersal_genes){
-    DispersalGenes <- data.frame(
-        
-}
-
+# if(genetics) {
+#  
+#   # gen <- s@gene
+#  
+#   # ---- GENETICS (top-level GeneticsParams) ----
+#   Genetics <<- data.frame(
+#     "Parameter" = c(
+#       "GenomeSize",
+#       "ChromosomeEnds",
+#       "RecombinationRate",
+#       "OutputGeneValues",
+#       "OutputGenesStart",
+#       "OutputGenesInterval",
+#       "OutputGlobalFst",
+#       "OutputGlobalFstStart",
+#       "OutputGlobalFstInterval",
+#       "OutputPairwiseFst",
+#       "OutputPairwiseFstStart",
+#       "OutputPairwiseFstInterval",
+#       "OutputPerLocusFst",
+#       "PatchList",
+#       "NbrPatchesToSample",
+#       "nIndividualsToSample",
+#       "Stages"
+#     ),
+#     "Description" = c(
+#       "Maximum size of genome (number of loci)",
+#       "Positions where the genome is split into chromosomes (recombination probability = 0.5 between segments)",
+#       "Recombination rate through chromosomal crossover across the whole genome",
+#       "Output allele values for all genes of all sampled individuals?",
+#       "Year at which gene value output starts",
+#       "Interval (in years) for gene value output",
+#       "Calculate global F-statistics (Weir & Cockerham 1984)?",
+#       "Year at which global Fst output starts",
+#       "Interval (in years) for global Fst output",
+#       "Calculate pairwise patch F-statistics (Weir & Cockerham 1984)?",
+#       "Year at which pairwise Fst output starts",
+#       "Interval (in years) for pairwise Fst output",
+#       "Calculate per-locus Fst estimates (requires OutputGlobalFst = TRUE)?",
+#       "Patches to sample for genetic output: vector of patch IDs, 'all', 'random', or 'random_occupied'",
+#       "Number of patches to sample randomly (only if PatchList = 'random' or 'random_occupied')",
+#       "Number of individuals to sample per patch ('all' or positive integer)",
+#       "Age stages to sample from (vector of integers or 'all')"
+#     ),
+#     "Values" = c(
+#       fmt(gen@GenomeSize),
+#       fmt(gen@ChromosomeEnds),
+#       fmt(gen@RecombinationRate),
+#       fmt(gen@OutputGeneValues),
+#       fmt(gen@OutputGenesStart),
+#       fmt(gen@OutputGenesInterval),
+#       fmt(gen@OutputGlobalFst),
+#       fmt(gen@OutputGlobalFstStart),
+#       fmt(gen@OutputGlobalFstInterval),
+#       fmt(gen@OutputPairwiseFst),
+#       fmt(gen@OutputPairwiseFstStart),
+#       fmt(gen@OutputPairwiseFstInterval),
+#       fmt(gen@OutputPerLocusFst),
+#       fmt(gen@PatchList),
+#       fmt(gen@NbrPatchesToSample),
+#       fmt(gen@nIndividualsToSample),
+#       fmt(gen@Stages)
+#     )
+#   )
+#  
+#   # ---- NEUTRAL GENETICS ----
+#   if(neutral_genetics) {
+#     nt <<- gen@Traits@Neutral
+#     NeutralGenetics <<- data.frame(
+#       "Parameter" = c(
+#         "Positions",
+#         "NbOfPositions",
+#         "InitialPositions",
+#         "InitialNbOfPositions",
+#         "InitialAlleleDistribution",
+#         "InitialAlleleParameters",
+#         "MutationDistribution",
+#         "MutationParameters",
+#         "MutationRate",
+#         "OutputValues"
+#       ),
+#       "Description" = c(
+#         "Loci positions coding for neutral trait within genome ('random' or vector of integers)",
+#         "Number of randomly sampled loci positions (only if Positions = 'random')",
+#         "Which positions to initialise: 'all', 'random', or vector of integers",
+#         "Number of randomly sampled initial positions (only if InitialPositions = 'random')",
+#         "Distribution to draw initial allele values from (uniform)",
+#         "Maximum value for the uniform initial allele distribution (0-255)",
+#         "Mutation model: KAM (k-alleles) or SSM (single-step mutation)",
+#         "Maximum allele value for mutation distribution (0-255)",
+#         "Mutation rate per locus (0.0 - 1.0)",
+#         "Write allele values for this trait to output?"
+#       ),
+#       "Values" = c(
+#         fmt(nt@Positions),
+#         fmt(nt@NbOfPositions),
+#         fmt(nt@InitialPositions),
+#         fmt(nt@InitialNbOfPositions),
+#         fmt(nt@InitialAlleleDistribution),
+#         fmt(nt@InitialAlleleParameters),
+#         fmt(nt@MutationDistribution),
+#         fmt(nt@MutationParameters),
+#         fmt(nt@MutationRate),
+#         fmt(nt@OutputValues)
+#       )
+#     )
+#   }
+#  
+#   # ---- GENETIC LOAD ----
+#   if(geneticload) {
+#     gl <<- gen@Traits@GeneticLoad
+#     GeneticLoad <<- data.frame(
+#       "Parameter" = c(
+#         "NbGeneticLoads",
+#         "Positions",
+#         "NbOfPositions",
+#         "InitialPositions",
+#         "InitialNbOfPositions",
+#         "InitialAlleleDistribution",
+#         "InitialAlleleParameters",
+#         "InitialDomDistribution",
+#         "InitialDomParameters",
+#         "DominanceDistribution",
+#         "DominanceParameters",
+#         "MutationDistribution",
+#         "MutationParameters",
+#         "MutationRate",
+#         "OutputValues"
+#       ),
+#       "Description" = c(
+#         "Number of genetic loads (up to 5)",
+#         "Loci positions for each genetic load ('random' or vector of integers, as list)",
+#         "Number of randomly sampled positions per genetic load (only if Positions = 'random')",
+#         "Positions to initialise per load: 'all', 'random', or vector of integers (as list)",
+#         "Number of initial random positions per load (only if InitialPositions = 'random')",
+#         "Distribution for initial allele values: gamma, uniform, normal, negExp (per load)",
+#         "Parameters for initial allele distribution (matrix, one row per load)",
+#         "Distribution for initial dominance values: gamma, uniform, normal, negExp, scaled (per load)",
+#         "Parameters for initial dominance distribution (matrix, one row per load)",
+#         "Distribution for dominance coefficients: gamma, uniform, normal, negExp, scaled (per load)",
+#         "Parameters for dominance distribution (matrix, one row per load)",
+#         "Mutation distribution per load: normal, gamma, uniform, negExp",
+#         "Parameters for mutation distribution (matrix, one row per load)",
+#         "Mutation rate per locus (0.0 - 1.0)",
+#         "Write allele values for this trait to output? (logical per load)"
+#       ),
+#       "Values" = c(
+#         fmt(gl@NbGeneticLoads),
+#         fmt(gl@Positions),
+#         fmt(gl@NbOfPositions),
+#         fmt(gl@InitialPositions),
+#         fmt(gl@InitialNbOfPositions),
+#         fmt(gl@InitialAlleleDistribution),
+#         fmt(gl@InitialAlleleParameters),
+#         fmt(gl@InitialDomDistribution),
+#         fmt(gl@InitialDomParameters),
+#         fmt(gl@DominanceDistribution),
+#         fmt(gl@DominanceParameters),
+#         fmt(gl@MutationDistribution),
+#         fmt(gl@MutationParameters),
+#         fmt(gl@MutationRate),
+#         fmt(gl@OutputValues)
+#       )
+#     )
+#   }
+#  
+#   # ---- EMIGRATION GENES ----
+#   if(emigration_genes) {
+#     eg <<- gen@Traits@EmigrationGenes
+#     EmigrationGenes <<- data.frame(
+#       "Parameter" = c(
+#         "Positions",
+#         "NbOfPositions",
+#         "ExpressionType",
+#         "IsInherited",
+#         "InitialAlleleDistribution",
+#         "InitialAlleleParameters",
+#         "MutationDistribution",
+#         "MutationParameters",
+#         "MutationRate",
+#         "OutputValues"
+#       ),
+#       "Description" = c(
+#         "Loci positions coding for emigration traits within genome ('random' or vector of integers)",
+#         "Number of randomly sampled positions (only if Positions = 'random')",
+#         "How alleles are combined to produce trait value: 'additive' or 'average'",
+#         "Are traits heritable (TRUE) or only showing individual variability (FALSE)?",
+#         "Distribution for initial allele values: normal, gamma, uniform, negExp",
+#         "Parameters for initial allele distribution (matrix)",
+#         "Mutation distribution: normal, gamma, uniform, negExp",
+#         "Parameters for mutation distribution (matrix)",
+#         "Mutation rate per locus (0.0 - 1.0)",
+#         "Write allele values for this trait to output?"
+#       ),
+#       "Values" = c(
+#         fmt(eg@Positions),
+#         fmt(eg@NbOfPositions),
+#         fmt(eg@ExpressionType),
+#         fmt(eg@IsInherited),
+#         fmt(eg@InitialAlleleDistribution),
+#         fmt(eg@InitialAlleleParameters),
+#         fmt(eg@MutationDistribution),
+#         fmt(eg@MutationParameters),
+#         fmt(eg@MutationRate),
+#         fmt(eg@OutputValues)
+#       )
+#     )
+#   }
+#  
+#   # ---- SETTLEMENT GENES ----
+#   if(settlement_genes) {
+#     sg <<- gen@Traits@SettlementGenes
+#     SettlementGenes <<- data.frame(
+#       "Parameter" = c(
+#         "Positions",
+#         "NbOfPositions",
+#         "ExpressionType",
+#         "IsInherited",
+#         "InitialAlleleDistribution",
+#         "InitialAlleleParameters",
+#         "MutationDistribution",
+#         "MutationParameters",
+#         "MutationRate",
+#         "OutputValues"
+#       ),
+#       "Description" = c(
+#         "Loci positions coding for settlement traits within genome ('random' or vector of integers)",
+#         "Number of randomly sampled positions (only if Positions = 'random')",
+#         "How alleles are combined to produce trait value: 'additive' or 'average'",
+#         "Are traits heritable (TRUE) or only showing individual variability (FALSE)?",
+#         "Distribution for initial allele values: normal, gamma, uniform, negExp",
+#         "Parameters for initial allele distribution (matrix)",
+#         "Mutation distribution: normal, gamma, uniform, negExp",
+#         "Parameters for mutation distribution (matrix)",
+#         "Mutation rate per locus (0.0 - 1.0)",
+#         "Write allele values for this trait to output?"
+#       ),
+#       "Values" = c(
+#         fmt(sg@Positions),
+#         fmt(sg@NbOfPositions),
+#         fmt(sg@ExpressionType),
+#         fmt(sg@IsInherited),
+#         fmt(sg@InitialAlleleDistribution),
+#         fmt(sg@InitialAlleleParameters),
+#         fmt(sg@MutationDistribution),
+#         fmt(sg@MutationParameters),
+#         fmt(sg@MutationRate),
+#         fmt(sg@OutputValues)
+#       )
+#     )
+#   }
+#  
+#   # ---- TRANSFER GENES (CorrRW / SMS / Kernel) ----
+#   if(transfer_genes) {
+#  
+#     if(!is.logical(gen@Traits@CorrRWGenes)) {
+#       tg <<- gen@Traits@CorrRWGenes
+#       transfer_gene_type <<- "CorrRW"
+#     } else if(!is.logical(gen@Traits@SMSGenes)) {
+#       tg <<- gen@Traits@SMSGenes
+#       transfer_gene_type <<- "SMS"
+#     } else {
+#       tg <<- gen@Traits@KernelGenes
+#       transfer_gene_type <<- "Kernel"
+#     }
+#  
+#     TransferGenes <<- data.frame(
+#       "Parameter" = c(
+#         "Type",
+#         "Positions",
+#         "NbOfPositions",
+#         "ExpressionType",
+#         "IsInherited",
+#         "InitialAlleleDistribution",
+#         "InitialAlleleParameters",
+#         "MutationDistribution",
+#         "MutationParameters",
+#         "MutationRate",
+#         "OutputValues"
+#       ),
+#       "Description" = c(
+#         "Transfer gene type (CorrRW, SMS or Kernel)",
+#         "Loci positions coding for transfer traits within genome ('random' or vector of integers)",
+#         "Number of randomly sampled positions (only if Positions = 'random')",
+#         "How alleles are combined to produce trait value: 'additive' or 'average'",
+#         "Are traits heritable (TRUE) or only showing individual variability (FALSE)?",
+#         "Distribution for initial allele values: normal, gamma, uniform, negExp",
+#         "Parameters for initial allele distribution (matrix)",
+#         "Mutation distribution: normal, gamma, uniform, negExp",
+#         "Parameters for mutation distribution (matrix)",
+#         "Mutation rate per locus (0.0 - 1.0)",
+#         "Write allele values for this trait to output?"
+#       ),
+#       "Values" = c(
+#         transfer_gene_type,
+#         fmt(tg@Positions),
+#         fmt(tg@NbOfPositions),
+#         fmt(tg@ExpressionType),
+#         fmt(tg@IsInherited),
+#         fmt(tg@InitialAlleleDistribution),
+#         fmt(tg@InitialAlleleParameters),
+#         fmt(tg@MutationDistribution),
+#         fmt(tg@MutationParameters),
+#         fmt(tg@MutationRate),
+#         fmt(tg@OutputValues)
+#       )
+#     )
+#   }
+#  
+# } # end if(genetics)
 
 # delete all off-switches
 Landscape <- Landscape[Landscape$Values!=-9 & Landscape$Values!="NULL",]
@@ -1050,6 +1295,41 @@ knitr::kable(Simulation, col.names = gsub("[.]", " ", names(Simulation)), captio
 knitr::kable(Landscape, col.names = gsub("[.]", " ", names(Landscape)), caption = 'Landscape parameters')
 knitr::kable(Demography, col.names = gsub("[.]", " ", names(Demography)), caption = 'Demography parameters')
 knitr::kable(Dispersal, col.names = gsub("[.]", " ", names(Dispersal)), caption = 'Dispersal parameters')
+
+# ============================================================
+# Render tables (add to knitr section at the bottom)
+# ============================================================
+ 
+# if(genetics) {
+#   Genetics <<- Genetics[Genetics$Values != "NULL", ]
+#   rownames(Genetics) <<- NULL
+#   knitr::kable(Genetics, col.names = gsub("[.]", " ", names(Genetics)), caption = 'Genetics parameters')
+# }
+# if(neutral_genetics) {
+#   NeutralGenetics <<- NeutralGenetics[NeutralGenetics$Values != "NULL", ]
+#   rownames(NeutralGenetics) <<- NULL
+#   knitr::kable(NeutralGenetics, col.names = gsub("[.]", " ", names(NeutralGenetics)), caption = 'Neutral genetics parameters')
+# }
+# if(geneticload) {
+#   GeneticLoad <<- GeneticLoad[GeneticLoad$Values != "NULL", ]
+#   rownames(GeneticLoad) <<- NULL
+#   knitr::kable(GeneticLoad, col.names = gsub("[.]", " ", names(GeneticLoad)), caption = 'Genetic load parameters')
+# }
+# if(emigration_genes) {
+#   EmigrationGenes <<- EmigrationGenes[EmigrationGenes$Values != "NULL", ]
+#   rownames(EmigrationGenes) <<- NULL
+#   knitr::kable(EmigrationGenes, col.names = gsub("[.]", " ", names(EmigrationGenes)), caption = 'Emigration gene parameters')
+# }
+# if(settlement_genes) {
+#   SettlementGenes <<- SettlementGenes[SettlementGenes$Values != "NULL", ]
+#   rownames(SettlementGenes) <<- NULL
+#   knitr::kable(SettlementGenes, col.names = gsub("[.]", " ", names(SettlementGenes)), caption = 'Settlement gene parameters')
+# }
+# if(transfer_genes) {
+#   TransferGenes <<- TransferGenes[TransferGenes$Values != "NULL", ]
+#   rownames(TransferGenes) <<- NULL
+#   knitr::kable(TransferGenes, col.names = gsub("[.]", " ", names(TransferGenes)), caption = paste('Transfer gene parameters (', transfer_gene_type, ')'))
+# }
 if(management) knitr::kable(Management, col.names = gsub("[.]", " ", names(Management)), caption = 'Management parameters')
 knitr::kable(Initialisation, col.names = gsub("[.]", " ", names(Initialisation)), caption = 'Initialisation parameters')
 ```

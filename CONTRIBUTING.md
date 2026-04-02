@@ -11,22 +11,21 @@ In this document we will give you guidance on how to contribute to the RangeShif
 
 RangeShifter is distributed with three user interfaces, each living in their own repo:
 
-- the RangeShifter GUI (clickable Windows interface)*
-- RangeShifter Batch Mode (command line interface)
-- the RangeShiftR package (R interface)
+- the [RangeShifter GUI](https://github.com/RangeShifter/RangeShifter_GUI) (clickable Windows interface)*
+- RangeShifter [Batch Mode](https://github.com/RangeShifter/RangeShifter_batch) (command line interface)
+- the [RangeShiftR](https://github.com/RangeShifter/RangeShiftR-pkg) package (R interface)
 
 All three share the same source code for the core simulation (i.e., the actual model), which lives in its own repo (RScore). Each of the interfaces keeps a copy of this core code in a subfolder called RScore, kept in sync with the RScore repo via a git subtree (see [Git subtree usage section](https://github.com/RangeShifter/RScore?tab=readme-ov-file#usage-git-subtree). 
 
 ⚠️ If you wish to propose a change to the core code of the simulation, please do so *in the [RScore](https://github.com/RangeShifter/RScore) repo*, rather than in the RScore folder of either interface.
 
-*The RangeShifter GUI is currently being rewritten, and is not open source yet.
+*The RangeShifter GUI is currently not maintained and only available with RangeShifter v2.0.
 
 ## Roles
 
 #### Maintainers
 
 - [@JetteReeg](https://github.com/JetteReeg): RScore repo and lead in R package
-- [@TheoPannetier](https://github.com/TheoPannetier): RScore repo and lead in batch mode
 
 Maintainers are responsible for coordinating development efforts and ensuring that RangeShifter keeps building continuously.
 
@@ -45,36 +44,41 @@ Anyone who whishes to make changes to RangeShifter's code, including regular dev
 This policy applies to RScore and all three RangeShifter interfaces.
 RangeShifter uses the following branching structure:
 
-- `main` is the default branch, where stable releases live. Because it contains the version of RangeShifter that users normally interact with, it must be stable and build at all times.
-  Only maintainers should make significant changes to `main`, normally by merging `develop` into `main` to make newly developed features and bug fixes available to users, and marking a release while doing so.
-- `develop` is the development branch containing new, in-development features. It is the reference branch for all developers. Contributors may make small changes and bug fixes directly to `develop` but should ensure that new changes do not break the build. If one happens to break `develop`, it should be their top priority to fix it as this will disrupt the work of all other contributors.
-  Larger changes should instead be developed on feature branches.
-- Larger changes should be first developed on feature (e.g. `cmake`, `mutualism`, etc.) or contributor (e.g., `theo`) branches. Contributors are welcome to experiment and break such branches at any time, as this will not impact users or other contributors.
+- `main` is the default branch, where the stable releases live. Because it contains the version of RangeShifter that users normally interact with, it must be stable and build at all times.
+Only maintainers should make changes to `main`, either directly for small changes (e.g. typo fixes), or by merging `develop` into `main` for any larger change.
+- `develop` is the development branch containing new features not yet made available to users.
+Contributors are welcome to make changes to `develop`, but because this is the version that every contributor uses as a reference, one should ensure that new changes do not break `develop`.
+If one happens to break `develop`, it should be their first priority to fix it.
+For this reason, we recommend working from feature branches instead.
+- Feature branches are created from `develop` by contributors to work on a new feature or other change, e.g. `cmake`, `mutualism`, etc. 
+Contributors can also create their own branch, e.g. `theo` or `jette` to experiment with the code or implement miscellaneous changes.
+Once a contributor deems their changes ready to be added to the development version, they should merge their changes from the feature branch into `develop`.
+Optionally, we encourage contributors to seek a review from one or more developers and or maintainers by opening a pull request to merge their branch into develop.
   
-  When progress is deemed satisfactory, changes can be brought to `develop`. Please open a pull request on GitHub, and assign at least one maintainer as a reviewer. As a pre-requisite, RangeShifter must build on the branch before merging. Please enter a descriptive title and use the description field to describe what you have changed. 
+### Contributing to RangeShifter core code
   
-  In the meantime, we encourage contributors to work in small and frequent commits, and to merge `develop` into their branch often to update their branch with newest changes.
+Any changes regarding the RangeShifter core code should be done in [this](https://github.com/RangeShifter/RScore) repository and can afterwards be synced with all interfaces using the git subtree feature (see [Git subtree](https://github.com/RangeShifter/RScore/tree/main#usage-git-subtrees) section in the README).
 
-If you need a reminder on the main git commands related to committing and branching, head to the [Git cheatsheet](https://github.com/RangeShifter/RScore/blob/main/git_cheatsheet.md).
+#### Bugs
 
-## Contributing to the RangeShifter core code
+To report a bug, please [open an issue](https://github.com/RangeShifter/RangeShiftR-pkg/issues/new), using the Bug Report template. 
+Please do check if a related issue has already open on one of the other interfaces ([here](https://github.com/RangeShifter/RangeShifter_batch/issues) for the batch interface).
+To propose a bug fix (thank you!!), please create and work on your own branch or fork, from either `main` or `develop` (preferred), and open a pull request when your fix is ready to be merged into the original branch.
 
-Any changes (issues, bugs, features) regarding the actual RangeShifter core code should be done in [this](https://github.com/RangeShifter/RScore) repository and can afterwards be synced with all interfaces using the git subtree feature (see [Git subtree](https://github.com/RangeShifter/RScore?tab=readme-ov-file#usage-git-subtree) section in the README). 
 
-Please check the [contributing guidelines for the RScore code](https://github.com/RangeShifter/RScore/blob/main/CONTRIBUTING.md). 
 
-## Contributing to the RangeShiftR package
+### Contributing to the RangeShiftR package
 
 Please follow these guidelines for issues, bugs or new features related to the RangeShiftR-package. 
 
-### Issues and bugs
+#### Issues and bugs
 
 Issues should be used for reporting technical problems and bugs with the R package or suggest improvements e.g. in the documentation. 
 General and more conceptual questions regarding the application and settings of RangeShifter parameters should be asked in the [discussion forum](https://github.com/RangeShifter/RangeshiftR-tutorials/discussions) and answered by the broader RangeShifter community.
 
 #### Create a new issue
 
-If you encounter a technical problem, find a bug related to the RangeShiftR package or would like to suggest an improvement to the R package, please search if [a related issue already exists](https://github.com/RangeShifter/RangeShiftR-package-dev/issues). If you can't find a related issue, you can open a new issue using a relevant [issue form](https://github.com/RangeShifter/RangeShiftR-package-dev/issues/new/choose). To propose a bug fix (thank you!!), please create and work on your own branch or fork, from either `main` or `develop` (preferred), and open a pull request when your fix is ready to be merged into the original branch.
+If you encounter a technical problem, find a bug related to the RangeShiftR package or would like to suggest an improvement to the R package, please search if [a related issue already exists](https://github.com/RangeShifter/RangeShiftR-package-dev/issues). If you can't find a related issue, you can open a new issue using a relevant [issue form](https://github.com/RangeShifter/RangeShiftR-pkg/issues/new/choose). To propose a bug fix (thank you!!), please create and work on your own branch or fork, from either `main` or `develop` (preferred), and open a pull request when your fix is ready to be merged into the original branch.
 
 As a prerequisite for merging, please ensure that the R package is build correctly. GitHub Action will soon be used for ensuring a successfull build of the R package interface on all operating systems (i.e. R CMD CHECK needs to run without warnings).
 

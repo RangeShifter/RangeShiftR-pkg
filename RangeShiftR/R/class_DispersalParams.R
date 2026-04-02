@@ -1412,7 +1412,7 @@ setMethod("show", "CorrRW", function(object){
 #' @usage Settlement(StageDep = FALSE, SexDep = FALSE,
 #'           Settle = 0, FindMate = FALSE,
 #'           DensDep = FALSE,
-#'           IndVar = FALSE, TraitScaleFactor,
+#'           IndVar = FALSE,
 #'           MinSteps = 0, MaxSteps = 0, MaxStepsYear = 0)
 #' @param StageDep Stage-dependent settlement requirements? (default: \code{FALSE})
 #' @param SexDep Sex-dependent settlement requirements? (default: \code{FALSE})
@@ -1634,8 +1634,10 @@ setValidity("SettlementParams", function(object) {
                     msg <- c(msg, "FindMate must be a single logical value or a matrix!")
                 }
             } else {
-                if(nrow(object@FindMate)!=nrow(object@Settle) && length(object@FindMate)!=1 ) {
-                    msg <- c(msg, "FindMate must have either 1 entry or as many as rows in the Settle matrix!")
+                if(any(c(object@SexDep, object@StageDep))){
+                    if(nrow(object@FindMate)!=nrow(object@Settle)) {
+                        msg <- c(msg, "FindMate must have as many rows as in the Settle matrix!")
+                    }
                 }
             }
 
@@ -1666,6 +1668,9 @@ setValidity("SettlementParams", function(object) {
                 if(nrow(object@MaxSteps)!=2 && length(object@MaxSteps)!=1 ) {
                     msg <- c(msg, "MaxSteps must have either 1 entry or 2 rows, one for each sex!")
                 }
+                if(nrow(object@MaxStepsYear)!=2 && length(object@MaxStepsYear)!=1 ) {
+                    msg <- c(msg, "MaxStepsYear must have either 1 entry or 2 rows, one for each sex!")
+                }
             } else{ # sex independent -> one value
                 if( length(object@MinSteps)!=1 ) {
                     msg <- c(msg, "MinSteps must have 1 entry!")
@@ -1673,14 +1678,22 @@ setValidity("SettlementParams", function(object) {
                 if( length(object@MaxSteps)!=1 ) {
                     msg <- c(msg, "MaxSteps must have 1 entry!")
                 }
+                if( length(object@MaxStepsYear)!=1 ) {
+                    msg <- c(msg, "MaxStepsYear must have 1 entry!")
+                }
             }
 
         } else{
-            if( nrow(object@MinSteps)!=nrow(object@Settle) && length(object@MinSteps)!=1 ) {
-                msg <- c(msg, "MinSteps must have either 1 entry or as many as rows in the Settle matrix!")
-            }
-            if( nrow(object@MaxSteps)!=nrow(object@Settle) && length(object@MaxSteps)!=1 ) {
-                msg <- c(msg, "MaxSteps must have either 1 entry or as many as rows in the Settle matrix!")
+            if(any(c(object@SexDep, object@StageDep))){
+                if( nrow(object@MinSteps)!=nrow(object@Settle) && length(object@MinSteps)!=1) {
+                    msg <- c(msg, "MinSteps must have as many rows as in the Settle matrix!")
+                }
+                if( nrow(object@MaxSteps)!=nrow(object@Settle) && length(object@MaxSteps)!=1) {
+                    msg <- c(msg, "MaxSteps must have as many rows as in the Settle matrix!")
+                }
+                if( nrow(object@MaxStepsYear)!=nrow(object@Settle) && length(object@MaxStepsYear)!=1) {
+                    msg <- c(msg, "MaxStepsYear must have as many rows as in the Settle matrix!")
+                }
             }
         }
 
@@ -1694,10 +1707,15 @@ setValidity("SettlementParams", function(object) {
                 msg <- c(msg, "MaxStepsYear can't be negative!")
             }
             else{
-                if( nrow(object@MaxStepsYear)!=nrow(object@Settle) && length(object@MaxStepsYear)!=1 ) {
-                    msg <- c(msg, "MaxStepsYear must have either 1 entry or as many as rows in the Settle matrix!")
-                }
-                else {
+                if(any(c(object@SexDep, object@StageDep))){
+                    if( nrow(object@MaxStepsYear)!=nrow(object@Settle)&& length(object@MaxStepsYear)!=1) {
+                        msg <- c(msg, "MaxStepsYear must have as many rows as in the Settle matrix!")
+                    }
+                    # if(any(object@MaxStepsYear[, ncol(MaxStepsYear)] >
+                    #        object@MaxSteps[, ncol(MaxSteps)])){
+                    #     msg <- c(msg, "MaxStepsYear can't be larger than MaxSteps!")
+                    # }
+                } else{
                     if (any(object@MaxStepsYear>object@MaxSteps)) {
                         msg <- c(msg, "MaxStepsYear can't be larger than MaxSteps!")
                     }

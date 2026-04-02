@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------
  *
- *	Copyright (C) 2020 Anne-Kathleen Malchow, Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Damaris Zurell
+ *	Copyright (C) 2026 Anne-Kathleen Malchow, Jette Wolff, Théo Pannetier, Roslyn Henry, Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Damaris Zurell
  *
  *	This file is part of RangeShiftR.
  *
@@ -22,7 +22,7 @@
 
 /*------------------------------------------------------------------------------
 
-RangeShifter v2.0 Main
+RangeShifter v3.0.0 Main
 
 Entry level function for the R-package RangeshiftR.
 
@@ -2664,24 +2664,46 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
 	sexSettle = 2 * sett.stgDep + sett.sexDep;
 
 	for(int line = 0; line < Nlines; line++) {
-		// determine stage and sex of this line
-		if(sett.stgDep) {
-			if(sett.sexDep) {
-                stage = (int)FindMate(line, 0);
-                sex = (int)FindMate(line, 1);
-			} else {
-                stage = (int)FindMate(line, 0);
-				sex = 0;
-			}
-		} else {
-			if(sett.sexDep) {
-				stage = 0;
-                sex = (int)FindMate(line, 0);
-			} else {
-				stage = 0;
-				sex = 0;
-			}
-		}
+	    if(sett.indVar){ // if individual variability is simulated, settle matrix is not defined, indVar can only be true for SMS or corrRW (so MinSteps should be defined)
+	        // determine stage and sex of this line
+	        if(sett.stgDep) {
+	            if(sett.sexDep) {
+	                stage = (int)MinSteps(line, 0);
+	                sex = (int)MinSteps(line, 1);
+	            } else {
+	                stage = (int)MinSteps(line, 0);
+	                sex = 0;
+	            }
+	        } else {
+	            if(sett.sexDep) {
+	                stage = 0;
+	                sex = (int)MinSteps(line, 0);
+	            } else {
+	                stage = 0;
+	                sex = 0;
+	            }
+	        }
+	    } else {
+	        // determine stage and sex of this line
+    		if(sett.stgDep) {
+    			if(sett.sexDep) {
+                    stage = (int)SettleCondMatrix(line, 0);
+                    sex = (int)SettleCondMatrix(line, 1);
+    			} else {
+                    stage = (int)SettleCondMatrix(line, 0);
+    				sex = 0;
+    			}
+    		} else {
+    			if(sett.sexDep) {
+    				stage = 0;
+                    sex = (int)SettleCondMatrix(line, 0);
+    			} else {
+    				stage = 0;
+    				sex = 0;
+    			}
+    		}
+	    }
+
 
         if(trfr.usesMovtProc) { // ...movement process
             // FindMate
@@ -3390,7 +3412,10 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
         string initDistR = Rcpp::as<string>(NeutralTraitsParamsR.slot("InitialAlleleDistribution"));
         if(initDistR != "uniform") initDistR == "#";
 
-        Rcpp::NumericVector initParamsR = {0,Rcpp::as<int>(NeutralTraitsParamsR.slot("InitialAlleleParameters"))};
+        Rcpp::NumericVector initParamsR = {
+            0.0,
+            static_cast<double>(Rcpp::as<int>(NeutralTraitsParamsR.slot("InitialAlleleParameters")))
+        };
 
         // Initial dominance distribution parameters not applicable for neutral traits
         string initDomDistR = "#";

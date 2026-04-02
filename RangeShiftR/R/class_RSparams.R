@@ -598,11 +598,20 @@ setValidity("RSparams", function(object) {
                         msg <- c(msg, paste0("Settlement(): MaxSteps must have ", rows ," rows (with the current settings)!"))
                 }
             }
-            if (object@dispersal@Settlement@StageDep) {
+            # if (object@dispersal@Settlement@StageDep) {
                 if (!is.null(nrow(object@dispersal@Settlement@MaxStepsYear))){
                     if(nrow(object@dispersal@Settlement@MaxStepsYear) != rows ){
                             msg <- c(msg, paste0("Settlement(): MaxStepsYear must have ", rows ," rows (with the current settings)!"))
                     }
+                }
+            # }
+        }
+
+        # if sexual model, check FindMate
+        if (object@control@reproductn) {
+            if (!is.null(nrow(object@dispersal@Settlement@FindMate))){
+                if(nrow(object@dispersal@Settlement@FindMate) != rows ){
+                        msg <- c(msg, paste0("Settlement(): FindMate must have ", rows ," rows (with the current settings)!"))
                 }
             }
         }
@@ -660,14 +669,14 @@ setValidity("RSparams", function(object) {
     #GENETICS
     validObject(object@gene)
     # Check if output is correct: Fstats should only be activated if neutral genetics is set
-    if(object@gene@OutputFstatsWeirCockerham || object@gene@OutputPairwiseFst){
+    if(object@gene@OutputGlobalFst || object@gene@OutputPairwiseFst){
         if(class(object@gene@Traits@Neutral)[1] != "NeutralTraitsParams"){
             msg <- c(msg, "FstatsWeirCockerham or PairwiseFst can only be activated if NeutralTraits is set!")
         }
     }
 
-    if(class(object@gene@Traits@Neutral)[1] == "NeutralTraitsParams" && (!object@gene@OutputFstatsWeirCockerham && !object@gene@OutputPairwiseFst)){
-            msg <- c(msg, "If NeutralTraits are set, at least one of the neutrall stats outputs (FstatsWeirCockerham or PairwiseFst) must be true!")
+    if(class(object@gene@Traits@Neutral)[1] == "NeutralTraitsParams" && (!object@gene@OutputGlobalFst && !object@gene@OutputPairwiseFst)){
+            msg <- c(msg, "If NeutralTraits are set, at least one of the neutral stats outputs (GlobalFst or PairwiseFst) must be true!")
     }
 
     # Dispersal Traits
