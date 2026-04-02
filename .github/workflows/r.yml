@@ -32,5 +32,5 @@ jobs:
 
       - name: Install RangeShiftR
         run: |
-          pak::pak("RangeShifter/RangeShiftR-pkg@${{ github.head_ref || github.ref_name }}", subdir = "RangeShiftR")
+          pak::pak("RangeShifter/RangeShiftR-pkg/RangeShiftR@${{ github.head_ref || github.ref_name }}")
         shell: Rscript {0}
