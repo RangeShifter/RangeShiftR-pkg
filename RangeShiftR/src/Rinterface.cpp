@@ -3412,7 +3412,10 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
         string initDistR = Rcpp::as<string>(NeutralTraitsParamsR.slot("InitialAlleleDistribution"));
         if(initDistR != "uniform") initDistR == "#";
 
-        Rcpp::NumericVector initParamsR = {0,Rcpp::as<int>(NeutralTraitsParamsR.slot("InitialAlleleParameters"))};
+       Rcpp::NumericVector initParamsR = {
+            0.0,
+            static_cast<double>(Rcpp::as<int>(NeutralTraitsParamsR.slot("InitialAlleleParameters")))
+        };
 
         // Initial dominance distribution parameters not applicable for neutral traits
         string initDomDistR = "#";
