@@ -27,10 +27,10 @@ jobs:
  
       - name: Install dependencies
         run: |
-          install.packages(c("Rcpp", "devtools", "Rdpack"))
+          install.packages(c("pak", "Rcpp", "Rdpack"))
         shell: Rscript {0}
- 
+
       - name: Install RangeShiftR
         run: |
-          devtools::install_github("RangeShifter/RangeShiftR-pkg", ref = "${{ github.head_ref || github.ref_name }}", subdir = "RangeShiftR")
+          pak::pak("RangeShifter/RangeShiftR-pkg@${{ github.head_ref || github.ref_name }}", subdir = "RangeShiftR")
         shell: Rscript {0}
