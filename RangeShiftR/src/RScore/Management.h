@@ -48,7 +48,7 @@
 #include <map>
 using namespace std;
 #if RS_RCPP
-#include <Rcpp.h> // for Rcpp::Rcout
+#include <RcppArmadillo.h>
 #endif
 #include "Parameters.h"
 #include "Species.h"

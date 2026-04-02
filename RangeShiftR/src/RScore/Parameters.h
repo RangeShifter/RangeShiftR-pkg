@@ -78,7 +78,7 @@ typedef unsigned long long intptr;
         #define M_2PI 6.283185307179586
         const double PI = 3.141592653589793238462643383279502884197169399375;
     #endif
-#include <Rcpp.h>
+#include <RcppArmadillo.h>
 #else
     #define M_2PI 6.283185307179586
     const double PI = 3.141592654;
