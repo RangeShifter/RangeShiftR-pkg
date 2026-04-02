@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------
  *
- *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell
+ *	Copyright (C) 2026 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Roslyn Henry, Théo Pannetier, Jette Wolff, Damaris Zurell
  *
  *	This file is part of RangeShifter.
  *
@@ -42,6 +42,7 @@
 
 using namespace std;
 
+#ifdef UNIT_TESTS
 void testIndividual();
 void testNeutralStats();
 void testPopulation();
@@ -55,6 +56,7 @@ void run_unit_tests() {
 	testNeutralStats();
 	cout << endl << "************************" << endl;
 }
+#endif // UNIT_TESTS
 
 // Global vars
 string landFile;
@@ -66,6 +68,7 @@ RSrandom* pRandom;
 Management* pManagement; // pointer to management routines
 Species* pSpecies;
 Community* pComm;
+short nDSlayer=gMaxNbLayers;
 
 #if LINUX_CLUSTER || RS_RCPP
 int main(int argc, char* argv[])
@@ -73,8 +76,8 @@ int main(int argc, char* argv[])
 int _tmain(int argc, _TCHAR* argv[])
 #endif
 {
-#ifdef NDEBUG
-	cout << "This code is only for running tests and not meant to run in release." << endl;
+#ifndef UNIT_TESTS
+	cout << "This version is only for running unit tests." << endl;
 	return 1;
 #else
 

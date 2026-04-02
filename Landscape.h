@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------
  *
- *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell
+ *	Copyright (C) 2026 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Roslyn Henry, Théo Pannetier, Jette Wolff, Damaris Zurell
  *
  *	This file is part of RangeShifter.
  *
@@ -16,8 +16,8 @@
  *
  *	You should have received a copy of the GNU General Public License
  *	along with RangeShifter. If not, see <https://www.gnu.org/licenses/>.
- *
  --------------------------------------------------------------------------*/
+
 
 
 /*------------------------------------------------------------------------------
@@ -58,9 +58,9 @@ to be intialised, which are specified by the user in FormSeeding. This option is
 available in the GUI version only.
 
 For full details of RangeShifter, please see:
-Bocedi G., Palmer S.C.F., Pe?er G., Heikkinen R.K., Matsinos Y.G., Watts K.
+ Bocedi G., Palmer S.C.F., Pe’er G., Heikkinen R.K., Matsinos Y.G., Watts K.
 and Travis J.M.J. (2014). RangeShifter: a platform for modelling spatial
-eco-evolutionary dynamics and species? responses to environmental changes.
+ eco-evolutionary dynamics and species’ responses to environmental changes.
 Methods in Ecology and Evolution, 5, 388-396. doi: 10.1111/2041-210X.12162
 
 Authors: Greta Bocedi & Steve Palmer, University of Aberdeen
@@ -87,10 +87,17 @@ using namespace std;
 #if !RSWIN64
 #include <codecvt>
 #endif
-#include <Rcpp.h>
+#include <RcppArmadillo.h>
 #endif
 
+
 //---------------------------------------------------------------------------
+// not sure whether it needs to be added here for the readDistribution() function to work
+
+struct landOrigin {
+	double minEast; double minNorth;
+};
+
 
 // Initial species distribution
 
@@ -98,8 +105,16 @@ class InitDist{
 public:
 	InitDist(Species*);
 	~InitDist();
+#if RS_RCPP
 	int readDistribution(
+		Rcpp::NumericMatrix,
+		landOrigin,
+		int
 		string // name of species distribution file
+	);
+#endif
+	int readDistribution(
+	        string // name of species distribution file
 	);
 	void setDistribution(
 		int	// no. of distribution cells to be initialised (0 for all cells)
@@ -145,6 +160,7 @@ private:
 struct landParams {
 	bool patchModel; bool spDist; bool generated;
 	bool dynamic;
+	bool spatialdemog;
 	int landNum; int resol; int spResol; int nHab; int nHabMax;
 	int dimX,dimY,minX,minY,maxX,maxY;
 	short rasterType;
@@ -159,9 +175,11 @@ struct genLandParams {
 struct landPix {
 	int pix; float gpix;
 };
+/*
 struct landOrigin {
 	double minEast; double minNorth;
 };
+ */
 struct rasterHdr {
 	bool ok;
 	int errors,ncols,nrows,cellsize;
@@ -179,7 +197,8 @@ struct patchData {
 	Patch *pPatch; int patchNum,nCells; int x,y;
 };
 struct landChange {
-	int chgnum,chgyear; string habfile,pchfile,costfile;
+	int chgNb, chgYear; 
+	string pathHabFile, pathPatchFile, pathCostFile, pathSpatDemogFile;
 };
 struct patchChange {
 	int chgnum, x, y, oldpatch, newpatch;
@@ -229,8 +248,6 @@ public:
 	// functions to handle patches and cells
 
 	void setCellArray(void);
-	void addPatchNum(int);
-	std::vector<int> getPatchNums() const { return patchnums; }
 	void generatePatches(); 		// create an artificial landscape
 	void allocatePatches(Species*);	// create patches for a cell-based landscape
 	Patch* newPatch(
@@ -289,6 +306,7 @@ public:
 	Patch* findPatch(
 		int   // Patch id no.
 	);
+	set<int> getPatchNbs() const;
 	set<int> samplePatches(const string& samplingOption, int nbToSample, Species* pSpecies);
 	int checkTotalCover(void);
 	void resetPatchPopns(void);
@@ -332,7 +350,19 @@ public:
 		short	// change number
 	);
 	void deleteLandChanges(void);
+//#if RS_THREADSAFE
 #if RS_RCPP && !R_CMD
+	int readLandChange(
+		int,		// change number
+		Rcpp::NumericMatrix,// habitat raster
+		Rcpp::NumericMatrix,// patch raster
+		Rcpp::NumericMatrix	// cost raster
+//#if SPATIALDEMOG
+		,Rcpp::NumericVector// array of demographic scaling layers
+//#endif
+	);
+//#else
+// #if RS_RCPP && !R_CMD
 	int readLandChange(
 	    int,		// change file number
 		bool,		// change SMS costs?
@@ -341,12 +371,16 @@ public:
 		wifstream&, // cost file stream
 		int,		// habnodata
 		int,		// pchnodata
-		int			// costnodata
+		int,			// costnodata
+		vector <string>  // vector of demographic scaling layers
+// TODO: add spatial demography with normal file input
 	);
 #else
+	// TODO: add spatial demography for batch version
 	int readLandChange(
-		int,	// change file number
-		bool	// change SMS costs?
+		int,	// change file numbers
+		bool,	// change SMS costs?
+		vector <string> // vector of demographic scaling layers
 	);
 #endif
 	void createPatchChgMatrix(void);
@@ -363,6 +397,9 @@ public:
 	costChange getCostChange(
 		int	// cost change number
 	);
+//#if SPATIALDEMOG
+	void updateDemoScalings(short);
+//#endif // SPATIALDEMOG
 
 	// functions to handle species distributions
 
@@ -370,6 +407,19 @@ public:
 		Species*,	// pointer to Species
 		string		// name of initial distribution file
 	);
+
+	// function for new file input
+#if RS_RCPP
+	int newDistribution(
+			Species*,	// pointer to Species
+	//#if RS_THREADSAFE
+			Rcpp::NumericMatrix,
+			int
+	//#else
+			string		// name of initial distribution file
+		);
+#endif
+
 	void setDistribution(
 		Species*, // pointer to Species
 		int				// no. of distribution squares to initialise
@@ -432,11 +482,11 @@ public:
 		int   // sequential no. of settlement Patch
 	);
 	void deleteConnectMatrix(void);
-	bool outConnectHeaders( // Write connectivity file headers
-		int		// option - set to -999 to close the connectivity file
-	);
+	bool outConnectFinishLandscape(); // Close connectivity file
+	bool outConnectStartLandscape(); // Open connectivity file and write header record
 #if RS_RCPP
-	void outPathsHeaders(int, int);
+	void outPathsFinishReplicate();
+	void outPathsStartReplicate(int);
 #endif
 	void outConnect(
 		int,	// replicate no.
@@ -445,17 +495,28 @@ public:
 
 	// functions to handle input and output
 
+#if RS_RCPP
+	int readLandscape(
+		int, 				// no. of seasonss
+		Rcpp::NumericMatrix,// habitat raster
+		Rcpp::NumericMatrix,// patch raster
+		Rcpp::NumericMatrix	// cost raster
+		,Rcpp::NumericVector // array of demographic scaling layers
+	);
+#endif
 	int readLandscape(
 		int,		// fileNum == 0 for (first) habitat file and optional patch file
 						// fileNum > 0  for subsequent habitat files under the %cover option
 		string,	// habitat file name
 		string,	// patch file name
-		string	// cost file name (may be NULL)
+		string,	// cost file name (may be NULL)
+		vector <string> // demographic scaling layers (may be empty)
 	);
 	void listPatches(void);
 	int readCosts(
 		string	// costs file name
 	);
+	int readDemographicScaling(vector <string>);
 	void resetVisits(void);
 	void outVisits(int,int);	// save SMS path visits map to raster text file
 
@@ -467,6 +528,9 @@ private:
 	bool continuous;			//
 	bool dynamic;					// landscape changes during simulation
 	bool habIndexed;			// habitat codes have been converted to index numbers
+//#if SPATIALDEMOG
+	bool spatialdemog;			// are there spatially varying demographic rates?
+//#endif // SPATIALDEMOG
 	short rasterType;			// 0 = habitat codes 1 = % cover 2 = quality 9 = artificial landscape
 	int landNum;					// landscape number
 	int resol;						// cell size (m)
@@ -474,7 +538,7 @@ private:
 	int nHab;							// no. of habitats
 	int nHabMax;					// max. no. of habitats (used for batch input only)
 	int dimX,dimY;				// dimensions
-	int minX,minY;				// minimum available X and Y co-ordinates
+	int minX, minY;				// minimum available X and Y co-ordinates, i.e. coordinates of the bottom-right corner
 	int maxX,maxY;				// maximum available X and Y co-ordinates
 	float minPct,maxPct;  // min and max percentage of habitat in a cell
 	float propSuit;				// proportion of suitable cells
@@ -491,9 +555,6 @@ private:
 
 	// list of patches in the landscape - can be in any sequence
 	std::vector <Patch*> patches;
-
-	// list of patch numbers in the landscape
-	std::vector <int> patchnums;
 
 	// list of habitat codes
 	std::vector <int> habCodes;
@@ -514,7 +575,7 @@ private:
 	int **connectMatrix;
 
 	// global environmental stochasticity (epsilon)
-	float* epsGlobal;	// pointer to time-series	
+	float* epsGlobal;	// pointer to time-series
 
 	// patch and costs change matrices (temporary - used when reading dynamic landscape)
 	// indexed by [descending y][x][period]
@@ -534,7 +595,7 @@ extern paramInit *paramsInit;
 extern paramSim *paramsSim;
 extern RSrandom *pRandom;
 
-#ifndef NDEBUG
+#ifdef UNIT_TESTS
 landParams createDefaultLandParams(const int& dim);
 void testLandscape();
 #endif

@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------
  *
- *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell
+ *	Copyright (C) 2026 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Roslyn Henry, Théo Pannetier, Jette Wolff, Damaris Zurell
  *
  *	This file is part of RangeShifter.
  *
@@ -218,22 +218,19 @@ paramSim::paramSim(const string& pathToProjDir) :
 	outIntRange = 1;
 	outStartPop = outStartInd = 0;
 	outStartTraitCell = outStartTraitRow = outStartConn = 0;
-	outIntOcc = outIntPop = outIntInd = outputGeneticInterval = 10;
+	outputGlobalFstStart = outputPairwiseFstStart = 0;
+	outIntOcc = outIntPop = outIntInd = outputGlobalFstInterval  = outputPairwiseFstInterval= 10;
 	outIntTraitCell = outIntTraitRow = outIntConn = 10;
-	mapInt = traitInt = 10;
-	slowFactor = 1;
+	traitInt = 10;
 	batchMode = absorbing = false;
 	outRange = outOccup = outPop = outInds = false;
 	outTraitsCells = outTraitsRows = outConnect = false;
-	outputGenes = outputWeirCockerham = outputWeirHill = false;
-	saveMaps = false; saveTraitMaps = false;
+	outputGenes = outputGlobalFst = outPairwiseFst = false;
 	saveVisits = false;
 #if RS_RCPP
 	outStartPaths = 0; outIntPaths = 0;
-	outPaths = false; ReturnPopRaster = false; CreatePopFile = true;
+	outPaths = false; ReturnPopMatrix = false; ReturnPopDataFrame = false; CreatePopFile = true;
 #endif
-	viewLand = false; viewPatch = false; viewGrad = false; viewCosts = false;
-	viewPop = false; viewTraits = false; viewPaths = false; viewGraph = false;
 }
 
 paramSim::~paramSim(void) { }
@@ -243,7 +240,6 @@ void paramSim::setSim(simParams s) {
 	if (s.simulation >= 0) simulation = s.simulation;
 	if (s.reps >= 1) reps = s.reps;
 	if (s.years >= 1) years = s.years;
-	if (s.mapInt >= 1) mapInt = s.mapInt;
 	if (s.traitInt >= 1) traitInt = s.traitInt;
 	batchMode = s.batchMode; absorbing = s.absorbing;
 	outRange = s.outRange; outOccup = s.outOccup;
@@ -262,28 +258,35 @@ void paramSim::setSim(simParams s) {
 	if (s.outIntTraitCell >= 1) outIntTraitCell = s.outIntTraitCell;
 	if (s.outIntTraitRow >= 1) outIntTraitRow = s.outIntTraitRow;
 	if (s.outIntConn >= 1) outIntConn = s.outIntConn;
-	saveMaps = s.saveMaps; saveTraitMaps = s.saveTraitMaps;
 	saveVisits = s.saveVisits;
 #if RS_RCPP
 	outStartPaths = s.outStartPaths;
 	outIntPaths = s.outIntPaths;
 	outPaths = s.outPaths;
-	ReturnPopRaster = s.ReturnPopRaster;
+	ReturnPopMatrix = s.ReturnPopMatrix;
+	ReturnPopDataFrame = s.ReturnPopDataFrame;
+	ReturnStages = s.ReturnStages;
 	CreatePopFile = s.CreatePopFile;
 #endif
 	fixReplicateSeed = s.fixReplicateSeed;
 }
 
-void paramSim::setGeneticSim(string patchSamplingOption, bool outputGeneticValues, bool outputWeirCockerham, bool outputWeirHill, int outputStartGenetics, int outputGeneticInterval) {
+void paramSim::setGeneticSim(string patchSamplingOption, bool outputGenes, int outputGenesStart, int outputGenesInterval,  bool outPairwiseFst,
+	int outputGlobalFst, int outputStartGlobalFst, int outputGlobalFstInterval, int outputStartPairwiseFst, int outputPairwiseFstIntervals, bool outputPerLocusFst) {
 	this->patchSamplingOption = patchSamplingOption;
-	this->outputGenes = outputGeneticValues;
-	this->outputWeirCockerham = outputWeirCockerham;
-	this->outputWeirHill = outputWeirHill;
-	this->outputStartGenetics = outputStartGenetics;
-	this->outputGeneticInterval = outputGeneticInterval;
+	this->outputGenes = outputGenes;
+	this->outputGenesStart = outputGenesStart;
+	this->outputGenesInterval = outputGenesInterval;
+	this->outputGlobalFst = outputGlobalFst;
+	this->outputGlobalFstStart = outputStartGlobalFst;
+	this->outputGlobalFstInterval = outputGlobalFstInterval;
+	this->outPairwiseFst = outPairwiseFst;
+	this->outputPairwiseFstStart = outputStartPairwiseFst;
+	this->outputPairwiseFstInterval = outputPairwiseFstIntervals;
+	this->outputPerLocusFst = outputPerLocusFst;
 }
 
-simParams paramSim::getSim(void) {
+simParams paramSim::getSim() {
 	simParams s;
 	s.batchNum = batchNum;
 	s.simulation = simulation; s.reps = reps; s.years = years;
@@ -300,45 +303,37 @@ simParams paramSim::getSim(void) {
 	s.outIntConn = outIntConn;
 	s.batchMode = batchMode;
 	s.absorbing = absorbing;
-	s.saveMaps = saveMaps; s.saveTraitMaps = saveTraitMaps;
-	s.saveVisits = saveVisits;
-	s.mapInt = mapInt; s.traitInt = traitInt;
+	s.traitInt = traitInt;
 #if RS_RCPP
+	s.saveVisits = saveVisits;
 	s.outStartPaths = outStartPaths;
 	s.outIntPaths = outIntPaths;
 	s.outPaths = outPaths;
-	s.ReturnPopRaster = ReturnPopRaster;
+	s.ReturnPopMatrix = ReturnPopMatrix;
+	s.ReturnPopDataFrame = ReturnPopDataFrame;
+	s.ReturnStages = ReturnStages;
 	s.CreatePopFile = CreatePopFile;
 #endif
 	s.patchSamplingOption = patchSamplingOption;
-	s.outputGeneValues = outputGenes;
-	s.outputWeirCockerham = outputWeirCockerham;
-	s.outputWeirHill = outputWeirHill;
-	s.outStartGenetics = outputStartGenetics;
-	s.outputGeneticInterval = outputGeneticInterval;
+
+	s.outputGenes = outputGenes;
+	s.outputGenesStart = outputGenesStart;
+	s.outputGenesInterval = outputGenesInterval;
+	
+	s.outputGlobalFst = outputGlobalFst;
+	s.outputGlobalFstStart = outputGlobalFstStart;
+	s.outputGlobalFstInterval = outputGlobalFstInterval;
+	
+	s.outPairwiseFst = outPairwiseFst;
+	s.outputPairwiseFstStart = outputPairwiseFstStart;
+	s.outputPairwiseFstInterval = outputPairwiseFstInterval;
+
+	s.outputPerLocusFst = outputPerLocusFst;
 
 	return s;
 }
 
 int paramSim::getSimNum(void) { return simulation; }
-
-void paramSim::setViews(simView v) {
-	viewLand = v.viewLand; viewPatch = v.viewPatch;
-	viewGrad = v.viewGrad; viewCosts = v.viewCosts;
-	viewPop = v.viewPop; viewTraits = v.viewTraits;
-	viewPaths = v.viewPaths; viewGraph = v.viewGraph;
-	if (v.slowFactor > 0) slowFactor = v.slowFactor;
-}
-
-simView paramSim::getViews(void) {
-	simView v;
-	v.viewLand = viewLand; v.viewPatch = viewPatch;
-	v.viewGrad = viewGrad; v.viewCosts = viewCosts;
-	v.viewPop = viewPop; v.viewTraits = viewTraits;
-	v.viewPaths = viewPaths; v.viewGraph = viewGraph;
-	v.slowFactor = slowFactor;
-	return v;
-}
 
 // return directory name depending on option specified
 string paramSim::getDir(int option) {
@@ -467,7 +462,8 @@ string to_string(const ExpressionType& expr) {
 }
 
 #if RS_RCPP
-bool paramSim::getReturnPopRaster(void) { return ReturnPopRaster; }
+bool paramSim::getReturnPopMatrix(void) { return ReturnPopMatrix; }
+bool paramSim::getReturnPopDataFrame(void) { return ReturnPopDataFrame; }
 bool paramSim::getCreatePopFile(void) { return CreatePopFile; }
 #endif
 

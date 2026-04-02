@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------
  *
- *	Copyright (C) 2020 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Damaris Zurell
+ *	Copyright (C) 2026 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Roslyn Henry, Théo Pannetier, Jette Wolff, Damaris Zurell
  *
  *	This file is part of RangeShifter.
  *
@@ -16,8 +16,8 @@
  *
  *	You should have received a copy of the GNU General Public License
  *	along with RangeShifter. If not, see <https://www.gnu.org/licenses/>.
- *
  --------------------------------------------------------------------------*/
+
 
 
  /*------------------------------------------------------------------------------
@@ -57,6 +57,10 @@ using namespace std;
 #include "Patch.h"
 #include "Cell.h"
 #include "TraitFactory.h"
+
+#ifdef _OPENMP
+#include <atomic>
+#endif // _OPENMP
 
 //---------------------------------------------------------------------------
 
@@ -161,6 +165,28 @@ struct smsData : trfrData {
 
 };
 
+// A class that mimicks std::queue with a fixed-size circular buffer.
+template <typename T>
+class MemoryQueue {
+	std::unique_ptr<T[]> data;
+	const std::size_t space;
+	std::size_t begin_idx;
+	std::size_t nb_elts;
+
+public:
+	MemoryQueue(std::size_t size);
+	T& front();
+	T const& front() const;
+	T& back();
+	T const& back() const;
+	void push(const T& value);
+	void push(T&& value);
+	void pop();
+	std::size_t size() const;
+	bool empty() const;
+	bool full() const;
+};
+
 struct kernelData : trfrData {
 	float	meanDist1;
 	float	meanDist2;
@@ -194,12 +220,18 @@ struct kernelData : trfrData {
 	}
 };
 
+
 class Individual {
 
 public:
+#ifdef _OPENMP
+	static std::atomic<int> indCounter; // used to create ID, held by class, not members of class
+#else
 	static int indCounter; // used to create ID, held by class, not members of class
+#endif
 	static TraitFactory traitFactory;
 	Individual( // Individual constructor
+		Species*, // pointer to species
 		Cell*,	// pointer to Cell
 		Patch*,	// pointer to patch
 		short,	// stage
@@ -223,7 +255,9 @@ public:
 
 	void inheritTraits(Species* pSpecies, Individual* mother, int resol); //haploid
 
-	void setDispersalPhenotypes(Species* pSpecies, int resol);
+	void expressDispersalPhenotypes(Species* pSpecies, int resol);
+
+	void expressGeneticLoad(Species* pSpecies);
 
 	QuantitativeTrait* getTrait(TraitType trait) const;
 
@@ -268,9 +302,8 @@ public:
 	float getGeneticFitness(void);
 	bool isViable() const;
 	indStats getStats(void);
-	Cell* getLocn( // Return location (as pointer to Cell)
-		const short	// option: 0 = get natal locn, 1 = get current locn
-	); //
+	Cell* getPrevCell(); // Return previous location (as pointer to Cell)
+	Cell* getCurrCell(); // Return current location (as pointer to Cell)
 	Patch* getNatalPatch(void);
 	void setYearSteps(int);
 	pathSteps getSteps(void);
@@ -341,7 +374,7 @@ public:
 		const int		 	// year
 	);
 #endif
-#ifndef NDEBUG
+#ifdef UNIT_TESTS
 	// Testing utilities
 	Cell* getCurrCell() const;
 	void setInitAngle(const float angle);
@@ -383,7 +416,7 @@ private:
 	std::unique_ptr <emigTraits> pEmigTraits;			// pointer to emigration traits
 	std::unique_ptr <settleTraits> pSettleTraits;		// pointer to settlement traits
 	std::unique_ptr <trfrData> pTrfrData; //can be sms, kernel, crw
-	std::queue <locn> memory;		// memory of last N squares visited for SMS
+	MemoryQueue<locn> memory;		// memory of last N squares visited for SMS
 	map<TraitType, unique_ptr<QuantitativeTrait>> spTraitTable;
 };
 

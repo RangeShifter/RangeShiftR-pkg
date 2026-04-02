@@ -1,3 +1,25 @@
+/*----------------------------------------------------------------------------
+ *
+ *	Copyright (C) 2026 Greta Bocedi, Stephen C.F. Palmer, Justin M.J. Travis, Anne-Kathleen Malchow, Roslyn Henry, Théo Pannetier, Jette Wolff, Damaris Zurell
+ *
+ *	This file is part of RangeShifter.
+ *
+ *	RangeShifter is free software: you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation, either version 3 of the License, or
+ *	(at your option) any later version.
+ *
+ *	RangeShifter is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with RangeShifter. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * File Created by Roslyn Henry March 2023. Code adapted from NEMO (https://nemo2.sourceforge.io/)
+ --------------------------------------------------------------------------*/
+
 #include "NeutralTrait.h"
 
 // ----------------------------------------------------------------------------------------
@@ -194,7 +216,7 @@ void NeutralTrait::inheritDiploid(const bool& fromMother, map<int, vector<unsign
 	
 	// Is the first parent gene position already recombinant?
 	auto distance = std::distance(recomPositions.begin(), recomIt);
-	if (distance - 1 % 2 != 0)
+	if (distance % 2 != 0)
 		parentChromosome = 1 - parentChromosome; //switch chromosome
 
 	for (auto const& [locus, allelePair] : parentGenes) {
@@ -240,14 +262,18 @@ void NeutralTrait::inheritHaploid(const bool& fromMother, map<int, vector<unsign
 void NeutralTrait::initialiseUniform(int maxAlleleVal)
 {
 	const auto& genePositions = pSpeciesTrait->getGenePositions();
+	const auto& initPositions = pSpeciesTrait->getInitPositions();
 	short ploidy = pSpeciesTrait->getPloidy();
 
 	for (auto position : genePositions) {
 		vector<unsigned char> allelePair;
 
 		for (int i = 0; i < ploidy; i++) {
-			//  allele values span 0 - max inclusive, max is wildtype
-			auto alleleVal = (unsigned char)pRandom->IRandom(0, maxAlleleVal); 
+			unsigned char alleleVal = char(0);
+			if (initPositions.contains(position)) {
+				//  allele values span 0 - max inclusive, max is wildtype
+				alleleVal = (unsigned char)pRandom->IRandom(0, maxAlleleVal);
+			}
 			allelePair.emplace_back(alleleVal);
 		}
 		genes.insert(make_pair(position, allelePair));
@@ -290,7 +316,7 @@ float NeutralTrait::getAlleleValueAtLocus(short whichChromosome, int position) c
 	return it->second[whichChromosome];
 }
 
-#ifndef NDEBUG // Testing only
+#ifdef UNIT_TESTS // Testing only
 
 // Create a default set of neutral alleles for testing
 //
@@ -312,4 +338,4 @@ map<int, vector<unsigned char>> createTestNeutralGenotype(
 	return genotype;
 }
 
-#endif // NDEBUG
+#endif // UNIT_TESTS
