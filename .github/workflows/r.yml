@@ -25,12 +25,26 @@ jobs:
           r-version: ${{ matrix.r }}
           rtools-version: '44'
  
+      - name: Install pak (Windows/macOS)
+        if: runner.os != 'Linux'
+        run: |
+          install.packages("pak", repos = "https://r-lib.github.io/p/pak/stable/")
+        shell: Rscript {0}
+ 
       - name: Install dependencies
         run: |
-          install.packages(c("pak", "Rcpp", "Rdpack"))
+          install.packages(c("Rcpp", "Rdpack", "devtools", "remotes"))
         shell: Rscript {0}
-
-      - name: Install RangeShiftR
+ 
+      - name: Install RangeShiftR (Windows/macOS)
+        if: runner.os != 'Linux'
         run: |
           pak::pak("RangeShifter/RangeShiftR-pkg/RangeShiftR@${{ github.head_ref || github.ref_name }}")
         shell: Rscript {0}
+ 
+      - name: Install RangeShiftR (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          devtools::install_github("RangeShifter/RangeShiftR-pkg", ref = "${{ github.head_ref || github.ref_name }}", subdir = "RangeShiftR")
+        shell: Rscript {0}
+ 

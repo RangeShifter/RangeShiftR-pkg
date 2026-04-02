@@ -53,7 +53,7 @@ Author: Anne-Kathleen Malchow, Humboldt University Berlin
 
 using namespace std;
 
-#include <Rcpp.h>
+#include <RcppArmadillo.h>
 
 #include "RScore/Parameters.h"
 #include "RScore/Landscape.h"

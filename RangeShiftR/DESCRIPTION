@@ -21,9 +21,12 @@ Imports:
     Rdpack (>= 0.7),
     methods,
     rmarkdown,
-    terra
+    terra,
+    RcppArmadillo
 RdMacros: Rdpack
-LinkingTo: Rcpp
+LinkingTo: 
+    Rcpp,
+    RcppArmadillo
 Encoding: UTF-8
 RoxygenNote: 7.3.3
 Collate: 
