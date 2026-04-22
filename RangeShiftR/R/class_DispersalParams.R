@@ -1475,9 +1475,11 @@ setMethod("show", "CorrRW", function(object){
 #' \code{\link[RangeShiftR]{CorrRW}}), at each step (made simultaneously) they each evaluate their current cell or patch for the
 #' possibility of settling. This allows for the implementation of more complex settlement rules. The simplest one is that the individual
 #' decides to stop if there is suitable habitat; this is in any case a necessary condition (set \code{DensDep=FALSE}).\cr
-#' If a Settlement module with a constant \eqn{S_0=0} (the default) is used in a model with \emph{movement process} and \code{IndVar=FALSE},
-#' it gets converted to \eqn{S_0=1.0}, i.e. 'always settle when habitat is suitable'. \cr
+#'
+#' If a Settlement module with a constant \eqn{S_0=0} (\code{DensDep=FALSE} the default) is used in a model with \emph{movement process} and \code{IndVar=FALSE},
+#' it gets converted to \eqn{S_0=1.0}, i.e. 'always settle when habitat is suitable'. In this case, \code{Settle} should not be defined, but be kept at the default value of \eqn{0}.\cr
 #' \cr
+#'
 #' Furthermore, the settlement decision can be density-dependent (set \code{DensDep=TRUE}). In this case, the individual has a probability \ifelse{html}{\out{p<sub>S</sub>}}{\eqn{p_S}}
 #' of settling in the cell or patch \eqn{i}, given by:
 #'
@@ -1512,12 +1514,11 @@ setMethod("show", "CorrRW", function(object){
 #'
 #' \tabular{ccccc}{DensDep \tab IndVar \tab StageDep \tab SexDep \tab columns \cr
 #  F \tab F \tab F \tab F \tab \ifelse{html}{\out{p<sub>S</sub>}}{\eqn{p_S}} \cr
-#'  F \tab F \tab F \tab F \tab - not applicable - \cr
-#'  F \tab F \tab T \tab F \tab stage, \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}} \cr
-#'  F \tab F \tab F \tab T \tab sex, \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}} \cr
-#'  F \tab F \tab T \tab T \tab stage, sex, \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}} \cr
-#'  T \tab F \tab F \tab F \tab \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}}, \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{α_S}}, \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}} \cr
+#'  F \tab F \tab F \tab F \tab - not applicable if DensDep = F - \cr
 #'  \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \tab \out{&#8942;} \cr
+#'  T \tab F \tab F \tab F \tab \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}}, \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{α_S}}, \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}} \cr
+#'  T \tab F \tab T \tab F \tab stage, \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}}, \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{α_S}}, \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}} \cr
+#'  T \tab F \tab F \tab T \tab sex, \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}}, \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{α_S}}, \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}} \cr
 #'  T \tab F \tab T \tab T \tab stage, sex, \ifelse{html}{\out{S<sub>0</sub>}}{\eqn{S_0}}, \ifelse{html}{\out{&alpha;<sub>S</sub>}}{\eqn{α_S}}, \ifelse{html}{\out{&beta;<sub>S</sub>}}{\eqn{β_S}} \cr
 #'  }
 #'
@@ -1635,9 +1636,12 @@ setValidity("SettlementParams", function(object) {
                 }
             } else {
                 if(any(c(object@SexDep, object@StageDep))){
-                    if(nrow(object@FindMate)!=nrow(object@Settle)) {
-                        msg <- c(msg, "FindMate must have as many rows as in the Settle matrix!")
+                    if(object@DensDep){
+                        if(nrow(object@FindMate)!=nrow(object@Settle)) {
+                            msg <- c(msg, "FindMate must have as many rows as in the Settle matrix!")
+                        }
                     }
+
                 }
             }
 
@@ -1685,14 +1689,16 @@ setValidity("SettlementParams", function(object) {
 
         } else{
             if(any(c(object@SexDep, object@StageDep))){
-                if( nrow(object@MinSteps)!=nrow(object@Settle) && length(object@MinSteps)!=1) {
-                    msg <- c(msg, "MinSteps must have as many rows as in the Settle matrix!")
-                }
-                if( nrow(object@MaxSteps)!=nrow(object@Settle) && length(object@MaxSteps)!=1) {
-                    msg <- c(msg, "MaxSteps must have as many rows as in the Settle matrix!")
-                }
-                if( nrow(object@MaxStepsYear)!=nrow(object@Settle) && length(object@MaxStepsYear)!=1) {
-                    msg <- c(msg, "MaxStepsYear must have as many rows as in the Settle matrix!")
+                if(object@DensDep){
+                    if( nrow(object@MinSteps)!=nrow(object@Settle) && length(object@MinSteps)!=1) {
+                        msg <- c(msg, "MinSteps must have as many rows as in the Settle matrix!")
+                    }
+                    if( nrow(object@MaxSteps)!=nrow(object@Settle) && length(object@MaxSteps)!=1) {
+                        msg <- c(msg, "MaxSteps must have as many rows as in the Settle matrix!")
+                    }
+                    if( nrow(object@MaxStepsYear)!=nrow(object@Settle) && length(object@MaxStepsYear)!=1) {
+                        msg <- c(msg, "MaxStepsYear must have as many rows as in the Settle matrix!")
+                    }
                 }
             }
         }
@@ -1708,8 +1714,10 @@ setValidity("SettlementParams", function(object) {
             }
             else{
                 if(any(c(object@SexDep, object@StageDep))){
-                    if( nrow(object@MaxStepsYear)!=nrow(object@Settle)&& length(object@MaxStepsYear)!=1) {
-                        msg <- c(msg, "MaxStepsYear must have as many rows as in the Settle matrix!")
+                    if(object@DensDep){
+                        if( nrow(object@MaxStepsYear)!=nrow(object@Settle)&& length(object@MaxStepsYear)!=1) {
+                            msg <- c(msg, "MaxStepsYear must have as many rows as in the Settle matrix!")
+                        }
                     }
                     # if(any(object@MaxStepsYear[, ncol(MaxStepsYear)] >
                     #        object@MaxSteps[, ncol(MaxSteps)])){

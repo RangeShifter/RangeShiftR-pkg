@@ -2752,9 +2752,10 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
 					settleDD.beta =
 					    (float)SettleCondMatrix(line, offset + 2); // Required for DensDep = 1 and IndVar = 0
 				}
-            } else { // only s0 needs to be provided
-                settleDD.s0 = (float)SettleCondMatrix(
-                    line, offset + 0); // Max. settlement probability for density reaction norm. Required for
+            } else { //settleDD is not used for movement processes without density dependence
+                // settleDD.s0 = (float)SettleCondMatrix(
+                //     line, offset + 0); // Max. settlement probability for density reaction norm. Required for
+                settleDD.s0 = -9;
                 // DensDep = 1 and IndVar = 0; 0.0 < S0 <= 1.0
                 settleDD.alpha = -9;
                 settleDD.beta = -9;
