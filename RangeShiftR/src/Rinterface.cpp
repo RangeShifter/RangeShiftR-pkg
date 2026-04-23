@@ -2703,6 +2703,20 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
         return {stg, sx};
     };
 
+    // validity check: if any dependency is declared, at least one of the settlement parameter matrices must be non-constant
+    bool anyDependencyDeclared = sett.stgDep || sett.sexDep || (trfr.usesMovtProc && densdep);
+    bool allConst = constFindMate && constMinSteps && constMaxSteps && constMaxStepsYr && constSettle;
+
+    if (anyDependencyDeclared && allConst) {
+        Rcpp::Rcout << "ReadSettlementR(): warning: stage, sex or density dependence is declared "
+                    << "(StageDep=" << sett.stgDep
+                    << ", SexDep=" << sett.sexDep
+                    << ", DensDep=" << (trfr.usesMovtProc ? densdep : false) << ")"
+                    << " but all settlement parameters are constant scalar values. "
+                    << "Dependencies will have no effect."
+                    << endl;
+    }
+
     // Validate that all non-const matrices have consistent stage/sex index columns across all lines.
     if(sett.sexDep || sett.stgDep) {
 
