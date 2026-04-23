@@ -16,8 +16,8 @@ Translocation(years = 1,
 \item{TransLocMat}{Matrix of translocation events. Each row represents a translocation event. Columns represent:
 
  - the year of the event,\cr
- - the source location (\code{Patch_ID} in case of cell-based models or \code{X} and \code{Y} location in case of cell-based models),\cr
- - the destination location (\code{Patch_ID} in case of cell-based models or \code{X} and \code{Y} location in case of cell-based models),\cr
+ - the source location (\code{Patch_ID} in case of patch-based models or \code{X} and \code{Y} location in case of cell-based models),\cr
+ - the destination location (\code{Patch_ID} in case of patch-based models or \code{X} and \code{Y} location in case of cell-based models),\cr
  - the number of individuals which are tried to be caught,\cr
  - minimal age of each individual,\cr
  - maximal age of the individual,\cr
