@@ -2556,10 +2556,12 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
 	settleRules srules;
     settleSteps ssteps; // = pSpecies->getSteps(0,0);
     settleTraits settleDD; // = pSpecies->getSpSettTraits(0,0);
+
 	sett.stgDep = Rcpp::as<bool>(SettleParamsR.slot("StageDep")); // Stage-dependent settlement.
 	sett.sexDep = Rcpp::as<bool>(SettleParamsR.slot("SexDep"));   // Sex-dependent settlement.
+
     if ( gTransferType == 0) {
-		// dispersal kernel                                         // dispersal kernel
+		// dispersal kernel
 		sett.indVar = false;
 		if(dem.repType == 0) {
 			if(sett.sexDep)
@@ -2605,136 +2607,242 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
 	DEBUGLOG << "ReadSettlementR(): sett.stgDep = " << sett.stgDep << ", sett.sexDep = " << sett.sexDep
 	         << ", sett.indVar = " << sett.indVar << endl;
 #endif
-    // check if SettleParamsR.slots are single values or a matrix and assign them accordingly:
-    Rcpp::NumericMatrix FindMate;
-	bool constFindMate = false;
-    if(Rf_isMatrix(SettleParamsR.slot("FindMate"))){
-        FindMate = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("FindMate"));
-    } else {
-        int singleValue = Rcpp::as<int>(SettleParamsR.slot("FindMate"));
-        FindMate = Rcpp::NumericMatrix(1, 1);
-        FindMate(0, 0) = singleValue;
-		constFindMate = true;
-	}
 
-    Rcpp::NumericMatrix MinSteps;
-	bool constMinSteps = false;
-    if(Rf_isMatrix(SettleParamsR.slot("MinSteps"))){
-        MinSteps = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("MinSteps"));
-    } else {
-        int singleValue = Rcpp::as<int>(SettleParamsR.slot("MinSteps"));
-        MinSteps = Rcpp::NumericMatrix(1, 1);
-        MinSteps(0, 0) = singleValue;
-		constMinSteps = true;
-	}
+	// Helper to read a slot as a matrix (wrapping scalar values into a 1x1 matrix)
+	// Returns the matrix and sets isConst=true if the slot was a scalar.
+	auto readSlotAsMatrix = [&](const char* slotName, bool& isConst) -> Rcpp::NumericMatrix {
+	    Rcpp::RObject slot = SettleParamsR.slot(slotName);
+	    if (Rf_isMatrix(slot)) {
+	        isConst = false;
+	        return Rcpp::as<Rcpp::NumericMatrix>(slot);
+	    } else {
+	        isConst = true;
+	        Rcpp::NumericMatrix m(1, 1);
+	        m(0, 0) = Rcpp::as<double>(slot);
+	        return m;
+	    }
+	};
+
+	bool constFindMate, constMinSteps, constMaxSteps, constMaxStepsYr, constSettle;
+	Rcpp::NumericMatrix FindMate      = readSlotAsMatrix("FindMate",     constFindMate);
+	Rcpp::NumericMatrix MinSteps      = readSlotAsMatrix("MinSteps",     constMinSteps);
+	Rcpp::NumericMatrix MaxSteps      = readSlotAsMatrix("MaxSteps",     constMaxSteps);
+	Rcpp::NumericMatrix MaxStepsYr    = readSlotAsMatrix("MaxStepsYear", constMaxStepsYr);
+	Rcpp::NumericMatrix SettleCondMatrix = readSlotAsMatrix("Settle",    constSettle);
+
+	sexSettle = 2 * sett.stgDep + sett.sexDep;
+
+//     // check if SettleParamsR.slots are single values or a matrix and assign them accordingly:
+//     Rcpp::NumericMatrix FindMate;
+// 	bool constFindMate = false;
+//     if(Rf_isMatrix(SettleParamsR.slot("FindMate"))){
+//         FindMate = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("FindMate"));
+//     } else {
+//         int singleValue = Rcpp::as<int>(SettleParamsR.slot("FindMate"));
+//         FindMate = Rcpp::NumericMatrix(1, 1);
+//         FindMate(0, 0) = singleValue;
+// 		constFindMate = true;
+// 	}
+//
+//     Rcpp::NumericMatrix MinSteps;
+// 	bool constMinSteps = false;
+//     if(Rf_isMatrix(SettleParamsR.slot("MinSteps"))){
+//         MinSteps = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("MinSteps"));
+//     } else {
+//         int singleValue = Rcpp::as<int>(SettleParamsR.slot("MinSteps"));
+//         MinSteps = Rcpp::NumericMatrix(1, 1);
+//         MinSteps(0, 0) = singleValue;
+// 		constMinSteps = true;
+// 	}
+//
+//
+//     Rcpp::NumericMatrix MaxSteps;
+// 	bool constMaxSteps = false;
+//     if(Rf_isMatrix(SettleParamsR.slot("MaxSteps"))){
+//         MaxSteps = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("MaxSteps"));
+//     } else {
+//         int singleValue = Rcpp::as<int>(SettleParamsR.slot("MaxSteps"));
+//         MaxSteps = Rcpp::NumericMatrix(1, 1);
+//         MaxSteps(0, 0) = singleValue;
+// 		constMaxSteps = true;
+// 	}
+//
+//     Rcpp::NumericMatrix MaxStepsYr;
+// 	bool constMaxStepsYr = false;
+//     if(Rf_isMatrix(SettleParamsR.slot("MaxStepsYear"))){
+//         MaxStepsYr = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("MaxStepsYear"));
+//     } else {
+//         int singleValue = Rcpp::as<int>(SettleParamsR.slot("MaxStepsYear"));
+//         MaxStepsYr = Rcpp::NumericMatrix(1, 1);
+//         MaxStepsYr(0, 0) = singleValue;
+// 		constMaxStepsYr = true;
+// 	}
+//
+//     Rcpp::NumericMatrix SettleCondMatrix;
+//
+//     if(Rf_isMatrix(SettleParamsR.slot("Settle"))){
+//         SettleCondMatrix = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("Settle"));
+//     } else {
+//         int singleValue = Rcpp::as<int>(SettleParamsR.slot("Settle"));
+//         SettleCondMatrix = Rcpp::NumericMatrix(1, 1);
+//         SettleCondMatrix(0, 0) = singleValue;
+//     }
+
+    // Extracts stage and sex from a specific matrix row.
+    // If that matrix is constant (scalar), returns {0, 0} — the single value applies to all.
+    // If it is a full matrix, reads stage/sex from the index columns of that row.
+    auto getStageSexFrom = [&](const Rcpp::NumericMatrix& mat, bool isConst, int line) -> std::pair<int,int> {
+        if (isConst) return {0, 0}; // but it still needs to be set for all stg + sex combinations later
+        int stg = 0, sx = 0;
+        if (sett.stgDep) {
+            stg = (int)mat(line, 0);
+            if (sett.sexDep) sx = (int)mat(line, 1);
+        } else {
+            if (sett.sexDep) sx = (int)mat(line, 0);
+        }
+        return {stg, sx};
+    };
+
+    // Validate that all non-const matrices have consistent stage/sex index columns across all lines.
+    if(sett.sexDep || sett.stgDep) {
+
+        // Collect all non-const matrices for comparison.
+        struct NamedMatrix {
+            const char* name;
+            const Rcpp::NumericMatrix& mat;
+            bool isConst;
+        };
+
+        std::vector<NamedMatrix> allMatrices = {
+            {"FindMate",     FindMate,        constFindMate},
+            {"MinSteps",     MinSteps,        constMinSteps},
+            {"MaxSteps",     MaxSteps,        constMaxSteps},
+            {"MaxStepsYear", MaxStepsYr,      constMaxStepsYr},
+            // Only include SettleCondMatrix if densdep is true (movement process)
+            // or if it is a dispersal kernel — in both cases it carries stage/sex index columns.
+            {"Settle",       SettleCondMatrix, constSettle}
+        };
 
 
-    Rcpp::NumericMatrix MaxSteps;
-	bool constMaxSteps = false;
-    if(Rf_isMatrix(SettleParamsR.slot("MaxSteps"))){
-        MaxSteps = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("MaxSteps"));
-    } else {
-        int singleValue = Rcpp::as<int>(SettleParamsR.slot("MaxSteps"));
-        MaxSteps = Rcpp::NumericMatrix(1, 1);
-        MaxSteps(0, 0) = singleValue;
-		constMaxSteps = true;
-	}
+        for (int line = 0; line < Nlines; line++) {
+            int refStage = -1, refSex = -1;
+            const char* refName = nullptr;
 
-    Rcpp::NumericMatrix MaxStepsYr;
-	bool constMaxStepsYr = false;
-    if(Rf_isMatrix(SettleParamsR.slot("MaxStepsYear"))){
-        MaxStepsYr = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("MaxStepsYear"));
-    } else {
-        int singleValue = Rcpp::as<int>(SettleParamsR.slot("MaxStepsYear"));
-        MaxStepsYr = Rcpp::NumericMatrix(1, 1);
-        MaxStepsYr(0, 0) = singleValue;
-		constMaxStepsYr = true;
-	}
+            for (auto& nm : allMatrices) {
+                if (nm.isConst) continue; // scalars have no index columns to check
+                // Skip SettleCondMatrix for movement processes without densdep
+                if (trfr.usesMovtProc && !densdep && nm.name == std::string("Settle")) continue;
 
-    Rcpp::NumericMatrix SettleCondMatrix;
+                auto [stg, sx] = getStageSexFrom(nm.mat, nm.isConst, line);
 
-    if(Rf_isMatrix(SettleParamsR.slot("Settle"))){
-        SettleCondMatrix = Rcpp::as<Rcpp::NumericMatrix>(SettleParamsR.slot("Settle"));
-    } else {
-        int singleValue = Rcpp::as<int>(SettleParamsR.slot("Settle"));
-        SettleCondMatrix = Rcpp::NumericMatrix(1, 1);
-        SettleCondMatrix(0, 0) = singleValue;
+                if (refStage == -1) { // first non-const matrix sets the reference
+                    refStage = stg;
+                    refSex   = sx;
+                    refName  = nm.name;
+                } else {
+                    if (stg != refStage || sx != refSex) {
+                        Rcpp::Rcerr << "ReadSettlementR(): inconsistent stage/sex index at line " << line
+                                    << ": " << nm.name << " has stage=" << stg << " sex=" << sx
+                                    << " but " << refName << " has stage=" << refStage << " sex=" << refSex
+                                    << endl;
+                        return 510; // new error code for inconsistent stage/sex indices
+                    }
+                }
+            }
+        }
     }
 
 	sexSettle = 2 * sett.stgDep + sett.sexDep;
 
 	for(int line = 0; line < Nlines; line++) {
-	    if(sett.indVar){ // if individual variability is simulated, settle matrix is not defined, indVar can only be true for SMS or corrRW (so MinSteps should be defined)
-	        // determine stage and sex of this line
-	        if(sett.stgDep) {
-	            if(sett.sexDep) {
-	                stage = (int)MinSteps(line, 0);
-	                sex = (int)MinSteps(line, 1);
-	            } else {
-	                stage = (int)MinSteps(line, 0);
-	                sex = 0;
-	            }
-	        } else {
-	            if(sett.sexDep) {
-	                stage = 0;
-	                sex = (int)MinSteps(line, 0);
-	            } else {
-	                stage = 0;
-	                sex = 0;
-	            }
-	        }
-	    } else {
-	        // determine stage and sex of this line
-    		if(sett.stgDep) {
-    			if(sett.sexDep) {
-                    stage = (int)SettleCondMatrix(line, 0);
-                    sex = (int)SettleCondMatrix(line, 1);
-    			} else {
-                    stage = (int)SettleCondMatrix(line, 0);
-    				sex = 0;
-    			}
-    		} else {
-    			if(sett.sexDep) {
-    				stage = 0;
-                    sex = (int)SettleCondMatrix(line, 0);
-    			} else {
-    				stage = 0;
-    				sex = 0;
-    			}
-    		}
-	    }
+
+	    // Extract stage/sex once per line from the first available non-const matrix.
+	    // All non-const matrices are guaranteed to have consistent index columns (validated above).
+	    int lineStage = 0, lineSex = 0;
+	    if (!constFindMate)        std::tie(lineStage, lineSex) = getStageSexFrom(FindMate,        constFindMate,   line);
+	    else if (!constMinSteps)   std::tie(lineStage, lineSex) = getStageSexFrom(MinSteps,        constMinSteps,   line);
+	    else if (!constMaxSteps)   std::tie(lineStage, lineSex) = getStageSexFrom(MaxSteps,        constMaxSteps,   line);
+	    else if (!constMaxStepsYr) std::tie(lineStage, lineSex) = getStageSexFrom(MaxStepsYr,      constMaxStepsYr, line);
+	    else if (!constSettle)     std::tie(lineStage, lineSex) = getStageSexFrom(SettleCondMatrix, constSettle,     line);
+
+// 	    if(sett.indVar){ // if individual variability is simulated, settle matrix is not defined, indVar can only be true for SMS or corrRW (so MinSteps should be defined)
+// 	        // determine stage and sex of this line
+// 	        if(sett.stgDep) {
+// 	            if(sett.sexDep) {
+// 	                stage = (int)MinSteps(line, 0);
+// 	                sex = (int)MinSteps(line, 1);
+// 	            } else {
+// 	                stage = (int)MinSteps(line, 0);
+// 	                sex = 0;
+// 	            }
+// 	        } else {
+// 	            if(sett.sexDep) {
+// 	                stage = 0;
+// 	                sex = (int)MinSteps(line, 0);
+// 	            } else {
+// 	                stage = 0;
+// 	                sex = 0;
+// 	            }
+// 	        }
+// 	    } else {
+// 	        // determine stage and sex of this line
+//     		if(sett.stgDep) {
+//     			if(sett.sexDep) {
+//                     stage = (int)SettleCondMatrix(line, 0);
+//                     sex = (int)SettleCondMatrix(line, 1);
+//     			} else {
+//                     stage = (int)SettleCondMatrix(line, 0);
+//     				sex = 0;
+//     			}
+//     		} else {
+//     			if(sett.sexDep) {
+//     				stage = 0;
+//                     sex = (int)SettleCondMatrix(line, 0);
+//     			} else {
+//     				stage = 0;
+//     				sex = 0;
+//     			}
+//     		}
+// 	    }
 
 
         if(trfr.usesMovtProc) { // ...movement process
-            // FindMate
-			if(constFindMate) {
-                findmate = (bool)FindMate(0, 0);
-			} else {
-                findmate = (bool)FindMate(line, offset);
-			}
+
+
+            findmate          = constFindMate   ? (bool)FindMate(0,0)    : (bool)FindMate(line,   offset);
+            ssteps.minSteps   = constMinSteps   ? (int)MinSteps(0,0)     : (int)MinSteps(line,    offset);
+            ssteps.maxSteps   = constMaxSteps   ? (int)MaxSteps(0,0)     : (int)MaxSteps(line,    offset);
+            ssteps.maxStepsYr = constMaxStepsYr ? (int)MaxStepsYr(0,0)   : (int)MaxStepsYr(line,  offset);
+
+//             // FindMate
+// 			if(constFindMate) {
+//                 findmate = (bool)FindMate(0, 0);
+// 			} else {
+//                 findmate = (bool)FindMate(line, offset);
+// 			}
 			if(findmate && dem.repType == 0)
 				error = 504;
-
-           // MinSteps
-			if(constMinSteps) {
-                ssteps.minSteps = (int)MinSteps(0, 0);
-			} else {
-                ssteps.minSteps = (int)MinSteps(line, offset);
-			}
-
-           // MaxSteps
-			if(constMaxSteps) {
-                ssteps.maxSteps = (int)MaxSteps(0, 0);
-			} else {
-                ssteps.maxSteps = (int)MaxSteps(line, offset);
-			}
-
-                  // MaxStepsYr
-			if(constMaxStepsYr) {
-                ssteps.maxStepsYr = (int)MaxStepsYr(0, 0);
-			} else {
-                ssteps.maxStepsYr = (int)MaxStepsYr(line, offset);
-			}
+//
+//            // MinSteps
+// 			if(constMinSteps) {
+//                 ssteps.minSteps = (int)MinSteps(0, 0);
+// 			} else {
+//                 ssteps.minSteps = (int)MinSteps(line, offset);
+// 			}
+//
+//            // MaxSteps
+// 			if(constMaxSteps) {
+//                 ssteps.maxSteps = (int)MaxSteps(0, 0);
+// 			} else {
+//                 ssteps.maxSteps = (int)MaxSteps(line, offset);
+// 			}
+//
+//                   // MaxStepsYr
+// 			if(constMaxStepsYr) {
+//                 ssteps.maxStepsYr = (int)MaxStepsYr(0, 0);
+// 			} else {
+//                 ssteps.maxStepsYr = (int)MaxStepsYr(line, offset);
+// 			}
 
             // SettleCondMatrix
 			if(densdep) {
@@ -2772,7 +2880,7 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
                     for(int i = 0; i < sstruct.nStages; i++) {
 						pSpecies->setSettRules(i, 0, srules);
 						pSpecies->setSteps(i, 0, ssteps);
-                if(srules.densDep) {
+                        if(srules.densDep) {
                             pSpecies->setSpSettTraits(i, 0, settleDD);
                         }
 						if(dem.repType > 0) {                        // model is sexual - also set parameters for males
@@ -2784,67 +2892,61 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
 					}
                     }
 				} else {                  // see comment above (at case label)
+				    pSpecies->setSettRules(0, 0, srules);
+				    pSpecies->setSteps(0, 0, ssteps);
+				    if (srules.densDep) {
+				        pSpecies->setSpSettTraits(0, 0, settleDD);
+				    }
                     if(dem.repType > 0) { // model is sexual - set parameters for both sexes
-                        pSpecies->setSettRules(0, 0, srules);
-                        pSpecies->setSteps(0, 0, ssteps);
-                        if (srules.densDep) {
-                            pSpecies->setSpSettTraits(0, 0, settleDD);
-                        }
 						pSpecies->setSettRules(0, 1, srules);
 						pSpecies->setSteps(0, 1, ssteps);
 						if(srules.densDep) {
                             pSpecies->setSpSettTraits(0, 1, settleDD);
 						}
-                    } else { // asexual - set parameters only for females
-                        pSpecies->setSettRules(0, 0, srules);
-                        pSpecies->setSteps(0, 0, ssteps);
-                        if (srules.densDep) {
-                            pSpecies->setSpSettTraits(0, 0, settleDD);
-					}
-				}
-			}
+                    }
+			    }
             }
 			break;
 
 			case 1: { // sex-dependent
-				srules = pSpecies->getSettRules(0, sex);
+				srules = pSpecies->getSettRules(0, lineSex);
 				srules.densDep = densdep;
 				srules.findMate = findmate;
 
-				pSpecies->setSettRules(0, sex, srules);
-				pSpecies->setSteps(0, sex, ssteps);
+				pSpecies->setSettRules(0, lineSex, srules);
+				pSpecies->setSteps(0, lineSex, ssteps);
 				if(srules.densDep) {
-                    pSpecies->setSpSettTraits(0, sex, settleDD);
+                    pSpecies->setSpSettTraits(0, lineSex, settleDD);
 				}
 
 				if(dem.stageStruct) { // model is structured - also set parameters for all stages
 					for(int i = 1; i < sstruct.nStages; i++) {
-						pSpecies->setSettRules(i, sex, srules);
-						pSpecies->setSteps(i, sex, ssteps);
+						pSpecies->setSettRules(i, lineSex, srules);
+						pSpecies->setSteps(i, lineSex, ssteps);
                         if (srules.densDep) {
-                            pSpecies->setSpSettTraits(i, sex, settleDD);
-					}
-				}
-			}
+                            pSpecies->setSpSettTraits(i, lineSex, settleDD);
+					    }
+				    }
+			    }
 
             }
 			break;
 
 			case 2: { // stage-dependent
-				srules = pSpecies->getSettRules(stage, 0);
+				srules = pSpecies->getSettRules(lineStage, 0);
 				srules.densDep = densdep;
 				srules.findMate = findmate;
 
-				pSpecies->setSettRules(stage, 0, srules);
-				pSpecies->setSteps(stage, 0, ssteps);
+				pSpecies->setSettRules(lineStage, 0, srules);
+				pSpecies->setSteps(lineStage, 0, ssteps);
 				if(srules.densDep) {
-                    pSpecies->setSpSettTraits(stage, 0, settleDD);
+                    pSpecies->setSpSettTraits(lineStage, 0, settleDD);
 				}
 				if(dem.repType > 0) { // model is sexual - also set parameters for males
-					pSpecies->setSettRules(stage, 1, srules);
-					pSpecies->setSteps(stage, 1, ssteps);
+					pSpecies->setSettRules(lineStage, 1, srules);
+					pSpecies->setSteps(lineStage, 1, ssteps);
 					if(srules.densDep) {
-                        pSpecies->setSpSettTraits(stage, 0, settleDD);
+                        pSpecies->setSpSettTraits(lineStage, 1, settleDD);
 					}
 				}
 
@@ -2852,60 +2954,53 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
 			break;
 
 			case 3: { // sex- & stage-dependent
-				srules = pSpecies->getSettRules(stage, sex);
+				srules = pSpecies->getSettRules(lineStage, lineSex);
 				srules.densDep = densdep;
 				srules.findMate = findmate;
-				pSpecies->setSettRules(stage, sex, srules);
-				pSpecies->setSteps(stage, sex, ssteps);
+				pSpecies->setSettRules(lineStage, lineSex, srules);
+				pSpecies->setSteps(lineStage, lineSex, ssteps);
 				if(srules.densDep) {
-                    pSpecies->setSpSettTraits(stage, sex, settleDD);
+                    pSpecies->setSpSettTraits(lineStage, lineSex, settleDD);
 				}
 			}
 			break;
-			} // end sexSettle
+			} // end sexSettle (movement process)
         }
 		else { // ...dispersal kernel
-			if(constFindMate) {
-                findmate = (bool)FindMate(0, 0);
-			} // Mating requirements to settle, required for a sexual population only
-			else {
-                findmate = (bool)FindMate(line, offset);
-			}
-			if(findmate && dem.repType == 0)
-				error = 504;
+		    findmate = constFindMate ? (bool)FindMate(0,0) : (bool)FindMate(line, offset);
+		    if (findmate && dem.repType == 0) error = 504;
 
-            settType = (int)SettleCondMatrix(line,
-                        offset); // Settlement rule if the arrival cell/patch is unsuitable: 0 = die, 1 = wait, 2 = randomly choose a suitable cell/patch or die, 3 = randomly choose a suitable cell/patch or wait.
-            // Options 1 and 3 may be chosen for a stage-structured population only
+		    settType = constSettle ? (int)SettleCondMatrix(0,0) : (int)SettleCondMatrix(line, offset);
 
 
 			switch(sexSettle) {
 			case 0: { // no sex / stage dependence
-				if(findmate && dem.repType == 0)
-					error = 504;
+
 				srules = pSpecies->getSettRules(0, 0);
-                    srules.findMate = findmate;
+                srules.findMate = findmate;
+                srules.wait       = (settType == 1 || settType == 3);
+                srules.go2nbrLocn = (settType == 2 || settType == 3);
 
                 if((settType == 1 || settType == 3) && !dem.stageStruct)
                     error = 503;
-				switch(settType) {
-				case 0:
-					srules.wait = false;
-					srules.go2nbrLocn = false;
-					break;
-				case 1:
-					srules.wait = true;
-					srules.go2nbrLocn = false;
-					break;
-				case 2:
-					srules.wait = false;
-					srules.go2nbrLocn = true;
-					break;
-				case 3:
-					srules.wait = true;
-					srules.go2nbrLocn = true;
-					break;
-				}
+				// switch(settType) {
+				// case 0:
+				// 	srules.wait = false;
+				// 	srules.go2nbrLocn = false;
+				// 	break;
+				// case 1:
+				// 	srules.wait = true;
+				// 	srules.go2nbrLocn = false;
+				// 	break;
+				// case 2:
+				// 	srules.wait = false;
+				// 	srules.go2nbrLocn = true;
+				// 	break;
+				// case 3:
+				// 	srules.wait = true;
+				// 	srules.go2nbrLocn = true;
+				// 	break;
+				// }
 
 				if(dem.stageStruct) { // model is structured - also set parameters for all stages
 					for(int i = 0; i < sstruct.nStages; i++) {
@@ -2925,35 +3020,40 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
 			break;
 
 			case 1: { // sex dependent
-                srules = pSpecies->getSettRules(0, sex);
+                srules = pSpecies->getSettRules(0, lineSex);
                 srules.findMate = findmate;
 
-				if((settType == 1 || settType == 3) && dem.stageStruct == false)
-					error = 505;
+                srules.wait       = (settType == 1 || settType == 3);
+                srules.go2nbrLocn = (settType == 2 || settType == 3);
 
-				switch(settType) {
-				case 0:
-					srules.wait = false;
-					srules.go2nbrLocn = false;
-					break;
-				case 1:
-					srules.wait = true;
-					srules.go2nbrLocn = false;
-					break;
-				case 2:
-					srules.wait = false;
-					srules.go2nbrLocn = true;
-					break;
-				case 3:
-					srules.wait = true;
-					srules.go2nbrLocn = true;
-					break;
-				}
+                if ((settType == 1 || settType == 3) && !dem.stageStruct) error = 505;
 
-				pSpecies->setSettRules(0, sex, srules);
+				// if((settType == 1 || settType == 3) && dem.stageStruct == false)
+				// 	error = 505;
+				//
+				// switch(settType) {
+				// case 0:
+				// 	srules.wait = false;
+				// 	srules.go2nbrLocn = false;
+				// 	break;
+				// case 1:
+				// 	srules.wait = true;
+				// 	srules.go2nbrLocn = false;
+				// 	break;
+				// case 2:
+				// 	srules.wait = false;
+				// 	srules.go2nbrLocn = true;
+				// 	break;
+				// case 3:
+				// 	srules.wait = true;
+				// 	srules.go2nbrLocn = true;
+				// 	break;
+				// }
+
+				pSpecies->setSettRules(0, lineSex, srules);
 				if(dem.stageStruct) { // model is structured - also set parameters for all stages
 					for(int i = 1; i < sstruct.nStages; i++) {
-						pSpecies->setSettRules(i, sex, srules);
+						pSpecies->setSettRules(i, lineSex, srules);
 					}
 				}
 			}
@@ -2962,57 +3062,44 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
 			case 2: { // stage dependent
 				if(findmate && dem.repType == 0)
 					error = 507;
-				srules = pSpecies->getSettRules(stage, 0);
+				srules = pSpecies->getSettRules(lineStage, 0);
                 srules.findMate = findmate;
+                srules.wait       = (settType == 1 || settType == 3);
+                srules.go2nbrLocn = (settType == 2 || settType == 3);
 
-				switch(settType) {
-				case 0:
-					srules.wait = false;
-					srules.go2nbrLocn = false;
-					break;
-				case 1:
-					srules.wait = true;
-					srules.go2nbrLocn = false;
-					break;
-				case 2:
-					srules.wait = false;
-					srules.go2nbrLocn = true;
-					break;
-				case 3:
-					srules.wait = true;
-					srules.go2nbrLocn = true;
-					break;
-				}
+				// switch(settType) {
+				// case 0:
+				// 	srules.wait = false;
+				// 	srules.go2nbrLocn = false;
+				// 	break;
+				// case 1:
+				// 	srules.wait = true;
+				// 	srules.go2nbrLocn = false;
+				// 	break;
+				// case 2:
+				// 	srules.wait = false;
+				// 	srules.go2nbrLocn = true;
+				// 	break;
+				// case 3:
+				// 	srules.wait = true;
+				// 	srules.go2nbrLocn = true;
+				// 	break;
+				// }
 
-				pSpecies->setSettRules(stage, 0, srules);
+				pSpecies->setSettRules(lineStage, 0, srules);
 				if(dem.repType > 0) { // model is sexual - also set parameters for males
-					pSpecies->setSettRules(stage, 1, srules);
+					pSpecies->setSettRules(lineStage, 1, srules);
 				}
 			}
 			break;
 
 			case 3: { // sex & stage dependent
-				srules = pSpecies->getSettRules(stage, sex);
+				srules = pSpecies->getSettRules(lineStage, lineSex);
                 srules.findMate = findmate;
-				switch(settType) {
-				case 0:
-					srules.wait = false;
-					srules.go2nbrLocn = false;
-					break;
-				case 1:
-					srules.wait = true;
-					srules.go2nbrLocn = false;
-					break;
-				case 2:
-					srules.wait = false;
-					srules.go2nbrLocn = true;
-					break;
-				case 3:
-					srules.wait = true;
-					srules.go2nbrLocn = true;
-					break;
-				}
-				pSpecies->setSettRules(stage, sex, srules);
+                srules.wait       = (settType == 1 || settType == 3);
+                srules.go2nbrLocn = (settType == 2 || settType == 3);
+
+				pSpecies->setSettRules(lineStage, lineSex, srules);
 			}
 			break;
 
