@@ -225,7 +225,7 @@ paramSim::paramSim(const string& pathToProjDir) :
 	batchMode = absorbing = false;
 	outRange = outOccup = outPop = outInds = false;
 	outTraitsCells = outTraitsRows = outConnect = false;
-	outputGenes = outputGlobalFst = outPairwiseFst = false;
+	outputGenes = outputGlobalFst = outPairwiseFst = outputPerLocusFst = false;
 	saveVisits = false;
 #if RS_RCPP
 	outStartPaths = 0; outIntPaths = 0;
