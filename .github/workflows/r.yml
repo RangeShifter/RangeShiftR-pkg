@@ -32,7 +32,14 @@ jobs:
           sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev
         shell: bash
 
-      - name: Install pak
+      - name: Install pak (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          install.packages("pak", repos = "https://cran.r-project.org")
+        shell: Rscript {0}
+ 
+      - name: Install pak (macOS/Linux)
+        if: runner.os != 'Windows'
         run: |
           install.packages("pak", repos = "https://r-lib.github.io/p/pak/stable/")
         shell: Rscript {0}
