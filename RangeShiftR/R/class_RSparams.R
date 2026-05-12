@@ -498,64 +498,75 @@ setValidity("RSparams", function(object) {
             cols = 3
         }
         else {
-                if (object@control@transfer) cols = 1
-            else  cols = 1
+                if (object@control@transfer) cols = 0 # movement process -> not needed
+                    else  cols = 1 # dispersal kernel -> settle code needed
         }
-        if (dim(object@dispersal@Settlement@Settle)[1]!=rows) {
-            dim_ok = FALSE
-            msg <- c(msg, paste0("Matrix of Settlement traits (Settle) must have ", rows ," rows (with the current settings)!"))
+        if (object@dispersal@Settlement@DensDep) {
+            if (dim(object@dispersal@Settlement@Settle)[1]!=rows) {
+                dim_ok = FALSE
+                msg <- c(msg, paste0("Matrix of Settlement traits (Settle) must have ", rows ," rows (with the current settings)!"))
+            }
         }
         if((offset+cols) == 0){
             if (any(dim(object@dispersal@Settlement@Settle)!=c(1,1) )) {
-                msg <- c(msg, paste0("Matrix of Settlement traits is not needed with the current settings!"))
+                warning("Matrix of Settlement traits is not needed with the current settings and will be ignored.")
             }
         }
         else{
-            if (dim(object@dispersal@Settlement@Settle)[2]!=(offset+cols)) {
-                dim_ok = FALSE
-                msg <- c(msg, paste0("Matrix of Settlement traits (Settle) must have ", (offset+cols) ," columns (with the current settings)!"))
+            if (!object@dispersal@Settlement@DensDep & object@control@transfer) { # if it is still sex or stage dependent, offset is >0, but Settle is not needed
+                if (any(dim(object@dispersal@Settlement@Settle)!=c(1,1) )) {
+                    warning("Matrix of Settlement traits is not needed with the current settings and will be ignored.")
+                }
+            } else {
+                if (dim(object@dispersal@Settlement@Settle)[2]!=(offset+cols)) {
+                    dim_ok = FALSE
+                    msg <- c(msg, paste0("Matrix of Settlement traits (Settle) must have ", (offset+cols) ," columns (with the current settings)!"))
+                }
             }
+
         }
     }
     if (dim_ok && !object@dispersal@Settlement@IndVar) {
-        # check stage column of Settle
-        if (object@dispersal@Settlement@StageDep) {
-            if(any(object@dispersal@Settlement@Settle[,1]%%1!=0)){
-                msg <- c(msg, "First column of Settlement traits matrix (Settle) must contain the stage numbers (but non-integer number(s) found)!")
-            }
-            else {
-                if(any(object@dispersal@Settlement@Settle[,1]<0 | object@dispersal@Settlement@Settle[,1]>object@control@stages)){
-                    msg <- c(msg, "First column of Settlement traits matrix (Settle) must contain the stage numbers (found <0 or >#stages)!")
-                }
-                else{
-                    if(length(unique(object@dispersal@Settlement@Settle[,1])) != object@control@stages){
-                        msg <- c(msg, "First column of Settlement traits matrix (Settle) must contain the stage numbers (but found incorrect stage numbers)!")
-                    }
-                }
-            }
-        }
-        # check sex column of Settle
-        if (object@dispersal@Settlement@SexDep) {
-            if(!all(object@dispersal@Settlement@Settle[,offset] %in% c(0,1))){
-                msg <- c(msg, paste0(offset,". column of Settlement traits matrix (Settle) must contain the sex numbers (0 for female, 1 for male)!"))
-            }
-            else {
-                if (object@dispersal@Settlement@StageDep) {
-                    comb_ok = TRUE
-                    for(i in 0:(object@control@stages-1)) {
-                        if (length(unique(object@dispersal@Settlement@Settle[object@dispersal@Settlement@Settle[,1]==i, offset])) != 2) {
-                            comb_ok = FALSE
-                        }
-                    }
-                    if (!comb_ok) {
-                        dim_ok = FALSE
-                        msg <- c(msg, "The Settlement traits matrix (Settle) must contain exactly one row for each stage (1. column) and sex (2. column) combination!")
-                    }
+        # check stage and sex column of Settle if it is not a movement process model OR if movement process model is density-dependent (otherwise, settlement parameters are not needed and thus not checked):
+        if(object@dispersal@Settlement@DensDep || !object@control@transfer){
+            if (object@dispersal@Settlement@StageDep) {
+                if(any(object@dispersal@Settlement@Settle[,1]%%1!=0)){
+                    msg <- c(msg, "First column of Settlement traits matrix (Settle) must contain the stage numbers (but non-integer number(s) found)!")
                 }
                 else {
-                    if (length(unique(object@dispersal@Settlement@Settle[, offset])) != 2) {
-                        dim_ok = FALSE
-                        msg <- c(msg, "The Settlement traits matrix (Settle) must contain exactly one row for each sex (1. column)!")
+                    if(any(object@dispersal@Settlement@Settle[,1]<0 | object@dispersal@Settlement@Settle[,1]>object@control@stages)){
+                        msg <- c(msg, "First column of Settlement traits matrix (Settle) must contain the stage numbers (found <0 or >#stages)!")
+                    }
+                    else{
+                        if(length(unique(object@dispersal@Settlement@Settle[,1])) != object@control@stages){
+                            msg <- c(msg, "First column of Settlement traits matrix (Settle) must contain the stage numbers (but found incorrect stage numbers)!")
+                        }
+                    }
+                }
+            }
+            # check sex column of Settle
+            if (object@dispersal@Settlement@SexDep) {
+                if(!all(object@dispersal@Settlement@Settle[,offset] %in% c(0,1))){
+                    msg <- c(msg, paste0(offset,". column of Settlement traits matrix (Settle) must contain the sex numbers (0 for female, 1 for male)!"))
+                }
+                else {
+                    if (object@dispersal@Settlement@StageDep) {
+                        comb_ok = TRUE
+                        for(i in 0:(object@control@stages-1)) {
+                            if (length(unique(object@dispersal@Settlement@Settle[object@dispersal@Settlement@Settle[,1]==i, offset])) != 2) {
+                                comb_ok = FALSE
+                            }
+                        }
+                        if (!comb_ok) {
+                            dim_ok = FALSE
+                            msg <- c(msg, "The Settlement traits matrix (Settle) must contain exactly one row for each stage (1. column) and sex (2. column) combination!")
+                        }
+                    }
+                    else {
+                        if (length(unique(object@dispersal@Settlement@Settle[, offset])) != 2) {
+                            dim_ok = FALSE
+                            msg <- c(msg, "The Settlement traits matrix (Settle) must contain exactly one row for each sex (1. column)!")
+                        }
                     }
                 }
             }
@@ -565,10 +576,12 @@ setValidity("RSparams", function(object) {
         if(!object@dispersal@Settlement@IndVar){
             # check value columns of Settle
             if (object@control@transfer) {          #if Movemodel:
+                if (object@dispersal@Settlement@DensDep){ # and if density dependent
                     if(any(object@dispersal@Settlement@Settle[,(offset+1)]<=0 | object@dispersal@Settlement@Settle[,(offset+1)]>1)){
                         msg <- c(msg, paste0("Column ", (offset+1), " of settlement traits matrix (Settle) must contain the maximum settlement probability S0, with values in the half-open inerval (0,1] !"))
                     }
                     #// NB alpha and beta may take any value
+                }
                 #else {}  // no more columns required other than stage and sex if applicable
             }
             else {      # DispersalKernel
@@ -638,9 +651,9 @@ setValidity("RSparams", function(object) {
                 msg <- c(msg, paste0("Settle must only have one value (with the current settings)!"))
             } else {
                 if (object@control@transfer) {
-                    # Settle between 0 and 1
-                    if(object@dispersal@Settlement@Settle<0 | object@dispersal@Settlement@Settle>1){
-                        msg <- c(msg, "Settle must be between 0 and 1!")
+                    # Settle not 0
+                    if(object@dispersal@Settlement@Settle!=0){
+                        msg <- c(msg, "Settle should not be defined for a movement process without density dependence!")
                     }
                 } else {
                     if (object@control@stagestruct) {

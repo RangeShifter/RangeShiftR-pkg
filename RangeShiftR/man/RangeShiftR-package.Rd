@@ -44,6 +44,8 @@ Authors:
   \item Stephen C.F. Palmer
   \item Justin M.J. Travis
   \item Jette Wolff
+  \item Théo Pannetier
+  \item Roslyn Henry
   \item Damaris Zurell
 }
 

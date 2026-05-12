@@ -145,7 +145,7 @@ setValidity("NeutralTraitsParams", function(object) {
         if (is.null(object@InitialNbOfPositions) || object@InitialNbOfPositions <= 0 || object@InitialNbOfPositions >= object@NbOfPositions) {
             msg <- c(msg, "InitialNbOfPositions must be a strictly positive integrer smaller than the NbofPositions.")
         }
-    } else if (!is.null(object@NbOfPositions)) {
+    } else if (!is.null(object@InitialNbOfPositions)) {
         msg <- c(msg, "If InitialPositions is not random, InitialNbrOfPositions must not be set (NULL).")
     }
 
@@ -207,8 +207,8 @@ setMethod("show", "NeutralTraitsParams", function(object){
     cat("   Neutral Genetics: \n")
     if(is.numeric(object@Positions)) cat("     Loci positions coding for trait: ", object@Positions, "\n")
     if(!is.numeric(object@Positions) && object@Positions=="random") cat("    Loci positions coding for trait randomly chosen with ", object@NbOfPositions, " positions\n")
-    if(is.numeric(object@InitialPositions)) cat("     Initial loci positions coding for trait: ", object@Positions, "\n")
-    if(!is.numeric(object@InitialPositions) && object@InitialPositions=="random") cat("    Initial loci positions coding for trait randomly chosen with ", object@NbOfPositions, " positions\n")
+    if(is.numeric(object@InitialPositions)) cat("     Initial loci positions coding for trait: ", object@InitialPositions, "\n")
+    if(!is.numeric(object@InitialPositions) && object@InitialPositions=="random") cat("    Initial loci positions coding for trait randomly chosen with ", object@InitialNbOfPositions, " positions\n")
     if(!is.numeric(object@InitialPositions) && object@InitialPositions=="all") cat("    All loci positions chosen for initial loci positions\n")
     cat("     Initial distribution: ", object@InitialAlleleDistribution, "\n")
     cat("     Initial parameters: ", object@InitialAlleleParameters, "\n")
@@ -709,6 +709,9 @@ setMethod("show", "GeneticLoadParams", function(object){
         cat("     Configuration of genetic load ", i, ": \n")
         if(is.numeric(object@Positions[i])) cat("          Loci positions coding for trait: ", object@Positions[i], "\n")
         if(!is.numeric(object@Positions[i]) && object@Positions[i]=="random") cat("    Loci positions coding for trait randomly chosen with ", object@NbOfPositions[i], " positions\n")
+        if(is.numeric(object@InitialPositions[i])) cat("     Initial loci positions coding for trait: ", object@InitialPositions[i], "\n")
+        if(!is.numeric(object@InitialPositions[i]) && object@InitialPositions=="random") cat("    Initial loci positions coding for trait randomly chosen with ", object@InitialNbOfPositions[i], " positions\n")
+        if(!is.numeric(object@InitialPositions[i]) && object@InitialPositions=="all") cat("    All loci positions chosen for initial loci positions\n")
         cat("       Initial allel distribution: ", object@InitialAlleleDistribution[i], "\n")
         cat("       Initial allel distribution parameter: ", object@InitialAlleleParameters[i,], "\n")
         cat("       Initial dominance distribution: ", object@InitialDomDistribution[i], "\n")
