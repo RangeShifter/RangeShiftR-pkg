@@ -416,6 +416,10 @@ void NeutralStatsManager::calculatePairwiseFst(set<int> const& patchList, const 
 	{
 		const auto patchA = pLandscape->findPatch(patchVect[i]);
 		const auto pPopA = patchA->getPopn(pSpecies);
+		if (pPopA == 0) {
+		    // cout << "No population found for species in patch " << patchVect[i] << endl;
+		    continue;
+		}
 
 		// Skip if patch A has no individuals
 		if (pPopA->sampleSize() == 0)
@@ -425,7 +429,10 @@ void NeutralStatsManager::calculatePairwiseFst(set<int> const& patchList, const 
 		{
 			const auto patchB = pLandscape->findPatch(patchVect[j]);
 			const auto pPopB = patchB->getPopn(pSpecies);
-
+			if (pPopB == 0) {
+			    // cout << "No population found for species in patch " << patchVect[j] << endl;
+			    continue;
+			}
 			// Skip if patch B has no individuals
 			if (pPopB->sampleSize() == 0)
 				continue;
