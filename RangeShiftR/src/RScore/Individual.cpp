@@ -682,7 +682,7 @@ settleTraits Individual::getIndSettTraits(void) {
 
 
 void Individual::setStatus(short s) {
-	if (s >= 0 && s <= 10) status = s;
+	if (s >= 0 && s <= 11) status = s;
 	status = s;
 }
 
@@ -1625,7 +1625,7 @@ void Individual::outMovePath(const int year)
 			<< endl;
 	}
 	// if not anymore dispersing...
-	if (status > 1 && status <= 10) {
+	if (status > 1 && status <= 11) {
 		prev_loc = pPrevCell->getLocn();
 		// record only if this is the first step as non-disperser
 		if (path->pathoutput) {

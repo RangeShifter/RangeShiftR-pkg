@@ -37,32 +37,53 @@ Management::Management(void) {
     std::vector<int> translocation_years; // Number of years of translocation
     std::map< int, std::vector <locn> > source; // Source patch or cell: should be a vector of arrays
     std::map< int, std::vector <locn> > target; // Target patch or cell
-    std::map< int, std::vector <int> > nb; // number of ttanslocated individuals
+    std::map< int, std::vector <int> > nb; // number of translocated individuals
     std::map< int, std::vector <int> > min_age; // Minimum age of translocated individuals
     std::map< int, std::vector <int> > max_age; // Maximum age of translocated individuals
     std::map< int, std::vector <int> > stage; // Stage of translocated individuals
     std::map< int, std::vector <int> > sex; // Sex of translocated individuals
 
+    harvesting = false; // do not consider harvesting
+    harvesting_success = 1.0; // harvesting success rate
+    std::vector<int> harvesting_years; // Number of years of harvesting events
+    std::map< int, std::vector <locn> > harvestLoc; // Source patch or cell: should be a vector of arrays
+    std::map< int, std::vector <int> > harvestNb; // number of harvested individuals
+    std::map< int, std::vector <int> > harvestMin_age; // Minimum age of harvested individuals
+    std::map< int, std::vector <int> > harvestMax_age; // Maximum age of harvested individuals
+    std::map< int, std::vector <int> > harvestStage; // Stage of harvested individuals
+    std::map< int, std::vector <int> > harvestSex; // Sex of harvested individuals
+
+
 }
 
 Management::~Management(void) {
     translocation_years.clear();
+    harvesting_years.clear();
     source.clear();
     target.clear();
     nb.clear();
     min_age.clear();
     max_age.clear();
     stage.clear();
+    sex.clear();
+    harvestLoc.clear();
+    harvestNb.clear();
+    harvestMin_age.clear();
+    harvestMax_age.clear();
+    harvestStage.clear();
+    harvestSex.clear();
 }
 
 managementParams Management::getManagementParams(void) {
     managementParams m;
     m.translocation = translocation;
+    m.harvesting = harvesting;
     return m;
 }
 
 void Management::setManagementParams(const managementParams m){
     translocation = m.translocation;
+    harvesting = m.harvesting;
 };
 
 translocationParams Management::getTranslocationParams(void) {
@@ -79,6 +100,19 @@ translocationParams Management::getTranslocationParams(void) {
     return t;
 }
 
+harvestingParams Management::getHarvestingParams(void) {
+    harvestingParams h;
+    h.harvesting_success = harvesting_success;
+    h.harvesting_years = harvesting_years;
+    h.harvestLoc = harvestLoc;
+    h.harvestNb = harvestNb;
+    h.harvestMin_age = harvestMin_age;
+    h.harvestMax_age = harvestMax_age;
+    h.harvestStage = harvestStage;
+    h.harvestSex = harvestSex;
+    return h;
+}
+
 // not sure if this is a good way, so won't use it for now
 void Management::setTranslocationParams(const translocationParams t){
     catching_rate = t.catching_rate;
@@ -91,6 +125,16 @@ void Management::setTranslocationParams(const translocationParams t){
     stage = t.stage;
     sex = t.sex;
 
+};
+void Management::setHarvestingParams(const harvestingParams h){
+    harvesting_success = h.harvesting_success;
+    harvesting_years = h.harvesting_years;
+    harvestLoc = h.harvestLoc;
+    harvestNb = h.harvestNb;
+    harvestMin_age = h.harvestMin_age;
+    harvestMax_age = h.harvestMax_age;
+    harvestStage = h.harvestStage;
+    harvestSex = h.harvestSex;
 };
 
 void Management::translocate(int yr
@@ -324,4 +368,156 @@ void Management::translocate(int yr
         // remove pointers to sampled individuals
         s_pPop->clean();
     }
+};
+
+void Management::harvest(int yr
+                            , Landscape* pLandscape
+                            , Species* pSpecies){
+    // Implementation for harvesting
+    #if RS_RCPP
+    Rcpp::Rcout << "Start harvesting in year " << yr << endl;
+    #endif
+    #ifndef NDEBUG
+    cout << "Start harvesting in year " << yr << endl;
+    #endif
+    landParams ppLand = pLandscape->getLandParams();
+    auto it = harvestNb.find(yr); // the number of harvesting events (if there are e.g. multiple patches with harvesting events) is determined by the number of elements of the maps at year yr
+    auto nb_it = harvestNb.find(yr);
+    auto loc_it = harvestLoc.find(yr);
+    auto min_age_it = harvestMin_age.find(yr);
+    auto max_age_it = harvestMax_age.find(yr);
+    auto stage_it = harvestStage.find(yr);
+    auto sex_it = harvestSex.find(yr);
+    // iterate over the number of events
+    for (int e = 0; e < it->second.size(); e++) {
+    #if RS_RCPP
+        Rcpp::Rcout << "Harvesting event " << e << " in year " << yr << endl;
+    #endif
+    #ifndef NDEBUG
+        cout << "Harvesting event " << e << " in year " << yr << endl;
+    #endif
+    // find the source patch
+    Patch* s_patch;
+    Population* s_pPop;
+    if(ppLand.patchModel){
+       if(pLandscape->existsPatch(loc_it->second[e].x)){
+        #if RS_RCPP
+            Rcpp::Rcout << "Source patch exist." << endl;
+        #endif
+        #ifndef NDEBUG
+            cout << "Patch exist." << endl;
+        #endif
+
+        s_patch = pLandscape->findPatch(loc_it->second[e].x);
+        if (s_patch) { // if it is not a nullpointer
+            // test if population in patch is not zero
+            s_pPop = s_patch->getPopn(pSpecies); // returns the population of the species in that cell
+            if (s_pPop && s_pPop->getNbInds() > 0){
+                } else {
+        #if RS_RCPP
+            Rcpp::Rcout << "Population does not exist in patch or is 0! skipping harvesting event." << endl;
+        #endif
+        #ifndef NDEBUG
+            cout << "Population does not exist in patch or is 0! skipping harvesting event." << endl;
+        #endif
+                    return;
+                }
+        } else {
+        #if RS_RCPP
+            Rcpp::Rcout << "Patch was found but NULL! skipping harvesting event." << endl; // not sure if this ever happens
+        #endif
+        #ifndef NDEBUG
+            cout << "Patch was found but NULL! skipping harvesting event." << endl; // not sure if this ever happens
+        #endif
+        return;
+        }
+        //
+            } else{
+            #if RS_RCPP
+                Rcpp::Rcout << "Patch was not found in landscape! skipping harvesting event." << endl;
+            #endif
+            #ifndef NDEBUG
+                cout << "Patch was not found in landscape! skipping harvesting event." << endl;
+            #endif
+            return;
+            }
+       } else{
+           Cell* pCell;
+           pCell = pLandscape->findCell(loc_it->second[e].x, loc_it->second[e].y);
+           if (pCell != 0) {
+            #if RS_RCPP
+               Rcpp::Rcout << "Source cell was found" << endl;
+            #endif
+            #ifndef NDEBUG
+                cout << "Cell was found" << endl;
+            #endif
+            Patch *s_ppatch = pCell->getPatch();
+            if (s_ppatch) {
+                s_patch = s_ppatch;
+                // test if population in patch is not zero
+                s_pPop = s_patch->getPopn(pSpecies); // returns the population of the species in that cell
+                if (s_pPop && s_pPop->getNbInds() > 0){
+                   } else {
+                    #if RS_RCPP
+                       Rcpp::Rcout << "Population does not exist in cell or is 0! skipping harvesting event." << endl;
+                    #endif
+                    #ifndef NDEBUG
+                        cout << "Population does not exist in cell or is 0! skipping harvesting event." << endl;
+                    #endif
+                   return;
+                   }
+               } else {
+                #if RS_RCPP
+                   Rcpp::Rcout << "Cell does not exist! skipping harvesting event." << endl;
+                #endif
+                #ifndef NDEBUG
+                    cout << "Cell does not exist! skipping harvesting event." << endl;
+                #endif
+                return;
+               }
+           } else {
+                #if RS_RCPP
+                   Rcpp::Rcout << "Cell does not belong to landscape! skipping harvesting event." << endl;
+                #endif
+                #ifndef NDEBUG
+                    cout << "Cell does not belong to landscape! skipping harvesting event." << endl;
+                #endif
+                return;
+           }
+        }
+        // only if cell/patch exist, individuals are harvested:
+        // get individuals with the given characteristics in that population
+        int min_age = min_age_it->second[e];
+        int max_age = max_age_it->second[e];
+        int stage = stage_it->second[e];
+        int sex = sex_it->second[e];
+        int nb = nb_it->second[e];
+        int nbSampledInds = 0;
+        // We made already sure by now that in s_pPop at least some individuals exist
+        nbSampledInds = s_pPop->sampleIndividuals(nb, min_age, max_age, stage, sex); // checking values was done when reading in the parameters
+        popStats s_stats = s_pPop->getStats(s_patch->getDemoScaling());
+        Individual* harvested_individual;
+        int harvested = 0;
+        // loop over all individuals, extract sampled individuals, try to harvest individual
+        for (int j = 0; j < s_stats.nInds; j++) {
+            // if there are individuals to catch
+            if(s_pPop->getSizeSampledInds()){
+                // if this individual is matching one of the sampled individuals
+                harvested_individual = s_pPop->catchIndividual(harvesting_success, j); // catch individual in the patch
+                if (harvested_individual !=NULL) { // harvested individual - has already been removed from natal population
+                    harvested_individual->setStatus(11); // should be set to dying
+                    harvested ++;  
+                }
+            }
+        }
+        #if RS_RCPP
+            Rcpp::Rcout << "Successfully harvested " << harvested << " out of " << nb_it->second[e] << " individuals in harvesting event " << e <<"." << endl;
+        #endif
+        #ifndef NDEBUG
+            cout << "Successfully harvested " << harvested << " out of " << nb_it->second[e] << " individuals in harvesting event " << e <<"." << endl;
+        #endif
+        // remove pointers to sampled individuals
+        s_pPop->clean();
+    }
+                                
 };

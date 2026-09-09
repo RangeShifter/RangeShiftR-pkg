@@ -1239,8 +1239,8 @@ void Population::survival1(void)
 	for (int i = 0; i < ninds; i++) {
 		indStats ind = inds[i]->getStats();
 
-		if (ind.status > 5 && ind.status != 10) { // doomed to die; status 10 is translocated?
-			if (ind.status != 10) //not going into cold storage -> is there a new status 10 in this new_genetics version??
+		if (ind.status > 5 && ind.status != 10) { // doomed to die; status 10 is translocated
+			if (ind.status != 10) //not going into cold storage 
 			delete inds[i];
 			inds[i] = nullptr;
 			nInds[ind.stage][ind.sex]--;
