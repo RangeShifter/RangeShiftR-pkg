@@ -17,6 +17,7 @@ Harvesting(years = 1,
 
  - the year of the event,\cr
  - the location (\code{Patch_ID} in case of patch-based models or \code{X} and \code{Y} location in case of cell-based models),\cr
+ - the population size threshold above which harvesting is applied,\cr
  - the number of individuals which are tried to be harvested,\cr
  - minimal age of each individual,\cr
  - maximal age of the individual,\cr
@@ -54,11 +55,12 @@ Additionally, you can define a constant harvesting success rate to determine the
 
 You need to create a Harvesting Matrix \code{HarvestMat} which hold the information for each harvesting event in each row.
 
-In the columns of the \code{HarvestMat} the year, site as well as the number of individuals and the characteristics are
+In the columns of the \code{HarvestMat} the year, site, its specific threshold as well as the number of individuals and the characteristics are
 defined in the following order:
 
 - \code{year} of the translocation event \cr
 - \code{Patch_ID} or \code{X} and \code{Y} location site from which individuals are harvested. \cr
+- \code{threshold} population size above which harvesting is applied. \cr
 - \code{nb_harvest} how many individuals of the given set of characteristics are tried to be harvested \cr
 - \code{min_age} minimal age of the individual in the interval of 0-MaxAge. Set to -9 to ignore. \cr
 - \code{max_age} maximal age of the individual in the interval of \code{min_age}-MaxAge. Set to -9 to ignore.\cr
@@ -72,14 +74,14 @@ For non stage structured models, or to ignore the characteristic, set the value 
 
 To avoid unused harvest events, you should set the range of allowed characteristics as broad as possible.
 
-Each row of the harvesting matrix \code{HarvestMat} should hold a unique combination of year, site,
+Each row of the harvesting matrix \code{HarvestMat} should hold a unique combination of year, site, threshold and
 the number of individuals to harvest as well as characteristics of these individuals.
 You may add more than one harvest event per year, i.e. there may be multiple sites for each year of a harvest
 event or multiple individual characteristics for a certain site.
 
-In each \code{year} of a translocation event, individuals matching the given criteria in the site are collected and a given number of individuals \code{nb_harvest}
+In each \code{year} of a harvesting event, individuals matching the given criteria in the site are collected and a given number of individuals \code{nb_harvest}
 are sampled from this subset. The success of harvesting one of these sampled individuals in the site is defined by the \code{harvesting_success}.
-Successfully caught individuals are then extracted from the simulation and the individual will be assigned the status 11 (harvested).
+Successfully harvested individuals are assigned the status 11 (harvested) and the individual will be removed from the simulation at the end of the year.
 
 The site is required to be habitat patches or cells of the landscape. Otherwise the harvesting event will be skipped.
 }
