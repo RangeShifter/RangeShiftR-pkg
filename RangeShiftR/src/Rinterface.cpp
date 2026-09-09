@@ -85,6 +85,7 @@ DispersalTraitInputOptions gDispTraitOpt;
 //vector<int> gNbTraitFileRows;
 
 int translocation;
+int harvesting;
 
 bool threadsafe;
 bool spatial_demography;
@@ -352,6 +353,11 @@ Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
             m.translocation = false;
         else
             m.translocation = true;
+
+        if (harvesting == 0)
+            m.harvesting = false;
+        else
+            m.harvesting = true;
 
 		pSpecies->setDemogr(dem);
 		pSpecies->setStage(sstruct);
@@ -4948,6 +4954,310 @@ int ReadTranslocationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
     }
     return error;
 }
+
+//---------------------------------------------------------------------------
+int ReadHarvestingR(Landscape* pLandscape, Rcpp::S4 ParMaster)
+{
+    int error = 0;
+    // create new Management
+    if(pManagement != NULL)
+        delete pManagement;
+    pManagement = new Management;
+    // get landscape parameter (to distinguish between patch and cell model)
+    landParams paramsLand = pLandscape->getLandParams();
+    // get demographic parameter (to distinguish between sexual and asexual reproduction, and stage structured or not)
+    demogrParams dem = pSpecies->getDemogrParams();
+    // get simulation parameter (to get the number of years)
+    simParams sim = paramsSim->getSim();
+
+    // get default values
+    managementParams m = pManagement->getManagementParams();
+    harvestingParams h = pManagement->getHarvestingParams();
+
+
+    Rcpp::S4 ManageParamsR("ManagementParams");
+    ManageParamsR = Rcpp::as<Rcpp::S4>(ParMaster.slot("management"));
+    Rcpp::S4 HarvestingParamsR("HarvestingParams");
+    HarvestingParamsR = Rcpp::as<Rcpp::S4>(ManageParamsR.slot("Harvesting"));
+
+    double harvesting_success_R = Rcpp::as<double>(HarvestingParamsR.slot("harvesting_success"));
+
+    Rcpp::IntegerVector harvesting_years_R;
+    harvesting_years_R = Rcpp::as<Rcpp::IntegerVector>(HarvestingParamsR.slot("years"));
+
+    Rcpp::IntegerMatrix harvesting_matrix_R;
+    harvesting_matrix_R = Rcpp::as<Rcpp::IntegerMatrix>(HarvestingParamsR.slot("HarvestMat"));
+
+    // activate translocation if translocation_years_R is not empty
+    if(harvesting_years_R[0] > 0) m.harvesting = true;
+
+    // set and update the management parameters
+    pManagement->setManagementParams(m);
+
+    if(m.harvesting) {
+        // check if harvesting success as valid value:
+        if(harvesting_success_R > 0 || harvesting_success_R <= 1) {
+            // parse harvesting_success_R to harvesting_success
+            h.harvesting_success = harvesting_success_R;
+        } else {
+            Rcpp::Rcout << "ReadHarvestingR(): harvesting_success must be between 0 and 1" << std::endl;
+            error = 600;
+            return error;
+        }
+
+
+        // parse harvesting_years_R to harvesting_years
+        for (int i = 0; i < harvesting_years_R.size(); i++) {
+            // check if the year is within the simulated years
+            if(harvesting_years_R[i] > 0 || harvesting_years_R[i] <= sim.years) {
+                // check if year is not already in the vector
+                if(std::find(h.harvesting_years.begin(), h.harvesting_years.end(), harvesting_years_R[i]) == h.harvesting_years.end()) {
+                    h.harvesting_years.push_back(harvesting_years_R[i]);
+                }else{
+                    Rcpp::Rcout << "ReadHarvestingR(): harvesting_years[" << i << "]=" << harvesting_years_R[i] << " already exists. Make sure that you only include each year once." << std::endl;
+                    error = 600;
+                    return error;
+                }
+            } else{
+                Rcpp::Rcout << "ReadHarvestingR(): harvesting_years[" << i << "]=" << harvesting_years_R[i] << " is not within the simulated years" << std::endl;
+                error = 600;
+                return error;
+            }
+
+        }
+
+        for (int i = 0; i < h.harvesting_years.size(); i++) {
+            Rcpp::Rcout << "ReadHarvestingR(): h.harvesting_years[" << i << "]=" << h.harvesting_years[i] << std::endl;
+        }
+
+
+
+        Rcpp::Rcout << "ReadHarvestingR(): harvesting_success: "<< h.harvesting_success << std::endl;
+
+
+
+        for (int i = 0; i < harvesting_matrix_R.nrow(); ++i) {
+
+            // extract the year in the first column and initialize the year for each map if needed
+            int year = harvesting_matrix_R(i,0);
+            if (h.harvestLoc.find(year) == h.harvestLoc.end()) {
+                // not found so add a new key
+                h.harvestLoc.insert(std::pair<int, std::vector<locn>>(year, std::vector<locn>()));
+                h.harvestNb.insert(std::pair<int, std::vector<int>>(year, std::vector<int>()));
+                // if(dem.stageStruct) {
+                h.harvestMin_age.insert(std::pair<int, std::vector<int>>(year, std::vector<int>()));
+                h.harvestMax_age.insert(std::pair<int, std::vector<int>>(year, std::vector<int>()));
+                h.harvestStage.insert(std::pair<int, std::vector<int>>(year, std::vector<int>()));
+                // }
+                // if(dem.repType!=0) {
+                h.harvestSex.insert(std::pair<int, std::vector<int>>(year, std::vector<int>()));
+                // }
+
+            }
+
+            // push_back the source to the source map
+            locn s;
+            if(paramsLand.patchModel){ // if patch model, the x is the patch ID
+                // only if patch ID exists? otherwise exit?
+                if(harvesting_matrix_R(i,1) <= pLandscape->patchCount() && harvesting_matrix_R(i,1) > 0){ // not sure if I can run this check here
+                    s.x = harvesting_matrix_R(i,1);
+                    s.y = -9;
+                } else{
+                    Rcpp::Rcout << "ReadHarvestingR(): patch ID of source location " << harvesting_matrix_R(i,1) << " is either 0 or greater than the number of overall patches." << std::endl;
+                    error = 600;
+                    return error;
+                }
+
+            } else {
+                // if cell-based model
+                // check if x and y values are inside boundaries
+                bool data = false;
+                data = pLandscape->checkDataCell(harvesting_matrix_R(i,1), harvesting_matrix_R(i,2));
+                if(data == false){ // cell is out of boundary
+                    Rcpp::Rcout << "ReadHarvestingR(): source location " << harvesting_matrix_R(i,1) << " is outside the landscape." << std::endl;
+                    error = 600;
+                    return error;
+                } else{ // cell is within landscape
+                    s.x = harvesting_matrix_R(i,1);
+                    s.y = harvesting_matrix_R(i,2);
+                };
+            };
+
+            h.harvestLoc[year].push_back(s);
+
+            // push_back the number of individuals to the nb map
+            if(paramsLand.patchModel){
+                if((int)harvesting_matrix_R(i,2)>0){
+                    h.harvestNb[year].push_back((int)harvesting_matrix_R(i,2));
+                } else {
+                    Rcpp::Rcout << "ReadHarvestingR(): number of individuals to be harvesteded is 0 or a negative value." << std::endl;
+                    error = 600;
+                    return error;
+                }
+            } else {
+                // cell-based
+                if((int)harvesting_matrix_R(i,3)>0){
+                    h.harvestNb[year].push_back((int)harvesting_matrix_R(i,3));
+                }else{
+                    Rcpp::Rcout << "ReadHarvestingR(): number of individuals to be harvested is 0 or a negative value." << std::endl;
+                    error = 600;
+                    return error;
+                }
+            }
+
+            // only if stage structured
+            if(dem.stageStruct) {
+                // push_back the minimal age of the individuals to the min_age map
+                // the maximal age of the individuals to the max_age map
+                // and the stage of the individuals to the stage map
+                if(paramsLand.patchModel){
+                    if ((int)harvesting_matrix_R(i,3)>=0 || (int)harvesting_matrix_R(i,3)==-9){
+                        h.harvestMin_age[year].push_back((int)harvesting_matrix_R(i,3));
+                    } else{
+                        Rcpp::Rcout << "ReadHarvestingR(): minimal age of the individuals to be harvested is a negative value which is not -9." << std::endl;
+                        error = 600;
+                        return error;
+                    }
+                    if ((int)harvesting_matrix_R(i,4)>0 || (int)harvesting_matrix_R(i,4)==-9){
+                        h.harvestMax_age[year].push_back((int)harvesting_matrix_R(i,4));
+                    } else{
+                        Rcpp::Rcout << "ReadHarvestingR(): maximal age of the individuals to be harvested is 0 or a negative value which is not -9." << std::endl;
+                        error = 600;
+                        return error;
+                    }
+                    if ((int)harvesting_matrix_R(i,5)>=0 || (int)harvesting_matrix_R(i,5)==-9){
+                        h.harvestStage[year].push_back((int)harvesting_matrix_R(i,5));
+                    } else{
+                        Rcpp::Rcout << "ReadHarvestingR(): stage of the individuals to be harvested is a negative value which is not -9." << std::endl;
+                        error = 600;
+                        return error;
+                    }
+                } else {
+                    if ((int)harvesting_matrix_R(i,4)>=0 | (int)harvesting_matrix_R(i,4)==-9){
+                        h.harvestMin_age[year].push_back((int)harvesting_matrix_R(i,4));
+                    } else{
+                        Rcpp::Rcout << "ReadHarvestingR(): minimal age of the individuals to be harvested is a negative value which is not -9." << std::endl;
+                        error = 600;
+                        return error;
+                    }
+                    if ((int)harvesting_matrix_R(i,5)>0 | (int)harvesting_matrix_R(i,5)==-9){
+                        h.harvestMax_age[year].push_back((int)harvesting_matrix_R(i,5));
+                    } else{
+                        Rcpp::Rcout << "ReadHarvestingR(): maximal age of the individuals to be harvested is 0 or a negative value which is not -9." << std::endl;
+                        error = 600;
+                        return error;
+                    }
+                    if ((int)harvesting_matrix_R(i,6)>=0 | (int)harvesting_matrix_R(i,6)==-9){
+                        h.harvestStage[year].push_back((int)harvesting_matrix_R(i,6));
+                    } else{
+                        Rcpp::Rcout << "ReadHarvestingR(): stage of the individuals to be harvested is a negative value which is not -9." << std::endl;
+                        error = 600;
+                        return error;
+                    }
+                }
+            } else{
+                h.harvestMin_age[year].push_back(-9);
+                h.harvestMax_age[year].push_back(-9);
+                h.harvestStage[year].push_back(-9);
+            }
+
+            if(dem.repType!=0) {
+                // push_back the sex of the individuals to the sex map
+                if(paramsLand.patchModel){
+                    if ((int)harvesting_matrix_R(i,6) == 0 | (int)harvesting_matrix_R(i,6) == 1 | (int)harvesting_matrix_R(i,7) == -9){
+                        h.harvestSex[year].push_back((int)harvesting_matrix_R(i,6));
+                    } else{
+                        Rcpp::Rcout << "ReadHarvestingR(): sex of the individuals to be harvested is not 0, 1 or -9." << std::endl;
+                        error = 600;
+                        return error;
+                    }
+                } else {
+                    // cell-based
+                    if ((int)harvesting_matrix_R(i,7) == 0 | (int)harvesting_matrix_R(i,7) == 1 | (int)harvesting_matrix_R(i,9) == -9){
+                        h.harvestSex[year].push_back((int)harvesting_matrix_R(i,7));
+                    } else{
+                        Rcpp::Rcout << "ReadHarvestingR(): sex of the individuals to be harvested is not 0, 1 or -9." << std::endl;
+                        error = 600;
+                        return error;
+                    }
+                }
+            } else{
+                h.harvestSex[year].push_back(-9);
+            }
+        }
+
+        // check input
+        // loop over h.harvestLoc map and print out the content
+        for (std::map<int, std::vector<locn>>::iterator it = h.harvestLoc.begin(); it != h.harvestLoc.end(); ++it) {
+            Rcpp::Rcout << "ReadHarvestingR(): h.harvestLoc[" << it->first << "]: ";
+            for (int i = 0; i < it->second.size(); i++) {
+                Rcpp::Rcout << it->second[i].x << " " << it->second[i].y << " ";
+            }
+            Rcpp::Rcout << std::endl;
+        }
+
+        // check input
+        // loop over h.harvestNb map and print out the content
+        for (std::map<int, std::vector<int>>::iterator it = h.harvestNb.begin(); it != h.harvestNb.end(); ++it) {
+            Rcpp::Rcout << "ReadHarvestingR(): h.harvestNb[" << it->first << "]: ";
+            for (int i = 0; i < it->second.size(); i++) {
+                Rcpp::Rcout << it->second[i] << " ";
+            }
+            Rcpp::Rcout << std::endl;
+        }
+
+        if(dem.stageStruct) {
+            // check input
+            // loop over h.harvestMin_age map and print out the content
+            for (std::map<int, std::vector<int>>::iterator it = h.harvestMin_age.begin(); it != h.harvestMin_age.end(); ++it) {
+                Rcpp::Rcout << "ReadHarvestingR(): h.harvestMin_age[" << it->first << "]: ";
+                for (int i = 0; i < it->second.size(); i++) {
+                    Rcpp::Rcout << it->second[i] << " ";
+                }
+                Rcpp::Rcout << std::endl;
+            }
+
+            // check input
+            // loop over h.harvestMax_age map and print out the content
+            for (std::map<int, std::vector<int>>::iterator it = h.harvestMax_age.begin(); it != h.harvestMax_age.end(); ++it) {
+                Rcpp::Rcout << "ReadHarvestingR(): h.harvestMax_age[" << it->first << "]: ";
+                for (int i = 0; i < it->second.size(); i++) {
+                    Rcpp::Rcout << it->second[i] << " ";
+                }
+                Rcpp::Rcout << std::endl;
+            }
+
+            // check input
+            // loop over h.harvestStage map and print out the content
+            for (std::map<int, std::vector<int>>::iterator it = h.harvestStage.begin(); it != h.harvestStage.end(); ++it) {
+                Rcpp::Rcout << "ReadHarvestingR(): h.harvestStage[" << it->first << "]: ";
+                for (int i = 0; i < it->second.size(); i++) {
+                    Rcpp::Rcout << it->second[i] << " ";
+                }
+                Rcpp::Rcout << std::endl;
+            }
+        }
+
+        // only if sexual reproduction
+        if(dem.repType!=0) {
+
+            // check input
+            // loop over h.harvestSex map and print out the content
+            for (std::map<int, std::vector<int>>::iterator it = h.harvestSex.begin(); it != h.harvestSex.end(); ++it) {
+                Rcpp::Rcout << "ReadHarvestingR(): h.harvestSex[" << it->first << "]: ";
+                for (int i = 0; i < it->second.size(); i++) {
+                    Rcpp::Rcout << it->second[i] << " ";
+                }
+                Rcpp::Rcout << std::endl;
+            }
+        }
+
+        // set and update the translocation parameters
+        pManagement->setHarvestingParams(h);
+
+    }
+    return error;
+}
 //---------------------------------------------------------------------------
 
 Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
@@ -5300,6 +5610,21 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
                         Rcpp::Rcout << "ReadTranslocationR() done." << endl;
                     }
                 }
+
+                if(harvesting){
+                    read_error = ReadHarvestingR(pLandscape, ParMaster);
+                    if(read_error) {
+                        if(threadsafe){
+                            Rcpp::Rcout << "Error reading harvesting parameters - aborting" << endl;
+                        } else{
+                            rsLog << msgsim << sim.simulation << msgerr << read_error << msgabt << endl;
+                        }
+                        params_ok = false;
+                    } else{
+                        Rcpp::Rcout << "ReadHarvestingR() done." << endl;
+                    }
+                }
+
 				if(params_ok) {
 #if RSDEBUG
                     DebugGUI("RunBatchR(): simulation i=" + Int2Str(i));
@@ -5447,6 +5772,7 @@ void setglobalvarsR(Rcpp::S4 control)
 	stages = Rcpp::as<int>(control.slot("stages"));
     gTransferType = Rcpp::as<int>(control.slot("transfer"));
     translocation = Rcpp::as<int>(control.slot("translocation"));
+    harvesting = Rcpp::as<int>(control.slot("harvesting"));
     gHasNeutralGenetics = Rcpp::as<int>(control.slot("neutralgenetics"));
     gHasGeneticLoad = Rcpp::as<int>(control.slot("geneticload"));
     gHasGenetics = gHasNeutralGenetics || gHasGeneticLoad;

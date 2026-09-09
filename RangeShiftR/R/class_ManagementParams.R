@@ -179,22 +179,182 @@ setMethod("show", "TranslocationParams", function(object){
 })
 
 
+# Subclass holding the 'Harvesting' parameter
+
+#' Harvesting Parameters
+#'
+#' Harvesting is a management strategy to remove individuals from a population.
+#' Harvesting can be applied to control population size, manage invasive species, for economic purposes
+#' but can also represent illegal poaching events.
+#'
+#' @usage Harvesting(years = 1,
+#'                      HarvestMat = 0,
+#'                      harvesting_success = 1.0
+#'                       )
+#'
+#' @param years Vector of years in which harvesting events should take place
+#' @param HarvestMat Matrix of harvesting events. Each row represents a harvesting event. Columns represent:
+#'
+#'  - the year of the event,\cr
+#'  - the location (\code{Patch_ID} in case of patch-based models or \code{X} and \code{Y} location in case of cell-based models),\cr
+#'  - the number of individuals which are tried to be harvested,\cr
+#'  - minimal age of each individual,\cr
+#'  - maximal age of the individual,\cr
+#'  - stage of the individual,\cr
+#'  - sex of the individual\cr
+#' @param harvesting_success Harvesting success rate
+#'
+#' @details
+#'
+#' \strong{General information}
+#'
+#' This function harvests a specified number of individuals with given characteristics from a given site
+#' in a specified year representing a harvesting event.
+#' In other words, a harvesting event is defined by a unique combination of the year, site, and the number and characteristics of selected individuals.
+#'
+#' You must set at least one harvesting event, but there is no upper limit. Multiple harvesting events can occur
+#' per year (differing in either the characteristics of the individuals selected or
+#' the sites), or across different years.
+#'
+#' Individuals can be selected according to their age, stage and sex, depending on the type of demographic model applied.
+#' Only individuals which are currently not in the transfer phase are eligible for harvesting.
+#' After being selected for harvest, individuals are extracted and set to status 11.
+#'
+#' Additionally, you can define a constant harvesting success rate to determine the likelihood of successfully extracting a selected individual.
+#'
+#' \strong{Setting harvesting parameters}
+#'
+#' You need to create a Harvesting Matrix \code{HarvestMat} which hold the information for each harvesting event in each row.
+#'
+#' In the columns of the \code{HarvestMat} the year, site as well as the number of individuals and the characteristics are
+#' defined in the following order:
+#'
+#' - \code{year} of the translocation event \cr
+#' - \code{Patch_ID} or \code{X} and \code{Y} location site from which individuals are harvested. \cr
+#' - \code{nb_harvest} how many individuals of the given set of characteristics are tried to be harvested \cr
+#' - \code{min_age} minimal age of the individual in the interval of 0-MaxAge. Set to -9 to ignore. \cr
+#' - \code{max_age} maximal age of the individual in the interval of \code{min_age}-MaxAge. Set to -9 to ignore.\cr
+#' - \code{stage} of the individual. Set to -9 to ignore. \cr
+#' - \code{sex} of the individual: Only for sexual models, otherwise set to -9 to ignore  \cr
+#'
+#' \code{min_age}, \code{max_age} and \code{stage} can only be defined for stage structured models.
+#' For non stage structured models, or to ignore the characteristic, set the value to -9.
+#'
+#' \code{sex} can only be defined for sexual models. For non sexual models, or to ignore the characteristic, set the value to -9.
+#'
+#' To avoid unused harvest events, you should set the range of allowed characteristics as broad as possible.
+#'
+#' Each row of the harvesting matrix \code{HarvestMat} should hold a unique combination of year, site,
+#' the number of individuals to harvest as well as characteristics of these individuals.
+#' You may add more than one harvest event per year, i.e. there may be multiple sites for each year of a harvest
+#' event or multiple individual characteristics for a certain site.
+#'
+#' In each \code{year} of a translocation event, individuals matching the given criteria in the site are collected and a given number of individuals \code{nb_harvest}
+#' are sampled from this subset. The success of harvesting one of these sampled individuals in the site is defined by the \code{harvesting_success}.
+#' Successfully caught individuals are then extracted from the simulation and the individual will be assigned the status 11 (harvested).
+#'
+#' The site is required to be habitat patches or cells of the landscape. Otherwise the harvesting event will be skipped.
+#'
+#' @references
+#'         \insertAllCited{}
+#' @return a parameter object of class "ManagementParams"
+#' @author Jette Wolff
+#' @name Harvesting
+#' @export Harvesting
+Harvesting <- setClass("HarvestingParams", slots = c(years = "numeric",
+                                                           HarvestMat = "matrix",
+                                                           harvesting_success = "numeric")
+                          , prototype = list(years = -9L,
+                                             HarvestMat = matrix(0, nrow = 8, ncol = 8),
+                                             harvesting_success = 1L
+                          )
+)
+
+setValidity("HarvestingParams", function(object) {
+    msg <- NULL
+    # Check if years is not NA, has at least one entry and is either a numeric or integer
+    if (any(is.na(object@years)) || length(object@years)==0) {
+        msg <- c(msg, "Years must be defined")
+    }else{
+        if (!is.integer(object@years) && !is.numeric(object@years)) {
+            msg <- c(msg, "Years must be numeric or integer")
+        }
+    }
+
+    # Check if HarvestMat is not NA, is a matrix and has at least as many rows and years
+    if (any(is.na(object@HarvestMat)) && !is.matrix(object@HarvestMat)){
+        msg <- c(msg, "HarvestMat must be defined and be a matrix")
+    }else {
+        if(nrow(object@HarvestMat) < length(object@years)) {
+            msg <- c(msg, "HarvestMat must have at least as many rows as years of harvesting events")
+        } else {
+            if(!all(sort(object@HarvestMat[,1]) == object@HarvestMat[,1])){
+                msg <- c(msg, "Harvesting matrix must contain subsequent years!")
+            } else{
+                if (ncol(object@HarvestMat) != 7 && ncol(object@TransLocMat) != 8) { # 8 is only true for patch-based models; for cell based models it should be 10
+                    msg <- c(msg, "HarvestMat must have 7 or 8 columns: year, source location (patch ID OR 2 columns X and Y), number of individuals, min age, max age, stage.")
+                }
+            }
+            # check if unique values of first column of TransLocMat are equal to years
+            if (!all(unique(object@HarvestMat[,1]) %in% object@years)) {
+                msg <- c(msg, "You must provide define at least one translocation event for each year of translocation.")
+            }
+        }
+    }
+
+    # Check if harvesting_success is not NA and is a numeric
+    if (is.na(object@harvesting_success)) {
+        msg <- c(msg, "Harvesting success must be defined")
+    }else{
+        if (!is.numeric(object@harvesting_success)) {
+            msg <- c(msg, "Harvesting success must be numeric")
+        }
+    }
+
+    if (is.null(msg)) TRUE else msg}
+)
+
+setMethod("initialize", "HarvestingParams", function(.Object,...) {
+    this_func = "Harvesting(): "
+    args <- list(...)
+    .Object <- callNextMethod()
+    if ( length(args) == 0 ) {
+        validObject(.Object)
+    }
+    .Object}
+)
+
+
+setMethod("show", "HarvestingParams", function(object){
+    cat(" Harvesting:\n")
+    cat("  Years of harvesting events: ", object@years, "\n")
+    cat("  Harvesting success: ", object@harvesting_success, "\n")
+    cat("  Harvesting Matrix: \n")
+    print(object@HarvestMat)
+})
+
+
 
 #### MANAGEMENT ####
 
 # define this ClassUnion so that the 'Translocation' slot in the parameter master class 'RSparams' can be FALSE for not considering translocations
 setClassUnion("TranslocationSlot", c("logical", "TranslocationParams"))
 
-# Superclass holding the subclasses 'Translocation', but eventually also 'Hunting' and 'Poaching'
+# define this ClassUnion so that the 'Harvesting' slot in the parameter master class 'RSparams' can be FALSE for not considering harvesting
+setClassUnion("HarvestingSlot", c("logical", "HarvestingParams"))
+
+# Superclass holding the subclasses 'Translocation' and "Harvesting", but eventually also other management options
 
 #' Management Parameters
 #'
 #' With this function you can set all management strategies you wish to apply to your simulations.
 #' This function includes for now only the translocation of individuals (see details below).
 #'
-#' @usage Management(Translocation = Translocation())
+#' @usage Management(Translocation = Translocation(),
+#'                 Harvesting = Harvesting())
 #'
 #' @param Translocation Set translocation events. See \code{\link{Translocation}} for more details.
+#' @param Harvesting Set harvesting events. See \code{\link{Harvesting}} for more details.
 #'
 #' @details
 #'
@@ -205,6 +365,11 @@ setClassUnion("TranslocationSlot", c("logical", "TranslocationParams"))
 #' to increase survival probabilities of species, increase genetic diversity or restore ecological balance.The selection of
 #' suitable source and destination sites as well as selection of suitable individuals is crucial for the success of the strategy.
 #'
+#' \strong{Harvesting}
+#'
+#' Harvesting is a management strategy to remove individuals from a population.
+#' Harvesting can be applied to control population size, manage invasive species, for economic purposes but can also represent illegal poaching events.
+#'
 #'
 #' @references
 #'         \insertAllCited{}
@@ -212,8 +377,8 @@ setClassUnion("TranslocationSlot", c("logical", "TranslocationParams"))
 #' @author Jette Wolff
 #' @name Management
 #' @export Management
-Management <- setClass("ManagementParams", slots = c(Translocation = "TranslocationSlot")
-                      , prototype = list(Translocation = FALSE)
+Management <- setClass("ManagementParams", slots = c(Translocation = "TranslocationSlot", Harvesting = "HarvestingSlot")
+                      , prototype = list(Translocation = FALSE, Harvesting = FALSE)
 )
 
 setValidity("ManagementParams", function(object) {
@@ -233,5 +398,6 @@ setMethod("initialize", "ManagementParams", function(.Object,...) {
 setMethod("show", "ManagementParams", function(object){
     cat(" Management: \n ")
     print(object@Translocation)
+    print(object@Harvesting)
 })
 

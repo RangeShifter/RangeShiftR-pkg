@@ -186,6 +186,12 @@ setMethod("+", signature(e1 = "RSparams", e2 = "ManagementParams"), function(e1,
     else {
         e1@control@translocation = FALSE
     }
+    if (class(e2@Harvesting)[1] == "HarvestingParams") {
+        e1@control@harvesting = TRUE
+    }
+    else {
+        e1@control@harvesting = FALSE
+    }
     e1@management <- e2
     return(e1)}
 )
