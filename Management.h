@@ -29,6 +29,7 @@
 
  paramManagement  - Management parameters
  paramTranslocation  - Translocation parameters
+ paramHarvesting  - Harvesting parameters
 
 
  Last updated: 12 March 2024 by Jette Reeg
@@ -97,6 +98,7 @@ struct harvestingParams {
     double harvesting_success; // Harvesting success rate
     std::vector<int> harvesting_years; // Number of years of harvesting events -> will be increased at the beginning of a simulation
     std::map< int, std::vector <locn> > harvestLoc; // Patch or cell: should be a vector of arrays
+    std::map< int, std::vector <int> > harvestThres; // Threshold for harvesting
     std::map< int, std::vector <int> > harvestNb; // number of harvested individuals
     std::map< int, std::vector <int> > harvestMin_age; // Minimum age of harvested individuals
     std::map< int, std::vector <int> > harvestMax_age; // Maximum age of harvested individuals
@@ -154,6 +156,7 @@ public:
     double harvesting_success; // Harvesting success rate
     std::vector<int> harvesting_years; // Number of years of harvesting events -> should be a dynamic vector
     std::map< int, std::vector <locn> > harvestLoc; // Source patch or cell: should be a vector of arrays
+    std::map< int, std::vector <int> > harvestThres; // Threshold for harvesting
     std::map< int, std::vector <int> > harvestNb; // number of harvested individuals
     std::map< int, std::vector <int> > harvestMin_age; // Minimum age of harvested individuals
     std::map< int, std::vector <int> > harvestMax_age; // Maximum age of harvested individuals

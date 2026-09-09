@@ -47,6 +47,7 @@ Management::Management(void) {
     harvesting_success = 1.0; // harvesting success rate
     std::vector<int> harvesting_years; // Number of years of harvesting events
     std::map< int, std::vector <locn> > harvestLoc; // Source patch or cell: should be a vector of arrays
+    std::map< int, std::vector <int> > harvestThres; // Threshold for harvesting
     std::map< int, std::vector <int> > harvestNb; // number of harvested individuals
     std::map< int, std::vector <int> > harvestMin_age; // Minimum age of harvested individuals
     std::map< int, std::vector <int> > harvestMax_age; // Maximum age of harvested individuals
@@ -67,6 +68,7 @@ Management::~Management(void) {
     stage.clear();
     sex.clear();
     harvestLoc.clear();
+    harvestThres.clear();
     harvestNb.clear();
     harvestMin_age.clear();
     harvestMax_age.clear();
@@ -105,6 +107,7 @@ harvestingParams Management::getHarvestingParams(void) {
     h.harvesting_success = harvesting_success;
     h.harvesting_years = harvesting_years;
     h.harvestLoc = harvestLoc;
+    h.harvestThres = harvestThres;
     h.harvestNb = harvestNb;
     h.harvestMin_age = harvestMin_age;
     h.harvestMax_age = harvestMax_age;
@@ -130,6 +133,7 @@ void Management::setHarvestingParams(const harvestingParams h){
     harvesting_success = h.harvesting_success;
     harvesting_years = h.harvesting_years;
     harvestLoc = h.harvestLoc;
+    harvestThres = h.harvestThres;
     harvestNb = h.harvestNb;
     harvestMin_age = h.harvestMin_age;
     harvestMax_age = h.harvestMax_age;
@@ -382,6 +386,7 @@ void Management::harvest(int yr
     #endif
     landParams ppLand = pLandscape->getLandParams();
     auto it = harvestNb.find(yr); // the number of harvesting events (if there are e.g. multiple patches with harvesting events) is determined by the number of elements of the maps at year yr
+    auto threshold_it = harvestThres.find(yr);
     auto nb_it = harvestNb.find(yr);
     auto loc_it = harvestLoc.find(yr);
     auto min_age_it = harvestMin_age.find(yr);
@@ -486,6 +491,16 @@ void Management::harvest(int yr
            }
         }
         // only if cell/patch exist, individuals are harvested:
+        // and only if population size is above threshold
+        if (s_pPop->getNbInds() < threshold_it->second[e]) {
+            #if RS_RCPP
+                Rcpp::Rcout << "Population size is below threshold! skipping harvesting event." << endl;
+            #endif
+            #ifndef NDEBUG
+                cout << "Population size is below threshold! skipping harvesting event." << endl;
+            #endif
+            return;
+        }
         // get individuals with the given characteristics in that population
         int min_age = min_age_it->second[e];
         int max_age = max_age_it->second[e];
@@ -500,10 +515,10 @@ void Management::harvest(int yr
         int harvested = 0;
         // loop over all individuals, extract sampled individuals, try to harvest individual
         for (int j = 0; j < s_stats.nInds; j++) {
-            // if there are individuals to catch
+            // if there are individuals to harvest
             if(s_pPop->getSizeSampledInds()){
                 // if this individual is matching one of the sampled individuals
-                harvested_individual = s_pPop->catchIndividual(harvesting_success, j); // catch individual in the patch
+                harvested_individual = s_pPop->harvestIndividual(harvesting_success, j); // catch individual in the patch
                 if (harvested_individual !=NULL) { // harvested individual - has already been removed from natal population
                     harvested_individual->setStatus(11); // should be set to dying
                     harvested ++;  
