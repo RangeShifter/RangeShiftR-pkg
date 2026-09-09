@@ -1805,6 +1805,35 @@ Individual* Population::catchIndividual( // Translocate a set of individuals wit
 }
 
 // ---------------------------------------------------------------------------
+// harvest individuals according to harvest success
+// ---------------------------------------------------------------------------
+Individual* Population::harvestIndividual( // Translocate a set of individuals with specified characteristics
+        double harvest_success,
+        int j
+){
+    Individual* harvested;
+    int id = inds[j]->getId();
+    // If individual is part of the sampledInds vector:
+    if (std::find(sampledInds.begin(), sampledInds.end(), inds[j]) != std::end(sampledInds)){
+        // try to harvest individual
+#if RS_RCPP
+        if(harvest_success > 1) Rcpp::Rcout << "Harvest success: " << harvest_success << std::endl;
+#endif
+        if (pRandom->Bernoulli(harvest_success)){
+            indStats indstat = inds[j]->getStats();
+            harvested = inds[j];
+            cleanSampledInds(harvested); // clean vector of sampled individuals after the event
+            return harvested;
+        }else {
+            cleanSampledInds(inds[j]); // clean vector of sampled individuals after the event
+            return NULL;
+            }
+    } else {
+        return NULL;
+    }
+}
+
+// ---------------------------------------------------------------------------
 bool Population::getSizeSampledInds(
 ){
     bool size = false;

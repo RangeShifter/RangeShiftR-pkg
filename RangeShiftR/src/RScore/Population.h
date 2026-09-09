@@ -245,6 +245,11 @@ public:
 	    int
 	);
 
+	Individual* harvestIndividual(
+	    double, // harvest success rate
+	    int
+	);
+
 	// void completeTranslocation(
 	//         std::vector <Individual*> // catched individuals
 	// );
