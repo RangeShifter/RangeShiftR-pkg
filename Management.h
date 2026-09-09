@@ -76,6 +76,7 @@ typedef unsigned long long intptr;
 // Structure for management parameters
 struct managementParams {
     bool translocation; // Translocation
+    bool harvesting; // Harvesting
 };
 
 // Structure for translocation parameters
@@ -89,6 +90,18 @@ struct translocationParams {
     std::map< int, std::vector <int> > max_age; // Maximum age of translocated individuals
     std::map< int, std::vector <int> > stage; // Stage of translocated individuals
     std::map< int, std::vector <int> > sex; // Sex of translocated individuals
+};
+
+// Structure for harvesting parameters
+struct harvestingParams {
+    double harvesting_success; // Harvesting success rate
+    std::vector<int> harvesting_years; // Number of years of harvesting events -> will be increased at the beginning of a simulation
+    std::map< int, std::vector <locn> > harvestLoc; // Patch or cell: should be a vector of arrays
+    std::map< int, std::vector <int> > harvestNb; // number of harvested individuals
+    std::map< int, std::vector <int> > harvestMin_age; // Minimum age of harvested individuals
+    std::map< int, std::vector <int> > harvestMax_age; // Maximum age of harvested individuals
+    std::map< int, std::vector <int> > harvestStage; // Stage of harvested individuals
+    std::map< int, std::vector <int> > harvestSex; // Sex of harvested individuals
 };
 
 
@@ -105,9 +118,20 @@ public:
     void setTranslocationParams( // function to set translocation parameters
             const translocationParams	// structure holding translocation parameters
     );
+    void setHarvestingParams( // function to set harvesting parameters
+            const harvestingParams	// structure holding harvesting parameters
+    );
     translocationParams getTranslocationParams(void);
+    harvestingParams getHarvestingParams(void);
     void translocate(   // Translocation
             int  ,       // year of translocation
+            Landscape* , // pointer to the landscape
+            // Community*, // pointer to the community
+            Species*   // pointer to the species
+            );
+
+    void harvest(   // Harvesting
+            int  ,       // year of harvesting
             Landscape* , // pointer to the landscape
             // Community*, // pointer to the community
             Species*   // pointer to the species
@@ -125,6 +149,16 @@ public:
     std::map< int, std::vector <int> > max_age; // Maximum age of translocated individuals
     std::map< int, std::vector <int> > stage; // Stage of translocated individuals
     std::map< int, std::vector <int> > sex; // Sex of translocated individuals
+
+    bool harvesting; // Harvesting
+    double harvesting_success; // Harvesting success rate
+    std::vector<int> harvesting_years; // Number of years of harvesting events -> should be a dynamic vector
+    std::map< int, std::vector <locn> > harvestLoc; // Source patch or cell: should be a vector of arrays
+    std::map< int, std::vector <int> > harvestNb; // number of harvested individuals
+    std::map< int, std::vector <int> > harvestMin_age; // Minimum age of harvested individuals
+    std::map< int, std::vector <int> > harvestMax_age; // Maximum age of harvested individuals
+    std::map< int, std::vector <int> > harvestStage; // Stage of harvested individuals
+    std::map< int, std::vector <int> > harvestSex; // Sex of harvested individuals
 
 };
 

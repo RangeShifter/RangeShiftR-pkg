@@ -45,6 +45,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 	transferRules trfr = pSpecies->getTransferRules();
 	managementParams manage = pManagement->getManagementParams();
 	translocationParams transloc = pManagement->getTranslocationParams();
+	harvestingParams harvest = pManagement->getHarvestingParams();
 	initParams init = paramsInit->getInit();
 	simParams sim = paramsSim->getSim();
 
@@ -436,6 +437,13 @@ int RunModel(Landscape* pLandscape, int seqsim)
                                      , pLandscape
                                      , pSpecies
                                      );
+				}
+
+				if (manage.harvesting && std::find(harvest.harvesting_years.begin(), harvest.harvesting_years.end(), yr) != harvest.harvesting_years.end()) {
+					pManagement->harvest(yr
+									 , pLandscape
+									 , pSpecies
+									 );
 				}
 
 				// Output and pop. visualisation before reproduction
@@ -1716,6 +1724,8 @@ void OutParameters(Landscape* pLandscape)
 	// Management
 	managementParams manage = pManagement->getManagementParams();
 	translocationParams transloc = pManagement->getTranslocationParams();
+	harvestingParams harvest = pManagement->getHarvestingParams();
+
 	if(manage.translocation){
 	    outPar << endl << "MANAGEMENT - TRANSLOCATION: \t";
         // loop over translocation_years and print them
@@ -1741,6 +1751,39 @@ void OutParameters(Landscape* pLandscape)
 	            } else{
 	                outPar << "      Source cell: X " << source_it->second[j].x << " Y " << source_it->second[j].y << endl;
 	                outPar << "      Target cell: X " << target_it->second[j].x << " Y " << target_it->second[j].y << endl;
+	            }
+	            outPar << "      Min age: " << min_age_it->second[j] << endl;
+	            outPar << "      Max age: " << max_age_it->second[j] << endl;
+	            outPar << "      Stage: " << stage_it->second[j] << endl;
+	            outPar << "      Sex: " << sex_it->second[j] << endl;
+	            outPar << "      Number of individuals: " << nb_it->second[j] << endl;
+
+	        }
+	    }
+	}
+
+	if(manage.harvesting){
+	    outPar << endl << "MANAGEMENT - HARVESTING: \t";
+        // loop over harvesting_years and print them
+        outPar << endl;
+	    outPar << "Harvesting success: " << harvest.harvesting_success << endl;
+	    for( int i = 0; i < harvest.harvesting_years.size(); i++ ) {
+	        auto yr = harvest.harvesting_years[i];
+	        auto it = harvest.harvestNb.find(yr);
+	        auto nb_it = harvest.harvestNb.find(yr);
+	        auto source_it = harvest.harvestLoc.find(yr);
+	        auto min_age_it = harvest.harvestMin_age.find(yr);
+	        auto max_age_it = harvest.harvestMax_age.find(yr);
+	        auto stage_it = harvest.harvestStage.find(yr);
+	        auto sex_it = harvest.harvestSex.find(yr);
+	        outPar << "  Harvesting events in year: " << yr << endl;
+	        for( int j = 0; j < it->second.size(); j++ ){
+	            outPar << "    Event Nr. " << j+1 << " :" << endl;
+	            // if it is a cell based model
+	            if(ppLand.patchModel){
+	                outPar << "      Patch ID: " << source_it->second[j].x << endl;
+	            } else{
+	                outPar << "      Cell: X " << source_it->second[j].x << " Y " << source_it->second[j].y << endl;
 	            }
 	            outPar << "      Min age: " << min_age_it->second[j] << endl;
 	            outPar << "      Max age: " << max_age_it->second[j] << endl;
