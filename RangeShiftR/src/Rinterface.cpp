@@ -330,6 +330,8 @@ Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
     transferRules trfr = pSpecies->getTransferRules();
 
     // create new Management
+    if (pManagement != NULL)
+        delete pManagement;
     pManagement = new Management;
     managementParams m = pManagement->getManagementParams();
 
@@ -4613,9 +4615,9 @@ int ReadTranslocationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 {
     int error = 0;
     // create new Management
-    if(pManagement != NULL)
-        delete pManagement;
-    pManagement = new Management;
+    // if(pManagement != NULL)
+    //     delete pManagement;
+    // pManagement = new Management;
     // get landscape parameter (to distinguish between patch and cell model)
     landParams paramsLand = pLandscape->getLandParams();
     // get demographic parameter (to distinguish between sexual and asexual reproduction, and stage structured or not)
@@ -4959,10 +4961,10 @@ int ReadTranslocationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 int ReadHarvestingR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 {
     int error = 0;
-    // create new Management
-    if(pManagement != NULL)
-        delete pManagement;
-    pManagement = new Management;
+    // // create new Management
+    // if(pManagement != NULL)
+    //     delete pManagement;
+    // pManagement = new Management;
     // get landscape parameter (to distinguish between patch and cell model)
     landParams paramsLand = pLandscape->getLandParams();
     // get demographic parameter (to distinguish between sexual and asexual reproduction, and stage structured or not)
