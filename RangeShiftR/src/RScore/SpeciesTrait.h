@@ -60,7 +60,7 @@ public:
     ExpressionType getExpressionType() const { return expressionType; };
 
     int getNbNeutralAlleles() const {
-        if (!traitType == NEUTRAL) throw logic_error("getNbNeutralAlleles() should only be called for neutral traits.");
+        if (traitType != NEUTRAL) throw logic_error("getNbNeutralAlleles() should only be called for neutral traits.");
         else {
             int maxAlleleVal = max(
                 getMutationParameters().find(MAX)->second + 1,

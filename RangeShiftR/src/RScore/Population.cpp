@@ -167,7 +167,8 @@ Population::Population(Species* pSp, Patch* pPch, int ninds, int resol)
 					if (nAges > 1) {
 						double rrr = pRandom->Random();
 						int ageclass = 0;
-						while (rrr > ageProb[ageclass]) ageclass++;
+						// guard against rounding: the last cumulative value may be < 1
+						while (ageclass < nAges - 1 && rrr > ageProb[ageclass]) ageclass++;
 						age = minage + ageclass;
 					}
 					else age = minage;
@@ -597,8 +598,10 @@ void Population::reproduction(const float localK, const float envval, const int 
 				if (sstruct.fecDens) { // apply density dependence
 					float effect = 0.0;
 					if (sstruct.fecStageDens) { // stage-specific density dependence
-						// NOTE: matrix entries represent effect of ROW on COLUMN 
-						// AND males precede females
+						// NOTE: matrix entry [row][col] is the effect of the COLUMN stage (acting) on the
+						// ROW stage (affected), w_ij = effect of j on i, as in the R documentation;
+						// in the complex sexual model the matrix index puts males before females
+						// (2*stage = m, 2*stage+1 = f), although internally sex 0 = female, 1 = male
 						float weight = 0.0;
 						for (int effstg = 0; effstg < nStages; effstg++) {
 							for (int effsex = 0; effsex < nSexes; effsex++) {
@@ -675,7 +678,8 @@ void Population::reproduction(const float localK, const float envval, const int 
 					for (int j = 0; j < njuvs; j++) {
 
 						Individual* newJuv;
-						newJuv = new Individual(pSpecies, pCell, pPatch, 0, 0, 0, dem.propMales, trfr.usesMovtProc, trfr.moveType);
+						// asexual (female-only) model: offspring are always female
+						newJuv = new Individual(pSpecies, pCell, pPatch, 0, 0, 0, 0.0, trfr.usesMovtProc, trfr.moveType);
 
 						if (pSpecies->getNTraits() > 0) {
 							newJuv->inheritTraits(pSpecies, inds[i], resol);
@@ -805,6 +809,7 @@ void Population::fledge(void)
 }
 
 Individual* Population::sampleInd() const {
+	if (inds.empty()) return nullptr;
 	int index = pRandom->IRandom(0, static_cast<int>(inds.size() - 1));
 	return inds[index];
 }
@@ -814,12 +819,14 @@ void Population::sampleIndsWithoutReplacement(string strNbToSample, const set<in
 	if (sampledInds.size() > 0) {
 		sampledInds.clear();
 	}
-	auto rng = pRandom->getRNG();
+	auto& rng = pRandom->getRNG();// bugfix: auto& - plain auto would copy the generator again
 	vector<Individual*> stagedInds;
 
 	// Stage individuals in eligible stages
 	for (int stage : sampleStages) {
 		vector<Individual*> toAdd = getIndividualsInStage(stage);
+		// exclude individuals already doomed this season (status 6-9; removed by survival1())
+		erase_if(toAdd, [](Individual* ind) { const int st = ind->getStatus(); return st >= 6 && st != 10; });
 		stagedInds.insert(stagedInds.begin(), toAdd.begin(), toAdd.end());
 	}
 
@@ -1150,8 +1157,10 @@ void Population::survival0(float localK, short option0, short option1, std::vect
 				// NB DD in development does NOT apply to juveniles,
 					float effect = 0.0;
 					if (sstruct.devStageDens) { // stage-specific density dependence
-						// NOTE: matrix entries represent effect of ROW on COLUMN 
-						// AND males precede females
+						// NOTE: matrix entry [row][col] is the effect of the COLUMN stage (acting) on the
+						// ROW stage (affected), w_ij = effect of j on i, as in the R documentation;
+						// in the complex sexual model the matrix index puts males before females
+						// (2*stage = m, 2*stage+1 = f), although internally sex 0 = female, 1 = male
 						float weight = 0.0;
 						for (int effstg = 0; effstg < nStages; effstg++) {
 							for (int effsex = 0; effsex < nSexes; effsex++) {
@@ -1177,8 +1186,10 @@ void Population::survival0(float localK, short option0, short option1, std::vect
 
 					float effect = 0.0;
 					if (sstruct.survStageDens) { // stage-specific density dependence
-						// NOTE: matrix entries represent effect of ROW on COLUMN 
-						// AND males precede females
+						// NOTE: matrix entry [row][col] is the effect of the COLUMN stage (acting) on the
+						// ROW stage (affected), w_ij = effect of j on i, as in the R documentation;
+						// in the complex sexual model the matrix index puts males before females
+						// (2*stage = m, 2*stage+1 = f), although internally sex 0 = female, 1 = male
 						float weight = 0.0;
 						for (int effstg = 0; effstg < nStages; effstg++) {
 							for (int effsex = 0; effsex < nSexes; effsex++) {
@@ -1687,7 +1698,7 @@ std::vector <Individual*> Population::getIndsWithCharacteristics( // Select a se
         if (max_age!=-9){
             // loop over all number of individuals in cell
             for (int i = 0; i < ninds; i++) {
-                if (filteredInds[i] != NULL && inds[i]->getStats().age < max_age){// if not already NULL + age too old
+                if (filteredInds[i] != NULL && inds[i]->getStats().age > max_age){// if not already NULL + age too old; bugfix: check was inverted before 
                     if (filteredInds[i] != NULL) filteredInds[i] = NULL; // set it to NULL if not already NULL
                 }
             }
@@ -1746,7 +1757,7 @@ int Population::sampleIndividuals( // Select a set of individuals with specified
         int sex     //sex
         ){
     if(sampledInds.size() > 0)  sampledInds.clear(); // clear old vector
-    auto rng = pRandom->getRNG(); // random number for sampling from suitable individuals
+    auto& rng = pRandom->getRNG(); // random number for sampling from suitable individuals bugfix: auto& - plain auto would copy the generator again
 
     // get individuals with the characteristics
     std::vector <Individual*> filtered;
