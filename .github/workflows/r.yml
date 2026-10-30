@@ -35,7 +35,8 @@ jobs:
       - name: Install pak (Windows)
         if: runner.os == 'Windows'
         run: |
-          install.packages("pak", repos = "https://cran.r-project.org")
+          options(timeout = 600)
+          install.packages("pak", repos = "https://cloud.r-project.org")
         shell: Rscript {0}
  
       - name: Install pak (macOS/Linux)
