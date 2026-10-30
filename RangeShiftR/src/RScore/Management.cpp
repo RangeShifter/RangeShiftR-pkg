@@ -228,7 +228,7 @@ void Management::translocate(int yr
                         Rcpp::Rcout << "Target patch was found in landscape but has K = 0! skipping translocation event." << endl;
                     #endif
                     #ifndef NDEBUG
-                        cout << "Target patch was not found in landscape but has K = 0! skipping translocation event." << endl;
+                        cout << "Target patch was found in landscape but has K = 0! skipping translocation event." << endl;
                     #endif
 	                continue; // skip this event only
                 }
@@ -260,7 +260,7 @@ void Management::translocate(int yr
                             Rcpp::Rcout << "Target cell was found in landscape but has K = 0! skipping translocation event." << endl;
                           #endif
                           #ifndef NDEBUG
-                            cout << "Target cell was not found in landscape but has K = 0! skipping translocation event." << endl;
+                            cout << "Target cell was found in landscape but has K = 0! skipping translocation event." << endl;
                           #endif
                           continue; // skip this event only
                      }
