@@ -632,7 +632,7 @@ setValidity("RSparams", function(object) {
         }
     }
     } else {
-        if(object@dispersal@Settlement@DensDep){
+        if(object@dispersal@Settlement@DensDep && !object@dispersal@Settlement@IndVar){ # with IndVar, S0/alpha/beta come from SettlementTraits()
             rows = 1
             cols = 3
             if (dim(object@dispersal@Settlement@Settle)[1]!=rows) {
