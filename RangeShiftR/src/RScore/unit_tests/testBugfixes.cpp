@@ -522,6 +522,25 @@ namespace {
 		assert(std::count(forTransloc.begin(), forTransloc.end(), pTrans) == 0);
 	}
 
+	
+	// checkDataCell() is called while reading management parameters, before an
+	// artificial landscape has been generated: it must not dereference the
+	// (not yet allocated) cell array, but check the bounds only
+	void test_checkDataCell_before_cells_exist() {
+		Landscape ls;
+		landParams lp = makeLandParams(20, 10);
+		ls.setLandParams(lp, true);              // no setCellArray(): cells == 0
+		assert(ls.checkDataCell(5, 7));
+		assert(!ls.checkDataCell(20, 0));
+		assert(!ls.checkDataCell(0, 10));
+		assert(!ls.checkDataCell(-1, 0));
+
+		ls.setCellArray();                       // once cells exist, no-data cells are rejected
+		assert(!ls.checkDataCell(5, 7));
+		ls.addCellToLand(new Cell(5, 7, (Patch*)nullptr, 0));
+		assert(ls.checkDataCell(5, 7));
+	}
+
 	const std::map<string, std::function<void()>>& bugfixTests() {
 		static const std::map<string, std::function<void()>> tests{
 			{ "getRNG_advances_state", test_getRNG_advances_state },
@@ -546,6 +565,7 @@ namespace {
 			{ "harvest_removes_individuals_immediately", test_harvest_removes_individuals_immediately },
 			{ "harvest_invalid_event_skips_only_itself", test_harvest_invalid_event_skips_only_itself },
 			{ "harvest_translocated_individual", test_harvest_translocated_individual },
+			{ "checkDataCell_before_cells_exist", test_checkDataCell_before_cells_exist },
 		};
 		return tests;
 	}
