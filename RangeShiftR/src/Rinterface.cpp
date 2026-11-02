@@ -149,7 +149,11 @@ Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
 	Rcpp::Rcout << endl << "Working directory: " << paramsSim->getDir(0) << endl;
 #endif
 
-    bool errorfolder = CheckDirectory(dirpath);
+    bool folderOK = CheckDirectory(dirpath); // returns TRUE if Inputs/Outputs/Output_Maps exist
+    if(!folderOK) {
+        delete paramsGrad; delete paramsStoch; delete paramsInit; delete paramsSim;
+        return Rcpp::List::create(Rcpp::Named("Errors") = 666);
+    }
     // if(errorfolder) {
     //     Rcpp::Rcout << endl << "***** Invalid working directory: " << paramsSim->getDir(0) << endl << endl;
     //     Rcpp::Rcout << "***** Working directory must contain Inputs, Outputs and Output_Maps folders" << endl << endl;
@@ -1442,6 +1446,13 @@ int ReadDynLandR(Landscape *pLandscape, Rcpp::S4 LandParamsR)
                 yearLayers_fname = Rcpp::as<Rcpp::StringVector>(demogScaleLayers[i]);
         }
 
+		if (errors > 0) { // header errors of a dynamic landscape map: abort instead of silently skipping
+			if(hfile.is_open()) hfile.close();
+			if(pfile.is_open()) pfile.close();
+			if(cfile.is_open()) cfile.close();
+			hfile.clear(); pfile.clear(); cfile.clear();
+			return -215;
+		}
 		if (errors == 0)  {
             if (threadsafe){
                 imported = pLandscape->readLandChange(i-1, hraster, praster, craster, yearLayers);
@@ -1915,7 +1926,7 @@ int ReadStageStructureR(Rcpp::S4 ParMaster)
             if(layercols == feclayerMatrix.ncol() && layerrows == feclayerMatrix.nrow() ) {
                 for(i = 0; i < layerrows; i++) { // stages in rows
                     for(j = 0; j < layercols; j++) { // sexes in columns
-                        if( !R_IsNA( feclayerMatrix(i,j) ) ){
+                        if( feclayerMatrix(i,j) != NA_INTEGER ){ // R_IsNA() only works for doubles
                             layerix = feclayerMatrix(i,j);
                             pSpecies->setFecLayer(i, j, (layerix-1) ); // subtract 1 to account for different indexing in R and C
                             pSpecies->setFecSpatial(true);
@@ -1929,7 +1940,7 @@ int ReadStageStructureR(Rcpp::S4 ParMaster)
             if(layercols == devlayerMatrix.ncol() && layerrows == devlayerMatrix.nrow() ) {
                 for(i = 0; i < layerrows; i++) { // stages in rows
                     for(j = 0; j < layercols; j++) { // sexes in columns
-                        if( !R_IsNA( devlayerMatrix(i,j) ) ){
+                        if( devlayerMatrix(i,j) != NA_INTEGER ){ // R_IsNA() only works for doubles
                             layerix = devlayerMatrix(i,j);
                             pSpecies->setDevLayer(i, j, (layerix-1) ); // subtract 1 to account for different indexing in R and C
                             pSpecies->setDevSpatial(true);
@@ -1943,7 +1954,7 @@ int ReadStageStructureR(Rcpp::S4 ParMaster)
             if(layercols == survlayerMatrix.ncol() && layerrows == survlayerMatrix.nrow() ) {
                 for(i = 0; i < layerrows; i++) { // stages in rows
                     for(j = 0; j < layercols; j++) { // sexes in columns
-                        if( !R_IsNA( survlayerMatrix(i,j) ) ){
+                        if( survlayerMatrix(i,j) != NA_INTEGER ){ // R_IsNA() only works for doubles
                             layerix = survlayerMatrix(i,j);
                             pSpecies->setSurvLayer(i, j, (layerix-1) ); // subtract 1 to account for different indexing in R and C
                             pSpecies->setSurvSpatial(true);
@@ -2187,8 +2198,8 @@ int ReadTransferR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 	trfrMortParams mort;
     // trfrScales scale; // andere Implementierung für individuelle Variabilität
 	string CostsFile;
-    trfrMovtParams smsparams;
-    trfrMovtParams mparams;
+    trfrMovtParams smsparams{}; // value-initialised: fields not read from R must not be garbage
+    trfrMovtParams mparams{};
 	Rcpp::NumericVector ReadVec;
 
 	switch(TransferType) {
@@ -2555,7 +2566,7 @@ int ReadSettlementR(Rcpp::S4 ParMaster)
 
 	int Nlines, stage, sex, offset, sexSettle, settType;
 	int error = 0;
-	bool findmate, densdep;
+	bool findmate = false, densdep = false;
 
     demogrParams dem = pSpecies->getDemogrParams();
     stageParams sstruct = pSpecies->getStageParams();
@@ -3239,7 +3250,7 @@ int ReadInitialisationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 				check += p;
 				paramsInit->setProp(i, p);
 			}
-			if(check < 1.0 || check > 1.0) {
+			if(fabs(check - 1.0f) > 1.0e-5f) { // exact comparison rejected valid input such as c(0, .59, .39, .02)
 				// this condition should not occur - WHAT COULD BE DONE?? ABORT WITH ERROR CODE ...
 #if RSDEBUG
 				DEBUGLOG << "ReadInitialisation(): check = " << check << endl;
@@ -3266,7 +3277,7 @@ int ReadInitialisationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 #endif
 			error = 603;
 		}
-		maxcells = (init.maxSeedY - init.minSeedY) * (init.maxSeedX - init.minSeedX);
+		maxcells = (init.maxSeedY - init.minSeedY + 1) * (init.maxSeedX - init.minSeedX + 1); // bounds are inclusive
 		if(init.freeType == 0 && init.nSeedPatches > maxcells)
 			error = 602;
 	}
@@ -3479,7 +3490,7 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
             Rcpp::NumericVector PositionsR = Rcpp::as<Rcpp::NumericVector>(NeutralTraitsParamsR.slot("Positions")); // Positions are provided as numeric vector
             // use a for loop to insert the values at PositionsR into the set positions
             for (int i = 0; i < PositionsR.size(); i++) {
-                if (static_cast<int>(PositionsR[i]) <= genomeSize) {
+                if (static_cast<int>(PositionsR[i]) >= 0 && static_cast<int>(PositionsR[i]) < genomeSize) {
                     positions.insert(static_cast<int>(PositionsR[i]));
                 }
                 else throw logic_error("NeutralTraits(): Loci positions must be smaller than genome size");
@@ -3496,7 +3507,7 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
             string initialPositionsR = Rcpp::as<string>(NeutralTraitsParamsR.slot("InitialPositions"));
             if(initialPositionsR == "random"){
                 NbOfInitialPositionsR = Rcpp::as<int>(NeutralTraitsParamsR.slot("InitialNbOfPositions"));
-                if(NbOfPositionsR > 0){
+                if(NbOfInitialPositionsR > 0){
                     initialPositions = selectRandomLociPositions(NbOfInitialPositionsR, genomeSize);
                 }
                 else throw logic_error("NeutralTraits(): If initial positions are random you must provide the number of initial positions (>0).");
@@ -3510,7 +3521,7 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
             Rcpp::NumericVector initialPositionsR = Rcpp::as<Rcpp::NumericVector>(NeutralTraitsParamsR.slot("InitialPositions")); // Positions are provided as numeric vector
             // use a for loop to insert the values at initialPositionsR into the set positions
             for (int i = 0; i < initialPositionsR.size(); i++) {
-                if (static_cast<int>(initialPositionsR[i]) <= genomeSize) { // not sure if this is needed; initial positions should be checked beforehand and be within positons range
+                if (static_cast<int>(initialPositionsR[i]) >= 0 && static_cast<int>(initialPositionsR[i]) < genomeSize) { // not sure if this is needed; initial positions should be checked beforehand and be within positons range
                     initialPositions.insert(static_cast<int>(initialPositionsR[i]));
                 }
                 else throw logic_error("NeutralTraits(): initial loci positions must be smaller than genome size");
@@ -3520,7 +3531,7 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
 
         // Initial distribution parameters
         string initDistR = Rcpp::as<string>(NeutralTraitsParamsR.slot("InitialAlleleDistribution"));
-        if(initDistR != "uniform") initDistR == "#";
+        if(initDistR != "uniform") initDistR = "#";
 
         Rcpp::NumericVector initParamsR = {
             0.0,
@@ -3656,7 +3667,7 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
                 Rcpp::NumericVector PositionsR = Rcpp::as<Rcpp::NumericVector>(PositionsRList[l]); // Positions are provided as numeric vector
                 // use a for loop to insert the values at PositionsR into the set positions
                 for (int i = 0; i < PositionsR.size(); i++) {
-                    if (static_cast<int>(PositionsR[i]) <= genomeSize) {
+                    if (static_cast<int>(PositionsR[i]) >= 0 && static_cast<int>(PositionsR[i]) < genomeSize) {
                         positions.insert(static_cast<int>(PositionsR[i]));
                     }
                     else throw logic_error("GeneticLoad(): Loci positions must be smaller than genome size");
@@ -3683,7 +3694,7 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
                 Rcpp::NumericVector initialPositionsR = Rcpp::as<Rcpp::NumericVector>(initialPositionsRList[l]); // Positions are provided as numeric vector
                 // use a for loop to insert the values at PositionsR into the set positions
                 for (int i = 0; i < initialPositionsR.size(); i++) {
-                    if (static_cast<int>(initialPositionsR[i]) <= genomeSize) {
+                    if (static_cast<int>(initialPositionsR[i]) >= 0 && static_cast<int>(initialPositionsR[i]) < genomeSize) {
                         initialPositions.insert(static_cast<int>(initialPositionsR[i]));
                     }
                     else throw logic_error("GeneticLoad(): Initial loci positions must be smaller than genome size");
@@ -3836,7 +3847,7 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
                 Rcpp::NumericVector PositionsR = Rcpp::as<Rcpp::NumericVector>(PositionsRList[l]); // Positions are provided as numeric vector
                 // use a for loop to insert the values at PositionsR into the set positions
                 for (int i = 0; i < PositionsR.size(); i++) {
-                    if (static_cast<int>(PositionsR[i]) <= genomeSize) {
+                    if (static_cast<int>(PositionsR[i]) >= 0 && static_cast<int>(PositionsR[i]) < genomeSize) {
                         positions.insert(static_cast<int>(PositionsR[i]));
                     }
                     else throw logic_error("EmigrationGenes(): Loci positions must be smaller than genome size");
@@ -3935,7 +3946,7 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
             }
             else {
                 // expecting emigration_d0, emigration_alpha, emigration_beta
-                if (l == 0) TraitTypeR = "settlement_d0";
+                if (l == 0) TraitTypeR = "settlement_s0"; // was "settlement_d0" -> INVALID_TRAIT
                 else if (l == 1) TraitTypeR = "settlement_alpha";
                 else if (l == 2) TraitTypeR = "settlement_beta";
                 sexdep=2;
@@ -3958,7 +3969,7 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
                 Rcpp::NumericVector PositionsR = Rcpp::as<Rcpp::NumericVector>(PositionsRList[l]); // Positions are provided as numeric vector
                 // use a for loop to insert the values at PositionsR into the set positions
                 for (int i = 0; i < PositionsR.size(); i++) {
-                    if (static_cast<int>(PositionsR[i]) <= genomeSize) {
+                    if (static_cast<int>(PositionsR[i]) >= 0 && static_cast<int>(PositionsR[i]) < genomeSize) {
                         positions.insert(static_cast<int>(PositionsR[i]));
                     }
                     else throw logic_error("SettlementGenes(): Loci positions must be smaller than genome size");
@@ -4102,7 +4113,7 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
                 Rcpp::NumericVector PositionsR = Rcpp::as<Rcpp::NumericVector>(PositionsRList[l]); // Positions are provided as numeric vector
                 // use a for loop to insert the values at PositionsR into the set positions
                 for (int i = 0; i < PositionsR.size(); i++) {
-                    if (static_cast<int>(PositionsR[i]) <= genomeSize) {
+                    if (static_cast<int>(PositionsR[i]) >= 0 && static_cast<int>(PositionsR[i]) < genomeSize) {
                         positions.insert(static_cast<int>(PositionsR[i]));
                     }
                     else throw logic_error("KernelGenes(): Loci positions must be smaller than genome size");
@@ -4153,7 +4164,7 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
 
             // number of expected traits
             int nbTraits = 1;
-            if (smstraits.gb==2) nbTraits = 4;
+            if (smstraits.goalType == 2) nbTraits = 4; // DP, GB, alphaDB, betaDB (was: smstraits.gb == 2)
 
 
             // Positions and number of Positions
@@ -4225,7 +4236,7 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
                     Rcpp::NumericVector PositionsR = Rcpp::as<Rcpp::NumericVector>(PositionsRList[l]); // Positions are provided as numeric vector
                     // use a for loop to insert the values at PositionsR into the set positions
                     for (int i = 0; i < PositionsR.size(); i++) {
-                        if (static_cast<int>(PositionsR[i]) <= genomeSize) {
+                        if (static_cast<int>(PositionsR[i]) >= 0 && static_cast<int>(PositionsR[i]) < genomeSize) {
                             positions.insert(static_cast<int>(PositionsR[i]));
                         }
                         else throw logic_error("SMSGenes(): Loci positions must be smaller than genome size");
@@ -4339,7 +4350,7 @@ int ReadTraitsR(Rcpp::S4 TraitsParamsR)
                 Rcpp::NumericVector PositionsR = Rcpp::as<Rcpp::NumericVector>(PositionsRList[l]); // Positions are provided as numeric vector
                 // use a for loop to insert the values at PositionsR into the set positions
                 for (int i = 0; i < PositionsR.size(); i++) {
-                    if (static_cast<int>(PositionsR[i]) <= genomeSize) {
+                    if (static_cast<int>(PositionsR[i]) >= 0 && static_cast<int>(PositionsR[i]) < genomeSize) {
                         positions.insert(static_cast<int>(PositionsR[i]));
                     }
                     else throw logic_error("CorrRWGenes(): Loci positions must be smaller than genome size");
@@ -4644,14 +4655,14 @@ int ReadTranslocationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
     translocation_matrix_R = Rcpp::as<Rcpp::IntegerMatrix>(TranslocationParamsR.slot("TransLocMat"));
 
     // activate translocation if translocation_years_R is not empty
-    if(translocation_years_R[0] > 0) m.translocation = true;
+    if(translocation_years_R[0] >= 0) m.translocation = true; // default -9 = no translocation; year 0 is valid
 
     // set and update the management parameters
     pManagement->setManagementParams(m);
 
     if(m.translocation) {
         // check if catcing rate as valid value:
-        if(catching_rate_R > 0 || catching_rate_R <= 1) {
+        if(catching_rate_R > 0 && catching_rate_R <= 1) {
             // parse catching_rate_R to catching_rate
             t.catching_rate = catching_rate_R;
 			} else {
@@ -4664,7 +4675,7 @@ int ReadTranslocationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
         // parse translocation_years_R to translocation_years
         for (int i = 0; i < translocation_years_R.size(); i++) {
             // check if the year is within the simulated years
-            if(translocation_years_R[i] > 0 || translocation_years_R[i] <= sim.years) {
+            if(translocation_years_R[i] >= 0 && translocation_years_R[i] < sim.years) { // years loop runs 0 .. years-1
                 // check if year is not already in the vector
                 if(std::find(t.translocation_years.begin(), t.translocation_years.end(), translocation_years_R[i]) == t.translocation_years.end()) {
                     t.translocation_years.push_back(translocation_years_R[i]);
@@ -4715,7 +4726,7 @@ int ReadTranslocationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
             locn s;
             if(paramsLand.patchModel){ // if patch model, the x is the patch ID
                 // only if patch ID exists? otherwise exit?
-                if(translocation_matrix_R(i,1) <= pLandscape->patchCount() && translocation_matrix_R(i,1) > 0){ // not sure if I can run this check here
+                if(translocation_matrix_R(i,1) > 0 && pLandscape->existsPatch(translocation_matrix_R(i,1))){ // patch IDs need not be contiguous
                     s.x = translocation_matrix_R(i,1);
                     s.y = -9;
                 } else{
@@ -4744,7 +4755,7 @@ int ReadTranslocationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
             // push_back the target to the target map
             if(paramsLand.patchModel){ // if patch model, the x is the patch ID
                 // only if patch ID exists? otherwise exit?
-                if(translocation_matrix_R(i,2) <= pLandscape->patchCount() && translocation_matrix_R(i,2) > 0){
+                if(translocation_matrix_R(i,2) > 0 && pLandscape->existsPatch(translocation_matrix_R(i,2))){
                     s.x = translocation_matrix_R(i,2);
                     s.y = -9;
                 } else{
@@ -4755,14 +4766,14 @@ int ReadTranslocationR(Landscape* pLandscape, Rcpp::S4 ParMaster)
             } else {
                 // if cell-based model
                 // check if x and y values are inside boundaries and habitat
-                if(translocation_matrix_R(i,3) > 0 && translocation_matrix_R(i,3) <= paramsLand.maxX){
+                if(translocation_matrix_R(i,3) >= 0 && translocation_matrix_R(i,3) <= paramsLand.maxX){ // x = 0 is a valid cell
                     s.x = translocation_matrix_R(i,3);
                 } else{
                     Rcpp::Rcout << "ReadTranslocationR(): x value of target location " << translocation_matrix_R(i,3) << " is either 0 or greater than the maximum x value." << std::endl;
                     error = 600;
                     return error;
                 }
-                if(translocation_matrix_R(i,4) > 0 && translocation_matrix_R(i,4) <= paramsLand.maxY){
+                if(translocation_matrix_R(i,4) >= 0 && translocation_matrix_R(i,4) <= paramsLand.maxY){ // y = 0 is a valid cell
                     s.y = translocation_matrix_R(i,4);
                 } else{
                     Rcpp::Rcout << "ReadTranslocationR(): y value of target location " << translocation_matrix_R(i,4) << " is either 0 or greater than the maximum y value." << std::endl;
@@ -5339,7 +5350,7 @@ Rcpp::List RunBatchR(int nSimuls, int nLandscapes, Rcpp::S4 ParMaster)
 	rsLog << "WARNING,***** RSDEBUG mode is active *****,,," << endl;
 #endif
 #if RS_RCPP
-	rsLog << "RNG SEED,,,," << RS_random_seed << endl;
+	rsLog << "RNG SEED,,,," << pRandom->getSeed() << endl; // global RS_random_seed is never set
 #endif
     }
 
@@ -5813,6 +5824,9 @@ void setglobalvarsR(Rcpp::S4 control)
     threadsafe = Rcpp::as<int>(control.slot("threadsafe"));
     spatial_demography = Rcpp::as<int>(control.slot("spatial_demography"));
     fixreplicateseed = Rcpp::as<int>(control.slot("fixreplicateseed"));
+    // reset per run: nDSlayer is only set again for habitat-quality landscapes (ReadLandParamsR()),
+    // otherwise the value of a previous RunRS() call in the same R session would persist
+    nDSlayer = gMaxNbLayers;
 
 #if RSDEBUG
 	/*
