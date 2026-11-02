@@ -1186,7 +1186,10 @@ void testIndividual() {
 
 			settleTraits settTr = ind.getIndSettTraits();
 			assert(settTr.s0 <= 1.0);
-			assert(settTr.alpha > 0.0);
+			// Review 2026-10: the settlement slope is no longer forced to be positive;
+			// a negative alpha is needed for settlement that decreases with density (eqn. 16).
+			// previously: assert(settTr.alpha > 0.0);
+			assert(settTr.alpha < 0.0);
 			kernelData trfrTr = *(static_cast<kernelData*>(ind.getTrfrData()));
 			assert(trfrTr.meanDist1 >= 0.0);
 		}

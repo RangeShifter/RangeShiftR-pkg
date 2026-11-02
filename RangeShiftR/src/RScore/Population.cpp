@@ -167,7 +167,8 @@ Population::Population(Species* pSp, Patch* pPch, int ninds, int resol)
 					if (nAges > 1) {
 						double rrr = pRandom->Random();
 						int ageclass = 0;
-						while (rrr > ageProb[ageclass]) ageclass++;
+						// guard against rounding: the last cumulative value may be < 1
+						while (ageclass < nAges - 1 && rrr > ageProb[ageclass]) ageclass++;
 						age = minage + ageclass;
 					}
 					else age = minage;
@@ -199,6 +200,8 @@ Population::~Population(void) {
 		if (juvs[i] != NULL) delete juvs[i];
 	}
 	juvs.clear();
+	for (Individual* pInd : harvestedInds) delete pInd;
+	harvestedInds.clear();
 	int nsampledInds = (int)sampledInds.size();
 	for (int i = 0; i < nsampledInds; i++) {
 	    if (sampledInds[i] != NULL) sampledInds[i]=NULL;
@@ -597,8 +600,10 @@ void Population::reproduction(const float localK, const float envval, const int 
 				if (sstruct.fecDens) { // apply density dependence
 					float effect = 0.0;
 					if (sstruct.fecStageDens) { // stage-specific density dependence
-						// NOTE: matrix entries represent effect of ROW on COLUMN 
-						// AND males precede females
+						// NOTE: matrix entry [row][col] is the effect of the COLUMN stage (acting) on the
+						// ROW stage (affected), w_ij = effect of j on i, as in the R documentation;
+						// in the complex sexual model the matrix index puts males before females
+						// (2*stage = m, 2*stage+1 = f), although internally sex 0 = female, 1 = male
 						float weight = 0.0;
 						for (int effstg = 0; effstg < nStages; effstg++) {
 							for (int effsex = 0; effsex < nSexes; effsex++) {
@@ -675,7 +680,8 @@ void Population::reproduction(const float localK, const float envval, const int 
 					for (int j = 0; j < njuvs; j++) {
 
 						Individual* newJuv;
-						newJuv = new Individual(pSpecies, pCell, pPatch, 0, 0, 0, dem.propMales, trfr.usesMovtProc, trfr.moveType);
+						// asexual (female-only) model: offspring are always female
+						newJuv = new Individual(pSpecies, pCell, pPatch, 0, 0, 0, 0.0, trfr.usesMovtProc, trfr.moveType);
 
 						if (pSpecies->getNTraits() > 0) {
 							newJuv->inheritTraits(pSpecies, inds[i], resol);
@@ -805,6 +811,7 @@ void Population::fledge(void)
 }
 
 Individual* Population::sampleInd() const {
+	if (inds.empty()) return nullptr;
 	int index = pRandom->IRandom(0, static_cast<int>(inds.size() - 1));
 	return inds[index];
 }
@@ -814,12 +821,14 @@ void Population::sampleIndsWithoutReplacement(string strNbToSample, const set<in
 	if (sampledInds.size() > 0) {
 		sampledInds.clear();
 	}
-	auto rng = pRandom->getRNG();
+	auto& rng = pRandom->getRNG();// bugfix: auto& - plain auto would copy the generator again
 	vector<Individual*> stagedInds;
 
 	// Stage individuals in eligible stages
 	for (int stage : sampleStages) {
 		vector<Individual*> toAdd = getIndividualsInStage(stage);
+		// exclude individuals already doomed this season (status 6-9; removed by survival1())
+		erase_if(toAdd, [](Individual* ind) { const int st = ind->getStatus(); return st >= 6 && st != 10; });
 		stagedInds.insert(stagedInds.begin(), toAdd.begin(), toAdd.end());
 	}
 
@@ -1150,8 +1159,10 @@ void Population::survival0(float localK, short option0, short option1, std::vect
 				// NB DD in development does NOT apply to juveniles,
 					float effect = 0.0;
 					if (sstruct.devStageDens) { // stage-specific density dependence
-						// NOTE: matrix entries represent effect of ROW on COLUMN 
-						// AND males precede females
+						// NOTE: matrix entry [row][col] is the effect of the COLUMN stage (acting) on the
+						// ROW stage (affected), w_ij = effect of j on i, as in the R documentation;
+						// in the complex sexual model the matrix index puts males before females
+						// (2*stage = m, 2*stage+1 = f), although internally sex 0 = female, 1 = male
 						float weight = 0.0;
 						for (int effstg = 0; effstg < nStages; effstg++) {
 							for (int effsex = 0; effsex < nSexes; effsex++) {
@@ -1177,8 +1188,10 @@ void Population::survival0(float localK, short option0, short option1, std::vect
 
 					float effect = 0.0;
 					if (sstruct.survStageDens) { // stage-specific density dependence
-						// NOTE: matrix entries represent effect of ROW on COLUMN 
-						// AND males precede females
+						// NOTE: matrix entry [row][col] is the effect of the COLUMN stage (acting) on the
+						// ROW stage (affected), w_ij = effect of j on i, as in the R documentation;
+						// in the complex sexual model the matrix index puts males before females
+						// (2*stage = m, 2*stage+1 = f), although internally sex 0 = female, 1 = male
 						float weight = 0.0;
 						for (int effstg = 0; effstg < nStages; effstg++) {
 							for (int effsex = 0; effsex < nSexes; effsex++) {
@@ -1234,6 +1247,10 @@ void Population::survival0(float localK, short option0, short option1, std::vect
 // Apply survival changes to the population
 void Population::survival1(void)
 {
+	// individuals harvested in this season have been written to the individual output by now
+	for (Individual* pInd : harvestedInds) delete pInd;
+	harvestedInds.clear();
+
 	int ninds = (int)inds.size();
 
 	for (int i = 0; i < ninds; i++) {
@@ -1483,9 +1500,13 @@ void Population::outIndividual(Landscape* pLandscape, int rep, int yr, int gen,
 	settleType sett = pSpecies->getSettle();
 	short spNum = pSpecies->getSpNum();
 
-	int ninds = (int)inds.size();
+	// living individuals plus those harvested in this season (status 11)
+	std::vector<Individual*> toWrite(inds);
+	toWrite.insert(toWrite.end(), harvestedInds.begin(), harvestedInds.end());
+	int ninds = (int)toWrite.size();
 	for (int i = 0; i < ninds; i++) {
-		indStats ind = inds[i]->getStats();
+		Individual* pInd = toWrite[i];
+		indStats ind = pInd->getStats();
 		if (yr == -1) { // write all initialised individuals
 			writeInd = true;
 			outInds << rep << "\t" << yr << "\t" << dem.repSeasons - 1;
@@ -1504,19 +1525,19 @@ void Population::outIndividual(Landscape* pLandscape, int rep, int yr, int gen,
 			}
 		}
 		if (writeInd) {
-			outInds << "\t" << spNum << "\t" << inds[i]->getId();
+			outInds << "\t" << spNum << "\t" << pInd->getId();
 			if (dem.stageStruct) outInds << "\t" << ind.status;
 			else { // non-structured population
 				outInds << "\t" << ind.status;
 			}
-			pCell = inds[i]->getCurrCell();
+			pCell = pInd->getCurrCell();
 			locn loc;
 			if (pCell == 0) loc.x = loc.y = -1; // beyond boundary or in no-data cell
 			else loc = pCell->getLocn();
-			pCell = inds[i]->getPrevCell();
+			pCell = pInd->getPrevCell();
 			locn natalloc = pCell->getLocn();
 			if (ppLand.patchModel) {
-				outInds << "\t" << inds[i]->getNatalPatch()->getPatchNum();
+				outInds << "\t" << pInd->getNatalPatch()->getPatchNum();
 				if (loc.x == -1) outInds << "\t-1";
 				else outInds << "\t" << patchNum;
 			}
@@ -1527,10 +1548,10 @@ void Population::outIndividual(Landscape* pLandscape, int rep, int yr, int gen,
 			if (dem.repType != 0) outInds << "\t" << ind.sex;
 			if (dem.stageStruct) outInds << "\t" << ind.age << "\t" << ind.stage;
 
-			if (pSpecies->getNbGenLoadTraits() > 0) outInds << "\t" << inds[i]->getGeneticFitness();
+			if (pSpecies->getNbGenLoadTraits() > 0) outInds << "\t" << pInd->getGeneticFitness();
 
 			if (emig.indVar) {
-				emigTraits e = inds[i]->getIndEmigTraits();
+				emigTraits e = pInd->getIndEmigTraits();
 				if (emig.densDep) {
 					outInds << "\t" << e.d0 << "\t" << e.alpha << "\t" << e.beta;
 				}
@@ -1541,17 +1562,17 @@ void Population::outIndividual(Landscape* pLandscape, int rep, int yr, int gen,
 			if (trfr.indVar) {
 				if (trfr.usesMovtProc) {
 					if (trfr.moveType == 1) { // SMS
-						trfrSMSTraits s = inds[i]->getIndSMSTraits();
+						trfrSMSTraits s = pInd->getIndSMSTraits();
 						outInds << "\t" << s.dp << "\t" << s.gb;
 						outInds << "\t" << s.alphaDB << "\t" << s.betaDB;
 					} // end of SMS
 					if (trfr.moveType == 2) { // CRW
-						trfrCRWTraits c = inds[i]->getIndCRWTraits();
+						trfrCRWTraits c = pInd->getIndCRWTraits();
 						outInds << "\t" << c.stepLength << "\t" << c.rho;
 					} // end of CRW
 				}
 				else { // kernel
-					trfrKernelParams k = inds[i]->getIndKernTraits();
+					trfrKernelParams k = pInd->getIndKernTraits();
 					if (trfr.twinKern)
 					{
 						outInds << "\t" << k.meanDist1 << "\t" << k.meanDist2 << "\t" << k.probKern1;
@@ -1563,7 +1584,7 @@ void Population::outIndividual(Landscape* pLandscape, int rep, int yr, int gen,
 			}
 
 			if (sett.indVar) {
-				settleTraits s = inds[i]->getIndSettTraits();
+				settleTraits s = pInd->getIndSettTraits();
 				outInds << "\t" << s.s0 << "\t" << s.alpha << "\t" << s.beta;
 			}
 
@@ -1576,11 +1597,11 @@ void Population::outIndividual(Landscape* pLandscape, int rep, int yr, int gen,
 			}
 #ifndef NDEBUG
 			// ALWAYS WRITE NO. OF STEPS
-			steps = inds[i]->getSteps();
+			steps = pInd->getSteps();
 			outInds << "\t" << steps.year;
 #else
 			if (trfr.usesMovtProc) {
-				steps = inds[i]->getSteps();
+				steps = pInd->getSteps();
 				outInds << "\t" << steps.year;
 			}
 #endif
@@ -1652,7 +1673,8 @@ std::vector <Individual*> Population::getIndsWithCharacteristics( // Select a se
         int min_age,	// min age (0 if not set)
         int max_age,    // max age (max age if not set)
         int stage,    // stage
-        int sex     //sex
+        int sex,     // sex
+        bool includeTranslocated // also accept translocated individuals (status 10)
 ){
     // get all suitable individuals based on settings
     std::vector <Individual*> filteredInds;
@@ -1668,7 +1690,9 @@ std::vector <Individual*> Population::getIndsWithCharacteristics( // Select a se
 
         // check status of inividuals
         for (int i = 0; i < ninds; i++) {
-            if (inds[i] != NULL && inds[i]->getStats().status != 0 && inds[i]->getStats().status != 4 && inds[i]->getStats().status != 5){ // only accept individuals with status 0, 4 or 5 (not in transfer phase + not dead + not already translocated)
+            const short st = inds[i] != NULL ? inds[i]->getStats().status : 0;
+            const bool accepted = st == 0 || st == 4 || st == 5 || (includeTranslocated && st == 10);
+            if (inds[i] != NULL && !accepted){ // only accept individuals with status 0, 4 or 5 (not in transfer phase + not dead/harvested); status 10 (translocated) only if requested, i.e. for harvesting - a translocated individual is never translocated again
                 // Rcpp::Rcout << "Status: " << inds[i]->getStats().status << endl;
                 filteredInds[i] = NULL; // set it to NULL
 	}
@@ -1687,7 +1711,7 @@ std::vector <Individual*> Population::getIndsWithCharacteristics( // Select a se
         if (max_age!=-9){
             // loop over all number of individuals in cell
             for (int i = 0; i < ninds; i++) {
-                if (filteredInds[i] != NULL && inds[i]->getStats().age < max_age){// if not already NULL + age too old
+                if (filteredInds[i] != NULL && inds[i]->getStats().age > max_age){// if not already NULL + age too old; bugfix: check was inverted before 
                     if (filteredInds[i] != NULL) filteredInds[i] = NULL; // set it to NULL if not already NULL
                 }
             }
@@ -1743,14 +1767,15 @@ int Population::sampleIndividuals( // Select a set of individuals with specified
         int min_age,	// min age (0 if not set)
         int max_age,    // max age (max age if not set)
         int stage,    // stage
-        int sex     //sex
+        int sex,     // sex
+        bool includeTranslocated // also accept translocated individuals (status 10)
         ){
     if(sampledInds.size() > 0)  sampledInds.clear(); // clear old vector
-    auto rng = pRandom->getRNG(); // random number for sampling from suitable individuals
+    auto& rng = pRandom->getRNG(); // random number for sampling from suitable individuals bugfix: auto& - plain auto would copy the generator again
 
     // get individuals with the characteristics
     std::vector <Individual*> filtered;
-    filtered = getIndsWithCharacteristics(min_age, max_age, stage, sex);
+    filtered = getIndsWithCharacteristics(min_age, max_age, stage, sex, includeTranslocated);
 #if RS_RCPP
     Rcpp::Rcout << "Number of individuals with fitting characteristics: " << filtered.size() << endl;
 #endif
@@ -1807,27 +1832,28 @@ Individual* Population::catchIndividual( // Translocate a set of individuals wit
 // ---------------------------------------------------------------------------
 // harvest individuals according to harvest success
 // ---------------------------------------------------------------------------
-Individual* Population::harvestIndividual( // Translocate a set of individuals with specified characteristics
+Individual* Population::harvestIndividual( // Harvest one sampled individual with probability harvest_success
         double harvest_success,
         int j
 ){
-    Individual* harvested;
-    int id = inds[j]->getId();
     // If individual is part of the sampledInds vector:
     if (std::find(sampledInds.begin(), sampledInds.end(), inds[j]) != std::end(sampledInds)){
-        // try to harvest individual
-#if RS_RCPP
-        if(harvest_success > 1) Rcpp::Rcout << "Harvest success: " << harvest_success << std::endl;
-#endif
         if (pRandom->Bernoulli(harvest_success)){
             indStats indstat = inds[j]->getStats();
-            harvested = inds[j];
+            Individual* harvested = inds[j];
+            // remove the individual from the living population immediately (as in catchIndividual()),
+            // so that it no longer counts for density dependence, reproduction or population output;
+            // it is kept in harvestedInds for the individual output (status 11) and deleted in survival1()
+            inds[j] = nullptr;
+            nInds[indstat.stage][indstat.sex]--;
+            harvested->setStatus(11);
+            harvestedInds.push_back(harvested);
             cleanSampledInds(harvested); // clean vector of sampled individuals after the event
             return harvested;
-        }else {
+        } else {
             cleanSampledInds(inds[j]); // clean vector of sampled individuals after the event
             return NULL;
-            }
+        }
     } else {
         return NULL;
     }

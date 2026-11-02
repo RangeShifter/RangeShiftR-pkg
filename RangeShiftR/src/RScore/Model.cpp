@@ -431,15 +431,15 @@ int RunModel(Landscape* pLandscape, int seqsim)
 
 			for (int gen = 0; gen < dem.repSeasons; gen++) // generation loop
 			{
-				// TODO move translocation before dispersal?
-				if (manage.translocation && std::find(transloc.translocation_years.begin(), transloc.translocation_years.end(), yr) != transloc.translocation_years.end()) {
+				// Translocation only occurs in generation 0, and only if the current year is in the list of translocation years
+				if (manage.translocation && gen == 0 && std::find(transloc.translocation_years.begin(), transloc.translocation_years.end(), yr) != transloc.translocation_years.end()) {
 				    pManagement->translocate(yr
                                      , pLandscape
                                      , pSpecies
                                      );
 				}
 
-				if (manage.harvesting && std::find(harvest.harvesting_years.begin(), harvest.harvesting_years.end(), yr) != harvest.harvesting_years.end()) {
+				if (manage.harvesting && gen == 0 && std::find(harvest.harvesting_years.begin(), harvest.harvesting_years.end(), yr) != harvest.harvesting_years.end()) {
 					pManagement->harvest(yr
 									 , pLandscape
 									 , pSpecies
