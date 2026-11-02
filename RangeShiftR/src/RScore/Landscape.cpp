@@ -961,6 +961,10 @@ Cell* Landscape::findCell(int x, int y) {
 
 // TRUE if (x, y) lies within the landscape and is not a no-data cell
 bool Landscape::checkDataCell(int x, int y) {
+    // artificial landscapes are generated per replicate (in RunModel()), i.e. after the
+    // parameters have been read; until then the cell array does not exist and only
+    // the landscape bounds can be checked
+    if (cells == 0) return x >= 0 && x < dimX && y >= 0 && y < dimY;
     return findCell(x, y) != 0;
 }
 
