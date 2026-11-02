@@ -24,7 +24,7 @@ Harvesting(years = 1,
  - stage of the individual,\cr
  - sex of the individual\cr}
 
-\item{harvesting_success}{Harvesting success rate}
+\item{harvesting_success}{Harvesting success rate, i.e. the probability that a sampled individual is harvested (between 0 and 1)}
 }
 \value{
 a parameter object of class "ManagementParams"
@@ -46,8 +46,8 @@ per year (differing in either the characteristics of the individuals selected or
 the sites), or across different years.
 
 Individuals can be selected according to their age, stage and sex, depending on the type of demographic model applied.
-Only individuals which are currently not in the transfer phase are eligible for harvesting.
-After being selected for harvest, individuals are extracted and set to status 11.
+Only individuals which are currently not in the transfer phase are eligible for harvesting; this includes individuals translocated earlier (status 10).
+Successfully harvested individuals are removed from the population immediately and set to status 11.
 
 Additionally, you can define a constant harvesting success rate to determine the likelihood of successfully extracting a selected individual.
 
@@ -58,9 +58,9 @@ You need to create a Harvesting Matrix \code{HarvestMat} which hold the informat
 In the columns of the \code{HarvestMat} the year, site, its specific threshold as well as the number of individuals and the characteristics are
 defined in the following order:
 
-- \code{year} of the translocation event \cr
+- \code{year} of the harvesting event \cr
 - \code{Patch_ID} or \code{X} and \code{Y} location site from which individuals are harvested. \cr
-- \code{threshold} population size above which harvesting is applied. \cr
+- \code{threshold} minimum population size (total number of individuals in the site) for the event to be applied; the event is skipped if the population is smaller. Set to -9 to ignore. \cr
 - \code{nb_harvest} how many individuals of the given set of characteristics are tried to be harvested \cr
 - \code{min_age} minimal age of the individual in the interval of 0-MaxAge. Set to -9 to ignore. \cr
 - \code{max_age} maximal age of the individual in the interval of \code{min_age}-MaxAge. Set to -9 to ignore.\cr
@@ -81,7 +81,7 @@ event or multiple individual characteristics for a certain site.
 
 In each \code{year} of a harvesting event, individuals matching the given criteria in the site are collected and a given number of individuals \code{nb_harvest}
 are sampled from this subset. The success of harvesting one of these sampled individuals in the site is defined by the \code{harvesting_success}.
-Successfully harvested individuals are assigned the status 11 (harvested) and the individual will be removed from the simulation at the end of the year.
+Successfully harvested individuals are removed from the population immediately, i.e. they no longer count for density dependence, reproduction or the population output. They are assigned the status 11 (harvested) and still appear in the individual output of that year (if written), before they are deleted at the end of the reproductive season.
 
 The site is required to be habitat patches or cells of the landscape. Otherwise the harvesting event will be skipped.
 }

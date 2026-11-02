@@ -203,7 +203,7 @@ setMethod("show", "TranslocationParams", function(object){
 #'  - maximal age of the individual,\cr
 #'  - stage of the individual,\cr
 #'  - sex of the individual\cr
-#' @param harvesting_success Harvesting success rate
+#' @param harvesting_success Harvesting success rate, i.e. the probability that a sampled individual is harvested (between 0 and 1)
 #'
 #' @details
 #'
@@ -218,8 +218,8 @@ setMethod("show", "TranslocationParams", function(object){
 #' the sites), or across different years.
 #'
 #' Individuals can be selected according to their age, stage and sex, depending on the type of demographic model applied.
-#' Only individuals which are currently not in the transfer phase are eligible for harvesting.
-#' After being selected for harvest, individuals are extracted and set to status 11.
+#' Only individuals which are currently not in the transfer phase are eligible for harvesting; this includes individuals translocated earlier (status 10).
+#' Successfully harvested individuals are removed from the population immediately and set to status 11.
 #'
 #' Additionally, you can define a constant harvesting success rate to determine the likelihood of successfully extracting a selected individual.
 #'
@@ -230,9 +230,9 @@ setMethod("show", "TranslocationParams", function(object){
 #' In the columns of the \code{HarvestMat} the year, site, its specific threshold as well as the number of individuals and the characteristics are
 #' defined in the following order:
 #'
-#' - \code{year} of the translocation event \cr
+#' - \code{year} of the harvesting event \cr
 #' - \code{Patch_ID} or \code{X} and \code{Y} location site from which individuals are harvested. \cr
-#' - \code{threshold} population size above which harvesting is applied. \cr
+#' - \code{threshold} minimum population size (total number of individuals in the site) for the event to be applied; the event is skipped if the population is smaller. Set to -9 to ignore. \cr
 #' - \code{nb_harvest} how many individuals of the given set of characteristics are tried to be harvested \cr
 #' - \code{min_age} minimal age of the individual in the interval of 0-MaxAge. Set to -9 to ignore. \cr
 #' - \code{max_age} maximal age of the individual in the interval of \code{min_age}-MaxAge. Set to -9 to ignore.\cr
@@ -253,7 +253,7 @@ setMethod("show", "TranslocationParams", function(object){
 #'
 #' In each \code{year} of a harvesting event, individuals matching the given criteria in the site are collected and a given number of individuals \code{nb_harvest}
 #' are sampled from this subset. The success of harvesting one of these sampled individuals in the site is defined by the \code{harvesting_success}.
-#' Successfully harvested individuals are assigned the status 11 (harvested) and the individual will be removed from the simulation at the end of the year.
+#' Successfully harvested individuals are removed from the population immediately, i.e. they no longer count for density dependence, reproduction or the population output. They are assigned the status 11 (harvested) and still appear in the individual output of that year (if written), before they are deleted at the end of the reproductive season.
 #'
 #' The site is required to be habitat patches or cells of the landscape. Otherwise the harvesting event will be skipped.
 #'
@@ -284,7 +284,7 @@ setValidity("HarvestingParams", function(object) {
     }
 
     # Check if HarvestMat is not NA, is a matrix and has at least as many rows and years
-    if (any(is.na(object@HarvestMat)) && !is.matrix(object@HarvestMat)){
+    if (!is.matrix(object@HarvestMat) || any(is.na(object@HarvestMat))){
         msg <- c(msg, "HarvestMat must be defined and be a matrix")
     }else {
         if(nrow(object@HarvestMat) < length(object@years)) {
@@ -293,13 +293,16 @@ setValidity("HarvestingParams", function(object) {
             if(!all(sort(object@HarvestMat[,1]) == object@HarvestMat[,1])){
                 msg <- c(msg, "Harvesting matrix must contain subsequent years!")
             } else{
-                if (ncol(object@HarvestMat) != 8 && ncol(object@HarvestMat) != 9) { # 8 is only true for patch-based models; for cell based models it should be 10
-                    msg <- c(msg, "HarvestMat must have 8 or 9 columns: year, source location (patch ID OR 2 columns X and Y), number of individuals, min age, max age, stage.")
+                if (ncol(object@HarvestMat) != 8 && ncol(object@HarvestMat) != 9) { # 8 columns for patch-based models, 9 for cell-based models (X and Y)
+                    msg <- c(msg, "HarvestMat must have 8 (patch-based) or 9 (cell-based) columns: year, location (patch ID OR 2 columns X and Y), threshold, number of individuals, min age, max age, stage, sex.")
                 }
             }
-            # check if unique values of first column of TransLocMat are equal to years
+            # check if the years of the harvesting events and the vector of years match
             if (!all(unique(object@HarvestMat[,1]) %in% object@years)) {
-                msg <- c(msg, "You must provide define at least one translocation event for each year of translocation.")
+                msg <- c(msg, "All years in the first column of HarvestMat must be listed in years.")
+            }
+            if (!all(object@years %in% object@HarvestMat[,1])) {
+                msg <- c(msg, "You must define at least one harvesting event in HarvestMat for each year of harvesting.")
             }
         }
     }
@@ -310,6 +313,8 @@ setValidity("HarvestingParams", function(object) {
     }else{
         if (!is.numeric(object@harvesting_success)) {
             msg <- c(msg, "Harvesting success must be numeric")
+        } else if (object@harvesting_success < 0 || object@harvesting_success > 1) {
+            msg <- c(msg, "Harvesting success must be between 0 and 1")
         }
     }
 
