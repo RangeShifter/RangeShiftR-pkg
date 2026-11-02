@@ -225,7 +225,8 @@ public:
 		int,	// min age
 		int,    // max age
 		int,    // stage
-		int     //sex
+		int,	// sex
+		bool includeTranslocated = false // also accept translocated individuals (status 10), e.g. for harvesting
 	);
 	void cleanSampledInds(
 	    Individual* // individual to remove from sampled individuals vector
@@ -237,7 +238,8 @@ public:
         	int,	// min age (0 if not set)
         	int,    // max age (max age if not set)
         	int,    // stage
-        	int     //sex
+        	int,	// sex
+        	bool includeTranslocated = false // also accept translocated individuals (status 10), e.g. for harvesting
 	);
 
 	Individual* catchIndividual(
@@ -283,6 +285,7 @@ private:
 																	// has been completed
 
 	vector<Individual*> sampledInds;
+	vector<Individual*> harvestedInds; // removed from the population by harvesting; kept for the individual output until survival1()
 	//std::vector <Individual*> sampledInds; // individuals with specified characteristics from translocation!!! 
 	vector<NeutralCountsTable> popNeutralCountTables;
 	void resetPopNeutralTables();

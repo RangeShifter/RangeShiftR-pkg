@@ -439,7 +439,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
                                      );
 				}
 
-				if (manage.harvesting && std::find(harvest.harvesting_years.begin(), harvest.harvesting_years.end(), yr) != harvest.harvesting_years.end()) {
+				if (manage.harvesting && gen == 0 && std::find(harvest.harvesting_years.begin(), harvest.harvesting_years.end(), yr) != harvest.harvesting_years.end()) {
 					pManagement->harvest(yr
 									 , pLandscape
 									 , pSpecies

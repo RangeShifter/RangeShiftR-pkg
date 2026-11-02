@@ -20,6 +20,7 @@
 #include "../Community.h"
 #include "../SubCommunity.h"
 #include "../FractalGenerator.h"
+#include "../Management.h"
 
 using namespace std;
 
@@ -425,6 +426,102 @@ namespace {
 		ls.deleteConnectMatrix();
 	}
 
+	// ---------------------------------------------------------------------
+	// Harvesting (branch culling)
+	// ---------------------------------------------------------------------
+
+	// Harvested individuals must leave the living population immediately
+	// (no longer counted for density dependence, reproduction or output),
+	// carry status 11 and be deleted exactly once in survival1().
+	void test_harvest_removes_individuals_immediately() {
+		Landscape* pLandscape = new Landscape;
+		Patch* pPatch = pLandscape->newPatch(1);
+		Cell* pCell = new Cell(0, 0, pPatch, 0);
+		pPatch->addCell(pCell, 0, 0);
+		Species* pSpecies = createDefaultSpecies();
+		pSpecies->setDemogr(createDefaultHaploidDemogrParams());
+		Population pop(pSpecies, pPatch, 0, 1);
+		for (int i = 0; i < 6; i++)
+			pop.recruit(new Individual(pSpecies, pCell, pPatch, 1, 2, 0, 0.0, false, 1));
+		assert(pop.getNbInds() == 6);
+
+		pop.sampleIndividuals(3, -9, -9, -9, -9);
+		vector<Individual*> harvested;
+		const int n = pop.getStats(pPatch->getDemoScaling()).nInds;
+		for (int j = 0; j < n; j++) {
+			Individual* h = pop.harvestIndividual(1.0, j);
+			if (h != nullptr) harvested.push_back(h);
+		}
+		pop.clean();
+		assert(harvested.size() == 3);
+		for (Individual* h : harvested) assert(h->getStats().status == 11);
+		assert(pop.getNbInds() == 3);                               // counts updated at once
+		assert(pop.getStats(pPatch->getDemoScaling()).nInds == 3);  // removed from inds
+
+		pop.survival1();                    // deletes the harvested individuals (ASan: no double free / leak)
+		assert(pop.getNbInds() == 3);       // no second decrement
+	}
+
+	// An invalid harvesting event must not cancel the remaining events of the year
+	void test_harvest_invalid_event_skips_only_itself() {
+		Landscape* pLandscape = new Landscape;
+		landParams lp = makeLandParams(1, 1);
+		lp.patchModel = true;
+		pLandscape->setLandParams(lp, true);
+		Patch* pPatch = pLandscape->newPatch(1);
+		Cell* pCell = new Cell(0, 0, pPatch, 0);
+		pPatch->addCell(pCell, 0, 0);
+		Species* pSpecies = createDefaultSpecies();
+		pSpecies->setDemogr(createDefaultHaploidDemogrParams());
+		Population* pPop = new Population(pSpecies, pPatch, 0, 1);
+		for (int i = 0; i < 4; i++)
+			pPop->recruit(new Individual(pSpecies, pCell, pPatch, 1, 2, 0, 0.0, false, 1));
+
+		const int yr = 5;
+		harvestingParams h;
+		h.harvesting_success = 1.0;
+		h.harvesting_years = { yr };
+		locn missing; missing.x = 99; missing.y = -9;   // patch 99 does not exist
+		locn valid; valid.x = 1; valid.y = -9;
+		h.harvestLoc[yr] = { missing, valid };
+		h.harvestThres[yr] = { 0, 0 };
+		h.harvestNb[yr] = { 2, 2 };
+		h.harvestMin_age[yr] = { -9, -9 };
+		h.harvestMax_age[yr] = { -9, -9 };
+		h.harvestStage[yr] = { -9, -9 };
+		h.harvestSex[yr] = { -9, -9 };
+		Management m;
+		m.setHarvestingParams(h);
+		m.harvest(yr, pLandscape, pSpecies);
+		assert(pPop->getNbInds() == 2); // second event ran although the first was invalid
+
+		// a year without events must be ignored safely
+		m.harvest(yr + 1, pLandscape, pSpecies);
+		assert(pPop->getNbInds() == 2);
+		delete pPop;
+	}
+
+	// Translocated individuals (status 10) must be available for harvesting,
+	// but never for another translocation
+	void test_harvest_translocated_individual() {
+		Landscape* pLandscape = new Landscape;
+		Patch* pPatch = pLandscape->newPatch(1);
+		Cell* pCell = new Cell(0, 0, pPatch, 0);
+		pPatch->addCell(pCell, 0, 0);
+		Species* pSpecies = createDefaultSpecies();
+		pSpecies->setDemogr(createDefaultHaploidDemogrParams());
+		Population pop(pSpecies, pPatch, 0, 1);
+		Individual* pTrans = new Individual(pSpecies, pCell, pPatch, 1, 2, 0, 0.0, false, 1);
+		pTrans->setStatus(10);
+		pop.recruit(pTrans);
+		pop.recruit(new Individual(pSpecies, pCell, pPatch, 1, 2, 0, 0.0, false, 1));
+
+		vector<Individual*> forHarvest = pop.getIndsWithCharacteristics(-9, -9, -9, -9, true);
+		assert(std::count(forHarvest.begin(), forHarvest.end(), pTrans) == 1);
+		vector<Individual*> forTransloc = pop.getIndsWithCharacteristics(-9, -9, -9, -9);
+		assert(std::count(forTransloc.begin(), forTransloc.end(), pTrans) == 0);
+	}
+
 	const std::map<string, std::function<void()>>& bugfixTests() {
 		static const std::map<string, std::function<void()>> tests{
 			{ "getRNG_advances_state", test_getRNG_advances_state },
@@ -446,6 +543,9 @@ namespace {
 			{ "settlement_neighbour_rule_absorbed_individual", test_settlement_neighbour_rule_absorbed_individual },
 			{ "fractal_non_square", test_fractal_non_square },
 			{ "connect_matrix_delete", test_connect_matrix_delete },
+			{ "harvest_removes_individuals_immediately", test_harvest_removes_individuals_immediately },
+			{ "harvest_invalid_event_skips_only_itself", test_harvest_invalid_event_skips_only_itself },
+			{ "harvest_translocated_individual", test_harvest_translocated_individual },
 		};
 		return tests;
 	}

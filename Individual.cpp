@@ -683,7 +683,6 @@ settleTraits Individual::getIndSettTraits(void) {
 
 void Individual::setStatus(short s) {
 	if (s >= 0 && s <= 11) status = s;
-	status = s;
 }
 
 void Individual::setToDevelop(void) {
