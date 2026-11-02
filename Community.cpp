@@ -111,7 +111,7 @@ void Community::initialise(Species* pSpecies, int year)
 				pch = pLandscape->getPatchData(i);
 				if (pch.pPatch->withinLimits(limits)) {
 					if (ppLand.patchModel) {
-						if (pch.pPatch->getPatchNum() != 0) {
+						if (pch.pPatch->getPatchNum() != 0 && pch.pPatch->getK() > 0.0) {
 							subcomms.push_back(pch.pPatch->getSubComm());
 							selected.push_back(false);
 						}
@@ -823,6 +823,51 @@ bool Community::outRangeStartLandscape(Species* pSpecies, int landNr)
 	return outrange.is_open();
 }
 
+
+// Pool the per-sex trait sums into index 0 for traits that are NOT sex-dependent.
+// getIndTraitsSums() tallies every individual under its own sex, also in the simple
+// (ReproductionType 1) and complex (2) sexual models. Without pooling, the mean was
+// computed as sum[0] (females only) / (nFemales + nMales), i.e. roughly halved
+// (e.g. range-file meanEP 0.296 instead of 0.600), and the SD was wrong as well.
+// Asexual models (0) are unaffected: all individuals are female, so sum[1] == 0.
+static traitsums poolSexes(const traitsums& t) {
+	traitsums p = t;
+	p.ninds[0] = t.ninds[0] + t.ninds[1]; p.ninds[1] = 0;
+	p.sumD0[0] = t.sumD0[0] + t.sumD0[1]; p.sumD0[1] = 0.0;
+	p.ssqD0[0] = t.ssqD0[0] + t.ssqD0[1]; p.ssqD0[1] = 0.0;
+	p.sumAlpha[0] = t.sumAlpha[0] + t.sumAlpha[1]; p.sumAlpha[1] = 0.0;
+	p.ssqAlpha[0] = t.ssqAlpha[0] + t.ssqAlpha[1]; p.ssqAlpha[1] = 0.0;
+	p.sumBeta[0] = t.sumBeta[0] + t.sumBeta[1]; p.sumBeta[1] = 0.0;
+	p.ssqBeta[0] = t.ssqBeta[0] + t.ssqBeta[1]; p.ssqBeta[1] = 0.0;
+	p.sumDist1[0] = t.sumDist1[0] + t.sumDist1[1]; p.sumDist1[1] = 0.0;
+	p.ssqDist1[0] = t.ssqDist1[0] + t.ssqDist1[1]; p.ssqDist1[1] = 0.0;
+	p.sumDist2[0] = t.sumDist2[0] + t.sumDist2[1]; p.sumDist2[1] = 0.0;
+	p.ssqDist2[0] = t.ssqDist2[0] + t.ssqDist2[1]; p.ssqDist2[1] = 0.0;
+	p.sumProp1[0] = t.sumProp1[0] + t.sumProp1[1]; p.sumProp1[1] = 0.0;
+	p.ssqProp1[0] = t.ssqProp1[0] + t.ssqProp1[1]; p.ssqProp1[1] = 0.0;
+	p.sumDP[0] = t.sumDP[0] + t.sumDP[1]; p.sumDP[1] = 0.0;
+	p.ssqDP[0] = t.ssqDP[0] + t.ssqDP[1]; p.ssqDP[1] = 0.0;
+	p.sumGB[0] = t.sumGB[0] + t.sumGB[1]; p.sumGB[1] = 0.0;
+	p.ssqGB[0] = t.ssqGB[0] + t.ssqGB[1]; p.ssqGB[1] = 0.0;
+	p.sumAlphaDB[0] = t.sumAlphaDB[0] + t.sumAlphaDB[1]; p.sumAlphaDB[1] = 0.0;
+	p.ssqAlphaDB[0] = t.ssqAlphaDB[0] + t.ssqAlphaDB[1]; p.ssqAlphaDB[1] = 0.0;
+	p.sumBetaDB[0] = t.sumBetaDB[0] + t.sumBetaDB[1]; p.sumBetaDB[1] = 0.0;
+	p.ssqBetaDB[0] = t.ssqBetaDB[0] + t.ssqBetaDB[1]; p.ssqBetaDB[1] = 0.0;
+	p.sumStepL[0] = t.sumStepL[0] + t.sumStepL[1]; p.sumStepL[1] = 0.0;
+	p.ssqStepL[0] = t.ssqStepL[0] + t.ssqStepL[1]; p.ssqStepL[1] = 0.0;
+	p.sumRho[0] = t.sumRho[0] + t.sumRho[1]; p.sumRho[1] = 0.0;
+	p.ssqRho[0] = t.ssqRho[0] + t.ssqRho[1]; p.ssqRho[1] = 0.0;
+	p.sumS0[0] = t.sumS0[0] + t.sumS0[1]; p.sumS0[1] = 0.0;
+	p.ssqS0[0] = t.ssqS0[0] + t.ssqS0[1]; p.ssqS0[1] = 0.0;
+	p.sumAlphaS[0] = t.sumAlphaS[0] + t.sumAlphaS[1]; p.sumAlphaS[1] = 0.0;
+	p.ssqAlphaS[0] = t.ssqAlphaS[0] + t.ssqAlphaS[1]; p.ssqAlphaS[1] = 0.0;
+	p.sumBetaS[0] = t.sumBetaS[0] + t.sumBetaS[1]; p.sumBetaS[1] = 0.0;
+	p.ssqBetaS[0] = t.ssqBetaS[0] + t.ssqBetaS[1]; p.ssqBetaS[1] = 0.0;
+	p.sumGeneticFitness[0] = t.sumGeneticFitness[0] + t.sumGeneticFitness[1]; p.sumGeneticFitness[1] = 0.0;
+	p.ssqGeneticFitness[0] = t.ssqGeneticFitness[0] + t.ssqGeneticFitness[1]; p.ssqGeneticFitness[1] = 0.0;
+	return p;
+}
+
 // Write record to range file
 void Community::outRange(Species* pSpecies, int rep, int yr, int gen)
 {
@@ -923,6 +968,8 @@ void Community::outRange(Species* pSpecies, int rep, int yr, int gen)
 			}
 		}
 
+		const traitsums tsPooled = poolSexes(ts);
+
 		if (emig.indVar) {
 			if (emig.sexDep) { // must be a sexual species
 				ngenes = 2;
@@ -936,6 +983,7 @@ void Community::outRange(Species* pSpecies, int rep, int yr, int gen)
 				}
 			}
 			double mnD0[2], mnAlpha[2], mnBeta[2], sdD0[2], sdAlpha[2], sdBeta[2];
+			const traitsums& tsx = (ngenes == 2) ? ts : tsPooled;
 			for (int g = 0; g < ngenes; g++) {
 				mnD0[g] = mnAlpha[g] = mnBeta[g] = sdD0[g] = sdAlpha[g] = sdBeta[g] = 0.0;
 				// individuals may have been counted by sex if there was
@@ -943,15 +991,15 @@ void Community::outRange(Species* pSpecies, int rep, int yr, int gen)
 				if (ngenes == 2) popsize = ts.ninds[g];
 				else popsize = ts.ninds[0] + ts.ninds[1];
 				if (popsize > 0) {
-					mnD0[g] = ts.sumD0[g] / (double)popsize;
-					mnAlpha[g] = ts.sumAlpha[g] / (double)popsize;
-					mnBeta[g] = ts.sumBeta[g] / (double)popsize;
+					mnD0[g] = tsx.sumD0[g] / (double)popsize;
+					mnAlpha[g] = tsx.sumAlpha[g] / (double)popsize;
+					mnBeta[g] = tsx.sumBeta[g] / (double)popsize;
 					if (popsize > 1) {
-						sdD0[g] = ts.ssqD0[g] / (double)popsize - mnD0[g] * mnD0[g];
+						sdD0[g] = tsx.ssqD0[g] / (double)popsize - mnD0[g] * mnD0[g];
 						if (sdD0[g] > 0.0) sdD0[g] = sqrt(sdD0[g]); else sdD0[g] = 0.0;
-						sdAlpha[g] = ts.ssqAlpha[g] / (double)popsize - mnAlpha[g] * mnAlpha[g];
+						sdAlpha[g] = tsx.ssqAlpha[g] / (double)popsize - mnAlpha[g] * mnAlpha[g];
 						if (sdAlpha[g] > 0.0) sdAlpha[g] = sqrt(sdAlpha[g]); else sdAlpha[g] = 0.0;
-						sdBeta[g] = ts.ssqBeta[g] / (double)popsize - mnBeta[g] * mnBeta[g];
+						sdBeta[g] = tsx.ssqBeta[g] / (double)popsize - mnBeta[g] * mnBeta[g];
 						if (sdBeta[g] > 0.0) sdBeta[g] = sqrt(sdBeta[g]); else sdBeta[g] = 0.0;
 					}
 					else {
@@ -995,6 +1043,7 @@ void Community::outRange(Species* pSpecies, int rep, int yr, int gen)
 			double sdDist1[2], sdDist2[2], sdProp1[2], sdStepL[2], sdRho[2];
 			double mnDP[2], mnGB[2], mnAlphaDB[2], mnBetaDB[2];
 			double sdDP[2], sdGB[2], sdAlphaDB[2], sdBetaDB[2];
+			const traitsums& tsx = (ngenes == 2) ? ts : tsPooled;
 			for (int g = 0; g < ngenes; g++) {
 				mnDist1[g] = mnDist2[g] = mnProp1[g] = mnStepL[g] = mnRho[g] = 0.0;
 				sdDist1[g] = sdDist2[g] = sdProp1[g] = sdStepL[g] = sdRho[g] = 0.0;
@@ -1005,33 +1054,33 @@ void Community::outRange(Species* pSpecies, int rep, int yr, int gen)
 				if (ngenes == 2) popsize = ts.ninds[g];
 				else popsize = ts.ninds[0] + ts.ninds[1];
 				if (popsize > 0) {
-					mnDist1[g] = ts.sumDist1[g] / (double)popsize;
-					mnDist2[g] = ts.sumDist2[g] / (double)popsize;
-					mnProp1[g] = ts.sumProp1[g] / (double)popsize;
-					mnStepL[g] = ts.sumStepL[g] / (double)popsize;
-					mnRho[g] = ts.sumRho[g] / (double)popsize;
-					mnDP[g] = ts.sumDP[g] / (double)popsize;
-					mnGB[g] = ts.sumGB[g] / (double)popsize;
-					mnAlphaDB[g] = ts.sumAlphaDB[g] / (double)popsize;
-					mnBetaDB[g] = ts.sumBetaDB[g] / (double)popsize;
+					mnDist1[g] = tsx.sumDist1[g] / (double)popsize;
+					mnDist2[g] = tsx.sumDist2[g] / (double)popsize;
+					mnProp1[g] = tsx.sumProp1[g] / (double)popsize;
+					mnStepL[g] = tsx.sumStepL[g] / (double)popsize;
+					mnRho[g] = tsx.sumRho[g] / (double)popsize;
+					mnDP[g] = tsx.sumDP[g] / (double)popsize;
+					mnGB[g] = tsx.sumGB[g] / (double)popsize;
+					mnAlphaDB[g] = tsx.sumAlphaDB[g] / (double)popsize;
+					mnBetaDB[g] = tsx.sumBetaDB[g] / (double)popsize;
 					if (popsize > 1) {
-						sdDist1[g] = ts.ssqDist1[g] / (double)popsize - mnDist1[g] * mnDist1[g];
+						sdDist1[g] = tsx.ssqDist1[g] / (double)popsize - mnDist1[g] * mnDist1[g];
 						if (sdDist1[g] > 0.0) sdDist1[g] = sqrt(sdDist1[g]); else sdDist1[g] = 0.0;
-						sdDist2[g] = ts.ssqDist2[g] / (double)popsize - mnDist2[g] * mnDist2[g];
+						sdDist2[g] = tsx.ssqDist2[g] / (double)popsize - mnDist2[g] * mnDist2[g];
 						if (sdDist2[g] > 0.0) sdDist2[g] = sqrt(sdDist2[g]); else sdDist2[g] = 0.0;
-						sdProp1[g] = ts.ssqProp1[g] / (double)popsize - mnProp1[g] * mnProp1[g];
+						sdProp1[g] = tsx.ssqProp1[g] / (double)popsize - mnProp1[g] * mnProp1[g];
 						if (sdProp1[g] > 0.0) sdProp1[g] = sqrt(sdProp1[g]); else sdProp1[g] = 0.0;
-						sdStepL[g] = ts.ssqStepL[g] / (double)popsize - mnStepL[g] * mnStepL[g];
+						sdStepL[g] = tsx.ssqStepL[g] / (double)popsize - mnStepL[g] * mnStepL[g];
 						if (sdStepL[g] > 0.0) sdStepL[g] = sqrt(sdStepL[g]); else sdStepL[g] = 0.0;
-						sdRho[g] = ts.ssqRho[g] / (double)popsize - mnRho[g] * mnRho[g];
+						sdRho[g] = tsx.ssqRho[g] / (double)popsize - mnRho[g] * mnRho[g];
 						if (sdRho[g] > 0.0) sdRho[g] = sqrt(sdRho[g]); else sdRho[g] = 0.0;
-						sdDP[g] = ts.ssqDP[g] / (double)popsize - mnDP[g] * mnDP[g];
+						sdDP[g] = tsx.ssqDP[g] / (double)popsize - mnDP[g] * mnDP[g];
 						if (sdDP[g] > 0.0) sdDP[g] = sqrt(sdDP[g]); else sdDP[g] = 0.0;
-						sdGB[g] = ts.ssqGB[g] / (double)popsize - mnGB[g] * mnGB[g];
+						sdGB[g] = tsx.ssqGB[g] / (double)popsize - mnGB[g] * mnGB[g];
 						if (sdGB[g] > 0.0) sdGB[g] = sqrt(sdGB[g]); else sdGB[g] = 0.0;
-						sdAlphaDB[g] = ts.ssqAlphaDB[g] / (double)popsize - mnAlphaDB[g] * mnAlphaDB[g];
+						sdAlphaDB[g] = tsx.ssqAlphaDB[g] / (double)popsize - mnAlphaDB[g] * mnAlphaDB[g];
 						if (sdAlphaDB[g] > 0.0) sdAlphaDB[g] = sqrt(sdAlphaDB[g]); else sdAlphaDB[g] = 0.0;
-						sdBetaDB[g] = ts.ssqBetaDB[g] / (double)popsize - mnBetaDB[g] * mnBetaDB[g];
+						sdBetaDB[g] = tsx.ssqBetaDB[g] / (double)popsize - mnBetaDB[g] * mnBetaDB[g];
 						if (sdBetaDB[g] > 0.0) sdBetaDB[g] = sqrt(sdBetaDB[g]); else sdBetaDB[g] = 0.0;
 					}
 				}
@@ -1085,6 +1134,7 @@ void Community::outRange(Species* pSpecies, int rep, int yr, int gen)
 			}
 			// CURRENTLY INDIVIDUAL VARIATION CANNOT BE SEX-DEPENDENT
 			double mnS0[2], mnAlpha[2], mnBeta[2], sdS0[2], sdAlpha[2], sdBeta[2];
+			const traitsums& tsx = (ngenes == 2) ? ts : tsPooled;
 			for (int g = 0; g < ngenes; g++) {
 				mnS0[g] = mnAlpha[g] = mnBeta[g] = sdS0[g] = sdAlpha[g] = sdBeta[g] = 0.0;
 				// individuals may have been counted by sex if there was
@@ -1092,15 +1142,15 @@ void Community::outRange(Species* pSpecies, int rep, int yr, int gen)
 				if (ngenes == 2) popsize = ts.ninds[g];
 				else popsize = ts.ninds[0] + ts.ninds[1];
 				if (popsize > 0) {
-					mnS0[g] = ts.sumS0[g] / (double)popsize;
-					mnAlpha[g] = ts.sumAlphaS[g] / (double)popsize;
-					mnBeta[g] = ts.sumBetaS[g] / (double)popsize;
+					mnS0[g] = tsx.sumS0[g] / (double)popsize;
+					mnAlpha[g] = tsx.sumAlphaS[g] / (double)popsize;
+					mnBeta[g] = tsx.sumBetaS[g] / (double)popsize;
 					if (popsize > 1) {
-						sdS0[g] = ts.ssqS0[g] / (double)popsize - mnS0[g] * mnS0[g];
+						sdS0[g] = tsx.ssqS0[g] / (double)popsize - mnS0[g] * mnS0[g];
 						if (sdS0[g] > 0.0) sdS0[g] = sqrt(sdS0[g]); else sdS0[g] = 0.0;
-						sdAlpha[g] = ts.ssqAlphaS[g] / (double)popsize - mnAlpha[g] * mnAlpha[g];
+						sdAlpha[g] = tsx.ssqAlphaS[g] / (double)popsize - mnAlpha[g] * mnAlpha[g];
 						if (sdAlpha[g] > 0.0) sdAlpha[g] = sqrt(sdAlpha[g]); else sdAlpha[g] = 0.0;
-						sdBeta[g] = ts.ssqBetaS[g] / (double)popsize - mnBeta[g] * mnBeta[g];
+						sdBeta[g] = tsx.ssqBetaS[g] / (double)popsize - mnBeta[g] * mnBeta[g];
 						if (sdBeta[g] > 0.0) sdBeta[g] = sqrt(sdBeta[g]); else sdBeta[g] = 0.0;
 					}
 					else {
@@ -1315,6 +1365,7 @@ void Community::writeTraitsRows(Species* pSpecies, int rep, int yr, int gen, int
 	transferRules trfr = pSpecies->getTransferRules();
 	settleType sett = pSpecies->getSettle();
 	double mn, sd;
+	const traitsums tp = poolSexes(ts); // for traits that are not sex-dependent
 
 	// calculate population size in case one phase is sex-dependent and the other is not
 	// (in which case numbers of individuals are recorded by sex)
@@ -1356,17 +1407,17 @@ void Community::writeTraitsRows(Species* pSpecies, int rep, int yr, int gen, int
 			}
 		}
 		else { // no sex dependence in emigration
-			if (popsize > 0) mn = ts.sumD0[0] / (double)popsize; else mn = 0.0;
-			if (popsize > 1) sd = ts.ssqD0[0] / (double)popsize - mn * mn; else sd = 0.0;
+			if (popsize > 0) mn = tp.sumD0[0] / (double)popsize; else mn = 0.0;
+			if (popsize > 1) sd = tp.ssqD0[0] / (double)popsize - mn * mn; else sd = 0.0;
 			if (sd > 0.0) sd = sqrt(sd); else sd = 0.0;
 			outtraitsrows << "\t" << mn << "\t" << sd;
 			if (emig.densDep) {
-				if (popsize > 0) mn = ts.sumAlpha[0] / (double)popsize; else mn = 0.0;
-				if (popsize > 1) sd = ts.ssqAlpha[0] / (double)popsize - mn * mn; else sd = 0.0;
+				if (popsize > 0) mn = tp.sumAlpha[0] / (double)popsize; else mn = 0.0;
+				if (popsize > 1) sd = tp.ssqAlpha[0] / (double)popsize - mn * mn; else sd = 0.0;
 				if (sd > 0.0) sd = sqrt(sd); else sd = 0.0;
 				outtraitsrows << "\t" << mn << "\t" << sd;
-				if (popsize > 0) mn = ts.sumBeta[0] / (double)popsize; else mn = 0.0;
-				if (popsize > 1) sd = ts.ssqBeta[0] / (double)popsize - mn * mn; else sd = 0.0;
+				if (popsize > 0) mn = tp.sumBeta[0] / (double)popsize; else mn = 0.0;
+				if (popsize > 1) sd = tp.ssqBeta[0] / (double)popsize - mn * mn; else sd = 0.0;
 				if (sd > 0.0) sd = sqrt(sd); else sd = 0.0;
 				outtraitsrows << "\t" << mn << "\t" << sd;
 			}
@@ -1377,12 +1428,12 @@ void Community::writeTraitsRows(Species* pSpecies, int rep, int yr, int gen, int
 		if (trfr.usesMovtProc) {
 			if (trfr.moveType == 2) { // CRW
 				// NB - CURRENTLY CANNOT BE SEX-DEPENDENT...
-				if (popsize > 0) mn = ts.sumStepL[0] / (double)popsize; else mn = 0.0;
-				if (popsize > 1) sd = ts.ssqStepL[0] / (double)popsize - mn * mn; else sd = 0.0;
+				if (popsize > 0) mn = tp.sumStepL[0] / (double)popsize; else mn = 0.0;
+				if (popsize > 1) sd = tp.ssqStepL[0] / (double)popsize - mn * mn; else sd = 0.0;
 				if (sd > 0.0) sd = sqrt(sd); else sd = 0.0;
 				outtraitsrows << "\t" << mn << "\t" << sd;
-				if (popsize > 0) mn = ts.sumRho[0] / (double)popsize; else mn = 0.0;
-				if (popsize > 1) sd = ts.ssqRho[0] / (double)popsize - mn * mn; else sd = 0.0;
+				if (popsize > 0) mn = tp.sumRho[0] / (double)popsize; else mn = 0.0;
+				if (popsize > 1) sd = tp.ssqRho[0] / (double)popsize - mn * mn; else sd = 0.0;
 				if (sd > 0.0) sd = sqrt(sd); else sd = 0.0;
 				outtraitsrows << "\t" << mn << "\t" << sd;
 			}
@@ -1418,18 +1469,18 @@ void Community::writeTraitsRows(Species* pSpecies, int rep, int yr, int gen, int
 				}
 			}
 			else { // sex-independent
-				if (popsize > 0) mn = ts.sumDist1[0] / (double)popsize; else mn = 0.0;
-				if (popsize > 1) sd = ts.ssqDist1[0] / (double)popsize - mn * mn; else sd = 0.0;
+				if (popsize > 0) mn = tp.sumDist1[0] / (double)popsize; else mn = 0.0;
+				if (popsize > 1) sd = tp.ssqDist1[0] / (double)popsize - mn * mn; else sd = 0.0;
 				if (sd > 0.0) sd = sqrt(sd); else sd = 0.0;
 				outtraitsrows << "\t" << mn << "\t" << sd;
 				if (trfr.twinKern)
 				{
-					if (popsize > 0) mn = ts.sumDist2[0] / (double)popsize; else mn = 0.0;
-					if (popsize > 1) sd = ts.ssqDist2[0] / (double)popsize - mn * mn; else sd = 0.0;
+					if (popsize > 0) mn = tp.sumDist2[0] / (double)popsize; else mn = 0.0;
+					if (popsize > 1) sd = tp.ssqDist2[0] / (double)popsize - mn * mn; else sd = 0.0;
 					if (sd > 0.0) sd = sqrt(sd); else sd = 0.0;
 					outtraitsrows << "\t" << mn << "\t" << sd;
-					if (popsize > 0) mn = ts.sumProp1[0] / (double)popsize; else mn = 0.0;
-					if (popsize > 1) sd = ts.ssqProp1[0] / (double)popsize - mn * mn; else sd = 0.0;
+					if (popsize > 0) mn = tp.sumProp1[0] / (double)popsize; else mn = 0.0;
+					if (popsize > 1) sd = tp.ssqProp1[0] / (double)popsize - mn * mn; else sd = 0.0;
 					if (sd > 0.0) sd = sqrt(sd); else sd = 0.0;
 					outtraitsrows << "\t" << mn << "\t" << sd;
 				}
@@ -1438,16 +1489,16 @@ void Community::writeTraitsRows(Species* pSpecies, int rep, int yr, int gen, int
 	}
 
 	if (sett.indVar) {
-		if (popsize > 0) mn = ts.sumS0[0] / (double)popsize; else mn = 0.0;
-		if (popsize > 1) sd = ts.ssqS0[0] / (double)popsize - mn * mn; else sd = 0.0;
+		if (popsize > 0) mn = tp.sumS0[0] / (double)popsize; else mn = 0.0;
+		if (popsize > 1) sd = tp.ssqS0[0] / (double)popsize - mn * mn; else sd = 0.0;
 		if (sd > 0.0) sd = sqrt(sd); else sd = 0.0;
 		outtraitsrows << "\t" << mn << "\t" << sd;
-		if (popsize > 0) mn = ts.sumAlphaS[0] / (double)popsize; else mn = 0.0;
-		if (popsize > 1) sd = ts.ssqAlphaS[0] / (double)popsize - mn * mn; else sd = 0.0;
+		if (popsize > 0) mn = tp.sumAlphaS[0] / (double)popsize; else mn = 0.0;
+		if (popsize > 1) sd = tp.ssqAlphaS[0] / (double)popsize - mn * mn; else sd = 0.0;
 		if (sd > 0.0) sd = sqrt(sd); else sd = 0.0;
 		outtraitsrows << "\t" << mn << "\t" << sd;
-		if (popsize > 0) mn = ts.sumBetaS[0] / (double)popsize; else mn = 0.0;
-		if (popsize > 1) sd = ts.ssqBetaS[0] / (double)popsize - mn * mn; else sd = 0.0;
+		if (popsize > 0) mn = tp.sumBetaS[0] / (double)popsize; else mn = 0.0;
+		if (popsize > 1) sd = tp.ssqBetaS[0] / (double)popsize - mn * mn; else sd = 0.0;
 		if (sd > 0.0) sd = sqrt(sd); else sd = 0.0;
 		outtraitsrows << "\t" << mn << "\t" << sd;
 	}
@@ -2008,7 +2059,8 @@ float Community::getPatchHet(Species* pSpecies, int patchId, int whichLocus) con
 			for (int a = 0; a < nAlleles; ++a) {
 				het += static_cast<int>(pPop->getHeteroTally(whichLocus, a));
 			}
-			het /= popSize;
+			// each heterozygous individual is tallied once for each of its two alleles
+			het /= 2.0f * popSize;
 			return het;
 		}
 	}

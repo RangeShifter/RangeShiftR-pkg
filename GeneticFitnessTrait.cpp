@@ -234,7 +234,7 @@ void GeneticFitnessTrait::setScaledCoeff(const DistributionType& selCoeffDist, c
 		scaledDomMeanSelCoeff = selCoeffParams.find(SHAPE)->second * selCoeffParams.find(SCALE)->second;
 		break;
 	case NEGEXP:
-		scaledDomMeanSelCoeff = 1 / selCoeffParams.find(MEAN)->second;
+		scaledDomMeanSelCoeff = selCoeffParams.find(MEAN)->second; // NegExp(mean) has mean 'mean', see RSrandom::NegExp()
 		break;
 	case NONE:
 		throw logic_error("Scaled dominance distribution cannot be used with default allele distribution.");
@@ -293,7 +293,7 @@ void GeneticFitnessTrait::mutate()
 	float newSelectionCoef;
 	float newDominanceCoef;
 
-	auto rng = pRandom->getRNG();
+	auto& rng = pRandom->getRNG();// bugfix: auto& - plain auto would copy the generator again
 
 	for (int p = 0; p < ploidy; p++) {
 		// Determine nb of mutations
@@ -528,9 +528,19 @@ float GeneticFitnessTrait::express() {
 			sB = pAlleleB->getAlleleValue();
 			hB = pAlleleB->getDominanceCoef();
 
-			sumDomCoeffs = hA + hB;
-			hLocus = sumDomCoeffs == 0.0 ? 0.5 : hA / sumDomCoeffs;
-			phenotype *= 1 - hLocus * sA - (1 - hLocus) * sB;
+			const bool aIsWildType = (sA == 0.0 && hA == 0.0);
+			const bool bIsWildType = (sB == 0.0 && hB == 0.0);
+			if (aIsWildType != bIsWildType) {
+				// heterozygote mutant / wild type: classical dominance, w = 1 - h*s
+				// (with the relative-dominance rule below, h_wt = 0 would make
+				// every mutation fully dominant against the wild type)
+				phenotype *= aIsWildType ? 1 - hB * sB : 1 - hA * sA;
+			}
+			else {
+				sumDomCoeffs = hA + hB;
+				hLocus = sumDomCoeffs == 0.0 ? 0.5 : hA / sumDomCoeffs;
+				phenotype *= 1 - hLocus * sA - (1 - hLocus) * sB;
+			}
 		}
 		else {
 			phenotype *= 1 - sA;

@@ -130,9 +130,9 @@ struct transferRules {
 	short movtTrait[2];
 };
 struct trfrKernelParams {
-	float	meanDist1;
-	float	meanDist2;
-	float	probKern1;
+	float	meanDist1 = -9.0f;	// <= 0: not set, ignored by setSpKernTraits()
+	float	meanDist2 = -9.0f;
+	float	probKern1 = -9.0f;
 };
 struct trfrMortParams {
 	float fixedMort;

@@ -192,7 +192,7 @@ void Management::translocate(int yr
 #ifndef NDEBUG
     cout << "Population does not exist in source patch or is 0! skipping translocation event." << endl;
 #endif
-                        return;
+                        continue; // skip this event only
                     }
                 } else {
 #if RS_RCPP
@@ -201,7 +201,7 @@ void Management::translocate(int yr
 #ifndef NDEBUG
     cout << "Source patch was found but NULL! skipping translocation event." << endl; // not sure if this ever happens
 #endif
-                    return;
+                    continue; // skip this event only
                 }
     //
             } else{
@@ -211,7 +211,7 @@ void Management::translocate(int yr
 #ifndef NDEBUG
     cout << "Source patch was not found in landscape! skipping translocation event." << endl;
 #endif
-                return;
+                continue; // skip this event only
             }
        } else{
            Cell* pCell;
@@ -236,7 +236,7 @@ void Management::translocate(int yr
 #ifndef NDEBUG
     cout << "Population does not exist in source cell or is 0! skipping translocation event." << endl;
 #endif
-                       return;
+                       continue; // skip this event only
                    }
                } else {
 #if RS_RCPP
@@ -246,7 +246,7 @@ void Management::translocate(int yr
     cout << "Source cell does not exist! skipping translocation event." << endl;
 #endif
 
-                   return;
+                   continue; // skip this event only
                }
            } else {
 #if RS_RCPP
@@ -255,7 +255,7 @@ void Management::translocate(int yr
 #ifndef NDEBUG
     cout << "Cell does not belong to landscape! skipping translocation event." << endl;
 #endif
-               return;
+               continue; // skip this event only
            }
         }
        // find the target patch and check for existence
@@ -270,6 +270,16 @@ void Management::translocate(int yr
     cout << "Target patch exist." << endl;
 #endif
                 t_patch = pLandscape->findPatch(target_it->second[e].x);
+                if (t_patch->getK() <= 0.0) { // no habitat in this year (e.g. dynamic landscape)
+	                // message as for a missing target patch
+                    #if RS_RCPP
+                        Rcpp::Rcout << "Target patch was found in landscape but has K = 0! skipping translocation event." << endl;
+                    #endif
+                    #ifndef NDEBUG
+                        cout << "Target patch was found in landscape but has K = 0! skipping translocation event." << endl;
+                    #endif
+	                continue; // skip this event only
+                }
            } else{
 #if RS_RCPP
                Rcpp::Rcout << "Target patch was not found in landscape! skipping translocation event." << endl;
@@ -277,7 +287,7 @@ void Management::translocate(int yr
 #ifndef NDEBUG
     cout << "Target patch was not found in landscape! skipping translocation event." << endl;
 #endif
-               return;
+               continue; // skip this event only
            }
        } else{
            Cell* pCell;
@@ -292,6 +302,16 @@ void Management::translocate(int yr
                Patch *t_ppatch = pCell->getPatch();
                if (t_ppatch) {
                    t_patch = t_ppatch;
+                   if (t_patch->getK() <= 0.0) { // no habitat in this year (e.g. dynamic landscape)
+                          // message as for a missing target patch
+                          #if RS_RCPP
+                            Rcpp::Rcout << "Target cell was found in landscape but has K = 0! skipping translocation event." << endl;
+                          #endif
+                          #ifndef NDEBUG
+                            cout << "Target cell was found in landscape but has K = 0! skipping translocation event." << endl;
+                          #endif
+                          continue; // skip this event only
+                     }
                } else {
 #if RS_RCPP
                    Rcpp::Rcout << "Target cell does not exist! skipping translocation event." << endl;
@@ -299,7 +319,7 @@ void Management::translocate(int yr
 #ifndef NDEBUG
     cout << "Target cell does not exist! skipping translocation event." << endl;
 #endif
-                   return;
+                   continue; // skip this event only
                }
            } else {
 #if RS_RCPP
@@ -308,7 +328,7 @@ void Management::translocate(int yr
 #ifndef NDEBUG
     cout << "Target cell does not belong to landscape! skipping translocation event." << endl;
 #endif
-               return;
+               continue; // skip this event only
            }
        }
 

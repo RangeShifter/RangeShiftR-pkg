@@ -238,18 +238,28 @@ void Patch::setPatchDemoScaling(short landIx, patchLimits landlimits) {
 	std::vector<float> patchDS(nDSlayer, 0.0);
 	std::vector<float> cellDS(nDSlayer, 0.0);
 
+	int nvalid = 0;
 	for (int i = 0; i < ncells; i++) {
-		cellDS = cells[i]->getDemoScaling(landIx); // is that ok?
+		if (cells[i] == nullptr) continue;
+		cellDS = cells[i]->getDemoScaling(landIx);
+		// getDemoScaling() returns a vector of size 1 if no scaling is defined
+		// for this cell / landscape: skip it instead of reading out of bounds
+		if ((int)cellDS.size() < nDSlayer) continue;
 
 		//add cell value to patch value
 		for (int ly = 0; ly < nDSlayer; ly++) {
 			patchDS[ly] += cellDS[ly];
 		}
+		nvalid++;
+	}
+	if (nvalid == 0) { // nothing to average (also avoids 0/0): no scaling (100 %)
+		localDemoScaling.assign(nDSlayer, 1.0);
+		return;
 	}
 
 	// take mean over cells and divide by 100 to scale to range [0,1]
 	for (int ly = 0; ly < nDSlayer; ly++) {
-		patchDS[ly] = patchDS[ly] / ncells / 100.0f;
+		patchDS[ly] = patchDS[ly] / nvalid / 100.0f;
 	}
 
 	// set values
