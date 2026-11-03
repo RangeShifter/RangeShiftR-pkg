@@ -108,6 +108,13 @@ NeutralTraits<- setClass("NeutralTraitsParams", slots = c(Positions = "ANY", # v
                                       MutationRate = 0.0, # numeric
                                       OutputValues = FALSE
                    ))
+# TRUE if a Positions entry (or any entry of a list of Positions) is an empty vector of loci,
+# e.g. integer(0). A trait needs at least one locus; RScore rejects empty positions.
+.hasEmptyPositions <- function(positions) {
+    if (is.list(positions)) any(vapply(positions, function(p) is.null(p) || (is.numeric(p) && length(p) == 0), logical(1)))
+    else is.numeric(positions) && length(positions) == 0
+}
+
 setValidity("NeutralTraitsParams", function(object) {
     msg <- NULL
 
@@ -116,6 +123,9 @@ setValidity("NeutralTraitsParams", function(object) {
     isCharacter <- class(object@Positions) == "character"
     if (is.null(object@Positions) || (!isNumeric && !isCharacter)) {
         msg <- c(msg, "Positions must be integer or character.")
+    }
+    if (.hasEmptyPositions(object@Positions)) {
+        msg <- c(msg, "Positions must contain at least one locus position.")
     }
     if (!isNumeric){
         if(isCharacter && object@Positions != "random") {
@@ -349,6 +359,9 @@ setValidity("GeneticLoadParams", function(object) {
     # Positions must be of type list?
     if(class(object@Positions) != "list") {
         msg <- c(msg, "GeneticLoad(): Positions must be provided as a list.")
+    }
+    else if (.hasEmptyPositions(object@Positions)) {
+        msg <- c(msg, "GeneticLoad(): Positions must contain at least one locus position for each trait.")
     }
     # NbOfPositions must be either numeric, integer or NULL
     if (!is.null(object@NbOfPositions) && class(object@NbOfPositions) != "integer" && class(object@NbOfPositions) != "numeric") {
@@ -833,6 +846,9 @@ setValidity("EmigrationTraitsParams", function(object) {
     if(class(object@Positions) != "list") {
         msg <- c(msg, "In EmigrationTraits(): Positions must be provided as a list.")
     }
+    else if (.hasEmptyPositions(object@Positions)) {
+        msg <- c(msg, "In EmigrationTraits(): Positions must contain at least one locus position for each trait.")
+    }
     # NbOfPositions must be either numeric, integer or NULL
     if (!is.null(object@NbOfPositions) && class(object@NbOfPositions) != "numeric" && class(object@NbOfPositions) != "integer") {
         msg <- c(msg, "In EmigrationTraits(): NbrOfPositions must be either NULL (if all positions are given) or numeric (if at least one emigration trait has random positions).")
@@ -1074,6 +1090,9 @@ setValidity("SettlementTraitsParams", function(object) {
     if(class(object@Positions) != "list") {
         msg <- c(msg, "In SettlementTraits(): Positions must be provided as a list.")
     }
+    else if (.hasEmptyPositions(object@Positions)) {
+        msg <- c(msg, "In SettlementTraits(): Positions must contain at least one locus position for each trait.")
+    }
     # NbOfPositions must be either numeric, integer or NULL
     if (!is.null(object@NbOfPositions) && class(object@NbOfPositions) != "numeric" && class(object@NbOfPositions) != "integer") {
         msg <- c(msg, "In SettlementTraits(): NbrOfPositions must be either NULL (if all positions are given) or numeric (if at least one settlement trait has random positions).")
@@ -1306,6 +1325,9 @@ setValidity("KernelTraitsParams", function(object) {
     # Positions must be of type list?
     if(class(object@Positions) != "list") {
         msg <- c(msg, "In KernelTraits(): Positions must be provided as a list.")
+    }
+    else if (.hasEmptyPositions(object@Positions)) {
+        msg <- c(msg, "In KernelTraits(): Positions must contain at least one locus position for each trait.")
     }
     # NbOfPositions must be either numeric, integer or NULL
     if (!is.null(object@NbOfPositions) && class(object@NbOfPositions) != "numeric" && class(object@NbOfPositions) != "integer") {
@@ -1553,6 +1575,9 @@ setValidity("SMSTraitsParams", function(object) {
     if(class(object@Positions) != "list") {
         msg <- c(msg, "In SMSTraits(): Positions must be provided as a list.")
     }
+    else if (.hasEmptyPositions(object@Positions)) {
+        msg <- c(msg, "In SMSTraits(): Positions must contain at least one locus position for each trait.")
+    }
     # NbOfPositions must be either numeric, integer or NULL
     if (!is.null(object@NbOfPositions) && class(object@NbOfPositions) != "numeric" && class(object@NbOfPositions) != "integer") {
         msg <- c(msg, "In SMSTraits(): NbrOfPositions must be either NULL (if all positions are given) or numeric (if at least one SMS trait has random positions).")
@@ -1777,6 +1802,9 @@ setValidity("CorrRWTraitsParams", function(object) {
     # Positions must be of type list?
     if(class(object@Positions) != "list") {
         msg <- c(msg, "In CorrRWTraits(): Positions must be provided as a list.")
+    }
+    else if (.hasEmptyPositions(object@Positions)) {
+        msg <- c(msg, "In CorrRWTraits(): Positions must contain at least one locus position for each trait.")
     }
     # NbOfPositions must be either numeric, integer or NULL
     if (!is.null(object@NbOfPositions) && class(object@NbOfPositions) != "numeric" && class(object@NbOfPositions) != "integer") {
