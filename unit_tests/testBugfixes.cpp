@@ -329,6 +329,21 @@ namespace {
 		assert(thrown);
 	}
 
+	// A trait without any gene position (e.g. Positions = integer(0) in R) must be
+	// rejected when it is set up, instead of crashing at the first diploid inheritance
+	void test_trait_without_positions_throws() {
+		for (const TraitType trType : { TraitType::NEUTRAL, TraitType::E_D0, TraitType::GENETIC_LOAD1 }) {
+			bool thrown = false;
+			try {
+				SpeciesTrait spTr(trType, sex_t::NA, {} /* no positions */, ExpressionType::NOTEXPR, {},
+					DistributionType::UNIFORM, { {MAX, 3.0} }, DistributionType::NONE, {},
+					true, 0.0, DistributionType::KAM, { {MAX, 3.0} }, DistributionType::NONE, {}, 2, false);
+			}
+			catch (const logic_error&) { thrown = true; }
+			assert(thrown);
+		}
+	}
+
 	// ---------------------------------------------------------------------
 	// Dispersal
 	// ---------------------------------------------------------------------
@@ -558,6 +573,7 @@ namespace {
 			{ "genetic_load_heterozygote_with_wildtype", test_genetic_load_heterozygote_with_wildtype },
 			{ "settlement_alpha_can_be_negative", test_settlement_alpha_can_be_negative },
 			{ "neutral_trait_missing_max_throws", test_neutral_trait_missing_max_throws },
+			{ "trait_without_positions_throws", test_trait_without_positions_throws },
 			{ "kernel_waiting_individual_restarts_from_current_cell", test_kernel_waiting_individual_restarts_from_current_cell },
 			{ "settlement_neighbour_rule_absorbed_individual", test_settlement_neighbour_rule_absorbed_individual },
 			{ "fractal_non_square", test_fractal_non_square },
