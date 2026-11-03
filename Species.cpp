@@ -39,6 +39,7 @@ Species::Species(const short& repro, const short& nbRepSeasons, const bool& hasS
 	harem = 1.0;
 	bc = 1.0;
 	lambda = 1.5;
+	fecSD = -9.0; // < 0: Poisson-distributed fecundity (default)
 	probRep = 1.0;
 	repInterval = 0;
 	maxAge = 1000;
