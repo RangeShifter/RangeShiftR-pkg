@@ -38,6 +38,11 @@ SpeciesTrait::SpeciesTrait(
 	ploidy{ nPloidy },
 	traitIsOutput{ isOutput }
 {
+	// A trait must be coded by at least one locus: inheritance (e.g. NeutralTrait::inheritDiploid)
+	// reads the first and last gene position and would dereference an empty map
+	if (pos.empty())
+		throw logic_error("Invalid parameter value: trait " + to_string(traitType) + " must have at least one gene position.");
+
 	// Check distribution parameters
 	// Initial allele distribution
 	for (auto [paramType, paramVal] : initParams) {
