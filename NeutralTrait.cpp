@@ -35,6 +35,9 @@ NeutralTrait::NeutralTrait(SpeciesTrait* P)
 	DistributionType mutationDistribution = pSpeciesTrait->getMutationDistribution();
 	map<GenParamType, float> mutationParameters = pSpeciesTrait->getMutationParameters();
 
+	if (mutationParameters.count(MAX) != 1)
+		throw logic_error("KAM or SSM mutation distribution parameter must contain max value, max cannot exceed 256  \n");
+
 	// Set default value to user-specified max
 	wildType = (int)mutationParameters.find(MAX)->second;
 	if (wildType > NeutralValUpperBound)
@@ -52,7 +55,7 @@ NeutralTrait::NeutralTrait(SpeciesTrait* P)
 		throw logic_error("wrong mutation distribution for neutral markers, must be KAM or SSM \n");
 
 	if (mutationParameters.count(MAX) != 1)
-		throw logic_error("KAM or SSM mutation distribution parameter must contain max value (e.g. max= ), max cannot exceed 256  \n");
+		throw logic_error("KAM or SSM mutation distribution parameter must contain max value, max cannot exceed 256  \n");
 
 	DistributionType initialDistribution = pSpeciesTrait->getInitialDistribution();
 	map<GenParamType, float> initialParameters = pSpeciesTrait->getInitialParameters();
@@ -108,7 +111,7 @@ void NeutralTrait::mutate_KAM()
 	const auto& genePositions = pSpeciesTrait->getGenePositions();
 	const short ploidy = pSpeciesTrait->getPloidy();
 	const float mutationRate = pSpeciesTrait->getMutationRate();
-	auto rng = pRandom->getRNG();
+	auto& rng = pRandom->getRNG();// bugfix: auto& - plain auto would copy the generator again
 	unsigned char mut;
 
 	map<GenParamType, float> mutationParameters = pSpeciesTrait->getMutationParameters();
@@ -158,7 +161,7 @@ void NeutralTrait::mutate_SSM()
 	const auto& genePositions = pSpeciesTrait->getGenePositions();
 	const short ploidy = pSpeciesTrait->getPloidy();
 	const float mutationRate = pSpeciesTrait->getMutationRate();
-	auto rng = pRandom->getRNG();
+	auto& rng = pRandom->getRNG();// bugfix: auto& - plain auto would copy the generator again
 
 	map<GenParamType, float> mutationParameters = pSpeciesTrait->getMutationParameters();
 
