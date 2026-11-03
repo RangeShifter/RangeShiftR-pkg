@@ -110,7 +110,7 @@ RunRS <- function(RSparams, dirpath = getwd()){
 		        }
             }
             if(RSparams@simul@ReturnPopDataFrame){
-                stage_idx <- which(RSparams@simul@ReturnStages)
+                stage_idx <- which(RSparams@simul@ReturnStages) - 1L # ReturnStages[1] is stage 0 (juveniles)
                 df <- do.call(
                     rbind,
                     lapply(names(out), function(nm) {
