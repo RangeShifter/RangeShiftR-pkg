@@ -469,7 +469,12 @@ void NeutralStatsManager::calculatePairwiseFst(set<int> const& patchList, const 
 // For a single sample this is algebraically identical to the Weir & Cockerham (1984)
 // estimator f-hat = b / (b + c) used for the global Fis (with r = 1: sum_u c_u = Ho,
 // sum_u (b_u + c_u) = Hs), so per-patch and global values are directly comparable.
-// It is also the per-population Fis returned by hierfstat::basic.stats().
+// It is also identical to the population-specific Fis of Weir & Goudet (2017, Genetics 206:2085),
+// (M_W - M_S) / (1 - M_S), with M_W the allele matching within individuals and M_S the matching
+// between different individuals of the patch (averaged over loci), since 1 - M_S = Hs.
+// Per locus it equals the per-population Fis of hierfstat::basic.stats() (Nei 1987); over loci,
+// hierfstat averages the per-locus values (unweighted), whereas the ratio of sums is used here,
+// so multi-locus values can differ slightly.
 //
 // Undefined values are stored as NaN:
 //   - haploid species: Ho and Fis
