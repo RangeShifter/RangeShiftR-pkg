@@ -227,6 +227,7 @@ paramSim::paramSim(const string& pathToProjDir) :
 	outTraitsCells = outTraitsRows = outConnect = false;
 	outputGenes = outputGlobalFst = outPairwiseFst = outputPerLocusFst = false;
 	saveVisits = false;
+	fixReplicateSeed = false;
 #if RS_RCPP
 	outStartPaths = 0; outIntPaths = 0;
 	outPaths = false; ReturnPopMatrix = false; ReturnPopDataFrame = false; CreatePopFile = true;
@@ -329,6 +330,8 @@ simParams paramSim::getSim() {
 	s.outputPairwiseFstInterval = outputPairwiseFstInterval;
 
 	s.outputPerLocusFst = outputPerLocusFst;
+
+	s.fixReplicateSeed = fixReplicateSeed;
 
 	return s;
 }
