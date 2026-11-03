@@ -65,7 +65,7 @@ struct demogrParams {
 	float harem; 
 	float bc; 
 	float lambda;
-	float fecSD;
+	float fecSD; // < 0: Poisson fecundity; >= 0: Normal fecundity with this SD
 	bool stageStruct;
 };
 struct stageParams {
@@ -545,7 +545,7 @@ private:
 	float harem;        // max harem size in complex sexual model
 	float bc;						// competition coefficient for non-structured population
 	float lambda;       // maximum mean fecundity for non-structured populations
-	float fecSD;		// standard deviation of fecundity
+	float fecSD;		// SD of fecundity; < 0: Poisson, >= 0: Normal (truncated to integer, min. 0)
 	float probRep; 			// probability of reproducing in subsequent seasons
 	short repSeasons;		// no. of reproductive seasons per year
 	short repInterval;	// no. of reproductive seasons between subsequent reproductions

@@ -24,6 +24,18 @@
 
 #include "Population.h"
 
+// Draw the number of offspring of a breeding female.
+// - fecSD < 0  : Poisson distribution with mean meanFecundity (default)
+// - fecSD >= 0 : Normal distribution with mean meanFecundity and SD fecSD;
+//                the draw is truncated towards zero (deliberately, NOT rounded)
+//                and negative values are set to 0. Note that truncation lowers
+//                the realised mean fecundity relative to meanFecundity.
+static int drawNbOffspring(double meanFecundity, float fecSD) {
+	if (meanFecundity <= 0.0) return 0;
+	if (fecSD < 0.0) return pRandom->Poisson(meanFecundity);
+	return std::max(0, static_cast<int>(pRandom->Normal(meanFecundity, fecSD)));
+}
+
 #include <algorithm>
 //---------------------------------------------------------------------------
 
@@ -674,23 +686,7 @@ void Population::reproduction(const float localK, const float envval, const int 
 					inds[i]->resetFallow();
 
 					meanFecundity = fec[stage][0];
-					// Draw number of offspring:
-					// - if fecSD is not specified (< 0), preserve the
-					//   previous Poisson model
-					// - otherwise use a normal distribution with the
-					//   user-specified standard deviation
-					if(meanFecundity <= 0.0) {
-						njuvs = 0;
-					} else{
-						if (fecStdDev < 0.0) {
-							njuvs = pRandom->Poisson(meanFecundity);
-						}
-						else {
-							njuvs = max(0, static_cast<int>(
-								pRandom->Normal(meanFecundity, fecStdDev)
-							));
-						}
-					}
+					njuvs = drawNbOffspring(meanFecundity, fecStdDev);
 
 					pCell = pPatch->getRandomCell();
 					for (int j = 0; j < njuvs; j++) {
@@ -759,23 +755,7 @@ void Population::reproduction(const float localK, const float envval, const int 
 						// NECESSARILY EQUAL THE EXPECTED NO. FROM EQN. 7 IN THE MANUAL...
 						if (pRandom->Bernoulli(propBreed)) {
 							meanFecundity = fec[stage][0]; // breeds
-							// Draw number of offspring:
-							// - if fecSD is not specified (< 0), preserve the
-							//   previous Poisson model
-							// - otherwise use a normal distribution with the
-							//   user-specified standard deviation
-							if(meanFecundity <= 0.0) {
-								njuvs = 0;
-							} else{
-								if (fecStdDev < 0.0) {
-									njuvs = pRandom->Poisson(meanFecundity);
-								}
-								else {
-									njuvs = max(0, static_cast<int>(
-										pRandom->Normal(meanFecundity, fecStdDev)
-									));
-								}
-							}
+							njuvs = drawNbOffspring(meanFecundity, fecStdDev);
 						}
 						else njuvs = 0;
 

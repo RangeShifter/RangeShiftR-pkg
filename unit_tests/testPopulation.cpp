@@ -302,6 +302,45 @@ void testPopulation()
 		double obsFreqUnviable = 1 - pop.getNbInds() / localK;
 		assert(abs(obsFreqUnviable - expectedFreqAA) < tolerance);
 	}
+	// Fecundity distribution (fecSD):
+	// - fecSD = 0 is deterministic: every female produces exactly
+	//   (int)lambda offspring (draw is truncated, not rounded)
+	// - fecSD < 0 keeps the Poisson model (mean = lambda)
+	{
+		const int initialNbInds = 1000;
+		const float localK = 0.0; // <= 0: no density dependence, fecundity = lambda
+		vector <float> localScaling = {1.0};
+
+		struct fecCase { float lambda; float fecSD; };
+		vector<fecCase> cases = { {3.0, 0.0}, {2.7, 0.0}, {3.0, -1.0} };
+
+		for (fecCase c : cases) {
+			Landscape* pLandscape = new Landscape;
+			Patch* pPatch = pLandscape->newPatch(1);
+			Cell* pCell = new Cell(0, 0, pPatch, 0);
+			pPatch->addCell(pCell, 0, 0);
+
+			Species* pSpecies = createDefaultSpecies();
+			demogrParams dem = createDefaultHaploidDemogrParams();
+			dem.lambda = c.lambda;
+			dem.fecSD = c.fecSD;
+			pSpecies->setDemogr(dem);
+			assert(pSpecies->getDemogrParams().fecSD == c.fecSD);
+
+			Population pop = Population(pSpecies, pPatch, initialNbInds, 1);
+			pop.reproduction(localK, 1, 1, localScaling);
+			pop.fledge(); // non-overlapping: adults are replaced with juveniles
+			const int nOffspring = pop.getNbInds();
+
+			if (c.fecSD == 0.0) {
+				assert(nOffspring == initialNbInds * static_cast<int>(c.lambda));
+			}
+			else { // Poisson: total ~ Poisson(N * lambda), SD ~ 55
+				const double expected = initialNbInds * c.lambda;
+				assert(abs(nOffspring - expected) < 300);
+			}
+		}
+	}
 }
 
 #endif // UNIT_TESTS
