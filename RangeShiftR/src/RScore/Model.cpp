@@ -274,6 +274,10 @@ int RunModel(Landscape* pLandscape, int seqsim)
 		if (sim.outPairwiseFst) {
 			pComm->openPairwiseFstFile(pSpecies, pLandscape, ppLand.landNum, rep);
 		}
+		if (sim.outputPerPatchFis) {
+			if (!pComm->openPerPatchFisFile(ppLand.landNum, rep))
+				throw logic_error("Per-patch Fis output file could not be initialised.");
+		}
 #if RS_RCPP
 		// open a new movement paths file for each replicate
 		if (sim.outPaths)
@@ -430,8 +434,8 @@ int RunModel(Landscape* pLandscape, int seqsim)
 
 			for (int gen = 0; gen < dem.repSeasons; gen++) // generation loop
 			{
-				// TODO move translocation before dispersal?
-				if (manage.translocation && std::find(transloc.translocation_years.begin(), transloc.translocation_years.end(), yr) != transloc.translocation_years.end()) {
+				// Translocation only occurs in generation 0, and only if the current year is in the list of translocation years
+				if (manage.translocation && gen == 0 && std::find(transloc.translocation_years.begin(), transloc.translocation_years.end(), yr) != transloc.translocation_years.end()) {
 				    pManagement->translocate(yr
                                      , pLandscape
                                      , pSpecies
@@ -583,7 +587,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 							pSpecies, rep, yr, gen,
 							doPairwiseFst, sim.outputPairwiseFstStart, sim.outputPairwiseFstInterval,
 							doGlobalFst, sim.outputGlobalFstStart, sim.outputGlobalFstInterval,
-							sim.outputPerLocusFst);
+							sim.outputPerLocusFst, sim.outputPerPatchFis);
 					}
 				}
 				
@@ -707,6 +711,8 @@ int RunModel(Landscape* pLandscape, int seqsim)
 			pComm->openPerLocusFstFile(pSpecies, pLandscape, -999, rep);
 		if (sim.outPairwiseFst) //close per locus file 
 			pComm->openPairwiseFstFile(pSpecies, pLandscape, -999, rep);
+		if (sim.outputPerPatchFis) //close per patch Fis file
+			pComm->openPerPatchFisFile(-999, rep);
 
 		if (sim.saveVisits) {
 			pLandscape->outVisits(rep, ppLand.landNum);
@@ -758,6 +764,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 		pComm->openPerLocusFstFile(pSpecies, pLandscape, -999, 0);
 	}
 	if (sim.outPairwiseFst) pComm->openPairwiseFstFile(pSpecies, pLandscape, -999, 0);
+	if (sim.outputPerPatchFis) pComm->openPerPatchFisFile(-999, 0);
 
 	delete pComm;
 	pComm = 0;
@@ -1880,6 +1887,7 @@ void OutParameters(Landscape* pLandscape)
 		outPar << "Global Fst and neutral genetics - every " << sim.outputGlobalFstInterval << " year";
 		if (sim.outputGlobalFstInterval > 1) outPar << "s";
 		if (sim.outputPerLocusFst) outPar << "outputting per locus Fst too";
+		if (sim.outputPerPatchFis) outPar << ", outputting per patch Fis too";
 		outPar << endl;
 	}
 

@@ -339,6 +339,7 @@ struct simParams {
 	bool outputGenes;
 	bool outputGlobalFst, outPairwiseFst;
 	bool outputPerLocusFst;
+	bool outputPerPatchFis;
 	int outputGenesStart, outputGenesInterval;
 	int outputGlobalFstStart, outputGlobalFstInterval;
 	int outputPairwiseFstStart, outputPairwiseFstInterval;
@@ -358,6 +359,8 @@ public:
 	void setSim(simParams);
 	void setGeneticSim(string patchSamplingOption, bool outputGenes, int outputGenesStart, int outputGenesInterval, bool outPairwiseFst,
 		int outputGlobalFst, int outputStartGlobalFst, int outputGlobalFstInterval, int outputStartPairwiseFst, int outputPairwiseFstIntervals, bool outputPerLocusFst);
+	// per-patch Fis output (uses the same start year and interval as the global Fst output)
+	void setOutputPerPatchFis(const bool& outputPerPatchFis) { this->outputPerPatchFis = outputPerPatchFis; }
 	simParams getSim(void);
 	int getSimNum(void);
 	string getDir(int);
@@ -417,6 +420,7 @@ private:
 	bool outputGlobalFst;
 	bool outPairwiseFst;
 	bool outputPerLocusFst;
+	bool outputPerPatchFis;
 	int outputPairwiseFstStart;
 	int outputGlobalFstStart;
 	int outputPairwiseFstInterval;

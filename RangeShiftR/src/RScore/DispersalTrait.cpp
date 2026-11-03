@@ -147,7 +147,7 @@ void DispersalTrait::mutateUniform()
 	const float mutationRate = pSpeciesTrait->getMutationRate();
 	float newAlleleVal;
 
-	auto rng = pRandom->getRNG();
+	auto& rng = pRandom->getRNG();// bugfix: auto& - plain auto would copy the generator again
 
 	map<GenParamType, float> mutationParameters = pSpeciesTrait->getMutationParameters();
 	float maxD = mutationParameters.find(MAX)->second;
@@ -186,7 +186,7 @@ void DispersalTrait::mutateNormal()
 	const short ploidy = pSpeciesTrait->getPloidy();
 	const float mutationRate = pSpeciesTrait->getMutationRate();
 
-	auto rng = pRandom->getRNG();
+	auto& rng = pRandom->getRNG();
 
 	const map<GenParamType, float> mutationParameters = pSpeciesTrait->getMutationParameters();
 	const float mean = mutationParameters.find(MEAN)->second;
@@ -415,8 +415,6 @@ void DispersalTrait::trimPhenotype(float& val) {
 		break;
 	}
 	// Strictly positive values
-	case E_ALPHA_F: case E_ALPHA_M: case E_ALPHA:
-	case S_ALPHA_F: case S_ALPHA_M: case S_ALPHA:
 	case SMS_ALPHADB:
 	{
 		if (val <= 0.0) val = minPositiveVal;
@@ -430,6 +428,11 @@ void DispersalTrait::trimPhenotype(float& val) {
 		break;
 	}
 	// Not bound
+	// Slopes of the density reaction norms may be negative: a negative settlement
+	// slope gives settlement that decreases with density (eqn. 16), a negative
+	// emigration slope negative density-dependent emigration (cf. isValidTraitVal())
+	case E_ALPHA_F: case E_ALPHA_M: case E_ALPHA:
+	case S_ALPHA_F: case S_ALPHA_M: case S_ALPHA:
 	case E_BETA_F: case E_BETA_M: case E_BETA:
 	case S_BETA_F: case S_BETA_M: case S_BETA:
 	case SMS_BETADB:

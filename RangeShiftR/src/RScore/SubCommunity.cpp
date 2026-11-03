@@ -420,8 +420,12 @@ bool SubCommunity::matePresent(Species* pSpecies, Cell* pCell, short othersex)
 				pNewPopn = pPatch->getPopn(pSpecies);
 				if (pNewPopn != nullptr) {
 					const stageParams sstruct = pSpecies->getStageParams();
-					// count members of other sex already resident in the patch
-					for (int stg = 0; stg < sstruct.nStages; stg++) {
+					const demogrParams dem = pSpecies->getDemogrParams();
+					// count members of other sex already resident in the patch; in stage-structured
+					// models juveniles (stage 0) cannot breed and therefore do not count as mates
+					// not clear, whether only reproductive stages should be counted
+					const int firstStage = dem.stageStruct ? 1 : 0;
+					for (int stg = firstStage; stg < sstruct.nStages; stg++) {
 						popsize += pNewPopn->getNbInds(stg, othersex);
 					}
 				}
@@ -610,7 +614,8 @@ int SubCommunity::resolveSettlement(std::map<Species*, vector<Individual*>>& dis
 			}
 #endif
 
-			if (!trfr.usesMovtProc && sett.go2nbrLocn && (ind.status == 3 || ind.status == 6))
+			if (!trfr.usesMovtProc && sett.go2nbrLocn && (ind.status == 3 || ind.status == 6)
+				&& pInd->getCurrCell() != nullptr) // absorbed by boundary / no-data: no neighbours to move to
 			{
 				// for kernel-based transfer only ...
 				// determine whether recruitment to a neighbouring cell is possible
@@ -1183,9 +1188,9 @@ traitsums SubCommunity::outTraits(Landscape* pLandscape, int rep, int yr, int ge
 							sdD0 = sdD0 / popsize - mnD0 * mnD0;
 							sdAlpha = sdAlpha / popsize - mnAlpha * mnAlpha;
 							sdBeta = sdBeta / popsize - mnBeta * mnBeta;
-							sdD0 = sdD0 == 0.0 ? 0.0 : sqrt(sdD0);
-							sdAlpha = sdAlpha == 0.0 ? 0.0 : sqrt(sdAlpha);
-							sdBeta = sdBeta == 0.0 ? 0.0 : sqrt(sdBeta);
+							sdD0 = sdD0 <= 0.0 ? 0.0 : sqrt(sdD0);
+							sdAlpha = sdAlpha <= 0.0 ? 0.0 : sqrt(sdAlpha);
+							sdBeta = sdBeta <= 0.0 ? 0.0 : sqrt(sdBeta);
 						}
 						else {
 							sdD0 = 0.0;
@@ -1228,10 +1233,10 @@ traitsums SubCommunity::outTraits(Landscape* pLandscape, int rep, int yr, int ge
 								sdGB = sdGB / popsize - mnGB * mnGB;
 								sdAlphaDB = sdAlphaDB / popsize - mnAlphaDB * mnAlphaDB;
 								sdBetaDB = sdBetaDB / popsize - mnBetaDB * mnBetaDB;
-								sdDP = sdDP == 0.0 ? 0.0 : sqrt(sdDP);
-								sdGB = sdGB == 0.0 ? 0.0 : sqrt(sdGB);
-								sdAlphaDB = sdAlphaDB == 0.0 ? 0.0 : sqrt(sdAlphaDB);
-								sdBetaDB = sdBetaDB == 0.0 ? 0.0 : sqrt(sdBetaDB);
+								sdDP = sdDP <= 0.0 ? 0.0 : sqrt(sdDP);
+								sdGB = sdGB <= 0.0 ? 0.0 : sqrt(sdGB);
+								sdAlphaDB = sdAlphaDB <= 0.0 ? 0.0 : sqrt(sdAlphaDB);
+								sdBetaDB = sdBetaDB <= 0.0 ? 0.0 : sqrt(sdBetaDB);
 							}
 				else {
 								sdDP = 0.0;
@@ -1259,8 +1264,8 @@ traitsums SubCommunity::outTraits(Landscape* pLandscape, int rep, int yr, int ge
 							if (popsize > 1) {
 								sdStepL = sdStepL / popsize - mnStepL * mnStepL;
 								sdRho = sdRho / popsize - mnRho * mnRho;
-								sdStepL = sdStepL == 0.0 ? 0.0 : sqrt(sdStepL);
-								sdRho = sdRho == 0.0 ? 0.0 : sqrt(sdRho);
+								sdStepL = sdStepL <= 0.0 ? 0.0 : sqrt(sdStepL);
+								sdRho = sdRho <= 0.0 ? 0.0 : sqrt(sdRho);
 							}
 					else {
 								sdStepL = 0.0;
@@ -1325,9 +1330,9 @@ traitsums SubCommunity::outTraits(Landscape* pLandscape, int rep, int yr, int ge
 								sdDist1 = sdDist1 / popsize - mnDist1 * mnDist1;
 								sdDist2 = sdDist2 / popsize - mnDist2 * mnDist2;
 								sdProp1 = sdProp1 / popsize - mnProp1 * mnProp1;
-								sdDist1 = sdDist1 == 0.0 ? 0.0 : sqrt(sdDist1);
-								sdDist2 = sdDist2 == 0.0 ? 0.0 : sqrt(sdDist2);
-								sdProp1 = sdProp1 == 0.0 ? 0.0 : sqrt(sdProp1);
+								sdDist1 = sdDist1 <= 0.0 ? 0.0 : sqrt(sdDist1);
+								sdDist2 = sdDist2 <= 0.0 ? 0.0 : sqrt(sdDist2);
+								sdProp1 = sdProp1 <= 0.0 ? 0.0 : sqrt(sdProp1);
 						}
 							else {
 								sdDist1 = 0.0;
@@ -1401,9 +1406,9 @@ traitsums SubCommunity::outTraits(Landscape* pLandscape, int rep, int yr, int ge
 							sdS0 = sdS0 / popsize - mnS0 * mnS0;
 							sdAlpha = sdAlpha / popsize - mnAlpha * mnAlpha;
 							sdBeta = sdBeta / popsize - mnBeta * mnBeta;
-							sdS0 = sdS0 == 0.0 ? 0.0 : sqrt(sdS0);
-							sdAlpha = sdAlpha == 0.0 ? 0.0 : sqrt(sdAlpha);
-							sdBeta = sdBeta == 0.0 ? 0.0 : sqrt(sdBeta);
+							sdS0 = sdS0 <= 0.0 ? 0.0 : sqrt(sdS0);
+							sdAlpha = sdAlpha <= 0.0 ? 0.0 : sqrt(sdAlpha);
+							sdBeta = sdBeta <= 0.0 ? 0.0 : sqrt(sdBeta);
 				}
 						else {
 							sdS0 = 0.0;
@@ -1452,7 +1457,7 @@ traitsums SubCommunity::outTraits(Landscape* pLandscape, int rep, int yr, int ge
 						mnGenFitness /= popsize;
 						if (popsize > 1) {
 							sdGenFitness = sdGenFitness / popsize - mnGenFitness * mnGenFitness;
-							sdGenFitness = sdGenFitness == 0.0 ? 0.0 : sqrt(sdGenFitness);
+							sdGenFitness = sdGenFitness <= 0.0 ? 0.0 : sqrt(sdGenFitness);
 						}
 						else sdGenFitness = 0.0;
 						outtraits << "\t" << mnGenFitness << "\t" << sdGenFitness;
