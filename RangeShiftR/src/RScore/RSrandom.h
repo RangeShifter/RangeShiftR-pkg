@@ -74,7 +74,7 @@ public:
 	double Gamma(double, double);
 	double NegExp(double);
 	int Poisson(double);
-	mt19937 getRNG(void);
+	mt19937& getRNG(void); // returns the generator itself (a copy would replay the same stream)
 	void fixNewSeed(int);
 	seed_t getSeed() const { return RS_random_seed; };
 

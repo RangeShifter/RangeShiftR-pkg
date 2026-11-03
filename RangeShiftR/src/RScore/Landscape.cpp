@@ -340,6 +340,7 @@ Landscape::~Landscape() {
 
 	deleteConnectMatrix();
 	deletePatchChgMatrix();
+	deleteCostsChgMatrix();
 	if (epsGlobal != 0) delete[] epsGlobal;
 }
 
@@ -899,7 +900,7 @@ set<int> Landscape::samplePatches(const string& samplingOption, int nbToSample, 
 	else if (samplingOption == "random_occupied" || samplingOption == "random") {
 		if (nbToSample > eligiblePatches.size())
 			nbToSample = eligiblePatches.size();
-		auto rng = pRandom->getRNG();
+		auto& rng = pRandom->getRNG();// bugfix: auto& - plain auto would copy the generator again
 		sample(eligiblePatches.begin(), eligiblePatches.end(), std::back_inserter(sampledPatches),
 			nbToSample, rng);
 	}
@@ -958,10 +959,13 @@ Cell* Landscape::findCell(int x, int y) {
 	else return 0;
 }
 
+// TRUE if (x, y) lies within the landscape and is not a no-data cell
 bool Landscape::checkDataCell(int x, int y) {
-    Cell* pCell;
-    pCell = findCell(x, y);
-    return true;
+    // artificial landscapes are generated per replicate (in RunModel()), i.e. after the
+    // parameters have been read; until then the cell array does not exist and only
+    // the landscape bounds can be checked
+    if (cells == 0) return x >= 0 && x < dimX && y >= 0 && y < dimY;
+    return findCell(x, y) != 0;
 }
 
 
@@ -1803,6 +1807,7 @@ void Landscape::deletePatchChgMatrix(void) {
 			}
 			delete[] patchChgMatrix[y];
 		}
+		delete[] patchChgMatrix;
 	}
 	patchChgMatrix = 0;
 }
@@ -1880,6 +1885,7 @@ void Landscape::deleteCostsChgMatrix(void) {
 			}
 			delete[] costsChgMatrix[y];
 		}
+		delete[] costsChgMatrix;
 	}
 	costsChgMatrix = 0;
 }
@@ -2379,7 +2385,7 @@ resol = (int) tmpresol;
 
 	dimX = ncols;
 	dimY = nrows;
-	minX = maxY = 0; // bottom-left / south-west corner
+	minX = minY = 0; // bottom-left / south-west corner
 	maxX = dimX - 1;
 	maxY = dimY - 1;
 
@@ -2986,7 +2992,7 @@ return maxcost;
 #endif
 
             // set badfloat
-            float badDSfloat = -9.0; if (DSnodata == -9) DSfloat = -99.0;
+            float badDSfloat = -9.0; if (DSnodata == -9) badDSfloat = -99.0;
 
             // loop over landscape x+y
             for (int y = dimY - 1; y >= 0; y--) {
@@ -3054,6 +3060,7 @@ return maxcost;
         for (int y = dimY - 1; y >= 0; y--) {
             for (int x = 0; x < dimX; x++) {
                 // extract the vector in landscape at x, y
+                if (cells[y][x] == 0) continue; // no-data cell
                 std::vector<float> localDS = landscape[y][x];
                 cells[y][x]->addchgDemoScaling(localDS); // add the vector to the cell
             }
@@ -3143,7 +3150,7 @@ void Landscape::deleteConnectMatrix(void)
 		int npatches = (int)patches.size();
 		for (int j = 0; j < npatches; j++) {
 			if (connectMatrix[j] != 0)
-				delete connectMatrix[j];
+				delete[] connectMatrix[j];
 		}
 		delete[] connectMatrix;
 		connectMatrix = 0;
