@@ -227,7 +227,7 @@ paramSim::paramSim(const string& pathToProjDir) :
 	batchMode = absorbing = false;
 	outRange = outOccup = outPop = outInds = false;
 	outTraitsCells = outTraitsRows = outConnect = false;
-	outputGenes = outputGlobalFst = outPairwiseFst = outputPerLocusFst = false;
+	outputGenes = outputGlobalFst = outPairwiseFst = outputPerLocusFst = outputPerPatchFis = false;
 	saveVisits = false;
 	fixReplicateSeed = false;
 #if RS_RCPP
@@ -332,6 +332,7 @@ simParams paramSim::getSim() {
 	s.outputPairwiseFstInterval = outputPairwiseFstInterval;
 
 	s.outputPerLocusFst = outputPerLocusFst;
+	s.outputPerPatchFis = outputPerPatchFis;
 
 	s.fixReplicateSeed = fixReplicateSeed;
 

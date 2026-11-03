@@ -2,6 +2,141 @@
 
 #include "../Community.h"
 
+// ----------------------------------------------------------------------------------------
+// Per-patch Fis
+// ----------------------------------------------------------------------------------------
+
+// Genotype of one individual: one (alleleA, alleleB) pair per locus (alleleB ignored if haploid)
+using TestGenotype = vector<pair<int, int>>;
+
+struct PerPatchFisSetup {
+	Landscape* pLandscape;
+	Species* pSpecies;
+	vector<Patch*> patches;
+	set<int> patchList;
+	int nbInds = 0;
+	int nbLoci = 0;
+};
+
+// One patch per entry of genotypesPerPatch, loci at genome positions 0 .. nbLoci-1
+PerPatchFisSetup makePerPatchFisSetup(const vector<vector<TestGenotype>>& genotypesPerPatch, const int nbLoci, const bool isDiploid) {
+	PerPatchFisSetup s;
+	s.nbLoci = nbLoci;
+	s.pLandscape = new Landscape;
+	for (int i = 0; i < (int)genotypesPerPatch.size(); i++) {
+		Patch* p = s.pLandscape->newPatch(i + 1);
+		Cell* c = new Cell(i, 0, p, 0);
+		p->addCell(c, i, 0);
+		s.patches.push_back(p);
+		s.patchList.insert(p->getPatchNum());
+	}
+	s.pSpecies = createDefaultSpecies();
+	s.pSpecies->setDemogr(isDiploid ? createDefaultDiploidDemogrParams() : createDefaultHaploidDemogrParams());
+	s.pSpecies->setGeneticParameters(set<int>{nbLoci - 1}, nbLoci, 0.0, s.patchList, "all", { 1 }, 1);
+	set<int> positions;
+	for (int l = 0; l < nbLoci; l++) positions.insert(l);
+	const float maxAlleleVal = 3; // alleles 0..3
+	SpeciesTrait* spTr = createTestNeutralSpTrait(maxAlleleVal, positions, isDiploid);
+	s.pSpecies->addTrait(TraitType::NEUTRAL, *spTr);
+
+	for (int p = 0; p < (int)genotypesPerPatch.size(); p++) {
+		Population* pPop = new Population(s.pSpecies, s.patches[p], 0, 1);
+		for (const TestGenotype& gt : genotypesPerPatch[p]) {
+			Individual* pInd = new Individual(s.pSpecies, s.patches[p]->getCell(0), s.patches[p], 1, 0, 0, 0.0, false, 1);
+			pInd->setUpGenes(s.pSpecies, 1);
+			map<int, vector<unsigned char>> genotype;
+			for (int l = 0; l < nbLoci; l++) {
+				vector<unsigned char> gene(isDiploid ? 2 : 1);
+				gene[0] = (unsigned char)gt[l].first;
+				if (isDiploid) gene[1] = (unsigned char)gt[l].second;
+				genotype.emplace(l, gene);
+			}
+			pInd->overrideGenotype(NEUTRAL, genotype);
+			pPop->recruit(pInd);
+			s.nbInds++;
+		}
+		pPop->sampleIndsWithoutReplacement("all", { 1 });
+	}
+	return s;
+}
+
+vector<PatchFisStats> computePerPatchFis(PerPatchFisSetup& s) {
+	NeutralStatsManager nsm(s.patchList.size(), s.nbLoci);
+	nsm.updateAllNeutralTables(s.pSpecies, s.pLandscape, s.patchList);
+	nsm.calculatePerPatchFis(s.patchList, s.pSpecies, s.pLandscape);
+	return nsm.getPerPatchFis();
+}
+
+void testPerPatchFis() {
+
+	const double tol = 1e-9;
+
+	// Hand-computed example, one locus, n = 4:
+	// genotypes 0/1, 0/0, 0/1, 1/1 -> p = 0.5, Ho = 0.5,
+	// Hs = 4/3 * (1 - 0.5 - 0.5/8) = 7/12, Fis = 1 - 0.5 / (7/12) = 1/7
+	{
+		auto s = makePerPatchFisSetup({ { {{0,1}}, {{0,0}}, {{0,1}}, {{1,1}} } }, 1, true);
+		auto res = computePerPatchFis(s);
+		assert(res.size() == 1);
+		assert(res[0].patchId == s.patches[0]->getPatchNum());
+		assert(res[0].nbSampledInds == 4);
+		assert(fabs(res[0].ho - 0.5) < tol);
+		assert(fabs(res[0].hs - 7.0 / 12.0) < tol);
+		assert(fabs(res[0].fis - 1.0 / 7.0) < tol);
+	}
+
+	// Per-patch Fis is the Weir & Cockerham f-hat for a single sample:
+	// with two identical patches (s^2 = 0), the global WC Fis must equal the per-patch Fis
+	{
+		const vector<TestGenotype> pop = { {{0,1},{2,2}}, {{0,0},{1,2}}, {{1,1},{1,1}}, {{0,1},{2,1}}, {{0,0},{2,2}} };
+		auto s = makePerPatchFisSetup({ pop, pop }, 2, true);
+		NeutralStatsManager nsm(s.patchList.size(), s.nbLoci);
+		nsm.updateAllNeutralTables(s.pSpecies, s.pLandscape, s.patchList);
+		nsm.calculateFstatWC(s.patchList, s.nbInds, s.nbLoci, 4, s.pSpecies, s.pLandscape, false);
+		nsm.calculatePerPatchFis(s.patchList, s.pSpecies, s.pLandscape);
+		const auto& res = nsm.getPerPatchFis();
+		assert(res.size() == 2);
+		assert(fabs(res[0].fis - res[1].fis) < tol);
+		assert(fabs(res[0].fis - nsm.getFisWC()) < tol);
+	}
+
+	// Multi-locus Fis is the ratio of sums over loci, not the mean of per-locus ratios.
+	// Locus 0: 0/1, 0/1, 0/1 -> p = 0.5, Ho = 1,   Hs = 3/2 * (0.5 - 1/6)  = 0.5
+	// Locus 1: 0/0, 1/1, 0/1 -> p = 0.5, Ho = 1/3, Hs = 3/2 * (0.5 - 1/18) = 2/3
+	// Fis = 1 - (4/3) / (7/6) = -1/7
+	{
+		auto s = makePerPatchFisSetup({ { {{0,1},{0,0}}, {{0,1},{1,1}}, {{0,1},{0,1}} } }, 2, true);
+		auto res = computePerPatchFis(s);
+		assert(fabs(res[0].ho - 2.0 / 3.0) < tol);
+		assert(fabs(res[0].hs - 7.0 / 12.0) < tol);
+		assert(fabs(res[0].fis - (-1.0 / 7.0)) < tol);
+	}
+
+	// Edge cases: monomorphic patch (Fis undefined), single individual (Hs, Fis undefined),
+	// patch without sampled individuals (skipped)
+	{
+		auto s = makePerPatchFisSetup({ { {{0,0}}, {{0,0}} }, { {{0,1}} }, {} }, 1, true);
+		auto res = computePerPatchFis(s);
+		assert(res.size() == 2); // empty patch skipped
+		assert(res[0].ho == 0.0 && res[0].hs == 0.0);
+		assert(std::isnan(res[0].fis));
+		assert(res[1].nbSampledInds == 1);
+		assert(res[1].ho == 1.0);
+		assert(std::isnan(res[1].hs));
+		assert(std::isnan(res[1].fis));
+	}
+
+	// Haploid: Ho and Fis undefined, Hs is the unbiased gene diversity n/(n-1) * (1 - sum p^2)
+	{
+		auto s = makePerPatchFisSetup({ { {{0,0}}, {{1,0}}, {{1,0}}, {{2,0}} } }, 1, false);
+		auto res = computePerPatchFis(s);
+		assert(std::isnan(res[0].ho));
+		assert(std::isnan(res[0].fis));
+		// p = (0.25, 0.5, 0.25) -> 1 - sum p^2 = 0.625 -> Hs = 4/3 * 0.625
+		assert(fabs(res[0].hs - 4.0 / 3.0 * 0.625) < tol);
+	}
+}
+
 void testNeutralStats() {
 
 	// In haploid settings, Ho is always zero
@@ -1067,6 +1202,8 @@ void testNeutralStats() {
 		assert(pNeutralStatistics->getPerLocusFst(0) == 0.0);
 		assert(pNeutralStatistics->getPerLocusFst(1) == 1.0);
 	}
+
+	testPerPatchFis();
 }
 
 #endif // UNIT_TESTS
