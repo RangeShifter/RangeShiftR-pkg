@@ -40,6 +40,7 @@ Species::Species(const short& repro, const short& nbRepSeasons, const bool& hasS
 	bc = 1.0;
 	lambda = 1.5;
 	fecSD = -9.0; // < 0: Poisson-distributed fecundity (default)
+	maxOffspring = -9; // < 0: no upper limit (default)
 	probRep = 1.0;
 	repInterval = 0;
 	maxAge = 1000;
@@ -170,6 +171,7 @@ void Species::setDemogr(const demogrParams d) {
 	if (d.bc > 0.0) bc = d.bc;
 	if (d.lambda > 0.0) lambda = d.lambda;
 	fecSD = d.fecSD;
+	maxOffspring = d.maxOffspring;
 }
 
 demogrParams Species::getDemogrParams(void) {
@@ -182,6 +184,7 @@ demogrParams Species::getDemogrParams(void) {
 	d.bc = bc;
 	d.lambda = lambda;
 	d.fecSD = fecSD;
+	d.maxOffspring = maxOffspring;
 	return d;
 }
 
@@ -935,6 +938,7 @@ demogrParams createDefaultHaploidDemogrParams() {
 	d.bc = 1.0;
 	d.lambda = 2.0;
 	d.fecSD = -1.0; // using poisson distribution
+	d.maxOffspring = -1; // no upper limit
 	return d;
 }
 
@@ -948,6 +952,7 @@ demogrParams createDefaultDiploidDemogrParams() {
 	d.bc = 1.0;
 	d.lambda = 2.0;
 	d.fecSD = -1.0; // using poisson distribution
+	d.maxOffspring = -1; // no upper limit
 	return d;
 }
 
