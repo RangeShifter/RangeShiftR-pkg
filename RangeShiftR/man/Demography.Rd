@@ -7,7 +7,7 @@
 \usage{
 Demography(Rmax, bc = 1.0, StageStruct = FALSE,
            ReproductionType = 0, PropMales = 0.5, Harem = 1,
-           FecSD = -9)
+           FecSD = -9, MaxOffspring = -9)
 }
 \arguments{
 \item{Rmax}{Maximum growth rate. Describes the mean number of offspring per female and reproductive event at very low density. Only required if \code{StageStruct=FALSE}.}
@@ -29,6 +29,9 @@ If \code{FecSD} \eqn{\ge 0}, it is drawn from a normal distribution with standar
 that would otherwise be used for the Poisson distribution, i.e. for non-structured populations the density-dependent value given in Details (not \code{Rmax} itself).
 Note that \code{FecSD} is constant and does not scale with density.
 The drawn value is truncated to an integer (rounded towards zero) and negative values are set to \eqn{0}. See Details.}
+
+\item{MaxOffspring}{Maximum number of offspring per female and reproductive event. Applies to all population models and to both the Poisson and the normal distribution (see \code{FecSD}).\cr
+If negative (default \eqn{-9}), there is no upper limit. Otherwise it must be a positive integer; drawn numbers of offspring that exceed it are set to \code{MaxOffspring}. See Details.}
 }
 \value{
 a parameter object of class "DemogParams"
@@ -82,7 +85,7 @@ and \eqn{h>1} to polygyny. Each potentially reproductive female has a probabilit
 A Bernoulli trial \eqn{Bern}\ifelse{html}{\out{(p<sub>r</sub>)}}{\eqn{(p_r)}} determines if the female reproduces or not. For females that reproduce, the number of offspring is determined through the Poisson distribution as stated above. Hence, the specification of the mating system determines the probability for each female to reproduce. However, no explicit pair bonds are formed, and in the cases where traits inheritance is
 involved, the father (of all the offspring produced by a single female in a single reproductive event) is selected randomly from the males in the population.\cr
 \cr
-\emph{Distribution of the number of offspring:}  (\code{FecSD})\cr
+\emph{Distribution of the number of offspring:}  (\code{FecSD}, \code{MaxOffspring})\cr
 By default (\code{FecSD} \eqn{< 0}), the number of offspring of each reproducing female is drawn from a Poisson distribution, as given in the formulas above
 (and, for stage-structured populations, in \code{\link[RangeShiftR]{StageStructure}}).
 If a standard deviation \code{FecSD} \eqn{\ge 0} is given, the Poisson distribution is replaced by a normal distribution
@@ -92,6 +95,9 @@ and negative values are set to \eqn{0}. Note that, due to the truncation, the re
 With \code{FecSD = 0}, each reproducing female produces exactly the truncated expected number of offspring.
 Because \code{FecSD} does not scale with the expected value, truncation and setting negative values to \eqn{0} can noticeably alter the realised density regulation,
 so that equilibrium population sizes may differ from those obtained with the Poisson distribution.\cr
+Optionally, an upper limit \code{MaxOffspring} can be set for the number of offspring per female and reproductive event, for both distributions.
+Drawn values above this limit are set to \code{MaxOffspring}. This lowers the realised mean number of offspring, noticeably so if \code{MaxOffspring} is
+close to or below the expected value (e.g. \code{Rmax} at low density, or the stage-specific fecundities).\cr
 \cr
 Populations with overlapping generations, i.e. with \strong{with stage-structure} are the appropriate choice for species in which generations can overlap and individuals can be classified in different stages
 (e.g. immature vs. breeding individuals) differing in their demographic parameters. Individuals are characterized by their age and stage. Each stage has a certain fecundity (which will be used as expected value of the Poisson distribution for reproduction), survival
