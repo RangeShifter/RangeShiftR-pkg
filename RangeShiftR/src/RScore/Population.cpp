@@ -30,10 +30,15 @@
 //                the draw is truncated towards zero (deliberately, NOT rounded)
 //                and negative values are set to 0. Note that truncation lowers
 //                the realised mean fecundity relative to meanFecundity.
-static int drawNbOffspring(double meanFecundity, float fecSD) {
+// - maxOffspring >= 0 : upper limit; larger draws are set to maxOffspring
+//                       (applies to both distributions; < 0: no limit)
+static int drawNbOffspring(double meanFecundity, float fecSD, int maxOffspring) {
 	if (meanFecundity <= 0.0) return 0;
-	if (fecSD < 0.0) return pRandom->Poisson(meanFecundity);
-	return std::max(0, static_cast<int>(pRandom->Normal(meanFecundity, fecSD)));
+	int n;
+	if (fecSD < 0.0) n = pRandom->Poisson(meanFecundity);
+	else n = std::max(0, static_cast<int>(pRandom->Normal(meanFecundity, fecSD)));
+	if (maxOffspring >= 0 && n > maxOffspring) n = maxOffspring;
+	return n;
 }
 
 #include <algorithm>
@@ -686,7 +691,7 @@ void Population::reproduction(const float localK, const float envval, const int 
 					inds[i]->resetFallow();
 
 					meanFecundity = fec[stage][0];
-					njuvs = drawNbOffspring(meanFecundity, fecStdDev);
+					njuvs = drawNbOffspring(meanFecundity, fecStdDev, dem.maxOffspring);
 
 					pCell = pPatch->getRandomCell();
 					for (int j = 0; j < njuvs; j++) {
@@ -755,7 +760,7 @@ void Population::reproduction(const float localK, const float envval, const int 
 						// NECESSARILY EQUAL THE EXPECTED NO. FROM EQN. 7 IN THE MANUAL...
 						if (pRandom->Bernoulli(propBreed)) {
 							meanFecundity = fec[stage][0]; // breeds
-							njuvs = drawNbOffspring(meanFecundity, fecStdDev);
+							njuvs = drawNbOffspring(meanFecundity, fecStdDev, dem.maxOffspring);
 						}
 						else njuvs = 0;
 
