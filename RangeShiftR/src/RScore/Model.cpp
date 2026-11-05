@@ -1096,6 +1096,12 @@ void OutParameters(Landscape* pLandscape)
 		outPar << "MAX. HAREM SIZE (h)\t" << dem.harem << endl;
 		break;
 	}
+	outPar << "FECUNDITY DISTRIBUTION:\t";
+	if (dem.fecSD < 0.0) outPar << "Poisson" << endl;
+	else outPar << "Normal (truncated to integer, minimum 0), SD = " << dem.fecSD << endl;
+	outPar << "MAX. NO. OF OFFSPRING PER FEMALE:\t";
+	if (dem.maxOffspring < 0) outPar << "no limit" << endl;
+	else outPar << dem.maxOffspring << endl;
 	outPar << "STAGE STRUCTURE:\t";
 	if (dem.stageStruct) {
 		outPar << "yes" << endl;
