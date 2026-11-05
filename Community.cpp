@@ -53,6 +53,7 @@ ofstream ofsGenes;
 ofstream outwcfstat;
 ofstream outperlocusfstat;
 ofstream outpairwisefst;
+ofstream outperpatchfis;
 
 //---------------------------------------------------------------------------
 
@@ -1969,6 +1970,38 @@ bool Community::openPairwiseFstFile(Species* pSpecies, Landscape* pLandscape, co
 }
 
 // ----------------------------------------------------------------------------------------
+// open per-patch Fis file (one file per replicate, one row per sampled patch and year)
+// ----------------------------------------------------------------------------------------
+
+bool Community::openPerPatchFisFile(const int landNr, const int rep) {
+
+	if (landNr == -999) { // close the file
+		if (outperpatchfis.is_open()) outperpatchfis.close();
+		outperpatchfis.clear();
+		return true;
+	}
+
+	string name;
+	simParams sim = paramsSim->getSim();
+
+	if (sim.batchMode) {
+		name = paramsSim->getDir(2)
+			+ "Batch" + to_string(sim.batchNum) + "_"
+			+ "Sim" + to_string(sim.simulation) + "_Land"
+			+ to_string(landNr) + "_Rep"
+			+ to_string(rep)
+			+ "_perPatchNeutralGenetics.txt";
+	}
+	else {
+		name = paramsSim->getDir(2) + "Sim" + to_string(sim.simulation) + "_Rep" + to_string(rep) + "_perPatchNeutralGenetics.txt";
+	}
+	outperpatchfis.open(name.c_str());
+	outperpatchfis << "Rep\tYear\tRepSeason\tPatchID\tnIndividuals\tHo\tHs\tFis" << endl;
+
+	return outperpatchfis.is_open();
+}
+
+// ----------------------------------------------------------------------------------------
 // Write population level FST results file
 // ----------------------------------------------------------------------------------------
 
@@ -2105,12 +2138,36 @@ void Community::writePairwiseFstFile(Species* pSpecies, const int yr, const int 
 
 
 // ----------------------------------------------------------------------------------------
+// Write per-patch Fis results file
+// Undefined values (NaN) are written as NA
+// ----------------------------------------------------------------------------------------
+void Community::writePerPatchFisFile(const int rep, const int yr, const int gen) {
+
+	auto writeValue = [](ofstream& ofs, const double val) {
+		if (std::isnan(val)) ofs << "NA";
+		else ofs << val;
+	};
+
+	for (const PatchFisStats& st : pNeutralStatistics->getPerPatchFis()) {
+		outperpatchfis << rep << "\t" << yr << "\t" << gen << "\t"
+			<< st.patchId << "\t" << st.nbSampledInds << "\t";
+		writeValue(outperpatchfis, st.ho);
+		outperpatchfis << "\t";
+		writeValue(outperpatchfis, st.hs);
+		outperpatchfis << "\t";
+		writeValue(outperpatchfis, st.fis);
+		outperpatchfis << "\n";
+	}
+}
+
+// ----------------------------------------------------------------------------------------
 // Output and calculate neutral statistics
 // ----------------------------------------------------------------------------------------
 
 
 void Community::calculateNeutralGenetics(Species* pSpecies, int rep, int yr, int gen, bool outPairwiseFst, int outputPairwiseFstStart, int outputPairwiseFstInterval,
-	bool outputGlobalFst, int outputGlobalFstStart, int outputGlobalFstInterval, bool outputPerLocusFst) {
+	bool outputGlobalFst, int outputGlobalFstStart, int outputGlobalFstInterval, bool outputPerLocusFst,
+	bool outputPerPatchFis) {
 
 	const int maxNbNeutralAlleles = pSpecies->getSpTrait(NEUTRAL)->getNbNeutralAlleles();
 	const int nLoci = (int)pSpecies->getNPositionsForTrait(NEUTRAL);
@@ -2151,6 +2208,10 @@ void Community::calculateNeutralGenetics(Species* pSpecies, int rep, int yr, int
 			writeNeutralOutputFile(rep, yr, gen);
 			if (outputPerLocusFst)
 				writePerLocusFstatFile(pSpecies, yr, gen, nLoci, patchList);
+			if (outputPerPatchFis) {
+				pNeutralStatistics->calculatePerPatchFis(patchList, pSpecies, pLandscape);
+				writePerPatchFisFile(rep, yr, gen);
+			}
 		}
 	}
 
