@@ -1701,8 +1701,9 @@ void OutParameters(Landscape* pLandscape)
 	// Genetics
 	outPar << endl << "GENETICS:" << endl;
 
-	// only if genetics are simulated
-	if(sim.outputGenes) {
+	// only if genetics are simulated (any genetic trait defined),
+	// independent of whether gene values are written to file (sim.outputGenes)
+	if (pSpecies->getNTraits() > 0) {
 	set<TraitType> traitList = pSpecies->getTraitTypes();
 
 	if (pSpecies->isDiploid()) outPar << "DIPLOID" << endl; else outPar << "HAPLOID" << endl;
@@ -1715,7 +1716,7 @@ void OutParameters(Landscape* pLandscape)
 	outPar << "Recombination rate: " << pSpecies->getRecombinationRate() << endl;
 	outPar << "Traits modelled:  " << endl;
 	for (auto trait : traitList)
-		outPar << trait << endl;
+		outPar << to_string(trait) << endl;
 	} else {
 	    outPar << "No genetics simulated" << endl;
 	}
