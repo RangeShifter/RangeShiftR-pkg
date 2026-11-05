@@ -86,8 +86,9 @@ setValidity("RSparams", function(object) {
     #LAND
     validObject(object@land)
     if (any(object@control@landtype==c(0,2))){
-        if (any(object@land@DynamicLandYears>object@simul@Years)) {
-            warning("ImportedLandscape(): Dynamic landscape contains years that exceed the simulated years, so that some land changes will not apply.", call. = FALSE)
+        if (any(object@land@DynamicLandYears >= object@simul@Years)) { # years are numbered 0 .. Years-1
+            warning(paste0("ImportedLandscape(): Dynamic landscape contains years that exceed the simulated years (0 to ", object@simul@Years - 1,
+                           "), so that some land changes will not apply."), call. = FALSE)
         }
         if (!is.null(object@land@CostsFile[1]) || length(object@land@CostsMatrix)>0) { # for threadsafe: length(object@land@CostsFile)>0
             if (class(object@dispersal@Transfer)[1] == "StochMove") {
@@ -1126,8 +1127,29 @@ setValidity("RSparams", function(object) {
     }
     ## Management
     validObject(object@management)
+    if (is(object@management@Translocation, "TranslocationParams")) {
+        msg <- c(msg, .checkManagementYears(object@management@Translocation@years,
+                                            object@management@Translocation@TransLocMat[, 1],
+                                            object@simul@Years, "Translocation"))
+    }
     if (is.null(msg)) TRUE else msg}
 )
+
+# Management events can only take place in simulated years. Years are numbered from 0, the simulation
+# runs the years 0 to Years - 1. RScore rejects other years only after the simulation has been started
+# (error 600); checking them here reports the problem already when the RSsim object is created.
+# 'years' = the years slot, 'matYears' = first column of the event matrix; -9 = no events.
+.checkManagementYears <- function(years, matYears, nYears, what) {
+    allYears <- unique(c(years, matYears))
+    allYears <- allYears[!is.na(allYears) & allYears != -9]
+    bad <- sort(allYears[allYears < 0 | allYears >= nYears | allYears %% 1 != 0])
+    if (length(bad) > 0) {
+        return(paste0(what, "(): years must be whole numbers from 0 to Years - 1 (= ", nYears - 1,
+                      "), because the simulation runs the years 0 to ", nYears - 1,
+                      " (the first simulated year is year 0). Invalid year(s): ", paste(bad, collapse = ", "), "."))
+    }
+    NULL
+}
 setMethod("show", "RSparams", function(object){
     print(object@control)
     cat("\n")
