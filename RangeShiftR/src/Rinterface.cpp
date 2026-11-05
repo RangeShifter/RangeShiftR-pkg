@@ -3340,6 +3340,9 @@ int ReadGeneticsR(Rcpp::S4 GeneParamsR, Landscape* pLandscape)
     outputGlobalFst = Rcpp::as<bool>(GeneParamsR.slot("OutputGlobalFst"));
     outputPairwiseFst = Rcpp::as<bool>(GeneParamsR.slot("OutputPairwiseFst"));
     outputPerLocusFst = Rcpp::as<bool>(GeneParamsR.slot("OutputPerLocusFst"));
+    // slot is missing in GeneticsParams objects created with older package versions
+    bool outputPerPatchFis = GeneParamsR.hasSlot("OutputPerPatchFis") ?
+        Rcpp::as<bool>(GeneParamsR.slot("OutputPerPatchFis")) : false;
 
 
     if(GeneParamsR.slot("OutputGenesStart") != R_NilValue){
@@ -3440,6 +3443,7 @@ int ReadGeneticsR(Rcpp::S4 GeneParamsR, Landscape* pLandscape)
 
     paramsSim->setGeneticSim(patchSamplingOption, outputGeneValues, outputGenesStart, outputGenesInterval, outputPairwiseFst, outputGlobalFst, outputGlobalFstStart, outputGlobalFstInterval,
                              outputPairwiseFstStart, outputPairwiseFstInterval, outputPerLocusFst);
+    paramsSim->setOutputPerPatchFis(outputPerPatchFis);
     return 0;
 }
 
