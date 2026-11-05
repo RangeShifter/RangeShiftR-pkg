@@ -24,6 +24,23 @@
 
 #include "Population.h"
 
+// Draw the number of offspring of a breeding female.
+// - fecSD < 0  : Poisson distribution with mean meanFecundity (default)
+// - fecSD >= 0 : Normal distribution with mean meanFecundity and SD fecSD;
+//                the draw is truncated towards zero (deliberately, NOT rounded)
+//                and negative values are set to 0. Note that truncation lowers
+//                the realised mean fecundity relative to meanFecundity.
+// - maxOffspring >= 0 : upper limit; larger draws are set to maxOffspring
+//                       (applies to both distributions; < 0: no limit)
+static int drawNbOffspring(double meanFecundity, float fecSD, int maxOffspring) {
+	if (meanFecundity <= 0.0) return 0;
+	int n;
+	if (fecSD < 0.0) n = pRandom->Poisson(meanFecundity);
+	else n = std::max(0, static_cast<int>(pRandom->Normal(meanFecundity, fecSD)));
+	if (maxOffspring >= 0 && n > maxOffspring) n = maxOffspring;
+	return n;
+}
+
 #include <algorithm>
 //---------------------------------------------------------------------------
 
@@ -540,7 +557,7 @@ void Population::reproduction(const float localK, const float envval, const int 
 	int nsexes, stage, sex, njuvs, nj, nmales, nfemales;
 	Cell* pCell;
 	indStats ind;
-	double expected;
+	double meanFecundity;
 	bool skipbreeding;
 
 	envStochParams env = paramsStoch->getStoch();
@@ -549,6 +566,8 @@ void Population::reproduction(const float localK, const float envval, const int 
 	emigRules emig = pSpecies->getEmigRules();
 	transferRules trfr = pSpecies->getTransferRules();
 	settleType sett = pSpecies->getSettle();
+
+	float fecStdDev = dem.fecSD;
 
 	if (dem.repType == 0)
 		nsexes = 1;
@@ -672,10 +691,10 @@ void Population::reproduction(const float localK, const float envval, const int 
 				}
 				else { // attempt to breed
 					inds[i]->resetFallow();
-					expected = fec[stage][0];
-					if (expected <= 0.0) njuvs = 0;
-					else njuvs = pRandom->Poisson(expected);
-					nj = (int)juvs.size();
+
+					meanFecundity = fec[stage][0];
+					njuvs = drawNbOffspring(meanFecundity, fecStdDev, dem.maxOffspring);
+
 					pCell = pPatch->getRandomCell();
 					for (int j = 0; j < njuvs; j++) {
 
@@ -742,20 +761,18 @@ void Population::reproduction(const float localK, const float envval, const int 
 						// NOTE: FOR COMPLEX SEXUAL MODEL, NO. OF FEMALES *ACTUALLY* BREEDING DOES NOT
 						// NECESSARILY EQUAL THE EXPECTED NO. FROM EQN. 7 IN THE MANUAL...
 						if (pRandom->Bernoulli(propBreed)) {
-							expected = fec[stage][0]; // breeds
+							meanFecundity = fec[stage][0]; // breeds
+							njuvs = drawNbOffspring(meanFecundity, fecStdDev, dem.maxOffspring);
 						}
-						else expected = 0.0; // fails to breed
-						if (expected <= 0.0) njuvs = 0;
-						else njuvs = pRandom->Poisson(expected);
+						else njuvs = 0;
 
-						if (njuvs > 0)
-						{
-							nj = (int)juvs.size();
+						if (njuvs > 0) {
 							// select father at random from breeding males ...
 							int rrr = 0;
 							if (nmales > 1) rrr = pRandom->IRandom(0, nmales - 1);
 							father = fathers[rrr];
 							pCell = pPatch->getRandomCell();
+
 							for (int j = 0; j < njuvs; j++) {
 								Individual* newJuv;
 
