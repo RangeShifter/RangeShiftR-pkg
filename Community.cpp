@@ -1661,8 +1661,9 @@ Rcpp::IntegerMatrix Community::addYearToPopList(int rep, int yr, PopOutType type
 						pop = pSubComm->getPopStats();
 
 					    switch (type) {
-					    case PopOutType::NInd:
-					        pop_map_year(ppLand.dimY - 1 - y, x) = pop.nInds;
+					    case PopOutType::NInd: // as NInd in the population file: without juveniles if stage-structured
+					        pop_map_year(ppLand.dimY - 1 - y, x) =
+					            (pop.pSpecies != nullptr && pop.pSpecies->stageStructured()) ? pop.nNonJuvs : pop.nInds;
 					        break;
 
 					    case PopOutType::Stage:
@@ -1758,7 +1759,9 @@ Rcpp::IntegerMatrix Community::addYearToPopListPatchBased(int rep, int yr, Rcpp:
 		    pSubComm = pPatch->getSubComm();
 	        if (pSubComm != nullptr) { // Valid sub-community
 	            popStats pop = pSubComm->getPopStats();
-	            pop_map_year(currentRow, 1) = pop.nInds; // Actual total abundance
+	            // total abundance as NInd in the population file: without juveniles if stage-structured
+	            pop_map_year(currentRow, 1) =
+	                (pop.pSpecies != nullptr && pop.pSpecies->stageStructured()) ? pop.nNonJuvs : pop.nInds;
 
 	            for (int idx = 0; idx < stageIndices.size(); ++idx) {
 	                int stage = stageIndices[idx];
