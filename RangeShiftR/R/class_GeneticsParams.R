@@ -2205,7 +2205,10 @@ setMethod("show", "TraitsParams", function(object){
 #' where \ifelse{html}{\out{p<sub>ilu</sub>}}{\eqn{p_{ilu}}} is the frequency of allele \eqn{u} at locus \eqn{l} in patch \eqn{i}. Over loci,
 #' \ifelse{html}{\out{F<sub>is,i</sub> = 1 - &sum;<sub>l</sub> H<sub>o,il</sub> / &sum;<sub>l</sub> H<sub>s,il</sub>}}{\eqn{F_{is,i} = 1 - \sum_l H_{o,il} / \sum_l H_{s,il}}} (ratio of sums).
 #' For a single sample this is identical to the \insertCite{weir1984}{RangeShiftR} estimator used for the global \ifelse{html}{\out{F<sub>is</sub>}}{\eqn{F_{is}}},
-#' so per-patch and global values are directly comparable; it also equals the per-population \ifelse{html}{\out{F<sub>is</sub>}}{\eqn{F_{is}}} of \code{hierfstat::basic.stats()}.
+#' so per-patch and global values are directly comparable. It is also identical to the population-specific \ifelse{html}{\out{F<sub>is</sub>}}{\eqn{F_{is}}} of \insertCite{weir2017}{RangeShiftR},
+#' which is defined by the allele matching within individuals and between different individuals of the same patch.
+#' Per locus, it equals the per-population \ifelse{html}{\out{F<sub>is</sub>}}{\eqn{F_{is}}} of \code{hierfstat::basic.stats()}; over loci, \code{hierfstat} averages the per-locus values
+#' instead of using the ratio of sums, so multi-locus values can differ slightly.
 #' Values that are not defined are reported as \code{NA}: Ho and Fis for haploid (asexual) species, Hs and Fis if only one individual was sampled, and Fis if all loci are monomorphic in the patch. \cr
 #'
 #' As individuals are sampled after dispersal, recently immigrated individuals can be part of a patch sample. If they originate from genetically different patches,
