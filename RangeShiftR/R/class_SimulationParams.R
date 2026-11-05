@@ -51,7 +51,7 @@
 #'            SMSHeatMap = FALSE)
 #' @param Simulation ID number of current simulation, defaults to \eqn{1}. (integer)
 #' @param Replicates Number of simulation iterations, defaults to \eqn{2}. (integer)
-#' @param Years The number of simulated years, defaults to \eqn{50}. (integer)
+#' @param Years The number of simulated years, defaults to \eqn{50}. Years are numbered from \eqn{0}: year \eqn{0} starts with the initial population, the simulation runs the years \eqn{0} to \code{Years}\eqn{-1}, and the final population and range output is written for year \code{Years} (the state after the last simulated year). All year parameters (e.g. the output start years, \code{DynamicLandYears} in \code{\link{ImportedLandscape}}, translocation years in \code{\link{Management}}, start years of genetic output) refer to this numbering. (integer)
 #' @param Absorbing If \code{FALSE} (default), every move in the \code{\link[RangeShiftR]{Transfer}} process will be
 #' repeated until a valid cell is met.\cr
 #' If \code{TRUE}, an individual which hits a non-valid cell or

@@ -340,7 +340,7 @@ setMethod("show", "ArtificialLandscape", function(object){
 #' @param CostsMatrix List of matrices of the SMS cost raster(s); contains each cells' SMS cost.
 #' @param DynamicLandYears Integer vector indicating the years of landscape changes. For a non-dynamic landscape its only entry is \eqn{0} (default).
 #' For a dynamic landscape, \code{DynamicLandYears} lists the years in which the corresponding habitat maps in \code{LandscapeFile} and - if applicable - their respective patch and/or costs
-#' maps (in \code{PatchFile},\code{CostsFile}) are loaded and used in the simulation. More details below.
+#' maps (in \code{PatchFile},\code{CostsFile}) are loaded and used in the simulation. Years are numbered from \eqn{0} to \code{Years}\eqn{-1} (see \code{\link{Simulation}}); maps for years \eqn{\ge} \code{Years} are not used (with a warning). More details below.
 #' @param SpDistFile Filename of the species initial distribution map which shall be imported (*.txt). Default is \code{NULL}.
 #' @param SpDistMatrix List of one matrix containing the species' initial distribution raster.
 #' @param SpDistResolution Required if \code{SpDistFile} is given: Cell size of the distribution map in meters. (integer) Must be an integer multiple of the landscape resolution.
