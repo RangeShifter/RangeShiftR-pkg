@@ -1132,6 +1132,11 @@ setValidity("RSparams", function(object) {
                                             object@management@Translocation@TransLocMat[, 1],
                                             object@simul@Years, "Translocation"))
     }
+    if (is(object@management@Harvesting, "HarvestingParams")) {
+        msg <- c(msg, .checkManagementYears(object@management@Harvesting@years,
+                                            object@management@Harvesting@HarvestMat[, 1],
+                                            object@simul@Years, "Harvesting"))
+    }
     if (is.null(msg)) TRUE else msg}
 )
 

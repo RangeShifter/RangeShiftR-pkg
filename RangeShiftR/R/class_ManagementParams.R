@@ -192,7 +192,7 @@ setMethod("show", "TranslocationParams", function(object){
 #'                      harvesting_success = 1.0
 #'                       )
 #'
-#' @param years Vector of years in which harvesting events should take place
+#' @param years Vector of years in which harvesting events should take place. Years are numbered from \eqn{0} to \code{Years}\eqn{-1} of \code{\link{Simulation}} (the first simulated year is year \eqn{0}); years \eqn{\ge} \code{Years} are not allowed.
 #' @param HarvestMat Matrix of harvesting events. Each row represents a harvesting event. Columns represent:
 #'
 #'  - the year of the event,\cr
