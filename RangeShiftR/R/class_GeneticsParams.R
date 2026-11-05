@@ -2484,7 +2484,7 @@ setMethod("show", "GeneticsParams", function(object){
         }
 
         cat("     Patches to sample: ", object@PatchList, "\n")
-        if(object@PatchList=="random" || object@PatchList=="random_occupied"){
+        if(is.character(object@PatchList) && object@PatchList[1] %in% c("random", "random_occupied")){
             cat("     Number of patches to sample: ", object@NbrPatchesToSample, "\n")
         }
         cat("     Number of individuals to sample: ", object@nIndividualsToSample, "\n")
