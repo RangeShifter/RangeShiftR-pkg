@@ -112,9 +112,9 @@
 # #' @param DrawLoadedSp If \code{FALSE} (default), only the simulated distribution is drawn into the output map.\cr
 # #' If \code{TRUE}, the initial species distribution is drawn additionally.
 #' @param SMSHeatMap Produce SMS heat map raster as output? Defaults to \code{FALSE}.
-#' @param ReturnPopMatrix Return population data to R as matrix (only for cell-based models)? Defaults to \code{FALSE}.
-#' @param ReturnPopDataFrame Return population data to R as data frame (most suitable for patch based models)? Defaults to \code{FALSE}.
-#' @param ReturnStages Return also stage-specific population data? Only applicable for stage-structured models if \code{ReturnPopMatrix = TRUE} or \code{ReturnPopDataFrame = TRUE}. If \code{FALSE} only total abundance is recorded.
+#' @param ReturnPopMatrix Return population data to R as matrix (only for cell-based models)? Defaults to \code{FALSE}. The data are recorded at the same time and for the same years as the population output file (\code{OutStartPop}, \code{OutIntPop}, including the final year \code{Years}): before reproduction in non-structured and after reproduction in stage-structured models. Total abundance corresponds to \code{NInd} in the population file, i.e. it excludes juveniles in stage-structured models.
+#' @param ReturnPopDataFrame Return population data to R as data frame (most suitable for patch based models)? Defaults to \code{FALSE}. The data are recorded at the same time and for the same years as the population output file (\code{OutStartPop}, \code{OutIntPop}, including the final year \code{Years}): before reproduction in non-structured and after reproduction in stage-structured models. Total abundance corresponds to \code{NInd} in the population file, i.e. it excludes juveniles in stage-structured models.
+#' @param ReturnStages Return also stage-specific population data? Only applicable for stage-structured models if \code{ReturnPopMatrix = TRUE} or \code{ReturnPopDataFrame = TRUE}. Logical vector with one entry per stage, the first entry being stage \eqn{0} (juveniles), e.g. \code{c(TRUE, FALSE, TRUE)} returns juveniles and stage \eqn{2}; a single \code{TRUE} only returns stage \eqn{0}. If \code{FALSE} only total abundance is recorded.
 #' @param CreatePopFile Create population output file? Defaults to \code{TRUE}.
 #' @details \emph{Environmental Gradient}\cr
 #' In \emph{RangeShiftR}, it is possible to superimpose an artificial gradient on top of the landscape map (real or artificial).
