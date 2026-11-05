@@ -1628,6 +1628,8 @@ int ReadParametersR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 	dem.harem = Rcpp::as<float>(DemogParamsR.slot("Harem"));
 	dem.bc = Rcpp::as<float>(DemogParamsR.slot("bc"));
 	dem.lambda = Rcpp::as<float>(DemogParamsR.slot("Rmax"));
+	dem.fecSD = Rcpp::as<float>(DemogParamsR.slot("FecSD")); // < 0: Poisson, >= 0: Normal
+	dem.maxOffspring = Rcpp::as<int>(DemogParamsR.slot("MaxOffspring")); // < 0: no upper limit
 
 	pSpecies->setDemogr(dem);
 

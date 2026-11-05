@@ -62,7 +62,7 @@ In this way, the transition matrix describes the effect of each individuals curr
 Since all offspring is born into the juvenile stage (stage 0), all fecundities are always located in the first row of the matrix.
 
 However, in \emph{RangeShiftR}, these parameters are not used deterministically as \emph{rates} (like it is typical for matrix models) but, instead, as \emph{probabilities} which are
-applied stochastically at the individual level. Hence, each female at stage \eqn{i}, if it reproduces, produces a number of offspring given by \eqn{Poisson}(\ifelse{html}{\out{&phi;<sub>i</sub>}}{\eqn{φ_i}}),
+applied stochastically at the individual level. Hence, each female at stage \eqn{i}, if it reproduces, produces a number of offspring given by \eqn{Poisson}(\ifelse{html}{\out{&phi;<sub>i</sub>}}{\eqn{φ_i}}) (or by a normal distribution if \code{FecSD} \eqn{\ge 0} is set in \code{\link[RangeShiftR]{Demography}}, see there),
 while Bernoulli trials \eqn{Bern}(\ifelse{html}{\out{&sigma;<sub>i</sub>}}{\eqn{σ_i}}) and \eqn{Bern}(\ifelse{html}{\out{&gamma;<sub>i,i+1</sub>}}{\eqn{γ_(i,i+1)}}) determine if an individual/female survives or not
 and - if it survives - if it develops to the next stage or not.
 
