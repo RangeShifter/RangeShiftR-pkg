@@ -34,7 +34,7 @@ Some modules contain sub-modules: \code{\link[RangeShiftR]{StageStructure}} in \
 \code{\link[RangeShiftR]{Emigration}}, \code{\link[RangeShiftR]{DispersalKernel}}, \code{\link[RangeShiftR]{SMS}} or
 \code{\link[RangeShiftR]{CorrRW}}, and \code{\link[RangeShiftR]{Settlement}} in \code{Dispersal};
 \code{\link[RangeShiftR]{Traits}} with \code{\link[RangeShiftR]{NeutralTraits}}, \code{\link[RangeShiftR]{GeneticLoadTraits}}
-and the dispersal traits in \code{Genetics}; \code{\link[RangeShiftR]{Translocation}} in \code{Management}.
+and the dispersal traits in \code{Genetics}; \code{\link[RangeShiftR]{Translocation}} and \code{\link[RangeShiftR]{Harvesting}} in \code{Management}.
 
 \code{\link[RangeShiftR]{RSsim}} combines the modules into the parameter master object and validates it.
 \code{\link[RangeShiftR]{RunRS}} runs the simulation (see there for the order of processes). The results are written to the folder
