@@ -3,11 +3,11 @@ Type: Package
 Title: An R package for individual-based simulation of spatial eco-evolutionary dynamics and species' responses to environmental changes
 Version: 3.0.2
 Authors@R: c(
-	person("Anne-Kathleen", "Malchow", email = "rangeshiftr@uni-potsdam.de", role = c("aut", "cre")),
+	person("Anne-Kathleen", "Malchow", role = c("aut")),
 	person("Greta", "Bocedi", role = c("aut")),
 	person("Stephen C.F.", "Palmer", role = c("aut")),
 	person("Justin M.J.", "Travis", role = c("aut")),
-	person("Jette", "Wolff", role= c("aut")),
+	person("Jette", "Wolff", email = "rangeshiftr@uni-potsdam.de", role = c("aut", "cre")),
 	person("Théo", "Pannetier", role=c("aut")),
 	person("Roslyn", "Henry", role=c("aut")),
 	person("Damaris", "Zurell", role = c("aut"))

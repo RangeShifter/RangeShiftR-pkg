@@ -12,7 +12,7 @@ RangeShiftR provides individual-based simulations of spatial eco-evolutionary dy
 \code{RangeShiftR} provides flexible and fast simulations of spatial eco-evolutionary dynamics.
 It implements the individual-based simulation software \emph{RangeShifter},
 \insertCite{bocedi2014,bocedi2020}{RangeShiftR},
-making it available for all machines that can build and run \emph{R}.
+making it available for all machines that can build and run \emph{R} \insertCite{malchow2021}{RangeShiftR}.
 
 \code{RangeShiftR} models the processes of demography, dispersal and evolution in an
 inter-dependent way, offering substantial complexity in the corresponding modelling choices.
@@ -24,6 +24,28 @@ The \emph{RangeShifter} project is presented on our website
 
 To get started with the package, please find an overview and a range of tutorials here:
 \url{https://rangeshifter.github.io/RangeshiftR-tutorials/}.
+
+\subsection{Workflow}{
+The figure shows the typical workflow. The parameters of a simulation are set in parameter modules, each created by its own function:
+\code{\link[RangeShiftR]{Simulation}}, \code{\link[RangeShiftR]{ImportedLandscape}} or \code{\link[RangeShiftR]{ArtificialLandscape}},
+\code{\link[RangeShiftR]{Demography}}, \code{\link[RangeShiftR]{Dispersal}}, \code{\link[RangeShiftR]{Genetics}},
+\code{\link[RangeShiftR]{Management}} and \code{\link[RangeShiftR]{Initialise}}.
+Some modules contain sub-modules: \code{\link[RangeShiftR]{StageStructure}} in \code{Demography};
+\code{\link[RangeShiftR]{Emigration}}, \code{\link[RangeShiftR]{DispersalKernel}}, \code{\link[RangeShiftR]{SMS}} or
+\code{\link[RangeShiftR]{CorrRW}}, and \code{\link[RangeShiftR]{Settlement}} in \code{Dispersal};
+\code{\link[RangeShiftR]{Traits}} with \code{\link[RangeShiftR]{NeutralTraits}}, \code{\link[RangeShiftR]{GeneticLoadTraits}}
+and the dispersal traits in \code{Genetics}; \code{\link[RangeShiftR]{Translocation}} in \code{Management}.
+
+\code{\link[RangeShiftR]{RSsim}} combines the modules into the parameter master object and validates it.
+\code{\link[RangeShiftR]{RunRS}} runs the simulation (see there for the order of processes). The results are written to the folder
+\file{Outputs}; population data can also be returned to \emph{R} (see \code{ReturnPopMatrix} and \code{ReturnPopDataFrame}
+in \code{\link[RangeShiftR]{Simulation}}). They can be analysed with \code{\link[RangeShiftR]{readPop}},
+\code{\link[RangeShiftR]{readRange}}, \code{\link[RangeShiftR]{plotAbundance}}, \code{\link[RangeShiftR]{plotOccupancy}},
+\code{\link[RangeShiftR]{ColonisationStats}} and \code{\link[RangeShiftR]{SMSpathLengths}}.
+
+\if{html}{\figure{package_workflow.svg}{options: width="680" alt="RangeShiftR workflow"}}
+\if{latex}{\figure{package_workflow.pdf}{options: width=5in}}
+}
 }
 \references{
 \insertAllCited{}
@@ -36,14 +58,14 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Anne-Kathleen Malchow \email{rangeshiftr@uni-potsdam.de}
+\strong{Maintainer}: Jette Wolff \email{rangeshiftr@uni-potsdam.de}
 
 Authors:
 \itemize{
+  \item Anne-Kathleen Malchow
   \item Greta Bocedi
   \item Stephen C.F. Palmer
   \item Justin M.J. Travis
-  \item Jette Wolff
   \item Théo Pannetier
   \item Roslyn Henry
   \item Damaris Zurell

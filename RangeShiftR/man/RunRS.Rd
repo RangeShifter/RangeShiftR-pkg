@@ -14,8 +14,40 @@ Can be generated using the function \code{\link[RangeShiftR]{RSsim}}.}
 If NULL, the current \code{R} working directory will be used.}
 }
 \value{
-returns an error code
+\itemize{
+  \item With \code{ReturnPopMatrix = TRUE} (see \code{\link[RangeShiftR]{Simulation}}): a named list of matrices,
+        one per replicate, output year and reproductive season, named \code{rep<r>_year<y>_season<s>_NInd}; with \code{ReturnStages} additionally
+        \code{rep<r>_year<y>_season<s>_NInd_stage<i>} (and \code{rep<r>_year<y>_season<s>_NJuv} for stage \eqn{0}).
+  \item With \code{ReturnPopDataFrame = TRUE}: a data frame with the columns \code{Rep}, \code{Year}, \code{RepSeason}, \code{PatchID},
+        \code{totalAbundance} and, with \code{ReturnStages}, \code{NInd_Stage<i>}.
+  \item Otherwise \code{NULL}. All results are written to the folder \file{Outputs}.
+  \item If an error occurs, a list with the element \code{Errors} containing the error code.
+}
 }
 \description{
-Run the Simulation
+Runs a \emph{RangeShifter} simulation with the parameters given in the parameter master object.
+}
+\details{
+The figure shows the order of processes in a simulation. Each replicate starts with the initialisation of the landscape
+and the initial individuals. Years are numbered from \eqn{0} to \code{Years}\eqn{-1}, and a replicate stops early
+if the population goes extinct. At the start of each year the environment is updated (dynamic landscape,
+environmental gradient, carrying capacities). This is followed by \code{RepSeasons} reproductive seasons. Management
+actions (see \code{\link[RangeShiftR]{Management}}) are applied only in the first reproductive season of the
+specified years. In each season, individuals reproduce, then disperse in the three phases emigration, transfer and settlement.
+
+The timing of survival and development depends on the survival schedule \code{SurvSched}
+(see \code{\link[RangeShiftR]{StageStructure}}):
+\itemize{
+  \item \code{SurvSched = 0}: survival and development of adults directly after reproduction; of juveniles after dispersal.
+  \item \code{SurvSched = 1}: survival and development of all stages after dispersal.
+  \item \code{SurvSched = 2}: development after dispersal in each season; survival once at the end of the year.
+  \item Non-structured models: all adults die after reproduction (non-overlapping generations); the offspring
+        are subject to survival after dispersal.
+}
+At the end of each year individuals age, and individuals exceeding the maximum age die.
+After the last year, the final outputs are written for \code{Year = Years}.
+The timing of the individual outputs within a year is shown in \code{\link[RangeShiftR]{Simulation}}.
+
+\if{html}{\figure{simulation_flow.svg}{options: width="680" alt="Flow of a RangeShifter simulation"}}
+\if{latex}{\figure{simulation_flow.pdf}{options: width=5in}}
 }
