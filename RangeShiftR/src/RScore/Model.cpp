@@ -96,7 +96,8 @@ int RunModel(Landscape* pLandscape, int seqsim)
 	// time and under the same conditions as the population output file (see RangePopOutput()):
 	// before reproduction for non-structured and after reproduction for stage-structured models,
 	// and once more for year = Years (or the year after extinction) after the last simulated year.
-	auto returnPopToR = [&](int rep, int yr) {
+	// List names: rep<r>_year<y>_season<s>[_NInd|_NInd_stage<i>|_NJuv]; season s corresponds to RepSeason in the file.
+	auto returnPopToR = [&](int rep, int yr, int gen) {
 		if (!(sim.ReturnPopMatrix || sim.ReturnPopDataFrame) || !sim.outPop
 			|| yr < sim.outStartPop || yr % sim.outIntPop != 0) return;
 
@@ -105,7 +106,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 			// total abundance
 			list_outPop.push_back(
 				pComm->addYearToPopList(rep, yr, PopOutType::NInd, -1),
-				"rep" + std::to_string(rep) + "_year" + std::to_string(yr) + "_NInd"
+				"rep" + std::to_string(rep) + "_year" + std::to_string(yr) + "_season" + std::to_string(gen) + "_NInd"
 			);
 
 			// also output single stages
@@ -118,6 +119,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 							pComm->addYearToPopList(rep, yr, PopOutType::Stage, i),
 							"rep" + std::to_string(rep) +
 								"_year" + std::to_string(yr) +
+								"_season" + std::to_string(gen) +
 								"_NInd_stage" + std::to_string(i)
 						);
 					}
@@ -127,7 +129,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 					//Rcpp::Rcout << "Return Juveniles" << endl;
 					list_outPop.push_back(
 						pComm->addYearToPopList(rep, yr, PopOutType::Juvs, -1),
-						"rep" + std::to_string(rep) + "_year" + std::to_string(yr) + "_NJuv"
+						"rep" + std::to_string(rep) + "_year" + std::to_string(yr) + "_season" + std::to_string(gen) + "_NJuv"
 					);
 				}
 			}
@@ -138,7 +140,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 			// instead of a single matrix for each population size metric (total abundance, stage-specific abundance, juvenile abundance) and each year and replicate
 			list_outPop.push_back(
 				pComm->addYearToPopListPatchBased(rep, yr, sim.ReturnStages),
-				"rep" + std::to_string(rep) + "_year" + std::to_string(yr)
+				"rep" + std::to_string(rep) + "_year" + std::to_string(yr) + "_season" + std::to_string(gen)
 			);
 		}
 
@@ -509,7 +511,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				if (!dem.stageStruct && (sim.outRange || sim.outPop))
 					RangePopOutput(pComm, rep, yr, gen);
 #if RS_RCPP && !R_CMD
-				if (!dem.stageStruct) returnPopToR(rep, yr);
+				if (!dem.stageStruct) returnPopToR(rep, yr, gen);
 #endif
 			// apply local extinction for generation 0 only
 			// CHANGED TO *BEFORE* RANGE & POPN OUTPUT PRODUCTION IN v1.1,
@@ -532,7 +534,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				if (dem.stageStruct && (sim.outRange || sim.outPop))
 					RangePopOutput(pComm, rep, yr, gen);
 #if RS_RCPP && !R_CMD
-				if (dem.stageStruct) returnPopToR(rep, yr);
+				if (dem.stageStruct) returnPopToR(rep, yr, gen);
 #endif
 
 				// Dispersal
@@ -655,7 +657,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 		if (sim.outRange || sim.outPop)
 			RangePopOutput(pComm, rep, yr, 0);
 #if RS_RCPP && !R_CMD
-		returnPopToR(rep, yr);
+		returnPopToR(rep, yr, 0); // RepSeason 0, as in the population output file
 #endif
 
 		pComm->resetPopns();
