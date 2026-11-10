@@ -107,7 +107,7 @@ Instead, genetic data output is controlled within the \code{\link[RangeShiftR]{G
 
 \item{ReturnPopDataFrame}{Return population data to R as data frame (most suitable for patch based models)? Defaults to \code{FALSE}. The data are recorded at the same time and for the same years as the population output file (\code{OutStartPop}, \code{OutIntPop}, including the final year \code{Years}): before reproduction in non-structured and after reproduction in stage-structured models. Total abundance corresponds to \code{NInd} in the population file, i.e. it excludes juveniles in stage-structured models.}
 
-\item{ReturnStages}{Return also stage-specific population data? Only applicable for stage-structured models if \code{ReturnPopMatrix = TRUE} or \code{ReturnPopDataFrame = TRUE}. Logical vector with one entry per stage, the first entry being stage \eqn{0} (juveniles), e.g. \code{c(TRUE, FALSE, TRUE)} returns juveniles and stage \eqn{2}; a single \code{TRUE} only returns stage \eqn{0}. If \code{FALSE} only total abundance is recorded.}
+\item{ReturnStages}{Return also stage-specific population data? Only applicable for stage-structured models if \code{ReturnPopMatrix = TRUE} or \code{ReturnPopDataFrame = TRUE}. Either \code{FALSE} (default; only total abundance is recorded) or a logical vector with exactly one entry per stage (as set in \code{StageStructure(Stages)}), the first entry being stage \eqn{0} (juveniles), e.g. \code{c(TRUE, FALSE, TRUE)} returns juveniles and stage \eqn{2} in a model with \eqn{3} stages.}
 
 \item{CreatePopFile}{Create population output file? Defaults to \code{TRUE}.}
 }

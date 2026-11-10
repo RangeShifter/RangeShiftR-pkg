@@ -114,7 +114,7 @@
 #' @param SMSHeatMap Produce SMS heat map raster as output? Defaults to \code{FALSE}.
 #' @param ReturnPopMatrix Return population data to R as matrix (only for cell-based models)? Defaults to \code{FALSE}. The data are recorded at the same time and for the same years as the population output file (\code{OutStartPop}, \code{OutIntPop}, including the final year \code{Years}): before reproduction in non-structured and after reproduction in stage-structured models. Total abundance corresponds to \code{NInd} in the population file, i.e. it excludes juveniles in stage-structured models.
 #' @param ReturnPopDataFrame Return population data to R as data frame (most suitable for patch based models)? Defaults to \code{FALSE}. The data are recorded at the same time and for the same years as the population output file (\code{OutStartPop}, \code{OutIntPop}, including the final year \code{Years}): before reproduction in non-structured and after reproduction in stage-structured models. Total abundance corresponds to \code{NInd} in the population file, i.e. it excludes juveniles in stage-structured models.
-#' @param ReturnStages Return also stage-specific population data? Only applicable for stage-structured models if \code{ReturnPopMatrix = TRUE} or \code{ReturnPopDataFrame = TRUE}. Logical vector with one entry per stage, the first entry being stage \eqn{0} (juveniles), e.g. \code{c(TRUE, FALSE, TRUE)} returns juveniles and stage \eqn{2}; a single \code{TRUE} only returns stage \eqn{0}. If \code{FALSE} only total abundance is recorded.
+#' @param ReturnStages Return also stage-specific population data? Only applicable for stage-structured models if \code{ReturnPopMatrix = TRUE} or \code{ReturnPopDataFrame = TRUE}. Either \code{FALSE} (default; only total abundance is recorded) or a logical vector with exactly one entry per stage (as set in \code{StageStructure(Stages)}), the first entry being stage \eqn{0} (juveniles), e.g. \code{c(TRUE, FALSE, TRUE)} returns juveniles and stage \eqn{2} in a model with \eqn{3} stages.
 #' @param CreatePopFile Create population output file? Defaults to \code{TRUE}.
 #' @details \emph{Environmental Gradient}\cr
 #' In \emph{RangeShiftR}, it is possible to superimpose an artificial gradient on top of the landscape map (real or artificial).
@@ -814,8 +814,11 @@ setValidity('SimulationParams', function(object){
     }
 
     # ReturnStages must be logical
-    if(anyNA(object@ReturnStages)){
+    if(anyNA(object@ReturnStages) || length(object@ReturnStages) == 0){
         msg <- c(msg, 'ReturnStages has to be set')
+    }
+    else if(length(object@ReturnStages) == 1 && object@ReturnStages){
+        msg <- c(msg, 'ReturnStages must be FALSE or a logical vector with one entry per stage (the first entry being stage 0 = juveniles).')
     }
     if (anyNA(object@CreatePopFile) || length(object@CreatePopFile)!=1 ){
         msg <- c(msg, 'CreatePopFile has to be set')
@@ -1018,7 +1021,7 @@ setMethod("show", "SimulationParams", function(object) {
                 cat("\n   population size for stage ")
                 for (i in 1:length(object@ReturnStages)) {
                     if (object@ReturnStages[i]) {
-                        cat("\n  ", i)
+                        cat("\n  ", i - 1) # ReturnStages[1] is stage 0 (juveniles)
                     }
                 }
             }
@@ -1031,7 +1034,7 @@ setMethod("show", "SimulationParams", function(object) {
                 cat("\n   population size for stage ")
                 for (i in 1:length(object@ReturnStages)) {
                     if (object@ReturnStages[i]) {
-                        cat("\n  ", i)
+                        cat("\n  ", i - 1) # ReturnStages[1] is stage 0 (juveniles)
                     }
                 }
             }

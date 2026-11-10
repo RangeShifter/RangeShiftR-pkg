@@ -1743,9 +1743,10 @@ int ReadParametersR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 		}
 	}
 	if(stagestruct){
-	    // size of sim.ReturnStages should not be larger than the number of stages
-	    if(sim.ReturnStages.length() > stages){
-	        Rcpp::Rcout << "Error: ReturnStages should not have more entries than the number of stages." << endl;
+	    // ReturnStages is either FALSE or has exactly one entry per stage (first entry = stage 0)
+	    bool onlyFalse = sim.ReturnStages.length() == 1 && sim.ReturnStages[0] == false;
+	    if(!onlyFalse && sim.ReturnStages.length() != stages){
+	        Rcpp::Rcout << "Error: ReturnStages must be FALSE or have exactly one entry per stage (" << stages << ")." << endl;
 	        error++;
 	    }
 	}else {
