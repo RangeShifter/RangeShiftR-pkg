@@ -104,7 +104,7 @@ setValidity("RSparams", function(object) {
     #DEMOGRAPHY
     validObject(object@demog)
     if (object@control@landtype == 2L){ # habitat quality
-        if (class(object@demog@StageStruct)[1] == "StageStructure") {
+        if (is(object@demog@StageStruct, "StagesParams")) { # class name of StageStructure() objects
             varydemogixs <- (length(object@demog@StageStruct@FecLayer)+length(object@demog@StageStruct@DevLayer)+length(object@demog@StageStruct@SurvLayer)>0)
             varydemoglyr <- (length(object@land@demogScaleLayersMatrix)>0 || length(object@land@demogScaleLayersFile)>0)
             if(varydemogixs & !varydemoglyr){
@@ -1123,6 +1123,16 @@ setValidity("RSparams", function(object) {
     else{
         if (length(object@init@PropStages)>1 || !(object@init@PropStages[1] %in% c(0,-9))) {
             msg <- c(msg, 'PropStages is not used for a population without stage structure.')
+        }
+    }
+    ## ReturnStages: FALSE, or one entry per stage (the first entry being stage 0 = juveniles)
+    if (!(length(object@simul@ReturnStages) == 1 && !object@simul@ReturnStages[1])) {
+        if (!is(object@demog@StageStruct, "StagesParams")) {
+            msg <- c(msg, 'Simulation(): ReturnStages must be FALSE in a model without stage structure.')
+        }
+        else if (length(object@simul@ReturnStages) != object@demog@StageStruct@Stages) {
+            msg <- c(msg, paste0('Simulation(): ReturnStages must be FALSE or have exactly one entry per stage (',
+                                 object@demog@StageStruct@Stages, ' entries, the first entry being stage 0 = juveniles).'))
         }
     }
     ## Management
