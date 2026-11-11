@@ -33,7 +33,7 @@
 template <typename T>
 MemoryQueue<T>::MemoryQueue(std::size_t size):
 	space(size),
-	data(new T[size]),
+	data(size > 0 ? new T[size] : nullptr), // no heap allocation for an unused (size 0) queue
 	begin_idx(0),
 	nb_elts(0)
 { }
@@ -108,7 +108,8 @@ TraitFactory Individual::traitFactory = TraitFactory();
 // Individual constructor
 Individual::Individual(Species* pSpecies, Cell* pCell, Patch* pPatch, short stg, short a, short repInt,
 	float probmale, bool movt, short moveType):
-	memory(pSpecies->getSpSMSTraits().memSize)
+	// the SMS memory of visited cells is only needed (and allocated) for SMS movers
+	memory((movt && moveType == 1) ? pSpecies->getSpSMSTraits().memSize : 0)
 {
 	indId = indCounter; indCounter++; // unique identifier for each individual
 	geneticFitness = 1.0;
