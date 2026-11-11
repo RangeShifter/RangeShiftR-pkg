@@ -1699,7 +1699,8 @@ Rcpp::IntegerMatrix Community::addYearToPopListPatchBased(int rep, int yr, Rcpp:
     /* Rcpp::Rcout << "Calling addYearToPopListPatchBased: "
                 << "rep=" << rep
                 << " yr=" << yr << endl;*/
-    int nrows=pLandscape->getPatchNbs().size();
+    const set<int> patchNbs = pLandscape->getPatchNbs(); // build once (was built twice)
+    int nrows = (int)patchNbs.size();
     int ncols = 2; // for patchID + total abundance
     std::vector<int> stageIndices;
 
@@ -1716,7 +1717,7 @@ Rcpp::IntegerMatrix Community::addYearToPopListPatchBased(int rep, int yr, Rcpp:
 	SubCommunity* pSubComm = nullptr;
 	int currentRow = 0;
 
-	for (auto patchId : pLandscape->getPatchNbs()) {
+	for (auto patchId : patchNbs) {
 		// pPatch = pLandscape->findPatch(patchId);
 		// if (pPatch == nullptr) { // check if patch exists
 		// 	continue; // skip to next patch
@@ -2008,7 +2009,9 @@ void Community::writePerLocusFstatFile(Species* pSpecies, const int yr, const in
 		|| samplingOpt == "random"
 		|| (samplingOpt == "all" && !pLandscape->getLandParams().dynamic);
 
-	const set<int> positions = pSpecies->getSpTrait(NEUTRAL)->getGenePositions();
+	const set<int>& positions = pSpecies->getSpTrait(NEUTRAL)->getGenePositions();
+	// all patch numbers, built once instead of once per locus
+	const set<int> allPatchNbs = samplingFixed ? set<int>() : pLandscape->getPatchNbs();
 
 	int thisLocus = 0;
 	for (int position : positions) {
@@ -2030,7 +2033,7 @@ void Community::writePerLocusFstatFile(Species* pSpecies, const int yr, const in
 				}
 					}
 		else { // sampling may change between generations, must produce output for all patches in Landscape
-			for (auto patchId : pLandscape->getPatchNbs()) {
+			for (auto patchId : allPatchNbs) {
 				if (patchList.find(patchId) != patchList.end()) {
 					float het = getPatchHet(pSpecies, patchId, thisLocus);
 					if (het < 0) // patch empty
