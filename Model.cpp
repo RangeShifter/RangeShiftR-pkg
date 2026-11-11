@@ -29,6 +29,33 @@ using namespace std::chrono;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 #if RS_RCPP && !R_CMD
+// Collects the population maps returned to R.
+// Rcpp::List::push_back() copies the whole list (and its names) on every call,
+// i.e. building a list of n elements costs O(n^2). Here the elements are kept
+// in a std::vector (Rcpp::RObject keeps them protected from R's garbage
+// collector) and the named list is created once at the end.
+class RListBuilder {
+public:
+	void push_back(SEXP x, const std::string& name) {
+		values.emplace_back(x);
+		names.push_back(name);
+	}
+	Rcpp::List build() const {
+		const R_xlen_t n = static_cast<R_xlen_t>(values.size());
+		Rcpp::List out(n);
+		Rcpp::CharacterVector nms(n);
+		for (R_xlen_t i = 0; i < n; i++) {
+			out[i] = values[i];
+			nms[i] = names[i];
+		}
+		if (n > 0) out.attr("names") = nms;
+		return out;
+	}
+private:
+	std::vector<Rcpp::RObject> values;
+	std::vector<std::string> names;
+};
+
 Rcpp::List RunModel(Landscape* pLandscape, int seqsim, Rcpp::S4 ParMaster) //Rcpp::S4 ParMaster new for all variants
 #else
 int RunModel(Landscape* pLandscape, int seqsim)
@@ -90,7 +117,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 	}
 
 #if RS_RCPP && !R_CMD
-	Rcpp::List list_outPop;
+	RListBuilder list_outPop;
 	// Population data returned to R (ReturnPopMatrix / ReturnPopDataFrame) are recorded at the same
 	// time and under the same conditions as the population output file (see RangePopOutput()):
 	// before reproduction for non-structured and after reproduction for stage-structured models,
@@ -776,7 +803,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 	pComm = 0;
 
 #if RS_RCPP && !R_CMD
-	return list_outPop;
+	return list_outPop.build();
 #else
 	return 0;
 #endif
