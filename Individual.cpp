@@ -1713,7 +1713,7 @@ void Individual::overrideGenotype(TraitType whichTrait, const map<int, vector<sh
 	{
 	case GENETIC_LOAD1: case GENETIC_LOAD2: case GENETIC_LOAD3: case GENETIC_LOAD4: case GENETIC_LOAD5: 
 		pGenFitTrait = dynamic_cast<GeneticFitnessTrait*>(this->getTrait(whichTrait));
-		pGenFitTrait->getGenes() = newGenotype;
+		pGenFitTrait->setGenesFromMap(newGenotype);
 		break;
 	case E_D0: case E_ALPHA: case E_BETA:
 	case S_S0: case S_ALPHA: case S_BETA:
@@ -1727,7 +1727,7 @@ void Individual::overrideGenotype(TraitType whichTrait, const map<int, vector<sh
 	case KERNEL_MEANDIST_1_M: case KERNEL_MEANDIST_2_M: case KERNEL_PROBABILITY_M: 
 	case SMS_DP: case SMS_GB: case SMS_ALPHADB: case SMS_BETADB:
 		pDispTrait = dynamic_cast<DispersalTrait*>(this->getTrait(whichTrait));
-		pDispTrait->getGenes() = newGenotype;
+		pDispTrait->overwriteGenes(newGenotype);
 		break;
 	default:
 		throw logic_error("Wrong trait type: please choose a valid dispersal or genetic fitness trait.");
