@@ -1742,7 +1742,7 @@ void Individual::overrideGenotype(TraitType whichTrait, const map<int, vector<un
 	}
 	NeutralTrait* pNeutralTrait;
 	pNeutralTrait = dynamic_cast<NeutralTrait*>(this->getTrait(NEUTRAL));
-	pNeutralTrait->getGenes() = newGenotype;
+	pNeutralTrait->setGenesFromMap(newGenotype);
 };
 
 #endif // UNIT_TESTS

@@ -338,15 +338,16 @@ void Population::updatePopNeutralTables() {
 	// Fill tallies for each locus
 	for (Individual* individual : sampledInds) {
 
-		const auto trait = individual->getTrait(NEUTRAL);
-		int whichLocus = 0;
-		for (auto position : positions) {
+		// direct access by locus index (positions are iterated in ascending order,
+		// which is the order of the loci in the neutral genes array)
+		const NeutralTrait* trait = static_cast<const NeutralTrait*>(individual->getTrait(NEUTRAL));
+		for (int whichLocus = 0; whichLocus < (int)positions.size(); whichLocus++) {
 
-			int alleleOnChromA = (int)trait->getAlleleValueAtLocus(0, position);
+			int alleleOnChromA = (int)trait->getAlleleAtIndex(0, whichLocus);
 			popNeutralCountTables[whichLocus].incrementTally(alleleOnChromA);
 
 			if (ploidy == 2) { // second allele and heterozygosity
-				int alleleOnChromB = (int)trait->getAlleleValueAtLocus(1, position);
+				int alleleOnChromB = (int)trait->getAlleleAtIndex(1, whichLocus);
 				popNeutralCountTables[whichLocus].incrementTally(alleleOnChromB);
 
 				bool isHetero = alleleOnChromA != alleleOnChromB;
@@ -355,7 +356,6 @@ void Population::updatePopNeutralTables() {
 					popNeutralCountTables[whichLocus].incrementHeteroTally(alleleOnChromB);
 				}
 			}
-			whichLocus++;
 		}
 	}
 
@@ -406,10 +406,8 @@ vector<int> Population::countNbHeterozygotesEachLocus() {
 	if (pSpecies->isDiploid()) {
 		for (Individual* ind : sampledInds) {
 			const NeutralTrait* trait = (NeutralTrait*)ind->getTrait(NEUTRAL);
-			int counter = 0;
-			for (auto position : positions) {
-				hetero[counter] += trait->isHeterozygoteAtLocus(position);
-				counter++;
+			for (int counter = 0; counter < (int)positions.size(); counter++) {
+				hetero[counter] += trait->isHeterozygoteAtIndex(counter);
 			}
 		}
 	}
