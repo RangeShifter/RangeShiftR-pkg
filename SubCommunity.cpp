@@ -242,7 +242,6 @@ void SubCommunity::reproduction(int resol, float epsGlobal, short rasterType, bo
 {
 	if (subCommNum == 0) return; // no reproduction in the matrix
 	float localK, envval;
-	std::vector <float> localDemoScaling;
 	Cell* pCell;
 	envGradParams grad = paramsGrad->getGradient();
 	envStochParams env = paramsStoch->getStoch();
@@ -252,7 +251,7 @@ void SubCommunity::reproduction(int resol, float epsGlobal, short rasterType, bo
 	if (npops < 1) return;
 
 	localK = pPatch->getK();
-	localDemoScaling = pPatch->getDemoScaling();
+	const std::vector <float>& localDemoScaling = pPatch->getDemoScaling();
 	if (localK > 0.0) {
 		if (patchModel) {
 			envval = 1.0; // environmental gradient is currently not applied for patch-based model
@@ -731,8 +730,7 @@ void SubCommunity::completeDispersal(std::map<Species*,vector<Individual*>>& ind
 void SubCommunity::survival0(short option0, short option1)
 {
 	int npops = (int)popns.size();
-    std::vector <float> localDemoScaling;
-		localDemoScaling = pPatch->getDemoScaling();
+	const std::vector <float>& localDemoScaling = pPatch->getDemoScaling();
 	float localK = pPatch->getK();
 	for (int i = 0; i < npops; i++) { // all populations
 			popns[i]->survival0(localK, option0, option1, localDemoScaling);

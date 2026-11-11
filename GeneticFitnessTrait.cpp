@@ -37,7 +37,7 @@ GeneticFitnessTrait::GeneticFitnessTrait(SpeciesTrait* P)
 
 	// Set initialisation parameters
 	DistributionType initialDistribution = pSpeciesTrait->getInitialDistribution();
-	map<GenParamType, float> initialParameters = pSpeciesTrait->getInitialParameters();
+	const map<GenParamType, float>& initialParameters = pSpeciesTrait->getInitialParameters();
 	switch (initialDistribution) {
 	case UNIFORM:
 	{
@@ -79,7 +79,7 @@ GeneticFitnessTrait::GeneticFitnessTrait(SpeciesTrait* P)
 	}
 
 	DistributionType initDomDistribution = pSpeciesTrait->getInitDomDistribution();
-	map<GenParamType, float> initDomParameters = pSpeciesTrait->getInitDomParameters();
+	const map<GenParamType, float>& initDomParameters = pSpeciesTrait->getInitDomParameters();
 	switch (initDomDistribution) {
 	case UNIFORM:
 	{
@@ -132,7 +132,7 @@ GeneticFitnessTrait::GeneticFitnessTrait(SpeciesTrait* P)
 	initialise();
 
 	DistributionType mutationDistribution = pSpeciesTrait->getMutationDistribution();
-	map<GenParamType, float> mutationParameters = pSpeciesTrait->getMutationParameters();
+	const map<GenParamType, float>& mutationParameters = pSpeciesTrait->getMutationParameters();
 	switch (mutationDistribution) {
 	case UNIFORM:
 	{
@@ -169,7 +169,7 @@ GeneticFitnessTrait::GeneticFitnessTrait(SpeciesTrait* P)
 	}
 
 	DistributionType dominanceDistribution = pSpeciesTrait->getDominanceDistribution();
-	map<GenParamType, float> dominanceParameters = pSpeciesTrait->getDominanceParameters();
+	const map<GenParamType, float>& dominanceParameters = pSpeciesTrait->getDominanceParameters();
 
 	switch (dominanceDistribution) {
 	case UNIFORM:
@@ -260,12 +260,12 @@ void GeneticFitnessTrait::initialise() {
 	float initDomCoeff;
 	short ploidy = pSpeciesTrait->getPloidy();
 	auto initDist = pSpeciesTrait->getInitialDistribution();
-	auto initParams = pSpeciesTrait->getInitialParameters();
+	const auto& initParams = pSpeciesTrait->getInitialParameters();
 	auto initDomDist = pSpeciesTrait->getInitDomDistribution();
-	auto initDomParams = pSpeciesTrait->getInitDomParameters();
+	const auto& initDomParams = pSpeciesTrait->getInitDomParameters();
 
 	const set<int> genePositions = pSpeciesTrait->getGenePositions();
-	const set<int> initPositions = pSpeciesTrait->getInitPositions();
+	const set<int>& initPositions = pSpeciesTrait->getInitPositions();
 
 	for (auto position : genePositions) {
 		vector<shared_ptr<Allele>> initialGene(ploidy);

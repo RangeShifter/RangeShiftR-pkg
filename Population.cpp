@@ -439,7 +439,7 @@ double Population::computeHs() {
 	return hs;
 }
 
-popStats Population::getStats(std::vector <float> localDemoScaling)
+popStats Population::getStats(const std::vector <float>& localDemoScaling)
 {
 	popStats p = popStats();
 	int ninds;
@@ -528,7 +528,7 @@ void Population::extirpate(void) {
 
 //---------------------------------------------------------------------------
 // Produce juveniles and hold them in the juvs vector
-void Population::reproduction(const float localK, const float envval, const int resol, std::vector <float> localDemoScaling)
+void Population::reproduction(const float localK, const float envval, const int resol, const std::vector <float>& localDemoScaling)
 {
 
 	// get population size at start of reproduction
@@ -1088,7 +1088,7 @@ void Population::recruitMany(std::vector<Individual*>& recruits) {
 // FOR MULTIPLE SPECIES, MAY NEED TO SEPARATE OUT THIS IDENTIFICATION STAGE,
 // SO THAT IT CAN BE PERFORMED FOR ALL SPECIES BEFORE ANY UPDATING OF POPULATIONS
 
-void Population::survival0(float localK, short option0, short option1, std::vector <float> localDemoScaling)
+void Population::survival0(float localK, short option0, short option1, const std::vector <float>& localDemoScaling)
 {
 	// option0:	0 - stage 0 (juveniles) only
 	//					1 - all stages
@@ -1609,7 +1609,7 @@ void Population::outputGeneValues(ofstream& ofsGenes, const int& yr, const int& 
 	float domCoefA, domCoefB;
 
 	// Subset traits that are selected to be output
-	set<TraitType> traitTypes = pSpecies->getTraitTypes();
+	const set<TraitType>& traitTypes = pSpecies->getTraitTypes();
 	set<TraitType> outputTraitTypes;
 	for (auto trType : traitTypes) {
 		if (pSpecies->getSpTrait(trType)->isOutput())
@@ -1618,17 +1618,15 @@ void Population::outputGeneValues(ofstream& ofsGenes, const int& yr, const int& 
 
 	// Fetch map to positions for each trait
 	// Presumably faster than fetching for every individual
-	map<TraitType, set<int>> allGenePositions;
+	map<TraitType, const set<int>*> allGenePositions;
 	for (auto trType : outputTraitTypes) {
-		set<int> traitPositions = pSpecies->getSpTrait(trType)->getGenePositions();
-		allGenePositions.insert(make_pair(trType, traitPositions));
+		allGenePositions.emplace(trType, &pSpecies->getSpTrait(trType)->getGenePositions());
 		}
 
-	set<int> positions;
 	for (Individual* ind : sampledInds) {
 		indID = ind->getId();
 		for (auto trType : outputTraitTypes) {
-			positions = allGenePositions[trType];
+			const set<int>& positions = *allGenePositions[trType]; // no copy per individual
 			auto indTrait = ind->getTrait(trType);
 			for (auto pos : positions) {
 				alleleOnChromA = indTrait->getAlleleValueAtLocus(0, pos);

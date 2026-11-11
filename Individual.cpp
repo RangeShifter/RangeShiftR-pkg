@@ -184,7 +184,7 @@ set<TraitType> Individual::getTraitTypes() {
 void Individual::inherit(Species* pSpecies, const Individual* mother, const Individual* father) {
 
 	int events = 0;
-	const set<int> chromosomeEnds = pSpecies->getChromosomeEnds();
+	const set<int>& chromosomeEnds = pSpecies->getChromosomeEnds();
 	const int genomeSize = pSpecies->getGenomeSize();
 
 	int maternalStartingChromosome = pRandom->Bernoulli(0.5);

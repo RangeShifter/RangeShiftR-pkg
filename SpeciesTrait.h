@@ -44,18 +44,18 @@ public:
     float getMutationRate() const { return mutationRate; }
     short getPloidy() const { return ploidy; }
     set<int>& getGenePositions() { return genePositions; } // returning by reference, make sure receiver is const
-    set<int> getInitPositions() const { return initPositions; }
+    const set<int>& getInitPositions() const { return initPositions; }
     int getPositionsSize() const { return static_cast<int>(genePositions.size()); }
     bool isInherited() const { return inherited; }
 
     DistributionType getInitialDistribution() const { return initialDistribution; };
-    map<GenParamType, float> getInitialParameters() const { return initialParameters; };
+    const map<GenParamType, float>& getInitialParameters() const { return initialParameters; };
     DistributionType getInitDomDistribution() const { return initialDomDistribution; };
-    map<GenParamType, float> getInitDomParameters() const { return initialDomParameters; };
+    const map<GenParamType, float>& getInitDomParameters() const { return initialDomParameters; };
     DistributionType getMutationDistribution() const { return mutationDistribution; };
-    map<GenParamType, float> getMutationParameters() const { return mutationParameters; };
+    const map<GenParamType, float>& getMutationParameters() const { return mutationParameters; };
     DistributionType getDominanceDistribution() const { return dominanceDistribution; };
-    map<GenParamType, float> getDominanceParameters() const { return dominanceParameters; };
+    const map<GenParamType, float>& getDominanceParameters() const { return dominanceParameters; };
 
     ExpressionType getExpressionType() const { return expressionType; };
 

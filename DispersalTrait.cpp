@@ -39,7 +39,7 @@ DispersalTrait::DispersalTrait(SpeciesTrait* P)
 		_inherit_func_ptr = (pSpeciesTrait->getPloidy() == 1) ? &DispersalTrait::inheritHaploid : &DispersalTrait::inheritDiploid; //this could be changed if we wanted some alternative form of inheritance
 
 		DistributionType mutationDistribution = pSpeciesTrait->getMutationDistribution();
-		map<GenParamType, float> mutationParameters = pSpeciesTrait->getMutationParameters();
+		const map<GenParamType, float>& mutationParameters = pSpeciesTrait->getMutationParameters();
 
 		// Set mutation parameters
 		switch (mutationDistribution) {
@@ -71,7 +71,7 @@ DispersalTrait::DispersalTrait(SpeciesTrait* P)
 
 	// Set initialisation parameters
 	DistributionType initialDistribution = pSpeciesTrait->getInitialDistribution();
-	map<GenParamType, float> initialParameters = pSpeciesTrait->getInitialParameters();
+	const map<GenParamType, float>& initialParameters = pSpeciesTrait->getInitialParameters();
 	switch (initialDistribution) {
 	case UNIFORM:
 	{
@@ -149,7 +149,7 @@ void DispersalTrait::mutateUniform()
 
 	auto& rng = pRandom->getRNG();// bugfix: auto& - plain auto would copy the generator again
 
-	map<GenParamType, float> mutationParameters = pSpeciesTrait->getMutationParameters();
+	const map<GenParamType, float>& mutationParameters = pSpeciesTrait->getMutationParameters();
 	float maxD = mutationParameters.find(MAX)->second;
 	float minD = mutationParameters.find(MIN)->second;
 
@@ -188,7 +188,7 @@ void DispersalTrait::mutateNormal()
 
 	auto& rng = pRandom->getRNG();
 
-	const map<GenParamType, float> mutationParameters = pSpeciesTrait->getMutationParameters();
+	const map<GenParamType, float>& mutationParameters = pSpeciesTrait->getMutationParameters();
 	const float mean = mutationParameters.find(MEAN)->second;
 	const float sd = mutationParameters.find(SD)->second;
 	float newAlleleVal;
@@ -294,7 +294,7 @@ void DispersalTrait::inheritHaploid(const bool& fromMother, map<int, vector<shar
 void DispersalTrait::reInitialiseGenes(const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome)
 {
 	DistributionType initialDistribution = pSpeciesTrait->getInitialDistribution();
-	map<GenParamType, float> initialParameters = pSpeciesTrait->getInitialParameters();
+	const map<GenParamType, float>& initialParameters = pSpeciesTrait->getInitialParameters();
 
 	switch (initialDistribution) {
 	case UNIFORM:

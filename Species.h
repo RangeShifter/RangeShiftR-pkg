@@ -520,13 +520,13 @@ public:
 
 	SpeciesTrait* getSpTrait(TraitType trait) const;
 
-	std::set<TraitType> getTraitTypes();
+	const std::set<TraitType>& getTraitTypes() const; // cached, see traitTypes
 
 	int getNTraits() const;
 	int getNPositionsForTrait(const TraitType trait) const;
 	int getGenomeSize() const;
 	float getRecombinationRate() const;
-	std::set<int> getChromosomeEnds() const;
+	const std::set<int>& getChromosomeEnds() const;
 	void setGeneticParameters(const std::set<int>& chromosomeEnds, const int genomeSize, const float recombinationRate,
 		const std::set<int>& samplePatchList, const string nIndsToSample, const std::set<int>& stagesToSampleFrom, int nPatchesToSampleFrom);
 	void setSamplePatchList(const std::set<int>& samplePatchList);
@@ -587,6 +587,7 @@ private:
 
 	/**The traits table.*/
 	std::map<TraitType, std::unique_ptr<SpeciesTrait>> spTraitTable;
+	std::set<TraitType> traitTypes; // keys of spTraitTable, cached because queried for every newborn
 	std::set<int> chromosomeEnds;
 	int genomeSize;
 	bool diploid;

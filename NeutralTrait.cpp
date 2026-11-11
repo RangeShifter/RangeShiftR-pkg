@@ -33,7 +33,7 @@ NeutralTrait::NeutralTrait(SpeciesTrait* P)
 	pSpeciesTrait = P;
 
 	DistributionType mutationDistribution = pSpeciesTrait->getMutationDistribution();
-	map<GenParamType, float> mutationParameters = pSpeciesTrait->getMutationParameters();
+	const map<GenParamType, float>& mutationParameters = pSpeciesTrait->getMutationParameters();
 
 	if (mutationParameters.count(MAX) != 1)
 		throw logic_error("KAM or SSM mutation distribution parameter must contain max value, max cannot exceed 256  \n");
@@ -58,7 +58,7 @@ NeutralTrait::NeutralTrait(SpeciesTrait* P)
 		throw logic_error("KAM or SSM mutation distribution parameter must contain max value, max cannot exceed 256  \n");
 
 	DistributionType initialDistribution = pSpeciesTrait->getInitialDistribution();
-	map<GenParamType, float> initialParameters = pSpeciesTrait->getInitialParameters();
+	const map<GenParamType, float>& initialParameters = pSpeciesTrait->getInitialParameters();
 
 	if (mutationDistribution == SSM && initialDistribution != UNIFORM)
 		throw logic_error("If using SSM mutation model for neutral trait, must use uniform initial distribution.\n");
@@ -114,7 +114,7 @@ void NeutralTrait::mutate_KAM()
 	auto& rng = pRandom->getRNG();// bugfix: auto& - plain auto would copy the generator again
 	unsigned char mut;
 
-	map<GenParamType, float> mutationParameters = pSpeciesTrait->getMutationParameters();
+	const map<GenParamType, float>& mutationParameters = pSpeciesTrait->getMutationParameters();
 
 	int maxNeutralVal = (int)mutationParameters.find(MAX)->second;
 	if (maxNeutralVal > NeutralValUpperBound) maxNeutralVal = NeutralValUpperBound; //reserve max value for wildtype
@@ -163,7 +163,7 @@ void NeutralTrait::mutate_SSM()
 	const float mutationRate = pSpeciesTrait->getMutationRate();
 	auto& rng = pRandom->getRNG();// bugfix: auto& - plain auto would copy the generator again
 
-	map<GenParamType, float> mutationParameters = pSpeciesTrait->getMutationParameters();
+	const map<GenParamType, float>& mutationParameters = pSpeciesTrait->getMutationParameters();
 
 	int maxNeutralVal = (int)mutationParameters.find(MAX)->second;
 	if (maxNeutralVal > NeutralValUpperBound) maxNeutralVal = NeutralValUpperBound; //reserved max value for wildtype

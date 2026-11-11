@@ -125,7 +125,7 @@ public:
 	~Population(void);
 	traitsums getIndTraitsSums(Species*);
 	popStats getStats(
-			std::vector <float>
+			const std::vector <float>&
 	);
 	Species* getSpecies(void);
 	int getNbInds() const;
@@ -136,7 +136,7 @@ public:
 		const float,	// local carrying capacity
 		const float,	// effect of environmental gradient and/or stochasticty
 		const int,			// Landscape resolution
-		std::vector <float>    // local demographic scaling
+		const std::vector <float>&    // local demographic scaling
 	);
 	// Following reproduction of ALL species, add juveniles to the population
 	void fledge(void);
@@ -179,7 +179,7 @@ public:
 		short, 	// option1:	0 - development only (when survival is annual)
 						//	  	 		1 - development and survival
 						//	  	 		2 - survival only (when survival is annual)
-		std::vector <float> // local demographic scaling
+		const std::vector <float>& // local demographic scaling
 	);
 	void survival1(void); // Apply survival changes to the population
 	void ageIncrement(void);
