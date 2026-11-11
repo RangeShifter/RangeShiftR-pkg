@@ -3180,7 +3180,7 @@ bool Landscape::outConnectStartLandscape()
 	name += "_Connect.txt";
 	outConnMat.open(name.c_str());
 
-	outConnMat << "Rep\tYear\tStartPatch\tEndPatch\tNinds" << endl;
+	outConnMat << "Rep\tYear\tStartPatch\tEndPatch\tNinds" << '\n';
 
 	return outConnMat.is_open();
 }
@@ -3212,7 +3212,7 @@ void Landscape::outPathsStartReplicate(int rep)
 
 		outMovePaths.open(name.c_str());
 		if (outMovePaths.is_open()) {
-			outMovePaths << "Year\tIndID\tStep\tx\ty\tStatus" << endl;
+			outMovePaths << "Year\tIndID\tStep\tx\ty\tStatus" << '\n';
 		}
 		else {
 			outMovePaths.clear();
@@ -3242,7 +3242,7 @@ void Landscape::outConnect(int rep, int yr)
 					if (connectMatrix[i][j] > 0) {
 						outConnMat << rep << "\t" << yr
 							<< "\t" << patchnum0 << "\t" << patchnum1
-							<< "\t" << connectMatrix[i][j] << endl;
+							<< "\t" << connectMatrix[i][j] << '\n';
 					}
 				}
 			}
@@ -3255,9 +3255,9 @@ void Landscape::outConnect(int rep, int yr)
 			if (patches[i]->getK() > 0.0)
 			{ // suitable patch
 				outConnMat << rep << "\t" << yr
-					<< "\t" << patchnum0 << "\t-999\t" << emigrants[i] << endl;
+					<< "\t" << patchnum0 << "\t-999\t" << emigrants[i] << '\n';
 				outConnMat << rep << "\t" << yr
-					<< "\t-999\t" << patchnum0 << "\t" << immigrants[i] << endl;
+					<< "\t-999\t" << patchnum0 << "\t" << immigrants[i] << '\n';
 			}
 		}
 	}
@@ -3306,12 +3306,12 @@ void Landscape::outVisits(int rep, int landNr) {
 	}
 	outvisits.open(name.c_str());
 
-	outvisits << "ncols " << dimX << endl;
-	outvisits << "nrows " << dimY << endl;
-	outvisits << "xllcorner " << minEast << endl;
-	outvisits << "yllcorner " << minNorth << endl;
-	outvisits << "cellsize " << resol << endl;
-	outvisits << "NODATA_value -9" << endl;
+	outvisits << "ncols " << dimX << '\n';
+	outvisits << "nrows " << dimY << '\n';
+	outvisits << "xllcorner " << minEast << '\n';
+	outvisits << "yllcorner " << minNorth << '\n';
+	outvisits << "cellsize " << resol << '\n';
+	outvisits << "NODATA_value -9" << '\n';
 
 	for (int y = dimY - 1; y >= 0; y--) {
 		for (int x = 0; x < dimX; x++) {
@@ -3322,7 +3322,7 @@ void Landscape::outVisits(int rep, int landNr) {
 				outvisits << cells[y][x]->getVisits() << " ";
 			}
 		}
-		outvisits << endl;
+		outvisits << '\n';
 	}
 
 	outvisits.close(); 

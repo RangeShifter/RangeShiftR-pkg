@@ -1042,7 +1042,7 @@ bool SubCommunity::outTraitsStartLandscape(Landscape* pLandscape, Species* pSpec
 		}
 	}
 
-	outtraits << endl;
+	outtraits << '\n';
 
 	return outtraits.is_open();
 }
@@ -1463,7 +1463,7 @@ traitsums SubCommunity::outTraits(Landscape* pLandscape, int rep, int yr, int ge
 						outtraits << "\t" << mnGenFitness << "\t" << sdGenFitness;
 					}
 				}
-				outtraits << endl;
+				outtraits << '\n';
 			} // end trait-per-cell output
 
 		} 

@@ -1616,13 +1616,13 @@ void Individual::outMovePath(const int year)
 			outMovePaths << year << "\t" << indId << "\t"
 				<< "0\t" << prev_loc.x << "\t" << prev_loc.y << "\t"
 				<< "0\t"	// status at start cell is 0
-				<< endl;
+				<< '\n';
 		}
 		// then record current step
 		outMovePaths << year << "\t" << indId << "\t"
 			<< path->total << "\t" << loc.x << "\t" << loc.y << "\t"
 			<< status << "\t"
-			<< endl;
+			<< '\n';
 	}
 	// if not anymore dispersing...
 	if (status > 1 && status <= 10) {
@@ -1634,12 +1634,12 @@ void Individual::outMovePath(const int year)
 				outMovePaths << year << "\t" << indId << "\t"
 					<< "0\t" << prev_loc.x << "\t" << prev_loc.y << "\t"
 					<< "0\t"	// status at start cell is 0
-					<< endl;
+					<< '\n';
 			}
 			outMovePaths << year << "\t" << indId << "\t"
 				<< path->total << "\t" << loc.x << "\t" << loc.y << "\t"
 				<< status << "\t"
-				<< endl;
+				<< '\n';
 			// current cell will be invalid (zero), so set back to previous cell
 			//pPrevCell = pCurrCell;
 			path->pathoutput = 0;

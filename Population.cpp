@@ -1353,7 +1353,7 @@ bool Population::outPopStartLandscape(int landNr, bool patchModel) {
 	else {
 		if (dem.repType != 0) outPop << "\tNfemales\tNmales";
 	}
-	outPop << endl;
+	outPop << '\n';
 	return outPop.is_open();
 }
 
@@ -1411,7 +1411,7 @@ void Population::outPopulation(int rep, int yr, int gen, float eps,
 			outPop << "\t" << nInds[1][0] << "\t" << nInds[1][1];
 		}
 	}
-	outPop << endl;
+	outPop << '\n';
 }
 
 //---------------------------------------------------------------------------
@@ -1476,7 +1476,7 @@ void Population::outIndsStartReplicate(int rep, int landNr, bool patchModel)
 #else
 	if (trfr.usesMovtProc) outInds << "\tNsteps";
 #endif
-	outInds << endl;
+	outInds << '\n';
 }
 
 //---------------------------------------------------------------------------
@@ -1595,7 +1595,7 @@ void Population::outIndividual(Landscape* pLandscape, int rep, int yr, int gen,
 				outInds << "\t" << steps.year;
 			}
 #endif
-			outInds << endl;
+			outInds << '\n';
 		} // end of writeInd condition
 
 	}
@@ -1649,7 +1649,7 @@ void Population::outputGeneValues(ofstream& ofsGenes, const int& yr, const int& 
 	}
 					ofsGenes << '\t' << alleleOnChromB << '\t' << domCoefB;
 				}
-				ofsGenes << endl;
+				ofsGenes << '\n';
 	}
 		}
 	}
