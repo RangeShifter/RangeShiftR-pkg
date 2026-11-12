@@ -49,7 +49,7 @@
 ofstream outrange;
 ofstream outoccup, outsuit;
 ofstream outtraitsrows;
-ofstream ofsGenes;
+OutputTable ofsGenes; // gene values file: text or binary, see OutputTable
 ofstream outwcfstat;
 ofstream outperlocusfstat;
 ofstream outpairwisefst;
@@ -1783,10 +1783,7 @@ Rcpp::IntegerMatrix Community::addYearToPopListPatchBased(int rep, int yr, Rcpp:
 bool Community::openOutGenesFile(const bool& isDiploid, const int landNr, const int rep)
 {
 	if (landNr == -999) { // close the file
-		if (ofsGenes.is_open()) {
-			ofsGenes.close();
-			ofsGenes.clear();
-		}
+		ofsGenes.close();
 		return true;
 	}
 	string name;
@@ -1797,29 +1794,30 @@ bool Community::openOutGenesFile(const bool& isDiploid, const int landNr, const 
 			+ "Batch" + to_string(sim.batchNum) + "_"
 			+ "Sim" + to_string(sim.simulation) + "_Land"
 			+ to_string(landNr) + "_Rep" + to_string(rep)
-			+ "_geneValues.txt";
+			+ "_geneValues"; // extension added by OutputTable
 	}
 	else {
 		name = paramsSim->getDir(2) 
 			+ "Sim" + to_string(sim.simulation) + "_Land"
 			+ to_string(landNr) + "_Rep" + to_string(rep) 
-			+ "_geneValues.txt";
+			+ "_geneValues";
 	}
 
-	ofsGenes.open(name.c_str());
-	ofsGenes << "Year\tGeneration\tIndID\ttraitType\tlocusPosition"
-			 << "\talleleValueA\tdomCoefA";
-	if (isDiploid) ofsGenes << "\talleleValueB\tdomCoefB";
-	ofsGenes << '\n';
+	typedef OutputTable T;
+	ofsGenes.clearColumns();
+	ofsGenes.addColumn("Year", T::INT); ofsGenes.addColumn("Generation", T::INT); ofsGenes.addColumn("IndID", T::INT);
+	ofsGenes.addColumn("traitType", T::STRING); ofsGenes.addColumn("locusPosition", T::INT);
+	ofsGenes.addColumn("alleleValueA", T::FLOAT); ofsGenes.addColumn("domCoefA", T::FLOAT);
+	if (isDiploid) { ofsGenes.addColumn("alleleValueB", T::FLOAT); ofsGenes.addColumn("domCoefB", T::FLOAT); }
 
-	return ofsGenes.is_open();
+	return ofsGenes.open(name, static_cast<OutputFormat>(sim.outputFormat));
 }
 
 void Community::outputGeneValues(const int& year, const int& gen, Species* pSpecies) {
-	if (!ofsGenes.is_open())
+	if (!ofsGenes.isOpen())
 		throw runtime_error("Could not open output gene values file.");
 
-	const set<int> patchList = pSpecies->getSamplePatches();
+	const set<int>& patchList = pSpecies->getSamplePatches();
 	for (int patchId : patchList) {
 		const auto patch = pLandscape->findPatch(patchId);
 		if (patch == 0) {

@@ -8,13 +8,22 @@ if(NOT batchmode) # that is, RScore as a standalone
 	set(CMAKE_CXX_STANDARD 20)
 	set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-	add_executable(RScore Main.cpp Species.cpp Cell.cpp Community.cpp FractalGenerator.cpp GeneticFitnessTrait.cpp Individual.cpp Landscape.cpp Management.cpp Model.cpp NeutralStatsManager.cpp Parameters.cpp Patch.cpp Population.cpp DispersalTrait.cpp RSrandom.cpp NeutralTrait.cpp SpeciesTrait.cpp SubCommunity.cpp Utils.cpp "unit_tests/testIndividual.cpp" "unit_tests/testNeutralStats.cpp" "unit_tests/testPopulation.cpp" "unit_tests/testBugfixes.cpp")
+	add_executable(RScore Main.cpp Species.cpp Cell.cpp Community.cpp FractalGenerator.cpp GeneticFitnessTrait.cpp Individual.cpp Landscape.cpp Management.cpp Model.cpp NeutralStatsManager.cpp Parameters.cpp Patch.cpp Population.cpp DispersalTrait.cpp RSrandom.cpp NeutralTrait.cpp SpeciesTrait.cpp SubCommunity.cpp Utils.cpp OutputTable.cpp "unit_tests/testIndividual.cpp" "unit_tests/testNeutralStats.cpp" "unit_tests/testPopulation.cpp" "unit_tests/testBugfixes.cpp")
 
 	# turn on unit tests
 	add_compile_definitions("UNIT_TESTS")
 else() # that is, RScore compiled as library within RangeShifter_batch
 
-	add_library(RScore Species.cpp Cell.cpp Community.cpp FractalGenerator.cpp GeneticFitnessTrait.cpp Individual.cpp Landscape.cpp Management.cpp Model.cpp NeutralStatsManager.cpp Parameters.cpp Patch.cpp Population.cpp DispersalTrait.cpp RSrandom.cpp NeutralTrait.cpp SpeciesTrait.cpp SubCommunity.cpp Utils.cpp)
+	add_library(RScore Species.cpp Cell.cpp Community.cpp FractalGenerator.cpp GeneticFitnessTrait.cpp Individual.cpp Landscape.cpp Management.cpp Model.cpp NeutralStatsManager.cpp Parameters.cpp Patch.cpp Population.cpp DispersalTrait.cpp RSrandom.cpp NeutralTrait.cpp SpeciesTrait.cpp SubCommunity.cpp Utils.cpp OutputTable.cpp)
+endif()
+
+# optional binary (HDF5) output, see OutputTable.h
+# enable with: cmake -DHDF5=ON ...   (text output remains the default at run time)
+if(HDF5)
+	find_package(HDF5 REQUIRED COMPONENTS C)
+	target_include_directories(RScore PUBLIC ${HDF5_INCLUDE_DIRS})
+	target_link_libraries(RScore PUBLIC ${HDF5_LIBRARIES})
+	target_compile_definitions(RScore PUBLIC RS_HDF5)
 endif()
 
 if(OMP)

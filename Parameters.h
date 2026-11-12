@@ -342,6 +342,7 @@ struct simParams {
 	int outputGenesStart, outputGenesInterval;
 	int outputGlobalFstStart, outputGlobalFstInterval;
 	int outputPairwiseFstStart, outputPairwiseFstInterval;
+	int outputFormat = 0; // format of the large tabular outputs (Pop, Inds, geneValues): 0 = text, 1 = HDF5 (see OutputTable)
 };
 
 struct simView {
@@ -424,6 +425,7 @@ private:
 	int outputGlobalFstStart;
 	int outputPairwiseFstInterval;
 	int outputGlobalFstInterval;
+	int outputFormat;			// 0 = text, 1 = HDF5 (see OutputTable)
 };
 
 extern RSrandom* pRandom;

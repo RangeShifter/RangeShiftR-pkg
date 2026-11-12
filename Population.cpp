@@ -27,8 +27,9 @@
 #include <algorithm>
 //---------------------------------------------------------------------------
 
-ofstream outPop;
-ofstream outInds;
+// Population and Individuals output files: text (default) or binary, see OutputTable
+OutputTable outPop;
+OutputTable outInds;
 
 //---------------------------------------------------------------------------
 // The inds vector holds pointers to individuals that are scattered over the heap
@@ -1317,8 +1318,7 @@ void Population::clean(void)
 //---------------------------------------------------------------------------
 // Close population file
 bool Population::outPopFinishLandscape() {
-	if (outPop.is_open()) outPop.close();
-	outPop.clear();
+	outPop.close();
 	return true;
 }
 
@@ -1334,45 +1334,46 @@ bool Population::outPopStartLandscape(int landNr, bool patchModel) {
 	// ATTRIBUTES OF *ALL* SPECIES AS DETECTED AT MODEL LEVEL
 	demogrParams dem = pSpecies->getDemogrParams();
 	stageParams sstruct = pSpecies->getStageParams();
-		name = paramsSim->getDir(2)
-		+ (sim.batchMode ? "Batch" + to_string(sim.batchNum) + "_" : "")
-			+ "Sim" + to_string(sim.simulation) + "_Land" + to_string(landNr) + "_Pop.txt";
-
+	// file name without extension (.txt or .h5 is added by OutputTable)
 	if (sim.batchMode) {
 		name = paramsSim->getDir(2)
 			+ "Batch" + to_string(sim.batchNum) + "_"
-			+ "Sim" + to_string(sim.simulation) + "_Land" + to_string(landNr) + "_Pop.txt";
+			+ "Sim" + to_string(sim.simulation) + "_Land" + to_string(landNr) + "_Pop";
 	}
 	else {
-		name = paramsSim->getDir(2) + "Sim" + to_string(sim.simulation) + "_Pop.txt";
+		name = paramsSim->getDir(2) + "Sim" + to_string(sim.simulation) + "_Pop";
 	}
-	outPop.open(name.c_str());
-	outPop << "Rep\tYear\tRepSeason";
-	if (patchModel) outPop << "\tPatchID\tNcells";
-	else outPop << "\tx\ty";
+	typedef OutputTable T;
+	outPop.clearColumns();
+	outPop.addColumn("Rep", T::INT); outPop.addColumn("Year", T::INT); outPop.addColumn("RepSeason", T::INT);
+	if (patchModel) { outPop.addColumn("PatchID", T::INT); outPop.addColumn("Ncells", T::INT); }
+	else { outPop.addColumn("x", T::INT); outPop.addColumn("y", T::INT); }
 	// determine whether environmental data need be written for populations
 	bool writeEnv = false;
 	if (grad.gradient) writeEnv = true;
 	if (paramsStoch->envStoch()) writeEnv = true;
-	if (writeEnv) outPop << "\tEpsilon\tGradient\tLocal_K";
-	outPop << "\tSpecies\tNInd";
+	if (writeEnv) {
+		outPop.addColumn("Epsilon", T::FLOAT); outPop.addColumn("Gradient", T::FLOAT); outPop.addColumn("Local_K", T::FLOAT);
+	}
+	outPop.addColumn("Species", T::INT); outPop.addColumn("NInd", T::INT);
 	if (dem.stageStruct) {
 		if (dem.repType == 0)
 		{
-			for (int i = 1; i < sstruct.nStages; i++) outPop << "\tNInd_stage" << i;
-			outPop << "\tNJuvs";
+			for (int i = 1; i < sstruct.nStages; i++) outPop.addColumn("NInd_stage" + to_string(i), T::INT);
+			outPop.addColumn("NJuvs", T::INT);
 		}
 		else {
-			for (int i = 1; i < sstruct.nStages; i++)
-				outPop << "\tNfemales_stage" << i << "\tNmales_stage" << i;
-			outPop << "\tNJuvFemales\tNJuvMales";
+			for (int i = 1; i < sstruct.nStages; i++) {
+				outPop.addColumn("Nfemales_stage" + to_string(i), T::INT);
+				outPop.addColumn("Nmales_stage" + to_string(i), T::INT);
+			}
+			outPop.addColumn("NJuvFemales", T::INT); outPop.addColumn("NJuvMales", T::INT);
 		}
 	}
 	else {
-		if (dem.repType != 0) outPop << "\tNfemales\tNmales";
+		if (dem.repType != 0) { outPop.addColumn("Nfemales", T::INT); outPop.addColumn("Nmales", T::INT); }
 	}
-	outPop << '\n';
-	return outPop.is_open();
+	return outPop.open(name, static_cast<OutputFormat>(sim.outputFormat));
 }
 
 //---------------------------------------------------------------------------
@@ -1386,50 +1387,50 @@ void Population::outPopulation(int rep, int yr, int gen, float eps,
 	demogrParams dem = pSpecies->getDemogrParams();
 
 	popStats p;
-	outPop << rep << "\t" << yr << "\t" << gen;
+	outPop << rep << yr << gen;
 	if (patchModel) {
-		outPop << "\t" << pPatch->getPatchNum();
-		outPop << "\t" << pPatch->getNCells();
+		outPop << pPatch->getPatchNum();
+		outPop << pPatch->getNCells();
 	}
 	else {
 		locn loc = pPatch->getCellLocn(0);
-		outPop << "\t" << loc.x << "\t" << loc.y;
+		outPop << loc.x << loc.y;
 	}
 	if (writeEnv) {
 		if (pPatch->getPatchNum() == 0) { // matrix
-			outPop << "\t0\t0\t0";
+			outPop << 0 << 0 << 0;
 		}
 		else {
 			float k = pPatch->getK();
 			float envval = 0.0;
 			pCell = pPatch->getRandomCell();
 			if (pCell != 0) envval = pCell->getEnvVal();
-			outPop << "\t" << eps << "\t" << envval << "\t" << k;
+			outPop << eps << envval << k;
 		}
 	}
-	outPop << "\t" << pSpecies->getSpNum();
+	outPop << pSpecies->getSpNum();
 	if (dem.stageStruct) {
 		p = getStats(pPatch->getDemoScaling());
-		outPop << "\t" << p.nNonJuvs;
+		outPop << p.nNonJuvs;
 		// non-juvenile stage totals from permanent array
 		for (int stg = 1; stg < nStages; stg++) {
 			for (int sex = 0; sex < nSexes; sex++) {
-				outPop << "\t" << nInds[stg][sex];
+				outPop << (int)nInds[stg][sex];
 			}
 		}
 		// juveniles from permanent array
 		for (int sex = 0; sex < nSexes; sex++) {
-			outPop << "\t" << nInds[0][sex];
+			outPop << (int)nInds[0][sex];
 		}
 	}
 	else { // non-structured population
-		outPop << "\t" << getNbInds();
+		outPop << getNbInds();
 		if (dem.repType != 0)
 		{ // sexual model
-			outPop << "\t" << nInds[1][0] << "\t" << nInds[1][1];
+			outPop << (int)nInds[1][0] << (int)nInds[1][1];
 		}
 	}
-	outPop << '\n';
+	outPop.endRow();
 }
 
 //---------------------------------------------------------------------------
@@ -1438,9 +1439,7 @@ void Population::outPopulation(int rep, int yr, int gen, float eps,
 // Close individuals file
 void Population::outIndsFinishReplicate()
 {
-	if (outInds.is_open()) {
-		outInds.close(); outInds.clear();
-	}
+	outInds.close();
 	return;
 }
 
@@ -1455,46 +1454,49 @@ void Population::outIndsStartReplicate(int rep, int landNr, bool patchModel)
 	settleType sett = pSpecies->getSettle();
 	simParams sim = paramsSim->getSim();
 
+		// file name without extension (.txt or .h5 is added by OutputTable)
 		name = paramsSim->getDir(2)
 		+ (sim.batchMode ? "Batch" + to_string(sim.batchNum) + "_" : "")
 			+ "Sim" + to_string(sim.simulation)
-			+ "_Land" + to_string(landNr) + "_Rep" + to_string(rep) + "_Inds.txt";
+			+ "_Land" + to_string(landNr) + "_Rep" + to_string(rep) + "_Inds";
 
-	outInds.open(name.c_str());
-	outInds << "Rep\tYear\tRepSeason\tSpecies\tIndID\tStatus";
-	if (patchModel) outInds << "\tNatal_patch\tPatchID";
-	else outInds << "\tNatal_X\tNatal_Y\tX\tY";
-	if (dem.repType != 0) outInds << "\tSex";
-	if (dem.stageStruct) outInds << "\tAge\tStage";
-	if (pSpecies->getNbGenLoadTraits() > 0) outInds << "\tProbViable";
+	typedef OutputTable T;
+	auto col = [](const char* n, T::ColType t) { outInds.addColumn(n, t); };
+	outInds.clearColumns();
+	col("Rep", T::INT); col("Year", T::INT); col("RepSeason", T::INT); col("Species", T::INT); col("IndID", T::INT); col("Status", T::INT);
+	if (patchModel) { col("Natal_patch", T::INT); col("PatchID", T::INT); }
+	else { col("Natal_X", T::INT); col("Natal_Y", T::INT); col("X", T::INT); col("Y", T::INT); }
+	if (dem.repType != 0) col("Sex", T::INT);
+	if (dem.stageStruct) { col("Age", T::INT); col("Stage", T::INT); }
+	if (pSpecies->getNbGenLoadTraits() > 0) col("ProbViable", T::FLOAT);
 	if (emig.indVar) {
-		if (emig.densDep) outInds << "\tD0\tAlpha\tBeta";
-		else outInds << "\tEP";
+		if (emig.densDep) { col("D0", T::FLOAT); col("Alpha", T::FLOAT); col("Beta", T::FLOAT); }
+		else col("EP", T::FLOAT);
 	}
 	if (trfr.indVar) {
 		if (trfr.usesMovtProc) {
 			if (trfr.moveType == 1) { // SMS
-				outInds << "\tDP\tGB\tAlphaDB\tBetaDB";
+				col("DP", T::FLOAT); col("GB", T::FLOAT); col("AlphaDB", T::FLOAT); col("BetaDB", T::FLOAT);
 			}
 			if (trfr.moveType == 2) { // CRW
-				outInds << "\tStepLength\tRho";
+				col("StepLength", T::FLOAT); col("Rho", T::FLOAT);
 			}
 		}
 		else { // kernel
-			outInds << "\tMeanDistI";
-			if (trfr.twinKern) outInds << "\tMeanDistII\tPKernelI";
+			col("MeanDistI", T::FLOAT);
+			if (trfr.twinKern) { col("MeanDistII", T::FLOAT); col("PKernelI", T::FLOAT); }
 		}
 	}
 	if (sett.indVar) {
-		outInds << "\tS0\tAlphaS\tBetaS";
+		col("S0", T::FLOAT); col("AlphaS", T::FLOAT); col("BetaS", T::FLOAT);
 	}
-	outInds << "\tDistMoved";
+	col("DistMoved", T::FLOAT);
 #ifndef NDEBUG
-	outInds << "\tNsteps";
+	col("Nsteps", T::INT);
 #else
-	if (trfr.usesMovtProc) outInds << "\tNsteps";
+	if (trfr.usesMovtProc) col("Nsteps", T::INT);
 #endif
-	outInds << '\n';
+	outInds.open(name, static_cast<OutputFormat>(sim.outputFormat));
 }
 
 //---------------------------------------------------------------------------
@@ -1518,27 +1520,24 @@ void Population::outIndividual(Landscape* pLandscape, int rep, int yr, int gen,
 		indStats ind = inds[i]->getStats();
 		if (yr == -1) { // write all initialised individuals
 			writeInd = true;
-			outInds << rep << "\t" << yr << "\t" << dem.repSeasons - 1;
+			outInds << rep << yr << dem.repSeasons - 1;
 		}
 		else {
 			if (dem.stageStruct && gen < 0) { // write status 9 individuals only
 				if (ind.status == 9) {
 					writeInd = true;
-					outInds << rep << "\t" << yr << "\t" << dem.repSeasons - 1;
+					outInds << rep << yr << dem.repSeasons - 1;
 				}
 				else writeInd = false;
 			}
 			else {
 				writeInd = true;
-				outInds << rep << "\t" << yr << "\t" << gen;
+				outInds << rep << yr << gen;
 			}
 		}
 		if (writeInd) {
-			outInds << "\t" << spNum << "\t" << inds[i]->getId();
-			if (dem.stageStruct) outInds << "\t" << ind.status;
-			else { // non-structured population
-				outInds << "\t" << ind.status;
-			}
+			outInds << spNum << inds[i]->getId();
+			outInds << ind.status;
 			pCell = inds[i]->getCurrCell();
 			locn loc;
 			if (pCell == 0) loc.x = loc.y = -1; // beyond boundary or in no-data cell
@@ -1546,81 +1545,81 @@ void Population::outIndividual(Landscape* pLandscape, int rep, int yr, int gen,
 			pCell = inds[i]->getPrevCell();
 			locn natalloc = pCell->getLocn();
 			if (ppLand.patchModel) {
-				outInds << "\t" << inds[i]->getNatalPatch()->getPatchNum();
-				if (loc.x == -1) outInds << "\t-1";
-				else outInds << "\t" << patchNum;
+				outInds << inds[i]->getNatalPatch()->getPatchNum();
+				if (loc.x == -1) outInds << -1;
+				else outInds << patchNum;
 			}
 			else { // cell-based model
-				outInds << "\t" << (float)natalloc.x << "\t" << natalloc.y;
-				outInds << "\t" << (float)loc.x << "\t" << (float)loc.y;
+				outInds << (float)natalloc.x << natalloc.y;
+				outInds << (float)loc.x << (float)loc.y;
 			}
-			if (dem.repType != 0) outInds << "\t" << ind.sex;
-			if (dem.stageStruct) outInds << "\t" << ind.age << "\t" << ind.stage;
+			if (dem.repType != 0) outInds << (int)ind.sex;
+			if (dem.stageStruct) outInds << ind.age << ind.stage;
 
-			if (pSpecies->getNbGenLoadTraits() > 0) outInds << "\t" << inds[i]->getGeneticFitness();
+			if (pSpecies->getNbGenLoadTraits() > 0) outInds << inds[i]->getGeneticFitness();
 
 			if (emig.indVar) {
 				emigTraits e = inds[i]->getIndEmigTraits();
 				if (emig.densDep) {
-					outInds << "\t" << e.d0 << "\t" << e.alpha << "\t" << e.beta;
+					outInds << e.d0 << e.alpha << e.beta;
 				}
 				else {
-					outInds << "\t" << e.d0;
+					outInds << e.d0;
 				}
 			} // end of if (emig.indVar)
 			if (trfr.indVar) {
 				if (trfr.usesMovtProc) {
 					if (trfr.moveType == 1) { // SMS
 						trfrSMSTraits s = inds[i]->getIndSMSTraits();
-						outInds << "\t" << s.dp << "\t" << s.gb;
-						outInds << "\t" << s.alphaDB << "\t" << s.betaDB;
+						outInds << s.dp << s.gb;
+						outInds << s.alphaDB << s.betaDB;
 					} // end of SMS
 					if (trfr.moveType == 2) { // CRW
 						trfrCRWTraits c = inds[i]->getIndCRWTraits();
-						outInds << "\t" << c.stepLength << "\t" << c.rho;
+						outInds << c.stepLength << c.rho;
 					} // end of CRW
 				}
 				else { // kernel
 					trfrKernelParams k = inds[i]->getIndKernTraits();
 					if (trfr.twinKern)
 					{
-						outInds << "\t" << k.meanDist1 << "\t" << k.meanDist2 << "\t" << k.probKern1;
+						outInds << k.meanDist1 << k.meanDist2 << k.probKern1;
 					}
 					else {
-						outInds << "\t" << k.meanDist1;
+						outInds << k.meanDist1;
 					}
 				}
 			}
 
 			if (sett.indVar) {
 				settleTraits s = inds[i]->getIndSettTraits();
-				outInds << "\t" << s.s0 << "\t" << s.alpha << "\t" << s.beta;
+				outInds << s.s0 << s.alpha << s.beta;
 			}
 
 			// distance moved (metres)
-			if (loc.x == -1) outInds << "\t-1";
+			if (loc.x == -1) outInds << -1;
 			else {
 				float d = ppLand.resol * sqrt((float)((natalloc.x - loc.x) * (natalloc.x - loc.x)
 					+ (natalloc.y - loc.y) * (natalloc.y - loc.y)));
-				outInds << "\t" << d;
+				outInds << d;
 			}
 #ifndef NDEBUG
 			// ALWAYS WRITE NO. OF STEPS
 			steps = inds[i]->getSteps();
-			outInds << "\t" << steps.year;
+			outInds << steps.year;
 #else
 			if (trfr.usesMovtProc) {
 				steps = inds[i]->getSteps();
-				outInds << "\t" << steps.year;
+				outInds << steps.year;
 			}
 #endif
-			outInds << '\n';
+			outInds.endRow();
 		} // end of writeInd condition
 
 	}
 }
 
-void Population::outputGeneValues(ofstream& ofsGenes, const int& yr, const int& gen) const {
+void Population::outputGeneValues(OutputTable& ofsGenes, const int& yr, const int& gen) const {
 
 	const bool isDiploid = pSpecies->isDiploid();
 	int indID;
@@ -1655,7 +1654,7 @@ void Population::outputGeneValues(ofstream& ofsGenes, const int& yr, const int& 
 	else {
 					domCoefA = 0.0;
 	}
-				ofsGenes << yr << '\t' << gen << '\t' << indID << '\t' << to_string(trType) << '\t' << pos << '\t' << alleleOnChromA << '\t' << domCoefA;
+				ofsGenes << yr << gen << indID << to_string(trType) << pos << alleleOnChromA << domCoefA;
 				if (isDiploid) {
 					alleleOnChromB = indTrait->getAlleleValueAtLocus(1, pos);
 					if (trType == GENETIC_LOAD1 || trType == GENETIC_LOAD2 || trType == GENETIC_LOAD3 || trType == GENETIC_LOAD4 || trType == GENETIC_LOAD5) {
@@ -1664,9 +1663,9 @@ void Population::outputGeneValues(ofstream& ofsGenes, const int& yr, const int& 
 					else {
 						domCoefB = 0.0;
 	}
-					ofsGenes << '\t' << alleleOnChromB << '\t' << domCoefB;
+					ofsGenes << alleleOnChromB << domCoefB;
 				}
-				ofsGenes << '\n';
+				ofsGenes.endRow();
 	}
 		}
 	}

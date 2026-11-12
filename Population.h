@@ -59,6 +59,7 @@ using namespace std;
 #include "Patch.h"
 #include "Cell.h"
 #include "NeutralStatsManager.h"
+#include "OutputTable.h"
 
 #ifdef _OPENMP
 #include <atomic>
@@ -217,7 +218,7 @@ public:
 		int,				// generation
 		int					// Patch number
 	);
-	void outputGeneValues(ofstream& ofsGenes, const int& yr, const int& gen) const;
+	void outputGeneValues(OutputTable& ofsGenes, const int& yr, const int& gen) const;
 	void clean(void); // Remove zero pointers to dead or dispersed individuals
 
 	void updatePopNeutralTables();
