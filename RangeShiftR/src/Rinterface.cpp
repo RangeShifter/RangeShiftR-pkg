@@ -1759,8 +1759,9 @@ int ReadParametersR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 			error++;
 		}
 		if (!outputFormatAvailable(static_cast<OutputFormat>(sim.outputFormat))) {
-			Rcpp::Rcout << "Error: OutputFormat = \"hdf5\" requires RangeShiftR to be installed with HDF5 support "
-				<< "(the HDF5 library was not found when the package was compiled)." << endl;
+			Rcpp::Rcout << "Error: OutputFormat = \"hdf5\" is not available: RangeShiftR was installed without HDF5 support, "
+				<< "because the HDF5 library (libhdf5) was not found when the package was compiled. "
+				<< "Install libhdf5 on your system and reinstall RangeShiftR, or use OutputFormat = \"txt\"." << endl;
 			error++;
 		}
 	}

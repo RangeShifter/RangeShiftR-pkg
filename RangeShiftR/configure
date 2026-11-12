@@ -1,53 +1,6 @@
 #!/bin/sh
-# Configure script for RangeShiftR
+# Configure script for RangeShiftR (Linux, macOS).
 # Detects the optional HDF5 library, which enables binary output files
 # (Simulation(OutputFormat = "hdf5")). Without HDF5 the package builds as before
-# and writes text output only.
-#
-# Environment variables:
-#   RANGESHIFTR_HDF5=no          do not use HDF5 even if it is available
-#   HDF5_CPPFLAGS / HDF5_LIBS    use these flags instead of auto-detection
-
-: ${R_HOME=`R RHOME`}
-CXX=`"${R_HOME}/bin/R" CMD config CXX20 2>/dev/null`
-[ -z "$CXX" ] && CXX=`"${R_HOME}/bin/R" CMD config CXX`
-
-H5_CPPFLAGS=""
-H5_LIBS=""
-if [ "${RANGESHIFTR_HDF5}" = "no" ]; then
-  echo "RangeShiftR: HDF5 output disabled (RANGESHIFTR_HDF5=no)"
-else
-  if [ -n "${HDF5_LIBS}" ]; then
-    H5_CPPFLAGS="${HDF5_CPPFLAGS}"
-    H5_LIBS="${HDF5_LIBS}"
-  elif pkg-config --exists hdf5 2>/dev/null; then
-    H5_CPPFLAGS=`pkg-config --cflags hdf5`
-    H5_LIBS=`pkg-config --libs hdf5`
-  elif command -v h5cc >/dev/null 2>&1; then
-    H5_PREFIX=`h5cc -showconfig 2>/dev/null | sed -n 's/^ *Installation point: *//p'`
-    if [ -n "$H5_PREFIX" ]; then
-      H5_CPPFLAGS="-I${H5_PREFIX}/include"
-      H5_LIBS="-L${H5_PREFIX}/lib -lhdf5"
-    fi
-  fi
-  if [ -n "$H5_LIBS" ]; then
-    # check that a program using the HDF5 C API compiles and links
-    tmpdir=`mktemp -d 2>/dev/null || echo /tmp/rs_h5_$$`
-    mkdir -p "$tmpdir"
-    printf '#include <hdf5.h>\nint main(){ hid_t f = H5Fcreate("x.h5", H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT); return f < 0; }\n' > "$tmpdir/h5test.cpp"
-    if $CXX $H5_CPPFLAGS "$tmpdir/h5test.cpp" -o "$tmpdir/h5test" $H5_LIBS >/dev/null 2>&1; then
-      echo "RangeShiftR: HDF5 found - binary output (OutputFormat = \"hdf5\") enabled"
-      H5_CPPFLAGS="-DRS_HDF5 $H5_CPPFLAGS"
-    else
-      echo "RangeShiftR: HDF5 headers/library not usable - building without binary output"
-      H5_CPPFLAGS=""
-      H5_LIBS=""
-    fi
-    rm -rf "$tmpdir"
-  else
-    echo "RangeShiftR: HDF5 not found - building without binary output (text output only)"
-  fi
-fi
-
-sed -e "s|@HDF5_CPPFLAGS@|${H5_CPPFLAGS}|" -e "s|@HDF5_LIBS@|${H5_LIBS}|" src/Makevars.in > src/Makevars
-exit 0
+# and writes text output only. See tools/detect_hdf5.sh.
+sh ./tools/detect_hdf5.sh Makevars unix
