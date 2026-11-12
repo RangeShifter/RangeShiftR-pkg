@@ -539,6 +539,7 @@ void Species::addTrait(TraitType traitType, const SpeciesTrait& trait) {
 		}
 	}
 	spTraitTable.emplace(traitT, make_unique<SpeciesTrait>(trait));
+	traitTypes.insert(traitT);
 }
 
 SpeciesTrait* Species::getSpTrait(TraitType trait) const {
@@ -550,12 +551,11 @@ SpeciesTrait* Species::getSpTrait(TraitType trait) const {
 
 void Species::clearTraitTable() {
 	spTraitTable.clear();
+	traitTypes.clear();
 }
 
-set<TraitType> Species::getTraitTypes() {
-	auto kv = std::ranges::views::keys(spTraitTable);
-	set<TraitType> keys{ kv.begin(), kv.end() };
-	return keys;
+const set<TraitType>& Species::getTraitTypes() const {
+	return traitTypes;
 }
 
 int Species::getNTraits() const {
@@ -574,7 +574,7 @@ float Species::getRecombinationRate() const {
 	return recombinationRate;
 }
 
-set<int> Species::getChromosomeEnds() const {
+const set<int>& Species::getChromosomeEnds() const {
 	return chromosomeEnds;
 }
 

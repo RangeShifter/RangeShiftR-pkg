@@ -23,6 +23,8 @@
  //---------------------------------------------------------------------------
 
 #include "Individual.h"
+#include <cstddef>
+#include <new>
 
 #ifdef _OPENMP
 #include <mutex>
@@ -33,7 +35,7 @@
 template <typename T>
 MemoryQueue<T>::MemoryQueue(std::size_t size):
 	space(size),
-	data(new T[size]),
+	data(size > 0 ? new T[size] : nullptr), // no heap allocation for an unused (size 0) queue
 	begin_idx(0),
 	nb_elts(0)
 { }
@@ -104,11 +106,102 @@ int Individual::indCounter = 0;
 TraitFactory Individual::traitFactory = TraitFactory();
 
 //---------------------------------------------------------------------------
+// Memory pool for Individuals
+//
+// Millions of individuals are created and destroyed during a simulation. Instead
+// of one malloc()/free() per individual (with ~16 bytes of allocator overhead each
+// and individuals scattered over the heap), they are carved out of blocks of
+// kBlockObjects individuals; freed slots are kept in a free list and reused.
+// The memory is returned to the system by releaseMemoryPool() once no individual
+// is alive (called at the end of a simulation).
+//---------------------------------------------------------------------------
+namespace {
+class IndividualPool {
+public:
+	void* allocate(std::size_t size) {
+#ifdef _OPENMP
+		std::lock_guard<std::mutex> lock(m);
+#endif
+		if (objectSize == 0) objectSize = roundUp(size);
+		if (size > objectSize) throw std::bad_alloc(); // cannot happen: Individual has no derived classes
+		if (freeList == nullptr) addBlock();
+		FreeSlot* slot = freeList;
+		freeList = slot->next;
+		live++;
+		return slot;
+	}
+	void release(void* p) {
+		if (p == nullptr) return;
+#ifdef _OPENMP
+		std::lock_guard<std::mutex> lock(m);
+#endif
+		FreeSlot* slot = static_cast<FreeSlot*>(p);
+		slot->next = freeList;
+		freeList = slot;
+		live--;
+	}
+	void releaseAll() {
+#ifdef _OPENMP
+		std::lock_guard<std::mutex> lock(m);
+#endif
+		if (live != 0) return; // individuals still alive
+		for (void* b : blocks) ::operator delete(b);
+		blocks.clear();
+		freeList = nullptr;
+	}
+	~IndividualPool() { if (live == 0) for (void* b : blocks) ::operator delete(b); }
+
+private:
+	struct FreeSlot { FreeSlot* next; };
+	static constexpr std::size_t kBlockObjects = 4096;
+	static std::size_t roundUp(std::size_t s) {
+		const std::size_t a = alignof(std::max_align_t);
+		s = s < sizeof(FreeSlot) ? sizeof(FreeSlot) : s;
+		return (s + a - 1) / a * a;
+	}
+	void addBlock() {
+		unsigned char* b = static_cast<unsigned char*>(::operator new(kBlockObjects * objectSize));
+		blocks.push_back(b);
+		// thread the new slots onto the free list, in address order
+		for (std::size_t i = kBlockObjects; i-- > 0; ) {
+			FreeSlot* slot = reinterpret_cast<FreeSlot*>(b + i * objectSize);
+			slot->next = freeList;
+			freeList = slot;
+		}
+	}
+	std::vector<void*> blocks;
+	FreeSlot* freeList = nullptr;
+	std::size_t objectSize = 0;
+	std::size_t live = 0;
+#ifdef _OPENMP
+	std::mutex m;
+#endif
+};
+IndividualPool& individualPool() {
+	static IndividualPool pool; // constructed on first use
+	return pool;
+}
+} // namespace
+
+void* Individual::operator new(std::size_t size) {
+	return individualPool().allocate(size);
+}
+
+void Individual::operator delete(void* p) noexcept {
+	individualPool().release(p);
+}
+
+void Individual::releaseMemoryPool(void) {
+	individualPool().releaseAll();
+}
+
+//---------------------------------------------------------------------------
 
 // Individual constructor
 Individual::Individual(Species* pSpecies, Cell* pCell, Patch* pPatch, short stg, short a, short repInt,
 	float probmale, bool movt, short moveType):
-	memory(pSpecies->getSpSMSTraits().memSize)
+	// the SMS memory of visited cells is only needed (and allocated) for SMS movers
+	memory((movt && moveType == 1) ? pSpecies->getSpSMSTraits().memSize : 0)
 {
 	indId = indCounter; indCounter++; // unique identifier for each individual
 	geneticFitness = 1.0;
@@ -184,7 +277,7 @@ set<TraitType> Individual::getTraitTypes() {
 void Individual::inherit(Species* pSpecies, const Individual* mother, const Individual* father) {
 
 	int events = 0;
-	const set<int> chromosomeEnds = pSpecies->getChromosomeEnds();
+	const set<int>& chromosomeEnds = pSpecies->getChromosomeEnds();
 	const int genomeSize = pSpecies->getGenomeSize();
 
 	int maternalStartingChromosome = pRandom->Bernoulli(0.5);
@@ -948,7 +1041,7 @@ int Individual::moveStep(Landscape* pLandscape, Species* pSpecies,
 	//int popsize;
 
 	landData land = pLandscape->getLandData();
-	simParams sim = paramsSim->getSim();
+	const bool saveVisits = paramsSim->getSaveVisits(); // called for every step of every mover
 
 	transferRules trfr = pSpecies->getTransferRules();
 	trfrCRWTraits movt = pSpecies->getSpCRWTraits();
@@ -1004,7 +1097,7 @@ int Individual::moveStep(Landscape* pLandscape, Species* pSpecies,
 			else {
 				// WOULD IT BE MORE EFFICIENT FOR smsMove TO RETURN A POINTER TO THE NEW CELL? ...
 				pPatch = pCurrCell->getPatch();
-				if (sim.saveVisits && pPatch != pNatalPatch) {
+				if (saveVisits && pPatch != pNatalPatch) {
 					pCurrCell->incrVisits();
 				}
 			}
@@ -1616,13 +1709,13 @@ void Individual::outMovePath(const int year)
 			outMovePaths << year << "\t" << indId << "\t"
 				<< "0\t" << prev_loc.x << "\t" << prev_loc.y << "\t"
 				<< "0\t"	// status at start cell is 0
-				<< endl;
+				<< '\n';
 		}
 		// then record current step
 		outMovePaths << year << "\t" << indId << "\t"
 			<< path->total << "\t" << loc.x << "\t" << loc.y << "\t"
 			<< status << "\t"
-			<< endl;
+			<< '\n';
 	}
 	// if not anymore dispersing...
 	if (status > 1 && status <= 10) {
@@ -1634,12 +1727,12 @@ void Individual::outMovePath(const int year)
 				outMovePaths << year << "\t" << indId << "\t"
 					<< "0\t" << prev_loc.x << "\t" << prev_loc.y << "\t"
 					<< "0\t"	// status at start cell is 0
-					<< endl;
+					<< '\n';
 			}
 			outMovePaths << year << "\t" << indId << "\t"
 				<< path->total << "\t" << loc.x << "\t" << loc.y << "\t"
 				<< status << "\t"
-				<< endl;
+				<< '\n';
 			// current cell will be invalid (zero), so set back to previous cell
 			//pPrevCell = pCurrCell;
 			path->pathoutput = 0;
@@ -1712,7 +1805,7 @@ void Individual::overrideGenotype(TraitType whichTrait, const map<int, vector<sh
 	{
 	case GENETIC_LOAD1: case GENETIC_LOAD2: case GENETIC_LOAD3: case GENETIC_LOAD4: case GENETIC_LOAD5: 
 		pGenFitTrait = dynamic_cast<GeneticFitnessTrait*>(this->getTrait(whichTrait));
-		pGenFitTrait->getGenes() = newGenotype;
+		pGenFitTrait->setGenesFromMap(newGenotype);
 		break;
 	case E_D0: case E_ALPHA: case E_BETA:
 	case S_S0: case S_ALPHA: case S_BETA:
@@ -1726,7 +1819,7 @@ void Individual::overrideGenotype(TraitType whichTrait, const map<int, vector<sh
 	case KERNEL_MEANDIST_1_M: case KERNEL_MEANDIST_2_M: case KERNEL_PROBABILITY_M: 
 	case SMS_DP: case SMS_GB: case SMS_ALPHADB: case SMS_BETADB:
 		pDispTrait = dynamic_cast<DispersalTrait*>(this->getTrait(whichTrait));
-		pDispTrait->getGenes() = newGenotype;
+		pDispTrait->overwriteGenes(newGenotype);
 		break;
 	default:
 		throw logic_error("Wrong trait type: please choose a valid dispersal or genetic fitness trait.");
@@ -1741,7 +1834,7 @@ void Individual::overrideGenotype(TraitType whichTrait, const map<int, vector<un
 	}
 	NeutralTrait* pNeutralTrait;
 	pNeutralTrait = dynamic_cast<NeutralTrait*>(this->getTrait(NEUTRAL));
-	pNeutralTrait->getGenes() = newGenotype;
+	pNeutralTrait->setGenesFromMap(newGenotype);
 };
 
 #endif // UNIT_TESTS

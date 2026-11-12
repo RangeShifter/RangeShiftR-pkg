@@ -31,6 +31,7 @@
 DispersalTrait::DispersalTrait(SpeciesTrait* P)
 {
 	pSpeciesTrait = P;
+	ploidy = pSpeciesTrait->getPloidy();
 	ExpressionType expressionType = pSpeciesTrait->getExpressionType();
 
 	if (!pSpeciesTrait->isInherited()) // there is a trait for individual variation but this isn't inherited variation it's sampled from initial distribution 
@@ -39,7 +40,7 @@ DispersalTrait::DispersalTrait(SpeciesTrait* P)
 		_inherit_func_ptr = (pSpeciesTrait->getPloidy() == 1) ? &DispersalTrait::inheritHaploid : &DispersalTrait::inheritDiploid; //this could be changed if we wanted some alternative form of inheritance
 
 		DistributionType mutationDistribution = pSpeciesTrait->getMutationDistribution();
-		map<GenParamType, float> mutationParameters = pSpeciesTrait->getMutationParameters();
+		const map<GenParamType, float>& mutationParameters = pSpeciesTrait->getMutationParameters();
 
 		// Set mutation parameters
 		switch (mutationDistribution) {
@@ -71,7 +72,7 @@ DispersalTrait::DispersalTrait(SpeciesTrait* P)
 
 	// Set initialisation parameters
 	DistributionType initialDistribution = pSpeciesTrait->getInitialDistribution();
-	map<GenParamType, float> initialParameters = pSpeciesTrait->getInitialParameters();
+	const map<GenParamType, float>& initialParameters = pSpeciesTrait->getInitialParameters();
 	switch (initialDistribution) {
 	case UNIFORM:
 	{
@@ -128,10 +129,21 @@ DispersalTrait::DispersalTrait(SpeciesTrait* P)
 // Only called via clone()
 // ----------------------------------------------------------------------------------------
 DispersalTrait::DispersalTrait(const DispersalTrait& T) : 
+	ploidy(T.ploidy),
 	pSpeciesTrait(T.pSpeciesTrait), 
 	_mutate_func_ptr(T._mutate_func_ptr), 
 	_inherit_func_ptr(T._inherit_func_ptr), 
 	_express_func_ptr(T._express_func_ptr) {}
+
+// ----------------------------------------------------------------------------------------
+// Index of a gene position in the flat genes array (throws if not a locus of this trait)
+// ----------------------------------------------------------------------------------------
+int DispersalTrait::locusIndexOrThrow(int position, const char* msg) const {
+	const int l = pSpeciesTrait->getLocusIndex(position);
+	if (l < 0 || static_cast<size_t>(l) * ploidy >= genes.size())
+		throw runtime_error(msg);
+	return l;
+}
 
 // ----------------------------------------------------------------------------------------
 // Sample and apply mutations from a uniform distribution
@@ -149,7 +161,7 @@ void DispersalTrait::mutateUniform()
 
 	auto& rng = pRandom->getRNG();// bugfix: auto& - plain auto would copy the generator again
 
-	map<GenParamType, float> mutationParameters = pSpeciesTrait->getMutationParameters();
+	const map<GenParamType, float>& mutationParameters = pSpeciesTrait->getMutationParameters();
 	float maxD = mutationParameters.find(MAX)->second;
 	float minD = mutationParameters.find(MIN)->second;
 
@@ -163,12 +175,11 @@ void DispersalTrait::mutateUniform()
 				NbMut, rng);
 
 			for (int m : mutationPositions) {
-				auto it = genes.find(m);
-				if (it == genes.end())
-					throw runtime_error("Locus sampled for mutation doesn't exist.");
-				float currentAlleleVal = it->second[p].get()->getAlleleValue();//current
+				const int l = locusIndexOrThrow(m, "Locus sampled for mutation doesn't exist.");
+				float& allele = genes[static_cast<size_t>(l) * ploidy + p];
+				float currentAlleleVal = allele;//current
 				newAlleleVal = pRandom->FRandom(minD, maxD) + currentAlleleVal;
-				it->second[p] = make_shared<Allele>(newAlleleVal, dispDominanceFactor);
+				allele = newAlleleVal;
 			}
 		}
 	}
@@ -188,7 +199,7 @@ void DispersalTrait::mutateNormal()
 
 	auto& rng = pRandom->getRNG();
 
-	const map<GenParamType, float> mutationParameters = pSpeciesTrait->getMutationParameters();
+	const map<GenParamType, float>& mutationParameters = pSpeciesTrait->getMutationParameters();
 	const float mean = mutationParameters.find(MEAN)->second;
 	const float sd = mutationParameters.find(SD)->second;
 	float newAlleleVal;
@@ -203,12 +214,11 @@ void DispersalTrait::mutateNormal()
 				NbMut, rng);
 
 			for (int m : mutationPositions) {
-				auto it = genes.find(m);
-				if (it == genes.end())
-					throw runtime_error("Locus sampled for mutation doesn't exist.");
-				float currentAlleleVal = it->second[p].get()->getAlleleValue(); //current
+				const int l = locusIndexOrThrow(m, "Locus sampled for mutation doesn't exist.");
+				float& allele = genes[static_cast<size_t>(l) * ploidy + p];
+				float currentAlleleVal = allele; //current
 				newAlleleVal = pRandom->Normal(mean, sd) + currentAlleleVal;
-				it->second[p] = make_shared<Allele>(newAlleleVal, dispDominanceFactor);
+				allele = newAlleleVal;
 			}
 		}
 	}
@@ -235,10 +245,16 @@ void DispersalTrait::inheritGenes(const bool& fromMother, QuantitativeTrait* par
 // 0001
 // Assumes mother genes are inherited first.
 // ----------------------------------------------------------------------------------------
-void DispersalTrait::inheritDiploid(const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome) {
+void DispersalTrait::inheritDiploid(const bool& fromMother, vector<float> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome) {
 
-	const int lastPosition = parentGenes.rbegin()->first;
-	auto recomIt = recomPositions.lower_bound(parentGenes.begin()->first);
+	// all individuals carry all loci of the trait, in the order of the gene positions
+	const vector<int>& positions = pSpeciesTrait->getGenePositionsVec();
+	const int nLoci = static_cast<int>(positions.size());
+	if (parentGenes.size() != static_cast<size_t>(nLoci) * 2)
+		throw runtime_error("Parent dispersal genotype has the wrong number of loci.");
+
+	const int lastPosition = positions.back();
+	auto recomIt = recomPositions.lower_bound(positions.front());
 	// If no recombination sites, only breakpoint is last position
 	// i.e., no recombination occurs
 	int nextBreakpoint = recomIt == recomPositions.end() ? lastPosition : *recomIt;
@@ -248,7 +264,16 @@ void DispersalTrait::inheritDiploid(const bool& fromMother, map<int, vector<shar
 	if (distance % 2 != 0) // odd positions = switch, even = switch back
 		parentChromosome = 1 - parentChromosome; //switch chromosome
 
-	for (auto const& [locus, allelePair] : parentGenes) {
+	if (fromMother) {
+		// loci do not exist yet: create them (paternal alleles are set by the father's call)
+		if (!genes.empty()) throw runtime_error("Mother-inherited locus already exists.");
+		genes.assign(static_cast<size_t>(nLoci) * 2, 0.0f);
+	}
+	else if (genes.empty()) throw runtime_error("Father-inherited locus does not exist.");
+	const int offspringChromosome = fromMother ? sex_t::FEM : sex_t::MAL;
+
+	for (int l = 0; l < nLoci; l++) {
+		const int locus = positions[l];
 
 		// Switch chromosome if locus is past recombination site
 		while (locus > nextBreakpoint) {
@@ -258,19 +283,7 @@ void DispersalTrait::inheritDiploid(const bool& fromMother, map<int, vector<shar
 		}
 
 		if (locus <= nextBreakpoint) {
-			auto& parentAllele = allelePair[parentChromosome];
-			auto itGene = genes.find(locus);
-			if (itGene == genes.end()) {
-				// locus does not exist yet, create and initialise it
-				if (!fromMother) throw runtime_error("Father-inherited locus does not exist.");
-				vector<shared_ptr<Allele>> newAllelePair(2);
-				newAllelePair[sex_t::FEM] = parentAllele;
-				genes.insert(make_pair(locus, newAllelePair));
-			}
-			else { // father, locus already exists
-				if (fromMother) throw runtime_error("Mother-inherited locus already exists.");
-				itGene->second[sex_t::MAL] = parentAllele;
-			}
+			genes[static_cast<size_t>(l) * 2 + offspringChromosome] = parentGenes[static_cast<size_t>(l) * 2 + parentChromosome];
 		}
 	}
 }
@@ -280,7 +293,7 @@ void DispersalTrait::inheritDiploid(const bool& fromMother, map<int, vector<shar
 // Simply pass down parent genes
 // Arguments are still needed to match overloaded function in base class
 // ----------------------------------------------------------------------------------------
-void DispersalTrait::inheritHaploid(const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome)
+void DispersalTrait::inheritHaploid(const bool& fromMother, vector<float> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome)
 {
 	genes = parentGenes;
 }
@@ -291,10 +304,10 @@ void DispersalTrait::inheritHaploid(const bool& fromMother, map<int, vector<shar
 // In this case, offspring alleles are populated using the initialise functions
 // Arguments are still needed to match overloaded function in base class
 // ----------------------------------------------------------------------------------------
-void DispersalTrait::reInitialiseGenes(const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome)
+void DispersalTrait::reInitialiseGenes(const bool& fromMother, vector<float> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome)
 {
 	DistributionType initialDistribution = pSpeciesTrait->getInitialDistribution();
-	map<GenParamType, float> initialParameters = pSpeciesTrait->getInitialParameters();
+	const map<GenParamType, float>& initialParameters = pSpeciesTrait->getInitialParameters();
 
 	switch (initialDistribution) {
 	case UNIFORM:
@@ -332,31 +345,29 @@ void DispersalTrait::reInitialiseGenes(const bool& fromMother, map<int, vector<s
 // ----------------------------------------------------------------------------------------
 void DispersalTrait::initialiseNormal(float mean, float sd) {
 
-	const set<int> genePositions = pSpeciesTrait->getGenePositions();
-	short ploidy = pSpeciesTrait->getPloidy();
+	const int nLoci = pSpeciesTrait->getPositionsSize();
 
-	for (auto position : genePositions) {
-		vector<shared_ptr<Allele>> newAllelePair;
+	genes.clear();
+	genes.reserve(static_cast<size_t>(nLoci) * ploidy);
+	for (int l = 0; l < nLoci; l++) { // loci in ascending position order
 		for (int i = 0; i < ploidy; i++) {
 			float alleleVal = pRandom->Normal(mean, sd);
-			newAllelePair.emplace_back(make_shared<Allele>(alleleVal, dispDominanceFactor));
+			genes.push_back(alleleVal);
 		}
-		genes.insert(make_pair(position, newAllelePair));
 	}
 }
 
 void DispersalTrait::initialiseUniform(float min, float max) {
 
-	const set<int> genePositions = pSpeciesTrait->getGenePositions();
-	short ploidy = pSpeciesTrait->getPloidy();
+	const int nLoci = pSpeciesTrait->getPositionsSize();
 
-	for (auto position : genePositions) {
-		vector<shared_ptr<Allele>> newAllelePair;
+	genes.clear();
+	genes.reserve(static_cast<size_t>(nLoci) * ploidy);
+	for (int l = 0; l < nLoci; l++) { // loci in ascending position order
 		for (int i = 0; i < ploidy; i++) {
 			float alleleVal = pRandom->FRandom(min, max);
-			newAllelePair.emplace_back(make_shared<Allele>(alleleVal, dispDominanceFactor));
+			genes.push_back(alleleVal);
 		}
-		genes.insert(make_pair(position, newAllelePair));
 	}
 }
 
@@ -367,11 +378,8 @@ float DispersalTrait::expressAdditive() {
 
 	float phenotype = 0.0;
 
-	for (auto const& [locus, allelePair] : genes)
-	{
-		for (const std::shared_ptr<Allele> m : allelePair)
-			phenotype += m->getAlleleValue();
-	}
+	for (float allele : genes) // same summation order as before: locus by locus, chromosome A then B
+		phenotype += allele;
 	trimPhenotype(phenotype);
 	return phenotype;
 }
@@ -382,11 +390,8 @@ float DispersalTrait::expressAverage() {
 	short ploidy = pSpeciesTrait->getPloidy();
 	float phenotype = 0.0;
 
-	for (auto const& [locus, allelePair] : genes)
-	{
-		for (auto& m : allelePair)
-			phenotype += m->getAlleleValue();
-	}
+	for (float allele : genes) // same summation order as before
+		phenotype += allele;
 	phenotype /= positionsSize * ploidy;
 	trimPhenotype(phenotype);
 	return phenotype;
@@ -449,20 +454,28 @@ void DispersalTrait::trimPhenotype(float& val) {
 // ----------------------------------------------------------------------------------------
 float DispersalTrait::getAlleleValueAtLocus(short whichChromosome, int position) const {
 
-	auto it = genes.find(position);
-	if (it == genes.end())
-		throw runtime_error("The Dispersal locus queried for its allele value does not exist.");
-	return it->second[whichChromosome].get()->getAlleleValue();
+	const int l = locusIndexOrThrow(position, "The Dispersal locus queried for its allele value does not exist.");
+	return genes[static_cast<size_t>(l) * ploidy + whichChromosome];
 }
 
 float DispersalTrait::getDomCoefAtLocus(short whichChromosome, int position) const {
-	auto it = genes.find(position);
-	if (it == genes.end())
-		throw runtime_error("The genetic load locus queried for its dominance coefficient does not exist.");
-	return it->second[whichChromosome]->getDominanceCoef();
+	locusIndexOrThrow(position, "The genetic load locus queried for its dominance coefficient does not exist.");
+	return static_cast<float>(dispDominanceFactor); // all dispersal alleles have the same dominance
 }
 
 #ifdef UNIT_TESTS
+
+// Convert a test genotype (position -> alleles) to the flat representation
+vector<float> DispersalTrait::flattenTestGenotype(const map<int, vector<shared_ptr<Allele>>>& genSeq) const {
+	vector<float> flat;
+	for (int position : pSpeciesTrait->getGenePositionsVec()) {
+		auto it = genSeq.find(position);
+		if (it == genSeq.end()) throw logic_error("Test genotype misses a dispersal locus.");
+		for (const auto& pAllele : it->second)
+			flat.push_back(pAllele ? pAllele->getAlleleValue() : 0.0f);
+	}
+	return flat;
+}
 
 // Create a default set of alleles for testing
 //

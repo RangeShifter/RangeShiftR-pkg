@@ -24,6 +24,13 @@
  --------------------------------------------------------------------------*/
 
 
+// Plain allele value as stored in the flat genomes of genetic load traits.
+// Value-initialised ({0, 0}) equals the wild type allele.
+struct AlleleValues {
+	float value = 0.0f;
+	float dominance = 0.0f;
+};
+
 class Allele {
 	const float value;
 	const float dominance;
