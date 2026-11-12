@@ -949,7 +949,7 @@ int Individual::moveStep(Landscape* pLandscape, Species* pSpecies,
 	//int popsize;
 
 	landData land = pLandscape->getLandData();
-	simParams sim = paramsSim->getSim();
+	const bool saveVisits = paramsSim->getSaveVisits(); // called for every step of every mover
 
 	transferRules trfr = pSpecies->getTransferRules();
 	trfrCRWTraits movt = pSpecies->getSpCRWTraits();
@@ -1005,7 +1005,7 @@ int Individual::moveStep(Landscape* pLandscape, Species* pSpecies,
 			else {
 				// WOULD IT BE MORE EFFICIENT FOR smsMove TO RETURN A POINTER TO THE NEW CELL? ...
 				pPatch = pCurrCell->getPatch();
-				if (sim.saveVisits && pPatch != pNatalPatch) {
+				if (saveVisits && pPatch != pNatalPatch) {
 					pCurrCell->incrVisits();
 				}
 			}

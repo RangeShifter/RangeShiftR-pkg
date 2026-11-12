@@ -359,6 +359,9 @@ public:
 	void setGeneticSim(string patchSamplingOption, bool outputGenes, int outputGenesStart, int outputGenesInterval, bool outPairwiseFst,
 		int outputGlobalFst, int outputStartGlobalFst, int outputGlobalFstInterval, int outputStartPairwiseFst, int outputPairwiseFstIntervals, bool outputPerLocusFst);
 	simParams getSim(void);
+	// cheap getters for flags queried in inner loops (getSim() copies the whole
+	// struct, incl. a std::string and, in the R package, an Rcpp vector)
+	bool getSaveVisits(void) const { return saveVisits; }
 	int getSimNum(void);
 	string getDir(int);
 	void setBatchNum(const int& batchNb) {
