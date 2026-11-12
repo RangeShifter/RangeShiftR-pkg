@@ -801,6 +801,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 
 	delete pComm;
 	pComm = 0;
+	Individual::releaseMemoryPool(); // all individuals are gone: give their memory back
 
 #if RS_RCPP && !R_CMD
 	return list_outPop.build();

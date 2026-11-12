@@ -23,6 +23,8 @@
  //---------------------------------------------------------------------------
 
 #include "Individual.h"
+#include <cstddef>
+#include <new>
 
 #ifdef _OPENMP
 #include <mutex>
@@ -102,6 +104,96 @@ std::atomic<int> Individual::indCounter = 0;
 int Individual::indCounter = 0;
 #endif // _OPENMP
 TraitFactory Individual::traitFactory = TraitFactory();
+
+//---------------------------------------------------------------------------
+// Memory pool for Individuals
+//
+// Millions of individuals are created and destroyed during a simulation. Instead
+// of one malloc()/free() per individual (with ~16 bytes of allocator overhead each
+// and individuals scattered over the heap), they are carved out of blocks of
+// kBlockObjects individuals; freed slots are kept in a free list and reused.
+// The memory is returned to the system by releaseMemoryPool() once no individual
+// is alive (called at the end of a simulation).
+//---------------------------------------------------------------------------
+namespace {
+class IndividualPool {
+public:
+	void* allocate(std::size_t size) {
+#ifdef _OPENMP
+		std::lock_guard<std::mutex> lock(m);
+#endif
+		if (objectSize == 0) objectSize = roundUp(size);
+		if (size > objectSize) throw std::bad_alloc(); // cannot happen: Individual has no derived classes
+		if (freeList == nullptr) addBlock();
+		FreeSlot* slot = freeList;
+		freeList = slot->next;
+		live++;
+		return slot;
+	}
+	void release(void* p) {
+		if (p == nullptr) return;
+#ifdef _OPENMP
+		std::lock_guard<std::mutex> lock(m);
+#endif
+		FreeSlot* slot = static_cast<FreeSlot*>(p);
+		slot->next = freeList;
+		freeList = slot;
+		live--;
+	}
+	void releaseAll() {
+#ifdef _OPENMP
+		std::lock_guard<std::mutex> lock(m);
+#endif
+		if (live != 0) return; // individuals still alive
+		for (void* b : blocks) ::operator delete(b);
+		blocks.clear();
+		freeList = nullptr;
+	}
+	~IndividualPool() { if (live == 0) for (void* b : blocks) ::operator delete(b); }
+
+private:
+	struct FreeSlot { FreeSlot* next; };
+	static constexpr std::size_t kBlockObjects = 4096;
+	static std::size_t roundUp(std::size_t s) {
+		const std::size_t a = alignof(std::max_align_t);
+		s = s < sizeof(FreeSlot) ? sizeof(FreeSlot) : s;
+		return (s + a - 1) / a * a;
+	}
+	void addBlock() {
+		unsigned char* b = static_cast<unsigned char*>(::operator new(kBlockObjects * objectSize));
+		blocks.push_back(b);
+		// thread the new slots onto the free list, in address order
+		for (std::size_t i = kBlockObjects; i-- > 0; ) {
+			FreeSlot* slot = reinterpret_cast<FreeSlot*>(b + i * objectSize);
+			slot->next = freeList;
+			freeList = slot;
+		}
+	}
+	std::vector<void*> blocks;
+	FreeSlot* freeList = nullptr;
+	std::size_t objectSize = 0;
+	std::size_t live = 0;
+#ifdef _OPENMP
+	std::mutex m;
+#endif
+};
+IndividualPool& individualPool() {
+	static IndividualPool pool; // constructed on first use
+	return pool;
+}
+} // namespace
+
+void* Individual::operator new(std::size_t size) {
+	return individualPool().allocate(size);
+}
+
+void Individual::operator delete(void* p) noexcept {
+	individualPool().release(p);
+}
+
+void Individual::releaseMemoryPool(void) {
+	individualPool().releaseAll();
+}
 
 //---------------------------------------------------------------------------
 
