@@ -5,13 +5,17 @@ SOURCES = RScore/Cell.cpp RScore/Community.cpp RScore/FractalGenerator.cpp \
 	RScore/Population.cpp RScore/RSrandom.cpp \
 	RScore/Species.cpp RScore/SubCommunity.cpp RScore/Utils.cpp \
 	RScore/Management.cpp RScore/DispersalTrait.cpp RScore/NeutralStatsManager.cpp \
-	RScore/NeutralTrait.cpp RScore/SpeciesTrait.cpp RScore/GeneticFitnessTrait.cpp
+	RScore/NeutralTrait.cpp RScore/SpeciesTrait.cpp RScore/GeneticFitnessTrait.cpp \
+	RScore/OutputTable.cpp
 
 OBJECTS = Rinterface.o RcppExports.o $(SOURCES:.cpp=.o)
 
 
 CXX_STD = CXX20
 PKG_CXXFLAGS = -DRSWIN64 -DRS_RCPP -DBATCH -w
+# Optional binary (HDF5) output: Rtools ships the HDF5 library; to enable it use
+# PKG_CXXFLAGS = -DRSWIN64 -DRS_RCPP -DBATCH -w -DRS_HDF5
+# PKG_LIBS = -lhdf5 -lz -lsz -laec
 #PKG_CXXFLAGS = -DRSDEBUG
 #PKG_CXXFLAGS = -H
 #Optional for activating OpenMP
