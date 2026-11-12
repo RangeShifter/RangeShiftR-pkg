@@ -11,6 +11,16 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// hdf5AvailableCpp
+bool hdf5AvailableCpp();
+RcppExport SEXP _RangeShiftR_hdf5AvailableCpp() {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    rcpp_result_gen = Rcpp::wrap(hdf5AvailableCpp());
+    return rcpp_result_gen;
+END_RCPP
+}
 // BatchMainR
 Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster);
 RcppExport SEXP _RangeShiftR_BatchMainR(SEXP dirpathSEXP, SEXP ParMasterSEXP) {
@@ -25,6 +35,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_RangeShiftR_hdf5AvailableCpp", (DL_FUNC) &_RangeShiftR_hdf5AvailableCpp, 0},
     {"_RangeShiftR_BatchMainR", (DL_FUNC) &_RangeShiftR_BatchMainR, 2},
     {NULL, NULL, 0}
 };

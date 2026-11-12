@@ -835,6 +835,10 @@ setValidity('SimulationParams', function(object){
     }
     if (length(object@OutputFormat) != 1 || !(object@OutputFormat %in% c("txt", "hdf5"))) {
         msg <- c(msg, 'OutputFormat must be either "txt" or "hdf5"')
+    } else if (object@OutputFormat == "hdf5" && !hdf5Available()) {
+        msg <- c(msg, paste('OutputFormat = "hdf5" is not available: RangeShiftR was installed without HDF5 support,',
+                            'because the HDF5 library (libhdf5) was not found when the package was compiled.',
+                            'Install libhdf5 and reinstall RangeShiftR, or use OutputFormat = "txt".'))
     }
     if (is.null(msg)) TRUE else msg
 })

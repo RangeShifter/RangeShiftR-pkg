@@ -59,6 +59,21 @@ readRSOutput <- function(path) {
     read.table(path, header = TRUE, sep = "\t")
 }
 
+#' Is HDF5 output available?
+#'
+#' Tells whether this installation of RangeShiftR can write binary HDF5 output files
+#' (\code{Simulation(OutputFormat = "hdf5")}). This depends on whether the HDF5 library
+#' was found when the package was compiled; without it, RangeShiftR writes text output only.
+#' To enable HDF5 output, install the HDF5 library (e.g. \code{libhdf5-dev} on Debian/Ubuntu,
+#' \code{hdf5} with Homebrew on macOS; Rtools includes it on Windows) and reinstall RangeShiftR.
+#' @return \code{TRUE} if HDF5 output is available, otherwise \code{FALSE}.
+#' @examples
+#' hdf5Available()
+#' @export
+hdf5Available <- function() {
+    hdf5_available_cpp()
+}
+
 # path of an output file without extension
 RSoutputBase <- function(s, dirpath, suffix) {
     paste0(dirpath, "Outputs/Batch", s@control@batchnum, "_Sim", s@simul@Simulation,

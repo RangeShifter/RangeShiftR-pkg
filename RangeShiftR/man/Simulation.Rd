@@ -113,7 +113,7 @@ Instead, genetic data output is controlled within the \code{\link[RangeShiftR]{G
 \item{CreatePopFile}{Create population output file? Defaults to \code{TRUE}.}
 
 \item{OutputFormat}{File format of the large tabular output files (population, individuals and gene values):
-\code{"txt"} (default) writes tab-separated text files as before; \code{"hdf5"} writes compressed binary HDF5 files
+\code{"txt"} (default) writes tab-separated text files; \code{"hdf5"} writes compressed binary HDF5 files
 (same file names with extension \code{.h5}, one dataset per column). HDF5 output is smaller and faster to write and read,
 but requires that RangeShiftR was installed with the HDF5 library available (see \code{RangeShiftR/configure}).
 The output files can be read with \code{\link[RangeShiftR]{readPop}}, \code{\link[RangeShiftR]{readInds}} or

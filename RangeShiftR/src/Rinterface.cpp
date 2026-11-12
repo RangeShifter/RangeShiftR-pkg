@@ -125,6 +125,13 @@ int power2check(int x) {
 //---------------------------------------------------------------------------
 
 
+// Is binary (HDF5) output compiled in? Wrapped by hdf5Available() in R/output_handling.R
+//[[Rcpp::export(name = "hdf5_available_cpp")]]
+bool hdf5AvailableCpp()
+{
+	return outputFormatAvailable(OutputFormat::HDF5);
+}
+
 //[[Rcpp::export(name = "run_from_R")]]
 Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
 {

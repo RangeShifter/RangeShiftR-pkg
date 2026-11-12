@@ -54,3 +54,10 @@ jobs:
         run: |
           pak::pak("RangeShifter/RangeShiftR-pkg/RangeShiftR@${{ github.head_ref || github.ref_name }}")
         shell: Rscript {0}
+
+      - name: Check HDF5 support
+        run: |
+          library(RangeShiftR)
+          if (!hdf5Available()) stop("RangeShiftR was built without HDF5 support (HDF5 library not found)")
+          cat("HDF5 support: OK\n")
+        shell: Rscript {0}
