@@ -306,6 +306,7 @@ void SubCommunity::recruitDispersers(std::map<Species*,std::vector<Individual *>
 		pop = popns[i]->getStats(pPatch->getDemoScaling());
 		Species* pSpecies = popns[i]->getSpecies();
 		for (int j = 0; j < pop.nInds; j++) {
+			popns[i]->prefetch(j + 8);
 			disp = popns[i]->extractDisperser(j);
 			if (disp.yes) { // disperser - has already been removed from natal population
 				disperserPool[pSpecies].push_back(disp.pInd);

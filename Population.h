@@ -149,6 +149,12 @@ public:
 		int		// index no. to the Individual in the inds vector
 	);
 	// If an individual has been identified as an emigrant, remove it from the Population
+	// performance hint: start loading individual ix into the cache (no effect on results)
+	void prefetch(int ix) const {
+#if defined(__GNUC__) || defined(__clang__)
+		if (ix >= 0 && ix < (int)inds.size()) __builtin_prefetch(inds[ix]);
+#endif
+	}
 	disperser extractDisperser(
 		int		// index no. to the Individual in the inds vector
 	);

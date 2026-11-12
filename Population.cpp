@@ -31,6 +31,19 @@ ofstream outPop;
 ofstream outInds;
 
 //---------------------------------------------------------------------------
+// The inds vector holds pointers to individuals that are scattered over the heap
+// (and is shuffled after every clean()). Loops over all individuals are therefore
+// dominated by cache misses on the first access to each Individual. Asking the CPU
+// to start loading the individual a few iterations ahead hides most of this
+// latency. Pure performance hint: no effect on results.
+static inline void prefetchInd(const std::vector<Individual*>& v, int i) {
+#if defined(__GNUC__) || defined(__clang__)
+	constexpr int distance = 8;
+	if (i + distance < (int)v.size()) __builtin_prefetch(v[i + distance]);
+#endif
+}
+
+//---------------------------------------------------------------------------
 
 Population::Population(void) {
 	nSexes = nStages = 0;
@@ -651,6 +664,7 @@ void Population::reproduction(const float localK, const float envval, const int 
 
 	case 0: // asexual model
 		for (int i = 0; i < ninds; i++) {
+			prefetchInd(inds, i);
 			stage = inds[i]->breedingFem();
 			if (stage > 0) { // female of breeding age
 				if (dem.stageStruct) {
@@ -702,6 +716,7 @@ void Population::reproduction(const float localK, const float envval, const int 
 		// add breeding males to list of potential fathers
 		nfemales = nmales = 0;
 		for (int i = 0; i < ninds; i++) {
+			prefetchInd(inds, i);
 			ind = inds[i]->getStats();
 			if (ind.sex == 0 && fec[ind.stage][0] > 0.0) nfemales++;
 			if (ind.sex == 1 && fec[ind.stage][1] > 0.0) {
@@ -718,6 +733,7 @@ void Population::reproduction(const float localK, const float envval, const int 
 			}
 			else propBreed = 1.0;
 			for (int i = 0; i < ninds; i++) {
+				prefetchInd(inds, i);
 				stage = inds[i]->breedingFem();
 				if (stage > 0 && fec[stage][0] > 0.0) { // (potential) breeding female
 					if (dem.stageStruct) {
@@ -930,6 +946,7 @@ void Population::emigration(float localK)
 	}
 
 	for (int i = 0; i < ninds; i++) {
+		prefetchInd(inds, i);
 		ind = inds[i]->getStats();
 		if (ind.status < 1) // ToDo: Maybe allow dispersal after translocation? If so, we need to update the pPrevCell and pCurrCell variables of the translocated individuals!
 		{
@@ -1214,6 +1231,7 @@ void Population::survival0(float localK, short option0, short option1, const std
 	}
 	// identify which individuals die or develop
 	for (int i = 0; i < ninds; i++) {
+		prefetchInd(inds, i);
 		indStats ind = inds[i]->getStats();
 
 		if ((ind.stage == 0 && option0 < 2) || (ind.stage > 0 && option0 > 0)) {
@@ -1246,6 +1264,7 @@ void Population::survival1(void)
 	int ninds = (int)inds.size();
 
 	for (int i = 0; i < ninds; i++) {
+		prefetchInd(inds, i);
 		indStats ind = inds[i]->getStats();
 
 		if (ind.status > 5 && ind.status != 10) { // doomed to die; status 10 is translocated?
@@ -1269,6 +1288,7 @@ void Population::ageIncrement(void) {
 	int ninds = (int)inds.size();
 	stageParams sstruct = pSpecies->getStageParams();
 	for (int i = 0; i < ninds; i++) {
+		prefetchInd(inds, i);
 		inds[i]->ageIncrement(sstruct.maxAge);
 	}
 }
@@ -1494,6 +1514,7 @@ void Population::outIndividual(Landscape* pLandscape, int rep, int yr, int gen,
 
 	int ninds = (int)inds.size();
 	for (int i = 0; i < ninds; i++) {
+		prefetchInd(inds, i);
 		indStats ind = inds[i]->getStats();
 		if (yr == -1) { // write all initialised individuals
 			writeInd = true;
