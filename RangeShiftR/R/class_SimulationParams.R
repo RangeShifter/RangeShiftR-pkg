@@ -48,7 +48,8 @@
 #'            ReturnPopMatrix = FALSE, ReturnPopDataFrame = FALSE, ReturnStages = FALSE,
 #'            CreatePopFile = TRUE,
 #'            ReturnStages = FALSE,
-#'            SMSHeatMap = FALSE)
+#'            SMSHeatMap = FALSE,
+#'            OutputFormat = "txt")
 #' @param Simulation ID number of current simulation, defaults to \eqn{1}. (integer)
 #' @param Replicates Number of simulation iterations, defaults to \eqn{2}. (integer)
 #' @param Years The number of simulated years, defaults to \eqn{50}. Years are numbered from \eqn{0}: year \eqn{0} starts with the initial population, the simulation runs the years \eqn{0} to \code{Years}\eqn{-1}, and the final population and range output is written for year \code{Years} (the state after the last simulated year). All year parameters (e.g. the output start years, \code{DynamicLandYears} in \code{\link{ImportedLandscape}}, translocation years in \code{\link{Management}}, start years of genetic output) refer to this numbering. (integer)
@@ -116,6 +117,13 @@
 #' @param ReturnPopDataFrame Return population data to R as data frame (most suitable for patch based models)? Defaults to \code{FALSE}. The data are recorded at the same time and for the same years as the population output file (\code{OutStartPop}, \code{OutIntPop}, including the final year \code{Years}): before reproduction in non-structured and after reproduction in stage-structured models. Total abundance corresponds to \code{NInd} in the population file, i.e. it excludes juveniles in stage-structured models.
 #' @param ReturnStages Return also stage-specific population data? Only applicable for stage-structured models if \code{ReturnPopMatrix = TRUE} or \code{ReturnPopDataFrame = TRUE}. Either \code{FALSE} (default; only total abundance is recorded) or a logical vector with exactly one entry per stage (as set in \code{StageStructure(Stages)}), the first entry being stage \eqn{0} (juveniles), e.g. \code{c(TRUE, FALSE, TRUE)} returns juveniles and stage \eqn{2} in a model with \eqn{3} stages.
 #' @param CreatePopFile Create population output file? Defaults to \code{TRUE}.
+#' @param OutputFormat File format of the large tabular output files (population, individuals and gene values):
+#' \code{"txt"} (default) writes tab-separated text files; \code{"hdf5"} writes compressed binary HDF5 files
+#' (same file names with extension \code{.h5}, one dataset per column). HDF5 output is smaller and faster to write and read,
+#' but requires that RangeShiftR was installed with the HDF5 library available (see \code{RangeShiftR/configure}).
+#' The output files can be read with \code{\link[RangeShiftR]{readPop}}, \code{\link[RangeShiftR]{readInds}} or
+#' \code{\link[RangeShiftR]{readRSOutput}} (requires the package \pkg{hdf5r} for HDF5 files). All other output files
+#' and the objects returned to R are not affected.
 #' @details \emph{Environmental Gradient}\cr
 #' In \emph{RangeShiftR}, it is possible to superimpose an artificial gradient on top of the landscape map (real or artificial).
 #' Gradients are implemented for cell-based models only.\cr
@@ -357,7 +365,8 @@ Simulation <- setClass("SimulationParams", slots = c(Simulation = "integer_OR_nu
                                                  ReturnPopMatrix = "logical",
                                                  ReturnPopDataFrame = "logical",
                                                  ReturnStages = "logical",
-                                                 CreatePopFile = "logical"
+                                                 CreatePopFile = "logical",
+                                                 OutputFormat = "character"
                                                  #moved! PropMales = "integer_OR_numeric", #move to Demography
                                                  #moved! Harem = "integer_OR_numeric",     #move to Demography
                                                  #moved! bc = "integer_OR_numeric",        #move to Demography - determines density dependence
@@ -407,7 +416,8 @@ Simulation <- setClass("SimulationParams", slots = c(Simulation = "integer_OR_nu
                                           SMSHeatMap = FALSE,
                                           ReturnPopMatrix = FALSE, ReturnPopDataFrame = FALSE,
                                           ReturnStages = FALSE,
-                                          CreatePopFile = TRUE
+                                          CreatePopFile = TRUE,
+                                          OutputFormat = "txt"
                                           #moved! PropMales,
                                           #moved! Harem,
                                           #moved! bc,
@@ -823,6 +833,9 @@ setValidity('SimulationParams', function(object){
     if (anyNA(object@CreatePopFile) || length(object@CreatePopFile)!=1 ){
         msg <- c(msg, 'CreatePopFile has to be set')
     }
+    if (length(object@OutputFormat) != 1 || !(object@OutputFormat %in% c("txt", "hdf5"))) {
+        msg <- c(msg, 'OutputFormat must be either "txt" or "hdf5"')
+    }
     if (is.null(msg)) TRUE else msg
 })
 
@@ -1058,5 +1071,8 @@ setMethod("show", "SimulationParams", function(object) {
     }
     if (object@SMSHeatMap) {
         cat("   SMS heat map\n")
+    }
+    if (object@OutputFormat != "txt") {
+        cat("   Output format of Pop/Inds/geneValues files:", object@OutputFormat, "\n")
     }
 })

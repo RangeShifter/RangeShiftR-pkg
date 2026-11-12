@@ -31,6 +31,41 @@
 ### READING OUTPUT FILES
 
 
+#' Read a RangeShiftR output table (text or HDF5)
+#'
+#' Reads one of the tabular RangeShiftR output files into a data.frame. Population, individuals
+#' and gene value files are written either as tab-separated text (\code{.txt}) or, with
+#' \code{Simulation(OutputFormat = "hdf5")}, as HDF5 files (\code{.h5}, one dataset per column,
+#' column order stored in the root attribute \code{columns}). Reading HDF5 files requires the package \pkg{hdf5r}.
+#' @param path Path of the output file. If it has no extension, the \code{.h5} file is used if it exists,
+#' otherwise the \code{.txt} file.
+#' @return a data.frame
+#' @export
+readRSOutput <- function(path) {
+    if (!grepl("\\.(txt|h5)$", path)) {
+        path <- if (file.exists(paste0(path, ".h5"))) paste0(path, ".h5") else paste0(path, ".txt")
+    }
+    if (!file.exists(path)) stop("Output file ", path, " does not exist.", call. = FALSE)
+    if (grepl("\\.h5$", path)) {
+        if (!requireNamespace("hdf5r", quietly = TRUE))
+            stop("Reading HDF5 output requires the package 'hdf5r' (install.packages(\"hdf5r\")).", call. = FALSE)
+        f <- hdf5r::H5File$new(path, mode = "r")
+        on.exit(f$close_all())
+        cols <- strsplit(hdf5r::h5attr(f, "columns"), "\t", fixed = TRUE)[[1]]
+        out <- lapply(cols, function(cl) f[[cl]]$read())
+        names(out) <- cols
+        return(as.data.frame(out, stringsAsFactors = FALSE))
+    }
+    read.table(path, header = TRUE, sep = "\t")
+}
+
+# path of an output file without extension
+RSoutputBase <- function(s, dirpath, suffix) {
+    paste0(dirpath, "Outputs/Batch", s@control@batchnum, "_Sim", s@simul@Simulation,
+           "_Land", s@land@LandNum, suffix)
+}
+
+
 #' Read 'range' file
 #'
 #' Read the RangeShiftR output file 'range' into a data.frame, if it was generated.
@@ -62,9 +97,9 @@ setMethod("readRange", c(s="RSparams", dirpath="character"), function(s,dirpath)
 setGeneric("readPop", function(s,dirpath,...) standardGeneric("readPop") )
 
 setMethod("readPop", c(s="RSparams", dirpath="character"), function(s,dirpath,center=TRUE) {
-    path <- paste0(dirpath, "Outputs/Batch", s@control@batchnum, "_Sim", s@simul@Simulation, "_Land", s@land@LandNum, "_Pop.txt")
-    if(file.exists(path)){
-        pop_table <- read.table(path, h = T, sep = "\t")
+    base <- RSoutputBase(s, dirpath, "_Pop")
+    if(file.exists(paste0(base, ".h5")) || file.exists(paste0(base, ".txt"))){
+        pop_table <- readRSOutput(base)
         if (sum(grepl('x',names(pop_table))) & center){
             pop_table$x <- (pop_table$x+0.5)*s@land@Resolution
             pop_table$y <- (pop_table$y+0.5)*s@land@Resolution
@@ -74,6 +109,38 @@ setMethod("readPop", c(s="RSparams", dirpath="character"), function(s,dirpath,ce
         warning("The 'pop' output file for this simulation does not exist.", call. = FALSE)
     }
 })
+
+
+#' Read 'individuals' file
+#'
+#' Read the RangeShiftR output file 'individuals' of one replicate into a data.frame, if it was generated
+#' (text or HDF5 format, see \code{OutputFormat} in \code{\link[RangeShiftR]{Simulation}}).
+#' @param s RSmaster parameter object
+#' @param dirpath RS directory path
+#' @param rep replicate number (starting at 0)
+#' @return a data.frame
+#' @export
+readInds <- function(s, dirpath, rep = 0) {
+    base <- RSoutputBase(s, dirpath, paste0("_Rep", rep, "_Inds"))
+    if (file.exists(paste0(base, ".h5")) || file.exists(paste0(base, ".txt"))) readRSOutput(base)
+    else warning("The 'individuals' output file for this simulation and replicate does not exist.", call. = FALSE)
+}
+
+
+#' Read 'geneValues' file
+#'
+#' Read the RangeShiftR genetic output file 'geneValues' of one replicate into a data.frame, if it was generated
+#' (text or HDF5 format, see \code{OutputFormat} in \code{\link[RangeShiftR]{Simulation}}).
+#' @param s RSmaster parameter object
+#' @param dirpath RS directory path
+#' @param rep replicate number (starting at 0)
+#' @return a data.frame
+#' @export
+readGeneValues <- function(s, dirpath, rep = 0) {
+    base <- RSoutputBase(s, dirpath, paste0("_Rep", rep, "_geneValues"))
+    if (file.exists(paste0(base, ".h5")) || file.exists(paste0(base, ".txt"))) readRSOutput(base)
+    else warning("The 'geneValues' output file for this simulation and replicate does not exist.", call. = FALSE)
+}
 
 
 #---------------------------------------------------------

@@ -1748,6 +1748,23 @@ int ReadParametersR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 	sim.CreatePopFile = Rcpp::as<bool>(ParamParamsR.slot("CreatePopFile"));
 #endif
 
+	// File format of the large tabular outputs (Pop, Inds, geneValues):
+	// "txt" (default, tab-separated text) or "hdf5" (binary, see RScore/OutputTable.h)
+	sim.outputFormat = static_cast<int>(OutputFormat::TEXT);
+	if (ParamParamsR.hasSlot("OutputFormat")) {
+		std::string fmt = Rcpp::as<std::string>(ParamParamsR.slot("OutputFormat"));
+		if (fmt == "hdf5") sim.outputFormat = static_cast<int>(OutputFormat::HDF5);
+		else if (fmt != "txt") {
+			Rcpp::Rcout << "Error: OutputFormat must be \"txt\" or \"hdf5\"." << endl;
+			error++;
+		}
+		if (!outputFormatAvailable(static_cast<OutputFormat>(sim.outputFormat))) {
+			Rcpp::Rcout << "Error: OutputFormat = \"hdf5\" requires RangeShiftR to be installed with HDF5 support "
+				<< "(the HDF5 library was not found when the package was compiled)." << endl;
+			error++;
+		}
+	}
+
 	paramsSim->setSim(sim);
 
 	return error;
