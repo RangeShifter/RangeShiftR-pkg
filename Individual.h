@@ -242,6 +242,12 @@ public:
 		short		// movement type: 1 = SMS, 2 = CRW
 	);
 	~Individual(void);
+	// Individuals are allocated from a pool of large blocks instead of one malloc per
+	// individual: less allocator time, no per-object malloc overhead, better locality.
+	static void* operator new(std::size_t size);
+	static void operator delete(void* p) noexcept;
+	// Return the pool's memory to the system; only has an effect when no individual is alive.
+	static void releaseMemoryPool(void);
 	void setUpGenes( // Set genes for individual variation from species initialisation parameters
 		Species*,			// pointer to Species
 		int						// Landscape resolution

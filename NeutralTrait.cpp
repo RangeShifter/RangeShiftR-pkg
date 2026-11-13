@@ -31,9 +31,10 @@
 NeutralTrait::NeutralTrait(SpeciesTrait* P)
 {
 	pSpeciesTrait = P;
+	ploidy = pSpeciesTrait->getPloidy();
 
 	DistributionType mutationDistribution = pSpeciesTrait->getMutationDistribution();
-	map<GenParamType, float> mutationParameters = pSpeciesTrait->getMutationParameters();
+	const map<GenParamType, float>& mutationParameters = pSpeciesTrait->getMutationParameters();
 
 	if (mutationParameters.count(MAX) != 1)
 		throw logic_error("KAM or SSM mutation distribution parameter must contain max value, max cannot exceed 256  \n");
@@ -58,7 +59,7 @@ NeutralTrait::NeutralTrait(SpeciesTrait* P)
 		throw logic_error("KAM or SSM mutation distribution parameter must contain max value, max cannot exceed 256  \n");
 
 	DistributionType initialDistribution = pSpeciesTrait->getInitialDistribution();
-	map<GenParamType, float> initialParameters = pSpeciesTrait->getInitialParameters();
+	const map<GenParamType, float>& initialParameters = pSpeciesTrait->getInitialParameters();
 
 	if (mutationDistribution == SSM && initialDistribution != UNIFORM)
 		throw logic_error("If using SSM mutation model for neutral trait, must use uniform initial distribution.\n");
@@ -91,7 +92,17 @@ NeutralTrait::NeutralTrait(SpeciesTrait* P)
 // Only called via clone()
 // ----------------------------------------------------------------------------------------
 NeutralTrait::NeutralTrait(const NeutralTrait& T) :
-	pSpeciesTrait(T.pSpeciesTrait), _mutate_func_ptr(T._mutate_func_ptr), _inherit_func_ptr(T._inherit_func_ptr) {
+	ploidy(T.ploidy), pSpeciesTrait(T.pSpeciesTrait), _mutate_func_ptr(T._mutate_func_ptr), _inherit_func_ptr(T._inherit_func_ptr) {
+}
+
+// ----------------------------------------------------------------------------------------
+// Index of a gene position in the flat genes array (throws if not a locus of this trait)
+// ----------------------------------------------------------------------------------------
+int NeutralTrait::locusIndexOrThrow(int position, const char* msg) const {
+	const int l = pSpeciesTrait->getLocusIndex(position);
+	if (l < 0 || static_cast<size_t>(l) * ploidy >= genes.size())
+		throw runtime_error(msg);
+	return l;
 }
 
 // ----------------------------------------------------------------------------------------
@@ -114,7 +125,7 @@ void NeutralTrait::mutate_KAM()
 	auto& rng = pRandom->getRNG();// bugfix: auto& - plain auto would copy the generator again
 	unsigned char mut;
 
-	map<GenParamType, float> mutationParameters = pSpeciesTrait->getMutationParameters();
+	const map<GenParamType, float>& mutationParameters = pSpeciesTrait->getMutationParameters();
 
 	int maxNeutralVal = (int)mutationParameters.find(MAX)->second;
 	if (maxNeutralVal > NeutralValUpperBound) maxNeutralVal = NeutralValUpperBound; //reserve max value for wildtype
@@ -130,17 +141,16 @@ void NeutralTrait::mutate_KAM()
 			for (int m : mutationPositions) {
 				mut = (unsigned char)pRandom->IRandom(0, maxNeutralVal); // draw new mutation, could draw wildtype
 
-				auto it = genes.find(m);
-				if (it == genes.end())
-					throw runtime_error("Locus selected for mutation doesn't exist.");
-				auto currentChar = it->second[whichChromosome]; // current allele
+				const int l = locusIndexOrThrow(m, "Locus selected for mutation doesn't exist.");
+				unsigned char& allele = genes[static_cast<size_t>(l) * ploidy + whichChromosome];
+				auto currentChar = allele; // current allele
 				if (maxNeutralVal > 0) { // dodge the infinite loop
 					do {
 						mut = (unsigned char)pRandom->IRandom(0, maxNeutralVal);
 					} while (mut == currentChar); // new allele value is different
 				}
 				else mut = 0; 
-				it->second[whichChromosome] = mut; //overwrite with new value
+				allele = mut; //overwrite with new value
 			}
 		}
 	}
@@ -163,7 +173,7 @@ void NeutralTrait::mutate_SSM()
 	const float mutationRate = pSpeciesTrait->getMutationRate();
 	auto& rng = pRandom->getRNG();// bugfix: auto& - plain auto would copy the generator again
 
-	map<GenParamType, float> mutationParameters = pSpeciesTrait->getMutationParameters();
+	const map<GenParamType, float>& mutationParameters = pSpeciesTrait->getMutationParameters();
 
 	int maxNeutralVal = (int)mutationParameters.find(MAX)->second;
 	if (maxNeutralVal > NeutralValUpperBound) maxNeutralVal = NeutralValUpperBound; //reserved max value for wildtype
@@ -178,16 +188,15 @@ void NeutralTrait::mutate_SSM()
 
 			for (int m : mutationPositions) {
 				int mutateUp = pRandom->Bernoulli(0.5);
-				auto it = genes.find(m);
-				if (it == genes.end())
-					throw runtime_error("Locus selected for mutation doesn't exist.");
-				auto currentAllele = it->second[whichChromosome];
+				const int l = locusIndexOrThrow(m, "Locus selected for mutation doesn't exist.");
+				unsigned char& allele = genes[static_cast<size_t>(l) * ploidy + whichChromosome];
+				auto currentAllele = allele;
 				if (mutateUp == 1 && currentAllele < maxNeutralVal)
-					it->second[whichChromosome] += 1; // one step up
+					allele += 1; // one step up
 				else if (currentAllele > 0) // step down or already max
-					it->second[whichChromosome] -= 1; // one step down
+					allele -= 1; // one step down
 				else // current allele is 0, step up
-					it->second[whichChromosome] += 1;
+					allele += 1;
 			}
 		}
 	}
@@ -209,10 +218,16 @@ void NeutralTrait::inheritGenes(const bool& fromMother, QuantitativeTrait* paren
 // populates offspring genes with appropriate parent alleles
 // Assumes mother genes are inherited first
 // ----------------------------------------------------------------------------------------
-void NeutralTrait::inheritDiploid(const bool& fromMother, map<int, vector<unsigned char>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome) {
+void NeutralTrait::inheritDiploid(const bool& fromMother, vector<unsigned char> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome) {
 
-	const int lastPosition = parentGenes.rbegin()->first;
-	auto recomIt = recomPositions.lower_bound(parentGenes.begin()->first);
+	// all individuals carry all loci of the trait, in the order of the gene positions
+	const vector<int>& positions = pSpeciesTrait->getGenePositionsVec();
+	const int nLoci = static_cast<int>(positions.size());
+	if (parentGenes.size() != static_cast<size_t>(nLoci) * 2)
+		throw runtime_error("Parent neutral genotype has the wrong number of loci.");
+
+	const int lastPosition = positions.back();
+	auto recomIt = recomPositions.lower_bound(positions.front());
 	// If no recombination sites, only breakpoint is last position
 	// i.e., no recombination occurs
 	int nextBreakpoint = recomIt == recomPositions.end() ? lastPosition : *recomIt;
@@ -222,7 +237,16 @@ void NeutralTrait::inheritDiploid(const bool& fromMother, map<int, vector<unsign
 	if (distance % 2 != 0)
 		parentChromosome = 1 - parentChromosome; //switch chromosome
 
-	for (auto const& [locus, allelePair] : parentGenes) {
+	if (fromMother) {
+		// loci do not exist yet: create and initialise them (paternal allele = wild type)
+		if (!genes.empty()) throw runtime_error("Mother-inherited locus already exists.");
+		genes.assign(static_cast<size_t>(nLoci) * 2, static_cast<unsigned char>(wildType));
+	}
+	else if (genes.empty()) throw runtime_error("Father-inherited locus does not exist.");
+	const int offspringChromosome = fromMother ? sex_t::FEM : sex_t::MAL;
+
+	for (int l = 0; l < nLoci; l++) {
+		const int locus = positions[l];
 
 		// Switch chromosome if locus is past recombination site
 		while (locus > nextBreakpoint) {
@@ -232,19 +256,7 @@ void NeutralTrait::inheritDiploid(const bool& fromMother, map<int, vector<unsign
 		}
 
 		if (locus <= nextBreakpoint) {
-			unsigned char parentAllele = allelePair[parentChromosome];
-			auto it = genes.find(locus);
-			if (it == genes.end()) {
-				// locus does not exist yet, create and initialise it
-				if (!fromMother) throw runtime_error("Father-inherited locus does not exist.");
-				vector<unsigned char> newAllelePair(2, wildType);
-				newAllelePair[sex_t::FEM] = parentAllele;
-				genes.insert(make_pair(locus, newAllelePair));
-			}
-			else { // father, locus already exists
-				if (fromMother) throw runtime_error("Mother-inherited locus already exists.");
-				it->second[sex_t::MAL] = parentAllele;
-			}
+			genes[static_cast<size_t>(l) * 2 + offspringChromosome] = parentGenes[static_cast<size_t>(l) * 2 + parentChromosome];
 		}
 	}
 }
@@ -254,7 +266,7 @@ void NeutralTrait::inheritDiploid(const bool& fromMother, map<int, vector<unsign
 // Simply pass down parent genes
 // Arguments are still needed to match overloaded function in base class
 // ----------------------------------------------------------------------------------------
-void NeutralTrait::inheritHaploid(const bool& fromMother, map<int, vector<unsigned char>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome)
+void NeutralTrait::inheritHaploid(const bool& fromMother, vector<unsigned char> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome)
 {
 	genes = parentGenes;
 }
@@ -268,18 +280,17 @@ void NeutralTrait::initialiseUniform(int maxAlleleVal)
 	const auto& initPositions = pSpeciesTrait->getInitPositions();
 	short ploidy = pSpeciesTrait->getPloidy();
 
-	for (auto position : genePositions) {
-		vector<unsigned char> allelePair;
-
+	genes.clear();
+	genes.reserve(genePositions.size() * ploidy);
+	for (auto position : genePositions) { // ascending order = locus index order
 		for (int i = 0; i < ploidy; i++) {
 			unsigned char alleleVal = char(0);
 			if (initPositions.contains(position)) {
 				//  allele values span 0 - max inclusive, max is wildtype
 				alleleVal = (unsigned char)pRandom->IRandom(0, maxAlleleVal);
 			}
-			allelePair.emplace_back(alleleVal);
+			genes.push_back(alleleVal);
 		}
-		genes.insert(make_pair(position, allelePair));
 	}
 }
 
@@ -289,11 +300,8 @@ void NeutralTrait::initialiseUniform(int maxAlleleVal)
 // ----------------------------------------------------------------------------------------
 bool NeutralTrait::isHeterozygoteAtLocus(int locus) const {
 	// assumes diploidy
-	auto it = genes.find(locus);
-	if (it == genes.end()) 
-		throw runtime_error("Neutral gene queried for heterozygosity does not exist.");
-	else
-		return(it->second[0] != it->second[1]);
+	const int l = locusIndexOrThrow(locus, "Neutral gene queried for heterozygosity does not exist.");
+	return isHeterozygoteAtIndex(l);
 }
 
 // ----------------------------------------------------------------------------------------
@@ -302,8 +310,8 @@ bool NeutralTrait::isHeterozygoteAtLocus(int locus) const {
 int NeutralTrait::countHeterozygoteLoci() const {
 	// assumes diploidy
 	int count = 0;
-	for (auto const& [locus, allelePair] : genes) {
-		count += (allelePair[0] != allelePair[1]);
+	for (size_t i = 0; i + 1 < genes.size(); i += 2) {
+		count += (genes[i] != genes[i + 1]);
 	}
 	return count;
 }
@@ -313,13 +321,23 @@ int NeutralTrait::countHeterozygoteLoci() const {
 // ----------------------------------------------------------------------------------------
 float NeutralTrait::getAlleleValueAtLocus(short whichChromosome, int position) const {
 
-	auto it = genes.find(position);
-	if (it == genes.end()) //no mutations there
-		throw runtime_error("The neutral locus queried for its allele value does not exist.");
-	return it->second[whichChromosome];
+	const int l = locusIndexOrThrow(position, "The neutral locus queried for its allele value does not exist.");
+	return genes[static_cast<size_t>(l) * ploidy + whichChromosome];
 }
 
 #ifdef UNIT_TESTS // Testing only
+
+// Set the genotype from a map position -> alleles (as used by the unit tests)
+void NeutralTrait::setGenesFromMap(const map<int, vector<unsigned char>>& newGenes) {
+	genes.clear();
+	if (newGenes.empty()) return;
+	ploidy = static_cast<short>(newGenes.begin()->second.size());
+	for (int position : pSpeciesTrait->getGenePositionsVec()) {
+		auto it = newGenes.find(position);
+		if (it == newGenes.end()) throw logic_error("Test genotype misses a neutral locus.");
+		genes.insert(genes.end(), it->second.begin(), it->second.end());
+	}
+}
 
 // Create a default set of neutral alleles for testing
 //

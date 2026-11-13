@@ -36,7 +36,8 @@ SpeciesTrait::SpeciesTrait(
 	mutationParameters{ mutationParams },
 	mutationRate{ mutRate },
 	ploidy{ nPloidy },
-	traitIsOutput{ isOutput }
+	traitIsOutput{ isOutput },
+	genePositionsVec(pos.begin(), pos.end()) // std::set is sorted, so is the vector
 {
 	// A trait must be coded by at least one locus: inheritance (e.g. NeutralTrait::inheritDiploid)
 	// reads the first and last gene position and would dereference an empty map

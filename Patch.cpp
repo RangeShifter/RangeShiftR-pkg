@@ -222,7 +222,7 @@ void Patch::setDemoScaling(std::vector <float> ds) {
 	return;
 }
 
-std::vector <float> Patch::getDemoScaling(void) { return localDemoScaling; }
+const std::vector <float>& Patch::getDemoScaling(void) const { return localDemoScaling; }
 
 void Patch::setPatchDemoScaling(short landIx, patchLimits landlimits) {
 

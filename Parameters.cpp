@@ -230,6 +230,7 @@ paramSim::paramSim(const string& pathToProjDir) :
 	outputGenes = outputGlobalFst = outPairwiseFst = outputPerLocusFst = outputPerPatchFis = false;
 	saveVisits = false;
 	fixReplicateSeed = false;
+	outputFormat = 0;
 #if RS_RCPP
 	outStartPaths = 0; outIntPaths = 0;
 	outPaths = false; ReturnPopMatrix = false; ReturnPopDataFrame = false; CreatePopFile = true;
@@ -272,6 +273,7 @@ void paramSim::setSim(simParams s) {
 	CreatePopFile = s.CreatePopFile;
 #endif
 	fixReplicateSeed = s.fixReplicateSeed;
+	outputFormat = s.outputFormat;
 }
 
 void paramSim::setGeneticSim(string patchSamplingOption, bool outputGenes, int outputGenesStart, int outputGenesInterval,  bool outPairwiseFst,
@@ -318,6 +320,7 @@ simParams paramSim::getSim() {
 	s.CreatePopFile = CreatePopFile;
 #endif
 	s.patchSamplingOption = patchSamplingOption;
+	s.outputFormat = outputFormat;
 
 	s.outputGenes = outputGenes;
 	s.outputGenesStart = outputGenesStart;
