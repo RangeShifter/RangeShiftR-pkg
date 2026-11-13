@@ -1349,11 +1349,6 @@ void OutParameters(Landscape* pLandscape)
 	string indvar = "INDIVIDUAL VARIABILITY: ";
 	string emigstage = "EMIGRATION STAGE: ";
 
-	if (!ppLand.generated && ppLand.dynamic) {
-		outPar << "ACTION AFTER POPULATION DESTRUCTION: all individuals ";
-		if (emig.disperseOnLoss) outPar << "disperse" << endl;
-		else outPar << "die" << endl;
-	}
 	outPar << endl << "DISPERSAL - EMIGRATION:\t";
 	if (emig.densDep) {
 		outPar << "density-dependent" << endl;
@@ -1442,6 +1437,12 @@ void OutParameters(Landscape* pLandscape)
 					}
 				}
 				}
+
+	if (!ppLand.generated && ppLand.dynamic) {
+		outPar << "ACTION AFTER POPULATION DESTRUCTION: all individuals ";
+		if (emig.disperseOnLoss) outPar << "disperse" << endl;
+		else outPar << "die" << endl;
+	}
 
 	// Transfer
 
