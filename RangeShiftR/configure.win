@@ -1,0 +1,7 @@
+#!/bin/sh
+# Configure script for RangeShiftR (Windows). R runs it with the shell of Rtools.
+# Detects the HDF5 library that ships with Rtools, which enables binary output
+# files (Simulation(OutputFormat = "hdf5")). Nothing has to be installed or edited
+# by the user; without HDF5 the package builds with text output only.
+# See tools/detect_hdf5.sh.
+sh ./tools/detect_hdf5.sh Makevars.win windows

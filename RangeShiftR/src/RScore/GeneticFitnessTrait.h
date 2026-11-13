@@ -61,7 +61,12 @@ public:
     float getMutationRate() const override { return pSpeciesTrait->getMutationRate(); }
     bool isInherited() const override { return pSpeciesTrait->isInherited(); }
 
-    map<int, vector<shared_ptr<Allele>>>& getGenes() { return genes; } // returning reference, reciever must be const
+    // Alleles in a flat array: locus index l, chromosome c -> genes[l * ploidy + c]
+    // (locus index = rank of the gene position among the trait's sorted positions)
+    const vector<AlleleValues>& getGenes() const { return genes; }
+#ifdef UNIT_TESTS
+    void setGenesFromMap(const map<int, vector<shared_ptr<Allele>>>& newGenes); // testing only
+#endif
 
     virtual void mutate() override;
     virtual float express();
@@ -76,7 +81,12 @@ private:
     inline static shared_ptr<Allele> wildType = make_shared<Allele>(0.0, 0.0);
 
     // <Locus position, <Allele A, Allele B> >
-    map<int, vector<shared_ptr<Allele>>> genes; // position <strand A , strand B>>
+    // Formerly map<int, vector<shared_ptr<Allele>>> (position <strand A , strand B>>), ~120 bytes
+    // per locus plus shared Allele objects. A null allele meant wild type, which is
+    // what a value-initialised AlleleValues {0, 0} represents now.
+    vector<AlleleValues> genes;
+    short ploidy = 2;
+    int locusIndexOrThrow(int position, const char* msg) const;
 
     // Initialisation
     void initialise();
@@ -100,12 +110,12 @@ private:
     //// Species-level trait attributes, invariant across individuals
     SpeciesTrait* pSpeciesTrait;
     //// Species-level trait functions
-    void (GeneticFitnessTrait::* _inherit_func_ptr) (const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
+    void (GeneticFitnessTrait::* _inherit_func_ptr) (const bool& fromMother, vector<AlleleValues> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
 
     // Possible values for immutable functions
      //// Inheritance
-    void inheritDiploid(const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
-    void inheritHaploid(const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
+    void inheritDiploid(const bool& fromMother, vector<AlleleValues> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
+    void inheritHaploid(const bool& fromMother, vector<AlleleValues> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
 
 };
 #endif // GENETICFITNESSH

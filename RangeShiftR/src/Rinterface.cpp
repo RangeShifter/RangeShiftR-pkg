@@ -126,6 +126,13 @@ int power2check(int x) {
 //---------------------------------------------------------------------------
 
 
+// Is binary (HDF5) output compiled in? Wrapped by hdf5Available() in R/output_handling.R
+//[[Rcpp::export(name = "hdf5_available_cpp")]]
+bool hdf5AvailableCpp()
+{
+	return outputFormatAvailable(OutputFormat::HDF5);
+}
+
 //[[Rcpp::export(name = "run_from_R")]]
 Rcpp::List BatchMainR(std::string dirpath, Rcpp::S4 ParMaster)
 {
@@ -1757,6 +1764,24 @@ int ReadParametersR(Landscape* pLandscape, Rcpp::S4 ParMaster)
 	}
 	sim.CreatePopFile = Rcpp::as<bool>(ParamParamsR.slot("CreatePopFile"));
 #endif
+
+	// File format of the large tabular outputs (Pop, Inds, geneValues):
+	// "txt" (default, tab-separated text) or "hdf5" (binary, see RScore/OutputTable.h)
+	sim.outputFormat = static_cast<int>(OutputFormat::TEXT);
+	if (ParamParamsR.hasSlot("OutputFormat")) {
+		std::string fmt = Rcpp::as<std::string>(ParamParamsR.slot("OutputFormat"));
+		if (fmt == "hdf5") sim.outputFormat = static_cast<int>(OutputFormat::HDF5);
+		else if (fmt != "txt") {
+			Rcpp::Rcout << "Error: OutputFormat must be \"txt\" or \"hdf5\"." << endl;
+			error++;
+		}
+		if (!outputFormatAvailable(static_cast<OutputFormat>(sim.outputFormat))) {
+			Rcpp::Rcout << "Error: OutputFormat = \"hdf5\" is not available: RangeShiftR was installed without HDF5 support, "
+				<< "because the HDF5 library (libhdf5) was not found when the package was compiled. "
+				<< "Install libhdf5 on your system and reinstall RangeShiftR, or use OutputFormat = \"txt\"." << endl;
+			error++;
+		}
+	}
 
 	paramsSim->setSim(sim);
 

@@ -29,7 +29,12 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev
+          sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev libhdf5-dev
+        shell: bash
+
+      - name: Install system dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: brew install hdf5 pkg-config
         shell: bash
 
       - name: Install pak (Windows)
@@ -48,4 +53,11 @@ jobs:
       - name: Install RangeShiftR
         run: |
           pak::pak("RangeShifter/RangeShiftR-pkg/RangeShiftR@${{ github.head_ref || github.ref_name }}")
+        shell: Rscript {0}
+
+      - name: Check HDF5 support
+        run: |
+          library(RangeShiftR)
+          if (!hdf5Available()) stop("RangeShiftR was built without HDF5 support (HDF5 library not found)")
+          cat("HDF5 support: OK\n")
         shell: Rscript {0}

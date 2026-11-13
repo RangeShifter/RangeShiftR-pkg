@@ -319,10 +319,7 @@ Landscape::~Landscape() {
 		cells = 0;
 	}
 
-	int npatches = (int)patches.size();
-	for (int i = 0; i < npatches; i++)
-		if (patches[i] != NULL) delete patches[i];
-	patches.clear();
+	clearPatches();
 
 	int ndistns = (int)distns.size();
 	for (int i = 0; i < ndistns; i++)
@@ -348,9 +345,7 @@ Landscape::~Landscape() {
 // Used for replicating artificial landscape without deleting the landscape itself
 void Landscape::resetLand(void) {
 	resetLandLimits();
-	int npatches = (int)patches.size();
-	for (int i = 0; i < npatches; i++) if (patches[i] != NULL) delete patches[i];
-	patches.clear();
+	clearPatches();
 	if (cells != 0) {
 		for (int y = dimY - 1; y >= 0; y--) {
 			for (int x = 0; x < dimX; x++) {
@@ -667,13 +662,9 @@ void Landscape::allocatePatches(Species* pSpecies)
 	Cell* pCell;
 
 	// delete all existing patches
-	int npatches = (int)patches.size();
-	for (int i = 0; i < npatches; i++) {
-		if (patches[i] != NULL) delete patches[i];
-	}
-	patches.clear();
+	clearPatches();
 	// create the matrix patch
-	patches.push_back(new Patch(0, 0));
+	addPatch(new Patch(0, 0));
 	Patch* matrixPatch = patches[0];
 	int patchnum = 1;
 
@@ -753,16 +744,45 @@ void Landscape::allocatePatches(Species* pSpecies)
 
 Patch* Landscape::newPatch(int num)
 {
-	int npatches = (int)patches.size();
-	patches.push_back(new Patch(num, num));
-	return patches[npatches];
+	Patch* pPatch = new Patch(num, num);
+	addPatch(pPatch);
+	return pPatch;
 }
 
 Patch* Landscape::newPatch(int seqnum, int num)
 {
-	int npatches = (int)patches.size();
-	patches.push_back(new Patch(seqnum, num));
-	return patches[npatches];
+	Patch* pPatch = new Patch(seqnum, num);
+	addPatch(pPatch);
+	return pPatch;
+}
+
+// Append a patch and register it in the lookup index.
+// If several patches share the same number (should not happen), the index keeps
+// the first one, which is what the former linear search in findPatch() returned.
+void Landscape::addPatch(Patch* pPatch)
+{
+	patches.push_back(pPatch);
+	const int num = pPatch->getPatchNum();
+	if (patchesDense && num == static_cast<int>(patches.size()) - 1)
+		return; // still dense: findPatch(num) == patches[num]
+	if (patchesDense) {
+		// first patch that breaks the dense numbering: index all patches so far
+		patchesDense = false;
+		patchIndex.reserve(patches.size() * 2);
+		for (Patch* p : patches) patchIndex.emplace(p->getPatchNum(), p);
+		return;
+	}
+	patchIndex.emplace(num, pPatch);
+}
+
+// Delete all patches and clear the lookup index
+void Landscape::clearPatches(void)
+{
+	for (Patch* pPatch : patches)
+		if (pPatch != NULL) delete pPatch;
+	patches.clear();
+	patchIndex.clear();
+	patchesDense = true;
 }
 
 void Landscape::resetPatches(void) {
@@ -858,19 +878,14 @@ patchData Landscape::getPatchData(int ix) {
 }
 
 bool Landscape::existsPatch(int num) {
-	int npatches = (int)patches.size();
-	for (int i = 0; i < npatches; i++) {
-		if (num == patches[i]->getPatchNum()) return true;
-	}
-	return false;
+	return findPatch(num) != 0;
 }
 
 Patch* Landscape::findPatch(int num) {
-	int npatches = (int)patches.size();
-	for (int i = 0; i < npatches; i++) {
-		if (num == patches[i]->getPatchNum()) return patches[i];
-	}
-	return 0;
+	if (patchesDense)
+		return (num >= 0 && num < static_cast<int>(patches.size())) ? patches[num] : 0;
+	auto it = patchIndex.find(num);
+	return it == patchIndex.end() ? 0 : it->second;
 }
 
 
@@ -3180,7 +3195,7 @@ bool Landscape::outConnectStartLandscape()
 	name += "_Connect.txt";
 	outConnMat.open(name.c_str());
 
-	outConnMat << "Rep\tYear\tStartPatch\tEndPatch\tNinds" << endl;
+	outConnMat << "Rep\tYear\tStartPatch\tEndPatch\tNinds" << '\n';
 
 	return outConnMat.is_open();
 }
@@ -3212,7 +3227,7 @@ void Landscape::outPathsStartReplicate(int rep)
 
 		outMovePaths.open(name.c_str());
 		if (outMovePaths.is_open()) {
-			outMovePaths << "Year\tIndID\tStep\tx\ty\tStatus" << endl;
+			outMovePaths << "Year\tIndID\tStep\tx\ty\tStatus" << '\n';
 		}
 		else {
 			outMovePaths.clear();
@@ -3242,7 +3257,7 @@ void Landscape::outConnect(int rep, int yr)
 					if (connectMatrix[i][j] > 0) {
 						outConnMat << rep << "\t" << yr
 							<< "\t" << patchnum0 << "\t" << patchnum1
-							<< "\t" << connectMatrix[i][j] << endl;
+							<< "\t" << connectMatrix[i][j] << '\n';
 					}
 				}
 			}
@@ -3255,9 +3270,9 @@ void Landscape::outConnect(int rep, int yr)
 			if (patches[i]->getK() > 0.0)
 			{ // suitable patch
 				outConnMat << rep << "\t" << yr
-					<< "\t" << patchnum0 << "\t-999\t" << emigrants[i] << endl;
+					<< "\t" << patchnum0 << "\t-999\t" << emigrants[i] << '\n';
 				outConnMat << rep << "\t" << yr
-					<< "\t-999\t" << patchnum0 << "\t" << immigrants[i] << endl;
+					<< "\t-999\t" << patchnum0 << "\t" << immigrants[i] << '\n';
 			}
 		}
 	}
@@ -3306,12 +3321,12 @@ void Landscape::outVisits(int rep, int landNr) {
 	}
 	outvisits.open(name.c_str());
 
-	outvisits << "ncols " << dimX << endl;
-	outvisits << "nrows " << dimY << endl;
-	outvisits << "xllcorner " << minEast << endl;
-	outvisits << "yllcorner " << minNorth << endl;
-	outvisits << "cellsize " << resol << endl;
-	outvisits << "NODATA_value -9" << endl;
+	outvisits << "ncols " << dimX << '\n';
+	outvisits << "nrows " << dimY << '\n';
+	outvisits << "xllcorner " << minEast << '\n';
+	outvisits << "yllcorner " << minNorth << '\n';
+	outvisits << "cellsize " << resol << '\n';
+	outvisits << "NODATA_value -9" << '\n';
 
 	for (int y = dimY - 1; y >= 0; y--) {
 		for (int x = 0; x < dimX; x++) {
@@ -3322,7 +3337,7 @@ void Landscape::outVisits(int rep, int landNr) {
 				outvisits << cells[y][x]->getVisits() << " ";
 			}
 		}
-		outvisits << endl;
+		outvisits << '\n';
 	}
 
 	outvisits.close(); 

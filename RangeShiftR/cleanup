@@ -1,0 +1,2 @@
+#!/bin/sh
+rm -f src/Makevars src/Makevars.win src/*.o src/*.so src/*.dll src/RScore/*.o

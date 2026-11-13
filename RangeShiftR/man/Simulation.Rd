@@ -20,7 +20,8 @@ Simulation(Simulation = 1, Replicates = 2, Years = 50, Absorbing = FALSE,
            ReturnPopMatrix = FALSE, ReturnPopDataFrame = FALSE, ReturnStages = FALSE,
            CreatePopFile = TRUE,
            ReturnStages = FALSE,
-           SMSHeatMap = FALSE)
+           SMSHeatMap = FALSE,
+           OutputFormat = "txt")
 }
 \arguments{
 \item{Simulation}{ID number of current simulation, defaults to \eqn{1}. (integer)}
@@ -110,6 +111,14 @@ Instead, genetic data output is controlled within the \code{\link[RangeShiftR]{G
 \item{ReturnStages}{Return also stage-specific population data? Only applicable for stage-structured models if \code{ReturnPopMatrix = TRUE} or \code{ReturnPopDataFrame = TRUE}. Either \code{FALSE} (default; only total abundance is recorded) or a logical vector with exactly one entry per stage (as set in \code{StageStructure(Stages)}), the first entry being stage \eqn{0} (juveniles), e.g. \code{c(TRUE, FALSE, TRUE)} returns juveniles and stage \eqn{2} in a model with \eqn{3} stages.}
 
 \item{CreatePopFile}{Create population output file? Defaults to \code{TRUE}.}
+
+\item{OutputFormat}{File format of the large tabular output files (population, individuals and gene values):
+\code{"txt"} (default) writes tab-separated text files; \code{"hdf5"} writes compressed binary HDF5 files
+(same file names with extension \code{.h5}, one dataset per column). HDF5 output is smaller and faster to write and read,
+but requires that RangeShiftR was installed with the HDF5 library available (see \code{RangeShiftR/configure}).
+The output files can be read with \code{\link[RangeShiftR]{readPop}}, \code{\link[RangeShiftR]{readInds}} or
+\code{\link[RangeShiftR]{readRSOutput}} (requires the package \pkg{hdf5r} for HDF5 files). All other output files
+and the objects returned to R are not affected.}
 }
 \description{
 Set basic simulation parameters and control output types.\cr

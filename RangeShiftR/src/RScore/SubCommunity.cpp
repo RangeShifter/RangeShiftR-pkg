@@ -242,7 +242,6 @@ void SubCommunity::reproduction(int resol, float epsGlobal, short rasterType, bo
 {
 	if (subCommNum == 0) return; // no reproduction in the matrix
 	float localK, envval;
-	std::vector <float> localDemoScaling;
 	Cell* pCell;
 	envGradParams grad = paramsGrad->getGradient();
 	envStochParams env = paramsStoch->getStoch();
@@ -252,7 +251,7 @@ void SubCommunity::reproduction(int resol, float epsGlobal, short rasterType, bo
 	if (npops < 1) return;
 
 	localK = pPatch->getK();
-	localDemoScaling = pPatch->getDemoScaling();
+	const std::vector <float>& localDemoScaling = pPatch->getDemoScaling();
 	if (localK > 0.0) {
 		if (patchModel) {
 			envval = 1.0; // environmental gradient is currently not applied for patch-based model
@@ -307,6 +306,7 @@ void SubCommunity::recruitDispersers(std::map<Species*,std::vector<Individual *>
 		pop = popns[i]->getStats(pPatch->getDemoScaling());
 		Species* pSpecies = popns[i]->getSpecies();
 		for (int j = 0; j < pop.nInds; j++) {
+			popns[i]->prefetch(j + 8);
 			disp = popns[i]->extractDisperser(j);
 			if (disp.yes) { // disperser - has already been removed from natal population
 				disperserPool[pSpecies].push_back(disp.pInd);
@@ -731,8 +731,7 @@ void SubCommunity::completeDispersal(std::map<Species*,vector<Individual*>>& ind
 void SubCommunity::survival0(short option0, short option1)
 {
 	int npops = (int)popns.size();
-    std::vector <float> localDemoScaling;
-		localDemoScaling = pPatch->getDemoScaling();
+	const std::vector <float>& localDemoScaling = pPatch->getDemoScaling();
 	float localK = pPatch->getK();
 	for (int i = 0; i < npops; i++) { // all populations
 			popns[i]->survival0(localK, option0, option1, localDemoScaling);
@@ -1042,7 +1041,7 @@ bool SubCommunity::outTraitsStartLandscape(Landscape* pLandscape, Species* pSpec
 		}
 	}
 
-	outtraits << endl;
+	outtraits << '\n';
 
 	return outtraits.is_open();
 }
@@ -1463,7 +1462,7 @@ traitsums SubCommunity::outTraits(Landscape* pLandscape, int rep, int yr, int ge
 						outtraits << "\t" << mnGenFitness << "\t" << sdGenFitness;
 					}
 				}
-				outtraits << endl;
+				outtraits << '\n';
 			} // end trait-per-cell output
 
 		} 

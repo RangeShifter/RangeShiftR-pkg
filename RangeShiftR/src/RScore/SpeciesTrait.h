@@ -6,6 +6,7 @@
 
 #include <map>
 #include <vector>
+#include <algorithm>
 #include <set>
 #include <memory>
 
@@ -44,18 +45,27 @@ public:
     float getMutationRate() const { return mutationRate; }
     short getPloidy() const { return ploidy; }
     set<int>& getGenePositions() { return genePositions; } // returning by reference, make sure receiver is const
-    set<int> getInitPositions() const { return initPositions; }
+    // Gene positions as a sorted vector: the i-th entry is the position of locus index i.
+    // Used by traits that store their genes in a flat array indexed by locus index.
+    const vector<int>& getGenePositionsVec() const { return genePositionsVec; }
+    // Index of a gene position in the sorted list of positions, or -1 if it is not a locus of this trait
+    int getLocusIndex(int position) const {
+        auto it = std::lower_bound(genePositionsVec.begin(), genePositionsVec.end(), position);
+        if (it == genePositionsVec.end() || *it != position) return -1;
+        return static_cast<int>(it - genePositionsVec.begin());
+    }
+    const set<int>& getInitPositions() const { return initPositions; }
     int getPositionsSize() const { return static_cast<int>(genePositions.size()); }
     bool isInherited() const { return inherited; }
 
     DistributionType getInitialDistribution() const { return initialDistribution; };
-    map<GenParamType, float> getInitialParameters() const { return initialParameters; };
+    const map<GenParamType, float>& getInitialParameters() const { return initialParameters; };
     DistributionType getInitDomDistribution() const { return initialDomDistribution; };
-    map<GenParamType, float> getInitDomParameters() const { return initialDomParameters; };
+    const map<GenParamType, float>& getInitDomParameters() const { return initialDomParameters; };
     DistributionType getMutationDistribution() const { return mutationDistribution; };
-    map<GenParamType, float> getMutationParameters() const { return mutationParameters; };
+    const map<GenParamType, float>& getMutationParameters() const { return mutationParameters; };
     DistributionType getDominanceDistribution() const { return dominanceDistribution; };
-    map<GenParamType, float> getDominanceParameters() const { return dominanceParameters; };
+    const map<GenParamType, float>& getDominanceParameters() const { return dominanceParameters; };
 
     ExpressionType getExpressionType() const { return expressionType; };
 
@@ -81,6 +91,7 @@ private:
     // Positions in the genome of all genes (loci) pertaining to this trait
     // The genome itself is not modelled explicitly
     set<int> genePositions;
+    vector<int> genePositionsVec; // same content as genePositions, sorted, for index lookups
     set<int> initPositions;
 
     ExpressionType expressionType;

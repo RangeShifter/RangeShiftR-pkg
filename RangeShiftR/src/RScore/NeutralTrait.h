@@ -59,7 +59,16 @@ public:
 	virtual int getNLoci()  const override { return pSpeciesTrait->getPositionsSize(); }
 	float getMutationRate() const override { return pSpeciesTrait->getMutationRate(); }
 	bool isInherited() const override { return pSpeciesTrait->isInherited(); }
-	map<int, vector<unsigned char>>& getGenes() { return genes; } //returning reference, reciever must be const
+	// Genes are stored in a flat array: allele of locus index l on chromosome c is
+	// genes[l * ploidy + c], where locus index l is the rank of the gene position
+	// in the (sorted) gene positions of the species trait.
+	const vector<unsigned char>& getGenes() const { return genes; }
+	unsigned char getAlleleAtIndex(short whichChromosome, int locusIndex) const {
+		return genes[static_cast<size_t>(locusIndex) * ploidy + whichChromosome];
+	}
+#ifdef UNIT_TESTS
+	void setGenesFromMap(const map<int, vector<unsigned char>>& newGenes); // testing only
+#endif
 
 	virtual void mutate() override { (this->*_mutate_func_ptr) (); }
 	virtual void inheritGenes(const bool& fromMother, QuantitativeTrait* parent, set<unsigned int> const& recomPositions, int startingChromosome) override;
@@ -75,6 +84,9 @@ public:
 
 	int countHeterozygoteLoci() const;
 	bool isHeterozygoteAtLocus(int locus) const;
+	bool isHeterozygoteAtIndex(int locusIndex) const { // assumes diploidy
+		return genes[static_cast<size_t>(locusIndex) * 2] != genes[static_cast<size_t>(locusIndex) * 2 + 1];
+	}
 
 private:
 
@@ -82,7 +94,11 @@ private:
 	const int NeutralValUpperBound = UCHAR_MAX; // alleles are char, can take value 0-255
 
 	// <Locus position, <Allele A, Allele B>>
-	map<int, vector<unsigned char>> genes;
+	// Formerly map<int, vector<unsigned char>>: one map node plus one heap-allocated
+	// vector per locus (~100 bytes per locus). Now ploidy bytes per locus.
+	vector<unsigned char> genes;
+	short ploidy = 2;
+	int locusIndexOrThrow(int position, const char* msg) const;
 
 	// Initialisation
 	void initialiseUniform(int max);
@@ -93,12 +109,12 @@ private:
 	SpeciesTrait* pSpeciesTrait;
 	//// Species-level trait functions
 	void (NeutralTrait::* _mutate_func_ptr) (void);
-	void (NeutralTrait::* _inherit_func_ptr) (const bool& fromMother, map<int, vector<unsigned char>> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
+	void (NeutralTrait::* _inherit_func_ptr) (const bool& fromMother, vector<unsigned char> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
 
 	// Possible values for immutable functions
 	//// Inheritance
-	void inheritDiploid(const bool& fromMother, map<int, vector<unsigned char>> const&, set<unsigned int> const& recomPositions, int parentChromosome);
-	void inheritHaploid(const bool& fromMother, map<int, vector<unsigned char>> const& parentMutations, set<unsigned int> const& recomPositions, int parentChromosome);
+	void inheritDiploid(const bool& fromMother, vector<unsigned char> const&, set<unsigned int> const& recomPositions, int parentChromosome);
+	void inheritHaploid(const bool& fromMother, vector<unsigned char> const& parentMutations, set<unsigned int> const& recomPositions, int parentChromosome);
 	//// Mutation
 	void mutate_KAM();
 	void mutate_SSM(); // single-step mutations

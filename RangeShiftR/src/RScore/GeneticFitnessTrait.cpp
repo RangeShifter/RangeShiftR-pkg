@@ -31,13 +31,14 @@
 GeneticFitnessTrait::GeneticFitnessTrait(SpeciesTrait* P)
 {
 	pSpeciesTrait = P;
+	ploidy = pSpeciesTrait->getPloidy();
 	ExpressionType expressionType = pSpeciesTrait->getExpressionType();
 
 	_inherit_func_ptr = (pSpeciesTrait->getPloidy() == 1) ? &GeneticFitnessTrait::inheritHaploid : &GeneticFitnessTrait::inheritDiploid; //this could be changed if we wanted some alternative form of inheritance
 
 	// Set initialisation parameters
 	DistributionType initialDistribution = pSpeciesTrait->getInitialDistribution();
-	map<GenParamType, float> initialParameters = pSpeciesTrait->getInitialParameters();
+	const map<GenParamType, float>& initialParameters = pSpeciesTrait->getInitialParameters();
 	switch (initialDistribution) {
 	case UNIFORM:
 	{
@@ -79,7 +80,7 @@ GeneticFitnessTrait::GeneticFitnessTrait(SpeciesTrait* P)
 	}
 
 	DistributionType initDomDistribution = pSpeciesTrait->getInitDomDistribution();
-	map<GenParamType, float> initDomParameters = pSpeciesTrait->getInitDomParameters();
+	const map<GenParamType, float>& initDomParameters = pSpeciesTrait->getInitDomParameters();
 	switch (initDomDistribution) {
 	case UNIFORM:
 	{
@@ -132,7 +133,7 @@ GeneticFitnessTrait::GeneticFitnessTrait(SpeciesTrait* P)
 	initialise();
 
 	DistributionType mutationDistribution = pSpeciesTrait->getMutationDistribution();
-	map<GenParamType, float> mutationParameters = pSpeciesTrait->getMutationParameters();
+	const map<GenParamType, float>& mutationParameters = pSpeciesTrait->getMutationParameters();
 	switch (mutationDistribution) {
 	case UNIFORM:
 	{
@@ -169,7 +170,7 @@ GeneticFitnessTrait::GeneticFitnessTrait(SpeciesTrait* P)
 	}
 
 	DistributionType dominanceDistribution = pSpeciesTrait->getDominanceDistribution();
-	map<GenParamType, float> dominanceParameters = pSpeciesTrait->getDominanceParameters();
+	const map<GenParamType, float>& dominanceParameters = pSpeciesTrait->getDominanceParameters();
 
 	switch (dominanceDistribution) {
 	case UNIFORM:
@@ -250,9 +251,20 @@ void GeneticFitnessTrait::setScaledCoeff(const DistributionType& selCoeffDist, c
 GeneticFitnessTrait::GeneticFitnessTrait(const GeneticFitnessTrait& T) : 
 	pSpeciesTrait(T.pSpeciesTrait), 
 	_inherit_func_ptr(T._inherit_func_ptr),
-	scaledDomMeanSelCoeff(T.scaledDomMeanSelCoeff)
+	scaledDomMeanSelCoeff(T.scaledDomMeanSelCoeff),
+	ploidy(T.ploidy)
 {
 	// nothing
+}
+
+// ----------------------------------------------------------------------------------------
+// Index of a gene position in the flat genes array (throws if not a locus of this trait)
+// ----------------------------------------------------------------------------------------
+int GeneticFitnessTrait::locusIndexOrThrow(int position, const char* msg) const {
+	const int l = pSpeciesTrait->getLocusIndex(position);
+	if (l < 0 || static_cast<size_t>(l) * ploidy >= genes.size())
+		throw runtime_error(msg);
+	return l;
 }
 
 void GeneticFitnessTrait::initialise() {
@@ -260,24 +272,24 @@ void GeneticFitnessTrait::initialise() {
 	float initDomCoeff;
 	short ploidy = pSpeciesTrait->getPloidy();
 	auto initDist = pSpeciesTrait->getInitialDistribution();
-	auto initParams = pSpeciesTrait->getInitialParameters();
+	const auto& initParams = pSpeciesTrait->getInitialParameters();
 	auto initDomDist = pSpeciesTrait->getInitDomDistribution();
-	auto initDomParams = pSpeciesTrait->getInitDomParameters();
+	const auto& initDomParams = pSpeciesTrait->getInitDomParameters();
 
-	const set<int> genePositions = pSpeciesTrait->getGenePositions();
-	const set<int> initPositions = pSpeciesTrait->getInitPositions();
+	const set<int>& genePositions = pSpeciesTrait->getGenePositions();
+	const set<int>& initPositions = pSpeciesTrait->getInitPositions();
 
-	for (auto position : genePositions) {
-		vector<shared_ptr<Allele>> initialGene(ploidy);
+	genes.clear();
+	genes.reserve(genePositions.size() * ploidy);
+	for (auto position : genePositions) { // ascending order = locus index order
 		for (int p = 0; p < ploidy; p++) {
 			initSelCoeff = initDomCoeff = 0.0;
 			if (initPositions.contains(position)) {
 				initSelCoeff = drawSelectionCoef(initDist, initParams);
 				initDomCoeff = drawDominance(initSelCoeff, initDomDist, initDomParams);
 			}
-			initialGene[p] = make_shared<Allele>(initSelCoeff, initDomCoeff);
+			genes.push_back(AlleleValues{ initSelCoeff, initDomCoeff });
 		}
-		genes.insert(make_pair(position, initialGene));
 	}
 }
 
@@ -306,9 +318,7 @@ void GeneticFitnessTrait::mutate()
 				NbMut, rng);
 
 			for (int m : mutationPositions) {
-				auto it = genes.find(m);
-				if (it == genes.end())
-					throw runtime_error("Locus sampled for mutation doesn't exist.");
+				const int l = locusIndexOrThrow(m, "Locus sampled for mutation doesn't exist.");
 				newSelectionCoef = drawSelectionCoef(
 					pSpeciesTrait->getMutationDistribution(),
 					pSpeciesTrait->getMutationParameters()
@@ -318,7 +328,7 @@ void GeneticFitnessTrait::mutate()
 					pSpeciesTrait->getDominanceDistribution(),
 					pSpeciesTrait->getDominanceParameters()
 				);
-				it->second[p] = make_shared<Allele>(newSelectionCoef, newDominanceCoef);
+				genes[static_cast<size_t>(l) * ploidy + p] = AlleleValues{ newSelectionCoef, newDominanceCoef };
 			}
 		}
 	}
@@ -458,10 +468,16 @@ void GeneticFitnessTrait::inheritGenes(const bool& fromMother, QuantitativeTrait
 // populates offspring genes with appropriate parent alleles
 // Assumes mother genes are inherited first
 // ----------------------------------------------------------------------------------------
-void GeneticFitnessTrait::inheritDiploid(const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome) {
+void GeneticFitnessTrait::inheritDiploid(const bool& fromMother, vector<AlleleValues> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome) {
 
-	const int lastPosition = parentGenes.rbegin()->first;
-	auto recomIt = recomPositions.lower_bound(parentGenes.begin()->first);
+	// all individuals carry all loci of the trait, in the order of the gene positions
+	const vector<int>& positions = pSpeciesTrait->getGenePositionsVec();
+	const int nLoci = static_cast<int>(positions.size());
+	if (parentGenes.size() != static_cast<size_t>(nLoci) * 2)
+		throw runtime_error("Parent genetic load genotype has the wrong number of loci.");
+
+	const int lastPosition = positions.back();
+	auto recomIt = recomPositions.lower_bound(positions.front());
 	// If no recombination sites, only breakpoint is last position
 	// i.e., no recombination occurs
 	int nextBreakpoint = recomIt == recomPositions.end() ? lastPosition : *recomIt;
@@ -471,7 +487,16 @@ void GeneticFitnessTrait::inheritDiploid(const bool& fromMother, map<int, vector
 	if (distance % 2 != 0)
 		parentChromosome = 1 - parentChromosome; // switch chromosome
 
-	for (auto const& [locus, allelePair] : parentGenes) {
+	if (fromMother) {
+		// loci do not exist yet: create them (paternal alleles are set by the father's call)
+		if (!genes.empty()) throw runtime_error("Mother-inherited locus already exists.");
+		genes.assign(static_cast<size_t>(nLoci) * 2, AlleleValues{}); // always diploid
+	}
+	else if (genes.empty()) throw runtime_error("Father-inherited locus does not exist.");
+	const int offspringChromosome = fromMother ? sex_t::FEM : sex_t::MAL;
+
+	for (int l = 0; l < nLoci; l++) {
+		const int locus = positions[l];
 
 		// Switch chromosome if locus is past recombination site
 		while (locus > nextBreakpoint) {
@@ -481,19 +506,7 @@ void GeneticFitnessTrait::inheritDiploid(const bool& fromMother, map<int, vector
 		}
 
 		if (locus <= nextBreakpoint) {
-			auto& parentAllele = allelePair[parentChromosome];
-			auto itGene = genes.find(locus);
-			if (itGene == genes.end()) {
-				// locus does not exist yet, create and initialise it
-				if (!fromMother) throw runtime_error("Father-inherited locus does not exist.");
-				vector<shared_ptr<Allele>> newAllelePair(2); // always diploid
-				newAllelePair[sex_t::FEM] = parentAllele;
-				genes.insert(make_pair(locus, newAllelePair));
-			} 
-			else { // father, locus already exists
-				if (fromMother) throw runtime_error("Mother-inherited locus already exists.");
-				itGene->second[sex_t::MAL] = parentAllele;
-			}
+			genes[static_cast<size_t>(l) * 2 + offspringChromosome] = parentGenes[static_cast<size_t>(l) * 2 + parentChromosome];
 		}
 	}
 }
@@ -503,7 +516,7 @@ void GeneticFitnessTrait::inheritDiploid(const bool& fromMother, map<int, vector
 // Simply pass down parent genes
 // Arguments are still needed to match overloaded function in base class
 // ----------------------------------------------------------------------------------------
-void GeneticFitnessTrait::inheritHaploid(const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome)
+void GeneticFitnessTrait::inheritHaploid(const bool& fromMother, vector<AlleleValues> const& parentGenes, set<unsigned int> const& recomPositions, int parentChromosome)
 {
 	genes = parentGenes;
 }
@@ -516,17 +529,18 @@ float GeneticFitnessTrait::express() {
 	float phenotype = 1.0;  // base chance of viability
 	float sA, sB, hA, hB, sumDomCoeffs, hLocus;
 
-	for (auto const& [locus, pAllelePair] : genes)
+	// loci in ascending position order (same order as the former map)
+	for (size_t i = 0; i < genes.size(); i += ploidy)
 	{
-		shared_ptr<Allele> pAlleleA = pAllelePair[0] == 0 ? wildType : pAllelePair[0];
+		const AlleleValues& alleleA = genes[i];
 
-		sA = pAlleleA->getAlleleValue();
-		hA = pAlleleA->getDominanceCoef();
+		sA = alleleA.value;
+		hA = alleleA.dominance;
 
-		if (pSpeciesTrait->getPloidy() == 2) {
-			shared_ptr<Allele> pAlleleB = pAllelePair[1] == 0 ? wildType : pAllelePair[1];
-			sB = pAlleleB->getAlleleValue();
-			hB = pAlleleB->getDominanceCoef();
+		if (ploidy == 2) {
+			const AlleleValues& alleleB = genes[i + 1];
+			sB = alleleB.value;
+			hB = alleleB.dominance;
 
 			const bool aIsWildType = (sA == 0.0 && hA == 0.0);
 			const bool bIsWildType = (sB == 0.0 && hB == 0.0);
@@ -554,15 +568,25 @@ float GeneticFitnessTrait::express() {
 // ----------------------------------------------------------------------------------------
 float GeneticFitnessTrait::getAlleleValueAtLocus(short whichChromosome, int position) const {
 
-	auto it = genes.find(position);
-	if (it == genes.end())
-		throw runtime_error("The genetic load locus queried for its allele value does not exist.");
-	return it->second[whichChromosome] == 0 ? wildType->getAlleleValue() : it->second[whichChromosome]->getAlleleValue();
+	const int l = locusIndexOrThrow(position, "The genetic load locus queried for its allele value does not exist.");
+	return genes[static_cast<size_t>(l) * ploidy + whichChromosome].value;
 }
 
 float GeneticFitnessTrait::getDomCoefAtLocus(short whichChromosome, int position) const {
-	auto it = genes.find(position);
-	if (it == genes.end())
-		throw runtime_error("The genetic load locus queried for its dominance coefficient does not exist.");
-	return it->second[whichChromosome] == 0 ? wildType->getDominanceCoef() : it->second[whichChromosome]->getDominanceCoef();
+	const int l = locusIndexOrThrow(position, "The genetic load locus queried for its dominance coefficient does not exist.");
+	return genes[static_cast<size_t>(l) * ploidy + whichChromosome].dominance;
 }
+
+#ifdef UNIT_TESTS
+// Set the genotype from a map position -> alleles (as used by the unit tests).
+// A null allele pointer stands for the wild type allele.
+void GeneticFitnessTrait::setGenesFromMap(const map<int, vector<shared_ptr<Allele>>>& newGenes) {
+	genes.clear();
+	for (int position : pSpeciesTrait->getGenePositionsVec()) {
+		auto it = newGenes.find(position);
+		if (it == newGenes.end()) throw logic_error("Test genotype misses a genetic load locus.");
+		for (const auto& pAllele : it->second)
+			genes.push_back(pAllele ? AlleleValues{ pAllele->getAlleleValue(), pAllele->getDominanceCoef() } : AlleleValues{});
+	}
+}
+#endif // UNIT_TESTS
