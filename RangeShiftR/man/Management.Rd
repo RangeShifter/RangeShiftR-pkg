@@ -5,10 +5,13 @@
 \alias{Management}
 \title{Management Parameters}
 \usage{
-Management(Translocation = Translocation())
+Management(Translocation = Translocation(),
+                Harvesting = Harvesting())
 }
 \arguments{
 \item{Translocation}{Set translocation events. See \code{\link{Translocation}} for more details.}
+
+\item{Harvesting}{Set harvesting events. See \code{\link{Harvesting}} for more details.}
 }
 \value{
 a parameter object of class "ManagementParams"
@@ -24,6 +27,11 @@ Translocation is a conservation management strategy to reintroduce species in ar
 stabilize metapopulations or enhance (genetic) connectivity between fragmented habitats. Translocations are applied
 to increase survival probabilities of species, increase genetic diversity or restore ecological balance.The selection of
 suitable source and destination sites as well as selection of suitable individuals is crucial for the success of the strategy.
+
+\strong{Harvesting}
+
+Harvesting is a management strategy to remove individuals from a population.
+Harvesting can be applied to control population size, manage invasive species, for economic purposes but can also represent illegal poaching events.
 }
 \references{
 \insertAllCited{}

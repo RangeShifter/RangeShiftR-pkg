@@ -108,6 +108,13 @@ NeutralTraits<- setClass("NeutralTraitsParams", slots = c(Positions = "ANY", # v
                                       MutationRate = 0.0, # numeric
                                       OutputValues = FALSE
                    ))
+# TRUE if a Positions entry (or any entry of a list of Positions) is an empty vector of loci,
+# e.g. integer(0). A trait needs at least one locus; RScore rejects empty positions.
+.hasEmptyPositions <- function(positions) {
+    if (is.list(positions)) any(vapply(positions, function(p) is.null(p) || (is.numeric(p) && length(p) == 0), logical(1)))
+    else is.numeric(positions) && length(positions) == 0
+}
+
 setValidity("NeutralTraitsParams", function(object) {
     msg <- NULL
 
@@ -116,6 +123,9 @@ setValidity("NeutralTraitsParams", function(object) {
     isCharacter <- class(object@Positions) == "character"
     if (is.null(object@Positions) || (!isNumeric && !isCharacter)) {
         msg <- c(msg, "Positions must be integer or character.")
+    }
+    if (.hasEmptyPositions(object@Positions)) {
+        msg <- c(msg, "Positions must contain at least one locus position.")
     }
     if (!isNumeric){
         if(isCharacter && object@Positions != "random") {
@@ -349,6 +359,9 @@ setValidity("GeneticLoadParams", function(object) {
     # Positions must be of type list?
     if(class(object@Positions) != "list") {
         msg <- c(msg, "GeneticLoad(): Positions must be provided as a list.")
+    }
+    else if (.hasEmptyPositions(object@Positions)) {
+        msg <- c(msg, "GeneticLoad(): Positions must contain at least one locus position for each trait.")
     }
     # NbOfPositions must be either numeric, integer or NULL
     if (!is.null(object@NbOfPositions) && class(object@NbOfPositions) != "integer" && class(object@NbOfPositions) != "numeric") {
@@ -833,6 +846,9 @@ setValidity("EmigrationTraitsParams", function(object) {
     if(class(object@Positions) != "list") {
         msg <- c(msg, "In EmigrationTraits(): Positions must be provided as a list.")
     }
+    else if (.hasEmptyPositions(object@Positions)) {
+        msg <- c(msg, "In EmigrationTraits(): Positions must contain at least one locus position for each trait.")
+    }
     # NbOfPositions must be either numeric, integer or NULL
     if (!is.null(object@NbOfPositions) && class(object@NbOfPositions) != "numeric" && class(object@NbOfPositions) != "integer") {
         msg <- c(msg, "In EmigrationTraits(): NbrOfPositions must be either NULL (if all positions are given) or numeric (if at least one emigration trait has random positions).")
@@ -1074,6 +1090,9 @@ setValidity("SettlementTraitsParams", function(object) {
     if(class(object@Positions) != "list") {
         msg <- c(msg, "In SettlementTraits(): Positions must be provided as a list.")
     }
+    else if (.hasEmptyPositions(object@Positions)) {
+        msg <- c(msg, "In SettlementTraits(): Positions must contain at least one locus position for each trait.")
+    }
     # NbOfPositions must be either numeric, integer or NULL
     if (!is.null(object@NbOfPositions) && class(object@NbOfPositions) != "numeric" && class(object@NbOfPositions) != "integer") {
         msg <- c(msg, "In SettlementTraits(): NbrOfPositions must be either NULL (if all positions are given) or numeric (if at least one settlement trait has random positions).")
@@ -1306,6 +1325,9 @@ setValidity("KernelTraitsParams", function(object) {
     # Positions must be of type list?
     if(class(object@Positions) != "list") {
         msg <- c(msg, "In KernelTraits(): Positions must be provided as a list.")
+    }
+    else if (.hasEmptyPositions(object@Positions)) {
+        msg <- c(msg, "In KernelTraits(): Positions must contain at least one locus position for each trait.")
     }
     # NbOfPositions must be either numeric, integer or NULL
     if (!is.null(object@NbOfPositions) && class(object@NbOfPositions) != "numeric" && class(object@NbOfPositions) != "integer") {
@@ -1553,6 +1575,9 @@ setValidity("SMSTraitsParams", function(object) {
     if(class(object@Positions) != "list") {
         msg <- c(msg, "In SMSTraits(): Positions must be provided as a list.")
     }
+    else if (.hasEmptyPositions(object@Positions)) {
+        msg <- c(msg, "In SMSTraits(): Positions must contain at least one locus position for each trait.")
+    }
     # NbOfPositions must be either numeric, integer or NULL
     if (!is.null(object@NbOfPositions) && class(object@NbOfPositions) != "numeric" && class(object@NbOfPositions) != "integer") {
         msg <- c(msg, "In SMSTraits(): NbrOfPositions must be either NULL (if all positions are given) or numeric (if at least one SMS trait has random positions).")
@@ -1777,6 +1802,9 @@ setValidity("CorrRWTraitsParams", function(object) {
     # Positions must be of type list?
     if(class(object@Positions) != "list") {
         msg <- c(msg, "In CorrRWTraits(): Positions must be provided as a list.")
+    }
+    else if (.hasEmptyPositions(object@Positions)) {
+        msg <- c(msg, "In CorrRWTraits(): Positions must contain at least one locus position for each trait.")
     }
     # NbOfPositions must be either numeric, integer or NULL
     if (!is.null(object@NbOfPositions) && class(object@NbOfPositions) != "numeric" && class(object@NbOfPositions) != "integer") {
@@ -2062,6 +2090,7 @@ setMethod("show", "TraitsParams", function(object){
 #'          OutputPairwiseFstStart = NULL,
 #'          OutputPairwiseFstInterval = NULL,
 #'          OutputPerLocusFst = NULL,
+#'          OutputPerPatchFis = FALSE,
 #'          PatchList = NULL,
 #'          NbrPatchesToSample = NULL,
 #'          nIndividualsToSample = NULL,
@@ -2087,6 +2116,7 @@ setMethod("show", "TraitsParams", function(object){
 #' @param OutputPairwiseFstStart Which year should RangeShifter start to produce the pairwise Fst output? Positive integer if \code{OutputPairwiseFst} is \code{TRUE}, otherwise \code{NULL}.
 #' @param OutputPairwiseFstInterval How frequently to output pairwise F-statistics? Positive integer if \code{OutputPairwiseFst} is \code{TRUE}, otherwise \code{NULL}.
 #' @param OutputPerLocusFst Calculate F-statistics per-locus estimates according to Weir & Cockerham (1984)'s method-of-moments approach, only if \code{OutputGlobalFst} is \code{TRUE}, for the same interval as the global fst. Enables the perLocusNeutralGenetics output files. \code{TRUE} or \code{FALSE}.
+#' @param OutputPerPatchFis Output per-patch observed and expected heterozygosity and the inbreeding coefficient \ifelse{html}{\out{F<sub>is</sub>}}{\eqn{F_{is}}} for every sampled patch, only if \code{OutputGlobalFst} is \code{TRUE}, for the same interval as the global Fst. Enables the perPatchNeutralGenetics output files. \code{TRUE} or \code{FALSE} (default).
 #' @param PatchList Which patches are to be sampled for output.  Patches can be
 #' specified according to their patch number, as per the patch layer in a patch-based
 #' model. Or sampled randomly or all patches can be chosen. In a cell-based landscape
@@ -2185,6 +2215,34 @@ setMethod("show", "TraitsParams", function(object){
 #' If patches have been sampled with the “random_occupied” option, then the patches number will not correspond to the sampled patches, instead ranging from 1 to the number
 #'  of patches sampled. This is because it is not known which patches will be sampled (and they may change) at the time of writing the headers.\cr
 #'
+#' \emph{Per-patch neutral genetics} \cr
+#'
+#' If \code{OutputPerPatchFis=TRUE} (only together with \code{OutputGlobalFst=TRUE}, written in the same years as the global F-statistics), RangeShifter outputs an additional file
+#' \emph{Sim<sim_nb>_Land<landscape_nb>_Rep<rep_nb>_perPatchNeutralGenetics} with one row for each sampled patch that contains at least one sampled individual: \cr
+#'
+#' 1.	Rep \cr
+#' 2.	Year \cr
+#' 3.	RepSeason \cr
+#' 4.	PatchID \cr
+#' 5.	nIndividuals, the number of sampled individuals \eqn{n_i} in the patch \cr
+#' 6.	Ho, the observed heterozygosity \ifelse{html}{\out{H<sub>o,i</sub>}}{\eqn{H_{o,i}}}, averaged over loci \cr
+#' 7.	Hs, the expected heterozygosity (gene diversity) \ifelse{html}{\out{H<sub>s,i</sub>}}{\eqn{H_{s,i}}}, corrected for sample size \insertCite{nei1987}{RangeShiftR} and averaged over loci \cr
+#' 8.	Fis, the inbreeding coefficient of the patch \cr
+#'
+#' For each locus \eqn{l}, \ifelse{html}{\out{H<sub>s,il</sub> = n<sub>i</sub>/(n<sub>i</sub>-1) (1 - &sum;<sub>u</sub> p<sub>ilu</sub><sup>2</sup> - H<sub>o,il</sub>/(2n<sub>i</sub>))}}{\eqn{H_{s,il} = n_i/(n_i-1) (1 - \sum_u p_{ilu}^2 - H_{o,il}/(2n_i))}},
+#' where \ifelse{html}{\out{p<sub>ilu</sub>}}{\eqn{p_{ilu}}} is the frequency of allele \eqn{u} at locus \eqn{l} in patch \eqn{i}. Over loci,
+#' \ifelse{html}{\out{F<sub>is,i</sub> = 1 - &sum;<sub>l</sub> H<sub>o,il</sub> / &sum;<sub>l</sub> H<sub>s,il</sub>}}{\eqn{F_{is,i} = 1 - \sum_l H_{o,il} / \sum_l H_{s,il}}} (ratio of sums).
+#' For a single sample this is identical to the \insertCite{weir1984}{RangeShiftR} estimator used for the global \ifelse{html}{\out{F<sub>is</sub>}}{\eqn{F_{is}}},
+#' so per-patch and global values are directly comparable. It is also identical to the population-specific \ifelse{html}{\out{F<sub>is</sub>}}{\eqn{F_{is}}} of \insertCite{weir2017}{RangeShiftR},
+#' which is defined by the allele matching within individuals and between different individuals of the same patch.
+#' Per locus, it equals the per-population \ifelse{html}{\out{F<sub>is</sub>}}{\eqn{F_{is}}} of \code{hierfstat::basic.stats()}; over loci, \code{hierfstat} averages the per-locus values
+#' instead of using the ratio of sums, so multi-locus values can differ slightly.
+#' Values that are not defined are reported as \code{NA}: Ho and Fis for haploid (asexual) species, Hs and Fis if only one individual was sampled, and Fis if all loci are monomorphic in the patch. \cr
+#'
+#' As individuals are sampled after dispersal, recently immigrated individuals can be part of a patch sample. If they originate from genetically different patches,
+#' they cause a heterozygote deficit (Wahlund effect, positive \ifelse{html}{\out{F<sub>is</sub>}}{\eqn{F_{is}}}). Within a patch, mating is random;
+#' with separate sexes and few breeding individuals a slightly negative \ifelse{html}{\out{F<sub>is</sub>}}{\eqn{F_{is}}} is expected. \cr
+#'
 #' \emph{Pairwise patch neutral genetics}\cr
 #'
 #' If the pariwise 	\emph{\ifelse{html}{\out{F<sub>st</sub>}}{\eqn{F_st}}} parameter is enabled (\code{OutputPairwiseFst=TRUE}), a pairwise \emph{\ifelse{html}{\out{F<sub>st</sub>}}{\eqn{F_st}}} matrix is constituted and filled with the corresponding
@@ -2234,6 +2292,7 @@ Genetics <- setClass("GeneticsParams", slots = c(GenomeSize = "integer_OR_numeri
                                                  OutputPairwiseFstStart = "ANY", # positive integer if OutputPairwiseFst is TRUE or NULL
                                                  OutputPairwiseFstInterval = "ANY", # positive integer if OutputPairwiseFst is TRUE or NULL
                                                  OutputPerLocusFst = "logical",
+                                                 OutputPerPatchFis = "logical",
                                                  PatchList = "ANY", # vector of integers or a string
                                                  NbrPatchesToSample = "ANY", # NULL or integer
                                                  nIndividualsToSample = "ANY", # "character_OR_integer", # character or integer
@@ -2252,6 +2311,7 @@ Genetics <- setClass("GeneticsParams", slots = c(GenomeSize = "integer_OR_numeri
                                                         OutputPairwiseFstStart = NULL, # positive integer if OutputPairwiseFst is TRUE
                                                         OutputPairwiseFstInterval = NULL, # positive integer if OutputPairwiseFst
                                                         OutputPerLocusFst = FALSE,
+                                                        OutputPerPatchFis = FALSE,
                                                         PatchList = NULL, #"all", # vector or string
                                                         NbrPatchesToSample = NULL, #0L, # NULL or integer
                                                         nIndividualsToSample = NULL, # "all", # NULL or integer
@@ -2325,6 +2385,15 @@ setValidity('GeneticsParams', function(object){
     # if OutputGlobalFst is false, OutputPerLocusFst must be false
     if (object@OutputPerLocusFst && !object@OutputGlobalFst) {
         msg <- c(msg, "OutputPerLocusFst cannot be TRUE if OutputGlobalFst is FALSE.")
+    }
+
+    # OutputPerPatchFis
+    if (!is.logical(object@OutputPerPatchFis) || length(object@OutputPerPatchFis) != 1 || is.na(object@OutputPerPatchFis)) {
+        msg <- c(msg, "In Genetics(): OutputPerPatchFis must be true or false.")
+    }
+    # if OutputGlobalFst is false, OutputPerPatchFis must be false
+    else if (object@OutputPerPatchFis && !object@OutputGlobalFst) {
+        msg <- c(msg, "OutputPerPatchFis cannot be TRUE if OutputGlobalFst is FALSE.")
     }
 
 
@@ -2436,13 +2505,14 @@ setMethod("show", "GeneticsParams", function(object){
         }
         if(object@OutputGlobalFst){
              cat("     Start global Fst output at year: ", object@OutputGlobalFstStart, "and output every ",object@OutputGlobalFstInterval ," year \n")
+             if(object@OutputPerPatchFis) cat("     Output per-patch Fis: TRUE \n")
         }
         if(object@OutputPairwiseFst){
              cat("     Start pairwise Fst output at year: ", object@OutputPairwiseFstStart, "and output every ",object@OutputPairwiseFstInterval ," year \n")
         }
 
         cat("     Patches to sample: ", object@PatchList, "\n")
-        if(object@PatchList=="random" || object@PatchList=="random_occupied"){
+        if(is.character(object@PatchList) && object@PatchList[1] %in% c("random", "random_occupied")){
             cat("     Number of patches to sample: ", object@NbrPatchesToSample, "\n")
         }
         cat("     Number of individuals to sample: ", object@nIndividualsToSample, "\n")

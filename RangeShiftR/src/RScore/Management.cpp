@@ -37,32 +37,55 @@ Management::Management(void) {
     std::vector<int> translocation_years; // Number of years of translocation
     std::map< int, std::vector <locn> > source; // Source patch or cell: should be a vector of arrays
     std::map< int, std::vector <locn> > target; // Target patch or cell
-    std::map< int, std::vector <int> > nb; // number of ttanslocated individuals
+    std::map< int, std::vector <int> > nb; // number of translocated individuals
     std::map< int, std::vector <int> > min_age; // Minimum age of translocated individuals
     std::map< int, std::vector <int> > max_age; // Maximum age of translocated individuals
     std::map< int, std::vector <int> > stage; // Stage of translocated individuals
     std::map< int, std::vector <int> > sex; // Sex of translocated individuals
 
+    harvesting = false; // do not consider harvesting
+    harvesting_success = 1.0; // harvesting success rate
+    std::vector<int> harvesting_years; // Number of years of harvesting events
+    std::map< int, std::vector <locn> > harvestLoc; // Source patch or cell: should be a vector of arrays
+    std::map< int, std::vector <int> > harvestThres; // Threshold for harvesting
+    std::map< int, std::vector <int> > harvestNb; // number of harvested individuals
+    std::map< int, std::vector <int> > harvestMin_age; // Minimum age of harvested individuals
+    std::map< int, std::vector <int> > harvestMax_age; // Maximum age of harvested individuals
+    std::map< int, std::vector <int> > harvestStage; // Stage of harvested individuals
+    std::map< int, std::vector <int> > harvestSex; // Sex of harvested individuals
+
+
 }
 
 Management::~Management(void) {
     translocation_years.clear();
+    harvesting_years.clear();
     source.clear();
     target.clear();
     nb.clear();
     min_age.clear();
     max_age.clear();
     stage.clear();
+    sex.clear();
+    harvestLoc.clear();
+    harvestThres.clear();
+    harvestNb.clear();
+    harvestMin_age.clear();
+    harvestMax_age.clear();
+    harvestStage.clear();
+    harvestSex.clear();
 }
 
 managementParams Management::getManagementParams(void) {
     managementParams m;
     m.translocation = translocation;
+    m.harvesting = harvesting;
     return m;
 }
 
 void Management::setManagementParams(const managementParams m){
     translocation = m.translocation;
+    harvesting = m.harvesting;
 };
 
 translocationParams Management::getTranslocationParams(void) {
@@ -79,6 +102,20 @@ translocationParams Management::getTranslocationParams(void) {
     return t;
 }
 
+harvestingParams Management::getHarvestingParams(void) {
+    harvestingParams h;
+    h.harvesting_success = harvesting_success;
+    h.harvesting_years = harvesting_years;
+    h.harvestLoc = harvestLoc;
+    h.harvestThres = harvestThres;
+    h.harvestNb = harvestNb;
+    h.harvestMin_age = harvestMin_age;
+    h.harvestMax_age = harvestMax_age;
+    h.harvestStage = harvestStage;
+    h.harvestSex = harvestSex;
+    return h;
+}
+
 // not sure if this is a good way, so won't use it for now
 void Management::setTranslocationParams(const translocationParams t){
     catching_rate = t.catching_rate;
@@ -91,6 +128,17 @@ void Management::setTranslocationParams(const translocationParams t){
     stage = t.stage;
     sex = t.sex;
 
+};
+void Management::setHarvestingParams(const harvestingParams h){
+    harvesting_success = h.harvesting_success;
+    harvesting_years = h.harvesting_years;
+    harvestLoc = h.harvestLoc;
+    harvestThres = h.harvestThres;
+    harvestNb = h.harvestNb;
+    harvestMin_age = h.harvestMin_age;
+    harvestMax_age = h.harvestMax_age;
+    harvestStage = h.harvestStage;
+    harvestSex = h.harvestSex;
 };
 
 void Management::translocate(int yr
@@ -144,7 +192,7 @@ void Management::translocate(int yr
 #ifndef NDEBUG
     cout << "Population does not exist in source patch or is 0! skipping translocation event." << endl;
 #endif
-                        return;
+                        continue; // skip this event only
                     }
                 } else {
 #if RS_RCPP
@@ -153,7 +201,7 @@ void Management::translocate(int yr
 #ifndef NDEBUG
     cout << "Source patch was found but NULL! skipping translocation event." << endl; // not sure if this ever happens
 #endif
-                    return;
+                    continue; // skip this event only
                 }
     //
             } else{
@@ -163,7 +211,7 @@ void Management::translocate(int yr
 #ifndef NDEBUG
     cout << "Source patch was not found in landscape! skipping translocation event." << endl;
 #endif
-                return;
+                continue; // skip this event only
             }
        } else{
            Cell* pCell;
@@ -188,7 +236,7 @@ void Management::translocate(int yr
 #ifndef NDEBUG
     cout << "Population does not exist in source cell or is 0! skipping translocation event." << endl;
 #endif
-                       return;
+                       continue; // skip this event only
                    }
                } else {
 #if RS_RCPP
@@ -198,7 +246,7 @@ void Management::translocate(int yr
     cout << "Source cell does not exist! skipping translocation event." << endl;
 #endif
 
-                   return;
+                   continue; // skip this event only
                }
            } else {
 #if RS_RCPP
@@ -207,7 +255,7 @@ void Management::translocate(int yr
 #ifndef NDEBUG
     cout << "Cell does not belong to landscape! skipping translocation event." << endl;
 #endif
-               return;
+               continue; // skip this event only
            }
         }
        // find the target patch and check for existence
@@ -222,6 +270,16 @@ void Management::translocate(int yr
     cout << "Target patch exist." << endl;
 #endif
                 t_patch = pLandscape->findPatch(target_it->second[e].x);
+                if (t_patch->getK() <= 0.0) { // no habitat in this year (e.g. dynamic landscape)
+	                // message as for a missing target patch
+                    #if RS_RCPP
+                        Rcpp::Rcout << "Target patch was found in landscape but has K = 0! skipping translocation event." << endl;
+                    #endif
+                    #ifndef NDEBUG
+                        cout << "Target patch was found in landscape but has K = 0! skipping translocation event." << endl;
+                    #endif
+	                continue; // skip this event only
+                }
            } else{
 #if RS_RCPP
                Rcpp::Rcout << "Target patch was not found in landscape! skipping translocation event." << endl;
@@ -229,7 +287,7 @@ void Management::translocate(int yr
 #ifndef NDEBUG
     cout << "Target patch was not found in landscape! skipping translocation event." << endl;
 #endif
-               return;
+               continue; // skip this event only
            }
        } else{
            Cell* pCell;
@@ -244,6 +302,16 @@ void Management::translocate(int yr
                Patch *t_ppatch = pCell->getPatch();
                if (t_ppatch) {
                    t_patch = t_ppatch;
+                   if (t_patch->getK() <= 0.0) { // no habitat in this year (e.g. dynamic landscape)
+                          // message as for a missing target patch
+                          #if RS_RCPP
+                            Rcpp::Rcout << "Target cell was found in landscape but has K = 0! skipping translocation event." << endl;
+                          #endif
+                          #ifndef NDEBUG
+                            cout << "Target cell was found in landscape but has K = 0! skipping translocation event." << endl;
+                          #endif
+                          continue; // skip this event only
+                     }
                } else {
 #if RS_RCPP
                    Rcpp::Rcout << "Target cell does not exist! skipping translocation event." << endl;
@@ -251,7 +319,7 @@ void Management::translocate(int yr
 #ifndef NDEBUG
     cout << "Target cell does not exist! skipping translocation event." << endl;
 #endif
-                   return;
+                   continue; // skip this event only
                }
            } else {
 #if RS_RCPP
@@ -260,7 +328,7 @@ void Management::translocate(int yr
 #ifndef NDEBUG
     cout << "Target cell does not belong to landscape! skipping translocation event." << endl;
 #endif
-               return;
+               continue; // skip this event only
            }
        }
 
@@ -324,4 +392,167 @@ void Management::translocate(int yr
         // remove pointers to sampled individuals
         s_pPop->clean();
     }
+};
+
+void Management::harvest(int yr
+                            , Landscape* pLandscape
+                            , Species* pSpecies){
+    // Implementation for harvesting
+    #if RS_RCPP
+    Rcpp::Rcout << "Start harvesting in year " << yr << endl;
+    #endif
+    #ifndef NDEBUG
+    cout << "Start harvesting in year " << yr << endl;
+    #endif
+    landParams ppLand = pLandscape->getLandParams();
+    auto it = harvestNb.find(yr); // the number of harvesting events (if there are e.g. multiple patches with harvesting events) is determined by the number of elements of the maps at year yr
+    if (it == harvestNb.end()) return; // no harvesting events defined for this year
+    auto threshold_it = harvestThres.find(yr);
+    auto nb_it = harvestNb.find(yr);
+    auto loc_it = harvestLoc.find(yr);
+    auto min_age_it = harvestMin_age.find(yr);
+    auto max_age_it = harvestMax_age.find(yr);
+    auto stage_it = harvestStage.find(yr);
+    auto sex_it = harvestSex.find(yr);
+    // iterate over the number of events
+    for (int e = 0; e < it->second.size(); e++) {
+    #if RS_RCPP
+        Rcpp::Rcout << "Harvesting event " << e << " in year " << yr << endl;
+    #endif
+    #ifndef NDEBUG
+        cout << "Harvesting event " << e << " in year " << yr << endl;
+    #endif
+    // find the source patch
+    Patch* s_patch;
+    Population* s_pPop;
+    if(ppLand.patchModel){
+       if(pLandscape->existsPatch(loc_it->second[e].x)){
+        #if RS_RCPP
+            Rcpp::Rcout << "Source patch exist." << endl;
+        #endif
+        #ifndef NDEBUG
+            cout << "Patch exist." << endl;
+        #endif
+
+        s_patch = pLandscape->findPatch(loc_it->second[e].x);
+        if (s_patch) { // if it is not a nullpointer
+            // test if population in patch is not zero
+            s_pPop = s_patch->getPopn(pSpecies); // returns the population of the species in that cell
+            if (s_pPop && s_pPop->getNbInds() > 0){
+                } else {
+        #if RS_RCPP
+            Rcpp::Rcout << "Population does not exist in patch or is 0! skipping harvesting event." << endl;
+        #endif
+        #ifndef NDEBUG
+            cout << "Population does not exist in patch or is 0! skipping harvesting event." << endl;
+        #endif
+                    continue; // skip this event only
+                }
+        } else {
+        #if RS_RCPP
+            Rcpp::Rcout << "Patch was found but NULL! skipping harvesting event." << endl; // not sure if this ever happens
+        #endif
+        #ifndef NDEBUG
+            cout << "Patch was found but NULL! skipping harvesting event." << endl; // not sure if this ever happens
+        #endif
+        continue; // skip this event only
+        }
+        //
+            } else{
+            #if RS_RCPP
+                Rcpp::Rcout << "Patch was not found in landscape! skipping harvesting event." << endl;
+            #endif
+            #ifndef NDEBUG
+                cout << "Patch was not found in landscape! skipping harvesting event." << endl;
+            #endif
+            continue; // skip this event only
+            }
+       } else{
+           Cell* pCell;
+           pCell = pLandscape->findCell(loc_it->second[e].x, loc_it->second[e].y);
+           if (pCell != 0) {
+            #if RS_RCPP
+               Rcpp::Rcout << "Source cell was found" << endl;
+            #endif
+            #ifndef NDEBUG
+                cout << "Cell was found" << endl;
+            #endif
+            Patch *s_ppatch = pCell->getPatch();
+            if (s_ppatch) {
+                s_patch = s_ppatch;
+                // test if population in patch is not zero
+                s_pPop = s_patch->getPopn(pSpecies); // returns the population of the species in that cell
+                if (s_pPop && s_pPop->getNbInds() > 0){
+                   } else {
+                    #if RS_RCPP
+                       Rcpp::Rcout << "Population does not exist in cell or is 0! skipping harvesting event." << endl;
+                    #endif
+                    #ifndef NDEBUG
+                        cout << "Population does not exist in cell or is 0! skipping harvesting event." << endl;
+                    #endif
+                   continue; // skip this event only
+                   }
+               } else {
+                #if RS_RCPP
+                   Rcpp::Rcout << "Cell does not exist! skipping harvesting event." << endl;
+                #endif
+                #ifndef NDEBUG
+                    cout << "Cell does not exist! skipping harvesting event." << endl;
+                #endif
+                continue; // skip this event only
+               }
+           } else {
+                #if RS_RCPP
+                   Rcpp::Rcout << "Cell does not belong to landscape! skipping harvesting event." << endl;
+                #endif
+                #ifndef NDEBUG
+                    cout << "Cell does not belong to landscape! skipping harvesting event." << endl;
+                #endif
+                continue; // skip this event only
+           }
+        }
+        // only if cell/patch exist, individuals are harvested:
+        // and only if population size is above threshold
+        if (s_pPop->getNbInds() < threshold_it->second[e]) {
+            #if RS_RCPP
+                Rcpp::Rcout << "Population size is below threshold! skipping harvesting event." << endl;
+            #endif
+            #ifndef NDEBUG
+                cout << "Population size is below threshold! skipping harvesting event." << endl;
+            #endif
+            continue; // skip this event only
+        }
+        // get individuals with the given characteristics in that population
+        int min_age = min_age_it->second[e];
+        int max_age = max_age_it->second[e];
+        int stage = stage_it->second[e];
+        int sex = sex_it->second[e];
+        int nb = nb_it->second[e];
+        int nbSampledInds = 0;
+        // We made already sure by now that in s_pPop at least some individuals exist
+        nbSampledInds = s_pPop->sampleIndividuals(nb, min_age, max_age, stage, sex, true); // also translocated individuals; checking values was done when reading in the parameters
+        popStats s_stats = s_pPop->getStats(s_patch->getDemoScaling());
+        Individual* harvested_individual;
+        int harvested = 0;
+        // loop over all individuals, extract sampled individuals, try to harvest individual
+        for (int j = 0; j < s_stats.nInds; j++) {
+            // if there are individuals to harvest
+            if(s_pPop->getSizeSampledInds()){
+                // if this individual is matching one of the sampled individuals
+                harvested_individual = s_pPop->harvestIndividual(harvesting_success, j); // catch individual in the patch
+                if (harvested_individual != NULL) { // removed from the population, status 11, kept for output until survival1()
+                    harvested++;
+                }
+            }
+        }
+        #if RS_RCPP
+            Rcpp::Rcout << "Successfully harvested " << harvested << " out of " << nb_it->second[e] << " individuals in harvesting event " << e <<"." << endl;
+        #endif
+        #ifndef NDEBUG
+            cout << "Successfully harvested " << harvested << " out of " << nb_it->second[e] << " individuals in harvesting event " << e <<"." << endl;
+        #endif
+        // remove pointers to sampled individuals
+        s_pPop->clean();
+    }
+                                
 };

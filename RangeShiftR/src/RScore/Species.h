@@ -65,6 +65,8 @@ struct demogrParams {
 	float harem; 
 	float bc; 
 	float lambda;
+	float fecSD = -9.0f; // < 0: Poisson fecundity; >= 0: Normal fecundity with this SD
+	int maxOffspring = -9; // max. no. of offspring per female and reproductive event; < 0: no limit
 	bool stageStruct;
 };
 struct stageParams {
@@ -130,9 +132,9 @@ struct transferRules {
 	short movtTrait[2];
 };
 struct trfrKernelParams {
-	float	meanDist1;
-	float	meanDist2;
-	float	probKern1;
+	float	meanDist1 = -9.0f;	// <= 0: not set, ignored by setSpKernTraits()
+	float	meanDist2 = -9.0f;
+	float	probKern1 = -9.0f;
 };
 struct trfrMortParams {
 	float fixedMort;
@@ -543,7 +545,9 @@ private:
 	float propMales;    // proportion of males at birth in sexual model
 	float harem;        // max harem size in complex sexual model
 	float bc;						// competition coefficient for non-structured population
-	float lambda;       // max intrinsic growth rate for non-structured population
+	float lambda;       // maximum mean fecundity for non-structured populations
+	float fecSD;		// SD of fecundity; < 0: Poisson, >= 0: Normal (truncated to integer, min. 0)
+	int maxOffspring;	// max. no. of offspring per female and reproductive event; < 0: no limit
 	float probRep; 			// probability of reproducing in subsequent seasons
 	short repSeasons;		// no. of reproductive seasons per year
 	short repInterval;	// no. of reproductive seasons between subsequent reproductions

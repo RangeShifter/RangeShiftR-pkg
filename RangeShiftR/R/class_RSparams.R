@@ -86,8 +86,9 @@ setValidity("RSparams", function(object) {
     #LAND
     validObject(object@land)
     if (any(object@control@landtype==c(0,2))){
-        if (any(object@land@DynamicLandYears>object@simul@Years)) {
-            warning("ImportedLandscape(): Dynamic landscape contains years that exceed the simulated years, so that some land changes will not apply.", call. = FALSE)
+        if (any(object@land@DynamicLandYears >= object@simul@Years)) { # years are numbered 0 .. Years-1
+            warning(paste0("ImportedLandscape(): Dynamic landscape contains years that exceed the simulated years (0 to ", object@simul@Years - 1,
+                           "), so that some land changes will not apply."), call. = FALSE)
         }
         if (!is.null(object@land@CostsFile[1]) || length(object@land@CostsMatrix)>0) { # for threadsafe: length(object@land@CostsFile)>0
             if (class(object@dispersal@Transfer)[1] == "StochMove") {
@@ -103,20 +104,22 @@ setValidity("RSparams", function(object) {
     #DEMOGRAPHY
     validObject(object@demog)
     if (object@control@landtype == 2L){ # habitat quality
-        varydemogixs <- (length(object@demog@StageStruct@FecLayer)+length(object@demog@StageStruct@DevLayer)+length(object@demog@StageStruct@SurvLayer)>0)
-        varydemoglyr <- (length(object@land@demogScaleLayersMatrix)>0 || length(object@land@demogScaleLayersFile)>0)
-        if(varydemogixs & !varydemoglyr){
-            msg <- c(msg, "RSsim(): If FecLayer, DevLayer and/or SurvLayer are used, the demographic scaling layers must be given in ImportedLandscape.")
-        }
-        if(varydemoglyr & !varydemogixs){
-            msg <- c(msg, "RSsim(): If deographic scaling layers are given, the demographic rates they correspond to must be defined with FecLayer, DevLayer and/or SurvLayer in StageStructure().")
-        }
-        if(varydemoglyr & varydemogixs){
-            if ((length(object@demog@StageStruct@FecLayer) + length(object@demog@StageStruct@DevLayer) + length(object@demog@StageStruct@SurvLayer)) > 0 ){ # spatially varying demographic rates
-                ixs <- c(object@demog@StageStruct@FecLayer,object@demog@StageStruct@DevLayer,object@demog@StageStruct@SurvLayer)
-                ixs[is.na(ixs)] <- -9
-                if ( any( ixs > object@land@nrDemogScaleLayers )){
-                    msg <- c(msg, "StageStructure(): Entries of FecLayer, DevLayer and SurvLayer must not exceed the number of layers in demogScaleLayers (of ImportedLandscape) !")
+        if (is(object@demog@StageStruct, "StagesParams")) { # class name of StageStructure() objects
+            varydemogixs <- (length(object@demog@StageStruct@FecLayer)+length(object@demog@StageStruct@DevLayer)+length(object@demog@StageStruct@SurvLayer)>0)
+            varydemoglyr <- (length(object@land@demogScaleLayersMatrix)>0 || length(object@land@demogScaleLayersFile)>0)
+            if(varydemogixs & !varydemoglyr){
+                msg <- c(msg, "RSsim(): If FecLayer, DevLayer and/or SurvLayer are used, the demographic scaling layers must be given in ImportedLandscape.")
+            }
+            if(varydemoglyr & !varydemogixs){
+                msg <- c(msg, "RSsim(): If deographic scaling layers are given, the demographic rates they correspond to must be defined with FecLayer, DevLayer and/or SurvLayer in StageStructure().")
+            }
+            if(varydemoglyr & varydemogixs){
+                if ((length(object@demog@StageStruct@FecLayer) + length(object@demog@StageStruct@DevLayer) + length(object@demog@StageStruct@SurvLayer)) > 0 ){ # spatially varying demographic rates
+                    ixs <- c(object@demog@StageStruct@FecLayer,object@demog@StageStruct@DevLayer,object@demog@StageStruct@SurvLayer)
+                    ixs[is.na(ixs)] <- -9
+                    if ( any( ixs > object@land@nrDemogScaleLayers )){
+                        msg <- c(msg, "StageStructure(): Entries of FecLayer, DevLayer and SurvLayer must not exceed the number of layers in demogScaleLayers (of ImportedLandscape) !")
+                    }
                 }
             }
         }
@@ -630,7 +633,7 @@ setValidity("RSparams", function(object) {
         }
     }
     } else {
-        if(object@dispersal@Settlement@DensDep){
+        if(object@dispersal@Settlement@DensDep && !object@dispersal@Settlement@IndVar){ # with IndVar, S0/alpha/beta come from SettlementTraits()
             rows = 1
             cols = 3
             if (dim(object@dispersal@Settlement@Settle)[1]!=rows) {
@@ -1122,10 +1125,46 @@ setValidity("RSparams", function(object) {
             msg <- c(msg, 'PropStages is not used for a population without stage structure.')
         }
     }
+    ## ReturnStages: FALSE, or one entry per stage (the first entry being stage 0 = juveniles)
+    if (!(length(object@simul@ReturnStages) == 1 && !object@simul@ReturnStages[1])) {
+        if (!is(object@demog@StageStruct, "StagesParams")) {
+            msg <- c(msg, 'Simulation(): ReturnStages must be FALSE in a model without stage structure.')
+        }
+        else if (length(object@simul@ReturnStages) != object@demog@StageStruct@Stages) {
+            msg <- c(msg, paste0('Simulation(): ReturnStages must be FALSE or have exactly one entry per stage (',
+                                 object@demog@StageStruct@Stages, ' entries, the first entry being stage 0 = juveniles).'))
+        }
+    }
     ## Management
     validObject(object@management)
+    if (is(object@management@Translocation, "TranslocationParams")) {
+        msg <- c(msg, .checkManagementYears(object@management@Translocation@years,
+                                            object@management@Translocation@TransLocMat[, 1],
+                                            object@simul@Years, "Translocation"))
+    }
+    if (is(object@management@Harvesting, "HarvestingParams")) {
+        msg <- c(msg, .checkManagementYears(object@management@Harvesting@years,
+                                            object@management@Harvesting@HarvestMat[, 1],
+                                            object@simul@Years, "Harvesting"))
+    }
     if (is.null(msg)) TRUE else msg}
 )
+
+# Management events can only take place in simulated years. Years are numbered from 0, the simulation
+# runs the years 0 to Years - 1. RScore rejects other years only after the simulation has been started
+# (error 600); checking them here reports the problem already when the RSsim object is created.
+# 'years' = the years slot, 'matYears' = first column of the event matrix; -9 = no events.
+.checkManagementYears <- function(years, matYears, nYears, what) {
+    allYears <- unique(c(years, matYears))
+    allYears <- allYears[!is.na(allYears) & allYears != -9]
+    bad <- sort(allYears[allYears < 0 | allYears >= nYears | allYears %% 1 != 0])
+    if (length(bad) > 0) {
+        return(paste0(what, "(): years must be whole numbers from 0 to Years - 1 (= ", nYears - 1,
+                      "), because the simulation runs the years 0 to ", nYears - 1,
+                      " (the first simulated year is year 0). Invalid year(s): ", paste(bad, collapse = ", "), "."))
+    }
+    NULL
+}
 setMethod("show", "RSparams", function(object){
     print(object@control)
     cat("\n")

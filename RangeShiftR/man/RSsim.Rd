@@ -52,7 +52,9 @@ that happen to individuals is crucial for avoiding systematic overestimation of 
 \insertCite{clark2001invasion,kendall2003unstructured,robert2003variation,grimm2005individual,jongejans2008dispersal,travis2011improving}{RangeShiftR}.
 Thus, population dynamics in \emph{RangeShiftR} were constructed to be
 fully individual-based and stochastic. Each reproductive individual produces a discrete number of offspring sampled from a Poisson distribution with a mean
-that is influenced by the species’ demographic parameters and the local population density. As \emph{RangeShiftR} has been designed for modelling a variety of
+that is influenced by the species’ demographic parameters and the local population density. Alternatively, the number of offspring can be drawn
+from a normal distribution with the same mean and a given standard deviation, and an upper limit can be set (see \code{FecSD} and \code{MaxOffspring}
+in \code{\link[RangeShiftR]{Demography}}). As \emph{RangeShiftR} has been designed for modelling a variety of
 species with different life-history traits, a range of different population models can be chosen, depending on the species being modelled and on the
 available information (see \code{\link[RangeShiftR]{Demography}}). In all cases demographic stochasticity is implemented.
 

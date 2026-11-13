@@ -51,7 +51,7 @@
 #'            SMSHeatMap = FALSE)
 #' @param Simulation ID number of current simulation, defaults to \eqn{1}. (integer)
 #' @param Replicates Number of simulation iterations, defaults to \eqn{2}. (integer)
-#' @param Years The number of simulated years, defaults to \eqn{50}. (integer)
+#' @param Years The number of simulated years, defaults to \eqn{50}. Years are numbered from \eqn{0}: year \eqn{0} starts with the initial population, the simulation runs the years \eqn{0} to \code{Years}\eqn{-1}, and the final population and range output is written for year \code{Years} (the state after the last simulated year). All year parameters (e.g. the output start years, \code{DynamicLandYears} in \code{\link{ImportedLandscape}}, translocation and harvesting years in \code{\link{Management}}, start years of genetic output) refer to this numbering. (integer)
 #' @param Absorbing If \code{FALSE} (default), every move in the \code{\link[RangeShiftR]{Transfer}} process will be
 #' repeated until a valid cell is met.\cr
 #' If \code{TRUE}, an individual which hits a non-valid cell or
@@ -112,9 +112,9 @@
 # #' @param DrawLoadedSp If \code{FALSE} (default), only the simulated distribution is drawn into the output map.\cr
 # #' If \code{TRUE}, the initial species distribution is drawn additionally.
 #' @param SMSHeatMap Produce SMS heat map raster as output? Defaults to \code{FALSE}.
-#' @param ReturnPopMatrix Return population data to R as matrix (only for cell-based models)? Defaults to \code{FALSE}.
-#' @param ReturnPopDataFrame Return population data to R as data frame (most suitable for patch based models)? Defaults to \code{FALSE}.
-#' @param ReturnStages Return also stage-specific population data? Only applicable for stage-structured models if \code{ReturnPopMatrix = TRUE} or \code{ReturnPopDataFrame = TRUE}. If \code{FALSE} only total abundance is recorded.
+#' @param ReturnPopMatrix Return population data to R as matrix (only for cell-based models)? Defaults to \code{FALSE}. The data are recorded at the same time and for the same years as the population output file (\code{OutStartPop}, \code{OutIntPop}, including the final year \code{Years}): before reproduction in non-structured and after reproduction in stage-structured models. Total abundance corresponds to \code{NInd} in the population file, i.e. it excludes juveniles in stage-structured models.
+#' @param ReturnPopDataFrame Return population data to R as data frame (most suitable for patch based models)? Defaults to \code{FALSE}. The data are recorded at the same time and for the same years as the population output file (\code{OutStartPop}, \code{OutIntPop}, including the final year \code{Years}): before reproduction in non-structured and after reproduction in stage-structured models. Total abundance corresponds to \code{NInd} in the population file, i.e. it excludes juveniles in stage-structured models.
+#' @param ReturnStages Return also stage-specific population data? Only applicable for stage-structured models if \code{ReturnPopMatrix = TRUE} or \code{ReturnPopDataFrame = TRUE}. Either \code{FALSE} (default; only total abundance is recorded) or a logical vector with exactly one entry per stage (as set in \code{StageStructure(Stages)}), the first entry being stage \eqn{0} (juveniles), e.g. \code{c(TRUE, FALSE, TRUE)} returns juveniles and stage \eqn{2} in a model with \eqn{3} stages.
 #' @param CreatePopFile Create population output file? Defaults to \code{TRUE}.
 #' @details \emph{Environmental Gradient}\cr
 #' In \emph{RangeShiftR}, it is possible to superimpose an artificial gradient on top of the landscape map (real or artificial).
@@ -191,6 +191,17 @@
 #' of the landscape to which the output refers. Additionally, for each simulation all the set parameters
 #' will be automatically written to a text file named \"Sim0_Parameters.txt\" in the case of simulation\eqn{#=0}.
 #'
+#' \emph{Timing of outputs}\cr
+#' The figure shows at which step of a simulated year each output is written. Population (\code{Sim0_Pop.txt}) and range
+#' (\code{Sim0_Range.txt}) outputs, as well as the population data returned to R (\code{ReturnPopMatrix}, \code{ReturnPopDataFrame}),
+#' are written before reproduction in non-structured models and after reproduction in stage-structured models, so that the number
+#' of juveniles born can be reported. Occupancy and traits outputs are always written before reproduction. Individuals and genetic
+#' outputs are written after dispersal, before the deaths of the season are applied; individuals that die in this season are still
+#' listed in the individuals output (see their status), but are not sampled for genetic outputs. After the last simulated year, a final
+#' record for year \code{Years} is written to the population, range, occupancy and traits outputs and to the data returned to R.\cr
+#' \if{html}{\figure{output_timing.svg}{options: width="680" alt="Timing of outputs within a simulated year"}}
+#' \if{latex}{\figure{output_timing.pdf}{options: width=6in}}
+#'
 #' - \emph{Species range} (\code{Sim0_Range.txt}) \cr
 #' contains the following general information regarding the species’ range:\cr
 #' Replicate number (Rep), Year (Year), Reproductive season within the year (RepSeason), Total number of individuals (NInds),
@@ -199,8 +210,8 @@
 #' Total number of occupied cells (NOccupCells) or total number of occupied patches (NOccupPatches),
 #' Ratio between occupied and suitable cells or patches (OccupSuit),
 #' Species’ range, in terms of maximum and minimum coordinates (min_X, max_X, min_Y, max_Y).\cr
-#' Data are written before reproduction at each reproductive season at the specified yearly interval. An extra line is written
-#' at the end of the simulation.
+#' Data are written at each reproductive season at the specified yearly interval, before reproduction in non-structured and after
+#' reproduction in stage-structured models (see \emph{Timing of outputs}). An extra line is written at the end of the simulation (year \code{Years}).
 #'
 #' - \emph{Occupancy} \cr
 #' reports the cell/patch probability of occupancy. This is only possible if the number of replicates is greater than \eqn{1}.
@@ -214,8 +225,8 @@
 #'      2) \code{Sim0_Occupancy_Stats.txt}: Summary occupancy statistics, i.e. the mean ratio between occupied and suitable cells
 #' (Mean_OccupSuit) and its standard error (Std_error) at the set time interval.
 #'
-#'     Data will be recorded at the beginning of the year before any other process (and only once a year no matter the number
-#' of reproductive seasons per year).
+#'     Data will be recorded at the beginning of the year, after landscape changes and management and before reproduction (and only
+#' once a year no matter the number of reproductive seasons per year).
 #'
 #' - \emph{Populations} (\code{Sim0_Pop.txt}) \cr
 #' contains statistics regarding each population present in the landscape at a given time interval:\cr
@@ -226,12 +237,13 @@
 #' of sexual model without stage structure, two columns will indicate the number of females (Nfemales) and of males (Nmales) in
 #' the population. In the case of a stage-structured population, the number of juveniles born (NJuvs). If the reproduction is sexual,
 #' these columns will be replaced by the number of females juveniles (NJuvFemales) and males (NJuvMales).\cr
-#' As for the species’ range output, data are collected before reproduction at each reproductive
-#' season at the specified yearly interval and at the end of the simulation.
+#' As for the species’ range output, data are collected at each reproductive season at the specified yearly interval (before
+#' reproduction in non-structured and after reproduction in stage-structured models) and at the end of the simulation.
 #'
 #' - \emph{Individuals} (\code{Sim0_Rep0_Inds.txt}) \cr
 #' contains information regarding each individual at a given time step. To avoid the production of huge files, a separate file is
-#' saved for each replicate. Data are recorded after settlement and before aging (in the case of overlapping generations). For each
+#' saved for each replicate. Data are recorded after settlement and before aging (in the case of overlapping generations); individuals
+#' that die in this season are still listed (see their Status). For each
 #' individual the following data are saved: \cr
 #' Replicate number (Rep), Year, Reproductive season within the year (RepSeason), Species ID (always \eqn{0}),
 #' Individual ID (IndID), the individual’s Status (Status), Natal cell (Natal_X and Natal_Y) and current cell (\eqn{x} and
@@ -254,9 +266,8 @@
 #' at the specified yearly interval. This is particularly useful for analyzing the structuring of traits along latitudinal gradients.
 #' It is possible to compute this output only for cell-based models. \cr
 #'
-#'     Data for these outputs are collected at the same time as for the
-#' range and population outputs, i.e. before reproduction at each reproductive season at the set year interval and at the end of the
-#' simulation. For sexual models, the standard deviation relates to the variation between all alleles in the local population (which
+#'     Data for these outputs are collected before reproduction at each reproductive season at the set year interval and at the end of
+#' the simulation, i.e. at the same time as the range and population outputs only in non-structured models. For sexual models, the standard deviation relates to the variation between all alleles in the local population (which
 #' is greater than the variation in phenotypic expression; if the phenotypic s.d. is required, it must be calculated from
 #' individual-level output data).
 #'
@@ -803,8 +814,11 @@ setValidity('SimulationParams', function(object){
     }
 
     # ReturnStages must be logical
-    if(anyNA(object@ReturnStages)){
+    if(anyNA(object@ReturnStages) || length(object@ReturnStages) == 0){
         msg <- c(msg, 'ReturnStages has to be set')
+    }
+    else if(length(object@ReturnStages) == 1 && object@ReturnStages){
+        msg <- c(msg, 'ReturnStages must be FALSE or a logical vector with one entry per stage (the first entry being stage 0 = juveniles).')
     }
     if (anyNA(object@CreatePopFile) || length(object@CreatePopFile)!=1 ){
         msg <- c(msg, 'CreatePopFile has to be set')
@@ -1007,7 +1021,7 @@ setMethod("show", "SimulationParams", function(object) {
                 cat("\n   population size for stage ")
                 for (i in 1:length(object@ReturnStages)) {
                     if (object@ReturnStages[i]) {
-                        cat("\n  ", i)
+                        cat("\n  ", i - 1) # ReturnStages[1] is stage 0 (juveniles)
                     }
                 }
             }
@@ -1020,7 +1034,7 @@ setMethod("show", "SimulationParams", function(object) {
                 cat("\n   population size for stage ")
                 for (i in 1:length(object@ReturnStages)) {
                     if (object@ReturnStages[i]) {
-                        cat("\n  ", i)
+                        cat("\n  ", i - 1) # ReturnStages[1] is stage 0 (juveniles)
                     }
                 }
             }
