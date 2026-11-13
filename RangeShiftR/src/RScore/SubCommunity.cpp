@@ -225,13 +225,11 @@ void SubCommunity::patchChange(void) {
 	if (localK <= 0.0) { // patch in dynamic landscape has become unsuitable
 		for (int i = 0; i < npops; i++) { // all populations
 			pSpecies = popns[i]->getSpecies();
-			demogrParams dem = pSpecies->getDemogrParams();
-			if (dem.stageStruct) {
-				stageParams sstruct = pSpecies->getStageParams();
-				if (sstruct.disperseOnLoss) popns[i]->allEmigrate();
-				else popns[i]->extirpate();
+			emigRules emig = pSpecies->getEmigRules();
+			if (emig.disperseOnLoss) {
+				popns[i]->allEmigrate();
 			}
-			else { // non-stage-structured species is destroyed
+			else {
 				popns[i]->extirpate();
 			}
 		}

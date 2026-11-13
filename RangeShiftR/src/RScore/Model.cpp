@@ -1148,11 +1148,6 @@ void OutParameters(Landscape* pLandscape)
 		outPar << "yes" << endl;
 		outPar << "PROBABILITY OF REPRODUCING IN SUBSEQUENT SEASONS\t" << sstruct.probRep << endl;
 		outPar << "No. OF REP. SEASONS BEFORE SUBSEQUENT REPRODUCTIONS\t" << sstruct.repInterval << endl;
-		if (!ppLand.generated && ppLand.dynamic) {
-			outPar << "ACTION AFTER POPULATION DESTRUCTION: all individuals ";
-			if (sstruct.disperseOnLoss) outPar << "disperse" << endl;
-			else outPar << "die" << endl;
-		}
 		outPar << "No. STAGES\t" << sstruct.nStages << endl;
 		outPar << "MAX. AGE\t" << sstruct.maxAge << endl;
 		// no sex-specific demographic parameters
@@ -1442,6 +1437,12 @@ void OutParameters(Landscape* pLandscape)
 					}
 				}
 				}
+
+	if (!ppLand.generated && ppLand.dynamic) {
+		outPar << "ACTION AFTER POPULATION DESTRUCTION: all individuals ";
+		if (emig.disperseOnLoss) outPar << "disperse" << endl;
+		else outPar << "die" << endl;
+	}
 
 	// Transfer
 

@@ -1389,9 +1389,9 @@ bool Population::outPopStartLandscape(int landNr, bool patchModel) {
 			for (int i = 1; i < sstruct.nStages; i++) {
 				outPop.addColumn("Nfemales_stage" + to_string(i), T::INT);
 				outPop.addColumn("Nmales_stage" + to_string(i), T::INT);
-		}
+			}
 			outPop.addColumn("NJuvFemales", T::INT); outPop.addColumn("NJuvMales", T::INT);
-	}
+		}
 	}
 	else {
 		if (dem.repType != 0) { outPop.addColumn("Nfemales", T::INT); outPop.addColumn("Nmales", T::INT); }
@@ -1542,6 +1542,7 @@ void Population::outIndividual(Landscape* pLandscape, int rep, int yr, int gen,
 	toWrite.insert(toWrite.end(), harvestedInds.begin(), harvestedInds.end());
 	int ninds = (int)toWrite.size();
 	for (int i = 0; i < ninds; i++) {
+		prefetchInd(toWrite, i);
 		Individual* pInd = toWrite[i];
 		indStats ind = pInd->getStats();
 		if (yr == -1) { // write all initialised individuals
@@ -1562,11 +1563,8 @@ void Population::outIndividual(Landscape* pLandscape, int rep, int yr, int gen,
 			}
 		}
 		if (writeInd) {
-			outInds << "\t" << spNum << "\t" << pInd->getId();
-			if (dem.stageStruct) outInds << "\t" << ind.status;
-			else { // non-structured population
-				outInds << "\t" << ind.status;
-			}
+			outInds << spNum << pInd->getId();
+			outInds << ind.status;
 			pCell = pInd->getCurrCell();
 			locn loc;
 			if (pCell == 0) loc.x = loc.y = -1; // beyond boundary or in no-data cell
@@ -1574,9 +1572,9 @@ void Population::outIndividual(Landscape* pLandscape, int rep, int yr, int gen,
 			pCell = pInd->getPrevCell();
 			locn natalloc = pCell->getLocn();
 			if (ppLand.patchModel) {
-				outInds << "\t" << pInd->getNatalPatch()->getPatchNum();
-				if (loc.x == -1) outInds << "\t-1";
-				else outInds << "\t" << patchNum;
+				outInds << pInd->getNatalPatch()->getPatchNum();
+				if (loc.x == -1) outInds << -1;
+				else outInds << patchNum;
 			}
 			else { // cell-based model
 				outInds << (float)natalloc.x << natalloc.y;
@@ -1585,7 +1583,7 @@ void Population::outIndividual(Landscape* pLandscape, int rep, int yr, int gen,
 			if (dem.repType != 0) outInds << (int)ind.sex;
 			if (dem.stageStruct) outInds << ind.age << ind.stage;
 
-			if (pSpecies->getNbGenLoadTraits() > 0) outInds << "\t" << pInd->getGeneticFitness();
+			if (pSpecies->getNbGenLoadTraits() > 0) outInds << pInd->getGeneticFitness();
 
 			if (emig.indVar) {
 				emigTraits e = pInd->getIndEmigTraits();

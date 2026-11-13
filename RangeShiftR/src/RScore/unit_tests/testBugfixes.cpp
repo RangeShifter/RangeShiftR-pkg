@@ -556,6 +556,36 @@ namespace {
 		assert(ls.checkDataCell(5, 7));
 	}
 
+	// PR #80: disperseOnLoss is an emigration rule now and also applies without stage structure.
+	// A destroyed patch (K = 0) lets all individuals emigrate (status 1) if set, otherwise they die.
+	void test_disperse_on_loss_non_structured() {
+		for (bool disperse : { true, false }) {
+			Landscape* pLandscape = new Landscape;
+			Patch* pPatch = pLandscape->newPatch(1); // no carrying capacity set: K = 0
+			Cell* pCell = new Cell(0, 0, pPatch, 0);
+			pPatch->addCell(pCell, 0, 0);
+			Species* pSpecies = createDefaultSpecies();
+			pSpecies->setDemogr(createDefaultHaploidDemogrParams()); // stageStruct = false
+			emigRules e = pSpecies->getEmigRules();
+			e.disperseOnLoss = disperse;
+			pSpecies->setEmigRules(e);
+			SubCommunity sc(pPatch, 1);
+			Population* pPop = sc.newPopn(pLandscape, pSpecies, pPatch, 0);
+			for (int i = 0; i < 5; i++)
+				pPop->recruit(new Individual(pSpecies, pCell, pPatch, 1, 2, 0, 0.0, false, 1));
+			assert(pPatch->getK() <= 0.0);
+
+			sc.patchChange();
+
+			if (disperse) {
+				vector<Individual*> inds = pPop->getIndividualsInStage(1);
+				assert(inds.size() == 5);
+				for (Individual* pInd : inds) assert(pInd->getStats().status == 1);
+			}
+			else assert(pPop->getNbInds() == 0);
+		}
+	}
+
 	const std::map<string, std::function<void()>>& bugfixTests() {
 		static const std::map<string, std::function<void()>> tests{
 			{ "getRNG_advances_state", test_getRNG_advances_state },
@@ -582,6 +612,7 @@ namespace {
 			{ "harvest_invalid_event_skips_only_itself", test_harvest_invalid_event_skips_only_itself },
 			{ "harvest_translocated_individual", test_harvest_translocated_individual },
 			{ "checkDataCell_before_cells_exist", test_checkDataCell_before_cells_exist },
+			{ "disperse_on_loss_non_structured", test_disperse_on_loss_non_structured },
 		};
 		return tests;
 	}
