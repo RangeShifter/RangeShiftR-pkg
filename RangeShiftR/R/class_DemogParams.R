@@ -38,8 +38,7 @@
 #'                RepSeasons = 1, PRep = 1.0, RepInterval = 0, SurvSched = 0,
 #'                FecDensDep = FALSE, DevDensDep = FALSE, SurvDensDep = FALSE,
 #'                FecStageWtsMatrix, DevStageWtsMatrix, SurvStageWtsMatrix,
-#'                FecLayer, DevLayer, SurvLayer,
-#'                PostDestructn = FALSE)
+#'                FecLayer, DevLayer, SurvLayer)
 #' @param Stages Number of life-stages (integer). Requires a minimum of \eqn{2}, for "juvenile" (stage 0) and "adult". Maximum is 10.
 #' @param TransMatrix Transition matrix. Defines the development probabilities from each stage into the next, as well as the respective survival probabilities and fecundities. See Details for matrix structure and notation.
 #' @param MaxAge Maximum age in years, defaults to \eqn{100}. (integer)
@@ -57,7 +56,7 @@
 #' scaling layers given in the \code{\link[RangeShiftR]{ImportedLandscape}} module to each demographic rate. The value NA denotes a spatially constant rate. The row number corresponds
 #' to the stage; the first/second column contains the layer index for females/males. In case of a female-only or simple sexual model (\code{ReproductionType={0,1}}) only the first
 #' column is needed and a vector is accepted to represent it. In any case, values will be coerced to integer.
-#' @param PostDestructn In a dynamic landscape, determine if all individuals of a population should die (\code{FALSE}, default) or disperse (\code{TRUE}) if its patch gets destroyed.
+#' @param PostDestructn Deprecated, use \code{PostDestructn} in \code{\link[RangeShiftR]{Emigration}} instead. A value given here still works: it triggers a warning, and \code{TRUE} is passed on to \code{Emigration(PostDestructn = TRUE)} when the parameter object is put together (e.g. in \code{RSsim()}).
 #' @details In stage-structured populations, generations can overlap and individuals can be classified in different stages (e.g. immature vs. breeding individuals) differing in their
 #' demographic parameters. Individuals are characterized by their age and stage. Each stage has a certain fecundity, survival probability and probability of developing to the next stage.
 #'
@@ -454,6 +453,11 @@ setMethod("initialize", "StagesParams", function(.Object,...) {
     if(length(.Object@FecLayer)>0) mode(.Object@FecLayer) <- "integer"
     if(length(.Object@DevLayer)>0) mode(.Object@DevLayer) <- "integer"
     if(length(.Object@SurvLayer)>0) mode(.Object@SurvLayer) <- "integer"
+    # PostDestructn has moved to Emigration() (it now applies to non-structured populations, too)
+    if (!is.null(args$PostDestructn)) {
+        warning(this_func, "PostDestructn is deprecated here and has moved to Emigration(PostDestructn = ...). ",
+                "The value given here is still used (TRUE is passed on to Emigration()).", call. = FALSE)
+    }
     .Object}
 )
 setMethod("show", "StagesParams", function(object){
@@ -502,12 +506,8 @@ setMethod("show", "StagesParams", function(object){
         cat("   Spatially varying survival layer indices:\n")
         print(object@SurvLayer)
     }
-    cat("   PostDestructn    :", paste(object@PostDestructn) )
-    if (object@PostDestructn) {
-        cat(" (all disperse)\n")
-    }
-    else {
-        cat(" (all die)\n")
+    if (isTRUE(object@PostDestructn)) {
+        cat("   PostDestructn    : TRUE (deprecated here, passed on to Emigration())\n")
     }
     cat ("\n")}
 )

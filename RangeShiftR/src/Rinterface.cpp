@@ -1811,7 +1811,6 @@ int ReadStageStructureR(Rcpp::S4 ParMaster)
 #endif
 	// int simulation;
 	// simulation = Rcpp::as<int>(StagesParamsR.slot("Simulation")); //Must match simulation numbers in ParamParams
-	sstruct.disperseOnLoss = Rcpp::as<bool>(StagesParamsR.slot("PostDestructn"));
 	sstruct.probRep = Rcpp::as<float>(StagesParamsR.slot("PRep"));
 	sstruct.repInterval = Rcpp::as<int>(StagesParamsR.slot("RepInterval"));
 	sstruct.maxAge = Rcpp::as<int>(StagesParamsR.slot("MaxAge"));
@@ -2023,6 +2022,9 @@ int ReadEmigrationR(Rcpp::S4 ParMaster)
     emigTraits emigrationTraits;
 
 	emig.densDep = Rcpp::as<bool>(EmigParamsR.slot("DensDep"));
+	// disperse (instead of dying) when the patch is destroyed; a deprecated StageStructure(PostDestructn = TRUE)
+	// has already been passed on to Emigration() at R level (.passOnPostDestructn())
+	emig.disperseOnLoss = Rcpp::as<bool>(EmigParamsR.slot("PostDestructn"));
 	pSpecies->setFullKernel(Rcpp::as<bool>(EmigParamsR.slot("UseFullKern"))); // Emigration rate derived from kernel. Only for kernel-based transfer and DensDep = 0
 	emig.stgDep = Rcpp::as<bool>(EmigParamsR.slot("StageDep")); // Stage-dependent emigration. Must be 0 if IndVar is 1
 	emig.sexDep = Rcpp::as<bool>(EmigParamsR.slot("SexDep"));   // Sex-dependent emigration.

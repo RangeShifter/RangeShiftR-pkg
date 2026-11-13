@@ -81,6 +81,17 @@ setMethod("+", signature(e1 = "RSparams", e2 = "LandParams"), function(e1, e2) {
     return(e1)}
 )
 
+# PostDestructn has moved from StageStructure() to Emigration(). A TRUE that is still given in
+# StageStructure() (deprecated) is passed on to Emigration(), whichever module is added first.
+.passOnPostDestructn <- function(s) {
+    ss <- s@demog@StageStruct
+    if (class(ss)[1] == "StagesParams" && isTRUE(ss@PostDestructn) &&
+        class(s@dispersal@Emigration)[1] == "EmigrationParams" && !isTRUE(s@dispersal@Emigration@PostDestructn)) {
+        s@dispersal@Emigration@PostDestructn <- TRUE
+    }
+    s
+}
+
 setMethod("+", signature(e1 = "RSparams", e2 = "DemogParams"), function(e1, e2) {
     validObject(e2)
     e1@control@reproductn = e2@ReproductionType
@@ -103,6 +114,7 @@ setMethod("+", signature(e1 = "RSparams", e2 = "DemogParams"), function(e1, e2) 
         e1@control@stages = 1L
     }
     e1@demog <- e2
+    e1 <- .passOnPostDestructn(e1)
     return(e1)}
 )
 
@@ -133,6 +145,7 @@ setMethod("+", signature(e1 = "RSparams", e2 = "DispersalParams"), function(e1, 
         }
     }
     e1@dispersal <- e2
+    e1 <- .passOnPostDestructn(e1)
     return(e1)}
 )
 

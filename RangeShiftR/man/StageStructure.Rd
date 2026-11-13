@@ -9,8 +9,7 @@ StageStructure(Stages, TransMatrix, MaxAge = 100, MinAge = 0,
                RepSeasons = 1, PRep = 1.0, RepInterval = 0, SurvSched = 0,
                FecDensDep = FALSE, DevDensDep = FALSE, SurvDensDep = FALSE,
                FecStageWtsMatrix, DevStageWtsMatrix, SurvStageWtsMatrix,
-               FecLayer, DevLayer, SurvLayer,
-               PostDestructn = FALSE)
+               FecLayer, DevLayer, SurvLayer)
 }
 \arguments{
 \item{Stages}{Number of life-stages (integer). Requires a minimum of \eqn{2}, for "juvenile" (stage 0) and "adult". Maximum is 10.}
@@ -40,7 +39,7 @@ scaling layers given in the \code{\link[RangeShiftR]{ImportedLandscape}} module 
 to the stage; the first/second column contains the layer index for females/males. In case of a female-only or simple sexual model (\code{ReproductionType={0,1}}) only the first
 column is needed and a vector is accepted to represent it. In any case, values will be coerced to integer.}
 
-\item{PostDestructn}{In a dynamic landscape, determine if all individuals of a population should die (\code{FALSE}, default) or disperse (\code{TRUE}) if its patch gets destroyed.}
+\item{PostDestructn}{Deprecated, use \code{PostDestructn} in \code{\link[RangeShiftR]{Emigration}} instead. A value given here still works: it triggers a warning, and \code{TRUE} is passed on to \code{Emigration(PostDestructn = TRUE)} when the parameter object is put together (e.g. in \code{RSsim()}).}
 }
 \value{
 a parameter object of class "StagesParams"
