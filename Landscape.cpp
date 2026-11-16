@@ -3375,6 +3375,7 @@ landParams createDefaultLandParams(const int& dim) {
 	ls_params.spDist = false;
 	ls_params.generated = false;
 	ls_params.dynamic = false;
+	ls_params.spatialdemog = false;
 	ls_params.landNum = 0;
 	ls_params.nHab = ls_params.nHabMax = 0; // irrelevant for habitat codes
 	return ls_params;
