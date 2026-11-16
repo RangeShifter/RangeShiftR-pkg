@@ -26,6 +26,13 @@ if(HDF5)
 	target_compile_definitions(RScore PUBLIC RS_HDF5)
 endif()
 
+# optional AddressSanitizer + UndefinedBehaviorSanitizer for the unit tests (GCC/Clang)
+# enable with: cmake -DCMAKE_BUILD_TYPE=Debug -DSANITIZE=ON ...
+if(SANITIZE)
+	target_compile_options(RScore PUBLIC -fsanitize=address,undefined -fno-sanitize-recover=undefined -fno-omit-frame-pointer)
+	target_link_libraries(RScore PUBLIC -fsanitize=address,undefined)
+endif()
+
 if(OMP)
 	find_package(OpenMP COMPONENTS CXX)
 	if(OpenMP_CXX_FOUND)
