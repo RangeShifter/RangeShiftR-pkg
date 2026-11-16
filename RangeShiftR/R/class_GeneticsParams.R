@@ -2107,13 +2107,13 @@ setMethod("show", "TraitsParams", function(object){
 #' @param OutputGeneValues TRUE or FALSE. Output the values of all alleles for all genes of all sampled individuals.
 #' Does not output the resulting trait values: mean and SD of dispersal and genetic fitness traits are
 #' output in the TraitsXPatch, TraitsXCell and/or TraitsXrow output files. Enables the geneValues output files.
-#' @param OutputGenesStart Which year should RangeShifter start to produce the output files listed above? Positive integer if any output is \code{TRUE}, otherwise \code{NULL}.
-#' @param OutputGenesInterval How frequently to output gene values output. Positive integer if any output is \code{TRUE}, otherwise \code{NULL}.
+#' @param OutputGenesStart Which year should RangeShifter start to produce the gene values output? Integer \eqn{\ge 0} if \code{OutputGeneValues} is \code{TRUE}, otherwise not needed (\code{NULL}). The Fst outputs have their own start year and interval.
+#' @param OutputGenesInterval How frequently to output gene values output. Positive integer if \code{OutputGeneValues} is \code{TRUE}, otherwise not needed (\code{NULL}).
 #' @param OutputGlobalFst Calculate global F-statistics according to Weir & Cockerham (1984)'s method-of-moments approach. Enables the neutralGenetics output file. \code{TRUE} or \code{FALSE}.
-#' @param OutputGlobalFstStart Which year should RangeShifter start to produce the global Fst output? Positive integer if \code{OutputGlobalFst} is \code{TRUE}, otherwise \code{NULL}.
+#' @param OutputGlobalFstStart Which year should RangeShifter start to produce the global Fst output? Integer \eqn{\ge 0} if \code{OutputGlobalFst} is \code{TRUE}, otherwise \code{NULL}.
 #' @param OutputGlobalFstInterval How frequently to output global F-statistics. Positive integer if \code{OutputGlobalFst} is \code{TRUE}, otherwise \code{NULL}.
 #' @param OutputPairwiseFst Calculate pairwise F-statistics according to Weir & Cockerham (1984)'s method-of-moments approach. Enables the pairwisePatchNeutralGenetics output files. \code{TRUE} or \code{FALSE}.
-#' @param OutputPairwiseFstStart Which year should RangeShifter start to produce the pairwise Fst output? Positive integer if \code{OutputPairwiseFst} is \code{TRUE}, otherwise \code{NULL}.
+#' @param OutputPairwiseFstStart Which year should RangeShifter start to produce the pairwise Fst output? Integer \eqn{\ge 0} if \code{OutputPairwiseFst} is \code{TRUE}, otherwise \code{NULL}.
 #' @param OutputPairwiseFstInterval How frequently to output pairwise F-statistics? Positive integer if \code{OutputPairwiseFst} is \code{TRUE}, otherwise \code{NULL}.
 #' @param OutputPerLocusFst Calculate F-statistics per-locus estimates according to Weir & Cockerham (1984)'s method-of-moments approach, only if \code{OutputGlobalFst} is \code{TRUE}, for the same interval as the global fst. Enables the perLocusNeutralGenetics output files. \code{TRUE} or \code{FALSE}.
 #' @param OutputPerPatchFis Output per-patch observed and expected heterozygosity and the inbreeding coefficient \ifelse{html}{\out{F<sub>is</sub>}}{\eqn{F_{is}}} for every sampled patch, only if \code{OutputGlobalFst} is \code{TRUE}, for the same interval as the global Fst. Enables the perPatchNeutralGenetics output files. \code{TRUE} or \code{FALSE} (default).
@@ -2351,10 +2351,10 @@ setValidity('GeneticsParams', function(object){
         msg <- c(msg, "In Genetics(): OutputGlobalFst must be true or false.")
     }
 
-    # if TRUE, OutputGlobalFstStart and OutputGlobalFstInterval must be positive integers
+    # if TRUE, OutputGlobalFstStart must be >= 0 (year 0 is a valid output year) and OutputGlobalFstInterval positive
     if (object@OutputGlobalFst) {
-        if (is.null(object@OutputGlobalFstStart) || object@OutputGlobalFstStart <= 0) {
-            msg <- c(msg, "OutputGlobalFstStart must be a positive integer if OutputGlobalFst is TRUE.")
+        if (is.null(object@OutputGlobalFstStart) || object@OutputGlobalFstStart < 0) {
+            msg <- c(msg, "OutputGlobalFstStart must be an integer >= 0 if OutputGlobalFst is TRUE.")
         }
         if (is.null(object@OutputGlobalFstInterval) || object@OutputGlobalFstInterval <= 0) {
             msg <- c(msg, "OutputGlobalFstInterval must be a positive integer if OutputGlobalFst is TRUE.")
@@ -2367,10 +2367,10 @@ setValidity('GeneticsParams', function(object){
         msg <- c(msg, "In Genetics(): OutputPairwiseFst must be true or false.")
     }
 
-    # if true, OutputPairwiseFstStart and OutputPairwiseFstInterval must be positive integers
+    # if true, OutputPairwiseFstStart must be >= 0 (year 0 is a valid output year) and OutputPairwiseFstInterval positive
     if (object@OutputPairwiseFst) {
-        if (is.null(object@OutputPairwiseFstStart) || object@OutputPairwiseFstStart <= 0) {
-            msg <- c(msg, "OutputPairwiseFstStart must be a positive integer if OutputPairwiseFst is TRUE.")
+        if (is.null(object@OutputPairwiseFstStart) || object@OutputPairwiseFstStart < 0) {
+            msg <- c(msg, "OutputPairwiseFstStart must be an integer >= 0 if OutputPairwiseFst is TRUE.")
         }
         if (is.null(object@OutputPairwiseFstInterval) || object@OutputPairwiseFstInterval <= 0) {
             msg <- c(msg, "OutputPairwiseFstInterval must be a positive integer if OutputPairwiseFst is TRUE.")
@@ -2401,16 +2401,18 @@ setValidity('GeneticsParams', function(object){
 
     anyGeneticsOutput = object@OutputGeneValues == "TRUE" || anyNeutral
 
-    if (anyGeneticsOutput) {
+    # OutputGenesStart/OutputGenesInterval only control the gene values output (as in the batch version);
+    # the Fst outputs have their own start and interval
+    if (object@OutputGeneValues) {
         if (is.null(object@OutputGenesStart) || object@OutputGenesStart < 0) {
-            msg <- c(msg, "OutputGenesStart must be greateror equal to 0 if any genetic output option is TRUE.")
+            msg <- c(msg, "OutputGenesStart must be an integer >= 0 if OutputGeneValues is TRUE.")
         }
 
-        if (is.null(object@OutputGenesInterval) || object@OutputGenesInterval <= 0) { # check whether is.null()
-            msg <- c(msg,"OutputInterval must be at least 1 if any genetic output option is TRUE.")
+        if (is.null(object@OutputGenesInterval) || object@OutputGenesInterval <= 0) {
+            msg <- c(msg,"OutputGenesInterval must be at least 1 if OutputGeneValues is TRUE.")
         }
     }
-    else if (!is.null(object@OutputGenesInterval) || !is.null(object@OutputGenesStart)){
+    else if (!anyGeneticsOutput && (!is.null(object@OutputGenesInterval) || !is.null(object@OutputGenesStart))){
         msg <- c(msg, "OutputGenesStart and OutputGenesInterval should be NULL if all genetic output options are FALSE.")
     }
 

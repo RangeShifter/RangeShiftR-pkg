@@ -40,19 +40,19 @@ across the whole genome (in addition to the chromosomeEnds above). Disabled for 
 Does not output the resulting trait values: mean and SD of dispersal and genetic fitness traits are
 output in the TraitsXPatch, TraitsXCell and/or TraitsXrow output files. Enables the geneValues output files.}
 
-\item{OutputGenesStart}{Which year should RangeShifter start to produce the output files listed above? Positive integer if any output is \code{TRUE}, otherwise \code{NULL}.}
+\item{OutputGenesStart}{Which year should RangeShifter start to produce the gene values output? Integer \eqn{\ge 0} if \code{OutputGeneValues} is \code{TRUE}, otherwise not needed (\code{NULL}). The Fst outputs have their own start year and interval.}
 
-\item{OutputGenesInterval}{How frequently to output gene values output. Positive integer if any output is \code{TRUE}, otherwise \code{NULL}.}
+\item{OutputGenesInterval}{How frequently to output gene values output. Positive integer if \code{OutputGeneValues} is \code{TRUE}, otherwise not needed (\code{NULL}).}
 
 \item{OutputGlobalFst}{Calculate global F-statistics according to Weir & Cockerham (1984)'s method-of-moments approach. Enables the neutralGenetics output file. \code{TRUE} or \code{FALSE}.}
 
-\item{OutputGlobalFstStart}{Which year should RangeShifter start to produce the global Fst output? Positive integer if \code{OutputGlobalFst} is \code{TRUE}, otherwise \code{NULL}.}
+\item{OutputGlobalFstStart}{Which year should RangeShifter start to produce the global Fst output? Integer \eqn{\ge 0} if \code{OutputGlobalFst} is \code{TRUE}, otherwise \code{NULL}.}
 
 \item{OutputGlobalFstInterval}{How frequently to output global F-statistics. Positive integer if \code{OutputGlobalFst} is \code{TRUE}, otherwise \code{NULL}.}
 
 \item{OutputPairwiseFst}{Calculate pairwise F-statistics according to Weir & Cockerham (1984)'s method-of-moments approach. Enables the pairwisePatchNeutralGenetics output files. \code{TRUE} or \code{FALSE}.}
 
-\item{OutputPairwiseFstStart}{Which year should RangeShifter start to produce the pairwise Fst output? Positive integer if \code{OutputPairwiseFst} is \code{TRUE}, otherwise \code{NULL}.}
+\item{OutputPairwiseFstStart}{Which year should RangeShifter start to produce the pairwise Fst output? Integer \eqn{\ge 0} if \code{OutputPairwiseFst} is \code{TRUE}, otherwise \code{NULL}.}
 
 \item{OutputPairwiseFstInterval}{How frequently to output pairwise F-statistics? Positive integer if \code{OutputPairwiseFst} is \code{TRUE}, otherwise \code{NULL}.}
 
