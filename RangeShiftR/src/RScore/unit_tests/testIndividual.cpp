@@ -1186,12 +1186,20 @@ void testIndividual() {
 
 			settleTraits settTr = ind.getIndSettTraits();
 			assert(settTr.s0 <= 1.0);
-			// Review 2026-10: the settlement slope is no longer forced to be positive;
-			// a negative alpha is needed for settlement that decreases with density (eqn. 16).
+			// Review 2026-10: the settlement slope alpha may be positive or negative and is
+			// no longer clamped (a negative alpha gives settlement that decreases with density,
+			// eqn. 16). The alleles -1.5 and -0.5 (AVERAGE) must give alpha = -1.0.
 			// previously: assert(settTr.alpha > 0.0);
-			assert(settTr.alpha < 0.0);
+			assert(abs(settTr.alpha - (-1.0)) < 1e-6);
 			kernelData trfrTr = *(static_cast<kernelData*>(ind.getTrfrData()));
 			assert(trfrTr.meanDist1 >= 0.0);
+
+			// positive slopes are expressed unchanged as well: alleles 0.5 and 1.5 give alpha = +1.0
+			Individual indPos = Individual(pSpecies, pCell, pPatch, 0, 0, 0, 0.0, false, 0);
+			indPos.setUpGenes(pSpecies, 1.0);
+			indPos.overrideGenotype(S_ALPHA, createTestGenotype(genomeSz, true, 0.5, 1.5));
+			indPos.triggerMutations(pSpecies); // no mutations, but trigger expression
+			assert(abs(indPos.getIndSettTraits().alpha - 1.0) < 1e-6);
 		}
 
 		// Case 2 - Correlated random walk transfer
