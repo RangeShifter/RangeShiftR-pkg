@@ -3,7 +3,14 @@
 ## How to contribute
 
 Thank you for your interest in contributing to the RangeShifter platform. 
-In this document we will give you guidance on how to contribute to the RangeShifter project regarding issues, bug fixing and adding new features. We distinguish between contributing to the RangeShifter core code and the different interfaces - in this case the R package.
+
+Please note that the RangeShifter platform is published under GPLv3 license, which means that any changes you make to the code must also be published under the same license.
+
+We welcome contributions but advise to contact the developer team (rangeshiftr@uni-potsdam.de) as early as possible to discuss a collaboration. This will prevent simultaneous development of the same feature and coordinate potential joint development.
+
+In this document we will give you guidance on how to contribute to the RangeShifter project regarding issues, bug fixing and adding new features.
+
+We distinguish between contributing to the RangeShifter core code and the different interfaces - in this case the R package.
 
 ## Repo structure
 
@@ -35,7 +42,7 @@ Regular contributors and members of the [RangeShifter development team](https://
 
 #### Contributors
 
-Anyone who whishes to make changes to RangeShifter's code, including regular developers.
+Anyone who whishes to make changes to RangeShifter's code, including regular developers. Please contact us if you want to contribute to the RangeShifter platform, so we can coordinate development efforts and avoid duplicate work.
 
 ## Branching policy
 

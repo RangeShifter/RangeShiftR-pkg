@@ -125,8 +125,9 @@ vector<land>& fractal_landscape(int X, int Y, double Hurst, double prop,
 					ran[ii] = (int)(pRandom->Random() * 2.0 * range - range);
 				}
 				//The diamond step:
-
-				arena[ix + kx][iy + ky] = ((arena[ix][iy] + arena[ix][iy + ky2] + arena[ix + ky2][iy]
+				// bugfix: x offset of the corner was ky2 instead of kx2 -> wrong cell (or out of
+				// bounds) averaged in non-square landscapes; identical result when X == Y.
+				arena[ix + kx][iy + ky] = ((arena[ix][iy] + arena[ix][iy + ky2] + arena[ix + kx2][iy]
 					+ arena[ix + kx2][iy + ky2]) / 4) + ran[0];
 				if (arena[ix + kx][iy + ky] < 1) 	arena[ix + kx][iy + ky] = 1;
 
@@ -183,6 +184,9 @@ vector<land>& fractal_landscape(int X, int Y, double Hurst, double prop,
 	sort(patches.begin(), patches.end(), compare);  // sorts the vector
 
 	Nno = (int)(prop * X * Y);
+	// bugfix: with prop = 1, Nno == X*Y and patches[Nno] (min below) read past the end
+	// of the vector; Nno is capped so that at least one cell remains for rescaling.
+	if (Nno > X * Y - 1) Nno = X * Y - 1; // keep at least one cell for rescaling
 	for (ii = 0; ii < Nno; ii++)
 	{
 		patches[ii].value = 0.0;
@@ -201,7 +205,9 @@ vector<land>& fractal_landscape(int X, int Y, double Hurst, double prop,
 	{
 		if (iter->value > 0) // rescale to a range of K between Kmin and Kmax
 		{
-			new_value = maxValue - diffK * (max - (double)iter->value) / diff;
+			// bugfix: if all remaining cells have the same value, diff == 0 gave 0/0 = NaN;
+			// such cells now get maxValue.
+			new_value = diff > 0.0 ? maxValue - diffK * (max - (double)iter->value) / diff : maxValue;
 
 			iter->value = (float)new_value;
 		}

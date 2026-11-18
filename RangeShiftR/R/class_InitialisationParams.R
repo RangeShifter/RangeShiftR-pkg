@@ -377,7 +377,7 @@ setValidity('InitialisationParams', function(object){
                     msg <- c(msg, 'Initial proportion of the juvenile stage (PropStages[1]) must be 0.0!')
                 }
                 else{
-                    if (length(object@PropStages)>1 && sum(object@PropStages) != 1.0) {
+                    if (length(object@PropStages)>1 && abs(sum(object@PropStages) - 1.0) > 1e-6) {
                         msg <- c(msg, 'The elements of PropStages must sum to 1!')
                     }
                 }

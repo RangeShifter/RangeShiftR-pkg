@@ -12,6 +12,10 @@ If you are only interested in using RangeShifter, you can ignore this and head t
 
 - [RangeShifter-batch](https://github.com/RangeShifter/RangeShifter_batch)
 
+## Contributing to RangeShifter core code
+
+See [CONTRIBUTING](https://github.com/RangeShifter/RScore/blob/main/CONTRIBUTING.md).
+
 ## Usage: git subtree
 
 In order to ensure that the same version of RangeShifter's core code is used by all three interfaces (RangeShiftR, RangeShifter-batch and the GUI), each interface repo keeps a copy of RScore as a git subtree.
@@ -91,10 +95,6 @@ git rm src/RScore -r
 git commit -m "switching subtree branch"
 git subtree add --prefix src/RScore RScore <the new branch>
 ```
-
-## Contributing to RangeShifter core code
-
-See [CONTRIBUTING](https://github.com/RangeShifter/RScore/blob/main/CONTRIBUTING.md).
 
 ## Maintainers
 

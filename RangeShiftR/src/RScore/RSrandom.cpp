@@ -65,8 +65,14 @@ RSrandom::RSrandom(std::int64_t seed)
 #ifdef _OPENMP
 	int nb_generators = omp_get_max_threads();
 	gens.reserve(nb_generators);
-	for (int i = 0; i < nb_generators; i++)
-		gens.emplace_back(seq);
+	for (int i = 0; i < nb_generators; i++) {
+		// each thread needs its own stream; identical seed sequences
+		// would make all threads draw the same numbers
+		std::vector<std::uint32_t> thread_seed = random_seed;
+		thread_seed.push_back(static_cast<std::uint32_t>(i));
+		std::seed_seq thread_seq(thread_seed.begin(), thread_seed.end());
+		gens.emplace_back(thread_seq);
+	}
 #else
 	gens.reserve(1);
 	gens.emplace_back(seq);
@@ -121,7 +127,7 @@ RSrandom::~RSrandom(void) {
         delete pNormal;
 }
 
-mt19937 RSrandom::getRNG() {
+mt19937& RSrandom::getRNG() { // bugfix: return by reference, not copy (copy replayed random numbers)
 #ifdef _OPENMP
 	return gens[omp_get_thread_num() % gens.size()];
 #else
@@ -204,7 +210,7 @@ double RSrandom::Gamma(double shape, double scale) { //scale  = mean/shape, shap
     gamma_distribution<> gamma(shape, abs(scale));
 
 #ifdef _OPENMP
-	double x = poiss(gens[omp_get_thread_num() % gens.size()]);
+	double x = gamma(gens[omp_get_thread_num() % gens.size()]);
 #else
 	double x = gamma(gens[0]);
 #endif // _OPENMP

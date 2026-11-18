@@ -59,6 +59,7 @@ using namespace std;
 #include "Patch.h"
 #include "Cell.h"
 #include "NeutralStatsManager.h"
+#include "OutputTable.h"
 
 #ifdef _OPENMP
 #include <atomic>
@@ -125,7 +126,7 @@ public:
 	~Population(void);
 	traitsums getIndTraitsSums(Species*);
 	popStats getStats(
-			std::vector <float>
+			const std::vector <float>&
 	);
 	Species* getSpecies(void);
 	int getNbInds() const;
@@ -136,7 +137,7 @@ public:
 		const float,	// local carrying capacity
 		const float,	// effect of environmental gradient and/or stochasticty
 		const int,			// Landscape resolution
-		std::vector <float>    // local demographic scaling
+		const std::vector <float>&    // local demographic scaling
 	);
 	// Following reproduction of ALL species, add juveniles to the population
 	void fledge(void);
@@ -149,6 +150,12 @@ public:
 		int		// index no. to the Individual in the inds vector
 	);
 	// If an individual has been identified as an emigrant, remove it from the Population
+	// performance hint: start loading individual ix into the cache (no effect on results)
+	void prefetch(int ix) const {
+#if defined(__GNUC__) || defined(__clang__)
+		if (ix >= 0 && ix < (int)inds.size()) __builtin_prefetch(inds[ix]);
+#endif
+	}
 	disperser extractDisperser(
 		int		// index no. to the Individual in the inds vector
 	);
@@ -179,7 +186,7 @@ public:
 		short, 	// option1:	0 - development only (when survival is annual)
 						//	  	 		1 - development and survival
 						//	  	 		2 - survival only (when survival is annual)
-		std::vector <float> // local demographic scaling
+		const std::vector <float>& // local demographic scaling
 	);
 	void survival1(void); // Apply survival changes to the population
 	void ageIncrement(void);
@@ -211,7 +218,7 @@ public:
 		int,				// generation
 		int					// Patch number
 	);
-	void outputGeneValues(ofstream& ofsGenes, const int& yr, const int& gen) const;
+	void outputGeneValues(OutputTable& ofsGenes, const int& yr, const int& gen) const;
 	void clean(void); // Remove zero pointers to dead or dispersed individuals
 
 	void updatePopNeutralTables();
@@ -225,7 +232,8 @@ public:
 		int,	// min age
 		int,    // max age
 		int,    // stage
-		int     //sex
+		int,	// sex
+		bool includeTranslocated = false // also accept translocated individuals (status 10), e.g. for harvesting
 	);
 	void cleanSampledInds(
 	    Individual* // individual to remove from sampled individuals vector
@@ -237,11 +245,17 @@ public:
         	int,	// min age (0 if not set)
         	int,    // max age (max age if not set)
         	int,    // stage
-        	int     //sex
+        	int,	// sex
+        	bool includeTranslocated = false // also accept translocated individuals (status 10), e.g. for harvesting
 	);
 
 	Individual* catchIndividual(
 	    double, // catching rate
+	    int
+	);
+
+	Individual* harvestIndividual(
+	    double, // harvest success rate
 	    int
 	);
 
@@ -278,6 +292,7 @@ private:
 																	// has been completed
 
 	vector<Individual*> sampledInds;
+	vector<Individual*> harvestedInds; // removed from the population by harvesting; kept for the individual output until survival1()
 	//std::vector <Individual*> sampledInds; // individuals with specified characteristics from translocation!!! 
 	vector<NeutralCountsTable> popNeutralCountTables;
 	void resetPopNeutralTables();

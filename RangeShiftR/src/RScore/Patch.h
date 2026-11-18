@@ -155,7 +155,7 @@ public:
 	float getK(void);
 	bool speciesIsPresent(Species* pSpecies);
 	void setDemoScaling(std::vector <float>);
-	std::vector <float> getDemoScaling(void);
+	const std::vector <float>& getDemoScaling(void) const;
 	void setPatchDemoScaling(short, patchLimits); // calculate demog. scalings of patch from its cells //TODO arguments
 
 private:

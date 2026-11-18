@@ -55,7 +55,7 @@ If \code{HabPercent=TRUE}: \code{K_or_DensDep} is interpreted as the maximum \co
 
 \item{DynamicLandYears}{Integer vector indicating the years of landscape changes. For a non-dynamic landscape its only entry is \eqn{0} (default).
 For a dynamic landscape, \code{DynamicLandYears} lists the years in which the corresponding habitat maps in \code{LandscapeFile} and - if applicable - their respective patch and/or costs
-maps (in \code{PatchFile},\code{CostsFile}) are loaded and used in the simulation. More details below.}
+maps (in \code{PatchFile},\code{CostsFile}) are loaded and used in the simulation. Years are numbered from \eqn{0} to \code{Years}\eqn{-1} (see \code{\link{Simulation}}); maps for years \eqn{\ge} \code{Years} are not used (with a warning). More details below.}
 
 \item{SpDistFile}{Filename of the species initial distribution map which shall be imported (*.txt). Default is \code{NULL}.}
 

@@ -213,8 +213,10 @@ int paramInit::numInitInds(void) { return (int)initinds.size(); }
 paramSim::paramSim(const string& pathToProjDir) :
 	dir{pathToProjDir}
 {
+	batchNum = 0;
 	simulation = 0;
 	reps = years = 1;
+	outputGenesStart = outputGenesInterval = 0;
 	outIntRange = 1;
 	outStartPop = outStartInd = 0;
 	outStartTraitCell = outStartTraitRow = outStartConn = 0;
@@ -225,9 +227,10 @@ paramSim::paramSim(const string& pathToProjDir) :
 	batchMode = absorbing = false;
 	outRange = outOccup = outPop = outInds = false;
 	outTraitsCells = outTraitsRows = outConnect = false;
-	outputGenes = outputGlobalFst = outPairwiseFst = outputPerLocusFst = false;
+	outputGenes = outputGlobalFst = outPairwiseFst = outputPerLocusFst = outputPerPatchFis = false;
 	saveVisits = false;
 	fixReplicateSeed = false;
+	outputFormat = 0;
 #if RS_RCPP
 	outStartPaths = 0; outIntPaths = 0;
 	outPaths = false; ReturnPopMatrix = false; ReturnPopDataFrame = false; CreatePopFile = true;
@@ -270,6 +273,7 @@ void paramSim::setSim(simParams s) {
 	CreatePopFile = s.CreatePopFile;
 #endif
 	fixReplicateSeed = s.fixReplicateSeed;
+	outputFormat = s.outputFormat;
 }
 
 void paramSim::setGeneticSim(string patchSamplingOption, bool outputGenes, int outputGenesStart, int outputGenesInterval,  bool outPairwiseFst,
@@ -305,8 +309,8 @@ simParams paramSim::getSim() {
 	s.batchMode = batchMode;
 	s.absorbing = absorbing;
 	s.traitInt = traitInt;
+	s.saveVisits = saveVisits; // must not depend on the interface
 #if RS_RCPP
-	s.saveVisits = saveVisits;
 	s.outStartPaths = outStartPaths;
 	s.outIntPaths = outIntPaths;
 	s.outPaths = outPaths;
@@ -316,6 +320,7 @@ simParams paramSim::getSim() {
 	s.CreatePopFile = CreatePopFile;
 #endif
 	s.patchSamplingOption = patchSamplingOption;
+	s.outputFormat = outputFormat;
 
 	s.outputGenes = outputGenes;
 	s.outputGenesStart = outputGenesStart;
@@ -330,6 +335,7 @@ simParams paramSim::getSim() {
 	s.outputPairwiseFstInterval = outputPairwiseFstInterval;
 
 	s.outputPerLocusFst = outputPerLocusFst;
+	s.outputPerPatchFis = outputPerPatchFis;
 
 	s.fixReplicateSeed = fixReplicateSeed;
 

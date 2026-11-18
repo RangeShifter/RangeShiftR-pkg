@@ -80,6 +80,7 @@ using namespace std;
 #include "Parameters.h"
 #include "Patch.h"
 #include "Cell.h"
+#include <unordered_map>
 #include "Species.h"
 #include "FractalGenerator.h"
 #if RS_RCPP
@@ -555,6 +556,15 @@ private:
 
 	// list of patches in the landscape - can be in any sequence
 	std::vector <Patch*> patches;
+	// index patch number (as supplied by the user) -> Patch, for O(1) lookup in
+	// findPatch()/existsPatch(); kept in sync with the patches vector
+	// Dense case (patch number == position in patches, e.g. the one-patch-per-cell
+	// landscapes of cell-based models): no index needed, lookup is patches[num].
+	// The hash index is built only once a patch breaks that rule.
+	std::unordered_map<int, Patch*> patchIndex;
+	bool patchesDense = true;
+	void addPatch(Patch* pPatch);
+	void clearPatches(void);
 
 	// list of habitat codes
 	std::vector <int> habCodes;

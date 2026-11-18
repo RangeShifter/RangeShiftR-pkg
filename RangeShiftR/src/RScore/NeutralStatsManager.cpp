@@ -152,7 +152,7 @@ void NeutralStatsManager::calcAllelicDiversityMetrics(set<int> const& patchList,
 		for (int patchId : patchList) {
 			const auto patch = pLandscape->findPatch(patchId);
 			const auto pPop = patch->getPopn(pSpecies);
-			if (pPop != 0) {
+			if (pPop != 0 && pPop->sampleSize() > 0) {
 				for (i = 0; i < nLoci; ++i)
 					for (j = 0; j < nAlleles; ++j)
 						meanNbFixedLociPerPatch += pPop->getAlleleFrequency(i, j) == 1;
@@ -369,9 +369,11 @@ void NeutralStatsManager::calculateFstatWC(set<int> const& patchList, const int 
 			b_l *= nBar / nBarMinusOne;
 			c_l *= 0.5;
 
-			perLocusFst[l] = a_l / (a_l + b_l + c_l);
+			const double denomLocus = a_l + b_l + c_l;
+			// monomorphic locus: estimators are undefined (0/0), report 0
+			perLocusFst[l] = a_l / denomLocus; //denomLocus == 0.0 ? 0.0 : a_l / denomLocus; // add check against 0/0 for monomorphic loci
 			perLocusFis[l] = (b_l + c_l) == 0.0 ? 0.0 : b_l / (b_l + c_l);
-			perLocusFit[l] = a_l + b_l / (a_l + b_l + c_l);
+			perLocusFit[l] = (a_l + b_l) / denomLocus; // denomLocus == 0.0 ? 0.0 : (a_l + b_l) / denomLocus; // bugfix: brackets were missing + add check against 0/0 for monomorphic loci 
 
 			numFst += a_l;
 			numFis += b_l;
@@ -383,9 +385,9 @@ void NeutralStatsManager::calculateFstatWC(set<int> const& patchList, const int 
 
 		denomFit = denomFst; // same quantity
 
-		fst = numFst / denomFst; // theta hat in eq. 1 in WC 1984
+		fst = numFst / denomFst; //(denomFst == 0.0) ? 0.0 : numFst / denomFst; // theta hat in eq. 1 in WC 1984
 		fis = (denomFis == 0.0) ? 0.0 : numFis / denomFis; // f hat
-		fit = numFit / denomFit; // F hat
+		fit = numFit / denomFit; //(denomFit == 0.0) ? 0.0 : numFit / denomFit; // F hat
 	}
 	else { // zero or one sampled pops, cannot compute F-stats
 		fst = 0.0;
@@ -454,6 +456,78 @@ void NeutralStatsManager::calculatePairwiseFst(set<int> const& patchList, const 
 		}
 	}
 	
+}
+
+// ----------------------------------------------------------------------------------------
+// Per-patch Fis
+//
+// For each sampled patch i with n_i sampled individuals and each neutral locus l:
+//   Ho_il = (nb of individuals heterozygous at l) / n_i
+//   Hs_il = n_i / (n_i - 1) * (1 - sum_u p_ilu^2 - Ho_il / (2 n_i))   (Nei 1987, eq. 7.39)
+//   Fis_i = 1 - sum_l Ho_il / sum_l Hs_il                              (ratio of sums over loci)
+//
+// For a single sample this is algebraically identical to the Weir & Cockerham (1984)
+// estimator f-hat = b / (b + c) used for the global Fis (with r = 1: sum_u c_u = Ho,
+// sum_u (b_u + c_u) = Hs), so per-patch and global values are directly comparable.
+// It is also identical to the population-specific Fis of Weir & Goudet (2017, Genetics 206:2085),
+// (M_W - M_S) / (1 - M_S), with M_W the allele matching within individuals and M_S the matching
+// between different individuals of the patch (averaged over loci), since 1 - M_S = Hs.
+// Per locus it equals the per-population Fis of hierfstat::basic.stats() (Nei 1987); over loci,
+// hierfstat averages the per-locus values (unweighted), whereas the ratio of sums is used here,
+// so multi-locus values can differ slightly.
+//
+// Undefined values are stored as NaN:
+//   - haploid species: Ho and Fis
+//   - n_i < 2: Hs and Fis
+//   - all loci monomorphic in the patch (sum Hs = 0): Fis
+// Patches without a population or without sampled individuals are skipped.
+// ----------------------------------------------------------------------------------------
+void NeutralStatsManager::calculatePerPatchFis(set<int> const& patchList, Species* pSpecies, Landscape* pLandscape) {
+
+	perPatchFis.clear();
+
+	const int nLoci = pSpecies->getNPositionsForTrait(NEUTRAL);
+	const int nAlleles = pSpecies->getSpTrait(NEUTRAL)->getNbNeutralAlleles();
+	const bool isDiploid = pSpecies->isDiploid();
+	const double notDefined = numeric_limits<double>::quiet_NaN();
+
+	for (int patchId : patchList) {
+		const auto patch = pLandscape->findPatch(patchId);
+		if (patch == 0) continue;
+		const auto pPop = patch->getPopn(pSpecies);
+		if (pPop == 0) continue;
+		const int n = pPop->sampleSize();
+		if (n == 0) continue;
+
+		PatchFisStats stats;
+		stats.patchId = patchId;
+		stats.nbSampledInds = n;
+		stats.ho = stats.hs = stats.fis = notDefined;
+
+		const vector<int> nbHeteroPerLocus = isDiploid ?
+			pPop->countNbHeterozygotesEachLocus() : vector<int>(nLoci, 0);
+
+		double sumHo = 0.0, sumHs = 0.0;
+		for (int l = 0; l < nLoci; ++l) {
+			double sumSqFreq = 0.0;
+			for (int u = 0; u < nAlleles; ++u) {
+				const double p = pPop->getAlleleFrequency(l, u);
+				sumSqFreq += p * p;
+			}
+			const double hoLocus = static_cast<double>(nbHeteroPerLocus[l]) / n;
+			sumHo += hoLocus;
+			if (n > 1)
+				sumHs += n / (n - 1.0) * (1.0 - sumSqFreq - hoLocus / (2.0 * n));
+		}
+
+		if (isDiploid) stats.ho = sumHo / nLoci;
+		if (n > 1) {
+			stats.hs = sumHs / nLoci;
+			if (isDiploid && fabs(sumHs) > 1e-12)
+				stats.fis = 1.0 - sumHo / sumHs;
+		}
+		perPatchFis.push_back(stats);
+	}
 }
 
 

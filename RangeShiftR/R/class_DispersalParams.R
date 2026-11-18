@@ -40,7 +40,8 @@
 #'            DensDep = FALSE,
 #'            IndVar = FALSE,
 #'            EmigStage,
-#'            UseFullKern = FALSE)
+#'            UseFullKern = FALSE,
+#'            PostDestructn = FALSE)
 #' @param EmigProb Matrix containing all parameters (#columns) to determine emigration probabilities for each stage/sex (#rows). Its structure depends on the other parameters, see the Details.
 #' If the emigration probability is constant (i.e. \code{DensDep, IndVar, StageDep, SexDep = FALSE}), \code{EmigProb} can take a single numeric. Defaults to \eqn{0.0}.
 #' @param SexDep Sex-dependent emigration probability? (default: \code{FALSE})
@@ -49,6 +50,7 @@
 #' @param IndVar Individual variability in emigration traits? (default: \code{FALSE}) Must be \code{FALSE} if \code{StageDep=TRUE}.
 #' @param EmigStage Required for stage-structured populations with \code{IndVar=TRUE}: Stage which emigrates. (\code{StageDep} must be \code{FALSE})
 #' @param UseFullKern Applicable only if transfer phase is modelled by a \code{\link[RangeShiftR]{DispersalKernel}} and \code{DensDep=FALSE}: Shall the emigration probability be derived from dispersal kernel?
+#' @param PostDestructn In a dynamic landscape, determine if all individuals of a population should die (\code{FALSE}, default) or disperse (\code{TRUE}) if its patch gets destroyed. Applies to stage-structured and non-structured populations. Replaces the former argument \code{PostDestructn} of \code{\link[RangeShiftR]{StageStructure}}.
 #' @details Emigration is modelled as the probability \eqn{d} that an individual leaves its natal patch during the present year or season (every reproductive event
 #' is always followed by dispersal).
 #' Populations with non-overlapping generations have only a single opportunity to emigrate, whereas in a stage-structured population the realised overall emigration
@@ -140,14 +142,16 @@ Emigration <- setClass("EmigrationParams", slots = c(DensDep = "logical",
                                                      SexDep = "logical",
                                                      EmigProb = "matrix_OR_numeric",
                                                      EmigStage = "integer_OR_numeric",
-                                                     UseFullKern = "logical")
+                                                     UseFullKern = "logical",
+                                                     PostDestructn = "logical")
                        , prototype = list(DensDep = FALSE,
                                           IndVar = FALSE,
                                           StageDep = FALSE,
                                           SexDep = FALSE,
                                           EmigProb = matrix(data = 0.0, nrow = 1, ncol = 1),
                                           EmigStage = 0L,
-                                          UseFullKern = FALSE)
+                                          UseFullKern = FALSE,
+                                          PostDestructn = FALSE)
 )
         # discuss TraitScaleFactor in the Details
 
@@ -225,6 +229,9 @@ setValidity("EmigrationParams", function(object) {
                 msg <- c(msg, "UseFullKern is not applicable if DensDep = TRUE!")
         }
     }
+    if (anyNA(object@PostDestructn) || length(object@PostDestructn)!=1) {
+        msg <- c(msg, "PostDestructn must be set and of length 1!")
+    }
     if (is.null(msg)) TRUE else msg}
 )
 setMethod("initialize", "EmigrationParams", function(.Object, ...) {
@@ -279,6 +286,9 @@ setMethod("show", "EmigrationParams", function(object){
     }
     if (!object@DensDep && object@UseFullKern) {
         cat("   UseFullKern =", object@UseFullKern, "\n")
+    }
+    if (object@PostDestructn) {
+        cat("   PostDestructn = TRUE (all individuals disperse if their patch is destroyed)\n")
     }
 })
 setMethod("plotProbs", "EmigrationParams", function(x, stage = NULL, sex = NULL, xmax = NULL, ymax = NULL){

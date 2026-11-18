@@ -72,8 +72,8 @@ void Cell::setHabIndex(short hx) {
 }
 
 void Cell::changeHabIndex(short ix,short hx) {
-	if (ix >= 0 && ix < (short)habIxx.size() && hx >= 0) habIxx[ix] = hx;
-	else habIxx[ix] = 0;
+	if (ix < 0 || ix >= (short)habIxx.size()) return; // invalid landscape change index
+	habIxx[ix] = hx >= 0 ? hx : 0;
 }
 
 int Cell::getHabIndex(int ix) {

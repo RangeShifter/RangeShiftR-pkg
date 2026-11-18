@@ -42,6 +42,7 @@ ControlParams <- setClass("ControlParams", slots = c(
                                    stages = "integer_OR_numeric",           # set via +Demography@StageStruct
                                    transfer = "integer_OR_numeric",         # set via +Dispersal     Transfer method: 0 = dispersal kernels, 1 = SMS, 2 = CRW)
                                    translocation = "logical",                # set via +Management
+                                   harvesting = "logical", # set via +Management
                                    spatial_demography = "logical",          # set via +Land
                                    neutralgenetics = "logical",                    # set via +Genetics
                                    geneticload = "logical",                        # set via +Genetics
@@ -63,6 +64,7 @@ ControlParams <- setClass("ControlParams", slots = c(
                                   stages = NA_integer_,
                                   transfer = 0L,
                                   translocation = FALSE,
+                                  harvesting = FALSE,
                                   spatial_demography = FALSE,
                                   neutralgenetics = FALSE,
                                   geneticload = FALSE,
@@ -87,7 +89,7 @@ setMethod("show", "ControlParams", function(object){
         cat(" Seed =", object@seed)
         if(object@seed<0) cat("  (generate random seed)")
         if(object@seed>0) cat("  (fixed seed)")
-        if(object@fixreplicateseed==TRUE) cat(" all replicates use the same seed")
         cat("\n")
     }
+    if(object@fixreplicateseed==TRUE) cat(" Each replicate is seeded with its replicate number (seed has no effect)\n")
 })

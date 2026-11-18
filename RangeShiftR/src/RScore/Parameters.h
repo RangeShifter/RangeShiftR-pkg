@@ -339,9 +339,11 @@ struct simParams {
 	bool outputGenes;
 	bool outputGlobalFst, outPairwiseFst;
 	bool outputPerLocusFst;
+	bool outputPerPatchFis;
 	int outputGenesStart, outputGenesInterval;
 	int outputGlobalFstStart, outputGlobalFstInterval;
 	int outputPairwiseFstStart, outputPairwiseFstInterval;
+	int outputFormat = 0; // format of the large tabular outputs (Pop, Inds, geneValues): 0 = text, 1 = HDF5 (see OutputTable)
 };
 
 struct simView {
@@ -358,7 +360,12 @@ public:
 	void setSim(simParams);
 	void setGeneticSim(string patchSamplingOption, bool outputGenes, int outputGenesStart, int outputGenesInterval, bool outPairwiseFst,
 		int outputGlobalFst, int outputStartGlobalFst, int outputGlobalFstInterval, int outputStartPairwiseFst, int outputPairwiseFstIntervals, bool outputPerLocusFst);
+	// per-patch Fis output (uses the same start year and interval as the global Fst output)
+	void setOutputPerPatchFis(const bool& outputPerPatchFis) { this->outputPerPatchFis = outputPerPatchFis; }
 	simParams getSim(void);
+	// cheap getters for flags queried in inner loops (getSim() copies the whole
+	// struct, incl. a std::string and, in the R package, an Rcpp vector)
+	bool getSaveVisits(void) const { return saveVisits; }
 	int getSimNum(void);
 	string getDir(int);
 	void setBatchNum(const int& batchNb) {
@@ -417,10 +424,12 @@ private:
 	bool outputGlobalFst;
 	bool outPairwiseFst;
 	bool outputPerLocusFst;
+	bool outputPerPatchFis;
 	int outputPairwiseFstStart;
 	int outputGlobalFstStart;
 	int outputPairwiseFstInterval;
 	int outputGlobalFstInterval;
+	int outputFormat;			// 0 = text, 1 = HDF5 (see OutputTable)
 };
 
 extern RSrandom* pRandom;

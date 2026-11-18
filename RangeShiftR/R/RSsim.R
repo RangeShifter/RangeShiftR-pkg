@@ -51,8 +51,8 @@
 #' @param gene Set \code{\link[RangeShiftR]{Genetics}} parameters
 #' @param management Set \code{\link[RangeShiftR]{Management}} parameters
 #' @param init Set \code{\link[RangeShiftR]{Initialise}} parameters
-#' @param seed Set seed for random number generator. If non-positive, a random seed will be generated.
-#' @param fixreplicateseed Use the same seed for all replicates.
+#' @param seed Seed for the random number generator. If non-positive (default \code{0}), a random seed is generated and results are not reproducible. A positive seed makes the whole run reproducible. With \code{fixreplicateseed = TRUE}, this seed has no effect on the simulation results (the parameter output file still reports it); see \code{fixreplicateseed} and Details.
+#' @param fixreplicateseed If \code{FALSE} (default), the random number generator is seeded once with \code{seed} and runs on through all replicates, i.e. each replicate continues the random sequence where the previous replicate stopped. If \code{TRUE}, the generator is re-seeded at the start of each replicate with the replicate number (0, 1, 2, ...), so that each replicate always uses the same random sequence, independent of \code{seed} and of the other replicates. Replicates still differ from each other. See Details.
 #' @return returns a \emph{RangeShiftR} parameter master object (class 'RSparams')
 #' @details
 #' \emph{Demographic stochasticity} \cr Demographic stochasticity is fundamentally important for the dynamics of populations that are naturally small or have declined to low abundances owing to
@@ -61,7 +61,9 @@
 #' \insertCite{clark2001invasion,kendall2003unstructured,robert2003variation,grimm2005individual,jongejans2008dispersal,travis2011improving}{RangeShiftR}.
 #' Thus, population dynamics in \emph{RangeShiftR} were constructed to be
 #' fully individual-based and stochastic. Each reproductive individual produces a discrete number of offspring sampled from a Poisson distribution with a mean
-#' that is influenced by the species’ demographic parameters and the local population density. As \emph{RangeShiftR} has been designed for modelling a variety of
+#' that is influenced by the species’ demographic parameters and the local population density. Alternatively, the number of offspring can be drawn
+#' from a normal distribution with the same mean and a given standard deviation, and an upper limit can be set (see \code{FecSD} and \code{MaxOffspring}
+#' in \code{\link[RangeShiftR]{Demography}}). As \emph{RangeShiftR} has been designed for modelling a variety of
 #' species with different life-history traits, a range of different population models can be chosen, depending on the species being modelled and on the
 #' available information (see \code{\link[RangeShiftR]{Demography}}). In all cases demographic stochasticity is implemented.
 #'
@@ -104,6 +106,18 @@
 #' season per year but it is also possible to simulate situations where there more than one per year or only one every \eqn{N} years. A single
 #' reproductive event is always followed by dispersal. Finally, the smallest time scale is represented by the number of steps that emigrants take
 #' during the movement phase of dispersal. This can be determined by a maximum number of steps, per-step mortality or both.
+#'
+#' \emph{Random numbers and replicates} \cr
+#' To compare scenarios that differ only from a certain year onwards (e.g. management actions starting in a specific year), set
+#' \code{fixreplicateseed = TRUE} (the value of \code{seed} then does not matter). All scenarios then use the same random numbers in each replicate, and their results are identical up to
+#' the first year in which the scenarios differ. With \code{fixreplicateseed = FALSE}, a scenario that uses a different number of random draws in
+#' one replicate (e.g. because of management) shifts the random sequence of all following replicates, so that these replicates differ between
+#' scenarios from the first year onwards.\cr
+#' Note that with \code{fixreplicateseed = TRUE} every run produces the same replicates 0, 1, 2, ..., whatever \code{seed} is set to. If replicates
+#' are split across several runs (e.g. jobs on a computing cluster), all runs would therefore produce identical results. Instead, run one replicate
+#' per job (\code{Replicates = 1} in \code{\link[RangeShiftR]{Simulation}}) with \code{fixreplicateseed = FALSE}, a different positive \code{seed}
+#' for each job (e.g. derived from the job array index; note that \code{seed} must be larger than \code{0}) and a different \code{batchnum} for
+#' each job, so that the output files do not overwrite each other. Jobs with the same \code{seed} remain paired between scenarios.
 #'
 #' @references
 #'         \insertAllCited{}

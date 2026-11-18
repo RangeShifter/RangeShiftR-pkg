@@ -1,5 +1,5 @@
 name: check
-on: push
+on: [push, pull_request]
 
 jobs:
   check:
@@ -20,7 +20,42 @@ jobs:
       - name: build
         run: |
           mkdir build && cd build
-          cmake ../ && cmake --build .
-          
+          cmake ../ -DCMAKE_BUILD_TYPE=Debug && cmake --build . --config Debug
+
       - name: run
         run: ${{ matrix.path_to_exe }}
+
+  # unit tests with AddressSanitizer + UndefinedBehaviorSanitizer:
+  # memory errors and undefined behaviour abort the run instead of passing silently
+  sanitizers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: build
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DSANITIZE=ON
+          cmake --build build -j 4
+
+      - name: run
+        env:
+          ASAN_OPTIONS: detect_leaks=0:alloc_dealloc_mismatch=1
+          UBSAN_OPTIONS: print_stacktrace=1
+        run: ./build/RScore
+
+  # optional binary output (OutputTable with HDF5)
+  hdf5:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: install HDF5
+        run: sudo apt-get update && sudo apt-get install -y libhdf5-dev
+
+      - name: build
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DHDF5=ON
+          cmake --build build -j 4
+
+      - name: run
+        run: ./build/RScore

@@ -29,6 +29,33 @@ using namespace std::chrono;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 #if RS_RCPP && !R_CMD
+// Collects the population maps returned to R.
+// Rcpp::List::push_back() copies the whole list (and its names) on every call,
+// i.e. building a list of n elements costs O(n^2). Here the elements are kept
+// in a std::vector (Rcpp::RObject keeps them protected from R's garbage
+// collector) and the named list is created once at the end.
+class RListBuilder {
+public:
+	void push_back(SEXP x, const std::string& name) {
+		values.emplace_back(x);
+		names.push_back(name);
+	}
+	Rcpp::List build() const {
+		const R_xlen_t n = static_cast<R_xlen_t>(values.size());
+		Rcpp::List out(n);
+		Rcpp::CharacterVector nms(n);
+		for (R_xlen_t i = 0; i < n; i++) {
+			out[i] = values[i];
+			nms[i] = names[i];
+		}
+		if (n > 0) out.attr("names") = nms;
+		return out;
+	}
+private:
+	std::vector<Rcpp::RObject> values;
+	std::vector<std::string> names;
+};
+
 Rcpp::List RunModel(Landscape* pLandscape, int seqsim, Rcpp::S4 ParMaster) //Rcpp::S4 ParMaster new for all variants
 #else
 int RunModel(Landscape* pLandscape, int seqsim)
@@ -45,6 +72,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 	transferRules trfr = pSpecies->getTransferRules();
 	managementParams manage = pManagement->getManagementParams();
 	translocationParams transloc = pManagement->getTranslocationParams();
+	harvestingParams harvest = pManagement->getHarvestingParams();
 	initParams init = paramsInit->getInit();
 	simParams sim = paramsSim->getSim();
 
@@ -90,7 +118,61 @@ int RunModel(Landscape* pLandscape, int seqsim)
 	}
 
 #if RS_RCPP && !R_CMD
-	Rcpp::List list_outPop;
+	RListBuilder list_outPop;
+	// Population data returned to R (ReturnPopMatrix / ReturnPopDataFrame) are recorded at the same
+	// time and under the same conditions as the population output file (see RangePopOutput()):
+	// before reproduction for non-structured and after reproduction for stage-structured models,
+	// and once more for year = Years (or the year after extinction) after the last simulated year.
+	// List names: rep<r>_year<y>_season<s>[_NInd|_NInd_stage<i>|_NJuv]; season s corresponds to RepSeason in the file.
+	auto returnPopToR = [&](int rep, int yr, int gen) {
+		if (!(sim.ReturnPopMatrix || sim.ReturnPopDataFrame) || !sim.outPop
+			|| yr < sim.outStartPop || yr % sim.outIntPop != 0) return;
+
+		// if ReturnPopMatrix
+		if(sim.ReturnPopMatrix) {
+			// total abundance
+			list_outPop.push_back(
+				pComm->addYearToPopList(rep, yr, PopOutType::NInd, -1),
+				"rep" + std::to_string(rep) + "_year" + std::to_string(yr) + "_season" + std::to_string(gen) + "_NInd"
+			);
+
+			// also output single stages
+			if(sim.ReturnStages.length() > 1){
+				bool ReturnStage;
+				for(int i = 1; i < sim.ReturnStages.length(); i++) {
+					ReturnStage = sim.ReturnStages[i] == 1;
+					if(ReturnStage) {
+						list_outPop.push_back(
+							pComm->addYearToPopList(rep, yr, PopOutType::Stage, i),
+							"rep" + std::to_string(rep) +
+								"_year" + std::to_string(yr) +
+								"_season" + std::to_string(gen) +
+								"_NInd_stage" + std::to_string(i)
+						);
+					}
+				}
+				ReturnStage = sim.ReturnStages[0] == 1;
+				if (ReturnStage) {
+					//Rcpp::Rcout << "Return Juveniles" << endl;
+					list_outPop.push_back(
+						pComm->addYearToPopList(rep, yr, PopOutType::Juvs, -1),
+						"rep" + std::to_string(rep) + "_year" + std::to_string(yr) + "_season" + std::to_string(gen) + "_NJuv"
+					);
+				}
+			}
+		}
+
+		if(sim.ReturnPopDataFrame){
+			// in contrast to ReturnMatrix, this function produces a list of data frames, one per rep and year, holding all (stage-specific) abundances for all patches,
+			// instead of a single matrix for each population size metric (total abundance, stage-specific abundance, juvenile abundance) and each year and replicate
+			list_outPop.push_back(
+				pComm->addYearToPopListPatchBased(rep, yr, sim.ReturnStages),
+				"rep" + std::to_string(rep) + "_year" + std::to_string(yr) + "_season" + std::to_string(gen)
+			);
+		}
+
+		// list_outPop.push_back(pComm->addYearToPopList(rep, yr), "rep" + std::to_string(rep) + "_year" + std::to_string(yr));
+	};
 #endif
 
 	// Loop through replicates
@@ -274,6 +356,10 @@ int RunModel(Landscape* pLandscape, int seqsim)
 		if (sim.outPairwiseFst) {
 			pComm->openPairwiseFstFile(pSpecies, pLandscape, ppLand.landNum, rep);
 		}
+		if (sim.outputPerPatchFis) {
+			if (!pComm->openPerPatchFisFile(ppLand.landNum, rep))
+				throw logic_error("Per-patch Fis output file could not be initialised.");
+		}
 #if RS_RCPP
 		// open a new movement paths file for each replicate
 		if (sim.outPaths)
@@ -430,12 +516,19 @@ int RunModel(Landscape* pLandscape, int seqsim)
 
 			for (int gen = 0; gen < dem.repSeasons; gen++) // generation loop
 			{
-				// TODO move translocation before dispersal?
-				if (manage.translocation && std::find(transloc.translocation_years.begin(), transloc.translocation_years.end(), yr) != transloc.translocation_years.end()) {
+				// Translocation only occurs in generation 0, and only if the current year is in the list of translocation years
+				if (manage.translocation && gen == 0 && std::find(transloc.translocation_years.begin(), transloc.translocation_years.end(), yr) != transloc.translocation_years.end()) {
 				    pManagement->translocate(yr
                                      , pLandscape
                                      , pSpecies
                                      );
+				}
+
+				if (manage.harvesting && gen == 0 && std::find(harvest.harvesting_years.begin(), harvest.harvesting_years.end(), yr) != harvest.harvesting_years.end()) {
+					pManagement->harvest(yr
+									 , pLandscape
+									 , pSpecies
+									 );
 				}
 
 				// Output and pop. visualisation before reproduction
@@ -445,54 +538,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				if (!dem.stageStruct && (sim.outRange || sim.outPop))
 					RangePopOutput(pComm, rep, yr, gen);
 #if RS_RCPP && !R_CMD
-				if ((sim.ReturnPopMatrix || sim.ReturnPopDataFrame)  && sim.outPop && yr >= sim.outStartPop && yr % sim.outIntPop == 0) {
-
-				    // if ReturnPopMatrix
-				    if(sim.ReturnPopMatrix) {
-				        // total abundance
-    				    list_outPop.push_back(
-    				        pComm->addYearToPopList(rep, yr, PopOutType::NInd, -1),
-    				        "rep" + std::to_string(rep) + "_year" + std::to_string(yr) + "_NInd"
-    				    );
-
-    				    // also output single stages
-                        if(sim.ReturnStages.length() > 1){
-        				    bool ReturnStage;
-        				    for(int i = 1; i < sim.ReturnStages.length(); i++) {
-        				        ReturnStage = sim.ReturnStages[i] == 1;
-        				        if(ReturnStage) {
-        				            list_outPop.push_back(
-        				                pComm->addYearToPopList(rep, yr, PopOutType::Stage, i),
-        				                "rep" + std::to_string(rep) +
-        				                    "_year" + std::to_string(yr) +
-        				                    "_NInd_stage" + std::to_string(i)
-        				            );
-        				        }
-        				    }
-    //
-    //
-    				        ReturnStage = sim.ReturnStages[0] == 1;
-        				    if (ReturnStage) {
-        				        //Rcpp::Rcout << "Return Juveniles" << endl;
-        				        list_outPop.push_back(
-        				            pComm->addYearToPopList(rep, yr, PopOutType::Juvs, -1),
-        				            "rep" + std::to_string(rep) + "_year" + std::to_string(yr) + "_NJuv"
-        				        );
-        				    }
-    				    }
-				    }
-
-				    if(sim.ReturnPopDataFrame){
-				        // in contrast to ReturnMatrix, this function produces a list of data frames, one per rep and year, holding all (stage-specific) abundances for all patches,
-				        // instead of a single matrix for each population size metric (total abundance, stage-specific abundance, juvenile abundance) and each year and replicate
-				        list_outPop.push_back(
-				            pComm->addYearToPopListPatchBased(rep, yr, sim.ReturnStages),
-				            "rep" + std::to_string(rep) + "_year" + std::to_string(yr)
-				        );
-				    }
-
-					// list_outPop.push_back(pComm->addYearToPopList(rep, yr), "rep" + std::to_string(rep) + "_year" + std::to_string(yr));
-				}
+				if (!dem.stageStruct) returnPopToR(rep, yr, gen);
 #endif
 			// apply local extinction for generation 0 only
 			// CHANGED TO *BEFORE* RANGE & POPN OUTPUT PRODUCTION IN v1.1,
@@ -514,6 +560,9 @@ int RunModel(Landscape* pLandscape, int seqsim)
 				// Output and pop. visualisation AFTER reproduction
 				if (dem.stageStruct && (sim.outRange || sim.outPop))
 					RangePopOutput(pComm, rep, yr, gen);
+#if RS_RCPP && !R_CMD
+				if (dem.stageStruct) returnPopToR(rep, yr, gen);
+#endif
 
 				// Dispersal
 				pComm->emigration();
@@ -583,7 +632,7 @@ int RunModel(Landscape* pLandscape, int seqsim)
 							pSpecies, rep, yr, gen,
 							doPairwiseFst, sim.outputPairwiseFstStart, sim.outputPairwiseFstInterval,
 							doGlobalFst, sim.outputGlobalFstStart, sim.outputGlobalFstInterval,
-							sim.outputPerLocusFst);
+							sim.outputPerLocusFst, sim.outputPerPatchFis);
 					}
 				}
 				
@@ -634,6 +683,9 @@ int RunModel(Landscape* pLandscape, int seqsim)
 			PreReproductionOutput(pLandscape, pComm, rep, yr, 0);
 		if (sim.outRange || sim.outPop)
 			RangePopOutput(pComm, rep, yr, 0);
+#if RS_RCPP && !R_CMD
+		returnPopToR(rep, yr, 0); // RepSeason 0, as in the population output file
+#endif
 
 		pComm->resetPopns();
 
@@ -707,6 +759,8 @@ int RunModel(Landscape* pLandscape, int seqsim)
 			pComm->openPerLocusFstFile(pSpecies, pLandscape, -999, rep);
 		if (sim.outPairwiseFst) //close per locus file 
 			pComm->openPairwiseFstFile(pSpecies, pLandscape, -999, rep);
+		if (sim.outputPerPatchFis) //close per patch Fis file
+			pComm->openPerPatchFisFile(-999, rep);
 
 		if (sim.saveVisits) {
 			pLandscape->outVisits(rep, ppLand.landNum);
@@ -758,12 +812,14 @@ int RunModel(Landscape* pLandscape, int seqsim)
 		pComm->openPerLocusFstFile(pSpecies, pLandscape, -999, 0);
 	}
 	if (sim.outPairwiseFst) pComm->openPairwiseFstFile(pSpecies, pLandscape, -999, 0);
+	if (sim.outputPerPatchFis) pComm->openPerPatchFisFile(-999, 0);
 
 	delete pComm;
 	pComm = 0;
+	Individual::releaseMemoryPool(); // all individuals are gone: give their memory back
 
 #if RS_RCPP && !R_CMD
-	return list_outPop;
+	return list_outPop.build();
 #else
 	return 0;
 #endif
@@ -1081,16 +1137,17 @@ void OutParameters(Landscape* pLandscape)
 		outPar << "MAX. HAREM SIZE (h)\t" << dem.harem << endl;
 		break;
 	}
+	outPar << "FECUNDITY DISTRIBUTION:\t";
+	if (dem.fecSD < 0.0) outPar << "Poisson" << endl;
+	else outPar << "Normal (truncated to integer, minimum 0), SD = " << dem.fecSD << endl;
+	outPar << "MAX. NO. OF OFFSPRING PER FEMALE:\t";
+	if (dem.maxOffspring < 0) outPar << "no limit" << endl;
+	else outPar << dem.maxOffspring << endl;
 	outPar << "STAGE STRUCTURE:\t";
 	if (dem.stageStruct) {
 		outPar << "yes" << endl;
 		outPar << "PROBABILITY OF REPRODUCING IN SUBSEQUENT SEASONS\t" << sstruct.probRep << endl;
 		outPar << "No. OF REP. SEASONS BEFORE SUBSEQUENT REPRODUCTIONS\t" << sstruct.repInterval << endl;
-		if (!ppLand.generated && ppLand.dynamic) {
-			outPar << "ACTION AFTER POPULATION DESTRUCTION: all individuals ";
-			if (sstruct.disperseOnLoss) outPar << "disperse" << endl;
-			else outPar << "die" << endl;
-		}
 		outPar << "No. STAGES\t" << sstruct.nStages << endl;
 		outPar << "MAX. AGE\t" << sstruct.maxAge << endl;
 		// no sex-specific demographic parameters
@@ -1380,6 +1437,12 @@ void OutParameters(Landscape* pLandscape)
 					}
 				}
 				}
+
+	if (!ppLand.generated && ppLand.dynamic) {
+		outPar << "ACTION AFTER POPULATION DESTRUCTION: all individuals ";
+		if (emig.disperseOnLoss) outPar << "disperse" << endl;
+		else outPar << "die" << endl;
+	}
 
 	// Transfer
 
@@ -1693,8 +1756,9 @@ void OutParameters(Landscape* pLandscape)
 	// Genetics
 	outPar << endl << "GENETICS:" << endl;
 
-	// only if genetics are simulated
-	if(sim.outputGenes) {
+	// only if genetics are simulated (any genetic trait defined),
+	// independent of whether gene values are written to file (sim.outputGenes)
+	if (pSpecies->getNTraits() > 0) {
 	set<TraitType> traitList = pSpecies->getTraitTypes();
 
 	if (pSpecies->isDiploid()) outPar << "DIPLOID" << endl; else outPar << "HAPLOID" << endl;
@@ -1707,7 +1771,7 @@ void OutParameters(Landscape* pLandscape)
 	outPar << "Recombination rate: " << pSpecies->getRecombinationRate() << endl;
 	outPar << "Traits modelled:  " << endl;
 	for (auto trait : traitList)
-		outPar << trait << endl;
+		outPar << to_string(trait) << endl;
 	} else {
 	    outPar << "No genetics simulated" << endl;
 	}
@@ -1716,6 +1780,8 @@ void OutParameters(Landscape* pLandscape)
 	// Management
 	managementParams manage = pManagement->getManagementParams();
 	translocationParams transloc = pManagement->getTranslocationParams();
+	harvestingParams harvest = pManagement->getHarvestingParams();
+
 	if(manage.translocation){
 	    outPar << endl << "MANAGEMENT - TRANSLOCATION: \t";
         // loop over translocation_years and print them
@@ -1741,6 +1807,39 @@ void OutParameters(Landscape* pLandscape)
 	            } else{
 	                outPar << "      Source cell: X " << source_it->second[j].x << " Y " << source_it->second[j].y << endl;
 	                outPar << "      Target cell: X " << target_it->second[j].x << " Y " << target_it->second[j].y << endl;
+	            }
+	            outPar << "      Min age: " << min_age_it->second[j] << endl;
+	            outPar << "      Max age: " << max_age_it->second[j] << endl;
+	            outPar << "      Stage: " << stage_it->second[j] << endl;
+	            outPar << "      Sex: " << sex_it->second[j] << endl;
+	            outPar << "      Number of individuals: " << nb_it->second[j] << endl;
+
+	        }
+	    }
+	}
+
+	if(manage.harvesting){
+	    outPar << endl << "MANAGEMENT - HARVESTING: \t";
+        // loop over harvesting_years and print them
+        outPar << endl;
+	    outPar << "Harvesting success: " << harvest.harvesting_success << endl;
+	    for( int i = 0; i < harvest.harvesting_years.size(); i++ ) {
+	        auto yr = harvest.harvesting_years[i];
+	        auto it = harvest.harvestNb.find(yr);
+	        auto nb_it = harvest.harvestNb.find(yr);
+	        auto source_it = harvest.harvestLoc.find(yr);
+	        auto min_age_it = harvest.harvestMin_age.find(yr);
+	        auto max_age_it = harvest.harvestMax_age.find(yr);
+	        auto stage_it = harvest.harvestStage.find(yr);
+	        auto sex_it = harvest.harvestSex.find(yr);
+	        outPar << "  Harvesting events in year: " << yr << endl;
+	        for( int j = 0; j < it->second.size(); j++ ){
+	            outPar << "    Event Nr. " << j+1 << " :" << endl;
+	            // if it is a cell based model
+	            if(ppLand.patchModel){
+	                outPar << "      Patch ID: " << source_it->second[j].x << endl;
+	            } else{
+	                outPar << "      Cell: X " << source_it->second[j].x << " Y " << source_it->second[j].y << endl;
 	            }
 	            outPar << "      Min age: " << min_age_it->second[j] << endl;
 	            outPar << "      Max age: " << max_age_it->second[j] << endl;
@@ -1880,6 +1979,7 @@ void OutParameters(Landscape* pLandscape)
 		outPar << "Global Fst and neutral genetics - every " << sim.outputGlobalFstInterval << " year";
 		if (sim.outputGlobalFstInterval > 1) outPar << "s";
 		if (sim.outputPerLocusFst) outPar << "outputting per locus Fst too";
+		if (sim.outputPerPatchFis) outPar << ", outputting per patch Fis too";
 		outPar << endl;
 	}
 

@@ -1,0 +1,6 @@
+#!/bin/sh
+# Configure script for RangeShiftR (Linux, macOS).
+# Detects the optional HDF5 library, which enables binary output files
+# (Simulation(OutputFormat = "hdf5")). Without HDF5 the package builds as before
+# and writes text output only. See tools/detect_hdf5.sh.
+sh ./tools/detect_hdf5.sh Makevars unix

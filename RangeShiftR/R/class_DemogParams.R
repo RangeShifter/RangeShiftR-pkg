@@ -38,8 +38,7 @@
 #'                RepSeasons = 1, PRep = 1.0, RepInterval = 0, SurvSched = 0,
 #'                FecDensDep = FALSE, DevDensDep = FALSE, SurvDensDep = FALSE,
 #'                FecStageWtsMatrix, DevStageWtsMatrix, SurvStageWtsMatrix,
-#'                FecLayer, DevLayer, SurvLayer,
-#'                PostDestructn = FALSE)
+#'                FecLayer, DevLayer, SurvLayer)
 #' @param Stages Number of life-stages (integer). Requires a minimum of \eqn{2}, for "juvenile" (stage 0) and "adult". Maximum is 10.
 #' @param TransMatrix Transition matrix. Defines the development probabilities from each stage into the next, as well as the respective survival probabilities and fecundities. See Details for matrix structure and notation.
 #' @param MaxAge Maximum age in years, defaults to \eqn{100}. (integer)
@@ -57,7 +56,7 @@
 #' scaling layers given in the \code{\link[RangeShiftR]{ImportedLandscape}} module to each demographic rate. The value NA denotes a spatially constant rate. The row number corresponds
 #' to the stage; the first/second column contains the layer index for females/males. In case of a female-only or simple sexual model (\code{ReproductionType={0,1}}) only the first
 #' column is needed and a vector is accepted to represent it. In any case, values will be coerced to integer.
-#' @param PostDestructn In a dynamic landscape, determine if all individuals of a population should die (\code{FALSE}, default) or disperse (\code{TRUE}) if its patch gets destroyed.
+#' @param PostDestructn Deprecated, use \code{PostDestructn} in \code{\link[RangeShiftR]{Emigration}} instead. A value given here still works: it triggers a warning, and \code{TRUE} is passed on to \code{Emigration(PostDestructn = TRUE)} when the parameter object is put together (e.g. in \code{RSsim()}).
 #' @details In stage-structured populations, generations can overlap and individuals can be classified in different stages (e.g. immature vs. breeding individuals) differing in their
 #' demographic parameters. Individuals are characterized by their age and stage. Each stage has a certain fecundity, survival probability and probability of developing to the next stage.
 #'
@@ -69,7 +68,7 @@
 #' Since all offspring is born into the juvenile stage (stage 0), all fecundities are always located in the first row of the matrix.
 #'
 #' However, in \emph{RangeShiftR}, these parameters are not used deterministically as \emph{rates} (like it is typical for matrix models) but, instead, as \emph{probabilities} which are
-#' applied stochastically at the individual level. Hence, each female at stage \eqn{i}, if it reproduces, produces a number of offspring given by \eqn{Poisson}(\ifelse{html}{\out{&phi;<sub>i</sub>}}{\eqn{φ_i}}),
+#' applied stochastically at the individual level. Hence, each female at stage \eqn{i}, if it reproduces, produces a number of offspring given by \eqn{Poisson}(\ifelse{html}{\out{&phi;<sub>i</sub>}}{\eqn{φ_i}}) (or by a normal distribution if \code{FecSD} \eqn{\ge 0} is set in \code{\link[RangeShiftR]{Demography}}, see there),
 #' while Bernoulli trials \eqn{Bern}(\ifelse{html}{\out{&sigma;<sub>i</sub>}}{\eqn{σ_i}}) and \eqn{Bern}(\ifelse{html}{\out{&gamma;<sub>i,i+1</sub>}}{\eqn{γ_(i,i+1)}}) determine if an individual/female survives or not
 #' and - if it survives - if it develops to the next stage or not.
 #'
@@ -454,6 +453,11 @@ setMethod("initialize", "StagesParams", function(.Object,...) {
     if(length(.Object@FecLayer)>0) mode(.Object@FecLayer) <- "integer"
     if(length(.Object@DevLayer)>0) mode(.Object@DevLayer) <- "integer"
     if(length(.Object@SurvLayer)>0) mode(.Object@SurvLayer) <- "integer"
+    # PostDestructn has moved to Emigration() (it now applies to non-structured populations, too)
+    if (!is.null(args$PostDestructn)) {
+        warning(this_func, "PostDestructn is deprecated here and has moved to Emigration(PostDestructn = ...). ",
+                "The value given here is still used (TRUE is passed on to Emigration()).", call. = FALSE)
+    }
     .Object}
 )
 setMethod("show", "StagesParams", function(object){
@@ -502,12 +506,8 @@ setMethod("show", "StagesParams", function(object){
         cat("   Spatially varying survival layer indices:\n")
         print(object@SurvLayer)
     }
-    cat("   PostDestructn    :", paste(object@PostDestructn) )
-    if (object@PostDestructn) {
-        cat(" (all disperse)\n")
-    }
-    else {
-        cat(" (all die)\n")
+    if (isTRUE(object@PostDestructn)) {
+        cat("   PostDestructn    : TRUE (deprecated here, passed on to Emigration())\n")
     }
     cat ("\n")}
 )
@@ -590,13 +590,23 @@ setClassUnion("StagesSlot", c("logical", "StagesParams"))
 #' Choose the Reproduction model that determines if sexes are considered implicitly or explicitly and if a mating system is used. If applicable, set the corresponding parameters, i.e. the proportion of males (\code{PropMales}) and the maximum harem size (\code{Harem}).
 #'
 #' @usage Demography(Rmax, bc = 1.0, StageStruct = FALSE,
-#'            ReproductionType = 0, PropMales = 0.5, Harem = 1)
+#'            ReproductionType = 0, PropMales = 0.5, Harem = 1,
+#'            FecSD = -9, MaxOffspring = -9)
 #' @param Rmax Maximum growth rate. Describes the mean number of offspring per female and reproductive event at very low density. Only required if \code{StageStruct=FALSE}.
 #' @param bc Competition coefficient. Describes the type of density regulation, providing the possibility for under-compensatory (\eqn{b_c < 1}), compensatory (\eqn{b_c = 1}) (default) or over-compensatory (\eqn{b_c > 1}) dynamics. Only required if \code{StageStruct=FALSE}.
 #' @param StageStruct \code{FALSE} (default) yields a population model with non-overlapping generations.\cr For a stage-structured population, this takes the corresponding parameter object generated by \code{\link[RangeShiftR]{StageStructure}}, which holds all demographic parameters.
 #' @param ReproductionType 0 = asexual / only female model (default)\cr1 = simple sexual model\cr2 = sexual model with explicit mating system
 #' @param PropMales Required if \code{ReproductionType={1,2}}: Proportion of males in the population, between \eqn{0} and \eqn{1}. Defaults to \eqn{0.5}.
 #' @param Harem Required if \code{ReproductionType=2}: Maximum harem size. The maximum number of pair bonds that a male can establish. \eqn{Harem = 1} (default) corresponds to monogamy, \eqn{0<Harem<1} to polyandry and \eqn{Harem>1} to polygyny.
+#' @param FecSD Standard deviation of the number of offspring per female and reproductive event.
+#' Applies to all population models (non-structured and stage-structured, all reproduction types).\cr
+#' If negative (default \eqn{-9}), the number of offspring is drawn from a Poisson distribution.
+#' If \code{FecSD} \eqn{\ge 0}, it is drawn from a normal distribution with standard deviation \code{FecSD} and the same expected value
+#' that would otherwise be used for the Poisson distribution, i.e. for non-structured populations the density-dependent value given in Details (not \code{Rmax} itself).
+#' Note that \code{FecSD} is constant and does not scale with density.
+#' The drawn value is truncated to an integer (rounded towards zero) and negative values are set to \eqn{0}. See Details.
+#' @param MaxOffspring Maximum number of offspring per female and reproductive event. Applies to all population models and to both the Poisson and the normal distribution (see \code{FecSD}).\cr
+#' If negative (default \eqn{-9}), there is no upper limit. Otherwise it must be a positive integer; drawn numbers of offspring that exceed it are set to \code{MaxOffspring}. See Details.
 #' @details The following information regards the population dynamics of a \strong{non-structured} (\code{StageStruct=FALSE}) population.\cr
 #' For more information on the population dynamics of a \strong{structured} population, see \code{\link[RangeShiftR]{StageStructure}}.
 #'
@@ -639,6 +649,20 @@ setClassUnion("StagesSlot", c("logical", "StagesParams"))
 #' A Bernoulli trial \eqn{Bern}\ifelse{html}{\out{(p<sub>r</sub>)}}{\eqn{(p_r)}} determines if the female reproduces or not. For females that reproduce, the number of offspring is determined through the Poisson distribution as stated above. Hence, the specification of the mating system determines the probability for each female to reproduce. However, no explicit pair bonds are formed, and in the cases where traits inheritance is
 #' involved, the father (of all the offspring produced by a single female in a single reproductive event) is selected randomly from the males in the population.\cr
 #' \cr
+#' \emph{Distribution of the number of offspring:}  (\code{FecSD}, \code{MaxOffspring})\cr
+#' By default (\code{FecSD} \eqn{< 0}), the number of offspring of each reproducing female is drawn from a Poisson distribution, as given in the formulas above
+#' (and, for stage-structured populations, in \code{\link[RangeShiftR]{StageStructure}}).
+#' If a standard deviation \code{FecSD} \eqn{\ge 0} is given, the Poisson distribution is replaced by a normal distribution
+#' with the same expected value and standard deviation \code{FecSD}. The drawn value is truncated to an integer (rounded towards zero)
+#' and negative values are set to \eqn{0}. Note that, due to the truncation, the realised mean number of offspring is lower than the expected value
+#' (by approximately \eqn{0.5} unless \code{FecSD} is very small), while setting negative values to \eqn{0} increases it if \code{FecSD} is large relative to the expected value.
+#' With \code{FecSD = 0}, each reproducing female produces exactly the truncated expected number of offspring.
+#' Because \code{FecSD} does not scale with the expected value, truncation and setting negative values to \eqn{0} can noticeably alter the realised density regulation,
+#' so that equilibrium population sizes may differ from those obtained with the Poisson distribution.\cr
+#' Optionally, an upper limit \code{MaxOffspring} can be set for the number of offspring per female and reproductive event, for both distributions.
+#' Drawn values above this limit are set to \code{MaxOffspring}. This lowers the realised mean number of offspring, noticeably so if \code{MaxOffspring} is
+#' close to or below the expected value (e.g. \code{Rmax} at low density, or the stage-specific fecundities).\cr
+#' \cr
 #' Populations with overlapping generations, i.e. with \strong{with stage-structure} are the appropriate choice for species in which generations can overlap and individuals can be classified in different stages
 #' (e.g. immature vs. breeding individuals) differing in their demographic parameters. Individuals are characterized by their age and stage. Each stage has a certain fecundity (which will be used as expected value of the Poisson distribution for reproduction), survival
 #' and probability of developing to the next stage. The parameters are provided as classical transition matrices \insertCite{caswell2001}{RangeShiftR} through a \code{\link[RangeShiftR]{StageStructure}}
@@ -654,13 +678,17 @@ Demography <- setClass("DemogParams", slots = c(Rmax = "integer_OR_numeric",
                                                 StageStruct = "StagesSlot",
                                                 ReproductionType = "integer_OR_numeric",
                                                 PropMales = "numeric",
-                                                Harem = "integer_OR_numeric")
+                                                Harem = "integer_OR_numeric",
+                                                FecSD = "numeric",
+                                                MaxOffspring = "integer_OR_numeric")
                        , prototype = list(#Rmax = 1.5,
                                           bc = 1.0,
                                           StageStruct = FALSE,
                                           ReproductionType = 0L,
                                           PropMales = 0.5,
-                                          Harem = 1L)
+                                          Harem = 1L,
+                                          FecSD = -9,
+                                          MaxOffspring = -9L)
 )
 setValidity("DemogParams", function(object) {
     msg <- NULL
@@ -692,6 +720,17 @@ setValidity("DemogParams", function(object) {
                     }
                 }
             }
+        }
+    }
+    if (anyNA(object@FecSD) || length(object@FecSD)!=1) {
+        msg <- c(msg, "FecSD must be set and of length 1! (Use a negative value for a Poisson distribution.)")
+    }
+    if (anyNA(object@MaxOffspring) || length(object@MaxOffspring)!=1) {
+        msg <- c(msg, "MaxOffspring must be set and of length 1! (Use a negative value for no upper limit.)")
+    }
+    else {
+        if (object@MaxOffspring >= 0 && (object@MaxOffspring < 1 || object@MaxOffspring %% 1 != 0)) {
+            msg <- c(msg, "MaxOffspring must be a positive integer, or negative for no upper limit!")
         }
     }
     validObject(object@StageStruct)
@@ -951,6 +990,15 @@ setMethod("show", "DemogParams", function(object){
     }
     if(object@ReproductionType==2) {
         cat("   Harem :", paste(object@Harem), "\n")
+    }
+    if(object@FecSD >= 0) {
+        cat("  Offspring number : Normal distribution, SD =", paste(object@FecSD), "(truncated to integer, min. 0)\n")
+    }
+    else {
+        cat("  Offspring number : Poisson distribution\n")
+    }
+    if(object@MaxOffspring >= 0) {
+        cat("  Max. offspring per female :", paste(object@MaxOffspring), "\n")
     }
 })
 

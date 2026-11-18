@@ -103,6 +103,15 @@ private:
 	vector<int> alleleHeterozygoteTallies; // nb of times each allele is found in a heterozygous pair
 };
 
+// Per-patch heterozygosity and inbreeding coefficient (one entry per sampled, non-empty patch)
+struct PatchFisStats {
+	int patchId;
+	int nbSampledInds; // n_i
+	double ho;  // observed heterozygosity, mean over loci (NaN if haploid)
+	double hs;  // expected heterozygosity (gene diversity), unbiased (Nei 1987), mean over loci (NaN if n_i < 2)
+	double fis; // 1 - sum_l Ho_l / sum_l Hs_l (NaN if undefined)
+};
+
 
 // Handles calculations of neutral statistics
 class NeutralStatsManager {
@@ -130,6 +139,9 @@ public:
 	void calculateFstatWC(set<int> const& patchList, const int nbSampledIndsInComm, const int nLoci, const int nAlleles, Species* pSpecies, Landscape* pLandscape, bool isPairwise);
 
 	void calculatePairwiseFst(set<int> const& patchList, const int nLoci, const int nAlleles, Species* pSpecies, Landscape* pLandscape);
+
+	// Per-patch Ho, Hs and Fis; requires updateAllNeutralTables() to have been called for this patchList
+	void calculatePerPatchFis(set<int> const& patchList, Species* pSpecies, Landscape* pLandscape);
 
 	//void calcPairwiseWeightedFst(set<int> const& patchList, const int nInds, const int nLoci, Species* pSpecies, Landscape* pLandscape);
 
@@ -160,6 +172,8 @@ public:
 
 	double getPairwiseFst(int i, int j) { return pairwiseFstMatrix.get(i, j); }
 
+	const vector<PatchFisStats>& getPerPatchFis() const { return perPatchFis; }
+
 private:
 
 	int nbExtantPops, totalNbSampledInds;
@@ -186,6 +200,9 @@ private:
 
 	// Pairwise Fst matrix
 	PatchMatrix pairwiseFstMatrix;
+
+	// Per-patch Ho, Hs, Fis
+	vector<PatchFisStats> perPatchFis;
 };
 
 #endif

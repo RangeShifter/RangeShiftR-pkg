@@ -63,6 +63,7 @@ using namespace std;
 #include "RScore/Model.h"
 #include "RScore/Management.h"
 #include "RScore/Cell.h"
+#include "RScore/OutputTable.h"
 
 
 

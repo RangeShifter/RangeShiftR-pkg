@@ -10,7 +10,8 @@ Emigration(EmigProb = 0.0,
            DensDep = FALSE,
            IndVar = FALSE,
            EmigStage,
-           UseFullKern = FALSE)
+           UseFullKern = FALSE,
+           PostDestructn = FALSE)
 }
 \arguments{
 \item{EmigProb}{Matrix containing all parameters (#columns) to determine emigration probabilities for each stage/sex (#rows). Its structure depends on the other parameters, see the Details.
@@ -27,6 +28,8 @@ If the emigration probability is constant (i.e. \code{DensDep, IndVar, StageDep,
 \item{EmigStage}{Required for stage-structured populations with \code{IndVar=TRUE}: Stage which emigrates. (\code{StageDep} must be \code{FALSE})}
 
 \item{UseFullKern}{Applicable only if transfer phase is modelled by a \code{\link[RangeShiftR]{DispersalKernel}} and \code{DensDep=FALSE}: Shall the emigration probability be derived from dispersal kernel?}
+
+\item{PostDestructn}{In a dynamic landscape, determine if all individuals of a population should die (\code{FALSE}, default) or disperse (\code{TRUE}) if its patch gets destroyed. Applies to stage-structured and non-structured populations. Replaces the former argument \code{PostDestructn} of \code{\link[RangeShiftR]{StageStructure}}.}
 }
 \value{
 a parameter object of class "EmigrationParams"

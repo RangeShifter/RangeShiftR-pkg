@@ -57,7 +57,9 @@ public:
 	float getMutationRate() const override { return pSpeciesTrait->getMutationRate(); }
 	bool isInherited() const override { return pSpeciesTrait->isInherited(); }
 	
-	map<int, vector<shared_ptr<Allele>>>& getGenes() { return genes; } // returning reference, receiver must be const
+	// Allele values in a flat array: locus index l, chromosome c -> genes[l * ploidy + c]
+	// (locus index = rank of the gene position among the trait's sorted positions)
+	const vector<float>& getGenes() const { return genes; }
 	
 	void mutate() override { (this->*_mutate_func_ptr) (); }
 	float express() override { return (this->*_express_func_ptr) (); }
@@ -68,7 +70,7 @@ public:
 
 #ifdef UNIT_TESTS // for testing only
 	void overwriteGenes(map<int, vector<shared_ptr<Allele>>> genSeq) {
-		genes = genSeq;
+		genes = flattenTestGenotype(genSeq);
 	}
 	void triggerInherit(
 		// inheritGenes requires passing a QuantitativeTrait, unfeasible in tests
@@ -76,16 +78,22 @@ public:
 		map<int, vector<shared_ptr<Allele>>> const& parentGenes, 
 		set<unsigned int> const& recomPositions, 
 		int startChr) {
-		(this->*_inherit_func_ptr)(fromMother, parentGenes, recomPositions, startChr);
+		const vector<float> flatParent = flattenTestGenotype(parentGenes);
+		(this->*_inherit_func_ptr)(fromMother, flatParent, recomPositions, startChr);
 	}
+	vector<float> flattenTestGenotype(const map<int, vector<shared_ptr<Allele>>>& genSeq) const;
 #endif
 
 private:
 
 	const double dispDominanceFactor = 1.0; // no dominance for Dispersal traits (yet?)
 
-	// <Locus position, <Allele A, Allele B> >
-	map<int, vector<shared_ptr<Allele>>> genes;
+	// Formerly map<int, vector<shared_ptr<Allele>>> (<Locus position, <Allele A, Allele B> >):
+	// ~120 bytes per locus plus shared Allele objects and atomic reference counting.
+	// Dispersal alleles carry no dominance (dispDominanceFactor), so the value is all we need.
+	vector<float> genes;
+	short ploidy = 2;
+	int locusIndexOrThrow(int position, const char* msg) const;
 
 	// Initialisation
 	void initialiseUniform(float min, float max);
@@ -97,14 +105,14 @@ private:
 	SpeciesTrait* pSpeciesTrait;
 	//// Species-level trait functions
 	void (DispersalTrait::* _mutate_func_ptr) (void);
-	void (DispersalTrait::* _inherit_func_ptr) (const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
+	void (DispersalTrait::* _inherit_func_ptr) (const bool& fromMother, vector<float> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
 	float (DispersalTrait::* _express_func_ptr) (void);
 
 	// Possible values for immutable functions
 	//// Inheritance
-	void inheritDiploid(const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
-	void inheritHaploid(const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
-	void reInitialiseGenes(const bool& fromMother, map<int, vector<shared_ptr<Allele>>> const& parentMutations, set<unsigned int> const& recomPositions, int parentChromosome);
+	void inheritDiploid(const bool& fromMother, vector<float> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
+	void inheritHaploid(const bool& fromMother, vector<float> const& parent, set<unsigned int> const& recomPositions, int parentChromosome);
+	void reInitialiseGenes(const bool& fromMother, vector<float> const& parentMutations, set<unsigned int> const& recomPositions, int parentChromosome);
 	//// Mutation
 	void mutateUniform();
 	void mutateNormal();
