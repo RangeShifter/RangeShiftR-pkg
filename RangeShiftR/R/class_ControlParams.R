@@ -89,7 +89,7 @@ setMethod("show", "ControlParams", function(object){
         cat(" Seed =", object@seed)
         if(object@seed<0) cat("  (generate random seed)")
         if(object@seed>0) cat("  (fixed seed)")
-        if(object@fixreplicateseed==TRUE) cat(" all replicates use the same seed")
         cat("\n")
     }
+    if(object@fixreplicateseed==TRUE) cat(" Each replicate is seeded with its replicate number (seed has no effect)\n")
 })
