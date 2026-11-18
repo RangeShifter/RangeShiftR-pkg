@@ -1,7 +1,7 @@
 Package: RangeShiftR
 Type: Package
 Title: An R package for individual-based simulation of spatial eco-evolutionary dynamics and species' responses to environmental changes
-Version: 3.0.2
+Version: 3.1.0
 Authors@R: c(
 	person("Anne-Kathleen", "Malchow", role = c("aut")),
 	person("Greta", "Bocedi", role = c("aut")),
